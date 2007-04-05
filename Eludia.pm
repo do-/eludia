@@ -133,7 +133,7 @@ BEGIN {
 		error => 1,
 	};
 	
-	unless ($ELUDIA_BANNER_PRINTED) {
+	unless ($ENV {ELUDIA_BANNER_PRINTED}) {
 
 		print STDERR "\n";
 		print STDERR " ----------------------------------------------------------------\n";
@@ -146,13 +146,13 @@ BEGIN {
 		print STDERR "     **                                                          \n";
 		print STDERR " *****          Copyright (c) 2002-2007 by Eludia                \n";
 		print STDERR "\n";
-		print STDERR " ----------------------------------------------------------------\n";
+		print STDERR " ----------------------------------------------------------------\n\n";
 
-		our $ELUDIA_BANNER_PRINTED = 1;
+		$ENV {ELUDIA_BANNER_PRINTED} = 1;
 
 	}
 
-	print STDERR "\n   Loading $pkg_banner...";
+	print STDERR " Loading $pkg_banner...";
 	
 	unless ($preconf -> {no_model_update}) {
 		require DBIx::ModelUpdate;
@@ -241,7 +241,7 @@ BEGIN {
 		warn $@ if $@;
 	}
 
-	print STDERR "\r   Loading $pkg_banner ok.\n\n";
+	print STDERR "\r Loading $pkg_banner ok.\n";
 }
 
 1;
