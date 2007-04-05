@@ -1273,7 +1273,13 @@ sub draw_form_field_static {
 				push @$static_value, $item if $v {$item -> {id}};
 
 				foreach my $ppv (@{$item -> {items}}) {
-					push @$static_value, $ppv if $v {$ppv -> {id}};
+					if (@{$ppv -> {show_for}}+0) {
+						$ppv -> {no_checkbox} = 0;
+						foreach my $sf (@{$ppv -> {show_for}}) {
+							$ppv -> {no_checkbox} = 1 if ($v {$sf});
+						}
+					}
+					push @$static_value, $ppv if $v {$ppv -> {id}} || $ppv -> {no_checkbox};
 				}
 				
 			}
