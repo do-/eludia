@@ -254,13 +254,28 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 		
 	};
 
+	$conf -> {core_screenshot} and $defs {__screenshots} = {
+		columns => {
+			id        => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
+			subset    => {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
+			type      => {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
+			id_object => {TYPE_NAME => 'int'},
+			id_user	  => {TYPE_NAME => 'int'},
+			dt        => {TYPE_NAME => 'timestamp'},
+			html      => {TYPE_NAME => 'text'},
+			error     => {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
+			gziped    => {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
+			params    => {TYPE_NAME => 'text'},
+		},
+	};
+
 	$model_update -> assert (tables => \%defs);
 	
 	$model_update -> {core_ok} = 1;
 	
 	sql_select_scalar ("SELECT unix_ts FROM ${q}__last_update${q}") or sql_do ("INSERT INTO ${q}__last_update${q} (unix_ts, pid) VALUES (?, ?)", time (), $$);
 		
-print STDERR "sql_assert_core_tables [$$] finished:" . (time - $time) . " ms";	
+print STDERR "sql_assert_core_tables [$$] finished:" . (time - $time) . " ms\n";	
 	
 }
 

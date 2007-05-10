@@ -87,7 +87,7 @@ sub hotkey {
 sub trunc_string {
 	my ($s, $len) = @_;
 	return $s if $_REQUEST {xls};
-	return length $s <= $len - 3 ? $s : substr ($s, 0, $len - 3) . '...';
+	return length $s <= $len ? $s : substr ($s, 0, $len - 3) . '...';
 }
 
 ################################################################################
@@ -101,7 +101,7 @@ sub esc_href {
 
 		if (exists $_REQUEST {__last_scrollable_table_row}) {
 			$href =~ s{\&?__scrollable_table_row\=\d*}{}g;
-			$href .= '&__scrollable_table_row=' . $_REQUEST {__last_scrollable_table_row};
+			$href .= '&__scrollable_table_row=' . $_REQUEST {__last_scrollable_table_row} unless ($_REQUEST {__windows_ce});
 		}
 
 
@@ -274,7 +274,7 @@ sub check_href {
 			$query_string =~ s{\&?__last_query_string\=[^\&]+}{}gsm;
 
 			$query_string =~ s{\&?__scrollable_table_row\=\d*}{}g;
-			$query_string .= "&__scrollable_table_row=$scrollable_row_id";
+			$query_string .= "&__scrollable_table_row=$scrollable_row_id" unless ($_REQUEST {__windows_ce});
 
 			my $esc_query_string = MIME::Base64::encode ($query_string);
 			$esc_query_string =~ y{+/=}{-_.};
@@ -733,7 +733,7 @@ sub draw_auth_toolbar {
 
 	return $_SKIN -> draw_auth_toolbar ({
 		top_banner => ($conf -> {top_banner} ? interpolate ($conf -> {top_banner}) : ''),
-		user_label  => ($i18n -> {User} . ': ' . ($_USER -> {label} || $i18n -> {not_logged_in})),
+		user_label  => ($_REQUEST {__windows_ce} ? '' : $i18n -> {User} . ': ') . ($_USER -> {label} || $i18n -> {not_logged_in}),
 	});
 			
 }
@@ -798,7 +798,7 @@ sub draw_form {
 	push @keep_params, {name  => 'id',                          value => $_REQUEST {id}     || $options -> {id}  };
 	push @keep_params, {name  => 'action',                      value => $options -> {action}                    };
 	push @keep_params, {name  => '__last_query_string',         value => $_REQUEST {__last_last_query_string}    };
-	push @keep_params, {name  => '__last_scrollable_table_row', value => $_REQUEST {__last_scrollable_table_row} };
+	push @keep_params, {name  => '__last_scrollable_table_row', value => $_REQUEST {__last_scrollable_table_row} } unless ($_REQUEST {__windows_ce});
 	$options -> {keep_params} = \@keep_params;	
 
 		
@@ -809,7 +809,7 @@ sub draw_form {
 	) {
 		$options -> {esc} = create_url (
 			__last_query_string => $_REQUEST {__last_last_query_string},
-			__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
+			__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 		);
 	}	
 	elsif ($conf -> {core_auto_esc} > 0 && $_REQUEST {__last_query_string}) {
@@ -897,7 +897,7 @@ sub draw_form {
 				$item -> {href} .= "&__last_query_string=$_REQUEST{__last_last_query_string}";
 
 				$item -> {href} =~ s{\&?__last_scrollable_table_row=\d*}{}gsm;
-				$item -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}";
+				$item -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" unless ($_REQUEST {__windows_ce});
 			
 			}
 			
@@ -935,7 +935,7 @@ sub draw_form {
 sub draw_form_field {
 
 	my ($field, $data) = @_;
-								
+
 	if (
 		($_REQUEST {__read_only} or $field -> {read_only})
 	 	 &&  $field -> {type} ne 'hgroup'
@@ -976,27 +976,26 @@ sub draw_form_field {
 		else {
 			$_REQUEST {__only_field} eq $field -> {name} or return '';
 		}
-	
-	
+
 	}
-	
+
 	$field -> {tr_id}  = 'tr_' . $field -> {name};
 
 	$field -> {html} = &{"draw_form_field_$$field{type}"} ($field, $data);
-	
+
 	$conf -> {kb_options_focus} ||= $conf -> {kb_options_buttons};
 	$conf -> {kb_options_focus} ||= {ctrl => 1, alt => 1};
-	
+
 	register_hotkey ($field, 'focus', '_' . $field -> {name}, $conf -> {kb_options_focus});
-	
+
 	$field -> {label} .= ':' if $field -> {label};
-	
+
 	$field -> {colspan} ||= $_REQUEST {__max_cols} - 1;
-	
+
 	$field -> {state}     = $data -> {fake} == -1 ? 'deleted' : $_REQUEST {__read_only} ? 'passive' : 'active';
-	
+
 	$field -> {label_width} = '20%' unless $field -> {is_slave};	
-	
+
 	return $_SKIN -> draw_form_field ($field);
 
 }
@@ -1106,12 +1105,12 @@ sub draw_form_field_date {
 sub draw_form_field_datetime {
 
 	my ($options, $data) = @_;
-		
+
 	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/) {
 		$options -> {size} ||= $options -> {no_time} ? 11 : 16;
 		return draw_form_field_string ($options, $data);
 	}	
-		
+
 	unless ($options -> {format}) {
 	
 		if ($options -> {no_time}) {
@@ -1347,7 +1346,7 @@ sub draw_form_field_static {
 		
 	$options -> {value} = $static_value;		
 	$options -> {value} = format_picture ($options -> {value}, $options -> {picture}) if $options -> {picture};
-	
+
 	return $_SKIN -> draw_form_field_static (@_);
 			
 }
@@ -1408,29 +1407,32 @@ sub draw_form_field_select {
 	}
 
 	foreach my $value (@{$options -> {values}}) {
-		
+
 		$value -> {selected} = (($value -> {id} eq $data -> {$options -> {name}}) or ($value -> {id} eq $options -> {value})) ? 'selected' : '';
 		$value -> {label} = trunc_string ($value -> {label}, $options -> {max_len});
 		$value -> {id} =~ s{\"}{\&quot;}g; #";
-		
+
 	}
 
 	$options -> {onChange} = '' if defined $options -> {other} || defined $options -> {detail};
 
 	if (defined $options -> {other}) {
-	
+
 		ref $options -> {other} or $options -> {other} = {href => $options -> {other}, label => $i18n -> {voc}};
-		
+
 		check_href ($options -> {other});
-		
+
 		$options -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
 		$options -> {other} -> {width}  ||= 600;
 		$options -> {other} -> {height} ||= 400;
 
-		$options -> {onChange} .= <<EOJS;
+		$d_style_top = "d.style.top = " . (defined $options -> {other} -> {top} ? "${$$options{other}}{top};" : "this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop;");
+		$d_style_left = "d.style.left = " . (defined $options -> {other} -> {left} ? "${$$options{other}}{left};" : "this.offsetLeft + this.offsetParent.offsetLeft + this.offsetParent.offsetParent.offsetLeft;");
 
-			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+#				d.style.top   = this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop;
+#				d.style.left  = this.offsetLeft + this.offsetParent.offsetLeft + this.offsetParent.offsetParent.offsetLeft;
 
+		my $onchange = $_REQUEST {__windows_ce} ? "switchDiv(); loadSlaveDiv('${$$options{other}}{href}&select=$$options{name}');" : <<EOS;
 				var fname = '_$$options{name}_iframe';
 				var f = document.getElementById (fname);
 
@@ -1438,14 +1440,20 @@ sub draw_form_field_select {
 				var d = document.getElementById (dname);
 
 				f.src = '${$$options{other}}{href}&select=$$options{name}';
-				
-				d.style.top   = this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop;
-				d.style.left  = this.offsetLeft + this.offsetParent.offsetLeft + this.offsetParent.offsetParent.offsetLeft;
+
+				$d_style_top
+				$d_style_left
+
 				d.style.display = 'block';
 				this.style.display = 'none';
-				
+
 				d.focus ();
-				
+EOS
+
+		$options -> {onChange} .= <<EOJS;
+
+			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+				$onchange
 			}
 
 EOJS
@@ -1453,25 +1461,18 @@ EOJS
 	}		
 
 	if (defined $options -> {detail}) {
-	
+
 		ref $options -> {detail} eq ARRAY or $options -> {detail} = [$options -> {detail}];
-		
+
 		foreach my $detail (@{$options -> {detail}}) {
-	
+
 			my $h = {href => {}};
-			
+
 			check_href ($h);
-			
+
 			push @{$_REQUEST{__invisibles}}, 'invisible_' . $detail;
 
-			$options -> {onChange} .= <<EOJS;
-
-				if (this.options[this.selectedIndex].value && this.options[this.selectedIndex].value != 0 && this.options[this.selectedIndex].value != -1) {
-
-					var element = this.form.elements['_${detail}'];
-					
-					var tab = element ? '&__only_tabindex=' + element.tabIndex : '';
-					
+			my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_field=${detail}&__only_form=' + this.form.name + '&_$$options{name}=' + this.options[this.selectedIndex].value);" : <<EOS;
 					activate_link (
 
 						'$$h{href}&__only_field=${detail}&__only_form=' + 
@@ -1484,12 +1485,23 @@ EOJS
 
 					);
 
+EOS
+
+			$options -> {onChange} .= <<EOJS;
+
+				if (this.options[this.selectedIndex].value && this.options[this.selectedIndex].value != -1) {
+
+					var element = this.form.elements['_${detail}'];
+					
+					var tab = element ? '&__only_tabindex=' + element.tabIndex : '';
+					
+					$onchange
+
 				}
 
 EOJS
 	
-		}
-	
+ 		}
 	}
 
 	return $_SKIN -> draw_form_field_select (@_);
@@ -1658,11 +1670,11 @@ sub draw_form_field_htmleditor {
 sub draw_toolbar {
 
 	my ($options, @buttons) = @_;
-	
+
 	return '' if $options -> {off};	
-	
+
 	$_REQUEST {__toolbars_number} ||= 0;
-		
+
 	my $form_name = $_REQUEST {__toolbars_number} ? 'toolbar_form_' . $_REQUEST {__toolbars_number} : 'toolbar_form';
 	$_REQUEST {__toolbars_number} ++;
 
@@ -1679,13 +1691,13 @@ sub draw_toolbar {
 			icon    => 'cancel',
 			id      => 'cancel',
 			label   => $i18n -> {close},
-			href    => "javaScript:window.parent.restoreSelectVisibility('_$_REQUEST{select}', true);window.parent.focus();",
+			href    => $_REQUEST {__windows_ce} ? "javaScript:switchDiv();" : "javaScript:window.parent.restoreSelectVisibility('_$_REQUEST{select}', true);window.parent.focus();",
 		};
-		
+
 	}
-	
+
 	foreach my $button (@buttons) {
-	
+
 		if (ref $button eq HASH) {
 			next if $button -> {off};
 			$button -> {type} ||= 'button';
@@ -1694,15 +1706,15 @@ sub draw_toolbar {
 		else {
 			$button = {html => $button, type => 'input_raw'};
 		}
-		
+
 		push @{$options -> {buttons}}, $button;
 
 	};
-	
+
 	return '' if 0 == @{$options -> {buttons}};
-	
+
 	return $_SKIN -> draw_toolbar ($options);
-	
+
 }
 
 ################################################################################
@@ -1737,7 +1749,7 @@ sub draw_toolbar_button {
 		$options -> {href} .= "&__last_query_string=$_REQUEST{__last_last_query_string}";
 
 		$options -> {href} =~ s{\&?__last_scrollable_table_row=\d*}{}gsm;
-		$options -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}";
+		$options -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" unless ($_REQUEST {__windows_ce});
 	
 	}		
 
@@ -1987,7 +1999,7 @@ sub draw_centered_toolbar {
 
 	$options -> {cnt} = 0;
 	
-	foreach (@$list) {	
+	foreach (@$list) {
 		next if $_ -> {off};
 		$_ -> {html} = draw_centered_toolbar_button ($_);
 		$options -> {cnt} ++;
@@ -2032,6 +2044,7 @@ sub draw_ok_esc_toolbar {
 
 	my $name = $options -> {name};
 	$name ||= 'form';
+	$name .= '_' . $_REQUEST {select} if ($_REQUEST {__windows_ce} && $_REQUEST {select});
 	
 	$options -> {label_ok}     ||= $i18n -> {ok};
 	$options -> {label_cancel} ||= $i18n -> {cancel};
@@ -2043,14 +2056,14 @@ sub draw_ok_esc_toolbar {
 		{
 			preset => 'ok',
 			label => $options -> {label_ok}, 
-			href => "javaScript:document.$name.fireEvent(\\'onsubmit\\'); document.$name.submit()", 
+			href => $_REQUEST {__windows_ce} ? "javaScript:document.$name.submit()" : "javaScript:document.$name.fireEvent(\\'onsubmit\\'); document.$name.submit()", 
 			off  => $_REQUEST {__read_only} || $options -> {no_ok},
 		},
 		{
 			preset => 'edit',
 			href  => create_url (
 				__last_query_string         => $_REQUEST {__last_last_query_string},
-				__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
+				__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 				__edit                      => 1,
 			),
 			off   => ((!$conf -> {core_auto_edit} && !$_REQUEST{__auto_edit}) || !$_REQUEST{__read_only} || $options -> {no_edit}),
@@ -2682,7 +2695,7 @@ sub draw_table_row {
 
 	foreach my $callback (@$tr_callback) {
 
-		$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . '&__last_scrollable_table_row=' . $scrollable_row_id if $conf -> {core_auto_esc} == 2;
+		$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . ($_REQUEST {__windows_ce} ? '' : '&__last_scrollable_table_row=' . $scrollable_row_id) if $conf -> {core_auto_esc} == 2;
 
 		$_SKIN -> start_table_row if $_SKIN -> {options} -> {no_buffering};
 		my $tr = &$callback ();
@@ -2760,7 +2773,7 @@ sub draw_table {
 			$url = esc_href ();
 		}
 		
-		$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . '&__last_scrollable_table_row=' . $scrollable_row_id if $conf -> {core_auto_esc} == 2;
+		$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . ($_REQUEST {__windows_ce} ? '' : '&__last_scrollable_table_row=' . $scrollable_row_id) if $conf -> {core_auto_esc} == 2;
 	
 		$options -> {dotdot} = draw_text_cell ({
 			a_id  => 'dotdot',
@@ -2890,9 +2903,13 @@ sub draw_page {
 	my ($selector, $renderrer);
 	
 	$_REQUEST {__invisibles} = ['invisible'];
-	
+
+	my $validate_error = 1;
+
 	unless ($_REQUEST {error}) {
-	
+
+		$validate_error = 0;
+
 		if ($_REQUEST {id}) {
 			$selector  = 'get_item_of_' . $page -> {type};
 			$renderrer = 'draw_item_of_' . $page -> {type};
@@ -2953,22 +2970,35 @@ sub draw_page {
 			}
 
 		}
-		
-						
+
 	}
 
+	my $html;
+
 	if ($_REQUEST {error}) {
-				
+
 		if ($_REQUEST {error} =~ s{^\#(\w+)\#\:}{}) {
 			$page -> {error_field} = $1;
 		}
 
-		return $_SKIN -> draw_error_page ($page);		
-		
+		$html = $_SKIN -> draw_error_page ($page);		
+
 	}
-		
-	return $_SKIN -> draw_page ($page);		
-		
+
+	$html ||= $_SKIN -> draw_page ($page);
+
+	if (
+		   $conf -> {core_screenshot} -> {allow}
+		&& $conf -> {core_screenshot} -> {subsets} -> {$$_SUBSET{name}}
+		&& $conf -> {core_screenshot} -> {exclude_types} !~ /\b$$page{type}\b/
+		&& !$_REQUEST {__edit}
+	) {
+		sql_do ("INSERT INTO __screenshots (subset, type, id_object, id_user, html, error, params, gziped) VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
+			$_SUBSET -> {name}, $page -> {type}, $_REQUEST {id}, $_USER -> {id}, Compress::Zlib::memGzip ($html), !$validate_error && $_REQUEST {error} ? 1 : 0, Dumper (\%_REQUEST));
+	}
+
+	return $html;
+
 }
 
 ################################################################################

@@ -238,6 +238,7 @@ sub get_skin_name {
 		$_REQUEST {__dump} || $_REQUEST {__d} ? 'Dumper' :
 		$_REQUEST {__proto} ? 'XMLProto' :
 		$_REQUEST {__x} ? 'XMLDumper' :
+		$_REQUEST {__windows_ce} ? 'WinCE' :
 		$preconf -> {core_skin} ? $preconf -> {core_skin} :
 		'Classic';
 
@@ -1102,7 +1103,7 @@ sub select_subset { return {} }
 sub get_user {
 
 	return if $_REQUEST {type} eq '_static_files';
-		
+
 	sql_do_refresh_sessions ();
 
 	my $user = undef;
@@ -1117,7 +1118,7 @@ sub get_user {
 	if ($r -> headers_in -> {'User-Agent'} =~ m{^Eludia/.*? \((.*?)\)}) {
 	
 		$peer_server = $1;
-					
+
 		my $local_sid = sql_select_scalar ('SELECT id FROM sessions WHERE peer_id = ? AND peer_server = ?', $_REQUEST {sid}, $peer_server);
 		
 		unless ($local_sid) {
@@ -1160,7 +1161,7 @@ sub get_user {
 	}
 	
 	my $session = sql_select_hash ('sessions', $_REQUEST {sid});
-	
+
 	if ($session -> {ip}) {	
 		$session -> {ip}    eq $ENV {REMOTE_ADDR}          or return undef;
 		$session -> {ip_fw} eq $ENV {HTTP_X_FORWARDED_FOR} or return undef;	
@@ -1299,22 +1300,24 @@ sub esc {
 sub redirect {
 
 	my ($url, $options) = @_;
-	
+
 	if (ref $url eq HASH) {
 		$url = create_url (%$url);
 	}
-	
+
 	if ($_REQUEST {__uri} ne '/' && $url =~ m{^\/\?}) {
 		$url =~ s{^\/\?}{$_REQUEST{__uri}\?};
 	}
-	
+
 	$options ||= {};
 	$options -> {kind} ||= 'http';
+	$options -> {kind} = 'http' if ($_REQUEST {select});
+#	$options -> {kind} = 'http' if ($_REQUEST {__windows_ce});
 
 	if ($options -> {kind} eq 'http' || $options -> {kind} eq 'internal') {
-	
+
 		$r -> status ($options -> {status} || 302);
-			
+
 		$r -> headers_out -> {'Location'} = $url;
 		$r -> send_http_header unless (MP2);
 		$_REQUEST {__response_sent} = 1;
@@ -1323,11 +1326,11 @@ sub redirect {
 	}
 
 	if ($options -> {kind} eq 'js') {
-	
+
 		if ($options -> {label}) {
 			$options -> {before} = 'alert(' . js_escape ($options -> {label}) . '); ';
 		}
-	
+
 		my $target = $options -> {target} ? "'$$options{target}'" : "(window.name == 'invisible' ? '_parent' : '_self')";
 				
 		if ($_REQUEST {__x}) {
@@ -1357,7 +1360,6 @@ sub redirect {
 EOH
 
 		}
-		
 
 		$_REQUEST {__response_sent} = 1;
 		return;

@@ -70,6 +70,8 @@ sub handler {
 	$_REQUEST {__uri} =~ s{\&salt\=[\d\.]+}{}gsm;
 #	$_REQUEST {__uri_root} =  $_REQUEST {__uri} . '?sid=' . $_REQUEST {sid} . '&salt=' . rand * time;
 
+	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;
+
 	if ($_REQUEST {action}) {
 	
 		foreach my $key (keys %_REQUEST) {
@@ -220,13 +222,13 @@ EOH
 		delete $_REQUEST {_salt};
 		delete $_REQUEST {__include_js};
 		delete $_REQUEST {__include_css};
-		
-		my $type = ($preconf -> {core_skip_boot} || $conf -> {core_skip_boot}) ? 'logon' : '_boot';
+
+		my $type = ($preconf -> {core_skip_boot} || $conf -> {core_skip_boot}) || $_REQUEST {__windows_ce} ? 'logon' : '_boot';
 		
 		redirect ("/?type=$type&redirect_params=" . b64u_freeze (\%_REQUEST));
 		
 	}
-			
+
 	elsif (exists ($_USER -> {redirect})) {
 		
 		redirect (create_url ());
@@ -315,7 +317,7 @@ EOH
 		my $action = $_REQUEST {action};
 
 		if ($action) {
-			
+
 			undef $__last_insert_id;
 
 			eval { $db -> {AutoCommit} = 0; };
@@ -338,7 +340,6 @@ EOH
 				my $error_message_template = $error_messages -> {"${action}_$$page{type}_${error_code}"} || $error_code;
 				$_REQUEST {error} = interpolate ($error_message_template);
 			}
-			
 			if ($_REQUEST {error}) {
 				out_html ({}, draw_page ($page));
 			}
@@ -375,7 +376,6 @@ EOH
 					$_REQUEST {error} = $@ if $@;
 								
 				}
-				
 				if ($_REQUEST {error}) {
 					out_html ({}, draw_page ($page));
 				}
@@ -385,6 +385,7 @@ EOH
 						esc ({label => $_REQUEST {__redirect_alert}});
 					}
 					else {
+
 						redirect (
 							{
 								action => '', 
@@ -396,12 +397,12 @@ EOH
 								label => $_REQUEST {__redirect_alert},
 							}
 						);
-					}				
-				
+					}
+
 				}
-				
+
 			}
-			
+
 			eval {
 				$db -> commit unless $_REQUEST {error} || $db -> {AutoCommit};
 				$db -> {AutoCommit} = 1;
@@ -465,11 +466,11 @@ EOH
 sub out_html {
 
 	my ($options, $html) = @_;
-		
+
 	$html or return;
 	
 	return if $_REQUEST {__response_sent};
-	
+
 	if ($conf -> {core_sweep_spaces}) {
 		$html =~ s{^\s+}{}gsm; 
 		$html =~ s{[ \t]+}{ }g;
