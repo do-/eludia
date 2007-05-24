@@ -103,8 +103,10 @@ sub checksum {
 
 sub assert {
 
-	my ($self, %params) = @_;
+warn Dumper (\@_);
 
+	my ($self, %params) = @_;
+	
 	$Storable::canonical = 1;
 	
 	my $checksum = '';

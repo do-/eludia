@@ -35,8 +35,8 @@ BEGIN {
   
 	$Data::Dumper::Sortkeys = 1;
 
-	$Eludia_VERSION      = $Eludia::VERSION      = '07.04.02';
-	$Eludia_VERSION_NAME = $Eludia::VERSION_NAME = 'Again';
+	$Eludia_VERSION      = $Eludia::VERSION      = '07.05.24';
+	$Eludia_VERSION_NAME = $Eludia::VERSION_NAME = '34';
 		
 	eval {
 		require Math::FixedPrecision;
@@ -132,7 +132,7 @@ BEGIN {
 		password => 1,
 		error => 1,
 	};
-	
+		
 	unless ($ENV {ELUDIA_BANNER_PRINTED}) {
 
 		print STDERR "\n";

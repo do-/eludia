@@ -198,6 +198,21 @@ sub peer_query {
 
 }
 
+#############################################################################
+
+sub fake_select {
+	
+	return {
+		type    => 'input_select',
+		name    => 'fake',
+		values  => [
+			{id => '0,-1', label => 'Все'},
+			{id => '-1', label => 'Удалённые'},
+		],
+		empty   => 'Активные',
+	}
+	
+}
 
 #############################################################################
 
@@ -2033,6 +2048,7 @@ sub fill_in {
 		cancel                   => 'вернуться', 
 		choose                   => 'выбрать', 
 		delete                   => 'удалить', 
+		undelete                 => 'восстановить', 
 		edit                     => 'редактировать', 
 		'close'                  => 'закрыть',
 		back                     => '&lt;&lt; назад',
@@ -2051,6 +2067,8 @@ sub fill_in {
 		save_or_cancel           => 'Пожалуйста, сначала сохраните данные (Ctrl-Enter) или отмените ввод (Esc)',
 		infty                    => '&infin;', 
 		voc                      => ' справочник...',
+		wrong_month              => 'Некорректно задан месяц',
+		wrong_day                => 'Некорректно задан день',
 		months			 => [qw(
 			января
 			февраля
@@ -2101,6 +2119,8 @@ sub fill_in {
 		infty                    => '&infin;', 
 		voc                      => ' vocabulary...',
 		today                    => 'Today', 
+		wrong_month              => 'Invalid month',
+		wrong_day                => 'Invalid day',
 		months			 => [qw(
 			january
 			february
@@ -2151,6 +2171,8 @@ sub fill_in {
 		infty                    => '&infin;', 
 		voc                      => ' vocabulaire...',
 		today                    => "Aujourd'hui", 
+		wrong_month              => 'Format de date inconnu',
+		wrong_day                => 'Format de date inconnu',
 		months			 => [qw(
 			janvier
 			fйvrier
