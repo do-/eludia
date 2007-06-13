@@ -9,7 +9,7 @@ sub sql_weave_model {
 	my @tables = ();
 	
 	foreach my $table_name ($db -> tables) {	
-		$table_name =~ s{\W}{}gsm;
+		$table_name =~ s{.*?(\w+)\W*$}{$1}gsm;
 		next if $table_name eq 'log';
 		push @tables, $table_name;
 	}
@@ -670,7 +670,7 @@ warn "undo relink $table_name: $old_id";
 
 		my $record = sql_select_hash ($table_name, $old_id);
 		
-		foreach my $column_def (@{$DB_MODEL -> {tables} -> {$table_name} -> {references}}) {
+		foreach my $column_def (@{$DB_MODEL -> {aliases} -> {$table_name} -> {references}}) {
 
 			my $from = <<EOS;
 				FROM
