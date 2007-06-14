@@ -2447,6 +2447,12 @@ sub draw_text_cell {
 			delete $data -> {href};
 		}
 
+		if ($data -> {add_hidden}) {
+			$data -> {hidden_name}  ||= $data -> {name};
+			$data -> {hidden_value} ||= $data -> {label};
+			$data -> {hidden_value} =~ s/\"/\&quot\;/gsm; #";
+		}	
+
 		if ($data -> {picture}) {	
 			$data -> {label} = format_picture ($data -> {label}, $data -> {picture});
 			$data -> {attributes} -> {align} ||= 'right';
@@ -2456,7 +2462,7 @@ sub draw_text_cell {
 		}
 
 		exists $options -> {strike} or $data -> {strike} ||= $i -> {fake} < 0;
-
+		
 	}
 	
 	return $_SKIN -> draw_text_cell ($data, $options);

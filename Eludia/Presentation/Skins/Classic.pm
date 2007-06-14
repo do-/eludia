@@ -1608,6 +1608,7 @@ sub draw_text_cell {
 		
 		$html .= '</nobr>' unless $data -> {no_nobr};
 		
+		$html .= qq {<input type=hidden name="$$data{hidden_name}" value="$$data{hidden_value}">} if ($data -> {add_hidden});		
 		
 	}
 	
