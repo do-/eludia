@@ -404,16 +404,17 @@ sub draw_form {
 	$html .= _draw_bottom (@_);
 	
 	$html .= $options -> {path};
-	
+
+	$options -> {target} = '_self' if ($_REQUEST {select});
+
 	$html .=  <<EOH;
 		<table cellspacing=1 width="100%">
 			<form 
 				name="$$options{name}"
-				target="$$options{target}"
 				method="$$options{method}"
 				enctype="$$options{enctype}"
-				target="$$options{target}"
 				action="$_REQUEST{__uri}"
+				target="$$options{target}"
 			>
 EOH
 	
@@ -1674,6 +1675,18 @@ sub draw_input_cell {
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}"></nobr></td>};
+
+}
+
+################################################################################
+
+sub draw_embed_cell {
+
+	my ($_SKIN, $data, $options) = @_;
+
+	my $attributes = dump_attributes ($data -> {attributes});
+	
+	return qq {<td $$options{data} width="1%" $attributes><embed src="$$data{src}" autostart="$$data{autostart}" type="$$data{src_type}" height="$$data{height}"/></td>};
 
 }
 

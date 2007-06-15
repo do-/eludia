@@ -857,6 +857,7 @@ sub draw_form {
 	foreach my $row (@rows) {
 		my $sum_colspan = 0;
 		for (my $i = 0; $i < @$row; $i++) {
+			$row -> [$i] -> {form_name} = $options -> {name};
 			$row -> [$i] -> {colspan} ||= 1;
 			$sum_colspan += $row -> [$i] -> {colspan};
 			$sum_colspan ++;
@@ -1474,6 +1475,21 @@ EOJS
 
 		foreach my $detail (@{$options -> {detail}}) {
 
+			my $codetails;
+			if (ref $detail eq HASH) {
+				($detail, $codetails) = each (%{$detail}); 
+			}
+			my $codetail_js;
+			if (defined $codetails) {
+				ref $codetails eq ARRAY or $codetails = [$codetails];
+				foreach my $codetail (@{$codetails}) {
+					$codetail_js .= <<EOS
+						'&_$codetail=' +
+						document.getElementById('_${codetail}_select').options[document.getElementById('_${codetail}_select').selectedIndex].value +  
+EOS
+				}
+			}
+ 
 			my $h = {href => {}};
 
 			check_href ($h);
@@ -1487,6 +1503,7 @@ EOJS
 						this.form.name + 
 						'&_$$options{name}=' + 
 						this.options[this.selectedIndex].value + 
+$codetail_js
 						tab
 
 						, 'invisible_${detail}'
@@ -1503,7 +1520,7 @@ EOS
 					
 					var tab = element ? '&__only_tabindex=' + element.tabIndex : '';
 					
-					$onchange
+$onchange
 
 				}
 
@@ -2064,7 +2081,7 @@ sub draw_ok_esc_toolbar {
 		{
 			preset => 'ok',
 			label => $options -> {label_ok}, 
-			href => $_REQUEST {__windows_ce} ? "javaScript:document.$name.submit()" : "javaScript:document.$name.fireEvent(\\'onsubmit\\'); document.$name.submit()", 
+			href => $_REQUEST {__windows_ce} || $_SKIN =~ /Universal/ ? "javaScript:document.$name.submit()" : "javaScript:document.$name.fireEvent(\\'onsubmit\\'); document.$name.submit()", 
 			off  => $_REQUEST {__read_only} || $options -> {no_ok},
 		},
 		{
@@ -2351,6 +2368,7 @@ sub draw_cells {
 			($cell -> {type} eq 'button'   || $cell -> {icon}) ? draw_row_button ($cell, $options) :		
 			$cell  -> {type} eq 'input'    ? draw_input_cell  ($cell, $options) :
 			$cell  -> {type} eq 'select'   ? draw_select_cell ($cell, $options) :
+			$cell  -> {type} eq 'embed'    ? draw_embed_cell ($cell, $options) :
 			draw_text_cell ($cell, $options);
 	
 	}
@@ -2555,6 +2573,20 @@ sub draw_input_cell {
 	check_title ($data);
 		
 	return $_SKIN -> draw_input_cell ($data, $options);
+
+}
+
+################################################################################
+
+sub draw_embed_cell {
+
+	my ($data, $options) = @_;
+	
+	$data -> {autostart} ||= 'false';
+	$data -> {src_type} ||= 'audio/mpeg';
+	$data -> {height} ||= 45;
+
+	return $_SKIN -> draw_embed_cell ($data, $options);
 
 }
 
