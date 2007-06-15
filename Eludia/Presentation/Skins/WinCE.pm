@@ -54,9 +54,11 @@ sub draw_hr {
 	my ($_SKIN, $options) = @_;
 		
 	return <<EOH;
+<!--
 		<table border=0 cellspacing=0 cellpadding=0 width="100%">
 			<tr><td class=$$options{class}><img src="/i/0.gif" width=1 height=$$options{height}></td></tr>
 		</table>
+-->
 EOH
 	
 }
@@ -112,25 +114,27 @@ EOH
 	$$options{user_label} =~ s/(.+) (.).+ (.).+/$1 $2\.$3\./;
 #				<td class=bgr1><A class=lnk2>$calendar</A></td>
 	return <<EOH;
+<!--
 		<table cellSpacing=0 cellPadding=0 border=0 width=100%>
 			<tr><td class=bgr1><img height=1 src="/i/0.gif" width=1 height=1 border=0></td></tr>
 			<tr><td class=bgr6><img height=1 src="/i/0.gif" width=1 height=1 border=0></td></tr>
 		</table>
+-->
 		<table cellSpacing=0 cellPadding=0 border=0 width=100%>
 			<form name=_subset_form>
 			<tr>
 				<td class=bgr1>&nbsp;&nbsp;</td>
 
-				<td class=bgr1><img height=22 src="/i/0.gif" width=4 border=0></td>
-				<td class=bgr1 width=100%><A class=lnk2>$$options{user_label}</a>&nbsp;&nbsp;</td>
+				<td class=bgr1><img src="/i/0.gif" width=4 border=0></td>
+				<td class=bgr1 width=100%><A class=lnk2 href="#" accesskey="2">&nbsp;</a><A class=lnk2 accesskey="2">$$options{user_label}</a>&nbsp;&nbsp;</td>
 
-				<td class=bgr1><img height=22 src="/i/0.gif" width=4 border=0></td>
-				<td class=bgr1><img height=22 src="/i/0.gif" width=4 border=0></td>
+				<td class=bgr1><img src="/i/0.gif" width=4 border=0></td>
+				<td class=bgr1><img src="/i/0.gif" width=4 border=0></td>
 
 				<td class=bgr1 nowrap width="100%"></td>				
 
 				@{[ $_REQUEST {__help_url} ? <<EOHELP : '' ]}
-				<td class=bgr1><img height=22 src="/i/0.gif" width=4 border=0></td>
+				<td class=bgr1><img src="/i/0.gif" width=4 border=0></td>
 				<td class=bgr1><A TABINDEX=-1 id="help" class=lnk2 href="$_REQUEST{__help_url}">[$$i18n{F1}]</A>&nbsp;&nbsp;</td>
 EOHELP
 
@@ -154,7 +158,7 @@ sub draw_window_title {
 	my ($_SKIN, $options) = @_;
 
 	return <<EOH
-		<table cellspacing=0 cellpadding=0 width="100%"><tr><td class='header15'><img src="/i/0.gif" width=1 height=20 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</table>
+		<table cellspacing=0 cellpadding=0 width="100%"><tr><td class='header15'><img src="/i/0.gif" width=1 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</table>
 EOH
 
 }
@@ -201,7 +205,13 @@ EOH
 
 		$tr1 .= qq{<td class='$class'><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
 
-		$tr2 .= qq{<td class="tabs-$active"><a id="$item" href="$$item{href}" class="main-menu">&nbsp;$$item{label}&nbsp;</a></td>};
+		my $accesskey = '';
+		if ($items -> [$i] -> {hotkey}) {
+			$items -> [$i] -> {hotkey} =~ s/\D//gsm;
+			$accesskey = 'accesskey="' . $items -> [$i] -> {hotkey} . '"';
+		}
+
+		$tr2 .= qq{<td class="tabs-$active"><a id="$item" href="$$item{href}" class="main-menu" $accesskey>&nbsp;$$item{label}&nbsp;</a></td>};
 
 		$tr3 .= qq{<td background="$_REQUEST{__static_url}/tab_b_$active.gif?$_REQUEST{__static_salt}"><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=2></td>};
 
@@ -263,7 +273,7 @@ sub _draw_input_datetime {
 			$attributes 
 			onFocus="q_is_focused = true;" 
 			onBlur="q_is_focused = false"
-			onChange="nope('$$options{onChange}');" 
+			onChange="nope('javascript:$$options{onChange}');" 
 		>
 		</div>
 EOH
@@ -343,7 +353,7 @@ sub draw_path {
 EOH
 
 	if ($conf -> {core_show_icons} || $_REQUEST {__core_show_icons}) {
-		$path .= qq{<img src="$_REQUEST{__static_url}/folder.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=1 align=absmiddle>&nbsp;};
+#		$path .= qq{<img src="$_REQUEST{__static_url}/folder.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=1 align=absmiddle>&nbsp;};
 	}
 
 	for (my $i = 0; $i < @$list; $i ++) {
@@ -365,12 +375,14 @@ EOH
 	$path .= <<EOH;
 &nbsp;</td>
 						</tr>
+<!--
 						<tr>
 							<td class=bgr8 colspan=4><img height=1 src="/i/0.gif" width=1 border=0></td>
 						</tr>
 						<tr>
 							<td class=bgr6 colspan=4><img height=1 src="/i/0.gif" width=1 border=0></td>
 						</tr>
+-->
 					</table>
 				</td>
 			</tr>
@@ -873,12 +885,14 @@ EOH
 					<input type=hidden name=__last_query_string value="$_REQUEST{__last_query_string}">
 					<input type=hidden name=__last_last_query_string value="$_REQUEST{__last_last_query_string}">
 
+<!--
 				<tr>
 					<td class=bgr0 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
 				</tr>
 				<tr>
 					<td class=bgr6 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
 				</tr>
+-->
 				<tr>
 EOH
 
@@ -887,12 +901,14 @@ EOH
 #					<td class=bgr8 width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>
 	$html .= <<EOH;
 				</tr>
+<!--
 				<tr>
 					<td class=bgr8 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
 				</tr>
 				<tr>
 					<td class=bgr6 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
 				</tr>
+-->
 			</form>
 		</table>
 EOH
@@ -944,8 +960,14 @@ sub draw_toolbar_button {
 
 	$options -> {href} = "javascript:loadSlaveDiv('$$options{href}');" if ($_REQUEST {select} && $options -> {href} && $options -> {href} !~ /switchDiv/);
 
+	my $accesskey = defined $options -> {accesskey} ? "accesskey=\"$$options{accesskey}\"" : ''; 
+
+	if ($options -> {href} =~ /action=create/ && !$accesskey) {
+		$accesskey = 'accesskey="0"';
+	}
+
 	my $html = <<EOH;
-		<td class="button"nowrap><a TABINDEX=-1 class=button href="$$options{href}" $onclick id="$$options{id}">
+		<td class="button"nowrap><a TABINDEX=-1 class=button href="$$options{href}" $onclick id="$$options{id}" $accesskey>
 EOH
 
 	if ($options -> {icon}) {
@@ -981,7 +1003,7 @@ sub draw_toolbar_input_select {
 	}
 	
 	$html .= <<EOH;
-		<select name="$$options{name}" onChange="nope('document.$form_name.submit()')">
+		<select name="$$options{name}" onChange="nope('javascript:document.$form_name.submit()')">
 EOH
 
 	if (defined $options -> {empty}) {
@@ -1015,7 +1037,7 @@ sub draw_toolbar_input_checkbox {
 		$html .= ': ';
 	}
 
-	$html .= qq {<input type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="nope('document.$form_name.submit()');">};
+	$html .= qq {<input type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="nope('javascript:document.$form_name.submit()');">};
 
 	$html .= "<td><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
 	
@@ -1056,22 +1078,25 @@ sub draw_toolbar_input_text {
 
 	my $html = '<td nowrap>';
 		
-	if ($options -> {label}) {
+	if ($options -> {label} && 0) {
 		$html .= $options -> {label};
 		$html .= ': ';
 	}
 
-	$options -> {size} = 7;
+	$options -> {size} = 2;
+
+	my $accesskey = defined $options -> {accesskey} ? "accesskey=\"$$options{accesskey}\"" : '';
 
 	$html .= <<EOH;
 		<input 
-			onChange="nope('document.$form_name.submit()');" 
+			onChange="nope('javascript:document.$form_name.submit()');" 
 			type=text 
 			size=$$options{size} 
 			name=$$options{name} 
 			value="$$options{value}" 
 			onFocus="q_is_focused = true" 
 			onBlur="q_is_focused = false"
+			$accesskey
 		>
 EOH
 
@@ -1132,17 +1157,21 @@ sub draw_toolbar_pager {
 		}
 
 		if ($options -> {back_url}) {
-			$html .= qq {&nbsp;<a TABINDEX=-1 href="$$options{back_url}" class=lnk0 id="_pager_prev">&lt;</a>&nbsp;&nbsp;};
+			$html .= qq {&nbsp;<a TABINDEX=-1 href="$$options{back_url}" class=lnk0 id="_pager_prev" accesskey="7">&lt;</a>&nbsp;&nbsp;};
 		}
 
-		$html .= ($options -> {start} + 1);
-		$html .= ' - ';
-		$html .= ($options -> {start} + $options -> {cnt});
-#		$html .= qq |$$i18n{toolbar_pager_of}<a TABINDEX=-1 class=lnk0 href="$$options{infty_url}">$$options{infty_label}</a>|;
-		$html .= qq |$$i18n{toolbar_pager_of}$$options{infty_label}|;
+#		$html .= ($options -> {start} + 1);
+#		$html .= ' - ';
+#		$html .= ($options -> {start} + $options -> {cnt});
+##		$html .= qq |$$i18n{toolbar_pager_of}<a TABINDEX=-1 class=lnk0 href="$$options{infty_url}">$$options{infty_label}</a>|;
+#		$html .= qq |$$i18n{toolbar_pager_of}$$options{infty_label}|;
+
+		$html .= ($options -> {start} / $options -> {cnt} + 1);
+#		my $count = $options -> {infty_label} eq $i18n -> {infty} ? $i18n -> {infty} : int($options -> {infty_label} / $options -> {cnt}) + 1;
+#		$html .= "/$count";
 
 		if ($options -> {next_url}) {
-			$html .= qq {&nbsp;<a TABINDEX=-1 href="$$options{next_url}" class=lnk0 id="_pager_next">&gt;</a>&nbsp;&nbsp;};
+			$html .= qq {&nbsp;<a TABINDEX=-1 href="$$options{next_url}" class=lnk0 id="_pager_next" accesskey="9">&gt;</a>&nbsp;&nbsp;};
 		}
 
 	}
@@ -1161,9 +1190,14 @@ sub draw_toolbar_pager {
 sub draw_centered_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
-	
+
+	my $hotkey = '';
+	$hotkey = 1 if ($options -> {hotkey} -> {code} == 115 || ($options -> {hotkey} -> {code} == 13 && $options -> {hotkey} -> {ctrl}));
+	$hotkey = 3 if ($options -> {hotkey} -> {code} == 27);
+	my $accesskey = $hotkey ? 'accesskey="' . $hotkey . '"' : '';
+
 	my $html = <<EOH;
-		<td class="button" nowrap><a TABINDEX=-1 class=button href="$$options{href}" id="$$options{id}">
+		<td class="button" nowrap><a TABINDEX=-1 class=button href="$$options{href}" id="$$options{id}" $accesskey>
 EOH
 
 	my $img_path = "$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}";
@@ -1176,7 +1210,7 @@ EOH
 #			$$options{label} 
 	$html .= <<EOH;
 		</a></td>
-		<td><img height=15 vspace=1 hspace=4 src="$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}" width=2 border=0></td>
+		<td><img vspace=1 hspace=4 src="$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}" width=2 border=0></td>
 EOH
 
 	return $html;
@@ -1198,17 +1232,19 @@ sub draw_centered_toolbar {
 			<tr>
 				<td class=bgr8>
 					<table cellspacing=0 cellpadding=0 width="100%" border=0>
+<!--
 						<tr>
 							<td class=bgr0 colspan=$colspan><img height=1 src="/i/0.gif" width=1 border=0></td>
 						</tr>
 						<tr>
 							<td class=bgr6 colspan=$colspan><img height=1 src="/i/0.gif" width=1 border=0></td>
 						</tr>
+-->
 						<tr>
 							<td width="45%">
 								<table cellspacing=0 cellpadding=0 width="100%" border=0>
 									<tr>
-										<td _background="/i/toolbars/6ptbg.gif"><img height=17 hspace=0 src="/i/0.gif" width=1 border=0></td>
+										<td _background="/i/toolbars/6ptbg.gif"><img hspace=0 src="/i/0.gif" width=1 border=0></td>
 									</tr>
 								</table>
 							</td>
@@ -1223,18 +1259,20 @@ EOH
 							<td width="45%">
 								<table cellspacing=0 cellpadding=0 width="100%" border=0>
 									<tr>
-										<td _background="/i/toolbars/6ptbg.gif"><img height=17 hspace=0 src="/i/0.gif" width=1 border=0></td>
+										<td _background="/i/toolbars/6ptbg.gif"><img hspace=0 src="/i/0.gif" width=1 border=0></td>
 									</tr>
 								</table>
 							</td>
 							<td align=right><img height=23 src="/i/0.gif" width=4 border=0></td>
 						</tr>
+<!--
 						<tr>
 							<td class=bgr8 colspan=$colspan><img height=1 src="/i/0.gif" width=1 border=0></td>
 						</tr>
 						<tr>
 							<td class=bgr6 colspan=$colspan><img height=1 src="/i/0.gif" width=1 border=0></td>
 						</tr>
+-->
 					</table>
 				</td>
 			</tr>
@@ -1264,9 +1302,11 @@ sub draw_menu {
 	my $html = <<EOH;
 
 		<table width="100%" class=bgr8 cellspacing=0 cellpadding=0 border=0>
+<!--
 			<tr>
 				<td class=bgr8 colspan=3 width=100%><img height=2 src="/i/0.gif" width=1 border=0></td>
 			<tr>
+-->
 			<tr>
 				<td class=bgr1>
 					<select
@@ -1296,12 +1336,14 @@ sub draw_menu {
 					</select>
 				</td>
 			</tr>
+<!--
 			<tr>
 				<td class=bgr8 colspan=3 width=100%><img height=2 src="/i/0.gif" width=1 border=0></td>
 			<tr>
 				<td class=bgr6 colspan=3 width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>
 			<tr>
 				<td class=bgr0 colspan=3 width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>
+-->
 		</table>
 EOH
 
@@ -1809,6 +1851,7 @@ EOHELP
 					$$page{body}
 				</div>
 				<div id="slave_div" style="display:none; position:absolute; z-index:100" ></div>
+				<a href="#" accesskey="8">&nbsp;</a>
 			</body>
 		</html>
 EOH
