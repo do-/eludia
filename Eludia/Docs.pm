@@ -604,11 +604,11 @@ our $charset = {
 		label_ru => "Ссылка на список, содержащий описания подэлементов",
 	},
 
-	{
-		name     => 'src',
-		label_en => "Value of SRC attribute of IMG tag (image URL)",
-		label_ru => "Значение атрибута SRC тега IMG (адрес изображения)",
-	},
+#	{
+#		name     => 'src',
+#		label_en => "Value of SRC attribute of IMG tag (image URL)",
+#		label_ru => "Значение атрибута SRC тега IMG (адрес изображения)",
+#	},
 
 	{
 		name     => 'add_columns',
@@ -720,8 +720,17 @@ our $charset = {
 
 	{
 		name     => 'position',
-		label_en => "Position of the totals line in the recordset.",
 		label_ru => "Номер строки итогов в выборке.",
+	},
+
+	{
+		name     => 'fields',
+		label_ru => "Список полей, по которым осуществляется группировка и вычисляются промежуточные итоги",
+	},
+
+	{
+		name     => 'no_sum',
+		label_ru => "Список числовых полей, для которых промежуточные суммы не вычисляются",
 	},
 
 	{
@@ -742,11 +751,62 @@ our $charset = {
 		label_ru => "При перенаравлении типа 'js' эта опция исполняется как JavaScript на клиенте до перенаправления",
 	},
 
+	{
+		name     => 'src',
+		label_ru => "Ссылка на мультимедиа-файл",
+	},
+
+	{
+		name     => 'autostart',
+		label_ru => "Если true, то воспроизведение автоматически запускается при загрузке страницы",
+	},
+
+	{
+		name     => 'src_type',
+		label_ru => "MIME-тип мультимедийного содержимого",
+	},
+
+
 );
 
 ################################################################################
 
 @subs = (
+
+					#######################################
+
+	{
+		name     => 'fake_select',
+		syn      => <<EO,
+
+
+	top_toolbar => [{},
+	
+		fake_select (),
+	
+	],
+	
+EO
+		label_ru => 'Стандартный переключатель статусов для верхней панели таблицы',
+		see_also => [qw(draw_table)],
+	},
+
+					#######################################
+
+	{
+		name     => 'del',
+		syn      => <<EO,
+	
+	...
+	
+	right_buttons => [del (\$data)];
+	
+	...
+	
+EO
+		label_ru => 'Стандартная кнопка удаления/восстановления для нижней панели формы',
+		see_also => [qw(draw_form)],
+	},
 
 					#######################################
 
@@ -1378,8 +1438,30 @@ EO
 EO
 		label_en => 'Internal sub loading the last version of the given module.',
 		label_ru => 'Внутренняя процедура загрузки последней версии требуемого модуля.',
-#		see_also => [qw(hotkey)],
+		see_also => [qw(require_content get_item_of_)],
 	},
+					#######################################
+
+	{
+		name     => 'require_content',
+		syn      => <<EO,		
+			require_content 'users';
+EO
+		label_ru => 'Загрузка последней версии Content-модуля данного типа',
+		see_also => [qw(require_fresh)],
+	},
+
+					#######################################
+
+	{
+		name     => 'get_item_of_',
+		syn      => <<EO,		
+			my \$user = get_item_of_ 'users';
+EO
+		label_ru => 'Загрузка последней версии Content-модуля данного типа и выполнение get-процедуры для него',
+		see_also => [qw(require_fresh require_content)],
+	},
+
 
 					#######################################
 
@@ -1753,13 +1835,28 @@ EO
 
 	{
 		name     => 'add_totals',
-		options  => [qw(position)],
+		options  => [qw(position fields no_sum)],
 		syn      => <<EO,
+		
 	add_totals ($statistics_data, {position => 0});
+
+	my $cnt_extra_lines = add_totals ($statistics_data, {
+	
+		fields => [
+			{name => 'id_region', top => 1, bottom => 1},
+			{name => 'id_city',             bottom => 1},
+		],
+		
+		no_sum => 'inn,kpp',
+		
+	});
+	
 EO
-		label_en => 'Adds a totals line (sums only) in the given recordeset (arrayref of hashrefs)',
-		label_ru => 'Добавляет строку итогов (суммы всех полей) в заданную выборку (список ссылок на хэши)',
+
+		label_ru => 'Добавляет строки итогов (суммы всех полей) в заданную выборку (список ссылок на хэши)',
+
 		see_also => [qw(draw_text_cell draw_text_cells)],
+
 	},
 
 					#######################################
@@ -2661,6 +2758,7 @@ EO
 		label_ru => 'Запрос на peer-сервер с заданными параметрами. Ответ передаётся в STDOUT через буфер ограниченного объёма.',
 		see_also => [qw(peer_query)]
 	},
+
 					#######################################
 
 	{
@@ -2672,6 +2770,34 @@ EO
 	}),
 EO
 		label_ru => 'Запрос на peer-сервер, наследующий параметры текущего запроса. Ответ возвращается в виде Perl-скаляра, как правило, ссылки на хэш.',
+		see_also => [qw(peer_get peer_proxy)]
+	},
+
+					#######################################
+
+	{
+		name     => 'peer_get',
+		options  => [qw(files)],
+		syn      => <<EO,	
+	my \$data = peer_get (PORTAL, {
+		__adendum  => 'Hello from localhost...',
+	}),
+EO
+		label_ru => 'Запрос на peer-сервер для извлечения объекта данных. Отличается от peer_query тем, что передаёт обратно значение $_REQUEST {__read_only} и может использоваться при $_REQUEST {xls} (на удалённом сервере не инициируется поточный ответ)',
+		see_also => [qw(peer_query)]
+	},
+					
+					#######################################
+
+	{
+		name     => 'peer_execute',
+		options  => [qw(files)],
+		syn      => <<EO,	
+	my \$data = peer_execute (PORTAL, {
+		__adendum  => 'Hello from localhost...',
+	}),
+EO
+		label_ru => 'Запрос на peer-сервер для изменения данных. Отличается от peer_query тем, что передаёт обратно значение $_REQUEST {error} и производит корректный redirect.',
 		see_also => [qw(peer_query)]
 	},
 
@@ -2988,6 +3114,21 @@ EO
 		label_ru => 'Отрисовывает клетку таблицы с радио-кнопкой.',
 		see_also => [qw(draw_table)]
 	},
+					#######################################
+
+	{
+		name     => 'draw_embed_cell',
+		options  => [qw(src src_type/audio/mpeg autostart/false height/45)],
+		syn      => <<EO,	
+
+	draw_embed_cell ({
+		src => '/i/audio/0012.mp3',
+	})
+EO
+		label_ru => 'Отрисовывает клетку таблицы с multimedia-файлом.',
+		see_also => [qw(draw_table)]
+	},
+
 
 					#######################################
 
@@ -3105,13 +3246,16 @@ EO
 			'..'    => 1,
 			name    => 'form_phones',
 			toolbar => draw_ok_esc_toolbar (),
+			top_toolbar => [ {},
+				fake_select (),
+			],
 		}		
 	
 	)
 EO
 		label_en => 'Draws the data table with the given headers, callback sub and data array. Data are passed to the callback sub through the global variable $i.',
 		label_ru => 'Отрисовывает таблицу данных с заданными заголовками, callback-процедурой и массивом данных. Данные передаются в callback-процедуру через глобальную переменную $i.',
-		see_also => [qw(draw_text_cells draw_text_cell draw_input_cell draw_checkbox_cell draw_row_button draw_row_buttons draw_table_header)]
+		see_also => [qw(draw_text_cells draw_text_cell draw_input_cell draw_checkbox_cell draw_row_button draw_row_buttons draw_table_header draw_embed_cell fake_select)]
 	},
 
 					#######################################
@@ -3328,6 +3472,11 @@ EO
 );
 
 our @conf = (
+
+	{
+		name     => 'classic_menu_style',
+		label_ru => "Если истина, то Skins::Classic отрисовывает меню в 'старом' стиле: раскрытие не onhover, а onclick",
+	},
 
 	{
 		name     => 'precision',
@@ -4143,7 +4292,7 @@ sub generate_docbook_subs {
 
 	print O <<EOX;
 <?xml version="1.0" encoding="windows-1251"?>
-<appendix>
+<appendix id="api">
 	<title>Процедуры API <productname>Eludia.pm</productname></title>
 EOX
 
@@ -4176,7 +4325,8 @@ EOX
 
 		my $options = '';
 		foreach my $o (@{$s -> {options}}) {
-			my ($name, $default) = split /\//, $o;
+			my ($name, @default) = split /\//, $o;
+			my $default = join '/', @default;
 #			$default ||= '&nbsp;'; #!!!
 			my ($o_def) = grep {$_ -> {name} eq $name} @options;
 			$o_def or die "Option not defined: $name.\n";
@@ -4335,7 +4485,7 @@ EOX
 EOX
 
 	my @subs_in_eludia = subs_in 'Eludia';
-	my %imported_subs = map {$_ => 1} (qw (OK GET HEAD LOCK_EX LOCK_NB LOCK_SH LOCK_UN POST PUT), map {subs_in $_} qw(Data::Dumper URI::Escape HTTP::Date MIME::Base64 Time::HiRes Storable));
+	my %imported_subs = map {$_ => 1} (qw (OK GET HEAD LOCK_EX LOCK_NB LOCK_SH LOCK_UN POST PUT MP2), map {subs_in $_} qw(Data::Dumper URI::Escape HTTP::Date MIME::Base64 Time::HiRes Storable File::Copy File::Find));
 	my %internal_subs = map {$_ => 1} (qw (
 		_adjust_row_cell_style
 		draw_table_header_cell
@@ -4355,6 +4505,11 @@ EOX
 		sql_weave_model
 		svn_status
 		vld_noref
+		svn_path
+		select_subset
+		is_recyclable
+		assert_fake_key
+		order_cells
 	));
 	my %documented_subs = map {$_ -> {name} => 1} @subs;
 	my @undocumented_subs = grep {!/_DEFAULT$/ && !exists $imported_subs {$_} && !exists $internal_subs {$_} && !exists $documented_subs {$_} && !/__/} @subs_in_eludia;
