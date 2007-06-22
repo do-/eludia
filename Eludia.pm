@@ -35,8 +35,8 @@ BEGIN {
   
 	$Data::Dumper::Sortkeys = 1;
 
-	$Eludia_VERSION      = $Eludia::VERSION      = '07.06.15';
-	$Eludia_VERSION_NAME = $Eludia::VERSION_NAME = 'Cleanup';
+	$Eludia_VERSION      = $Eludia::VERSION      = '07.06.22';
+	$Eludia_VERSION_NAME = $Eludia::VERSION_NAME = 'Logon';
 		
 	eval {
 		require Math::FixedPrecision;
@@ -250,18 +250,76 @@ BEGIN {
 
 =head1 NAME
 
-Eludia.pm - a ready-to-use WEB application framework. 
+Eludia.pm - a framework for rapid (~5 min for trivial CRUD; ~1 h for average complex screen) development and comfortable maintenance of large scale (hundreds of dialog screens) mission critical WEB applications. 
 
-=head1 DESCRIPTION
+=head1 FEATURES
 
-Eludia.pm let you develop sophisticated WEB applications quickly and maintain it easy. A good DHTML (or call it AJAX) widget set is available just out-of-the-box. 
+=over 1
 
-Eludia.pm is fairly well documented (honest!), but (we really, really sorry) only in Russian. Please visit http://dev.eludia.ru/docs.
+=item *
+
+active DB model: tables are created and altered automatically according to a textual schema definition;
+
+=item *
+
+one shot autoexec scripts making it possible to deploy application updates by simply copying new files;
+
+=item *
+
+rich DHTML (or call it AJAX) widget set available just out-of-the-box;
+
+=item *
+
+i18n with Russian, French and English bootstrap dictionnaries;
+
+=item *
+
+complex server side data validation made easy;
+
+=item *
+
+default handlers for basic CRUD actions;
+
+=item *
+
+automatic support for delete/undelete and merge/unmerge operations;
+
+=item *
+
+transparent logging of all user actions (with parameter values);
+
+=item *
+
+per-session access logging and smart ESC button (like BACK, but works well with data being edited);
+
+=item *
+
+built-in automaintenance tools;
+
+and some more...
+
+=back
+
+=head1 APOLOGIES
+
+Using Eludia.pm requires some learning. We are unable to cite here a short synopsis suitable for copying / pasting and running. Ten lines will show nothing, and for structured content we prefer DocBook to POD. Thank you for understanding.
+
+We wrote an application developer manual. It is ~400K of DocBook sources, ~2M PDF, ~1.2M HTML Help, online version is of course available. An illustrated step-by-step crash course for newbies is included.
+
+But, sorry, we are really sorry, it is in Russian only. We know, some people consider this insulting, but, honest, we force nobody to study our language. Writing such a manual en English is not easier to us than learning Russian to you.
+
+Having said that, we humbly invite all Russian-speaking Perl WEB developpers to visit L<http://dev.eludia.ru/docs>.
+
+=head1 DISCLAIMER
+
+The authors of Eludia.pm DOES NOT follow certain rules widely considered as "good style" attributes. We DO NOT recommend using Eludia.pm to any person who believe that formal accordance with these rules come first to factual quality and performance. NOR we beg from people who obviously will never use our software for exploring and "assessing" it.
 
 =back
 
 =head1 AUTHORS
 
-Dmitry Ovsyanko
+Dmitry Ovsyanko, <'do_' -- like this, with a trailing underscore -- at 'pochta.ru'>
+
 Pavel Kudryavtzev
+
 Roman Lobzin
