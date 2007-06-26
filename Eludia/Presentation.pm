@@ -2377,6 +2377,7 @@ sub draw_cells {
 			($cell -> {type} eq 'checkbox' || exists $cell -> {checked}) ? draw_checkbox_cell ($cell, $options) :
 			($cell -> {type} eq 'button'   || $cell -> {icon}) ? draw_row_button ($cell, $options) :		
 			$cell  -> {type} eq 'input'    ? draw_input_cell  ($cell, $options) :
+			$cell  -> {type} eq 'textarea' ? draw_textarea_cell  ($cell, $options) :
 			$cell  -> {type} eq 'select'   ? draw_select_cell ($cell, $options) :
 			$cell  -> {type} eq 'embed'    ? draw_embed_cell ($cell, $options) :
 			draw_text_cell ($cell, $options);
@@ -2583,6 +2584,30 @@ sub draw_input_cell {
 	check_title ($data);
 		
 	return $_SKIN -> draw_input_cell ($data, $options);
+
+}
+
+################################################################################
+
+sub draw_textarea_cell {
+
+	my ($data, $options) = @_;
+	
+	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit}) || $data -> {read_only} || $data -> {off};
+
+	$data -> {rows} ||= 3;
+	$data -> {cols} ||= 80;
+
+	$data -> {attributes} ||= {};
+	$data -> {attributes} -> {class} ||= 'row-cell';
+	
+	_adjust_row_cell_style ($data, $options);
+						
+	$data -> {label} ||= '';
+			
+	check_title ($data);
+		
+	return $_SKIN -> draw_textarea_cell ($data, $options);
 
 }
 

@@ -1680,6 +1680,18 @@ sub draw_input_cell {
 
 ################################################################################
 
+sub draw_textarea_cell {
+
+	my ($_SKIN, $data, $options) = @_;
+
+	my $attributes = dump_attributes ($data -> {attributes});
+
+	return qq {<td $$data{title} $attributes><textarea $attributes rows=$$data{rows} cols=$$data{cols} onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" name="$$data{name}">$$data{label}</textarea></td>};
+
+}
+
+################################################################################
+
 sub draw_embed_cell {
 
 	my ($_SKIN, $data, $options) = @_;
