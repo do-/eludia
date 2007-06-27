@@ -16,7 +16,6 @@ use Number::Format;
 use Time::HiRes 'time';
 use URI::Escape;
 use Storable;
-use Net::SMTP;
 #use Math::FixedPrecision;
 
 use constant MP2 => ( exists $ENV{MOD_PERL_API_VERSION} and 
