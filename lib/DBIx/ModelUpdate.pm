@@ -103,7 +103,7 @@ sub checksum {
 
 sub assert {
 
-warn Dumper (\@_);
+#warn Dumper (\@_);
 
 	my ($self, %params) = @_;
 	
