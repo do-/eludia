@@ -1806,7 +1806,7 @@ sub select__sync {
 	
 	foreach ($db -> tables) {
 
-		s{\W}{}gsm;
+		s{.*?(\w+)\W*$}{$1}gsm;
 		
 		push @tables, {
 			id    => $_,
