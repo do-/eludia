@@ -46,10 +46,15 @@ sub draw_auth_toolbar {
 sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
+
+	return '' if ($_REQUEST {__no_window_title});
+
 	$r -> print (<<EOH);
 		<p style="font-family:Arial;font-size:12pt"><b><i>$$options{label}</i></b></p>
 EOH
+
 	return '';
+
 }
 
 ################################################################################
@@ -633,6 +638,7 @@ sub start_page {
 				$_REQUEST{_xml}
 				</head>
 				<body bgcolor=white leftMargin=0 topMargin=0 marginwidth="0" marginheight="0">
+$_REQUEST{__before_xls}
 EOH
 
 }
@@ -642,7 +648,10 @@ EOH
 sub draw_page {
 
 	my ($_SKIN, $page) = @_;
-	$r -> print ('</body></html>');
+	$r -> print (<<EOH);
+$_REQUEST{__after_xls}
+</body></html>
+EOH
 
 }
 
