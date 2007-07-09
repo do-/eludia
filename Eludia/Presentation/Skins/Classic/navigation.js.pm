@@ -184,7 +184,7 @@ function initialize_controls (no_focus, pack, focused_input, blur_all, _scrollab
 
 	if (blur_all) {
 		var currObj = document.activeElement;
-		if (currObj && currObj.tagName == 'INPUT')
+		if (currObj && (currObj.tagName == 'INPUT' || currObj.tagName == 'TEXTAREA'))
 			currObj.blur ()
 	}
 		
@@ -456,22 +456,8 @@ function menuItemOut () {
 	timer = setTimeout('hideSubMenus(0)',delay);
 }
 
-function setVisible (id, isVisible, markSublevel) { 
+function setVisible (id, isVisible) { 
 	document.getElementById (id).style.display = isVisible ? 'block' : 'none'
-	if (markSublevel && isVisible) {
-		var els = document.getElementById (id).children;
-		var hasChecked = false;
-		for (i = 0; i < els.length; i++) {
-			if (els[i].checked) {
-				hasChecked = true;
-			}
-		}
-		if (!hasChecked) {
-			for (i = 0; i < els.length; i++) {
-				els[i].checked = true;
-			}
-		}
-	}
 };
 
 function restoreSelectVisibility (name, rewind) {
@@ -512,7 +498,7 @@ function setSelectOption (name, id, label) {
 
 function blur_all_inputs () {
 	var currObj = document.activeElement;
-	if (currObj && currObj.tagName == 'INPUT') {
+	if (currObj && (currObj.tagName == 'INPUT' || currObj.tagName == 'TEXTAREA')) {
 		currObj.blur ()
 		return 0;
 	} else 
@@ -578,7 +564,7 @@ function handle_basic_navigation_keys () {
 	var target = window.event.srcElement;
 
 	if (keyCode == 8) {
-		if (target.type && target.type == 'text')
+		if (target.type && (target.type == 'text' || target.tagName == 'TEXTAREA'))
 			return; 
 		 
 		typeAheadInfo.accumString = "";
