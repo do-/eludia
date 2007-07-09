@@ -458,7 +458,7 @@ function menuItemOut () {
 
 function setVisible (id, isVisible, markSublevel) { 
 	document.getElementById (id).style.display = isVisible ? 'block' : 'none'
-	if (markSublevel) {
+	if (markSublevel && isVisible) {
 		var els = document.getElementById (id).children;
 		var hasChecked = false;
 		for (i = 0; i < els.length; i++) {
