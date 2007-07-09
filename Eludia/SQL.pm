@@ -423,7 +423,7 @@ sub sql_select_vocabulary {
 
 	my ($table_name, $options) = @_;	
 	
-	$options -> {order} ||= 'label';
+	$options -> {order} ||= '2';
 	
 	my $filter = '1=1';
 	my $limit  = '';
@@ -460,8 +460,14 @@ sub sql_select_vocabulary {
 	}
 	
 	$limit = "LIMIT $options->{limit}" if $options -> {limit};
-	
-	return sql_select_all ("SELECT id, label FROM $table_name WHERE $filter ORDER BY $$options{order} $limit");
+
+	$options -> {label} ||= 'label';
+	if ($options -> {label} ne 'label') {
+		$options -> {label} =~ s/ AS.*//i;
+		$options -> {label} .= ' AS label';
+	}
+		
+	return sql_select_all ("SELECT id, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit");
 	
 }
 
