@@ -13,9 +13,12 @@ BEGIN {
 	$fn =~ s{/lib/.*}{};
 	$fn =~ s{\\lib\\.*}{};
 	
-	$PACKAGE_ROOT = [$fn . '/lib/' . __PACKAGE__ . '/'];
+	my $package = -e $fn . '/lib/' . __PACKAGE__ ? __PACKAGE__ : '';
+
+	$PACKAGE_ROOT = [$fn . '/lib/' . $package . '/'];
 	
-	my $config_path = $fn . '/lib/' . __PACKAGE__ . '/Config.pm';
+	my $config_path = $fn . '/lib/' . $package . '/Config.pm';
+	
 	
 	push @INC, $PACKAGE_ROOT;
 	
