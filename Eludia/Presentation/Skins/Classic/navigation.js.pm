@@ -456,8 +456,22 @@ function menuItemOut () {
 	timer = setTimeout('hideSubMenus(0)',delay);
 }
 
-function setVisible (id, isVisible) { 
+function setVisible (id, isVisible, markSublevel) { 
 	document.getElementById (id).style.display = isVisible ? 'block' : 'none'
+	if (markSublevel) {
+		var els = document.getElementById (id).children;
+		var hasChecked = false;
+		for (i = 0; i < els.length; i++) {
+			if (els[i].checked) {
+				hasChecked = true;
+			}
+		}
+		if (!hasChecked) {
+			for (i = 0; i < els.length; i++) {
+				els[i].checked = true;
+			}
+		}
+	}
 };
 
 function restoreSelectVisibility (name, rewind) {

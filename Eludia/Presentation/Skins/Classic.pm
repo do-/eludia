@@ -799,7 +799,7 @@ sub draw_form_field_checkboxes {
 				$subhtml .= $value -> {html};
 				$subhtml .= $value -> {inline} ? qq{</span>} : '';
 				
-				$subattr = qq{onClick="setVisible('$id', checked)"} unless $options -> {expand_all};
+				$subattr = qq{onClick="setVisible('$id', checked, '$$options{mark_sublevel}')"} unless $options -> {expand_all};
 				
 			}
 			elsif ($value -> {items} && @{$value -> {items}} > 0) {
@@ -821,7 +821,7 @@ sub draw_form_field_checkboxes {
 					</div>
 EOH
 			
-				$subattr = qq{onClick="setVisible('$id', checked)"} unless $options -> {expand_all};
+				$subattr = qq{onClick="setVisible('$id', checked, '$$options{mark_sublevel}')"} unless $options -> {expand_all};
 			
 			}
 		
