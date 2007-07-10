@@ -30,6 +30,9 @@ sub register_hotkey {
 
 sub draw_hr {
 	my ($_SKIN, $options) = @_;
+
+	return '' if ($_REQUEST {__no_draw_hr});
+
 	$r -> print ('<p>&nbsp;</p>');
 	return '';
 }
@@ -47,7 +50,7 @@ sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
 
-	return '' if ($_REQUEST {__no_window_title});
+	return '' if ($_REQUEST {__no_draw_window_title});
 
 	$r -> print (<<EOH);
 		<p style="font-family:Arial;font-size:12pt"><b><i>$$options{label}</i></b></p>
