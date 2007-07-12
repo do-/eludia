@@ -1899,7 +1899,7 @@ EOH
 	if ($page -> {error_field}) {
 		$html .= <<EOJ;
 			var e = window.parent.document.getElementsByName('$page->{error_field}'); 
-			if (e && e[0]) { e[0].focus () }				
+			if (e && e[0]) { try {e[0].focus ()} catch (e) {} }				
 EOJ
 	}
 
