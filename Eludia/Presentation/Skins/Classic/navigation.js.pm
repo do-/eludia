@@ -458,6 +458,20 @@ function menuItemOut () {
 
 function setVisible (id, isVisible) { 
 	document.getElementById (id).style.display = isVisible ? 'block' : 'none'
+        if (markSublevel && isVisible) {
+                var els = document.getElementById (id).children;
+                var hasChecked = false;
+                for (i = 0; i < els.length; i++) {
+                        if (els[i].checked) {
+                                hasChecked = true;
+                        }
+                }
+                if (!hasChecked) {
+                        for (i = 0; i < els.length; i++) {
+                                els[i].checked = true;
+                        }
+                }
+        }
 };
 
 function restoreSelectVisibility (name, rewind) {
