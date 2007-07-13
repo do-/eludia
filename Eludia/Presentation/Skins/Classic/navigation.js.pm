@@ -456,7 +456,7 @@ function menuItemOut () {
 	timer = setTimeout('hideSubMenus(0)',delay);
 }
 
-function setVisible (id, isVisible) { 
+function setVisible (id, isVisible, markSublevel) { 
 	document.getElementById (id).style.display = isVisible ? 'block' : 'none'
         if (markSublevel && isVisible) {
                 var els = document.getElementById (id).children;
