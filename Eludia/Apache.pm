@@ -458,7 +458,10 @@ EOH
    
 #   	$db -> disconnect;
 
-	CORE::exit (0) if $_REQUEST {__sucide};
+	if ($_REQUEST {__suicide}) {
+		$r -> print (' ' x 8096);
+		CORE::exit (0);
+	}
 	
 	return OK;
 

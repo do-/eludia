@@ -3,6 +3,7 @@ WriteMakefile(
     'NAME'		=> 'Eludia',
     'VERSION_FROM'	=> 'Eludia.pm',
     'PREREQ_PM'		=> {
+	'Net::SMTP'		=> '',
 	'Apache'		=> '',
 	'DBI'			=> '1.21',
 	'Number::Format'	=> '1.45',
