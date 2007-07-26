@@ -133,6 +133,89 @@ sub vld_inn_10 {
 
 ################################################################################
 
+sub vld_inn_12 {
+
+	my ($name, $nullable) = @_;
+	
+	$name = "_" . $name;
+
+	if (!$_REQUEST {$name} && $nullable) {
+		delete $_REQUEST {$name};
+		return undef;
+	}
+	
+	local $SIG {__DIE__} = 'DEFAULT';
+
+	$_REQUEST {$name} =~ /^\d{12}$/ or die "#$name#:Код ИНН должен состоять из 12 арабских цифр";
+	
+	my @n = split //, $_REQUEST {$name};
+		
+	my $checksum =
+		$n [0]  * 7  +
+		$n [1]  * 2  +
+		$n [2]  * 4  +
+		$n [3]  * 10 +
+		$n [4]  * 3  +
+		$n [5]  * 5  +
+		$n [6]  * 9  +
+		$n [7]  * 4  +
+		$n [8]  * 6  +
+		$n [9]  * 8  +
+		0;
+				
+	$checksum = $checksum % 11;
+	$checksum = 0 if $checksum > 9;
+			
+	$checksum == 0 + substr ($_REQUEST {$name}, -2, 1) or die "#$name#:Не сходится первая контрольная сумма ИНН";
+		
+	my $checksum =
+		$n [0]  * 3  +
+		$n [1]  * 7  +
+		$n [2]  * 2  +
+		$n [3]  * 4  +
+		$n [4]  * 10 +
+		$n [5]  * 3  +
+		$n [6]  * 5  +
+		$n [7]  * 9  +
+		$n [8]  * 4  +
+		$n [9]  * 6  +
+		$n [10] * 8  +
+		0;
+				
+	$checksum = $checksum % 11;
+	$checksum = 0 if $checksum > 9;
+			
+	$checksum == 0 + substr ($_REQUEST {$name}, -1, 1) or die "#$name#:Не сходится вторая контрольная сумма ИНН";
+
+	return undef;
+
+}
+
+################################################################################
+
+sub vld_inn {
+
+	my ($name, $nullable) = @_;
+	
+	my $name1 = '_' . $name;
+
+	if (!$_REQUEST {$name1} && $nullable) {
+		delete $_REQUEST {$name1};
+		return undef;
+	}
+
+    if (length $_REQUEST {$name1} == 10) {
+		return vld_inn_10 ($name);
+	} elsif (length $_REQUEST {$name1} == 12) {
+		return vld_inn_12 ($name);
+	} else {
+		return "#$name1#:ИНН должен состоять либо из 10, либо из 12 цифр";
+	}
+
+}
+
+################################################################################
+
 sub vld_okpo {
 
 	my ($name, $nullable) = @_;
