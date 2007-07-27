@@ -141,13 +141,21 @@ sub create_url {
 
 sub hrefs {
 
-	my ($order) = @_;
+	my ($order, $kind) = @_;
 	
-	return $order ? (
-		href      => create_url (order => $order, desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
-		href_asc  => create_url (order => $order, desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
-		href_desc => create_url (order => $order, desc => 1, __last_last_query_string => $_REQUEST {__last_last_query_string}),
-	) : ();
+	return $order ?
+		$kind == 1 ?
+			(
+				href      => create_url (order => $order, desc => $order eq $_REQUEST {order} ? 1 - $_REQUEST {desc} : 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+			)
+		:	
+			(
+				href      => create_url (order => $order, desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+				href_asc  => create_url (order => $order, desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+				href_desc => create_url (order => $order, desc => 1, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+			)
+	:
+		();
 	
 }
 
