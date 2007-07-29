@@ -1096,8 +1096,12 @@ sub draw_toolbar_input_select {
 		$html .= ': ';
 	}
 	
+	my $name = $$options{name};
+	
+	$name = "_$name" if defined $options -> {other};
+	
 	$html .= <<EOH;
-		<select name="$$options{name}" onChange="submit()" onkeypress="typeAhead()" style="visibility:expression(last_vert_menu && last_vert_menu [0] ? 'hidden' : '')">
+		<select name="$name" id="${name}_select" onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression(last_vert_menu && last_vert_menu [0] ? 'hidden' : '')">
 EOH
 
 	if (defined $options -> {empty}) {
@@ -1110,7 +1114,89 @@ EOH
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>};
 	}
 
-	$html .= "</select><td><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
+
+
+
+
+
+	if (defined $options -> {other}) {
+		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
+	}
+
+	$html .= '</select>';
+
+	my $width;
+	if (defined $options -> {other} -> {width}) {
+		$width = "${$$options{other}}{width}";
+#	} elsif (defined $options -> {other} -> {left}) {
+#		$width = "expression(this.offsetParent.offsetWidth)"; 
+#	} else {
+#		$width = "expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)";
+	}
+	if (defined $options -> {other}) {
+		$html .= <<EOH;
+			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:$width}">
+				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="/i/0.html" application="yes">
+				</iframe>
+			</div>
+EOH
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	$html .= "<td><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	return $html;
 	
