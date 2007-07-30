@@ -2026,15 +2026,15 @@ sub draw_page {
 			<script>
 				function main () {
 					
-					var element = window.parent.document.forms ['$_REQUEST{__only_form}'].elements ['_$_REQUEST{__only_field}'];
-					
+					var element = window.parent.document.getElementById ('input_$_REQUEST{__only_field}');
+				
 					if (element) {
 						element.outerHTML = "$page->{body}";
-						element.tabIndex = "$_REQUEST{__only_tabindex}";
 					}
 					else {
-						element = window.parent.document.getElementById ('input_$_REQUEST{__only_field}');
+						element = window.parent.document.forms ['$_REQUEST{__only_form}'].elements ['_$_REQUEST{__only_field}'];
 						element.outerHTML = "$page->{body}";
+						element.tabIndex = "$_REQUEST{__only_tabindex}";
 					}
 					
 				}
