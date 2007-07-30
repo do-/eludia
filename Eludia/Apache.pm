@@ -72,7 +72,7 @@ sub handler {
 
 	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;
 	if ($_REQUEST {fake}) {
-    	    $_REQUEST {fake} =~ s/\%(25)*2c/,/i;
+    	    $_REQUEST {fake} =~ s/\%(25)*2c/,/ig;
 	}
 
 	if ($_REQUEST {action}) {
