@@ -1404,6 +1404,62 @@ sub draw_form_field_radio {
 		$value -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
 		$value -> {attributes} -> {checked} = 1 if $data -> {$options -> {name}} == $value -> {id};
 					
+		if (defined $options -> {detail}) {
+
+			ref $options -> {detail} eq ARRAY or $options -> {detail} = [$options -> {detail}];
+
+			foreach my $detail_ (@{$options -> {detail}}) {
+
+				my $codetails;
+				if (ref $detail eq HASH) {
+					($detail, $codetails) = each (%{$detail_}); 
+				} else {
+					$detail = $detail_;
+				}
+				my $codetail_js;
+				if (defined $codetails) {
+					ref $codetails eq ARRAY or $codetails = [$codetails];
+					foreach my $codetail (@{$codetails}) {
+						$codetail_js .= <<EOS
+						'&_$codetail=' +
+						document.getElementById('_${codetail}_select').options[document.getElementById('_${codetail}_select').selectedIndex].value +  
+EOS
+					}
+				}
+ 
+				my $h = {href => {}};
+
+				check_href ($h);
+
+				my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_field=${detail}&__only_form=' + this.form.name + '&_$$options{name}=' + this.options[this.selectedIndex].value);" : <<EOS;
+					activate_link (
+
+						'$$h{href}&__only_field=${detail}&__only_form=' + 
+						this.form.name + 
+						'&_$$options{name}=' + 
+						this.value + 
+$codetail_js
+						tab
+
+						, 'invisible_${detail}'
+
+					);
+
+EOS
+
+				$value -> {onclick} .= <<EOJS;
+
+					var element = this.form.elements['_${detail}'];
+					
+					var tab = element ? '&__only_tabindex=' + element.tabIndex : '';
+					
+$onchange
+
+EOJS
+	
+ 			}
+		}
+
 		$value -> {type} ||= 'select' if $value -> {values};		
 		$value -> {type} or next;
 			
@@ -1413,7 +1469,11 @@ sub draw_form_field_radio {
 		delete $value -> {attributes} -> {class};
 						
 	}
-			
+
+	foreach my $detail (@{$options -> {detail}}) {
+		push @{$_REQUEST{__invisibles}}, 'invisible_' . $detail;
+	}
+
 	return $_SKIN -> draw_form_field_radio (@_);
 	
 }
