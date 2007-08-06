@@ -115,14 +115,14 @@ EOH
 EOH
 				
 				}
-				else {
+#				else {
 				
 					my $class = $i == @{$_SKIN -> {subset} -> {items}} - 1 ? 'mm0' : 'mm';
 
 					$subset_div .= <<EOH;
-						<tr><td class="$class"><a href="$href&__subset=$$item{name}">$$item{label}</a></td></tr>
+						<tr @{[$item -> {name} eq $_SKIN -> {subset} -> {name} ? 'style="display: none"' : '']} id="_subset_tr_$$item{name}"><td class="$class"><a id="_subset_a_$$item{name}" onClick="subset_on_change('$$item{name}', '$href&__subset=$$item{name}')" href="#">$$item{label}</a></td></tr>
 EOH
-				}
+#				}
 			
 			}
 			
@@ -1862,6 +1862,8 @@ EOH
 	
 	$_REQUEST {__select_rows} += 0;
 							
+  my $parameters = ${$_PACKAGE . 'apr'} -> parms;
+
 	return <<EOH;
 		<html>		
 			<head>
@@ -2054,6 +2056,41 @@ EOF
 					
 					}
 					
+          function subset_on_change (subset_name, href) {
+          
+            var subset_tr_id = '_subset_tr_' + subset_name;
+            var subset_a_id = '_subset_a_' + subset_name;
+
+            var subset_tr = document.getElementById(subset_tr_id);
+
+            var subset_table = subset_tr.parentElement;
+            
+            for (var i = 0; i < subset_table.rows.length; i++) {
+              subset_table.rows(i).style.display = '';
+            }
+
+            subset_tr.style.display = 'none';
+
+            var subset_label_div = document.getElementById('admin');
+
+            var label = document.getElementById(subset_a_id).innerHTML; 
+
+            var subset_label = document.createTextNode(label);
+            
+            var subset_label_a = document.createElement("A");
+
+            subset_label_a.appendChild(subset_label);
+
+            subset_label_a.href = '#';
+
+            subset_label_div.replaceChild(subset_label_a, subset_label_div.firstChild);
+
+            var fname = document.getElementById('_body_iframe');
+            fname.src = href;
+
+            subsets_are_visible = 1 - subsets_are_visible;
+          }
+
 					
 				</script>
 				
@@ -2096,9 +2133,15 @@ EOHELP
 					<iframe name='$_' src="/i/0.html" width=0 height=0 application="yes" style="display:none">
 					</iframe>
 EOI
+@{[ !$_USER -> {id} ? $$page{auth_toolbar} . $page -> {body} : ($parameters -> {__subset} || $parameters -> {type}) ? $$page{menu} . $$page{body} : <<EOIFRAME ]}
 					$$page{auth_toolbar}
-					$$page{menu}
-					$$page{body}
+
+          <div id="body_iframe_div" _style='height:100%; padding:0px; margin:0px'>
+	 				  <iframe name='_body_iframe' id='_body_iframe' src="@{[ create_url() ]}" width=100% height=100% application="yes">
+	 				  </iframe>
+          </div>
+EOIFRAME
+
 				</div>				
 			</body>
 		</html>
