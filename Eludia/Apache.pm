@@ -275,6 +275,8 @@ EOH
 			$_SUBSET -> {name} ||= $_SUBSET -> {items} -> [0] -> {name} if $n > 0;
 
 			$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ('UPDATE users SET subset = ? WHERE id = ?', $_SUBSET -> {name}, $_USER -> {id});
+
+			*{$_SKIN . '::_SUBSET'}    = *{$_PACKAGE . '_SUBSET'};
 			
 		}
 

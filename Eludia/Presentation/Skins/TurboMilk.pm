@@ -1,5 +1,7 @@
 package Eludia::Presentation::Skins::TurboMilk;
 
+use Data::Dumper;
+
 BEGIN {
 	require Eludia::Presentation::Skins::Generic;
 	delete $INC {"Eludia/Presentation/Skins/Generic.pm"};
@@ -1862,8 +1864,56 @@ EOH
 	
 	$_REQUEST {__select_rows} += 0;
 							
-  my $parameters = ${$_PACKAGE . 'apr'} -> parms;
+	my $parameters = ${$_PACKAGE . 'apr'} -> parms;
+  
+	my $body = '';
+	my $onKeyDown = '';	
+	
+	if (!$_USER -> {id}) {
+		
+		$body = $page -> {auth_toolbar} . $page -> {body}
+		
+	}
+	elsif ($parameters -> {__subset} || $parameters -> {type}) {
+		
+		$body = $page -> {menu} . $page -> {body};
+		
+		$onKeyDown = <<EOJS;
+		
+			if (window.event.keyCode == 88 && window.event.altKey) {
+				window.parent.document.location.href = '$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}';
+				blockEvent ();
+			}
+			
+			handle_basic_navigation_keys ();
+			
+EOJS
+		
+		foreach (@{$page -> {scan2names}}) {
 
+			$onKeyDown .= &{"handle_hotkey_$$_{type}"} ($_);
+			$onKeyDown .= ';';
+
+		}
+
+	}
+	else {
+	
+		my $href = create_url (__subset => $_SUBSET -> {name});
+		
+		$body = <<EOIFRAME;
+		
+			$$page{auth_toolbar}
+
+			<div id="body_iframe_div" _style='height:100%; padding:0px; margin:0px'>
+				<iframe name='_body_iframe' id='_body_iframe' src="$href" width=100% height=100% application="yes">
+				</iframe>
+			</div>
+			
+EOIFRAME
+
+	}
+	
 	return <<EOH;
 		<html>		
 			<head>
@@ -2107,18 +2157,7 @@ EOF
 				onload= "body_on_load (); try {StartClock ()} catch (e) {}"
 				onbeforeunload="document.body.style.cursor = 'wait'"
 				onunload=" try {KillClock ()} catch (e) {}"
-				onkeydown="
-				
-					if (window.event.keyCode == 88 && window.event.altKey) {
-						document.location.href = '$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}';
-						blockEvent ();
-					}
-					
-					handle_basic_navigation_keys ();
-					
-					@{[ map {&{"handle_hotkey_$$_{type}"} ($_)} @{$page->{scan2names}} ]}
-					
-				"						
+				onkeydown="$onKeyDown"						
 			>
 				
 				@{[ $_REQUEST{__help_url} ? <<EOHELP : '' ]}
@@ -2133,15 +2172,7 @@ EOHELP
 					<iframe name='$_' src="/i/0.html" width=0 height=0 application="yes" style="display:none">
 					</iframe>
 EOI
-@{[ !$_USER -> {id} ? $$page{auth_toolbar} . $page -> {body} : ($parameters -> {__subset} || $parameters -> {type}) ? $$page{menu} . $$page{body} : <<EOIFRAME ]}
-					$$page{auth_toolbar}
-
-          <div id="body_iframe_div" _style='height:100%; padding:0px; margin:0px'>
-	 				  <iframe name='_body_iframe' id='_body_iframe' src="@{[ create_url() ]}" width=100% height=100% application="yes">
-	 				  </iframe>
-          </div>
-EOIFRAME
-
+					$body
 				</div>				
 			</body>
 		</html>
