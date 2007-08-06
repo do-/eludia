@@ -7,12 +7,15 @@
 div.table-container {
 
       	PADDING-RIGHT: 0px;
-      	OVERFLOW-Y: auto;
+      	OVERFLOW-Y: scroll;
       	PADDING-LEFT: 0px;
       	OVERFLOW-X: auto;
       	PADDING-BOTTOM: 0px;
       	MARGIN: 0px;
-      	WIDTH: expression(document.body.offsetWidth - (window.name == 'application_frame' ? 12 : 21));
+/*
+      	WIDTH: expression(document.body.offsetWidth - (window.name == '_body_iframe' ? 12 : 21));
+*/      	
+      	WIDTH: expression(document.body.offsetWidth - 16);
       	PADDING-TOP: 0px;      	
       	
 	scrollbar-base-color:#d6d3ce;
@@ -753,3 +756,11 @@ a.hint {
 #Menu a {color:#23385A;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 #Menu a:hover {color:#23385A;text-decoration:underline;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 
+td.login-head {background:url('/i/_skins/TurboMilk/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
+td.submit-area {text-align:center;height:36px;background:url('/i/_skins/TurboMilk/submit_area_bgr.gif') repeat-x 0 0;}
+div.green-title {color:#ffffff;font-weight:bold;background:url('/i/_skins/TurboMilk/green_ear_left.gif') no-repeat 0 0; width:300px;padding-left:10%;}
+div.grey-submit {background:url('/i/_skins/TurboMilk/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
+div.grey-submit a {color:#222323;text-decoration:none;}
+div.grey-submit a:hover {color:#222323;text-decoration:underline;}
+
+.logon {font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal;font-weight: normal;color:#414141;text-decoration: none;}
