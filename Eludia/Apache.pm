@@ -228,7 +228,7 @@ EOH
 
 		my $type = ($preconf -> {core_skip_boot} || $conf -> {core_skip_boot}) || $_REQUEST {__windows_ce} ? 'logon' : '_boot';
 		
-		redirect ("/?type=$type&redirect_params=" . b64u_freeze (\%_REQUEST));
+		redirect ("/?type=$type&redirect_params=" . b64u_freeze (\%_REQUEST), kind => 'js', target => '_top');
 		
 	}
 

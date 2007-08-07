@@ -1633,7 +1633,7 @@ sub set_cookie {
 sub select__logout {
 	sql_do ("DELETE FROM $SQL_VERSION->{quote}__access_log$SQL_VERSION->{quote} WHERE id_session = ?", $_REQUEST {sid}) if ($conf -> {core_auto_esc} == 2);
 	sql_do ('DELETE FROM sessions WHERE id = ?', $_REQUEST {sid});
-	redirect ('/?type=logon', {kind => 'js', label => $i18n -> {session_terminated}});
+	redirect ('/?type=logon', {kind => 'js', target => '_top', label => $i18n -> {session_terminated}});
 }
 
 ################################################################################

@@ -492,7 +492,7 @@ sub draw__boot {
 			
 		}					
 						
-		nope ('$_REQUEST{__uri}?type=logon&redirect_params=$_REQUEST{redirect_params}', '_self');
+		nope ('$_REQUEST{__uri}?type=logon&redirect_params=$_REQUEST{redirect_params}', '_top');
 
 		setTimeout ("document.getElementById ('abuse_1').style.display = 'block'", 10000);
 		
