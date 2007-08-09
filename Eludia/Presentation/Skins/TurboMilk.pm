@@ -1915,6 +1915,14 @@ EOJS
 
 		}
 
+		$onKeyDown .= <<EOJS;
+		
+			if (window.event.keyCode == 115 && !window.event.altKey && !window.event.ctrlKey) {
+				return blockEvent ();
+			}
+			
+EOJS
+
 	}
 	else {
 	
@@ -2219,7 +2227,7 @@ sub handle_hotkey_focus {
 	<<EOJS
 		if (window.event.keyCode == $$r{code} && window.event.altKey && window.event.ctrlKey) {
 			document.form.$$r{data}.focus ();
-			blockEvent ();
+			return blockEvent ();
 		}
 EOJS
 
@@ -2246,7 +2254,7 @@ sub handle_hotkey_href {
 				if ($condition) {
 					nope ('$$r{href}&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');
 				}
-				blockEvent ();
+				return blockEvent ();
 			}
 EOJS
 
@@ -2259,7 +2267,7 @@ EOJS
 					var a = document.getElementById ('$$r{data}');
 					activate_link (a.href, a.target);
 				}
-				blockEvent ();
+				return blockEvent ();
 			}
 EOJS
 	}
