@@ -1879,7 +1879,11 @@ EOH
 		
 		$body = $page -> {menu} . $page -> {body};
 		
-		my $href = create_url ();
+		my %h = %_REQUEST;
+		delete $h {salt};
+		delete $h {_salt};
+		
+		my $href = create_url (%h);
 
 		$onKeyDown = <<EOJS;
 		
@@ -1889,6 +1893,13 @@ EOH
 			}
 			
 			if (window.event.keyCode == 116 && !window.event.altKey && !window.event.ctrlKey) {
+			
+				if (is_dirty) {
+				
+					if (!confirm ('Внимание! Вы изменили содержимое некоторых полей ввода. Перезагрузка страницы приведёт к утере этой информации. Продолжить?')) return blockEvent ();
+				
+				}
+			
 				window.location = '$href';
 				return blockEvent ();
 			}

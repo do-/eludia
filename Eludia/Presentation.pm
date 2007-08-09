@@ -2370,6 +2370,7 @@ sub draw_menu {
 		$conf -> {kb_options_menu} ||= {ctrl => 1, alt => 1};
 
 		$type -> {name} ||= "$type->{items}";
+		$type -> {name} ||= "$type";
 
 		register_hotkey ($type, 'href', 'main_menu_' . $type -> {name}, $conf -> {kb_options_menu});
 		
