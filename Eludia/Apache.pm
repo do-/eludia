@@ -422,7 +422,8 @@ EOH
 
 			if (
 				$conf -> {core_auto_esc} == 2 && 
-				$_REQUEST {sid} && 
+				$_REQUEST {sid} &&
+				!$_REQUEST {__top} &&
 				(
 					$r -> headers_in -> {'Referer'} =~ /action=\w/ ||
 					$r -> headers_in -> {'Referer'} !~ /__last_query_string=$_REQUEST{__last_query_string}/ ||

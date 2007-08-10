@@ -1873,18 +1873,24 @@ EOH
 		$$page{auth_toolbar} = '';
 		
 	}
-	elsif ($parameters -> {__subset} || $parameters -> {type}) {
+	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
 	
 		$$page{auth_toolbar} = '';
 		
 		$body = $page -> {menu} . $page -> {body};
 		
-		my %h = %_REQUEST;
+		my %h = %$parameters;
 		delete $h {salt};
 		delete $h {_salt};
 		
 		my $href = create_url (%h);
 
+		$_REQUEST {__on_load} .= <<EOJS;
+		
+			if (window.top == window) { window.location = '$href&__top=1'}
+			
+EOJS
+		
 		$onKeyDown = <<EOJS;
 		
 			if (window.event.keyCode == 88 && window.event.altKey) {
@@ -2010,13 +2016,6 @@ EOCSS
 EOK
 
 						$_REQUEST{__doc_on_load}
-
-						@{[ $_REQUEST {__pack} ? <<EOF : '']}
-							var newWidth  = document.all ['bodyArea'].offsetWidth + 10;
-							var newHeight = document.all ['bodyArea'].offsetHeight + 30;
-							window.resizeTo (newWidth, newHeight);						
-							window.moveTo ((screen.width - newWidth) / 2, (screen.height - newHeight) / 2);
-EOF
 
 						if (!document.body.getElementsByTagName) return;
 
