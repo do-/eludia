@@ -1268,6 +1268,7 @@ sub draw_toolbar_input_text {
 			onFocus="scrollable_table_is_blocked = true; " 
 			onBlur="scrollable_table_is_blocked = false; "
 			style="visibility:expression(last_vert_menu && last_vert_menu [0] ? 'hidden' : '')"
+			id="$options->{id}"
 		>
 EOH
 
@@ -2199,6 +2200,24 @@ sub handle_hotkey_focus {
 		if (window.event.keyCode == $$r{code} && window.event.altKey && window.event.ctrlKey) {
 			document.form.$$r{data}.focus ();
 			blockEvent ();
+		}
+EOJS
+
+}
+
+################################################################################
+
+sub handle_hotkey_focus_id {
+
+	my ($r) = @_;
+
+	my $ctrl = $r -> {ctrl} ? '' : '!';
+	my $alt  = $r -> {alt}  ? '' : '!';
+
+	<<EOJS
+		if (window.event.keyCode == $$r{code} && $alt window.event.altKey && $ctrl window.event.ctrlKey) {
+			document.getElementById('$r->{data}').focus ();
+			return blockEvent ();
 		}
 EOJS
 
