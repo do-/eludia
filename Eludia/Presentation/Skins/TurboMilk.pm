@@ -1108,7 +1108,7 @@ sub draw_toolbar_input_select {
 	}
 	
 	$html .= <<EOH;
-		<select name="$$options{name}" onChange="submit()" onkeypress="typeAhead()" style="visibility:expression(last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')">
+		<select name="$$options{name}" onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression(last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')">
 EOH
 
 	if (defined $options -> {empty}) {

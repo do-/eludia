@@ -1894,7 +1894,7 @@ sub draw_toolbar_input_select {
 		$value -> {selected} = (($value -> {id} eq $_REQUEST {$options -> {name}}) or ($value -> {id} eq $options -> {value})) ? 'selected' : '';
 	}
 
-	$options -> {onChange} = 'submit();';
+	$options -> {onChange} ||= 'submit();';
 
 	$options -> {onChange} = '' if defined $options -> {other} || defined $options -> {detail};
 
