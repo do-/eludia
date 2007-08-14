@@ -36,7 +36,7 @@ BEGIN {
   
 	$Data::Dumper::Sortkeys = 1;
 
-	$Eludia_VERSION      = $Eludia::VERSION      = '07.08.10';
+	$Eludia_VERSION      = $Eludia::VERSION      = '07.08.14';
 	$Eludia_VERSION_NAME = $Eludia::VERSION_NAME = 'TurboYoghurt';
 		
 	eval {

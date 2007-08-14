@@ -2136,6 +2136,8 @@ EOCSS
 					
 					}
 					
+					$_REQUEST{__script}
+					
 				</script>
 				
 			</head>
