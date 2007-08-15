@@ -110,7 +110,9 @@ sub assert {
 	$Storable::canonical = 1;
 	
 	my $checksum = '';
-	my $_db_model_checksums = $self -> {driver_name} eq 'Oracle' ? '"_db_model_checksums"' : '_db_model_checksums';
+	my $_db_model_checksums = $self -> {_db_model_checksums} ? $self -> {_db_model_checksums} 
+		: $self -> {driver_name} eq 'Oracle' ? '"_db_model_checksums"' 
+		: '_db_model_checksums';
 
 	unless ($params {no_checksums}) {
 
@@ -135,9 +137,9 @@ sub assert {
 
 	unless ($params {no_checksums}) {
 
-		unless (exists $existing_tables -> {_db_model_checksums}) {
+		unless (exists $existing_tables -> {$_db_model_checksums}) {
 			$self -> do ("CREATE TABLE $_db_model_checksums (checksum CHAR(22))");
-			$self -> do ("CREATE INDEX db_model_checksums_pk ON $_db_model_checksums (checksum)");
+			$self -> do ("CREATE INDEX ${_db_model_checksums}_pk ON $_db_model_checksums (checksum)");
 		} else {
 
 			my $st = $self -> {db} -> prepare ("SELECT COUNT(*) FROM $_db_model_checksums WHERE checksum = ?");
