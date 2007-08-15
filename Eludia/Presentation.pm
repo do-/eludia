@@ -104,7 +104,7 @@ sub esc_href {
 
 	if ($conf -> {core_auto_esc} == 2) {
 	
-		my $href = sql_select_scalar ("SELECT href FROM $SQL_VERSION->{quote}__access_log$SQL_VERSION->{quote} WHERE id_session = ? AND no = ?", $_REQUEST {sid}, $_REQUEST {__last_last_query_string});
+		my $href = sql_select_scalar ("SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?", $_REQUEST {sid}, $_REQUEST {__last_last_query_string});
 		$href ||= "/?type=$_REQUEST{type}";
 
 		if (exists $_REQUEST {__last_scrollable_table_row}) {
@@ -3212,7 +3212,7 @@ sub draw_page {
 		&& $conf -> {core_screenshot} -> {exclude_types} !~ /\b$$page{type}\b/
 		&& !$_REQUEST {__edit}
 	) {
-		sql_do ("INSERT INTO __screenshots (subset, type, id_object, id_user, html, error, params, gziped) VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
+		sql_do ("INSERT INTO $conf->{systables}->{__screenshots} (subset, type, id_object, id_user, html, error, params, gziped) VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
 			$_SUBSET -> {name}, $page -> {type}, $_REQUEST {id}, $_USER -> {id}, Compress::Zlib::memGzip ($html), !$validate_error && $_REQUEST {error} ? 1 : 0, Dumper (\%_REQUEST));
 	}
 
@@ -3254,7 +3254,7 @@ warn "\$href='$href'(1)\n";
 
 	if ($_USER -> {peer_server}) {
 	
-		$_REQUEST {sid} = sql_select_scalar ('SELECT peer_id FROM sessions WHERE id = ?', $_REQUEST {sid});
+		$_REQUEST {sid} = sql_select_scalar ("SELECT peer_id FROM $conf->{systables}->{sessions} WHERE id = ?", $_REQUEST {sid});
 	
 	}
 

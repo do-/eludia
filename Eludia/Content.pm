@@ -337,7 +337,7 @@ sub send_mail {
 		##### To address
 		
 	if (!ref $to && $to > 0) {
-		$to = sql_select_hash ('SELECT label, mail FROM users WHERE id = ?', $to);
+		$to = sql_select_hash ("SELECT label, mail FROM $conf->{systables}->{users} WHERE id = ?", $to);
 	}
 
 	if ($preconf -> {mail} -> {to}) {
@@ -559,8 +559,6 @@ sub require_fresh {
 		$need_refresh = $last_load < $last_modified;
 	}
 		
-	my $q = $SQL_VERSION -> {quote};
-
 	if ($need_refresh) {
 	
 		if ($_OLD_PACKAGE) {
@@ -590,10 +588,10 @@ sub require_fresh {
 
 		if (
 			$db
-			&& $last_modified > 0 + sql_select_scalar ("SELECT unix_ts FROM ${q}__required_files${q} WHERE file_name = ?", $module_name)
+			&& $last_modified > 0 + sql_select_scalar ("SELECT unix_ts FROM $conf->{systables}->{__required_files} WHERE file_name = ?", $module_name)
 		) {
 				
-			my $__last_update = sql_select_scalar ("SELECT unix_ts FROM ${q}__last_update${q}");
+			my $__last_update = sql_select_scalar ("SELECT unix_ts FROM $conf->{systables}->{__last_update}");
 			my $__time = time ();
 
 			if ($DB_MODEL && !$DB_MODEL -> {splitted}) {
@@ -637,7 +635,7 @@ sub require_fresh {
 						open  (SCRIPT, $script_path) || die "can't lock $script_path: $!";
 						flock (SCRIPT, LOCK_EX);
 
-						my ($__new_last_update, $pid) = sql_select_array ("SELECT unix_ts, pid FROM ${q}__last_update${q}");
+						my ($__new_last_update, $pid) = sql_select_array ("SELECT unix_ts, pid FROM $conf->{systables}->{__last_update}");
 
 						if ($__new_last_update > $__last_update) {
 
@@ -701,7 +699,7 @@ print STDERR "[$$] OK, $name is up to date\n";
 
 				eval {
 
-					my $__last_update = sql_select_scalar ("SELECT unix_ts FROM ${q}__last_update${q}");
+					my $__last_update = sql_select_scalar ("SELECT unix_ts FROM $conf->{systables}->{__last_update}");
 					my $__time = time ();
 
 					opendir (DIR, "$the_path/Updates") || die "can't opendir $the_path/Updates: $!";
@@ -727,7 +725,7 @@ print STDERR "[$$] Found new ($last_modified) update script '$script'. Locking $
 						open  (SCRIPT, $script_path) || die "can't lock $script_path: $!";
 						flock (SCRIPT, LOCK_EX);
 						
-						my ($__new_last_update, $pid) = sql_select_array ("SELECT unix_ts, pid FROM ${q}__last_update${q}");
+						my ($__new_last_update, $pid) = sql_select_array ("SELECT unix_ts, pid FROM $conf->{systables}->{__last_update}");
 
 						if ($__new_last_update > $__last_update) {
 
@@ -771,15 +769,15 @@ print STDERR "[$$] OK, $script is over and out.\n";
 			}			
 		
 			if ($__last_update > -1) {
-				$__last_update or sql_do ("INSERT INTO ${q}__last_update${q} (unix_ts) VALUES (?)", int(time));
-				sql_do ("UPDATE ${q}__last_update${q} SET unix_ts = ?, pid = ?", $__time, $$);
+				$__last_update or sql_do ("INSERT INTO $conf->{systables}->{__last_update} (unix_ts) VALUES (?)", int(time));
+				sql_do ("UPDATE $conf->{systables}->{__last_update} SET unix_ts = ?, pid = ?", $__time, $$);
 			}
 
 		};
 		
 		if ($db && $db -> ping) {
-			sql_do ("DELETE FROM ${q}__required_files${q} WHERE file_name = ?", $module_name);
-			sql_do ("INSERT INTO ${q}__required_files${q} (file_name, unix_ts) VALUES (?, ?)", $module_name, time);
+			sql_do ("DELETE FROM $conf->{systables}->{__required_files} WHERE file_name = ?", $module_name);
+			sql_do ("INSERT INTO $conf->{systables}->{__required_files} (file_name, unix_ts) VALUES (?, ?)", $module_name, time);
 		}
 	
 		$INC_FRESH {$module_name} = $last_modified;
@@ -1084,10 +1082,10 @@ sub call_for_role {
 		if ($preconf -> {core_debug_profiling} == 2) {
 			
 			sql_do (
-				'UPDATE __benchmarks SET cnt = cnt + 1, ms = ms + ?, selected = selected + ?, mean = ms / cnt, mean_selected = selected / cnt WHERE id = ?',
+				"UPDATE $conf->{systables}->{__benchmarks} SET cnt = cnt + 1, ms = ms + ?, selected = selected + ?, mean = ms / cnt, mean_selected = selected / cnt WHERE id = ?",
 				1000 * (time - $time),
 				$_REQUEST {__benchmarks_selected},
-				sql_select_id ('__benchmarks', {fake => 0, label => $sub_name}, ['label']),
+				sql_select_id ($conf->{systables}->{__benchmarks}, {fake => 0, label => $sub_name}, ['label']),
 			);
 			
 		}
@@ -1124,7 +1122,7 @@ sub get_user {
 	my $user = undef;
 	
 	if ($_REQUEST {__login}) {
-		$user = sql_select_hash ('SELECT * FROM users WHERE login = ? AND password = PASSWORD(?) AND fake <> -1', $_REQUEST {__login}, $_REQUEST {__password});
+		$user = sql_select_hash ("SELECT * FROM $conf->{systables}->{users} WHERE login = ? AND password = PASSWORD(?) AND fake <> -1", $_REQUEST {__login}, $_REQUEST {__password});
 		$user -> {id} or undef $user;
 	}
 	
@@ -1134,7 +1132,7 @@ sub get_user {
 	
 		$peer_server = $1;
 
-		my $local_sid = sql_select_scalar ('SELECT id FROM sessions WHERE peer_id = ? AND peer_server = ?', $_REQUEST {sid}, $peer_server);
+		my $local_sid = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE peer_id = ? AND peer_server = ?", $_REQUEST {sid}, $peer_server);
 		
 		unless ($local_sid) {
 		
@@ -1144,30 +1142,30 @@ sub get_user {
 			
 			$role or die ("Peer role $$user{role} is undefined for the server $peer_server\n");
 			
-			my $id_role = sql_select_scalar ('SELECT id FROM roles WHERE name = ?', $role);
+			my $id_role = sql_select_scalar ("SELECT id FROM $conf->{systables}->{roles} WHERE name = ?", $role);
 
 			$id_role or die ("Role not found: $role\n");
 
 			my $id_user = 
 			
-				sql_select_scalar ('SELECT id FROM users WHERE IFNULL(peer_id, 0) = ? AND peer_server = ?', 0 + $user -> {id}, $peer_server) ||
+				sql_select_scalar ("SELECT id FROM $conf->{systables}->{users} WHERE IFNULL(peer_id, 0) = ? AND peer_server = ?", 0 + $user -> {id}, $peer_server) ||
 				
-				sql_do_insert ('users', {
+				sql_do_insert ($conf->{systables}->{users}, {
 					fake        => -128,
 					peer_id     => $user -> {id},
 					peer_server => $peer_server,
 				});
 				
-			sql_do ('UPDATE users SET label = ?, id_role = ?, mail = ?  WHERE id = ?', $user -> {label}, $id_role, $user -> {mail}, $id_user);
+			sql_do ("UPDATE $conf->{systables}->{users} SET label = ?, id_role = ?, mail = ?  WHERE id = ?", $user -> {label}, $id_role, $user -> {mail}, $id_user);
 			
 			while (1) {
 				$local_sid = int (time * rand);
-				last if 0 == sql_select_scalar ('SELECT COUNT(*) FROM sessions WHERE id = ?', $local_sid);
+				last if 0 == sql_select_scalar ("SELECT COUNT(*) FROM $conf->{systables}->{sessions} WHERE id = ?", $local_sid);
 			}
 
-			sql_do ("DELETE FROM sessions WHERE id_user = ?", $id_user);
+			sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id_user = ?", $id_user);
 			
-			sql_do ("INSERT INTO sessions (id, id_user, peer_id, peer_server) VALUES (?, ?, ?, ?)", $local_sid, $id_user, $_REQUEST {sid}, $peer_server);
+			sql_do ("INSERT INTO $conf->{systables}->{sessions} (id, id_user, peer_id, peer_server) VALUES (?, ?, ?, ?)", $local_sid, $id_user, $_REQUEST {sid}, $peer_server);
 					
 		}
 		
@@ -1175,17 +1173,14 @@ sub get_user {
 		
 	}
 	
-	my $session = sql_select_hash ('sessions', $_REQUEST {sid});
+	my $session = sql_select_hash ($conf->{systables}->{sessions}, $_REQUEST {sid});
 
 	if ($session -> {ip}) {	
 		$session -> {ip}    eq $ENV {REMOTE_ADDR}          or return undef;
 		$session -> {ip_fw} eq $ENV {HTTP_X_FORWARDED_FOR} or return undef;	
-		ip => $ENV {REMOTE_ADDR}, 
-		ip_fw => $ENV {HTTP_X_FORWARDED_FOR},	
-	}
-	else {
+	}	else {
 		sql_do (
-			'UPDATE sessions SET ip = ?, ip_fw = ? WHERE id = ?',
+			"UPDATE $conf->{systables}->{sessions} SET ip = ?, ip_fw = ? WHERE id = ?",
 			$ENV {REMOTE_ADDR},
 			$ENV {HTTP_X_FORWARDED_FOR}, $_REQUEST {sid},
 		);
@@ -1193,23 +1188,23 @@ sub get_user {
 
 	$user ||= sql_select_hash (<<EOS, $_REQUEST {sid});
 		SELECT
-			users.*
-			, roles.name AS role
-			, roles.label AS role_label
-			, sessions.id_role AS session_role
+			$conf->{systables}->{users}.*
+			, $conf->{systables}->{roles}.name AS role
+			, $conf->{systables}->{roles}.label AS role_label
+			, $conf->{systables}->{sessions}.id_role AS session_role
 		FROM
-			sessions
-			, users
-			, roles
+			$conf->{systables}->{sessions}
+			, $conf->{systables}->{users}
+			, $conf->{systables}->{roles}
 		WHERE
-			sessions.id_user = users.id
-			AND users.id_role = roles.id
-			AND sessions.id = ?
-			AND users.fake <> -1
+			$conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id
+			AND $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id
+			AND $conf->{systables}->{sessions}.id = ?
+			AND $conf->{systables}->{users}.fake <> -1
 EOS
 
 	if ($user && $user -> {id}) {
-		$user -> {session_role_name} = sql_select_scalar ("SELECT name FROM sessions, roles WHERE sessions.id_role = roles.id AND sessions.id = ?", $_REQUEST {sid});
+		$user -> {session_role_name} = sql_select_scalar ("SELECT name FROM $conf->{systables}->{sessions}, $conf->{systables}->{roles} WHERE $conf->{systables}->{sessions}.id_role = $conf->{systables}->{roles}.id AND $conf->{systables}->{sessions}.id = ?", $_REQUEST {sid});
 	}
 
 	if ($user && $user -> {session_role}) {
@@ -1235,16 +1230,16 @@ EOS
 		
 		if ($id_role) {
 
-			my $id_session = sql_select_scalar ("SELECT id FROM sessions WHERE id_user = ? AND id_role = ?", $user -> {id}, $id_role);
+			my $id_session = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE id_user = ? AND id_role = ?", $user -> {id}, $id_role);
 
 			if ($id_session) {
 				$_REQUEST {sid} = $id_session;
 			} else {
 				while (1) {
 					$_REQUEST {sid} = int (time () * rand ());
-					last if 0 == sql_select_scalar ('SELECT COUNT(*) FROM sessions WHERE id = ?', $_REQUEST {sid});
+					last if 0 == sql_select_scalar ("SELECT COUNT(*) FROM $conf->{systables}->{sessions} WHERE id = ?", $_REQUEST {sid});
 				}
-				sql_do ("INSERT INTO sessions (id, id_user, id_role) VALUES (?, ?, ?)", $_REQUEST {sid}, $user -> {id}, $id_role);
+				sql_do ("INSERT INTO $conf->{systables}->{sessions} (id, id_user, id_role) VALUES (?, ?, ?)", $_REQUEST {sid}, $user -> {id}, $id_role);
 				sql_do_refresh_sessions ();
 			}
 
@@ -1268,8 +1263,8 @@ sub is_recyclable {
 
 	my ($table_name) = @_;
 	
-	return 0 if $table_name eq 'log';
-	return 0 if $table_name eq 'sessions';
+	return 0 if $table_name eq $conf -> {systables} -> {log};
+	return 0 if $table_name eq $conf -> {systables} -> {sessions};
 	
 	if (ref $conf -> {core_recycle_ids} eq ARRAY) {
 		$conf -> {core_recycle_ids} = {map {$_ => 1} @{$conf -> {core_recycle_ids}}}
@@ -1392,7 +1387,7 @@ sub log_action_start {
 	
 	$_REQUEST {error} = substr ($_REQUEST {error}, 0, 255);
 	
-	$_REQUEST {_id_log} = sql_do_insert ('log', {
+	$_REQUEST {_id_log} = sql_do_insert ($conf -> {systables} -> {log}, {
 		id_user => $_USER -> {id}, 
 		type => $_REQUEST {type}, 
 		action => $_REQUEST {action}, 
@@ -1415,7 +1410,7 @@ sub log_action_finish {
 	$_REQUEST {_id_object} = $__log_id || $_REQUEST {id} || $_OLD_REQUEST {id};
 	$_REQUEST {_id_user} = $__log_user || $_USER -> {id};
 	
-	sql_do_update ('log', ['params', 'error', 'id_object', 'id_user'], {id => $_REQUEST {_id_log}, lobs => ['params']});
+	sql_do_update ($conf -> {systables} -> {log}, ['params', 'error', 'id_object', 'id_user'], {id => $_REQUEST {_id_log}, lobs => ['params']});
 	delete $_REQUEST {params};
 	delete $_REQUEST {_params};
 	
@@ -1631,8 +1626,8 @@ sub set_cookie {
 ################################################################################
 
 sub select__logout {
-	sql_do ("DELETE FROM $SQL_VERSION->{quote}__access_log$SQL_VERSION->{quote} WHERE id_session = ?", $_REQUEST {sid}) if ($conf -> {core_auto_esc} == 2);
-	sql_do ('DELETE FROM sessions WHERE id = ?', $_REQUEST {sid});
+	sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session = ?", $_REQUEST {sid}) if ($conf -> {core_auto_esc} == 2);
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id = ?", $_REQUEST {sid});
 	redirect ('/?type=logon', {kind => 'js', target => '_top', label => $i18n -> {session_terminated}});
 }
 
@@ -1640,7 +1635,7 @@ sub select__logout {
 
 sub do_flush__benchmarks {
 
-	sql_do ("TRUNCATE TABLE $SQL_VERSION->{quote}__benchmarks$SQL_VERSION->{quote}");
+	sql_do ("TRUNCATE TABLE $conf->{systables}->{__benchmarks}");
 	
 }
 
@@ -1662,11 +1657,11 @@ sub select__benchmarks {
 
 	my ($_benchmarks, $cnt)= sql_select_all_cnt (<<EOS, $q);
 		SELECT
-			__benchmarks.*
+			*
 		FROM
-			__benchmarks
+			$conf->{systables}->{__benchmarks}
 		WHERE
-			(__benchmarks.label LIKE ?)
+			(label LIKE ?)
 		ORDER BY
 			$order
 		LIMIT
@@ -1859,15 +1854,15 @@ sub get_item_of__object_info {
 	
 	my $log_alias = 'log_' . $$;
 	
-	sql_do ("HANDLER log OPEN AS $log_alias");
+	sql_do ("HANDLER $conf->{systables}->{log} OPEN AS $log_alias");
 
 	$item -> {last_update} = sql_select_hash ("HANDLER $log_alias READ \`PRIMARY\` LAST WHERE type = '$_REQUEST{object_type}' AND action = 'update' AND id_object = '$_REQUEST{id}'");
 	$item -> {last_update} -> {dt} =~ s{(\d+)\-?(\d+)\-?(\d+)}{$3.$2.$1};
-	$item -> {last_update} -> {user} = sql_select_hash ('users', $item -> {last_update} -> {id_user});
+	$item -> {last_update} -> {user} = sql_select_hash ($conf -> {systables} -> {users}, $item -> {last_update} -> {id_user});
 
 	$item -> {last_create} = sql_select_hash ("HANDLER $log_alias READ \`PRIMARY\` PREV WHERE type = '$_REQUEST{object_type}' AND action = 'create' AND id_object = '$_REQUEST{id}'");
 	$item -> {last_create} -> {dt} =~ s{(\d+)\-?(\d+)\-?(\d+)}{$3.$2.$1};
-	$item -> {last_create} -> {user} = sql_select_hash ('users', $item -> {last_create} -> {id_user});
+	$item -> {last_create} -> {user} = sql_select_hash ($conf -> {systables} -> {users}, $item -> {last_create} -> {id_user});
 	
 	sql_do ("HANDLER $log_alias CLOSE");
 
@@ -2341,7 +2336,7 @@ sub select__names_list {
 	}	
 	closedir DIR;	
 	
-	sql_select_loop ('SELECT * FROM roles', sub {$names {$i -> {name}} = 1});
+	sql_select_loop ("SELECT * FROM $conf->{systables}->{roles}", sub {$names {$i -> {name}} = 1});
 	
 	$r -> status (200);
 	$r -> headers_out -> {'Content-Disposition'} = "attachment;filename=$_PACKAGE.txt";

@@ -59,6 +59,27 @@ sub handler {
 	
 	delete $_REQUEST {__x} if $preconf -> {core_no_xml};
 	
+	unless ($conf -> {systables}) {
+	
+		$conf -> {systables} = {
+			_db_model_checksums => '_db_model_checksums',
+			__access_log		=> '__access_log',
+			__benchmarks		=> '__benchmarks',
+			__last_update		=> '__last_update',
+			__moved_links		=> '__moved_links',
+			__required_files=> '__required_files',
+			__screenshots		=> '__screenshots',
+			cache_html			=> 'cache_html',
+			log          		=> 'log',
+			roles        		=> 'roles',
+			sessions     		=> 'sessions',
+			users        		=> 'users',
+			
+		};
+	
+	}
+		
+	
 	$_REQUEST {__no_navigation} ||= $_REQUEST {select};
 		
 	$_REQUEST {type} =~ s/_for_.*//;
@@ -201,7 +222,7 @@ EOH
 	}		
 	
 	if ($_REQUEST {__whois}) {
-		my $user = sql_select_hash ('SELECT users.id, users.label, users.mail, roles.name AS role FROM sessions INNER JOIN users ON sessions.id_user = users.id INNER JOIN roles ON users.id_role = roles.id WHERE sessions.id = ?', $_REQUEST {__whois});
+		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
 		out_html ({}, Dumper ({data => $user}));
 		return OK;
 	}
@@ -274,7 +295,7 @@ EOH
 
 			$_SUBSET -> {name} ||= $_SUBSET -> {items} -> [0] -> {name} if $n > 0;
 
-			$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ('UPDATE users SET subset = ? WHERE id = ?', $_SUBSET -> {name}, $_USER -> {id});
+			$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ("UPDATE $conf->{systables}->{users} SET subset = ? WHERE id = ?", $_SUBSET -> {name}, $_USER -> {id});
 
 			*{$_SKIN . '::_SUBSET'}    = *{$_PACKAGE . '_SUBSET'};
 			
@@ -371,7 +392,7 @@ EOH
 							}					
 
 						} elsif ($conf -> {core_cache_html}) {
-							sql_do ("DELETE FROM cache_html");
+							sql_do ("DELETE FROM $conf->{systables}->{cache_html}");
 							my $cache_path = $r -> document_root . '/cache/*';
 							$^O eq 'MSWin32' or eval {`rm -rf $cache_path`};
 						}
@@ -436,13 +457,11 @@ EOH
 				$url =~ s{\&?_?salt=[\d\.]+}{}gsm;
 				$url =~ s{\&?sid=\d+}{}gsm;
 
-				my $q = $SQL_VERSION -> {quote};
-
-				my $no = sql_select_scalar ("SELECT no FROM ${q}__access_log${q} WHERE id_session = ? AND href LIKE ?", $_REQUEST {sid}, $url);
+				my $no = sql_select_scalar ("SELECT no FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND href LIKE ?", $_REQUEST {sid}, $url);
 	
 				unless ($no) {
-					$no = 1 + sql_select_scalar ("SELECT MAX(no) FROM ${q}__access_log${q} WHERE id_session = ?", $_REQUEST {sid});
-					sql_do ("INSERT INTO ${q}__access_log${q} (id_session, no, href) VALUES (?, ?, ?)", $_REQUEST {sid}, $no, $url);
+					$no = 1 + sql_select_scalar ("SELECT MAX(no) FROM $conf->{systables}->{__access_log} WHERE id_session = ?", $_REQUEST {sid});
+					sql_do ("INSERT INTO $conf->{systables}->{__access_log} (id_session, no, href) VALUES (?, ?, ?)", $_REQUEST {sid}, $no, $url);
 				}
 
 				$_REQUEST {__last_query_string} = $no;
@@ -573,7 +592,7 @@ sub pub_handler {
 	
 	if ($conf -> {core_cache_html} && !$_USER -> {id}) {
 		
-		my $time = sql_select_scalar ("SELECT UNIX_TIMESTAMP(ts) FROM cache_html WHERE uri = ?", $cache_key);
+		my $time = sql_select_scalar ("SELECT UNIX_TIMESTAMP(ts) FROM $conf->{systables}->{cache_html} WHERE uri = ?", $cache_key);
 		
 		my $ims = $r -> headers_in -> {"If-Modified-Since"};
 		$ims =~ s{\;.*}{};
@@ -706,7 +725,7 @@ sub pub_handler {
 			
 			my $gzipped = (($conf -> {core_gzip} or $preconf -> {core_gzip})) ? Compress::Zlib::memGzip ($html) : '';		
 #			sql_do ('REPLACE INTO cache_html (uri, html, gzipped) VALUES (?, ?, ?)', $cache_key, $html, $gzipped);
-			sql_do ('REPLACE INTO cache_html (uri) VALUES (?)', $cache_key);
+			sql_do ("REPLACE INTO $conf->{systables}->{cache_html} (uri) VALUES (?)", $cache_key);
 			
 			open (F, ">$cache_fn") or die ("Can't write to $cache_fn: $!\n");
 			print F $html;

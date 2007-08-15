@@ -32,15 +32,15 @@ sub sql_do_refresh_sessions {
 			1;
 	}
 
-	my $ids = sql_select_ids ('SELECT id FROM sessions WHERE ts < sysdate - ? / 1440', $timeout);
+	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ? / 1440", $timeout);
 	
-	sql_do ("DELETE FROM sessions     WHERE id IN ($ids)");
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
 
-	$ids = sql_select_ids ('SELECT id FROM sessions');
+	$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
 
-	sql_do ("DELETE FROM $SQL_VERSION->{quote}__access_log$SQL_VERSION->{quote} WHERE id_session NOT IN ($ids)");
+	sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session NOT IN ($ids)");
 	
-	sql_do ("UPDATE sessions SET ts = sysdate WHERE id = ? ", $_REQUEST {sid});
+	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ? ", $_REQUEST {sid});
 	
 
 }
@@ -118,6 +118,30 @@ sub sql_do {
 #	elsif ($@) {
 #		die $@;
 #	}
+	
+}
+
+################################################################################
+
+sub sql_execute_procedure {
+
+	my ($sql, @params) = @_;
+
+	my $st = sql_prepare ("BEGIN\n$sql; \nEND;");
+
+	my $i = 1;
+	while (@params > 0) {
+		my ($val, $size) = (shift (@params), shift (@params));
+		if ($size) {
+			$st -> bind_param_inout ($i, $val, $size);
+		} else {
+			$st -> bind_param ($i, $val);
+		}
+		$i ++; 
+	}
+	
+	$st -> execute;
+	$st -> finish;	
 	
 }
 
@@ -295,14 +319,19 @@ sub sql_select_hash {
 	if ($sql_or_table_name !~ /^\s*SELECT/i) {
 	
 		my $id = $_REQUEST {id};
+		my $field = 'id'; 
 		
 		if (@params) {
-			$id = ref $params [0] eq HASH ? $params [0] -> {id} : $params [0];
+			if (ref $params [0] eq HASH) {
+				($field, $id) = each %{$params [0]};
+			} else {
+				$id = $params [0];
+			}
 		}
 	
 		@params = ({}) if (@params == 0);
 		
-		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE id = ?", $id);
+		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE $field = ?", $id);
 		
 	}	
 
@@ -484,12 +513,12 @@ sub sql_do_insert {
 		sql_do (<<EOS, $_REQUEST {sid});
 			UPDATE
 				$table_name
-				LEFT JOIN sessions ON $table_name.fake = sessions.id
+				LEFT JOIN $conf->{systables}->{sessions} ON $table_name.fake = $conf->{systables}->{sessions}.id
 			SET	
 				$table_name.fake = ?
 			WHERE
 				$table_name.fake > 0
-				AND sessions.id_user IS NULL
+				AND $conf->{systables}->{sessions}.id_user IS NULL
 EOS
 
 		### get my least fake id (maybe ex-orphan, maybe not)
@@ -618,7 +647,7 @@ sub sql_upload_file {
 
 sub keep_alive {
 	my $sid = shift;
-	sql_do ("UPDATE sessions SET ts = sysdate WHERE id = ? ", $sid);
+	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ? ", $sid);
 }
 
 

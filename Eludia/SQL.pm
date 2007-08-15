@@ -10,7 +10,7 @@ sub sql_weave_model {
 	
 	foreach my $table_name ($db -> tables) {	
 		$table_name =~ s{.*?(\w+)\W*$}{$1}gsm;
-		next if $table_name eq 'log';
+		next if $table_name eq $conf -> {systables} -> {log};
 		push @tables, $table_name;
 	}
 		
@@ -86,21 +86,9 @@ my $time = time;
 
 print STDERR "sql_assert_core_tables [$$] started...\n";
 
-	my $q = $SQL_VERSION -> {quote};
-
 	my %defs = (
 	
-		_script_checksums => {
-		
-			columns => {
-				name     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255, _PK => 1},
-				ts       => {TYPE_NAME => 'timestamp'},
-				checksum => {TYPE_NAME => 'char', COLUMN_SIZE => 22},
-			}
-
-		},
-
-		__access_log => {
+		$conf -> {systables} -> {__access_log} => {
 		
 			columns => {
 				id         => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
@@ -117,7 +105,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 
 		},
 		
-		__moved_links => {
+		$conf -> {systables} -> {__moved_links} => {
 		
 			columns => {
 				id          => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
@@ -133,7 +121,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 
 		},
 		
-		__required_files => {
+		$conf -> {systables} -> {__required_files} => {
 		
 			columns => {
 				unix_ts   => {TYPE_NAME => 'bigint'},
@@ -146,7 +134,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 
 		},
 
-		__last_update => {
+		$conf -> {systables} -> {__last_update} => {
 		
 			columns => {
 				pid 	  => {TYPE_NAME => 'int'},
@@ -155,7 +143,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 			
 		},
 
-		sessions => {
+		$conf -> {systables} -> {sessions} => {
 		
 			columns => {
 
@@ -174,7 +162,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 
 		},
 
-		roles => {
+		$conf -> {systables} -> {roles} => {
 
 			columns => {
 				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
@@ -185,7 +173,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 
 		},
 
-		users => {
+		$conf -> {systables} -> {users} => {
 
 			columns => {
 				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
@@ -206,7 +194,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 
 		},
 
-		log => {
+		$conf -> {systables} -> {log} => {
 
 			columns => {
 				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
@@ -227,14 +215,14 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 	
 	);
 	
-	$conf -> {core_cache_html} and $defs {cache_html} = {
+	$conf -> {core_cache_html} and $defs {$conf -> {systables} -> {cache_html}} = {
 		columns => {
 			uri     => {TYPE_NAME  => 'varchar', COLUMN_SIZE  => 255, _PK    => 1},
 			ts      => {TYPE_NAME  => 'timestamp'},
 		}
 	};
 	
-	$preconf -> {core_debug_profiling} == 2 and $defs {"__benchmarks"} = {
+	$preconf -> {core_debug_profiling} == 2 and $defs {$conf->{systables}->{__benchmarks}} = {
 
 		columns => {
 			id       => {TYPE_NAME  => 'int'    , _EXTRA => 'auto_increment', _PK => 1},
@@ -254,7 +242,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 		
 	};
 
-	$conf -> {core_screenshot} and $defs {__screenshots} = {
+	$conf -> {core_screenshot} and $defs {$conf -> {systables} -> {__screenshots}} = {
 		columns => {
 			id        => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
 			subset    => {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
@@ -273,8 +261,6 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 	
 	$model_update -> {core_ok} = 1;
 	
-	sql_select_scalar ("SELECT unix_ts FROM ${q}__last_update${q}") or sql_do ("INSERT INTO ${q}__last_update${q} (unix_ts, pid) VALUES (?, ?)", time (), $$);
-		
 print STDERR "sql_assert_core_tables [$$] finished:" . (time - $time) . " ms\n";	
 	
 }
@@ -386,7 +372,6 @@ sub sql_reconnect {
 	
 	our $SQL_VERSION = sql_version ();
 	$SQL_VERSION -> {driver} = $driver_name;
-	$SQL_VERSION -> {quote} = $db -> get_info ($GetInfoType {SQL_IDENTIFIER_QUOTE_CHAR});
 
 	delete $INC {"Eludia/SQL/${driver_name}.pm"};
 
@@ -397,6 +382,7 @@ sub sql_reconnect {
 			dump_to_stderr => 1,
 			before_assert	=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
 			schema			=> $preconf -> {db_schema},
+			_db_model_checksums	=> $conf -> {systables} -> {_db_model_checksums}, 
 		);
 
 		sql_assert_core_tables (); # unless $driver_name eq 'Oracle';
@@ -445,7 +431,7 @@ sub sql_select_vocabulary {
 	
 	$filter .= " AND $options->{filter}" if $options -> {filter};
 
-	if ($preconf -> {subset} && $table_name eq 'roles') {
+	if ($preconf -> {subset} && $table_name eq $conf -> {systables} -> {roles}) {
 		
 		$filter .= " AND name IN ('-1'";
 		
@@ -601,7 +587,7 @@ warn "relink $$column_def{table_name} ($$column_def{name}): $old_id -> $new_id";
 			if ($column_def -> {TYPE_NAME} =~ /int/) {
 			
 				sql_do (<<EOS, $old_id);
-					INSERT INTO $SQL_VERSION->{quote}__moved_links$SQL_VERSION->{quote}
+					INSERT INTO $conf->{systables}->{__moved_links}
 						(table_name, column_name, id_from, id_to)
 					SELECT
 						'$$column_def{table_name}' AS table_name,
@@ -623,7 +609,7 @@ EOS
 				my $_new_id = ',' . $new_id . ',';
 			
 				sql_do (<<EOS, '%' . $old_id . '%');
-					INSERT INTO $SQL_VERSION->{quote}__moved_links$SQL_VERSION->{quote}
+					INSERT INTO $conf->{systables}->{__moved_links}}
 						(table_name, column_name, id_from, id_to)
 					SELECT
 						'$$column_def{table_name}' AS table_name,
@@ -676,7 +662,7 @@ warn "undo relink $table_name: $old_id";
 
 			my $from = <<EOS;
 				FROM
-					__moved_links
+					$conf->{systables}->{__moved_links}
 				WHERE
 					table_name = '$$column_def{table_name}'
 					AND column_name = '$$column_def{name}'
@@ -740,10 +726,10 @@ sub delete_fakes {
 			$table_name.id
 		FROM
 			$table_name
-			LEFT JOIN sessions ON $table_name.fake = sessions.id
+			LEFT JOIN $conf->{systables}->{sessions} ON $table_name.fake = $conf->{systables}->{sessions}.id
 		WHERE
 			$table_name.fake > 0
-			AND sessions.id_user IS NULL
+			AND $conf->{systables}->{sessions}.id_user IS NULL
 EOS
 			
 	sql_do ("DELETE FROM $table_name WHERE id IN ($ids)");

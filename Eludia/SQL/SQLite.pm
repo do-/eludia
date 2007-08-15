@@ -37,8 +37,8 @@ sub sql_do_refresh_sessions {
 			1;
 	}
 
-	sql_do ("DELETE FROM sessions WHERE ts < ?", time - $timeout * 60);
-	sql_do ("UPDATE sessions SET ts = ? WHERE id = ? ", int (time), $_REQUEST {sid});
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < ?", time - $timeout * 60);
+	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = ? WHERE id = ? ", int (time), $_REQUEST {sid});
 }
 
 ################################################################################
@@ -438,7 +438,7 @@ sub sql_select_loop {
 
 sub keep_alive {
 	my $sid = shift;
-	sql_do ("UPDATE sessions SET ts = ? WHERE id = ? ", int(time), $sid);
+	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = ? WHERE id = ? ", int(time), $sid);
 }
 
 1;

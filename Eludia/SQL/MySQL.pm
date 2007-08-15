@@ -28,15 +28,15 @@ sub sql_do_refresh_sessions {
 			1;
 	}
 
-	my $ids = sql_select_ids ('SELECT id FROM sessions WHERE ts < now() - INTERVAL ? MINUTE', $timeout);
+	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < now() - INTERVAL ? MINUTE", $timeout);
 	
-	sql_do ("DELETE FROM sessions     WHERE id IN ($ids)");
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
 
-	$ids = sql_select_ids ('SELECT id FROM sessions');
+	$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
 
-	sql_do ("DELETE FROM __access_log WHERE id_session NOT IN ($ids)");
+	sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session NOT IN ($ids)");
 	
-	sql_do ("UPDATE sessions SET ts = NULL WHERE id = ? ", $_REQUEST {sid});
+	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = NULL WHERE id = ? ", $_REQUEST {sid});
 	
 }
 
@@ -54,7 +54,7 @@ sub sql_do {
 		my $insert_sql = '';
 		my $update_sql = '';
 
-		if ($sql =~ /\s*DELETE\s+FROM\s*(\w+).*?(WHERE.*)/i && $1 ne 'log' && sql_is_temporal_table ($1)) {
+		if ($sql =~ /\s*DELETE\s+FROM\s*(\w+).*?(WHERE.*)/i && $1 ne $conf -> {systables} -> {log} && sql_is_temporal_table ($1)) {
 		
 			my $cols = join ', ', keys %{$model_update -> get_columns ($1)};
 
@@ -70,7 +70,7 @@ sub sql_do {
 			$insert_sql = "INSERT INTO __log_$1 ($cols, __dt, __op, __id_log, __is_actual) SELECT $cols, NOW() AS __dt, 3 AS __op, $_REQUEST{_id_log} AS __id_log, 1 AS __is_actual FROM $1 WHERE $1.id IN ($ids)";
 			
 		}
-		elsif ($sql =~ /\s*UPDATE\s*(\w+).*?(WHERE.*)/i && $1 ne 'log' && sql_is_temporal_table ($1)) {
+		elsif ($sql =~ /\s*UPDATE\s*(\w+).*?(WHERE.*)/i && $1 ne $conf -> {systables} -> {log} && sql_is_temporal_table ($1)) {
 		
 			my $cols = join ', ', keys %{$model_update -> get_columns ($1)};
 
@@ -99,14 +99,14 @@ sub sql_do {
 		my $insert_sql = '';
 		my $update_sql = '';
 		
-		if ($sql =~ /\s*UPDATE\s*(\w+).*?(WHERE.*)/i && $1 ne 'log' && sql_is_temporal_table ($1)) {
+		if ($sql =~ /\s*UPDATE\s*(\w+).*?(WHERE.*)/i && $1 ne $conf -> {systables} -> {log} && sql_is_temporal_table ($1)) {
 
 			my $cols = join ', ', keys %{$model_update -> get_columns ($1)};
 			$update_sql = "UPDATE __log_$1 SET __is_actual = 0 WHERE id IN ($ids) AND __is_actual = 1";
 			$insert_sql = "INSERT INTO __log_$1 ($cols, __dt, __op, __id_log, __is_actual) SELECT $cols, NOW() AS __dt, 1 AS __op, $_REQUEST{_id_log} AS __id_log, 1 AS __is_actual FROM $1 WHERE $1.id IN ($ids)";
 
 		}
-		elsif ($sql =~ /\s*INSERT\s+INTO\s*(\w+)/i && $1 ne 'log' && sql_is_temporal_table ($1)) {
+		elsif ($sql =~ /\s*INSERT\s+INTO\s*(\w+)/i && $1 ne $conf -> {systables} -> {log} && sql_is_temporal_table ($1)) {
 
 			my $cols = join ', ', keys %{$model_update -> get_columns ($1)};
 			our $__last_insert_id = sql_last_insert_id ();
@@ -534,12 +534,12 @@ sub sql_do_insert {
 		sql_do (<<EOS, $_REQUEST {sid});
 			UPDATE
 				$table_name
-				LEFT JOIN sessions ON $table_name.fake = sessions.id
+				LEFT JOIN $conf->{systables}->{sessions} ON $table_name.fake = $conf->{systables}->{sessions}.id
 			SET	
 				$table_name.fake = ?
 			WHERE
 				$table_name.fake > 0
-				AND sessions.id_user IS NULL
+				AND $conf->{systables}->{sessions}.id_user IS NULL
 EOS
 
 		### get my least fake id (maybe ex-orphan, maybe not)
@@ -665,15 +665,15 @@ sub sql_upload_file {
 
 sub keep_alive {
 	my $sid = shift;
-	sql_do ("UPDATE sessions SET ts = NULL WHERE id = ? ", $sid);
+	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = NULL WHERE id = ? ", $sid);
 }
 
 ################################################################################
 
 sub select__table_data {
 
-	exit if $_REQUEST {table} eq 'sessions';
-	exit if $_REQUEST {table} eq '__access_log';
+	exit if $_REQUEST {table} eq $conf -> {systables} -> {sessions};
+	exit if $_REQUEST {table} eq $conf -> {systables} -> {__access_log};
 	
 	my $table = $DB_MODEL -> {tables} -> {$_REQUEST {table}} or exit;
 	
