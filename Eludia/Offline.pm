@@ -38,7 +38,25 @@ BEGIN {
 	sql_reconnect ();
 	
 	do $config_path;
-	
+
+	$package = __PACKAGE__;
+	eval "\$conf = \$${package}::conf";
+
+  $conf -> {systables} ||= {
+      _db_model_checksums => '_db_model_checksums',
+      __access_log            => '__access_log',
+      __benchmarks            => '__benchmarks',
+      __last_update           => '__last_update',
+      __moved_links           => '__moved_links',
+      __required_files=> '__required_files',
+      __screenshots           => '__screenshots',
+      cache_html                      => 'cache_html',
+      log                     => 'log',
+      roles                   => 'roles',
+      sessions                => 'sessions',
+      users                   => 'users',
+  };
+
 	our $number_format = Number::Format -> new (%{$conf -> {number_format}});
 
 	our $_SKIN = 'Eludia::Presentation::Skins::' . get_skin_name ();	

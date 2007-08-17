@@ -2562,6 +2562,7 @@ sub _adjust_row_cell_style {
 			$options -> {is_total} ? 'row-cell-total' : 
 			$data -> {attributes} -> {bgcolor} ? 'row-cell-transparent' : 
 			'row-cell';
+		$data -> {attributes} -> {class} .= '-no-scroll' if ($data -> {no_scroll} && $data -> {attributes} -> {class} =~ /row-cell/);
 	}	
 
 }
@@ -2888,6 +2889,7 @@ sub draw_table_header_cell {
 	
 	$cell -> {attributes} ||= {};
 	$cell -> {attributes} -> {class}   ||= 'row-cell-header';
+	$cell -> {attributes} -> {class}    .= '-no-scroll' if ($cell -> {no_scroll});
 	$cell -> {attributes} -> {colspan} ||= $cell -> {colspan};
 	$cell -> {attributes} -> {rowspan} ||= $cell -> {rowspan};
 	

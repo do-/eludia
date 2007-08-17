@@ -59,27 +59,6 @@ sub handler {
 	
 	delete $_REQUEST {__x} if $preconf -> {core_no_xml};
 	
-	unless ($conf -> {systables}) {
-	
-		$conf -> {systables} = {
-			_db_model_checksums => '_db_model_checksums',
-			__access_log		=> '__access_log',
-			__benchmarks		=> '__benchmarks',
-			__last_update		=> '__last_update',
-			__moved_links		=> '__moved_links',
-			__required_files=> '__required_files',
-			__screenshots		=> '__screenshots',
-			cache_html			=> 'cache_html',
-			log          		=> 'log',
-			roles        		=> 'roles',
-			sessions     		=> 'sessions',
-			users        		=> 'users',
-			
-		};
-	
-	}
-		
-	
 	$_REQUEST {__no_navigation} ||= $_REQUEST {select};
 		
 	$_REQUEST {type} =~ s/_for_.*//;

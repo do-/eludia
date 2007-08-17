@@ -498,6 +498,19 @@ TEXTAREA {
 	padding-top: 3px;
 	padding-bottom: 2px;
 }
+.row-cell-no-scroll {
+	FONT-FAMILY: Arial; 
+	FONT-WEIGHT: normal; 
+	FONT-SIZE: 10pt; 
+	COLOR: #000000; 
+	background-color: #ffffff;
+	padding-top: 3px;
+	padding-bottom: 2px;
+
+	position: relative;
+	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+
+}
 .row-cell-transparent {
 	FONT-FAMILY: Arial; 
 	FONT-WEIGHT: normal; 
@@ -505,6 +518,18 @@ TEXTAREA {
 	COLOR: #000000; 
 	padding-top: 3px;
 	padding-bottom: 2px;
+}
+.row-cell-transparent-no-scroll {
+	FONT-FAMILY: Arial; 
+	FONT-WEIGHT: normal; 
+	FONT-SIZE: 10pt; 
+	COLOR: #000000; 
+	padding-top: 3px;
+	padding-bottom: 2px;
+
+	position: relative;
+	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+
 }
 .row-button {
 	FONT-FAMILY: Arial; 
@@ -523,6 +548,19 @@ TEXTAREA {
 	background-color: #efefef;
 	padding-top: 5px;
 	padding-bottom: 5px;
+}
+.row-cell-total-no-scroll {
+	FONT-FAMILY: Arial; 
+	FONT-WEIGHT: bold;   
+	FONT-SIZE: 10pt; 
+	COLOR: #000000; 
+	background-color: #efefef;
+	padding-top: 5px;
+	padding-bottom: 5px;
+
+	position: relative;
+	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+
 }
 .row-cell-header {
 	FONT-FAMILY: Arial; 
@@ -543,6 +581,26 @@ TEXTAREA {
 
 }
 
+.row-cell-header-no-scroll {
+	FONT-FAMILY: Arial; 
+	FONT-WEIGHT: bold;   
+	FONT-SIZE: 10pt; 
+	COLOR: #000000; 
+	background-color: #efefef;
+	padding-top: 3px;
+	padding-bottom: 2px;
+	
+/*
+	border-top:solid 1px #D6D3CE;
+	border-bottom:solid 1px #D6D3CE;
+*/
+
+	position: relative;
+	top: expression(this.parentElement.parentElement.parentElement.parentElement.scrollTop);
+	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+
+}
+
 
 /*
 .row-cell-hilite {
@@ -557,6 +615,14 @@ TEXTAREA {
 
 .row-cell-hilite {
 	background-color: #dededc;
+}
+
+.row-cell-hilite-no-scroll {
+	background-color: #dededc;
+
+	position: relative;
+	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+
 }
 
 
