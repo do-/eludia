@@ -1670,6 +1670,7 @@ sub draw_text_cell {
 
 	my $html = "\n\t<td ";
 	$html .= dump_attributes ($data -> {attributes}) if $data -> {attributes};
+	$html .= ' style="padding-left:' . ($data -> {level} * 15 + 3) . '"' if (defined $data -> {level});
 	$html .= '>';
 	
 	unless ($data -> {off}) {
@@ -1681,7 +1682,7 @@ sub draw_text_cell {
 
 		$html .= '<nobr>' unless $data -> {no_nobr};
 
-		$html .= '&nbsp;';		
+		$html .= '&nbsp;' unless (defined $data -> {level});		
 
 		$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 		$html .= '<i>'      if $data -> {italic} || $options -> {italic};
