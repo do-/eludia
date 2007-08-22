@@ -1870,8 +1870,10 @@ sub draw_table_header_cell {
 	}	
 
 	my $attributes = dump_attributes ($cell -> {attributes});
+
+	my $z_index = $cell -> {no_scroll} ? 'style="z-index:110"' : 'style="z-index:100"';
 	
-	return "<th $attributes $$cell{title}>\&nbsp;$$cell{label}\&nbsp;</th>";
+	return "<th $attributes $$cell{title} $z_index>\&nbsp;$$cell{label}\&nbsp;</th>";
 
 }
 
