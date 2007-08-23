@@ -839,7 +839,7 @@ sub draw_form {
 		);
 	}	
 	elsif ($conf -> {core_auto_esc} > 0 && $_REQUEST {__last_query_string}) {
-		$options -> {esc} = esc_href ();
+		$options -> {esc} ||= esc_href ();
 	}
 
 	our $tabindex = 1;

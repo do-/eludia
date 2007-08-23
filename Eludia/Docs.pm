@@ -163,6 +163,10 @@ our $charset = {
 		label_ru => "js-код, подставляемый в конец обработчика body.onload",
 	},
 	{
+		name     => '__script',
+		label_ru => "js-код, подставляемый в конец элемента html/head/script, если страница предназначена для непосредственного просмотра (а не грузится в iframe[@name=invisible] для перерисовки родительского экрана)",
+	},
+	{
 		name     => '__no_focus',
 		label_ru => "Если ложь, то при загрузке страницы окно браузера перехватывает фокус ввода (в частности, всплывает поверх остальных приложений)",
 	},
@@ -2837,7 +2841,7 @@ EO
 
 	{
 		name     => 'draw_toolbar_input_select',
-		options  => [qw(name values value empty max_len)],
+		options  => [qw(name values value empty max_len onChange)],
 		syn      => <<EO,	
 	draw_toolbar_input_select ({
 		name   => 'id_topic',

@@ -2460,4 +2460,18 @@ sub get_item_of_ ($) {
 
 sub get_page {}
 
+################################################################################^M
+
+sub json_dump_to_function {
+
+	my ($name, $data) = @_;
+	
+	our $_JSON;
+	
+	$_JSON ||= JSON::XS -> new -> latin1 (1);
+
+	return "\n function $name () {\n return " . $_JSON -> encode ($data) . "\n}\n";
+
+}
+
 1;

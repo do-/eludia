@@ -14,6 +14,7 @@ WriteMakefile(
 	'Digest::MD5'		=> '',
 	'Fcntl'			=> '',
 	'XML::Simple'		=> '2.14',
+	'JSON::XS'		=> '1.43',
 #	'Math::FixedPrecision'  => '',
     },
     ($] >= 5.005 ?    

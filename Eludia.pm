@@ -17,6 +17,7 @@ use Time::HiRes 'time';
 use URI::Escape;
 use Storable;
 use Net::SMTP;
+use JSON::XS;
 #use Math::FixedPrecision;
 
 use constant MP2 => ( exists $ENV{MOD_PERL_API_VERSION} and 
@@ -36,9 +37,9 @@ BEGIN {
   
 	$Data::Dumper::Sortkeys = 1;
 
-	$Eludia_VERSION      = $Eludia::VERSION      = '07.08.14';
-	$Eludia_VERSION_NAME = $Eludia::VERSION_NAME = 'TurboYoghurt';
-		
+	$Eludia_VERSION      = $Eludia::VERSION      = '07.08.23';
+	$Eludia_VERSION_NAME = $Eludia::VERSION_NAME = 'The23rd';
+
 	eval {
 		require Math::FixedPrecision;
 	};
