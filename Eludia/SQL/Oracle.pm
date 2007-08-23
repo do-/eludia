@@ -126,8 +126,10 @@ sub sql_do {
 sub sql_execute_procedure {
 
 	my ($sql, @params) = @_;
-
-	my $st = sql_prepare ("BEGIN\n$sql; \nEND;");
+	
+	$sql .= ';' unless $sql =~ /;[\n\r\s]*$/;
+	
+	my $st = sql_prepare ("$sql");
 
 	my $i = 1;
 	while (@params > 0) {

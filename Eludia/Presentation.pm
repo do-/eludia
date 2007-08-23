@@ -1266,8 +1266,7 @@ sub draw_form_field_static {
 		delete $options -> {href};
 	}
 	
-		
-	my $value = $data -> {$options -> {name}};	
+	my $value = $options -> {value} || $data -> {$options -> {name}};	
 
 	my $static_value = '';
 	

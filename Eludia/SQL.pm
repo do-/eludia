@@ -749,7 +749,7 @@ sub sql_select_loop {
 	our $i;
 	while ($i = $st -> fetchrow_hashref) {
 		lc_hashref ($i)
-			if (&lc_hashref);
+			if (exists $$_PACKAGE {'lc_hashref'});
 		&$coderef ();
 	}
 	
