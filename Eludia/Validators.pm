@@ -98,18 +98,25 @@ sub vld_inn_10 {
 
 	my ($name, $nullable) = @_;
 	
-	$name = "_" . $name;
-	
-	if (!$_REQUEST {$name} && $nullable) {
-		delete $_REQUEST {$name};
+	my $name1;
+	my $value;
+	if ($name =~ /\D/) {
+		$name1 = '_' . $name;
+		$value = $_REQUEST {$name1};
+	} else {
+		$value = $name;
+	} 
+
+	if (!$value && $nullable) {
+		delete $_REQUEST {$name1} if ($name1);
 		return undef;
 	}
 	
 	local $SIG {__DIE__} = 'DEFAULT';
 
-	$_REQUEST {$name} =~ /^\d{10}$/ or die "#$name#:Код ИНН должен состоять из 10 арабских цифр";
-	
-	my @n = split //, $_REQUEST {$name};
+	$value =~ /^\d{10}$/ or $name1 ? die "#$name1#:Код ИНН должен состоять из 10 арабских цифр" : return 'Код ИНН должен состоять из 10 арабских цифр';
+
+	my @n = split //, $value;
 		
 	my $checksum =
 		$n [0] * 2  +
@@ -125,7 +132,7 @@ sub vld_inn_10 {
 	$checksum = $checksum % 11;		
 	$checksum = $checksum % 10 if $checksum > 9;
 		
-	$checksum == 0 + substr ($_REQUEST {$name}, -1, 1) or die "#$name#:Не сходится контрольная сумма ИНН";
+	$checksum == 0 + substr ($value, -1, 1) or $name1 ? die "#$name1#:Не сходится контрольная сумма ИНН" : return 'Не сходится контрольная сумма ИНН';
 
 	return undef;
 
@@ -137,18 +144,25 @@ sub vld_inn_12 {
 
 	my ($name, $nullable) = @_;
 	
-	$name = "_" . $name;
+	my $name1;
+	my $value;
+	if ($name =~ /\D/) {
+		$name1 = '_' . $name;
+		$value = $_REQUEST {$name1};
+	} else {
+		$value = $name;
+	} 
 
-	if (!$_REQUEST {$name} && $nullable) {
-		delete $_REQUEST {$name};
+	if (!$value && $nullable) {
+		delete $_REQUEST {$name1} if ($name1);
 		return undef;
 	}
 	
 	local $SIG {__DIE__} = 'DEFAULT';
 
-	$_REQUEST {$name} =~ /^\d{12}$/ or die "#$name#:Код ИНН должен состоять из 12 арабских цифр";
+	$value =~ /^\d{12}$/ or $name1 ? die "#$name1#:Код ИНН должен состоять из 12 арабских цифр" : return 'Код ИНН должен состоять из 12 арабских цифр';
 	
-	my @n = split //, $_REQUEST {$name};
+	my @n = split //, $value;
 		
 	my $checksum =
 		$n [0]  * 7  +
@@ -166,7 +180,7 @@ sub vld_inn_12 {
 	$checksum = $checksum % 11;
 	$checksum = 0 if $checksum > 9;
 			
-	$checksum == 0 + substr ($_REQUEST {$name}, -2, 1) or die "#$name#:Не сходится первая контрольная сумма ИНН";
+	$checksum == 0 + substr ($value, -2, 1) or $name1 ? die "#$name1#:Не сходится первая контрольная сумма ИНН" : return 'Не сходится первая контрольная сумма ИНН';
 		
 	my $checksum =
 		$n [0]  * 3  +
@@ -185,7 +199,7 @@ sub vld_inn_12 {
 	$checksum = $checksum % 11;
 	$checksum = 0 if $checksum > 9;
 			
-	$checksum == 0 + substr ($_REQUEST {$name}, -1, 1) or die "#$name#:Не сходится вторая контрольная сумма ИНН";
+	$checksum == 0 + substr ($value, -1, 1) or $name1 ? die "#$name1#:Не сходится вторая контрольная сумма ИНН" : return 'Не сходится вторая контрольная сумма ИНН';
 
 	return undef;
 
@@ -196,20 +210,27 @@ sub vld_inn_12 {
 sub vld_inn {
 
 	my ($name, $nullable) = @_;
-	
-	my $name1 = '_' . $name;
 
-	if (!$_REQUEST {$name1} && $nullable) {
-		delete $_REQUEST {$name1};
+	my $name1;
+	my $value;
+	if ($name =~ /\D/) {
+		$name1 = '_' . $name;
+		$value = $_REQUEST {$name1};
+	} else {
+		$value = $name;
+	} 
+
+	if (!$value && $nullable) {
+		delete $_REQUEST {$name1} if ($name1);
 		return undef;
 	}
 
-    if (length $_REQUEST {$name1} == 10) {
+    if (length $value == 10) {
 		return vld_inn_10 ($name);
-	} elsif (length $_REQUEST {$name1} == 12) {
+	} elsif (length $value == 12) {
 		return vld_inn_12 ($name);
 	} else {
-		return "#$name1#:ИНН должен состоять либо из 10, либо из 12 цифр";
+		return $name1 ? die "#$name1#:ИНН должен состоять либо из 10, либо из 12 цифр" : return 'ИНН должен состоять либо из 10, либо из 12 цифр';
 	}
 
 }
