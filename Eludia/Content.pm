@@ -246,21 +246,6 @@ sub ids {
 
 #############################################################################
 
-sub get_skin_name {
-
-	return
-		$_REQUEST {xls} ? 'XL' :
-		$_REQUEST {__dump} || $_REQUEST {__d} ? 'Dumper' :
-		$_REQUEST {__proto} ? 'XMLProto' :
-		$_REQUEST {__x} ? 'XMLDumper' :
-		$_REQUEST {__windows_ce} ? 'WinCE' :
-		$preconf -> {core_skin} ? $preconf -> {core_skin} :
-		'Classic';
-
-}
-
-#############################################################################
-
 sub is_off {
 	
 	my ($options, $value) = @_;

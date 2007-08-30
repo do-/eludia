@@ -3146,6 +3146,8 @@ sub draw_page {
 		undef $page -> {content};		
 		
 		eval { $page -> {content} = call_for_role ($selector)};
+		
+		setup_skin ();
 
 		$_REQUEST {__read_only} = 0 if ($_REQUEST {__only_field});
 		

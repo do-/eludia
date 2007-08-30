@@ -43,76 +43,43 @@ sub get_request {
 
 }
 
+sub setup_skin {
 
-sub handler {
+	eval {$_REQUEST {__skin} ||= get_skin_name ()};
 
-	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
-
-	$_PACKAGE ||= __PACKAGE__ . '::';
-		
-	get_request (@_);
-
-	my $parms = $apr -> parms;
-	undef %_REQUEST;
-	our %_REQUEST = %{$parms};
-	our $_REQUEST_TO_INHERIT = undef;
+	unless ($_REQUEST {__skin}) {
 	
-	delete $_REQUEST {__x} if $preconf -> {core_no_xml};
-	
-	$_REQUEST {__no_navigation} ||= $_REQUEST {select};
-		
-	$_REQUEST {type} =~ s/_for_.*//;
-	$_REQUEST {__uri} = $r -> uri;
-	$_REQUEST {__uri} =~ s{/cgi-bin/.*}{/};
-	$_REQUEST {__uri} =~ s{\/\w+\.\w+$}{};
-	$_REQUEST {__uri} =~ s{\?.*}{};
-	$_REQUEST {__uri} =~ s{^/+}{/};
-	$_REQUEST {__uri} =~ s{\&salt\=[\d\.]+}{}gsm;
-#	$_REQUEST {__uri_root} =  $_REQUEST {__uri} . '?sid=' . $_REQUEST {sid} . '&salt=' . rand * time;
-
-	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;
-	if ($_REQUEST {fake}) {
-    	    $_REQUEST {fake} =~ s/\%(25)*2c/,/ig;
-	}
-
-	if ($_REQUEST {action}) {
-	
-		foreach my $key (keys %_REQUEST) {
-
-			$key =~ /^_[^_]/ or next;
-
-			$_REQUEST {$key} =~ s{^\s+}{};
-			$_REQUEST {$key} =~ s{\s+$}{};
-
-			if ($key !~ /^_dt/ && $_REQUEST {$key} =~ /^\-?[\d ]*\d([\,\.]\d+)?$/) {
-
-				$_REQUEST {$key} =~ s{ }{}g;
-				$_REQUEST {$key} =~ y{,}{.};
-				
-				if ($^V ge v5.8.0 && $Math::FixedPrecision::VERSION) {
-					$_REQUEST {$field} = new Math::FixedPrecision ($_REQUEST {$field}, ($conf -> {precision} || 3));
-				}				
-
-			}
-
+		if ($_REQUEST {xls}) {
+			$_REQUEST {__skin} = 'XL';
+		}
+		elsif ($_REQUEST {__dump} || $_REQUEST {__d}) {
+			$_REQUEST {__skin} = 'Dumper';
+		}
+		elsif ($_REQUEST {__proto}) {
+			$_REQUEST {__skin} = 'XMLProto';
+		}
+		elsif ($_REQUEST {__x}) {
+			$_REQUEST {__skin} = 'XMLDumper';
+		}
+		elsif ($_REQUEST {__windows_ce}) {
+			$_REQUEST {__skin} = 'WinCE';
 		}
 		
 	}
-	
-   	sql_reconnect ();
 
-	require_fresh ($_PACKAGE . 'Config');
+	$_REQUEST {__skin} ||= $preconf -> {core_skin};
+	$_REQUEST {__skin} ||= 'Classic';
 
-	my $skin_name = get_skin_name ();
-
-	our $_SKIN = "Eludia::Presentation::Skins::$skin_name";
+	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
 	eval "require $_SKIN";
 	warn $@ if $@;
 	
-	$_REQUEST {__static_url}  = '/i/_skins/' . $skin_name;
+	$_REQUEST {__static_url}  = '/i/_skins/' . $_REQUEST {__skin};
 	$_REQUEST {__static_salt} = $_REQUEST {sid} || rand ();
 
 	$_SKIN -> {options} ||= $_SKIN -> options;
+	
+	$_REQUEST {__no_navigation} ||= $_SKIN -> {options} -> {no_navigation};
 
 	if (!$_SKIN -> {static_ok} && !$_SKIN -> {options} -> {no_presentation} && !$_SKIN -> {options} -> {no_static}) {
 
@@ -176,6 +143,69 @@ sub handler {
 	*{$_SKIN . '::r'       } = *{$_PACKAGE . 'r'};
 	*{$_SKIN . '::i18n'    } = *{$_PACKAGE . 'i18n'};
 	*{$_SKIN . '::create_url'    } = *{$_PACKAGE . 'create_url'};
+	*{$_SKIN . '::_SUBSET'}    = *{$_PACKAGE . '_SUBSET'};	
+
+}
+
+sub handler {
+
+	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
+
+	$_PACKAGE ||= __PACKAGE__ . '::';
+		
+	get_request (@_);
+
+	my $parms = $apr -> parms;
+	undef %_REQUEST;
+	our %_REQUEST = %{$parms};
+	$_REQUEST {__skin} = '';
+	our $_REQUEST_TO_INHERIT = undef;
+	
+	delete $_REQUEST {__x} if $preconf -> {core_no_xml};
+	
+	$_REQUEST {__no_navigation} ||= $_REQUEST {select};
+		
+	$_REQUEST {type} =~ s/_for_.*//;
+	$_REQUEST {__uri} = $r -> uri;
+	$_REQUEST {__uri} =~ s{/cgi-bin/.*}{/};
+	$_REQUEST {__uri} =~ s{\/\w+\.\w+$}{};
+	$_REQUEST {__uri} =~ s{\?.*}{};
+	$_REQUEST {__uri} =~ s{^/+}{/};
+	$_REQUEST {__uri} =~ s{\&salt\=[\d\.]+}{}gsm;
+#	$_REQUEST {__uri_root} =  $_REQUEST {__uri} . '?sid=' . $_REQUEST {sid} . '&salt=' . rand * time;
+
+	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;
+	if ($_REQUEST {fake}) {
+    	    $_REQUEST {fake} =~ s/\%(25)*2c/,/ig;
+	}
+
+	if ($_REQUEST {action}) {
+	
+		foreach my $key (keys %_REQUEST) {
+
+			$key =~ /^_[^_]/ or next;
+
+			$_REQUEST {$key} =~ s{^\s+}{};
+			$_REQUEST {$key} =~ s{\s+$}{};
+
+			if ($key !~ /^_dt/ && $_REQUEST {$key} =~ /^\-?[\d ]*\d([\,\.]\d+)?$/) {
+
+				$_REQUEST {$key} =~ s{ }{}g;
+				$_REQUEST {$key} =~ y{,}{.};
+				
+				if ($^V ge v5.8.0 && $Math::FixedPrecision::VERSION) {
+					$_REQUEST {$field} = new Math::FixedPrecision ($_REQUEST {$field}, ($conf -> {precision} || 3));
+				}				
+
+			}
+
+		}
+		
+	}
+	
+   	sql_reconnect ();
+
+	require_fresh ($_PACKAGE . 'Config');
 
 	if ($r -> uri =~ m{/\w+\.(css|gif|ico|js|html)$}) {
 		select__static_files ();
@@ -275,8 +305,6 @@ EOH
 			$_SUBSET -> {name} ||= $_SUBSET -> {items} -> [0] -> {name} if $n > 0;
 
 			$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ("UPDATE $conf->{systables}->{users} SET subset = ? WHERE id = ?", $_SUBSET -> {name}, $_USER -> {id});
-
-			*{$_SKIN . '::_SUBSET'}    = *{$_PACKAGE . '_SUBSET'};
 			
 		}
 

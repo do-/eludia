@@ -37,7 +37,6 @@ Eludia/Presentation/Skins/Classic/offer.gif.pm
 Eludia/Presentation/Skins/Classic/ok.gif.pm
 Eludia/Presentation/Skins/Classic/razd1.gif.pm
 Eludia/Presentation/Skins/Classic/right.gif.pm
-Eludia/Presentation/Skins/Classic/robots.txt.pm
 Eludia/Presentation/Skins/Classic/section_open.gif.pm
 Eludia/Presentation/Skins/Classic/status_100.gif.pm
 Eludia/Presentation/Skins/Classic/status_101.gif.pm
@@ -63,6 +62,7 @@ Eludia/Presentation/Skins/Classic/up.gif.pm
 Eludia/Presentation/Skins/Classic/w_20_1.gif.pm
 Eludia/Presentation/Skins/Dumper.pm
 Eludia/Presentation/Skins/Generic.pm
+Eludia/Presentation/Skins/JS.pm
 Eludia/Presentation/Skins/TurboMilk.pm
 Eludia/Presentation/Skins/TurboMilk/0.gif.pm
 Eludia/Presentation/Skins/TurboMilk/0.html.pm
