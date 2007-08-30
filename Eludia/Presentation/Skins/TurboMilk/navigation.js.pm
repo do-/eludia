@@ -120,6 +120,7 @@ function typeAhead() { // borrowed from http://www.oreillynet.com/javascript/200
 	       typeAheadInfo.last = now;
 	       typeAheadInfo.timeout = setTimeout("typeAheadInfo.reset()", typeAheadInfo.delay);
 	       selectElem.selectedIndex = i;
+	       selectElem.onchange ();
 	       evt.cancelBubble = true;
 	       evt.returnValue = false;
 	       return false;   
