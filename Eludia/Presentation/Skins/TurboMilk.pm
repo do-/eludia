@@ -3,9 +3,15 @@ package Eludia::Presentation::Skins::TurboMilk;
 use Data::Dumper;
 
 BEGIN {
+
 	require Eludia::Presentation::Skins::Generic;
 	delete $INC {"Eludia/Presentation/Skins/Generic.pm"};
-	our $error_skin = 'JS';
+
+	our $replacement = {
+		error    => 'JS',
+		redirect => 'JS',
+	};
+
 }
 
 ################################################################################

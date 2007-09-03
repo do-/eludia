@@ -48,6 +48,18 @@ sub draw_error_page {
 
 ################################################################################
 
+sub draw_redirect_page {
+
+	my ($_SKIN, $page) = @_;
+
+	$_REQUEST {__content_type} ||= 'text/plain; charset=' . $i18n -> {_charset};
+
+	return Dumper ({redirect => {url => $page -> {url}}}) if $_REQUEST {__d};
+
+}
+
+################################################################################
+
 sub lrt_print {
 
 	my $_SKIN = shift;

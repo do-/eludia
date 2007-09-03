@@ -1324,13 +1324,11 @@ sub redirect {
 
 	$options ||= {};
 	$options -> {kind} ||= 'http';
-	$options -> {kind} = 'http' if ($_REQUEST {select});
-#	$options -> {kind} = 'http' if ($_REQUEST {__windows_ce});
+	$options -> {kind}   = 'http' if ($_REQUEST {__windows_ce} && $_REQUEST {select});
 
 	if ($options -> {kind} eq 'http' || $options -> {kind} eq 'internal') {
 
 		$r -> status ($options -> {status} || 302);
-
 		$r -> headers_out -> {'Location'} = $url;
 		$r -> send_http_header unless (MP2);
 		$_REQUEST {__response_sent} = 1;
@@ -1339,41 +1337,9 @@ sub redirect {
 	}
 
 	if ($options -> {kind} eq 'js') {
-
-		if ($options -> {label}) {
-			$options -> {before} = 'alert(' . js_escape ($options -> {label}) . '); ';
-		}
-
-		my $target = $options -> {target} ? "'$$options{target}'" : "(window.name == 'invisible' ? '_parent' : '_self')";
-				
-		if ($_REQUEST {__x}) {
-								
-			out_html ({}, XML::Simple::XMLout ({
-				url   => $url,
-			}, 
-				RootName => 'redirect',
-				XMLDecl  => '<?xml version="1.0" encoding="windows-1251"?>',
-			));
-					
-		}
-		elsif ($_REQUEST {__d}) {
-			out_html ({}, Dumper ({redirect => {url   => $url}}));
-		}
-		else {
-
-			out_html ({}, <<EOH);
-<html>
-	<head>
-		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-		</script>
-	</head>
-	<body onLoad="$$options{before}; nope ('$url&salt=' + Math.random (), $target)">
-	</body>
-</html>
-EOH
-
-		}
-
+	
+		$options -> {url} = $url;	
+		out_html ({}, draw_redirect_page ($options));
 		$_REQUEST {__response_sent} = 1;
 		return;
 		

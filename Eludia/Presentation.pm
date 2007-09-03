@@ -3227,6 +3227,18 @@ sub draw_page {
 
 ################################################################################
 
+sub draw_redirect_page {
+
+	my ($page) = @_;
+
+	setup_skin ({kind => 'redirect'});
+
+	return $_SKIN -> draw_redirect_page ($page);
+
+}
+
+################################################################################
+
 sub lrt_print {
 	$_SKIN -> lrt_print (@_);
 }

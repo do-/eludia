@@ -45,6 +45,8 @@ sub get_request {
 
 sub setup_skin {
 
+	my ($options) = @_;
+
 	eval {$_REQUEST {__skin} ||= get_skin_name ()};
 
 	unless ($_REQUEST {__skin}) {
@@ -70,10 +72,11 @@ sub setup_skin {
 	$_REQUEST {__skin} ||= $preconf -> {core_skin};
 	$_REQUEST {__skin} ||= 'Classic';
 	
-	if ($_REQUEST {error}) {
+	$options -> {kind} = 'error' if $_REQUEST {error};
+	
+	if ($options -> {kind}) {
 		eval "require Eludia::Presentation::Skins::$_REQUEST{__skin}";
-		${"Eludia::Presentation::Skins::$_REQUEST{__skin}::error_skin"} ||= $_REQUEST {__skin};
-		$_REQUEST {__skin} = ${"Eludia::Presentation::Skins::$_REQUEST{__skin}::error_skin"};
+		$_REQUEST {__skin} = (${"Eludia::Presentation::Skins::$_REQUEST{__skin}::replacement"} -> {$options->{kind}} ||= $_REQUEST {__skin});
 	}
 
 	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";

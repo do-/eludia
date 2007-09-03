@@ -6,7 +6,12 @@ BEGIN {
 	require Eludia::Presentation::Skins::Generic;
 	delete $INC {"Eludia/Presentation/Skins/Generic.pm"};
 	our $lrt_bar = '<!-- L' . ('o' x 8500) . "ong comment -->\n";
-	our $error_skin = 'JS';
+	
+	our $replacement = {
+		error    => 'JS',
+		redirect => 'JS',
+	};
+	
 }
 
 ################################################################################
