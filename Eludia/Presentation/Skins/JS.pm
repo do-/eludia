@@ -39,7 +39,26 @@ sub draw_error_page {
 
 	my $data = $_JSON -> encode ([$_REQUEST {error}]);
 
-	return qq{<html><body onLoad="var data = $data; alert (data [0]);"></body><html>};
+	$_REQUEST {__script} = <<EOJ;
+		function onload () {
+EOJ
+
+	if ($page -> {error_field}) {
+		$_REQUEST{__script} .= <<EOJ;
+			var e = window.parent.document.getElementsByName('$page->{error_field}'); 
+			if (e && e[0]) { try {e[0].focus ()} catch (e) {} }				
+EOJ
+	}
+								
+	$_REQUEST {__script} .= <<EOJ;
+			history.go (-1);
+			var data = $data;
+			alert (data [0]);
+			window.parent.document.body.style.cursor = 'normal';
+		}
+EOJ
+
+	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="onload ()"></body><html>};
 
 }
 

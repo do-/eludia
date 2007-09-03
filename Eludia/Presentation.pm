@@ -3203,6 +3203,8 @@ sub draw_page {
 			$page -> {error_field} = $1;
 		}
 
+		setup_skin ();
+
 		$html = $_SKIN -> draw_error_page ($page);		
 
 	}
