@@ -90,7 +90,12 @@ sub setup_skin {
 	
 	$_REQUEST {__no_navigation} ||= $_SKIN -> {options} -> {no_navigation};
 
-	if (!$_SKIN -> {static_ok} && !$_SKIN -> {options} -> {no_presentation} && !$_SKIN -> {options} -> {no_static}) {
+	if (
+		!$_SKIN -> {static_ok} && 
+		!$_SKIN -> {options} -> {no_presentation} && 
+		!$_SKIN -> {options} -> {no_static} &&
+		$r
+	) {
 
 		my $skin_root = $r -> document_root () . $_REQUEST {__static_url};
 		-d $skin_root or mkdir $skin_root;

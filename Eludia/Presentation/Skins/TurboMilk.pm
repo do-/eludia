@@ -1822,6 +1822,8 @@ sub draw_page {
 		</body>
 EOH
 	}
+	
+#$_REQUEST {__on_load} .= 'alert(window.location + " --> " + window.name);';	
 		
 	$_REQUEST {__scrollable_table_row} ||= 0;
 	
@@ -1860,9 +1862,13 @@ EOH
 		
 		my $href = create_url (%h);
 
+#$_REQUEST {__on_load} .= 'alert(window.location + " --> " + window.name);';	
+
 		$_REQUEST {__on_load} .= <<EOJS;
 		
-			if (window.top == window) { window.location = '$href&__top=1'}
+			try {
+				if (window.name != '_body_iframe') { window.location = '$href&__top=1'}
+			} catch (e) {}
 			
 EOJS
 		
@@ -1961,7 +1967,6 @@ EOCSS
 					var td2sr = new Array ();
 					var td2sc = new Array ();
 					var last_vert_menu = new Array ();
-					var ms_word = null;
 					var subsets_are_visible = 0;
 					var clockID = 0;
 					var clockSeparators = new Array ('$_REQUEST{__clock_separator}', ' ');
