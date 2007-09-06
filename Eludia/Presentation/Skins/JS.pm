@@ -67,20 +67,23 @@ sub draw_redirect_page {
 
 	my ($_SKIN, $options) = @_;
 
-	my $target = $options -> {target} ? "'$$options{target}'" : "(window.name == 'invisible' ? '_parent' : '_self')";
+	my $target = 
+		$options -> {target} ? "'$$options{target}'" : 
+		"(window.name == 'invisible' ? '_parent' : '_self')";
 
 	if ($options -> {label}) {
-		my $data = $_JSON -> encode ([$_REQUEST {error}]);
+		my $data = $_JSON -> encode ([$options -> {label}]);
 		$options -> {before} = "var data = $data; alert(data[0]); ";
 	}				
 
 	return <<EOH;
 <html>
-	<head>
-		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-		</script>
-	</head>
-	<body onLoad="$$options{before}nope ('$options->{url}&salt=' + Math.random (), $target)">
+	<script for=window event=onload>
+		$$options{before};
+		var w = window; 
+		w.open ('$options->{url}&salt=' + Math.random (), $target);
+	</script>
+	<body>
 	</body>
 </html>
 EOH

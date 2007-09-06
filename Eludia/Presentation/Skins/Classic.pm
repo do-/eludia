@@ -724,6 +724,53 @@ sub draw_form_field_select {
 	my ($_SKIN, $options, $data) = @_;
 	
 	my $attributes = dump_attributes ($options -> {attributes});
+
+	if (defined $options -> {other}) {
+
+		$options -> {other} -> {width}  ||= 600;
+		$options -> {other} -> {height} ||= 400;
+
+		my $d_style_top = "d.style.top = " . (defined $options -> {other} -> {top} ? "${$$options{other}}{top};" : "this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop;");
+		my $d_style_left = "d.style.left = " . (defined $options -> {other} -> {left} ? "${$$options{other}}{left};" : "this.offsetLeft + this.offsetParent.offsetLeft + this.offsetParent.offsetParent.offsetLeft;");
+
+		my $onchange = <<EOS;
+		
+			var fname = '_$$options{name}_iframe';
+			var f = document.getElementById (fname);
+
+			var dname = '_$$options{name}_div';
+			var d = document.getElementById (dname);
+
+			f.src = '${$$options{other}}{href}&select=$$options{name}';
+
+			$d_style_top
+			$d_style_left
+
+			d.style.display = 'block';
+			this.style.display = 'none';
+
+			d.focus ();
+			
+EOS
+
+		$options -> {onChange} .= <<EOJS;
+
+			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+				$onchange
+			}
+
+EOJS
+
+	}		
+
+
+
+
+
+
+
+
+
 	
 	my $html = <<EOH;
 		<select 
@@ -982,6 +1029,21 @@ EOH
 sub draw_toolbar {
 
 	my ($_SKIN, $options) = @_;
+
+	if ($_REQUEST {select}) {
+
+		my $button = {
+			icon    => 'cancel',
+			id      => 'cancel',
+			label   => $i18n -> {close},
+			href    => "javaScript:window.parent.restoreSelectVisibility('_$_REQUEST{select}', true);window.parent.focus();",
+		};
+		
+		$button -> {html} = $_SKIN -> draw_toolbar_button ($button);
+		
+		unshift @{$options -> {buttons}}, $button;
+
+	}
 	
 	my $html = <<EOH;
 		<table class=bgr8 cellspacing=0 cellpadding=0 width="100%" border=0>

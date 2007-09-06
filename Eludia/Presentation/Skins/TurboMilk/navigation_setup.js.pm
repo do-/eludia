@@ -23,7 +23,7 @@ function _guess_app_url() {
 }
 
 
-function _install_HTA( FSO ) {
+function _install_HTA( FSO, HTA_content ) {
 	var filename_HTA = _get_HTA_fname();
 	var dirname_HTA = _get_HTA_dir();
 
@@ -33,29 +33,14 @@ function _install_HTA( FSO ) {
 	if( FSO.FileExists(filename_HTA) )
 		FSO.DeleteFile(filename_HTA);
 
-	_create_HTA_file( FSO );
+	_create_HTA_file( FSO, HTA_content );
 	_create_shortcut();
 
 	alert('Приложение "'+app_title+'" установлено.');
 }
 
 
-function _create_HTA_file( FSO ) {
-	var HTA_content = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">'
-		+ '<HTML>'
-		+ '<HEAD>'
-		+ '<TITLE>%%APPTITLE%</TITLE>'
-		+ '<hta:application id="oZP" applicationname="%%APPNAME%" border="thick" caption="yes" icon="%%APPURL%/favicon.ico" navigable="no" scroll="no" selection="yes" showintaskbar="yes" singleinstance="no">'
-		+ '</HEAD>'
-		+ '<BODY leftMargin=0 topMargin=0 rightMargin=0 bottomMargin=0 scroll="no">'
-		+ '<iframe src="%%APPURL%/?type=logon&action=execute_ip" application="yes" height=100% width=100% name="application_frame" frameborder=0>'
-		+ '</BODY>'
-		+ '</HTML>';
-
-	HTA_content = HTA_content.replace('%%APPNAME%', app_code);
-	HTA_content = HTA_content.replace('%%APPTITLE%', app_title);
-	HTA_content = HTA_content.replace('%%APPURL%', app_url);
-	HTA_content = HTA_content.replace('%%APPURL%', app_url); // xxx: dirty thing, but do not want to create regex object for 2 replacements
+function _create_HTA_file( FSO, HTA_content ) {
 
 	var fh = FSO.OpenTextFile(_get_HTA_fname(), 2, true);
 	fh.Write(HTA_content);
@@ -93,7 +78,7 @@ function __get_env_var( varname ) {
 }
 
 
-function SetupHTA(app_codevar, app_titlevar, app_urlvar) {
+function SetupHTA(app_codevar, app_titlevar, app_urlvar, HTA_content) {
 	app_code = app_codevar;
 	if( !app_code )
 		app_code = 'eludia_app';
@@ -108,7 +93,7 @@ function SetupHTA(app_codevar, app_titlevar, app_urlvar) {
 	try {
 		var FSO = new ActiveXObject('Scripting.FileSystemObject');
 		if( !FSO.FileExists(_get_HTA_fname()) || confirm('Приложение "'+app_title+'" уже установлено. Перезаписать?') ) {
-			_install_HTA( FSO );
+			_install_HTA( FSO, HTA_content );
 		}
 	}
 	catch (err) {

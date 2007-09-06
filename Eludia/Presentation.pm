@@ -786,7 +786,7 @@ sub draw_window_title {
 sub draw_logon_form {
 
 	my ($options) = @_;
-		
+	
 	return $_SKIN -> draw_logon_form (@_);
 
 }
@@ -1509,40 +1509,6 @@ sub draw_form_field_select {
 		check_href ($options -> {other});
 
 		$options -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
-		$options -> {other} -> {width}  ||= 600;
-		$options -> {other} -> {height} ||= 400;
-
-		$d_style_top = "d.style.top = " . (defined $options -> {other} -> {top} ? "${$$options{other}}{top};" : "this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop;");
-		$d_style_left = "d.style.left = " . (defined $options -> {other} -> {left} ? "${$$options{other}}{left};" : "this.offsetLeft + this.offsetParent.offsetLeft + this.offsetParent.offsetParent.offsetLeft;");
-
-#				d.style.top   = this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop;
-#				d.style.left  = this.offsetLeft + this.offsetParent.offsetLeft + this.offsetParent.offsetParent.offsetLeft;
-
-		my $onchange = $_REQUEST {__windows_ce} ? "switchDiv(); loadSlaveDiv('${$$options{other}}{href}&select=$$options{name}');" : <<EOS;
-				var fname = '_$$options{name}_iframe';
-				var f = document.getElementById (fname);
-
-				var dname = '_$$options{name}_div';
-				var d = document.getElementById (dname);
-
-				f.src = '${$$options{other}}{href}&select=$$options{name}';
-
-				$d_style_top
-				$d_style_left
-
-				d.style.display = 'block';
-				this.style.display = 'none';
-
-				d.focus ();
-EOS
-
-		$options -> {onChange} .= <<EOJS;
-
-			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-				$onchange
-			}
-
-EOJS
 
 	}		
 
@@ -1788,13 +1754,6 @@ sub draw_toolbar {
 				data => 'cancel',
 			},
 		);
-
-		unshift @buttons, {
-			icon    => 'cancel',
-			id      => 'cancel',
-			label   => $i18n -> {close},
-			href    => $_REQUEST {__windows_ce} ? "javaScript:switchDiv();" : "javaScript:window.parent.restoreSelectVisibility('_$_REQUEST{select}', true);window.parent.focus();",
-		};
 
 	}
 

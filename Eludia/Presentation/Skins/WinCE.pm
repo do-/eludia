@@ -625,6 +625,30 @@ sub draw_form_field_select {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
+	if (defined $options -> {other}) {
+
+		$options -> {other} -> {width}  ||= 600;
+		$options -> {other} -> {height} ||= 400;
+
+		$options -> {onChange} .= <<EOJS;
+
+			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+				switchDiv(); 
+				loadSlaveDiv('${$$options{other}}{href}&select=$$options{name}');
+			}
+
+EOJS
+
+	}		
+
+
+
+
+
+
+
+
+
 	my $html = <<EOH;
 		<div id="input_$$options{name}">
 		<select 
@@ -867,6 +891,21 @@ EOH
 sub draw_toolbar {
 
 	my ($_SKIN, $options) = @_;
+
+	if ($_REQUEST {select}) {
+
+		my $button = {		
+			icon    => 'cancel',
+			id      => 'cancel',
+			label   => $i18n -> {close},
+			href    => "javaScript:switchDiv();",
+		};
+		
+		$button -> {html} = $_SKIN -> draw_toolbar_button ($button);
+
+		unshift @{$options -> {buttons}}, $button;
+
+	}
 
 	my $form_name = 'toolbar_form_' . $_REQUEST {__toolbars_number};
 

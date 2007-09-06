@@ -736,6 +736,29 @@ sub draw_form_field_select {
 	
 	my $attributes = dump_attributes ($options -> {attributes});
 	
+	if (defined $options -> {other}) {
+
+		$options -> {other} -> {width}  ||= 600;
+		$options -> {other} -> {height} ||= 400;
+
+		$options -> {onChange} .= <<EOJS;
+
+			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+				
+				var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:no;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+				
+				focus ();
+				
+				if (result.result == 'ok') {
+					setSelectOption (this, result.id, result.label);
+				}
+				
+			}
+
+EOJS
+
+	}		
+
 	my $html = <<EOH;
 		<select 
 			name="_$$options{name}"
@@ -762,14 +785,14 @@ EOH
 
 	$html .= '</select>';
 
-	if (defined $options -> {other}) {
-		$html .= <<EOH;
-			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)}">
-				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="/i/0.html" application="yes">
-				</iframe>
-			</div>
-EOH
-	}
+#	if (defined $options -> {other}) {
+#		$html .= <<EOH;
+#			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)}">
+#				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="/i/0.html" application="yes">
+#				</iframe>
+#			</div>
+#EOH
+#	}
 
 	return $html;
 	
@@ -967,6 +990,21 @@ sub draw_toolbar {
 
 	my ($_SKIN, $options) = @_;
 	
+	if ($_REQUEST {select}) {
+
+		my $button = {		
+			icon    => 'cancel',
+			id      => 'cancel',
+			label   => $i18n -> {close},
+			href    => "javaScript:window.close();",
+		};
+		
+		$button -> {html} = $_SKIN -> draw_toolbar_button ($button);
+
+		unshift @{$options -> {buttons}}, $button;
+
+	}
+
 	my $html = <<EOH;
 		<table bgcolor="b9c5d7" cellspacing=0 cellpadding=0 width="100%" border=0>
 			<form action=$_REQUEST{__uri} name=$form_name target="$$options{target}">
@@ -1493,11 +1531,16 @@ EOH
 ################################################################################
 
 sub js_set_select_option {
+
 	my ($_SKIN, $name, $item, $fallback_href) = @_;	
 	return ($fallback_href || $i) unless $_REQUEST {select};
 	my $question = js_escape ($i18n -> {confirm_close_vocabulary} . ' ' . $item -> {label} . '?');
 	$name ||= '_' . $_REQUEST {select};
-	return 'javaScript:if (window.confirm(' . $question . ')) {parent.setSelectOption(' . js_escape ($name) . ', '	. $item -> {id} . ', ' . js_escape ($item -> {label}) . ');}';
+
+	my $label = js_escape ($item -> {label});
+
+	return qq|javaScript:if (window.confirm ($question)) {parent._setSelectOption ($item->{id}, $label)}|;
+
 }
 
 ################################################################################
@@ -1874,10 +1917,10 @@ EOJS
 		
 		$onKeyDown = <<EOJS;
 		
-			if (window.event.keyCode == 88 && window.event.altKey) {
-				window.parent.document.location.href = '$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}';
-				blockEvent ();
-			}
+//			if (window.event.keyCode == 88 && window.event.altKey) {
+//				nope ('$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}', '_top', '');
+//				blockEvent ();
+//			}
 			
 			if (window.event.keyCode == 116 && !window.event.altKey && !window.event.ctrlKey) {
 			
@@ -1910,15 +1953,161 @@ EOJS
 			
 EOJS
 
+		$_REQUEST {__on_load} .= <<EOS;
+			
+			typeAheadInfo = {last:0, 
+				accumString:"", 
+				delay:500,
+				timeout:null, 
+				reset:function() {this.last=0; this.accumString=""}
+			};
+
+			@{[ $_REQUEST{__no_focus} ? '' : 'window.focus ();' ]}
+
+			@{[ $_REQUEST{sid} ? <<EOK : '' ]}
+				keepaliveID = setTimeout ("open('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}', 'invisible'); clearTimeout (keepaliveID)", $timeout);
+EOK
+
+			if (!document.body.getElementsByTagName) return;
+
+			var tables = document.body.getElementsByTagName ('table');
+
+			if (tables != null) {										
+				for (var i = 0; i < tables.length; i++) {
+
+					if (tables [i].id != 'scrollable_table') continue;
+
+					var rows = tables [i].tBodies (0).rows;
+
+					for (var j = 0; j < rows.length; j++) {
+						scrollable_rows = scrollable_rows.concat (rows [j]);
+					}
+				}					
+			}
+
+			for (var i = 0; i < scrollable_rows.length; i++) {
+
+				var cells = scrollable_rows [i].cells;
+				for (var j = 0; j < cells.length; j++) {
+					var scrollable_cell = cells [j];
+					td2sr [scrollable_cell.uniqueID] = i;
+					td2sc [scrollable_cell.uniqueID] = j;
+					scrollable_cell.onclick = td_on_click;
+					scrollable_cell.oncontextmenu = td_on_click;
+				}
+			}
+
+			scrollable_table = document.getElementById ('scrollable_table');
+
+			if (scrollable_table) {				
+
+				scrollable_table = scrollable_table.tBodies (0);
+
+				scrollable_table_row = $_REQUEST{__scrollable_table_row};
+				scrollable_table_row_cell = 0;
+
+				if (scrollable_rows.length > 0) {
+					var cell = cell_on ();
+					if (scrollable_table_row > 0) scrollCellToVisibleTop (cell);
+				}
+				else {
+					scrollable_table = null;
+				}
+
+			}
+
+			var focused_inputs = document.getElementsByName ('$_REQUEST{__focused_input}');
+
+			if (focused_inputs != null && focused_inputs.length > 0) {
+				var focused_input = focused_inputs [0];
+				focused_input.focus ();
+				if (focused_input.type == 'radio') {
+					focused_input.select ();
+				}
+			}
+			else {	
+
+				var forms = document.forms;
+				if (forms != null) {
+
+					var done = 0;
+
+					for (var i = 0; i < forms.length; i++) {
+
+						var elements = forms [i].elements;
+
+						if (elements != null) {
+
+							for (var j = 0; j < elements.length; j++) {
+
+								var element = elements [j];
+
+								if (element.tagName == 'INPUT' && element.name == 'q') {
+									break;
+								}
+
+								if (
+									   (element.tagName == 'INPUT'  && (element.type == 'text' || element.type == 'checkbox' || element.type == 'radio'))
+									||  element.tagName == 'TEXTAREA') 
+								{
+									element.focus ();
+									done = 1;
+									break;
+								}										
+
+							}									
+
+						}
+
+						if (done) {
+							break;
+						}
+
+					}
+
+				}
+
+			}
+
+			@{[ $_REQUEST {__blur_all} ? <<EOF : '']}
+
+			if (inputs != null) {										
+				for (var i = 0; i < inputs.length; i++) {
+					inputs [i].blur ();
+				}					
+			}
+
+EOF
+
+EOS
+
+
+
 	}
 	else {
 	
 		my $href = create_url (__subset => $_SUBSET -> {name});
 		$body_scroll = 'no';
-		$_REQUEST {__no_focus} = 1;
+				
+		$_REQUEST {__on_load} = <<EOS;
+			window.focus ();
+			StartClock ();
+			$_REQUEST{__on_load};
+			nope ('$href', '_body_iframe', '');
+EOS
 		
 		$body = <<EOIFRAME;
-			<iframe name='_body_iframe' id='_body_iframe' src="$href" width=100% height=100% border=0 frameborder=0 marginheight=0 marginwidth=0>
+			<iframe 
+				name='_body_iframe' 
+				id='_body_iframe' 
+				src="$_REQUEST{__static_url}/0.html" 
+				width=100% 
+				height=100% 
+				border=0 
+				frameborder=0 
+				marginheight=0 
+				marginwidth=0
+			>
 			</iframe>
 EOIFRAME
 
@@ -1950,8 +2139,11 @@ EOJS
 					</script>
 EOCSS
 			
+				<script for="window" event="onload">
+					$_REQUEST{__on_load}
+				</script>
+
 				<script>
-				
 					var select_rows = $_REQUEST{__select_rows};
 					var scrollable_table = null;
 					var scrollable_table_row = 0;
@@ -1971,189 +2163,8 @@ EOCSS
 					var clockID = 0;
 					var clockSeparators = new Array ('$_REQUEST{__clock_separator}', ' ');
 					var clockSeparatorID = 0;
-					
-					function td_on_click () {
-						var uid = window.event.srcElement.uniqueID;
-						var new_scrollable_table_row = td2sr [uid];
-						var new_scrollable_table_row_cell = td2sc [uid];
-						if (new_scrollable_table_row == null || new_scrollable_table_row_cell == null) return;
-						scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className = scrollable_table_row_cell_old_style;
-						scrollable_table_row = new_scrollable_table_row;
-						scrollable_table_row_cell = new_scrollable_table_row_cell;
-						scrollable_table_row_cell_old_style = scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className;
-						scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className += ' row-cell-hilite';
-						focus_on_first_input (scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell]);
-						return false;
-					}
-					
-					
-					function body_on_load () {
-
-						@{[ $_REQUEST{__no_focus} ? '' : 'window.focus ();' ]}
-
-						@{[ $_REQUEST{sid} ? <<EOK : '' ]}
-							keepaliveID = setTimeout ("open('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}', 'invisible'); clearTimeout (keepaliveID)", $timeout);
-EOK
-
-						$_REQUEST{__doc_on_load}
-
-						if (!document.body.getElementsByTagName) return;
-
-						var tables = document.body.getElementsByTagName ('table');
-
-						if (tables != null) {										
-							for (var i = 0; i < tables.length; i++) {
-
-								if (tables [i].id != 'scrollable_table') continue;
-
-								var rows = tables [i].tBodies (0).rows;
-
-								for (var j = 0; j < rows.length; j++) {
-									scrollable_rows = scrollable_rows.concat (rows [j]);
-								}
-							}					
-						}
-
-						for (var i = 0; i < scrollable_rows.length; i++) {
-
-							var cells = scrollable_rows [i].cells;
-							for (var j = 0; j < cells.length; j++) {
-								var scrollable_cell = cells [j];
-								td2sr [scrollable_cell.uniqueID] = i;
-								td2sc [scrollable_cell.uniqueID] = j;
-								scrollable_cell.onclick = td_on_click;
-								scrollable_cell.oncontextmenu = td_on_click;
-							}
-						}
-
-						scrollable_table = document.getElementById ('scrollable_table');
-
-						if (scrollable_table) {				
-
-							scrollable_table = scrollable_table.tBodies (0);
-
-							scrollable_table_row = $_REQUEST{__scrollable_table_row};
-							scrollable_table_row_cell = 0;
-
-							if (scrollable_rows.length > 0) {
-								var cell = cell_on ();
-								if (scrollable_table_row > 0) scrollCellToVisibleTop (cell);
-							}
-							else {
-								scrollable_table = null;
-							}
-
-						}
-
-						var focused_inputs = document.getElementsByName ('$_REQUEST{__focused_input}');
-
-						if (focused_inputs != null && focused_inputs.length > 0) {
-							var focused_input = focused_inputs [0];
-							focused_input.focus ();
-							if (focused_input.type == 'radio') {
-								focused_input.select ();
-							}
-						}
-						else {	
-
-							var forms = document.forms;
-							if (forms != null) {
-
-								var done = 0;
-
-								for (var i = 0; i < forms.length; i++) {
-
-									var elements = forms [i].elements;
-
-									if (elements != null) {
-
-										for (var j = 0; j < elements.length; j++) {
-
-											var element = elements [j];
-
-											if (element.tagName == 'INPUT' && element.name == 'q') {
-												break;
-											}
-
-											if (
-												   (element.tagName == 'INPUT'  && (element.type == 'text' || element.type == 'checkbox' || element.type == 'radio'))
-												||  element.tagName == 'TEXTAREA') 
-											{
-												element.focus ();
-												done = 1;
-												break;
-											}										
-
-										}									
-
-									}
-
-									if (done) {
-										break;
-									}
-
-								}
-
-							}
-
-						}
-
-						@{[ $_REQUEST {__blur_all} ? <<EOF : '']}
-
-						if (inputs != null) {										
-							for (var i = 0; i < inputs.length; i++) {
-								inputs [i].blur ();
-							}					
-						}
-
-EOF
-
-						$_REQUEST{__on_load}
-					
-					}
-					
-          function subset_on_change (subset_name, href) {
-          
-            var subset_tr_id = '_subset_tr_' + subset_name;
-            var subset_a_id = '_subset_a_' + subset_name;
-
-            var subset_tr = document.getElementById(subset_tr_id);
-
-            var subset_table = subset_tr.parentElement;
-            
-            for (var i = 0; i < subset_table.rows.length; i++) {
-              subset_table.rows(i).style.display = '';
-            }
-
-            subset_tr.style.display = 'none';
-
-            var subset_label_div = document.getElementById('admin');
-
-            var label = document.getElementById(subset_a_id).innerHTML; 
-
-            var subset_label = document.createTextNode(label);
-            
-            var subset_label_a = document.createElement("A");
-
-            subset_label_a.appendChild(subset_label);
-
-            subset_label_a.href = '#';
-
-            subset_label_div.replaceChild(subset_label_a, subset_label_div.firstChild);
-
-            var fname = document.getElementById('_body_iframe');
-            fname.src = href;
-            
-            subsets_are_visible = 1 - subsets_are_visible;
-
-            document.getElementById ("_body_iframe").contentWindow.subsets_are_visible = subsets_are_visible;
-          
-          }
-
-					
-				
-					$_REQUEST{__script}
-				
+					var typeAheadInfo = null; 
+					$_REQUEST{__script}				
 				</script>
 				
 				@{[ $_REQUEST{__help_url} ? <<EOHELP : '' ]}
@@ -2176,10 +2187,8 @@ EOHELP
 				name="body" 
 				id="body"
 				scroll="auto"
-				onload= "body_on_load (); try {StartClock ()} catch (e) {}"
 				onbeforeunload="document.body.style.cursor = 'wait'"
-				onunload=" try {KillClock ()} catch (e) {}"
-				onkeydown="$onKeyDown"						
+				onkeydown="$onKeyDown"
 			>
 				
 				<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
@@ -2354,6 +2363,8 @@ EOH
 ################################################################################
 
 sub draw_logon_form {
+
+	$_REQUEST {__on_load} .= 'document.forms[0].elements["login"].focus ()';
 
 	return <<EOH;
 
