@@ -133,9 +133,9 @@ sub sql_execute_procedure {
 
 	my $i = 1;
 	while (@params > 0) {
-		my ($val, $size) = (shift (@params), shift (@params));
-		if ($size) {
-			$st -> bind_param_inout ($i, $val, $size);
+		my $val = shift (@params);
+		if (ref $val eq 'SCALAR') {
+			$st -> bind_param_inout ($i, $val, shift (@params));
 		} else {
 			$st -> bind_param ($i, $val);
 		}
@@ -515,12 +515,12 @@ sub sql_do_insert {
 		sql_do (<<EOS, $_REQUEST {sid});
 			UPDATE
 				$table_name
-				LEFT JOIN $conf->{systables}->{sessions} ON $table_name.fake = $conf->{systables}->{sessions}.id
 			SET	
 				$table_name.fake = ?
 			WHERE
 				$table_name.fake > 0
-				AND $conf->{systables}->{sessions}.id_user IS NULL
+			AND
+				$table_name.fake NOT IN (SELECT id FROM $conf->{systables}->{sessions})
 EOS
 
 		### get my least fake id (maybe ex-orphan, maybe not)
@@ -542,11 +542,17 @@ EOS
 		push @params, $pairs -> {$field};	
 	}
 
-	sql_do ("INSERT INTO $table_name ($fields) VALUES ($args)", @params);	
-	
-	my $id = sql_select_scalar ("SELECT ${table_name}_seq.currval FROM DUAL");
-
+	my $st = sql_prepare ("INSERT INTO $table_name ($fields) VALUES ($args) RETURNING id INTO ?");
+	my $i = 1; 
+	$st -> bind_param ($i++, $_)
+		foreach (@params);
 		
+	my $id;		
+	$st -> bind_param_inout ($i, \$id, 20);
+	
+	$st -> execute;
+	$st -> finish;	
+
 	return $id;
 		
 }
