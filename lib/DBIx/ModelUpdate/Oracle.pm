@@ -234,8 +234,28 @@ sub gen_column_definition {
 		$sql .= ' DEFAULT ' . ($definition -> {COLUMN_DEF} eq 'SYSDATE' ? 'SYSDATE' : $self -> {db} -> quote ($definition -> {COLUMN_DEF}));
 	}
 
-	$sql .= ' CONSTRAINT nn_' . $table_name . '_' . $name . ' NOT NULL' unless $definition -> {NULLABLE};
-	$sql .= ' CONSTRAINT pk_' . $table_name . '_' . $name . ' PRIMARY KEY' if $definition -> {_PK};
+	my ($nn_constraint_name, $pk_constraint_name) = ('nn_' . $table_name . '_' . $name, 'pk_' . $table_name . '_' . $name);
+	
+	if (length ($nn_constraint_name ) > 30) {
+			my ($i, $cn) = (0);
+			$nn_constraint_name = substr ($nn_constraint_name, 0, 25);
+			while ($self -> sql_select_scalar ('SELECT constraint_name FROM all_constraints WHERE owner = ? AND constraint_name = ?', $self->{schema}, $nn_constraint_name . "_$i")) {
+				$i ++;
+			}
+			$nn_constraint_name .= "_$i";			
+	}
+	
+	if (length ($pk_constraint_name ) > 30) {
+			my $i = 0;
+			$pk_constraint_name = substr ($pk_constraint_name, 0, 25);
+			while ($self -> sql_select_scalar ('SELECT constraint_name FROM all_constraints WHERE owner = ? AND constraint_name = ?', $self->{schema}, $pk_constraint_name . "_$i")) {
+				$i ++;
+			}
+			$pk_constraint_name .= "_$i";			
+	}
+	
+	$sql .= " CONSTRAINT $nn_constraint_name NOT NULL" unless $definition -> {NULLABLE};
+	$sql .= " CONSTRAINT $pk_constraint_name PRIMARY KEY" if $definition -> {_PK};
 	
 	return $sql;
 	
@@ -255,18 +275,36 @@ sub create_table {
 	my $pk_column = (grep {$definition -> {columns} -> {$_} -> {_PK}} keys %{$definition -> {columns}}) [0];
 
 	if ($pk_column) {
-		$self -> do ("CREATE SEQUENCE $q${name}_seq$q START WITH 1 INCREMENT BY 1");
+		my $sequence_name = $name;
+		if (length ($name) > 25) {
+			my $i = 0;
+			$sequence_name = substr ($sequence_name, 0, 22);
+			while ($self -> sql_select_scalar ('SELECT sequence_name FROM all_sequences WHERE sequence_owner = ? AND sequence_name = ?', $self->{schema}, $sequence_name . "_$i")) {
+				$i ++;
+			}
+			$sequence_name .= "_$i";			
+		}
+		$self -> do ("CREATE SEQUENCE $q${sequence_name}_seq$q START WITH 1 INCREMENT BY 1");
 	
+		my $trigger_name = $name;
+		if (length ($name) > 25) {
+			my $i = 0;
+			$trigger_name = substr ($trigger_name, 0, 21);
+			while ($self -> sql_select_scalar ('SELECT trigger_name FROM all_triggers WHERE owner = ? AND trigger_name = ?', $self->{schema}, $trigger_name . "_$i")) {
+				$i ++;
+			}
+			$trigger_name .= "_$i";			
+		}
 		$self -> do (<<EOS);
-			CREATE TRIGGER $q${name}_id_trigger$q BEFORE INSERT ON $q${name}$q
+			CREATE TRIGGER $q${trigger_name}_trig$q BEFORE INSERT ON $q${name}$q
 			FOR EACH ROW
 			WHEN (new.$pk_column is null)
 			BEGIN
-				SELECT $q${name}_seq$q.nextval INTO :new.$pk_column FROM DUAL;
+				SELECT $q${sequence_name}_seq$q.nextval INTO :new.$pk_column FROM DUAL;
 			END;		
 EOS
 
-		$self -> do ("ALTER TRIGGER $q${name}_id_trigger$q COMPILE");
+		$self -> do ("ALTER TRIGGER $q${trigger_name}_trig$q COMPILE");
 		$self -> do ("ALTER TABLE $q${name}$q ENABLE ALL TRIGGERS");
 	}
 
@@ -413,6 +451,23 @@ sub create_index {
 	warn "CREATE INDEX $q${table_name}_${index_name}$q ON $q$table_name$q ($index_def)\n";
 	$self -> {db} -> do ("CREATE INDEX $q${table_name}_${index_name}$q ON $q$table_name$q ($index_def)");
 	
+}
+
+################################################################################
+
+sub sql_select_scalar {
+
+	my ($self, $sql, @params) = @_;
+
+	my $st = $self -> prepare ($sql);
+	
+	$st -> execute (@params);
+
+	my @result = $st -> fetchrow_array ();
+	$st -> finish;
+	
+	return $result [0];
+
 }
 
 1;
