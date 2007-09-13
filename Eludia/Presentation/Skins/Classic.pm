@@ -753,13 +753,37 @@ sub draw_form_field_select {
 			
 EOS
 
-		$options -> {onChange} .= <<EOJS;
+		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
-			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-				$onchange
-			}
+		if ($options -> {no_confirm}) {
+
+			$options -> {onChange} .= <<EOJS;
+
+				if (this.options[this.selectedIndex].value == -1) {
+
+					$onchange
+
+				}
 
 EOJS
+		} else {
+
+			$options -> {onChange} .= <<EOJS;
+
+				if (this.options[this.selectedIndex].value == -1) {
+
+					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+
+						$onchange
+
+					} else {
+
+						this.selectedIndex = 0;
+
+					}
+				}
+EOJS
+		}
 
 	}		
 
