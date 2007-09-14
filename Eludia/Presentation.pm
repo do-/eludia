@@ -1743,7 +1743,8 @@ sub draw_toolbar {
 
 	$_REQUEST {__toolbars_number} ||= 0;
 
-	my $form_name = $_REQUEST {__toolbars_number} ? 'toolbar_form_' . $_REQUEST {__toolbars_number} : 'toolbar_form';
+	$options -> {form_name} = $_REQUEST {__toolbars_number} ? 'toolbar_form_' . $_REQUEST {__toolbars_number} : 'toolbar_form';
+
 	$_REQUEST {__toolbars_number} ++;
 
 	if ($_REQUEST {select}) {
@@ -3174,7 +3175,7 @@ sub draw_page {
 		   $conf -> {core_screenshot} -> {allow}
 		&& $conf -> {core_screenshot} -> {subsets} -> {$$_SUBSET{name}}
 		&& $conf -> {core_screenshot} -> {exclude_types} !~ /\b$$page{type}\b/
-		&& !$_REQUEST {__edit}
+		&& ($conf -> {core_screenshot} -> {allow_edit} || !$_REQUEST {__edit})
 	) {
 		sql_do ("INSERT INTO $conf->{systables}->{__screenshots} (subset, type, id_object, id_user, html, error, params, gziped) VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
 			$_SUBSET -> {name}, $page -> {type}, $_REQUEST {id}, $_USER -> {id}, Compress::Zlib::memGzip ($html), !$validate_error && $_REQUEST {error} ? 1 : 0, Dumper (\%_REQUEST));

@@ -211,7 +211,7 @@ function tabOnEnter () {
 }
 
 function typeAhead() { // borrowed from http://www.oreillynet.com/javascript/2003/09/03/examples/jsdhtmlcb_bonus2_example.html
-  
+   
    if (window.event && window.event.keyCode == 8) {
    	typeAheadInfo.accumString = "";
    	return;
@@ -344,7 +344,7 @@ function hideSubMenus (level) {
 	for (var i = last_vert_menu.length - 1; i >= level; i--) {
 		if (last_vert_menu [i] && last_vert_menu [i].div) {
 			if (last_vert_menu [i].td) { 
-				last_vert_menu [i].td.style.background='#D6D3CE';
+				last_vert_menu [i].td.style.background='#b9d4e5';
 				last_vert_menu [i].td.style.color='black';
 				if (last_vert_menu [i].td.childNodes && last_vert_menu [i].td.childNodes[0].id == "submenu") {
 					last_vert_menu [i].td.childNodes[0].rows(0).cells(0).style.color='black';
@@ -370,7 +370,7 @@ function menuItemOver (td, child, div, level) {
 			last_vert_menu [level].div = current_submenu;
 		} else {
 			if (last_vert_menu [level].td && last_vert_menu [level].td != td) {
-				last_vert_menu [level].td.style.background='#D6D3CE';
+				last_vert_menu [level].td.style.background='#b9d4e5';
 				last_vert_menu [level].td.style.color='black';
 				if (last_vert_menu [level].td.childNodes && last_vert_menu [level].td.childNodes[0].id == "submenu") {
 					last_vert_menu [level].td.childNodes[0].rows(0).cells(0).style.color='black';
@@ -384,7 +384,7 @@ function menuItemOver (td, child, div, level) {
 
 		for (var i = last_vert_menu.length - 1; i >= level; i--) {
 			if (last_vert_menu [i] && last_vert_menu [i].td) {
-				last_vert_menu [i].td.style.background='#D6D3CE';
+				last_vert_menu [i].td.style.background='#b9d4e5';
 				last_vert_menu [i].td.style.color='black';
 				if (last_vert_menu [i].td.childNodes && last_vert_menu [i].td.childNodes[0].id == "submenu") {
 					last_vert_menu [i].td.childNodes[0].rows(0).cells(0).style.color='black';
@@ -425,7 +425,7 @@ function menuItemOver (td, child, div, level) {
 			last_vert_menu [0] = td;
 		} else {
 			if (last_vert_menu [1] && last_vert_menu [1].td) {
-				last_vert_menu [1].td.style.background='#D6D3CE';
+				last_vert_menu [1].td.style.background='#b9d4e5';
 				last_vert_menu [1].td.style.color='black';
 				if (last_vert_menu [1].td.childNodes && last_vert_menu [1].td.childNodes[0].id == "submenu") {
 					last_vert_menu [1].td.childNodes[0].rows(0).cells(0).style.color='black';
@@ -806,7 +806,7 @@ function m_off (td) {
 	var cells = td.parentElement.cells;
 	for (var i = 0; i < cells.length; i++) {
 		if (cells [i].className != 'vert-menu') continue;
-		cells [i].style.background='#D6D3CE';
+		cells [i].style.background='#b9d4e5';
 		cells [i].style.color='black';
 	}
 	blockEvent ();

@@ -1007,7 +1007,7 @@ sub draw_toolbar {
 
 	my $html = <<EOH;
 		<table bgcolor="b9c5d7" cellspacing=0 cellpadding=0 width="100%" border=0>
-			<form action=$_REQUEST{__uri} name=$form_name target="$$options{target}">
+			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
 EOH
 
 	foreach (@{$options -> {keep_params}}) {

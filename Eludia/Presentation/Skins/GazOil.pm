@@ -1,4 +1,4 @@
-package Eludia::Presentation::Skins::Classic;
+package Eludia::Presentation::Skins::GazOil;
 
 use Data::Dumper;
 
@@ -23,7 +23,7 @@ sub options {
 ################################################################################
 
 sub _icon_path {
-	-r $r -> document_root . "/i/_skins/Classic/$_[0].gif" ?
+	-r $r -> document_root . "/i/_skins/GazOil/$_[0].gif" ?
 	"$_REQUEST{__static_url}/$_[0].gif?$_REQUEST{__static_salt}" :
 	"/i/buttons/$_[0].gif"
 }
@@ -79,7 +79,7 @@ sub draw_hr {
 	return <<EOH;
 		<table border=0 cellspacing=0 cellpadding=0 width="100%">
 			<tr><td class=$$options{class}><img src="/i/0.gif" width=1 height=$$options{height}></td></tr>
-		</table>
+		</table> 
 EOH
 	
 }
@@ -96,7 +96,7 @@ sub draw_calendar {
 
 	return <<EOH;
 
-	<nobr>$i18n->{today}: $mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></span></nobr>
+	<nobr><b>$i18n->{today}:</b> $mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;|&nbsp;&nbsp;<span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></span></nobr>
 	
 EOH
 	
@@ -109,13 +109,13 @@ sub draw_auth_toolbar {
 	my ($_SKIN, $options) = @_;
 	
 	my $calendar = draw_calendar ();
+
 	
 	my $subset_selector = '';
 	
 	if (@{$_SKIN -> {subset} -> {items}} > 1) {
 	
 		$subset_selector = <<EOH;
-			<td class=bgr1>
 			<input type=hidden name=sid value='$_REQUEST{sid}'>
 			<input type=hidden name=select value='$_REQUEST{select}'>
 			<input type=hidden name=__last_query_string value='$_REQUEST{__last_last_query_string}'>
@@ -132,35 +132,52 @@ EOH
 		$subset_selector .= '</select></td>';
 	
 	}
+	
+	$options -> {user_label} =~ s/($i18n->{User}: )(.*)/$1<br><b>$2<\/b>/;
 		
 	return <<EOH;
 		<table cellSpacing=0 cellPadding=0 border=0 width=100%>
 			<tr><td class=bgr1><img height=1 src="/i/0.gif" width=1 height=1 border=0></td></tr>
 			<tr><td class=bgr6><img height=1 src="/i/0.gif" width=1 height=1 border=0></td></tr>
 		</table>
-		<table cellSpacing=0 cellPadding=0 border=0 width=100%>
+		<table cellSpacing=0 cellPadding=0 border=0 width=100% class="toolbar">
 			<form name=_subset_form>
 			<tr>
-				<td class=bgr1><nobr>&nbsp;&nbsp;</nobr></td>
+				<td><nobr>&nbsp;&nbsp;</nobr></td>
 
-				<td class=bgr1><img height=22 src="/i/0.gif" width=4 border=0></td>
-				<td class=bgr1><nobr><A class=lnk2>$$options{user_label}</a>&nbsp;&nbsp;</nobr></td>
-
-				<td class=bgr1><img height=22 src="/i/0.gif" width=4 border=0></td>
-				<td class=bgr1><A class=lnk2>$calendar</A></td>
-				<td class=bgr1><img height=22 src="/i/0.gif" width=4 border=0></td>
-
-				<td class=bgr1 nowrap width="100%"></td>				
-
+				<td><img height=99 src="/i/0.gif" width=180 border=0></td>
+				<td><nobr><A class=lnk2>$$options{user_label}</a>&nbsp;&nbsp;</nobr><br>$subset_selector</td>
+				<td nowrap width="100%"></td>
+				<td>
+					<table border=0 cellspacing=0 cellpadding=0>
+						<tr>
+							<td><img src="/i/0.gif" height=30 width=1 border=0></td>
+							<td valign="middle">
+								<A class=lnk2>$calendar</A>
+							</td>
+						</tr>
+						<tr>
+							<td><img src="/i/0.gif" height=2 width=1 border=0></td>
+							<td style="background-color: #b9d4e5"><img src="/i/0.gif" height=2 width=268 border=0></td>
+						</tr>
+						<tr>
+							<td><img src="/i/0.gif" height=50 width=1 border=0></td>
+							<td valign="middle">
+								<table border=0>
+									<tr>
 				@{[ $_REQUEST {__help_url} ? <<EOHELP : '' ]}
-				<td class=bgr1><img height=22 src="/i/0.gif" width=4 border=0></td>
-				<td class=bgr1><nobr><A TABINDEX=-1 id="help" class=lnk2 href="$_REQUEST{__help_url}" target="_blank">[$$i18n{F1}]</A>&nbsp;&nbsp;</nobr></td>
+<td><A TABINDEX=-1 id="help" class=lnk2 href="$_REQUEST{__help_url}" target="_blank"><img src="$_REQUEST{__static_url}/help.gif" width=17 height=24 border=0 hspace=10></a></td><td valign="middle"><A TABINDEX=-1 id="help" class=lnk2 href="$_REQUEST{__help_url}" target="_blank">$i18n->{F1}</a></td>
 EOHELP
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><A TABINDEX=-1 id="logout" class=lnk2 href="$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}"><img src="$_REQUEST{__static_url}/off.gif" width=26 height=24 border=0 hspace=10></a></td><td valign="middle"><A TABINDEX=-1 id="logout" class=lnk2 href="$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}">$i18n->{Exit}</a></td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
 
-				$subset_selector
 
-				<td class=bgr1><img height=22 src="/i/0.gif" width=4 border=0></td>
-				<td class=bgr1><img height=1 src="/i/0.gif" width=7 border=0></td>
+				<td ><img height=1 src="/i/0.gif" width=7 border=0></td>
 			</tr>
 			</form>
 		</table>
@@ -203,54 +220,67 @@ EOH
 	
 	my $items = $options -> {menu};
 		
-	my ($tr1, $tr2, $tr3) = ('', '');
+		
+		my ($tr1, $tr2, $tr3) = ('', '');
 
-	$tr3 .= qq{<td></td>};
-	$tr2 .= qq{<td></td>};
-	$tr1 .= qq{<td class='bgr6' width=100%><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
+		$tr3 .= qq{<td class="bgr8"></td>};
+		$tr2 .= qq{<td class="bgr8"></td>};
+		$tr1 .= qq{<td class='bgr6' width=100%><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
 
-	my $class = $items -> [0] -> {is_active} ? 'bgr0' : 'bgr6';
-	
-	$tr1 .= qq{<td class='$class'><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
+		my $class = $items -> [0] -> {is_active} ? 'bgr0' : 'bgr6';
+		$tr1 .= qq{<td class=bgr6><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
 
-	$tr3 .= qq{<td rowspan=2 valign=top><img src="$_REQUEST{__static_url}/tab_l_${$$items[0]}{is_active}.gif?$_REQUEST{__static_salt}" border=0 hspace=0 vspace=0 width=6 height=17></td>};
+		$tr3 .= qq{<td rowspan=2 valign=top><img src="$_REQUEST{__static_url}/tab_l_${$$items[0]}{is_active}.gif" border=0 hspace=0 vspace=0 width=7 height=40></td>};
 
-	for (my $i = 0; $i < 0 + @$items; $i++) {
 
-		my $item = $items -> [$i];	
-		my $active = $item -> {is_active};
 
-		my $class = $active ? 'bgr0' : 'bgr6';
+		for (my $i = 0; $i < 0 + @$items; $i++) {
 
-		$tr1 .= qq{<td class='$class'><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
+			my $item = $items -> [$i];	
+			my $active = $item -> {is_active};
 
-		$tr2 .= qq{<td class="tabs-$active"><a id="$item" href="$$item{href}" class="main-menu"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>};
-
-		$tr3 .= qq{<td background="$_REQUEST{__static_url}/tab_b_$active.gif?$_REQUEST{__static_salt}"><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=2></td>};
-
-		if ($i < -1 + @$items) {
-			my $aa = $active . ($items -> [$i + 1] -> {is_active});
-			my $class = $aa ne '00' ? 'bgr0' : 'bgr6';
-			$tr1 .= qq{<td class='$class'><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
-			$tr3 .= qq{<td rowspan=2><img src="$_REQUEST{__static_url}/tab_$aa.gif?$_REQUEST{__static_salt}" border=0 hspace=0 vspace=0 width=8 height=17></td>};
-		}
-		else {
 			my $class = $active ? 'bgr0' : 'bgr6';
-			$tr1 .= qq{<td class='$class'><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
-			$tr3 .= qq{<td rowspan=2 valign=top><img src="$_REQUEST{__static_url}/tab_r_${$$items[-1]}{is_active}.gif?$_REQUEST{__static_salt}" border=0 hspace=0 vspace=0 width=6 height=17></td>};
-		}
+			my $class2 = $active ? 'tab-active' : 'tab-inactive';
 
-	}
-			
-	$tr3 .= qq{<td rowspan=2 valign=top><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
-	$tr1 .= qq{<td class='bgr6' width=30><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
+
+			my $separator = '';
+
+
+			my $onclick = '';
+
+			$tr1 .= qq{<td class=bgr6><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
+
+			$tr2 .= qq{<td class="tabs-$active"><a id="$item" href="$$item{href}" class="main-menu" $onclick><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>};
+
+			$tr3 .= qq{<td class="$class2"><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=2></td>};
+
+			if ($i < -1 + @$items) {
+				my $aa = $active . ($items -> [$i + 1] -> {is_active});
+				my $class = $aa ne '00' ? 'bgr0' : 'bgr6';
+				$tr1 .= qq{<td class=bgr6><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
+				$tr3 .= qq{<td rowspan=2><img src="$_REQUEST{__static_url}/tab_$aa.gif" border=0 hspace=0 vspace=0 width=17 height=40></td>};
+				$separator = ';'
+			}
+			else {
+				my $class = $active ? 'bgr0' : 'bgr6';
+				$tr1 .= qq{<td class=bgr6><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
+				$tr3 .= qq{<td rowspan=2 valign=top><img src="$_REQUEST{__static_url}/tab_r_${$$items[-1]}{is_active}.gif" border=0 hspace=0 vspace=0 width=7 height=40></td>};
+				$separator = '.'
+			}
+
+			my $label = $item -> {label} . $separator;
+		}	
+				
+		$tr3 .= qq{<td class="bgr8" rowspan=2 valign=top><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
+		$tr1 .= qq{<td class='bgr6' width=30><img src="/i/0.gif" border=0 hspace=0 vspace=0 width=1 height=1></td>};
+
 
 	return <<EOH;
-		<table border=0 cellspacing=0 cellpadding=0 width=100%>
-			<tr>$tr3
-			<tr>$tr2
-			<tr>$tr1
-		<table>
+			<table border=0 cellspacing=0 cellpadding=0 width=100%>
+				<tr>$tr3
+				<tr>$tr2
+				<tr>$tr1
+			</table>
 EOH
 
 }
@@ -753,37 +783,13 @@ sub draw_form_field_select {
 			
 EOS
 
-		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+		$options -> {onChange} .= <<EOJS;
 
-		if ($options -> {no_confirm}) {
-
-			$options -> {onChange} .= <<EOJS;
-
-				if (this.options[this.selectedIndex].value == -1) {
-
-					$onchange
-
-				}
+			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+				$onchange
+			}
 
 EOJS
-		} else {
-
-			$options -> {onChange} .= <<EOJS;
-
-				if (this.options[this.selectedIndex].value == -1) {
-
-					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-
-						$onchange
-
-					} else {
-
-						this.selectedIndex = 0;
-
-					}
-				}
-EOJS
-		}
 
 	}		
 
@@ -1070,7 +1076,7 @@ sub draw_toolbar {
 	}
 	
 	my $html = <<EOH;
-		<table class=bgr8 cellspacing=0 cellpadding=0 width="100%" border=0>
+		<table class=bgr18 cellspacing=0 cellpadding=0 width="100%" border=0>
 			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
 EOH
 
@@ -1085,25 +1091,13 @@ EOH
 					<input type=hidden name=__last_last_query_string value="$_REQUEST{__last_last_query_string}">
 
 				<tr>
-					<td class=bgr0 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
-				</tr>
-				<tr>
-					<td class=bgr6 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
-				</tr>
-				<tr>
-					<td class=bgr8 width=30><img height=1 src="/i/0.gif" width=20 border=0></td>
+					<td class=bgr18 width=30><img height=1 src="/i/0.gif" width=20 border=0></td>
 EOH
 
 	foreach (@{$options -> {buttons}}) {	$html .= $_ -> {html};	}
 
 	$html .= <<EOH;
-					<td class=bgr8 width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>
-				</tr>
-				<tr>
-					<td class=bgr8 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
-				</tr>
-				<tr>
-					<td class=bgr6 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
+					<td class=bgr18 width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>
 				</tr>
 			</form>
 		</table>
@@ -1120,10 +1114,10 @@ sub draw_toolbar_break {
 	my ($_SKIN, $options) = @_;
 
 	my $html = <<EOH;
-					<td class=bgr8 width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>
+					<td class=bgr18 width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td class=bgr8 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
+					<td class=bgr18 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
 				</tr>
 				<tr>
 					<td class=bgr6 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
@@ -1142,7 +1136,7 @@ EOH
 					<td class=bgr6 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td class=bgr8 width=30><img height=1 src="/i/0.gif" width=20 border=0></td>
+					<td class=bgr18 width=30><img height=1 src="/i/0.gif" width=20 border=0></td>
 EOH
 
 	return $html;
@@ -1343,7 +1337,7 @@ sub draw_toolbar_input_text {
 
 	my ($_SKIN, $options) = @_;
 	
-	my $html = '<td nowrap>';
+	my $html = '<td nowrap class=bgr18>';
 		
 	if ($options -> {label}) {
 		$html .= $options -> {label};
@@ -1369,7 +1363,7 @@ EOH
 		$html .= qq {<input type=hidden name=$key value="$_REQUEST{$key}">};
 	}
 
-	$html .= "<td><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
+	$html .= "<td class=bgr18><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
 
 	return $html;
 
@@ -1384,7 +1378,7 @@ sub draw_toolbar_input_datetime {
 	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";	
 	$options -> {onKeyPress} = "if (window.event.keyCode == 13) {this.form.submit()}";
 
-	my $html = '<td nowrap>';
+	my $html = '<td class=bgr18 nowrap>';
 		
 	if ($options -> {label}) {
 		$html .= $options -> {label};
@@ -1393,7 +1387,7 @@ sub draw_toolbar_input_datetime {
 
 	$html .= $_SKIN -> _draw_input_datetime ($options);
 
-	$html .= "<td><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
+	$html .= "<td class=bgr18><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
 
 	return $html;
 
@@ -1477,11 +1471,8 @@ sub draw_centered_toolbar {
 	my $html = <<EOH;
 		<table cellspacing=0 cellpadding=0 width="100%" border=0 id="$__last_centered_toolbar_id">
 			<tr>
-				<td class=bgr8>
+				<td class=bgr28>
 					<table cellspacing=0 cellpadding=0 width="100%" border=0>
-						<tr>
-							<td class=bgr0 colspan=$colspan><img height=1 src="/i/0.gif" width=1 border=0></td>
-						</tr>
 						<tr>
 							<td class=bgr6 colspan=$colspan><img height=1 src="/i/0.gif" width=1 border=0></td></tr>
 								<tr>
@@ -1508,12 +1499,6 @@ EOH
 										</table>
 									</td>
 									<td align=right><img height=23 src="/i/0.gif" width=4 border=0></td>
-								</tr>
-								<tr>
-									<td class=bgr8 colspan=$colspan><img height=1 src="/i/0.gif" width=1 border=0></td>
-								</tr>
-								<tr>
-									<td class=bgr6 colspan=$colspan><img height=1 src="/i/0.gif" width=1 border=0></td>
 								</tr>
 							</td>
 						</tr>
@@ -1546,76 +1531,31 @@ sub draw_menu {
 	$html .= $conf->{classic_menu_style} ? 'var classic_menu_style = 1' : 'var classic_menu_style = 0';
 	$html .= '</script>';
 
-	$html .= '<div style="position: relative">' if !$conf->{classic_menu_style};
+	$html .= '<div style="position: relative">';
 
 	$html .= <<EOH;
 
 		<table width="100%" class=bgr8 cellspacing=0 cellpadding=0 border=0 onmousemove="blockEvent ();">
-			<tr>
-				<td class=bgr8 colspan=$colspan width=100%><img height=2 src="/i/0.gif" width=1 border=0></td>
-			<tr>
 EOH
 
 	foreach my $type (@types) {
 		
 		if ($type eq BREAK) {
-			$html .= qq{<td class=bgr8 width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>};
+			$html .= qq{<td class=bgr8 width=100% style="background-image: url(/i/_skins/GazOil/menu_bg.gif)"><img height=1 src="/i/0.gif" width=1 border=0></td>};
 			next;
 		}
 
-		if ($conf -> {classic_menu_style}) {
-			$html .= <<EOH;
-				<td 
-					onmouseover="
-						if (last_main_menu) {
-							last_main_menu.style.borderColor='#D6D3CE'; 
-							last_main_menu.style.borderStyle='solid';
-						}
-						last_main_menu = this;
-						this.style.borderColor='#FFFFFF'; 
-						this.style.borderStyle='groove'; 
-						$$type{onhover}
-					" 
-					onmouseout="
-						if (hasMouse (this, event)) return;
-						this.style.borderColor='#D6D3CE'; 
-						this.style.borderStyle='solid';
-						if (
-							(event.y < 
-								this.offsetTop 
-								+ this.offsetParent.offsetTop 
-								+ this.offsetParent.offsetParent.offsetTop 
-								+ 2
-							) && last_vert_menu && last_vert_menu [0]
-						) {
-							
-							for (var i = 0; i < last_vert_menu.length; i++) {
-								if (last_vert_menu [i]) last_vert_menu [i].style.display = 'none';
-							}
-							
-						}				
-					" 
-					class="main-menu" 
-					nowrap
-				>&nbsp;<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1>&nbsp;$$type{label}&nbsp;</a>&nbsp;</td>
+		$html .= <<EOH;
+			<td onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
+				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1>&nbsp;$$type{label}&nbsp;</a>&nbsp;</td>
+			</td>
 EOH
-		} else {
-			$html .= <<EOH;
-				<td onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
-					<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1>&nbsp;$$type{label}&nbsp;</a>&nbsp;</td>
-				</td>
-EOH
-		}
 			
 	}
 
 	$html .= <<EOH;
 			<tr>
-				<td class=bgr8 colspan=$colspan width=100%><img height=2 src="/i/0.gif" width=1 border=0></td>
-			<tr>
-				<td class=bgr6 colspan=$colspan width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>
-			<tr>
-				<td class=bgr0 colspan=$colspan width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>
+				<td class=bgr0 colspan=$colspan width=100%><img height=3 src="/i/0.gif" width=1 border=0></td>
 		</table>
 EOH
 
@@ -1623,7 +1563,7 @@ EOH
 		$html .= $type -> {vert_menu};
 	}
 
-	$html .= '</div>' if !$conf->{classic_menu_style};
+	$html .= '</div>';
 
 	return $html;
 	
@@ -1634,9 +1574,7 @@ EOH
 sub draw_vert_menu {
 
 	my ($_SKIN, $name, $types, $level) = @_;
-	my $onmouseout = $conf -> {classic_menu_style} ? 'onmouseout="check_popup_menus(event)"' : '';
-	my $blockevent = $conf -> {classic_menu_style} ? 'onmouseover="blockEvent ();" onmouseout="blockEvent ();"' : '';
-
+	
 	my $html = <<EOH;
 		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:100" $onmouseout>
 			<table id="vert_menu_table_$name" width=1 bgcolor=#d5d5d5 cellspacing=0 cellpadding=0 border=0 border=1>
@@ -1677,31 +1615,17 @@ EOH
 		
 		}
 		else {
-			my $td;
-			if ($conf -> {classic_menu_style}) {
-				 $td = $type -> {items} ? <<EOH : qq{<td nowrap onmouseover="m_on(this)" onmouseout="m_off(this)" onclick="$$type{onclick}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
-					<td onmouseover="blockEvent ();" onmouseout="blockEvent ();">
-					<table width=100% border=0 cellspacing=0 cellpadding=0>
-						<tr>
-							<td         nowrap onmouseover="m_on(this)" onmouseout="m_off(this)" onclick="$$type{onclick}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
-							<td width=5 nowrap onmouseover="m_on(this)" onmouseout="m_off(this)" onclick="$$type{onclick}" class="vert-menu" align=right><font face=Marlett>8</font>&nbsp;</td>
-						</tr>
-					</table>
-					</td>
-EOH
-			} else {
-				$td = $type -> {items} ? <<EOH : qq{<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
-					<td onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}"  class="vert-menu">
-					<table width=100% border=0 cellspacing=0 cellpadding=0 id="submenu">
-						<tr>
-							<td         nowrap>&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
-							<td width=5 nowrap align=right><font face=Marlett>8</font>&nbsp;</td>
-						</tr>
-					</table>
-					</td>
+			my $td = $type -> {items} ? <<EOH : qq{<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
+				<td onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}"  class="vert-menu">
+				<table width=100% border=0 cellspacing=0 cellpadding=0 id="submenu">
+					<tr>
+						<td         nowrap>&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
+						<td width=5 nowrap align=right><font face=Marlett>8</font>&nbsp;</td>
+					</tr>
+				</table>
+				</td>
 EOH
 
-			}
 		
 			$html .= <<EOH;
 				<tr>
@@ -1728,13 +1652,12 @@ EOH
 			</table>
 EOH
 
-	$html .= '</div>' if $conf->{classic_menu_style};
 
 	foreach my $type (@$types) {
 		$html .= $type -> {vert_menu};
 	}
 
-	$html .= '</div>' if !$conf->{classic_menu_style};
+	$html .= '</div>';
 
 	return $html;
 
