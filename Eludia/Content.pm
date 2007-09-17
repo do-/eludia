@@ -963,6 +963,8 @@ sub do_add_DEFAULT {
 sub do_create_DEFAULT {
 
 	my $default_values = {};
+
+	my $columns = $model_update -> get_columns ($_REQUEST {type});
 	
 	while (my ($k, $v) = each %_REQUEST) {
 	
@@ -974,6 +976,7 @@ sub do_create_DEFAULT {
 		next if $k eq 'action';
 		next if $k eq 'lang';
 		next if $k eq 'error';
+		next unless exists $columns -> {$k}; 
 				
 		$default_values -> {$k} = $v;
 	
