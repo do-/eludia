@@ -72,29 +72,6 @@ sub new {
 
 ################################################################################
 
-sub get_tables {
-
-	my ($self, $needed_tables) = @_;
-	
-	my @tables = $self -> {db} -> tables;
-	
-	return { 
-		map { 
-			$_ => { columns => $self -> get_columns ($_), keys => $self -> get_keys ($_) } 
-		} 
-		grep {
-			$needed_tables -> {$_}
-		}
-		map {
-			$self -> unquote_table_name ($_)
-		}
-		@tables
-	};
-
-}
-
-################################################################################
-
 sub checksum {
 	return md5_base64 (freeze ($_[0]));	
 }

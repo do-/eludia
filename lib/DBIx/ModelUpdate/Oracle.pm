@@ -85,37 +85,6 @@ EOS
 
 }
 
-################################################################################
-
-sub get_tables {
-
-	my ($self, $options) = @_;
-	
-	my $st = $self -> prepare ("SELECT table_name FROM user_tables");
-	$st -> execute;
-	my $tables = {};
-	
-	while (my $r = $st -> fetchrow_hashref) {
-		my $name = lc ($r -> {TABLE_NAME});
-		$name =~ s{\W}{}g;
-		$tables -> {$name} = {
-#			columns => $self -> get_columns ($name, $options), 
-#			keys => $self -> get_keys ($name),
-		}
-	}	
-
-	$st -> finish;
-
-#print STDERR "get_tables (pid=$$): $tables = " . Dumper ($tables);
-	
-	foreach my $name (keys %$tables) {
-		$tables -> {$name} -> {columns} = $self -> get_columns ($name, $options);
-		$tables -> {$name} -> {keys}    = $self -> get_keys ($name);
-	}
-	
-	return $tables;
-
-}
 
 ################################################################################
 
@@ -237,12 +206,14 @@ sub gen_column_definition {
 	my ($nn_constraint_name, $pk_constraint_name) = ('nn_' . $table_name . '_' . $name, 'pk_' . $table_name . '_' . $name);
 	
 	if (length ($nn_constraint_name ) > 30) {
-			my ($i, $cn) = (0);
+			my ($i, $cn) = ($self -> {nn_constraint_num} || 0);
 			$nn_constraint_name = substr ($nn_constraint_name, 0, 25);
 			while ($self -> sql_select_scalar ('SELECT constraint_name FROM all_constraints WHERE owner = ? AND constraint_name = ?', $self->{schema}, $nn_constraint_name . "_$i")) {
 				$i ++;
 			}
-			$nn_constraint_name .= "_$i";			
+			$nn_constraint_name .= "_$i";
+			
+			$self -> {nn_constraint_num} = $i + 1;			
 	}
 	
 	if (length ($pk_constraint_name ) > 30) {
