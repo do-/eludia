@@ -268,9 +268,6 @@ sub create_table {
 		}
 
 
-	WHEN (new.$pk_column is null)
-
-
 		$self -> do (<<EOS);
 			CREATE TRIGGER $q${trigger_name}_trig$q BEFORE INSERT ON $q${name}$q
 			FOR EACH ROW
