@@ -269,6 +269,7 @@ sub create_table {
 
 
 		$self -> do (<<EOS);
+
 			CREATE TRIGGER $q${trigger_name}_trig$q BEFORE INSERT ON $q${name}$q
 			FOR EACH ROW
 			DECLARE
@@ -279,7 +280,14 @@ sub create_table {
     				IF (:NEW.$pk_column IS NULL) THEN
 				       SELECT $q${sequence_name}_seq$q.NEXTVAL INTO :NEW.$pk_column FROM DUAL;
 			        ELSE       
-				       SELECT $q${sequence_name}_seq$q.CURRVAL INTO CURRSEQ FROM DUAL;
+    					BEGIN       
+						SELECT $q${sequence_name}_seq$q.CURRVAL INTO CURRSEQ FROM DUAL;
+					        EXCEPTION       
+							WHEN OTHERS THEN
+					        IF (SQLCODE =-08002) THEN
+					          SELECT $q${sequence_name}_seq$q.NEXTVAL INTO DIFF FROM DUAL;
+					        END IF;
+				       END;
 				       IF (:NEW.$pk_column > CURRSEQ) THEN
 				       	   DIFF := :NEW.$pk_column - CURRSEQ;
 				           WHILE (DIFF <> 0) LOOP
@@ -290,7 +298,6 @@ sub create_table {
   	                        END IF;
 			END;		
 EOS
-
 		$self -> do ("ALTER TRIGGER $q${trigger_name}_trig$q COMPILE");
 		$self -> do ("ALTER TABLE $q${name}$q ENABLE ALL TRIGGERS");
 	}
