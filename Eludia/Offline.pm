@@ -59,13 +59,8 @@ BEGIN {
 
 	our $number_format = Number::Format -> new (%{$conf -> {number_format}});
 
-#	our $_SKIN = 'Eludia::Presentation::Skins::' . get_skin_name ();	
-#	*{$_SKIN . '::_REQUEST'} = *{$_PACKAGE . '_REQUEST'};
-#	*{$_SKIN . '::conf'}     = *{$_PACKAGE . 'conf'};
-#	*{$_SKIN . '::preconf'}  = *{$_PACKAGE . 'preconf'};
-#	*{$_SKIN . '::r'}        = *{$_PACKAGE . 'r'};
-#	*{$_SKIN . '::i18n'}     = *{$_PACKAGE . 'i18n'};
-
+	$_REQUEST {__skin} ||= 'STDERR';
+	
 	setup_skin ();
 
 }

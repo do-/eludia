@@ -115,7 +115,7 @@ sub esc_href {
 
 		$href = check_href ({href => $href}, 1);
 
-		return $href;
+		return uri_unescape ($href);
 		
 	}
 
@@ -125,7 +125,8 @@ sub esc_href {
 	my $salt = time (); #rand ();
 	$query_string =~ s{salt\=[\d\.]+}{salt=$salt}g;
 	$query_string =~ s{sid\=[\d\.]+}{sid=$_REQUEST{sid}}g;
-	return $_REQUEST {__uri} . '?' . $query_string;
+	
+	return $_REQUEST {__uri} . '?' . uri_unescape ($query_string);
 	
 	
 }
@@ -786,6 +787,14 @@ sub draw_window_title {
 sub draw_logon_form {
 
 	my ($options) = @_;
+	
+	$_REQUEST {__hta} = call_for_role ('_logon_hta');
+	
+	if ($_REQUEST {__hta}) {
+	
+		$_REQUEST {__script} .= json_dump_to_function (hta => $_REQUEST {__hta});
+	
+	}
 	
 	return $_SKIN -> draw_logon_form (@_);
 

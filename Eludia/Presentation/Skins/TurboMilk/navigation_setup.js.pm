@@ -22,8 +22,7 @@ function _guess_app_url() {
 	return _url;
 }
 
-
-function _install_HTA( FSO, HTA_content ) {
+function _install_HTA ( FSO, HTA_content, hotkey ) {
 	var filename_HTA = _get_HTA_fname();
 	var dirname_HTA = _get_HTA_dir();
 
@@ -34,9 +33,17 @@ function _install_HTA( FSO, HTA_content ) {
 		FSO.DeleteFile(filename_HTA);
 
 	_create_HTA_file( FSO, HTA_content );
-	_create_shortcut();
+	_create_shortcut( hotkey );
+	
+	var msg = 'Приложение "'+app_title+'" установлено.';
+	
+	if (hotkey) {
+	
+		msg = msg + ' Чтобы запустить его, нажмите ' + hotkey;
+	
+	}
 
-	alert('Приложение "'+app_title+'" установлено.');
+	alert (msg);
 }
 
 
@@ -48,12 +55,17 @@ function _create_HTA_file( FSO, HTA_content ) {
 }
 
 
-function _create_shortcut() {
+function _create_shortcut (hotkey) {
+
 	var Shell = new ActiveXObject("WScript.Shell");
 	var DesktopPath = Shell.SpecialFolders("Desktop");
 	var link = Shell.CreateShortcut(DesktopPath+'\\'+app_title+ ".lnk");
 	link.Description = app_title;
-	//link.HotKey = "CTRL+ALT+SHIFT+X";
+	
+	if (hotkey) {
+		link.HotKey = hotkey;
+	}
+	
 	link.IconLocation = app_url+'/favicon.ico';
 	link.TargetPath = _get_HTA_fname();
 	link.WindowStyle = 4;
@@ -78,7 +90,7 @@ function __get_env_var( varname ) {
 }
 
 
-function SetupHTA(app_codevar, app_titlevar, app_urlvar, HTA_content) {
+function SetupHTA(app_codevar, app_titlevar, app_urlvar, HTA_content, hotkey) {
 	app_code = app_codevar;
 	if( !app_code )
 		app_code = 'eludia_app';
@@ -93,7 +105,7 @@ function SetupHTA(app_codevar, app_titlevar, app_urlvar, HTA_content) {
 	try {
 		var FSO = new ActiveXObject('Scripting.FileSystemObject');
 		if( !FSO.FileExists(_get_HTA_fname()) || confirm('Приложение "'+app_title+'" уже установлено. Перезаписать?') ) {
-			_install_HTA( FSO, HTA_content );
+			_install_HTA( FSO, HTA_content, hotkey );
 		}
 	}
 	catch (err) {

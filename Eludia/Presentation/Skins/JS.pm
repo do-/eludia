@@ -74,12 +74,14 @@ sub draw_redirect_page {
 	if ($options -> {label}) {
 		my $data = $_JSON -> encode ([$options -> {label}]);
 		$options -> {before} = "var data = $data; alert(data[0]); ";
-	}				
+	}
+	
+	$$options{before} .= ';' if $$options{before};
 
 	return <<EOH;
 <html>
 	<script for=window event=onload>
-		$$options{before};
+		$$options{before}
 		var w = window; 
 		w.open ('$options->{url}&salt=' + Math.random (), $target);
 	</script>

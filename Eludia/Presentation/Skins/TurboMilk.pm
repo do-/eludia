@@ -182,7 +182,6 @@ EOH
 		$header_height = 90;
 	}
 	return <<EOH;
-		$subset_div
 		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
 			<tr>
 			<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
@@ -196,6 +195,7 @@ EOH
 			$header
 			<td width="20px" align="right">&nbsp;</td></tr>
 		 </table>
+		$subset_div
 EOH
 
 
