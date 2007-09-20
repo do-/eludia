@@ -266,12 +266,31 @@ sub create_table {
 			}
 			$trigger_name .= "_$i";			
 		}
+
+
+	WHEN (new.$pk_column is null)
+
+
 		$self -> do (<<EOS);
 			CREATE TRIGGER $q${trigger_name}_trig$q BEFORE INSERT ON $q${name}$q
 			FOR EACH ROW
-			WHEN (new.$pk_column is null)
+			DECLARE
+			       MAXID 	NUMBER;
+			       CURRSEQ  NUMBER;
+			       DIFF	NUMBER;
 			BEGIN
-				SELECT $q${sequence_name}_seq$q.nextval INTO :new.$pk_column FROM DUAL;
+    				IF (:NEW.$pk_column IS NULL) THEN
+				       SELECT $q${sequence_name}_seq$q.NEXTVAL INTO :NEW.$pk_column FROM DUAL;
+			        ELSE       
+				       SELECT $q${sequence_name}_seq$q.CURRVAL INTO CURRSEQ FROM DUAL;
+				       IF (:NEW.$pk_column > CURRSEQ) THEN
+				       	   DIFF := :NEW.$pk_column - CURRSEQ;
+				           WHILE (DIFF <> 0) LOOP
+					           SELECT $q${sequence_name}_seq$q.NEXTVAL INTO :NEW.$pk_column FROM DUAL;
+					           DIFF := DIFF - 1;
+				           END LOOP;
+				       END IF;
+  	                        END IF;
 			END;		
 EOS
 
