@@ -17,7 +17,7 @@ function __shortcut (path, app_title, hotkey, icon_fname, HTA_fname, HTA_dir) {
 	var link = WshShell.CreateShortcut (path + '\\' + app_title + '.lnk');
 	link.Description = app_title;
 	if (hotkey) link.HotKey = hotkey;
-	link.IconLocation = icon_fname;
+	link.IconLocation = icon_fname + ',0';
 	link.TargetPath = HTA_fname;
 	link.WindowStyle = 4;
 	link.WorkingDirectory = HTA_dir;
