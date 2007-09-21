@@ -1844,42 +1844,31 @@ sub draw_page {
 		$page -> {body} =~ s{[\n\r\s]+}{ }gsm;
 
 		return <<EOH;
-		<body onLoad="main()">
-			<script>
-				function main () {
-				
-					var element = window.parent.document.forms ['$_REQUEST{__only_form}'].elements ['_$_REQUEST{__only_field}'];
-					var html = "$page->{body}";
-					
-					if (element) {
-						element.outerHTML = html;
-						element.tabIndex = "$_REQUEST{__only_tabindex}";
-					}
-					else {
-						element = window.parent.document.getElementById ('input_$_REQUEST{__only_field}');
-						element.outerHTML = html;
-					}
-					
-				}
-			</script>
-		</body>
+<html>
+	<script for=window event=onload>
+		var doc = window.parent.document;				
+		var           element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$_REQUEST{__only_field}'];
+		if (!element) element = doc.getElementById ('input_$_REQUEST{__only_field}');
+		if (!element) return;					
+		element.outerHTML = "$page->{body}";
+		element.tabIndex = "$_REQUEST{__only_tabindex}";
+	</script>
+	<body>
+	</body>
+</html>
 EOH
 	}
-	
-#$_REQUEST {__on_load} .= 'alert(window.location + " --> " + window.name);';	
-		
+			
 	$_REQUEST {__scrollable_table_row} ||= 0;
-	
-	my $meta_refresh = $_REQUEST {__meta_refresh} ? qq{<META HTTP-EQUIV=Refresh CONTENT="$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1">} : '';	
-	
+		
+	$_REQUEST {__head_links} .= <<EOH if $_REQUEST {__meta_refresh};
+		<META HTTP-EQUIV=Refresh CONTENT="$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1">
+EOH
+
 	my $request_package = ref $apr;
 	my $mod_perl = $ENV {MOD_PERL};
 	$mod_perl ||= 'NO mod_perl AT ALL';
-	
-	my $timeout = 1000 * (60 * $conf -> {session_timeout} - 1);
-	
-	$_REQUEST {__select_rows} += 0;
-							
+								
 	my $parameters = ${$_PACKAGE . 'apr'} -> parms;
   
 	my $body = '';
@@ -1891,6 +1880,10 @@ EOH
 		$body = $page -> {body};
 		$body_scroll = 'no';
 		$$page{auth_toolbar} = '';
+		$_REQUEST {__head_links} .= <<EOH;
+			<script src="$_REQUEST{__static_url}/navigation_setup.js?$_REQUEST{__static_salt}">
+			</script>
+EOH
 		
 	}
 	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
@@ -1905,24 +1898,16 @@ EOH
 		
 		my $href = create_url (%h);
 
-#$_REQUEST {__on_load} .= 'alert(window.location + " --> " + window.name);';	
-
-		$_REQUEST {__on_load} .= <<EOJS;
-		
-			try {
-				if (window.name != '_body_iframe') { window.location = '$href&__top=1'}
-			} catch (e) {}
-			
-EOJS
-		
+		$_REQUEST {__on_load} .= "check_top_window ();";
+				
 		$onKeyDown = <<EOJS;
 		
-//			if (window.event.keyCode == 88 && window.event.altKey) {
+//			if (code_alt_ctrl (88, 1, 0)) {
 //				nope ('$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}', '_top', '');
 //				blockEvent ();
 //			}
 			
-			if (window.event.keyCode == 116 && !window.event.altKey && !window.event.ctrlKey) {
+			if (code_alt_ctrl (116, 0, 0)) {
 			
 				if (is_dirty) {
 				
@@ -1930,158 +1915,28 @@ EOJS
 				
 				}
 			
-				window.location = '$href';
+				window.location.href = '$href';
+				
 				return blockEvent ();
+			
 			}
 			
 			handle_basic_navigation_keys ();
 			
 EOJS
 		
-		foreach (@{$page -> {scan2names}}) {
+		foreach (@{$page -> {scan2names}}) { $onKeyDown .= &{"handle_hotkey_$$_{type}"} ($_) }
 
-			$onKeyDown .= &{"handle_hotkey_$$_{type}"} ($_);
-			$onKeyDown .= ';';
+		$onKeyDown .= "if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
 
+		if ($_REQUEST {sid}) {
+			my $timeout = 1000 * (60 * $conf -> {session_timeout} - 1);
+			$_REQUEST {__on_load} .= "start_keepalive ($timeout);";
 		}
 
-		$onKeyDown .= <<EOJS;
-		
-			if (window.event.keyCode == 115 && !window.event.altKey && !window.event.ctrlKey) {
-				return blockEvent ();
-			}
-			
-EOJS
-
-		$_REQUEST {__on_load} .= <<EOS;
-			
-			typeAheadInfo = {last:0, 
-				accumString:"", 
-				delay:500,
-				timeout:null, 
-				reset:function() {this.last=0; this.accumString=""}
-			};
-
-			@{[ $_REQUEST{__no_focus} ? '' : 'window.focus ();' ]}
-
-			@{[ $_REQUEST{sid} ? <<EOK : '' ]}
-				keepaliveID = setTimeout ("open('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}', 'invisible'); clearTimeout (keepaliveID)", $timeout);
-EOK
-
-			if (!document.body.getElementsByTagName) return;
-
-			var tables = document.body.getElementsByTagName ('table');
-
-			if (tables != null) {										
-				for (var i = 0; i < tables.length; i++) {
-
-					if (tables [i].id != 'scrollable_table') continue;
-
-					var rows = tables [i].tBodies (0).rows;
-
-					for (var j = 0; j < rows.length; j++) {
-						scrollable_rows = scrollable_rows.concat (rows [j]);
-					}
-				}					
-			}
-
-			for (var i = 0; i < scrollable_rows.length; i++) {
-
-				var cells = scrollable_rows [i].cells;
-				for (var j = 0; j < cells.length; j++) {
-					var scrollable_cell = cells [j];
-					td2sr [scrollable_cell.uniqueID] = i;
-					td2sc [scrollable_cell.uniqueID] = j;
-					scrollable_cell.onclick = td_on_click;
-					scrollable_cell.oncontextmenu = td_on_click;
-				}
-			}
-
-			scrollable_table = document.getElementById ('scrollable_table');
-
-			if (scrollable_table) {				
-
-				scrollable_table = scrollable_table.tBodies (0);
-
-				scrollable_table_row = $_REQUEST{__scrollable_table_row};
-				scrollable_table_row_cell = 0;
-
-				if (scrollable_rows.length > 0) {
-					var cell = cell_on ();
-					if (scrollable_table_row > 0) scrollCellToVisibleTop (cell);
-				}
-				else {
-					scrollable_table = null;
-				}
-
-			}
-
-			var focused_inputs = document.getElementsByName ('$_REQUEST{__focused_input}');
-
-			if (focused_inputs != null && focused_inputs.length > 0) {
-				var focused_input = focused_inputs [0];
-				focused_input.focus ();
-				if (focused_input.type == 'radio') {
-					focused_input.select ();
-				}
-			}
-			else {	
-
-				var forms = document.forms;
-				if (forms != null) {
-
-					var done = 0;
-
-					for (var i = 0; i < forms.length; i++) {
-
-						var elements = forms [i].elements;
-
-						if (elements != null) {
-
-							for (var j = 0; j < elements.length; j++) {
-
-								var element = elements [j];
-
-								if (element.tagName == 'INPUT' && element.name == 'q') {
-									break;
-								}
-
-								if (
-									   (element.tagName == 'INPUT'  && (element.type == 'text' || element.type == 'checkbox' || element.type == 'radio'))
-									||  element.tagName == 'TEXTAREA') 
-								{
-									element.focus ();
-									done = 1;
-									break;
-								}										
-
-							}									
-
-						}
-
-						if (done) {
-							break;
-						}
-
-					}
-
-				}
-
-			}
-
-			@{[ $_REQUEST {__blur_all} ? <<EOF : '']}
-
-			if (inputs != null) {										
-				for (var i = 0; i < inputs.length; i++) {
-					inputs [i].blur ();
-				}					
-			}
-
-EOF
-
-EOS
-
-
+		$_REQUEST {__on_load} .= "idx_tables ($_REQUEST{__scrollable_table_row});";
+		$_REQUEST {__on_load} .= 'window.focus ();'                             if !$_REQUEST {__no_focus};
+		$_REQUEST {__on_load} .= "focus_on_input ($_REQUEST{__focused_input});" if  $_REQUEST {__focused_input};
 
 	}
 	else {
@@ -2093,14 +1948,13 @@ EOS
 			window.focus ();
 			StartClock ();
 			$_REQUEST{__on_load};
-			nope ('$href', '_body_iframe', '');
 EOS
 		
 		$body = <<EOIFRAME;
 			<iframe 
 				name='_body_iframe' 
 				id='_body_iframe' 
-				src="$_REQUEST{__static_url}/0.html" 
+				src="$href" 
 				width=100% 
 				height=100% 
 				border=0 
@@ -2117,6 +1971,28 @@ EOIFRAME
 		$$page{auth_toolbar} = "<tr height=48><td height=48>$$page{auth_toolbar}</td></tr>";
 	}
 	
+	$_REQUEST {__head_links} .= <<EOH;
+		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
+EOH
+
+	foreach (@{$_REQUEST {__include_css}}) {
+		$_REQUEST {__head_links} .= <<EOH;
+			<LINK href="/i/$_.css" type=text/css rel=STYLESHEET>
+EOH
+	}
+
+	$_REQUEST {__head_links} .= <<EOH;
+		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
+		</script>
+EOH
+
+	foreach (@{$_REQUEST {__include_js}}) {
+		$_REQUEST {__head_links} .= <<EOH;
+			<script type="text/javascript" src="/i/${_}.js?$_REQUEST{__static_salt}">
+			</script>
+EOH
+	}
+	
 	return <<EOH;
 		<html>		
 			<head>
@@ -2124,46 +2000,16 @@ EOIFRAME
 								
 				<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with $request_package; gateway_interface is $ENV{GATEWAY_INTERFACE}; $mod_perl is in use">
 				<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
-				
-				$meta_refresh
-				
-				<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
-				@{[ map {<<EOJS} @{$_REQUEST{__include_css}} ]}
-					<LINK href="/i/$_.css" type=text/css rel=STYLESHEET>
-EOJS
-
-					<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-					</script>
-				@{[ map {<<EOCSS} @{$_REQUEST{__include_js}} ]}
-					<script type="text/javascript" src="/i/${_}.js">
-					</script>
-EOCSS
-			
+								
+				$_REQUEST{__head_links}
+							
 				<script for="window" event="onload">
 					$_REQUEST{__on_load}
 				</script>
 
 				<script>
-					var select_rows = $_REQUEST{__select_rows};
-					var scrollable_table = null;
-					var scrollable_table_row = 0;
-					var scrollable_table_row_id = 0;
-					var scrollable_table_row = 0;
-					var scrollable_table_row_length = 0;
-					var scrollable_table_row_cell_old_style = '';
-					var is_dirty = false;					
-					var scrollable_table_is_blocked = false;
-					var q_is_focused = false;					
-					var left_right_blocked = false;					
-					var scrollable_rows = new Array();		
-					var td2sr = new Array ();
-					var td2sc = new Array ();
-					var last_vert_menu = new Array ();
-					var subsets_are_visible = 0;
-					var clockID = 0;
-					var clockSeparators = new Array ('$_REQUEST{__clock_separator}', ' ');
-					var clockSeparatorID = 0;
-					var typeAheadInfo = null; 
+					var clockSeparators = ['$_REQUEST{__clock_separator}', ' '];
+					var keepalive_url = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
 					$_REQUEST{__script}				
 				</script>
 				
@@ -2215,8 +2061,11 @@ sub handle_hotkey_focus {
 
 	my ($r) = @_;
 	
+	$r -> {ctrl} += 0;
+	$r -> {alt}  += 0;
+
 	<<EOJS
-		if (window.event.keyCode == $$r{code} && window.event.altKey && window.event.ctrlKey) {
+		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) {
 			document.form.$$r{data}.focus ();
 			return blockEvent ();
 		}
@@ -2230,12 +2079,12 @@ sub handle_hotkey_focus_id {
 
 	my ($r) = @_;
 
-	my $ctrl = $r -> {ctrl} ? '' : '!';
-	my $alt  = $r -> {alt}  ? '' : '!';
+	$r -> {ctrl} += 0;
+	$r -> {alt}  += 0;
 
 	<<EOJS
-		if (window.event.keyCode == $$r{code} && $alt window.event.altKey && $ctrl window.event.ctrlKey) {
-			document.getElementById('$r->{data}').focus ();
+		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) {
+			document.getElementById ('$r->{data}').focus ();
 			return blockEvent ();
 		}
 EOJS
@@ -2248,38 +2097,22 @@ sub handle_hotkey_href {
 
 	my ($r) = @_;
 	
-	my $ctrl = $r -> {ctrl} ? '' : '!';
-	my $alt  = $r -> {alt}  ? '' : '!';
+	$r -> {ctrl} += 0;
+	$r -> {alt}  += 0;
 	
 	my $condition = 
 		$r -> {off}     ? '0' :
 		$r -> {confirm} ? 'window.confirm(' . js_escape ($r -> {confirm}) . ')' : 
 		'1';
-
-	if ($r -> {href}) {
 			
-		return <<EOJS
-			if (window.event.keyCode == $$r{code} && $alt window.event.altKey && $ctrl window.event.ctrlKey) {
-				if ($condition) {
-					nope ('$$r{href}&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');
-				}
-				return blockEvent ();
-			}
-EOJS
+	my $code = !$r -> {href} ? "activate_link_by_id ('$$r{data}')" : "nope ('$$r{href}&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');";
 
-	}
-	else {
-		
-		return <<EOJS
-			if (window.event.keyCode == $$r{code} && $alt window.event.altKey && $ctrl window.event.ctrlKey) {
-				if ($condition) {
-					var a = document.getElementById ('$$r{data}');
-					activate_link (a.href, a.target);
-				}
-				return blockEvent ();
-			}
+	$condition eq '1' or $code = "if ($condition) {$code}";
+	
+
+	return <<EOJS
+		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) $code;
 EOJS
-	}
 
 }
 
@@ -2364,7 +2197,43 @@ EOH
 
 sub draw_logon_form {
 
+	my ($_SKIN, $options) = @_;
+
+	if ($options -> {hta}) {
+	
+		$_REQUEST {__on_load} .= <<EOH;
+		
+			if (window.name != 'application_frame' && confirm ('$i18n->{hta_confirm}')) {
+											
+				var _hta = hta ();
+			
+				SetupHTA (
+					_hta.code, 
+					_hta.title, 
+					_hta.url, 
+					_hta.content, 
+					_hta.icon, 
+					_hta.hotkey
+				);
+			
+			}
+		
+EOH
+		
+		
+	
+	}
+
+
+
+
+
+
+
 	$_REQUEST {__on_load} .= 'document.forms[0].elements["login"].focus ()';
+	
+	
+	
 
 	return <<EOH;
 

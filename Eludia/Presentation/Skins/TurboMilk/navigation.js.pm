@@ -1,9 +1,160 @@
+var scrollable_table = null;
+var scrollable_table_row = 0;
+var scrollable_table_row_id = 0;
+var scrollable_table_row = 0;
+var scrollable_table_row_length = 0;
+var scrollable_table_row_cell_old_style = '';
+var is_dirty = false;					
+var scrollable_table_is_blocked = false;
+var q_is_focused = false;					
+var left_right_blocked = false;					
+var scrollable_rows = [];		
+var td2sr = [];
+var td2sc = [];
+var last_vert_menu = [];
+var subsets_are_visible = 0;
+var clockID = 0;
+var clockSeparatorID = 0;
+var typeAheadInfo = {last:0, 
+	accumString:"", 
+	delay:500,
+	timeout:null, 
+	reset:function () {this.last=0; this.accumString=""}
+};
+
 function nope (a1, a2, a3) {
 	var w = window;
 	w.open (a1, a2, a3);
 }
 
 function nop () {}
+
+function idx_tables (__scrollable_table_row) {
+
+	var tables = document.body.getElementsByTagName ('table');
+
+	if (!tables) return; 
+	
+	for (var i = 0; i < tables.length; i++) {
+	
+		var table = tables [i];
+
+		if (table.id != 'scrollable_table') continue;
+		
+		if (!scrollable_table) scrollable_table = table;
+
+		var rows = table.tBodies (0).rows;
+
+		for (var j = 0; j < rows.length; j++) {
+			scrollable_rows = scrollable_rows.concat (rows [j]);
+		}
+		
+	}					
+
+	for (var i = 0; i < scrollable_rows.length; i++) {
+
+		var cells = scrollable_rows [i].cells;
+		
+		for (var j = 0; j < cells.length; j++) {
+			var scrollable_cell = cells [j];
+			td2sr [scrollable_cell.uniqueID] = i;
+			td2sc [scrollable_cell.uniqueID] = j;
+			scrollable_cell.onclick = td_on_click;
+			scrollable_cell.oncontextmenu = td_on_click;
+		}
+	}
+
+	if (!scrollable_table) return;
+
+	scrollable_table          = scrollable_table.tBodies (0);
+	scrollable_table_row      = __scrollable_table_row;
+	scrollable_table_row_cell = 0;
+
+	if (scrollable_rows.length > 0) {
+		var cell = cell_on ();
+		if (scrollable_table_row > 0) scrollCellToVisibleTop (cell);
+	}
+	else {
+		scrollable_table = null;
+	}
+
+
+}
+
+function code_alt_ctrl (code, alt, ctrl) {
+	var e = window.event;
+	if (e.keyCode != code) return 0;
+	if (e.altKey  != alt)  return 0;
+	if (e.ctrlKey != ctrl) return 0;
+	return 1;
+}
+
+function check_top_window () {
+	try {
+		if (window.name != '_body_iframe') { window.location = '$href&__top=1'}
+	} catch (e) {}
+}
+
+function activate_link_by_id (id) {
+	var a = document.getElementById (id);
+	activate_link (a.href, a.target);
+}
+
+function start_keepalive (timeout) {
+	var callback = "open(keepalive_url, 'invisible'); clearTimeout (keepaliveID)";
+	keepaliveID = setTimeout (callback, timeout);
+}
+
+function focus_on_input (__focused_input) {
+
+	var focused_inputs = document.getElementsByName (__focused_input);
+
+	if (focused_inputs != null && focused_inputs.length > 0) {
+		var focused_input = focused_inputs [0];
+		focused_input.focus ();
+		if (focused_input.type == 'radio') focused_input.select ();
+		return;
+	}
+
+	var forms = document.forms;
+	
+	if (forms != null) {
+
+		var done = 0;
+
+		for (var i = 0; i < forms.length; i++) {
+
+			var elements = forms [i].elements;
+
+			if (elements != null) {
+
+				for (var j = 0; j < elements.length; j++) {
+
+					var element = elements [j];
+
+					if (element.tagName == 'INPUT' && element.name == 'q') break;
+
+					if (
+						   (element.tagName == 'INPUT'  && (element.type == 'text' || element.type == 'checkbox' || element.type == 'radio'))
+						||  element.tagName == 'TEXTAREA') 
+					{
+						element.focus ();
+						done = 1;
+						break;
+					}										
+
+				}									
+
+			}
+
+			if (done) break;
+
+		}
+
+	}
+
+}
+
 
 function tabOnEnter () {
    if (window.event && window.event.keyCode == 13 && !window.event.ctrlKey && !window.event.altKey) {

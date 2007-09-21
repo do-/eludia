@@ -787,15 +787,13 @@ sub draw_window_title {
 sub draw_logon_form {
 
 	my ($options) = @_;
+
+	if ($options -> {hta}) {
 	
-	$_REQUEST {__hta} = call_for_role ('_logon_hta');
-	
-	if ($_REQUEST {__hta}) {
-	
-		$_REQUEST {__script} .= json_dump_to_function (hta => $_REQUEST {__hta});
+		$_REQUEST {__script} .= json_dump_to_function (hta => $options -> {hta});				
 	
 	}
-	
+			
 	return $_SKIN -> draw_logon_form (@_);
 
 }
