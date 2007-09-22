@@ -37,8 +37,8 @@ BEGIN {
   
 	$Data::Dumper::Sortkeys = 1;
 
-	$Eludia_VERSION      = $Eludia::VERSION      = '07.09.06';
-	$Eludia_VERSION_NAME = $Eludia::VERSION_NAME = 'Boxx';
+	$Eludia_VERSION      = $Eludia::VERSION      = '07.09.23';
+	$Eludia_VERSION_NAME = $Eludia::VERSION_NAME = 'Klin';
 
 	eval {
 		require Math::FixedPrecision;
