@@ -1542,11 +1542,7 @@ sub draw_menu {
 	
 	my $colspan = 1 + @types;
 
-	my $html = '<script language="JavaScript">';
-	$html .= $conf->{classic_menu_style} ? 'var classic_menu_style = 1' : 'var classic_menu_style = 0';
-	$html .= '</script>';
-
-	$html .= '<div style="position: relative">' if !$conf->{classic_menu_style};
+	my $html = '<div style="position: relative">';
 
 	$html .= <<EOH;
 
@@ -1563,49 +1559,11 @@ EOH
 			next;
 		}
 
-		if ($conf -> {classic_menu_style}) {
 			$html .= <<EOH;
-				<td 
-					onmouseover="
-						if (last_main_menu) {
-							last_main_menu.style.borderColor='#D6D3CE'; 
-							last_main_menu.style.borderStyle='solid';
-						}
-						last_main_menu = this;
-						this.style.borderColor='#FFFFFF'; 
-						this.style.borderStyle='groove'; 
-						$$type{onhover}
-					" 
-					onmouseout="
-						if (hasMouse (this, event)) return;
-						this.style.borderColor='#D6D3CE'; 
-						this.style.borderStyle='solid';
-						if (
-							(event.y < 
-								this.offsetTop 
-								+ this.offsetParent.offsetTop 
-								+ this.offsetParent.offsetParent.offsetTop 
-								+ 2
-							) && last_vert_menu && last_vert_menu [0]
-						) {
-							
-							for (var i = 0; i < last_vert_menu.length; i++) {
-								if (last_vert_menu [i]) last_vert_menu [i].style.display = 'none';
-							}
-							
-						}				
-					" 
-					class="main-menu" 
-					nowrap
-				>&nbsp;<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1>&nbsp;$$type{label}&nbsp;</a>&nbsp;</td>
-EOH
-		} else {
-			$html .= <<EOH;
-				<td onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
-					<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1>&nbsp;$$type{label}&nbsp;</a>&nbsp;</td>
+				<td onmouseover="if (!edit_mode) $$type{onhover}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
+					<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1 onclick="return !check_edit_mode ();">&nbsp;$$type{label}&nbsp;</a>&nbsp;</td>
 				</td>
 EOH
-		}
 			
 	}
 
@@ -1623,7 +1581,7 @@ EOH
 		$html .= $type -> {vert_menu};
 	}
 
-	$html .= '</div>' if !$conf->{classic_menu_style};
+	$html .= '</div>';
 
 	return $html;
 	
@@ -1634,22 +1592,10 @@ EOH
 sub draw_vert_menu {
 
 	my ($_SKIN, $name, $types, $level) = @_;
-	my $onmouseout = $conf -> {classic_menu_style} ? 'onmouseout="check_popup_menus(event)"' : '';
-	my $blockevent = $conf -> {classic_menu_style} ? 'onmouseover="blockEvent ();" onmouseout="blockEvent ();"' : '';
 
 	my $html = <<EOH;
-		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:100" $onmouseout>
-			<table id="vert_menu_table_$name" width=1 bgcolor=#d5d5d5 cellspacing=0 cellpadding=0 border=0 border=1>
-				<tr height=1>
-					<td bgcolor=#D6D3CE colspan=4><img height=1 src=/i/0.gif width=1 border=0></td>
-					<td width=1 bgcolor=#424142 colspan=1><img height=1 src=/i/0.gif width=1 border=0></td>
-				</tr>
-				<tr height=1>
-					<td width=1 bgcolor=#D6D3CE><img height=1 src=/i/0.gif width=1 border=0></td>
-					<td width=1 bgcolor=#ffffff colspan=2><img height=1 src=/i/0.gif width=1 border=0></td>
-					<td width=1 bgcolor=#888888><img height=1 src=/i/0.gif width=1 border=0></td>
-					<td width=1 bgcolor=#424142><img height=1 src=/i/0.gif width=1 border=0></td>
-				</tr>
+		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:100; border-style: outset; border-width: 2px">
+			<table id="vert_menu_table_$name" width=1 bgcolor=#d5d5d5 cellspacing=0 cellpadding=0 border=0>
 EOH
 
 	foreach my $type (@$types) {
@@ -1659,17 +1605,12 @@ EOH
 			$html .= <<EOH;
 				<tr height=2>
 
-					<td bgcolor=#D6D3CE width=1><img height=2 src=/i/0.gif width=1 border=0></td>
-					<td bgcolor=#ffffff width=1><img height=2 src=/i/0.gif width=1 border=0></td>
-
-					<td $blockevent>
+					<td>
 						<table width=90% border=0 cellspacing=0 cellpadding=0 align=center minheight=2>
 							<tr height=1><td bgcolor="#888888"><img height=1 src=/i/0.gif width=1 border=0></td></tr>
 							<tr height=1><td bgcolor="#ffffff"><img height=1 src=/i/0.gif width=1 border=0></td></tr>
 						</table>
 					</td>
-					<td width=1 bgcolor=#888888><img height=2 src=/i/0.gif width=1 border=0></td>
-					<td width=1 bgcolor=#424142><img height=2 src=/i/0.gif width=1 border=0></td>
 					
 				</tr>
 				
@@ -1677,20 +1618,7 @@ EOH
 		
 		}
 		else {
-			my $td;
-			if ($conf -> {classic_menu_style}) {
-				 $td = $type -> {items} ? <<EOH : qq{<td nowrap onmouseover="m_on(this)" onmouseout="m_off(this)" onclick="$$type{onclick}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
-					<td onmouseover="blockEvent ();" onmouseout="blockEvent ();">
-					<table width=100% border=0 cellspacing=0 cellpadding=0>
-						<tr>
-							<td         nowrap onmouseover="m_on(this)" onmouseout="m_off(this)" onclick="$$type{onclick}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
-							<td width=5 nowrap onmouseover="m_on(this)" onmouseout="m_off(this)" onclick="$$type{onclick}" class="vert-menu" align=right><font face=Marlett>8</font>&nbsp;</td>
-						</tr>
-					</table>
-					</td>
-EOH
-			} else {
-				$td = $type -> {items} ? <<EOH : qq{<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
+			my $td = $type -> {items} ? <<EOH : qq{<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
 					<td onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}"  class="vert-menu">
 					<table width=100% border=0 cellspacing=0 cellpadding=0 id="submenu">
 						<tr>
@@ -1701,40 +1629,24 @@ EOH
 					</td>
 EOH
 
-			}
 		
 			$html .= <<EOH;
 				<tr>
-					<td width=1 bgcolor=#D6D3CE><img height=1 src=/i/0.gif width=1 border=0></td>
-					<td width=1 bgcolor=#ffffff><img height=1 src=/i/0.gif width=1 border=0></td>
 					$td
-					<td width=1 bgcolor=#888888><img height=1 src=/i/0.gif width=1 border=0></td>
-					<td width=1 bgcolor=#424142><img height=1 src=/i/0.gif width=1 border=0></td>
 				</tr>
 EOH
 		}
 	
 	}
 
-	$html .= <<EOH;
-				<tr height=1>
-					<td width=1 bgcolor=#D6D3CE><img height=1 src=/i/0.gif width=1 border=0></td>
-					<td width=1 bgcolor=#888888 colspan=3><img height=1 src=/i/0.gif width=1 border=0></td>
-					<td width=1 bgcolor=#424142><img height=1 src=/i/0.gif width=1 border=0></td>
-				</tr>
-				<tr height=1>
-					<td width=1 bgcolor=#424142 colspan=5><img height=1 src=/i/0.gif width=1 border=0></td>
-				</tr>
-			</table>
-EOH
+	$html .= '</table>';
 
-	$html .= '</div>' if $conf->{classic_menu_style};
 
 	foreach my $type (@$types) {
 		$html .= $type -> {vert_menu};
 	}
 
-	$html .= '</div>' if !$conf->{classic_menu_style};
+	$html .= '</div>';
 
 	return $html;
 
@@ -2069,6 +1981,70 @@ EOH
 
 ################################################################################
 
+sub draw_tree {
+
+	my ($_SKIN, $node_callback, $list, $options) = @_;
+	
+	my $menus;
+	
+	my $html = <<EOH;
+	
+		$$options{title}
+		
+		<table class="dtree">
+			<tr>
+				<td>
+		
+			<script type="text/javascript">
+				<!--
+		
+				d = new dTree('d');
+				
+				d.config.iconPath = '/i/dtree/';
+				d.config.target = '_content_iframe';
+				d.config.useStatusText = true;
+				d.icon.node = 'img/folderopen.gif';
+
+
+EOH
+
+	foreach our $i (@$list) {
+		
+			$html .= $i -> {__node};
+			$menus .= $i -> {__menu};
+			
+		
+	}
+
+	$html .= <<EOH;
+				document.write(d);
+		
+				//-->
+			</script>
+				</td>
+			</tr>
+		</table>
+		$menus
+		<iframe name="_content_iframe" id="__content_iframe" style="height: expression(document.body.offsetHeight - 80); width: expression(document.body.offsetWidth - 250);" height="80%" src="/i/0.html" application="yes">
+		</iframe>
+EOH
+
+}
+
+################################################################################
+
+sub draw_node {
+
+	my ($_SKIN, $options, $i) = @_;
+
+	my $menu = $i -> {__menu} ? "'$i'" : 'null';
+	
+	return "d.add($options->{id}, $options->{parent}, '$options->{label}', '$options->{href}', null, null, null, null, null, $menu);\n"
+
+}
+
+################################################################################
+
 sub start_page {
 }
 
@@ -2126,6 +2102,10 @@ EOH
 	$_REQUEST {__scrollable_table_row} += 0;
 	$_REQUEST {__on_load}     .= $_REQUEST {__doc_on_load};
 	
+	if ($_REQUEST {__tree}) {
+		$_REQUEST{__on_load} .= $_REQUEST {__edit} ? " parent.edit_mode = 1; \n" : " parent.edit_mode = 0; \n";
+		
+	}
 	if ($_REQUEST {sid}) {
 	
 		$_REQUEST {__on_load} .= <<EOH;
@@ -2187,6 +2167,7 @@ EOCSS
 					var last_main_menu = null;
 					var ms_word = null;
 					var keepaliveID = null;
+					var edit_mode = null;
 
 					var clockID = 0;
 					var clockSeparators = new Array (' ', '$_REQUEST{__clock_separator}');
@@ -2198,6 +2179,15 @@ EOCSS
 						
 						$_REQUEST{__on_load}
 					
+					}
+
+					function check_edit_mode () {
+						if (edit_mode) {
+							alert('$$i18n{save_or_cancel}'); 
+							document.body.style.cursor = 'normal'; 
+							return true;
+						}
+						return false;
 					}
 					
 					$_REQUEST{__script}
@@ -2214,10 +2204,9 @@ EOCSS
 				name="body" 
 				id="body"
 				scroll="auto"
-				onload= "body_on_load (); try {StartClock ()} catch (e) {}"
+				onload= "window.parent ? window.parent.document.body.style.cursor = 'default' : ''; body_on_load (); try {StartClock ()} catch (e) {}"
 				onbeforeunload="document.body.style.cursor = 'wait'"
 				onunload=" try {KillClock ()} catch (e) {}"
-				${\($conf -> {classic_menu_style} ? 'onmousemove="check_popup_menus(event)"' : '')}
 				onkeydown="
 				
 					if (window.event.keyCode == 88 && window.event.altKey) {

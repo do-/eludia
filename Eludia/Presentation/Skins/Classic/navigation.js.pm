@@ -280,48 +280,24 @@ function open_popup_menu (type, level) {
 		
 	if (!div) return;
 
-	if (classic_menu_style) {
-	
-		if (!level) level = 0;
-		
-		for (var i = level; i < last_vert_menu.length; i++) {
-			if (last_vert_menu [i]) last_vert_menu [i].style.display = 'none';
-			last_vert_menu [i] = null;
-		}
 
-		var mainMenuCell = document.getElementById ('main_menu_' + type);
-		
-		if (mainMenuCell) {
-			div.style.top  = mainMenuCell.offsetTop  + mainMenuCell.offsetParent.offsetTop  + mainMenuCell.offsetParent.offsetParent.offsetTop  + 16;
-			div.style.left = mainMenuCell.offsetLeft + mainMenuCell.offsetParent.offsetLeft + mainMenuCell.offsetParent.offsetParent.offsetLeft - 6;
-		}
-		else {
-			div.style.top  = event.y - 5 + document.body.scrollTop;
-			div.style.left = event.x - 5 + document.body.scrollLeft;
-		}
-		
-		last_vert_menu [level] = div;
-		
+	clearTimeout(timer);
+
+	if (!level) {
+		level = 1;
+		hideSubMenus (0);
 	} else {
-
-		clearTimeout(timer);
-
-		if (!level) {
-			level = 1;
-			hideSubMenus (0);
-		} else {
-			hideSubMenus (level);
-		}
-
-		div.style.top  = event.y - 5 + document.body.scrollTop;
-		div.style.left = event.x - 5 + document.body.scrollLeft;
-		
-
-		last_vert_menu [level] = {
-			div:	div,
-			td:		null
-		}	
+		hideSubMenus (level);
 	}
+
+	div.style.top  = event.y - 5 + document.body.scrollTop;
+	div.style.left = event.x - 5 + document.body.scrollLeft;
+	
+
+	last_vert_menu [level] = {
+		div:	div,
+		td:		null
+	}	
 
 	div.style.display = 'block';
 
