@@ -272,29 +272,9 @@ sub create_table {
 
 			CREATE TRIGGER $q${trigger_name}_trig$q BEFORE INSERT ON $q${name}$q
 			FOR EACH ROW
-			DECLARE
-			       MAXID 	NUMBER;
-			       CURRSEQ  NUMBER;
-			       DIFF	NUMBER;
 			BEGIN
     				IF (:NEW.$pk_column IS NULL) THEN
 				       SELECT $q${sequence_name}_seq$q.NEXTVAL INTO :NEW.$pk_column FROM DUAL;
-			        ELSE       
-    					BEGIN       
-						SELECT $q${sequence_name}_seq$q.CURRVAL INTO CURRSEQ FROM DUAL;
-					        EXCEPTION       
-							WHEN OTHERS THEN
-					        IF (SQLCODE =-08002) THEN
-					          SELECT $q${sequence_name}_seq$q.NEXTVAL INTO DIFF FROM DUAL;
-					        END IF;
-				       END;
-				       IF (:NEW.$pk_column > CURRSEQ) THEN
-				       	   DIFF := :NEW.$pk_column - CURRSEQ;
-				           WHILE (DIFF <> 0) LOOP
-					           SELECT $q${sequence_name}_seq$q.NEXTVAL INTO :NEW.$pk_column FROM DUAL;
-					           DIFF := DIFF - 1;
-				           END LOOP;
-				       END IF;
   	                        END IF;
 			END;		
 EOS
