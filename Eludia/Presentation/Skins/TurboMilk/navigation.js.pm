@@ -21,13 +21,35 @@ var typeAheadInfo = {last:0,
 	timeout:null, 
 	reset:function () {this.last=0; this.accumString=""}
 };
+var kb_hooks = [{}, {}, {}, {}];
 
+function handle_hotkey_focus    (r) {document.form.elements [r.data].focus ()}
+function handle_hotkey_focus_id (r) {document.getElementById (r.data).focus ()}
+function handle_hotkey_href     (r) {
+
+	if (r.confirm && !confirm (r.confirm)) return blockEvent ();
+
+	if (r.href) {
+		nope (r.href + '&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');
+	}
+	else {
+		activate_link_by_id (r.data);
+	}
+	
+}
+		
 function nope (a1, a2, a3) {
 	var w = window;
 	w.open (a1, a2, a3);
 }
 
 function nop () {}
+
+function check_menu_md5 (menu_md5) {
+	if (window.parent.menu_md5 == menu_md5) return;	
+	var href = window.location.href + '&__only_menu=1';
+	nope (href, 'invisible', '');	
+}
 
 function idx_tables (__scrollable_table_row) {
 
@@ -91,7 +113,7 @@ function code_alt_ctrl (code, alt, ctrl) {
 
 function check_top_window () {
 	try {
-		if (window.name != '_body_iframe') { window.location = '$href&__top=1'}
+		if (window.name != '_body_iframe') window.location.href = window.location.href + '&__top=1'
 	} catch (e) {}
 }
 
@@ -326,6 +348,8 @@ function activate_link (href, target) {
 		nope (href, target, 'toolbar=no,resizable=yes');
 	
 	}
+	
+	blockEvent ();
 
 }
 
@@ -555,7 +579,19 @@ function scrollCellToVisibleTop (td) {
 
 function handle_basic_navigation_keys () {
 
-	var keyCode = window.event.keyCode;
+	var e = window.event;
+	var keyCode = e.keyCode;
+	var i = 0;
+	
+	if (e.altKey ) i += 2;
+	if (e.ctrlKey) i ++;
+	
+	var kb_hook = kb_hooks [i] [keyCode];
+	
+	if (kb_hook) {
+		kb_hook [0] (kb_hook [1]);
+		return blockEvent ();
+	}
 
 	if (keyCode == 8 && !q_is_focused) {
 		typeAheadInfo.accumString = "";
@@ -616,15 +652,28 @@ function handle_basic_navigation_keys () {
 		}
 		
 		if (keyCode == 13) {									// Enter key
+		
+			var cell = get_cell ();
 
-			var children = get_cell ().getElementsByTagName ('a');
+			var children = cell.getElementsByTagName ('a');
+			
+			if (children == null || children.length == 0) {
+			
+				while (cell && cell.tagName != 'TR') cell = cell.parentElement;
+				
+				children = cell.getElementsByTagName ('a');
+			
+			}
+
 			if (children != null && children.length > 0) activate_link (children [0].href, children [0].target);
+			
 			return false;
 
 		}		
 		
 		if (q_is_focused || !document.toolbar_form || window.event.altKey || window.event.ctrlKey) return;
-		
+
+/*		
 		if (
 			   (keyCode >= 65 && keyCode <= 90)
 			|| (keyCode >= 48 && keyCode <= 57)
@@ -660,7 +709,8 @@ function handle_basic_navigation_keys () {
 
 		}
 		
-		
+*/
+
 		if (keyCode == 32) {									// Space bar
 
 			var children = get_cell ().getElementsByTagName ('input');
@@ -670,12 +720,10 @@ function handle_basic_navigation_keys () {
 				return false;
 			}
 
-		}
-		
+		}		
 		
 		
 	}
-
 
 }
 

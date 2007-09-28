@@ -147,17 +147,18 @@ sub setup_skin {
 
 	}
 	
-	*{$_SKIN . '::_PACKAGE'} = *{$_PACKAGE . '_PACKAGE'};
-	*{$_SKIN . '::_REQUEST'} = *{$_PACKAGE . '_REQUEST'};
-	*{$_SKIN . '::_USER'}    = *{$_PACKAGE . '_USER'};
-	*{$_SKIN . '::Eludia_VERSION_NAME'}    = *{$_PACKAGE . 'Eludia_VERSION_NAME'};
-	*{$_SKIN . '::SQL_VERSION'}    = *{$_PACKAGE . 'SQL_VERSION'};
-	*{$_SKIN . '::conf'    } = *{$_PACKAGE . 'conf'};
-	*{$_SKIN . '::preconf' } = *{$_PACKAGE . 'preconf'};
-	*{$_SKIN . '::r'       } = *{$_PACKAGE . 'r'};
-	*{$_SKIN . '::i18n'    } = *{$_PACKAGE . 'i18n'};
-	*{$_SKIN . '::create_url'    } = *{$_PACKAGE . 'create_url'};
-	*{$_SKIN . '::_SUBSET'}    = *{$_PACKAGE . '_SUBSET'};	
+	*{$_SKIN . '::_PACKAGE'           } = *{$_PACKAGE . '_PACKAGE'};
+	*{$_SKIN . '::_REQUEST'           } = *{$_PACKAGE . '_REQUEST'};
+	*{$_SKIN . '::_USER'              } = *{$_PACKAGE . '_USER'};
+	*{$_SKIN . '::Eludia_VERSION_NAME'} = *{$_PACKAGE . 'Eludia_VERSION_NAME'};
+	*{$_SKIN . '::SQL_VERSION'        } = *{$_PACKAGE . 'SQL_VERSION'};
+	*{$_SKIN . '::conf'               } = *{$_PACKAGE . 'conf'};
+	*{$_SKIN . '::preconf'            } = *{$_PACKAGE . 'preconf'};
+	*{$_SKIN . '::r'                  } = *{$_PACKAGE . 'r'};
+	*{$_SKIN . '::i18n'               } = *{$_PACKAGE . 'i18n'};
+	*{$_SKIN . '::create_url'         } = *{$_PACKAGE . 'create_url'};
+	*{$_SKIN . '::_SUBSET'            } = *{$_PACKAGE . '_SUBSET'};	
+	*{$_SKIN . '::_JSON'              } = *{$_PACKAGE . '_JSON'};
 
 }
 

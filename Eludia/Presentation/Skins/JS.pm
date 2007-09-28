@@ -2,10 +2,6 @@ package Eludia::Presentation::Skins::JS;
 
 use JSON::XS;
 
-BEGIN {
-	our $_JSON = JSON::XS -> new -> latin1 (1);	
-}
-
 ################################################################################
 
 sub options {

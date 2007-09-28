@@ -1,6 +1,7 @@
 package Eludia::Presentation::Skins::TurboMilk;
 
 use Data::Dumper;
+use Storable ('freeze');
 
 BEGIN {
 
@@ -1416,7 +1417,7 @@ sub draw_menu {
 
 	my $html = <<EOH;
 
-	<div style="position: relative">
+	<div style="position:relative" id="main_menu">
 
 		<table width="100%" class=bgr8 cellspacing=0 cellpadding=0 border=0>
 			<tr>
@@ -1427,6 +1428,10 @@ EOH
 	foreach my $type (@types) {
 
 		next if ($type -> {name} eq '_logout');
+		
+		$_REQUEST {__menu_links} .= "<a id='main_menu_$$type{name}' target='$$type{target}' href='$$type{href}'>-</a>";
+		
+		$type -> {target} = '_body_iframe' if $type -> {target} eq '_self';
 
 		if ($type eq BREAK) {
 			$html .= qq{<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>};
@@ -1489,6 +1494,9 @@ EOH
 EOH
 		}
 		else {
+		
+			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)};
+		
 			my $td = $type -> {items} ? <<EOH : qq{<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
 				<td nowrap onclick="$$type{onclick}" class="vert-menu" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}">
 						<table width="100%" cellspacing=0 cellpadding=0 border=0><tr>
@@ -1548,33 +1556,35 @@ sub js_set_select_option {
 sub draw_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
-
+	
 	my $html = "\n\t<td ";
 	$html .= dump_attributes ($data -> {attributes}) if $data -> {attributes};
 	$html .= '>';
 	
+	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
+	
 	unless ($data -> {off}) {
 	
-		$data -> {label} =~ s{^\s+}{};
-		$data -> {label} =~ s{\s+$}{};
+		$data -> {label} =~ s{^\s+}{}gsm;
+		$data -> {label} =~ s{\s+$}{}gsm;
 
 		$html .= qq {<img src='/i/_skins/TurboMilk/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
 		$html .= '<nobr>' unless $data -> {no_nobr};
 
-		$html .= '&nbsp; ';		
+#		$html .= '&nbsp; ';		
 
 		$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 		$html .= '<i>'      if $data -> {italic} || $options -> {italic};
 		$html .= '<strike>' if $data -> {strike} || $options -> {strike};
 
-		$html .= qq {<a id="$$data{a_id}" class=$$data{a_class} target="$$data{target}" href="$$data{href}" onFocus="blur()">} if $data -> {href};
+		$html .= qq {<a id="$$data{a_id}" class=$$data{a_class} target="$$data{target}" href="$$data{href}" onFocus="blur()">} if $data -> {href} && $data -> {href} ne $options -> {href};
 
 		$html .= $data -> {label};
 		
-		$html .= '</a>' if $data -> {href};
+		$html .= '</a>' if $data -> {href} && $data -> {href} ne $options -> {href};
 
-		$html .= '&nbsp;';		
+#		$html .= '&nbsp;';		
 		
 		$html .= '</nobr>' unless $data -> {no_nobr};
 		
@@ -1779,6 +1789,8 @@ EOH
 	my $menus = '';
 
 	foreach our $i (@$list) {
+
+#warn Dumper ($i);
 		
 		foreach my $tr (@{$i -> {__trs}}) {
 			
@@ -1791,7 +1803,9 @@ EOH
 			}
 
 			$html .= '>';
+			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $i -> {__href};
 			$html .= $tr;
+			$html .= qq {</a>} if $i -> {__href};
 			$html .= '</tr>';
 			
 		}
@@ -1837,20 +1851,38 @@ sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 
-	if ($_REQUEST {__only_form}) {
+	if ($_REQUEST {__only_menu}) {
 
-		$page -> {body} =~ s{\\}{\\\\}gsm;
-		$page -> {body} =~ s{\"}{\\\"}gsm; #"
-		$page -> {body} =~ s{[\n\r\s]+}{ }gsm;
+		my $a = $_JSON -> encode ([$page -> {menu}]);
+		my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
 
 		return <<EOH;
 <html>
 	<script for=window event=onload>
+		var a = $a;
+		var w = window.parent.parent;
+		w.document.getElementById ('main_menu').outerHTML = a[0];
+		w.menu_md5 = '$menu_md5';
+	</script>
+	<body>
+	</body>
+</html>
+EOH
+	}
+
+	if ($_REQUEST {__only_form}) {
+
+		my $a = $_JSON -> encode ([$page -> {body}]);
+
+		return <<EOH;
+<html>
+	<script for=window event=onload>
+		var a = $a;				
 		var doc = window.parent.document;				
 		var           element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$_REQUEST{__only_field}'];
 		if (!element) element = doc.getElementById ('input_$_REQUEST{__only_field}');
 		if (!element) return;					
-		element.outerHTML = "$page->{body}";
+		element.outerHTML = a [0];
 		element.tabIndex = "$_REQUEST{__only_tabindex}";
 	</script>
 	<body>
@@ -1872,7 +1904,7 @@ EOH
 	my $parameters = ${$_PACKAGE . 'apr'} -> parms;
   
 	my $body = '';
-	my $onKeyDown = '';	
+#	my $onKeyDown = '';	
 	my $body_scroll = 'yes';
 	
 	if (!$_USER -> {id}) {
@@ -1890,7 +1922,8 @@ EOH
 	
 		$$page{auth_toolbar} = '';
 		
-		$body = $page -> {menu} . $page -> {body};
+#		$body = $page -> {menu} . $page -> {body};
+		$body = $page -> {body} . "<div style='display:none'>$_REQUEST{__menu_links}</div>";
 		
 		my %h = %$parameters;
 		delete $h {salt};
@@ -1900,7 +1933,7 @@ EOH
 
 		$_REQUEST {__on_load} .= "check_top_window ();";
 				
-		$onKeyDown = <<EOJS;
+		$_REQUEST {__on_keydown} = <<EOJS;
 		
 //			if (code_alt_ctrl (88, 1, 0)) {
 //				nope ('$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}', '_top', '');
@@ -1925,15 +1958,28 @@ EOH
 			
 EOJS
 		
-		foreach (@{$page -> {scan2names}}) { $onKeyDown .= &{"handle_hotkey_$$_{type}"} ($_) }
+		foreach my $r (@{$page -> {scan2names}}) {
+			next if $r -> {off};
+			$r -> {alt}  += 0;
+			$r -> {ctrl} += 0;
+			$r -> {data} .= '';
+			my $i = 2 * $r -> {alt} + $r -> {ctrl};
+			$_REQUEST {__on_load} .= "\nkb_hooks [$i] [$r->{code}] = [handle_hotkey_$r->{type}, ";
+			foreach (qw(ctrl alt off type code)) {delete $r -> {$_}}
+			$_REQUEST {__on_load} .=  $_JSON -> encode ($r);
+			$_REQUEST {__on_load} .= '];';
+		}
 
-		$onKeyDown .= "if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
+		$_REQUEST {__on_keydown} .= "if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
 
 		if ($_REQUEST {sid}) {
 			my $timeout = 1000 * (60 * $conf -> {session_timeout} - 1);
 			$_REQUEST {__on_load} .= "start_keepalive ($timeout);";
 		}
 
+		my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
+
+		$_REQUEST {__on_load} .= "check_menu_md5 ('$menu_md5');";
 		$_REQUEST {__on_load} .= "idx_tables ($_REQUEST{__scrollable_table_row});";
 		$_REQUEST {__on_load} .= 'window.focus ();'                             if !$_REQUEST {__no_focus};
 		$_REQUEST {__on_load} .= "focus_on_input ($_REQUEST{__focused_input});" if  $_REQUEST {__focused_input};
@@ -1947,30 +1993,37 @@ EOJS
 		$_REQUEST {__on_load} = <<EOS;
 			window.focus ();
 			StartClock ();
-			$_REQUEST{__on_load};
+			nope ('$href', '_body_iframe');
 EOS
 		
 		$body = <<EOIFRAME;
 			<iframe 
 				name='_body_iframe' 
 				id='_body_iframe' 
-				src="$href" 
+				src="$_REQUEST{__static_url}/0.html"
 				width=100% 
 				height=100% 
 				border=0 
 				frameborder=0 
 				marginheight=0 
 				marginwidth=0
+				application=yes
 			>
 			</iframe>
 EOIFRAME
 
 	}
 	
-	if ($$page{auth_toolbar}) {
-		$$page{auth_toolbar} = "<tr height=48><td height=48>$$page{auth_toolbar}</td></tr>";
-	}
+	my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
 	
+	$_REQUEST {__script} .= <<EOH;
+		var menu_md5 = '$menu_md5';
+EOH
+	
+	if ($$page{auth_toolbar}) {
+		$$page{auth_toolbar} = "<tr height=48><td height=48>$$page{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>";
+	}
+		
 	$_REQUEST {__head_links} .= <<EOH;
 		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
 EOH
@@ -1993,6 +2046,25 @@ EOH
 EOH
 	}
 	
+	$_REQUEST {__on_help} = <<EOHELP if $_REQUEST {__help_url};
+		nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes');
+		blockEvent ();
+EOHELP
+
+	foreach (keys %_REQUEST) {
+	
+		/^__on_(\w+)$/ or next;
+		
+		my $what = $1 eq 'load' ? 'window' : 'body';
+	
+		$_REQUEST {__head_links} .= <<EOH;
+			<script for="$what" event="on$1">
+				$_REQUEST{$&};
+			</script>
+EOH
+
+	}
+	
 	return <<EOH;
 		<html>		
 			<head>
@@ -2001,11 +2073,7 @@ EOH
 				<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with $request_package; gateway_interface is $ENV{GATEWAY_INTERFACE}; $mod_perl is in use">
 				<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
 								
-				$_REQUEST{__head_links}
-							
-				<script for="window" event="onload">
-					$_REQUEST{__on_load}
-				</script>
+				$_REQUEST{__head_links}							
 
 				<script>
 					var clockSeparators = ['$_REQUEST{__clock_separator}', ' '];
@@ -2034,7 +2102,6 @@ EOHELP
 				id="body"
 				scroll="auto"
 				onbeforeunload="document.body.style.cursor = 'wait'"
-				onkeydown="$onKeyDown"
 			>
 				
 				<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
@@ -2051,6 +2118,7 @@ EOI
 
 			</body>
 		</html>
+		
 EOH
 
 }

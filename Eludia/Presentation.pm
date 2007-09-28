@@ -2443,11 +2443,12 @@ sub draw_cells {
 	my $result = '';
 	
 	delete $options -> {href} if $options -> {is_total};
-	
-	
+		
 	if ($options -> {href}) {
 		check_href ($options) ;
 		$options -> {a_class} ||= 'row-cell';
+		$i -> {__href} ||= $options -> {href};
+		$i -> {__target} ||= $options -> {target};
 	}
 	
 	foreach my $cell (order_cells (@{$_[0]})) {
@@ -3184,7 +3185,7 @@ sub draw_page {
 		
 		undef $page -> {content};		
 		
-		eval { $page -> {content} = call_for_role ($selector)};
+		eval { $page -> {content} = call_for_role ($selector)} unless $_REQUEST {__only_menu};
 		
 		setup_skin ();
 
@@ -3219,7 +3220,8 @@ sub draw_page {
 				$_SKIN -> {subset} = $_SUBSET;
 				$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
 				$page  -> {auth_toolbar} = draw_auth_toolbar ();
-				$page  -> {body} 	 = call_for_role ($renderrer, $page -> {content}); 
+				$page  -> {body} 	 = call_for_role ($renderrer, $page -> {content}) unless $_REQUEST {__only_menu}; 
+				$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
 				$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
 			};
 

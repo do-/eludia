@@ -438,9 +438,13 @@ td.vert-menu {
 	padding-top: 3px;
 	padding-bottom: 2px;
 
+	padding-left: 5px;
+	padding-right: 5px;
+
 	border-right:solid 1px #D6D3CE;
 	border-bottom:solid 1px #D6D3CE;
 
+	COLOR: #293869; 
 
 }
 .row-cell-transparent {
@@ -451,9 +455,13 @@ td.vert-menu {
 	padding-top: 3px;
 	padding-bottom: 2px;
 
+	padding-left: 5px;
+	padding-right: 5px;
+
 	border-right:solid 1px #D6D3CE;
 	border-bottom:solid 1px #D6D3CE;
 
+	COLOR: #293869; 
 
 }
 .row-button {

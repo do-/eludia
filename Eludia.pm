@@ -135,6 +135,8 @@ BEGIN {
 		password => 1,
 		error => 1,
 	};
+	
+	our $_JSON ||= JSON::XS -> new -> latin1 (1);
 		
 	unless ($ENV {ELUDIA_BANNER_PRINTED}) {
 
