@@ -129,7 +129,7 @@ sub sql_execute_procedure {
 	
 	$sql .= ';' unless $sql =~ /;[\n\r\s]*$/;
 	
-	my $st = sql_prepare ("$sql");
+	my $st = sql_prepare ($sql);
 
 	my $i = 1;
 	while (@params > 0) {
@@ -142,7 +142,20 @@ sub sql_execute_procedure {
 		$i ++; 
 	}
 	
-	$st -> execute;
+	eval {
+		$st -> execute;
+	};
+	
+	if ($@) {
+		local $SIG {__DIE__} = 'DEFAULT';
+		if ($@ =~ /ORA-\d+:(.*)/) {
+			die "$1\n";
+	  } else {
+			die $@;
+		}
+		
+	}
+	
 	$st -> finish;	
 	
 }
@@ -202,9 +215,11 @@ sub sql_select_all_cnt {
 	}
 	
 	$st -> finish;
-	
-	$sql =~ s{SELECT.*?FROM}{SELECT COUNT(*) FROM}ism;
-		
+
+
+	$sql =~ s{SELECT.*?[\s\n]FROM}{SELECT COUNT(*) FROM}ism;
+	$sql =~ s{ORDER BY.*}{}ism;
+
 	my $cnt = sql_select_scalar ($sql, @params);
 			
 	return (\@result, $cnt);
@@ -394,6 +409,7 @@ sub sql_select_scalar {
 	} else {
 
 		my $st = sql_prepare ($sql);
+
 		$st -> execute (@params);
 		@result = $st -> fetchrow_array ();
 		$st -> finish;
