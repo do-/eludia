@@ -829,8 +829,8 @@ sub draw_form {
 	push @keep_params, {name  => 'sid',                         value => $_REQUEST {sid}                         };
 	push @keep_params, {name  => 'select',                      value => $_REQUEST {select}                      };
 	push @keep_params, {name  => '__tree',                      value => $_REQUEST {__tree}                      };
-	push @keep_params, {name  => 'type',                        value => $_REQUEST {type}   || $options -> {type}};
-	push @keep_params, {name  => 'id',                          value => $_REQUEST {id}     || $options -> {id}  };
+	push @keep_params, {name  => 'type',                        value => $options -> {type} || $_REQUEST {type}  };
+	push @keep_params, {name  => 'id',                          value => $options -> {id} || $_REQUEST {id}      };
 	push @keep_params, {name  => 'action',                      value => $options -> {action}                    };
 	push @keep_params, {name  => '__last_query_string',         value => $_REQUEST {__last_last_query_string}    };
 	push @keep_params, {name  => '__last_scrollable_table_row', value => $_REQUEST {__last_scrollable_table_row} } unless ($_REQUEST {__windows_ce});
@@ -2123,7 +2123,8 @@ sub draw_centered_toolbar_button {
 		my $msg = js_escape ($options -> {confirm});
 		$options -> {preconfirm} ||= 1;
 		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {nope('$$options{href}', '$target')} else {window.parent.document.body.style.cursor = 'normal'; nop ();} ];
+		my $href = js_escape ($options -> {href});
+		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {nope($href, '$target')} else {window.parent.document.body.style.cursor = 'normal'; nop ();} ];
 	} 	
 
 	if ($options -> {href} =~ /^java/) {
@@ -2203,7 +2204,7 @@ sub draw_ok_esc_toolbar {
 		{
 			preset => 'ok',
 			label => $options -> {label_ok}, 
-			href => $_REQUEST {__windows_ce} || $_SKIN =~ /Universal/ ? "javaScript:document.$name.submit()" : "javaScript:document.$name.fireEvent(\\'onsubmit\\'); document.$name.submit()", 
+			href => $_REQUEST {__windows_ce} || $_SKIN =~ /Universal/ ? "javaScript:document.$name.submit()" : "javaScript:document.$name.fireEvent('onsubmit'); document.$name.submit()", 
 			off  => $_REQUEST {__read_only} || $options -> {no_ok},
 		},
 		{

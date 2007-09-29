@@ -1930,7 +1930,7 @@ EOH
 		qq {<td class=bgr8><div class="table-container-x">} :
 		qq {<td class=bgr8><div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
 		
-	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="scrollable_table" lpt=$$options{lpt}>\n};
+	$html .= qq {<table cellspacing=0 cellpadding=0 width="100%" id="scrollable_table" style="border-collapse: collapse;" lpt=$$options{lpt}>\n};
 
 	$html .= $options -> {header} if $options -> {header};
 

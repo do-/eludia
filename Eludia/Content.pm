@@ -1888,7 +1888,7 @@ sub fill_in {
    			icon    => 'ok',
    			label   => 'ok',
    			hotkey  => {code => ENTER, ctrl => 1},
-   			confirm => 'confirm_ok',
+   			confirm => $conf -> {core_no_confirm_submit} ? undef : 'confirm_ok',
    		},
    		
    		cancel => {

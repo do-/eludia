@@ -269,7 +269,7 @@ sub _draw_input_datetime {
 	$options -> {onKeyDown}  ||= 'null';
 	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
 
-	$options -> {no_read_only} or $options -> {attributes} -> {readonly} = 1;
+#	$options -> {no_read_only} or $options -> {attributes} -> {readonly} = 1;
 	
 	my $attributes = dump_attributes ($options -> {attributes});
 		
@@ -804,7 +804,7 @@ EOJS
 			onKeyDown="tabOnEnter()"
 			onChange="is_dirty=true; $$options{onChange}" 
 			onKeyPress="typeAhead()" 
-			style="visibility:expression(last_vert_menu && last_vert_menu [0] ? 'hidden' : '')"
+			style="visibility:expression((last_vert_menu && last_vert_menu [0]) || (window.top && window.top.last_vert_menu && window.top.last_vert_menu [0]) ? 'hidden' : '')"
 		>
 EOH
 		
@@ -1194,7 +1194,7 @@ sub draw_toolbar_input_select {
 	$name = "_$name" if defined $options -> {other};
 	
 	$html .= <<EOH;
-		<select name="$name" id="${name}_select" onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression(last_vert_menu && last_vert_menu [0] ? 'hidden' : '')">
+		<select name="$name" id="${name}_select" onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression((last_vert_menu && last_vert_menu [0]) || (window.top && window.top.last_vert_menu && window.top.last_vert_menu [0]) ? 'hidden' : '')">
 EOH
 
 	if (defined $options -> {empty}) {
@@ -1359,7 +1359,7 @@ sub draw_toolbar_input_text {
 			value="$$options{value}" 
 			onFocus="scrollable_table_is_blocked = true; " 
 			onBlur="scrollable_table_is_blocked = false; "
-			style="visibility:expression(last_vert_menu && last_vert_menu [0] ? 'hidden' : '')"
+			style="visibility:expression((last_vert_menu && last_vert_menu [0]) || (window.top && window.top.last_vert_menu && window.top.last_vert_menu [0]) ? 'hidden' : '')"
 			id="$options->{id}"
 		>
 EOH

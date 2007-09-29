@@ -460,6 +460,13 @@ OPTION {
 TEXTAREA {
 	FONT-SIZE: 9pt; COLOR: #000000; FONT-FAMILY: MS Sans Serif
 }
+td.row-cell {
+	border: 1px solid #888888;
+}
+th.row-cell-header {
+	border-top: 1px solid #888888;
+	border-left: 1px solid #888888;
+}
 .row-cell {
 	FONT-FAMILY: Arial; 
 	FONT-WEIGHT: normal; 

@@ -432,10 +432,16 @@ function menuItemOut () {
 	timer = setTimeout('hideSubMenus(0)',delay);
 }
 
-function setVisible (id, isVisible, markSublevel) { 
-	document.getElementById (id).style.display = isVisible ? 'block' : 'none'
+function setVisible (id, isVisible, markSublevel) {
+	var object;
+	if (window.parent && window.parent.document.getElementById (id))
+		object = window.parent.document.getElementById (id);
+	else
+		object = document.getElementById (id);   		
+	 
+	object.style.display = isVisible ? 'block' : 'none'
         if (markSublevel && isVisible) {
-                var els = document.getElementById (id).children;
+                var els = object.children;
                 var hasChecked = false;
                 for (i = 0; i < els.length; i++) {
                         if (els[i].checked) {
@@ -454,7 +460,15 @@ function restoreSelectVisibility (name, rewind) {
 	setVisible (name + '_select', true);
 //	setVisible (name + '_iframe', false);
 	setVisible (name + '_div', false);
-	document.getElementById (name + '_iframe').src = '/0.html';
+	
+	var iframe;
+	if (window.parent && window.parent.document.getElementById (name + '_iframe'))
+		iframe = window.parent.document.getElementById (name + '_iframe');
+	else 
+		iframe = document.getElementById (name + '_iframe');
+	 	
+	iframe.src = '/0.html';
+	
 	if (rewind) {
 		document.getElementById (name + '_select').selectedIndex = 0;
 	}
@@ -463,13 +477,25 @@ function restoreSelectVisibility (name, rewind) {
 function setSelectOption (name, id, label) { 
 
 	restoreSelectVisibility (name, false);
-	var select = document.getElementById (name + '_select');
 	
+	var select;
+	var tree = 0;
+	
+	if (window.parent && window.parent.document.getElementById (name + '_select')) {
+			select = window.parent.document.getElementById (name + '_select')
+			tree = 1; 
+	} else 
+			select = document.getElementById (name + '_select') 
+
+			
 	for (var i = 0; i < select.options.length; i++) {
 		if (select.options [i].value == id) {
 			select.options [i].innerText = label;
 			select.selectedIndex = i;
-			window.focus ();
+			if (tree)
+				window.parent.focus ();
+			else 
+				window.focus ();
 			select.focus ();
 			if( select.onchange() ) select.onchange();
 			return;
@@ -481,7 +507,10 @@ function setSelectOption (name, id, label) {
 	option.innerText = label;
 	option.value = id;
 	select.selectedIndex = select.options.length - 1;
-	window.focus ();
+	if (tree)
+		window.parent.focus ();
+	else 
+		window.focus ();
 	select.focus ();
 	if( select.onchange() ) select.onchange();
 };
@@ -766,26 +795,6 @@ function msword_line (s) {
 	ms_word.Selection.InsertParagraph (); 
 	ms_word.Selection.Start = ms_word.Selection.End; 
 
-}
-
-function m_on (td) {
-	var cells = td.parentElement.cells;
-	for (var i = 0; i < cells.length; i++) {
-		if (cells [i].className != 'vert-menu') continue;
-		cells [i].style.background='#08246b';
-		cells [i].style.color='white';
-	}
-	blockEvent ();
-}
-
-function m_off (td) {
-	var cells = td.parentElement.cells;
-	for (var i = 0; i < cells.length; i++) {
-		if (cells [i].className != 'vert-menu') continue;
-		cells [i].style.background='#D6D3CE';
-		cells [i].style.color='black';
-	}
-	blockEvent ();
 }
 
 function check_popup_menus (event) {
