@@ -1983,7 +1983,8 @@ EOJS
 		$_REQUEST {__on_load} .= "idx_tables ($_REQUEST{__scrollable_table_row});";
 		$_REQUEST {__on_load} .= 'window.focus ();'                             if !$_REQUEST {__no_focus};
 		$_REQUEST {__on_load} .= "focus_on_input ($_REQUEST{__focused_input});" if  $_REQUEST {__focused_input};
-
+		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " parent.edit_mode = 1;" : " parent.edit_mode = 0;" if ($_REQUEST {__tree});
+	
 	}
 	else {
 	
@@ -2065,6 +2066,43 @@ EOH
 
 	}
 	
+
+
+
+	$body_scroll = 'no' if $_REQUEST {__tree};
+
+	$body =~ /\<frameset/ or $body = <<EOH;
+			<body 
+				bgcolor=white 
+				leftMargin=0 
+				topMargin=0
+				bottomMargin=0
+				rightMargin=0
+				marginwidth=0 
+				marginheight=0 
+				scroll=$body_scroll
+				name="body" 
+				id="body"
+				onbeforeunload="document.body.style.cursor = 'wait'"
+			>
+				
+				<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
+					$$page{auth_toolbar}
+					<tr><td valign=top height=100%>
+						$body
+					</td></tr>
+				</table>
+
+@{[ map {<<EOI} @{$_REQUEST{__invisibles}} ]}
+					<iframe name='$_' src="/i/0.html" width=0 height=0 application="yes" style="display:none">
+					</iframe>
+EOI
+
+			</body>
+		</html>
+		
+EOH
+
 	return <<EOH;
 		<html>		
 			<head>
@@ -2089,34 +2127,7 @@ EOH
 EOHELP
 
 			</head>
-			<body 
-				bgcolor=white 
-				leftMargin=0 
-				topMargin=0
-				bottomMargin=0
-				rightMargin=0
-				marginwidth=0 
-				marginheight=0 
-				scroll=$body_scroll
-				name="body" 
-				id="body"
-				scroll="auto"
-				onbeforeunload="document.body.style.cursor = 'wait'"
-			>
-				
-				<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
-					$$page{auth_toolbar}
-					<tr><td valign=top height=100%>
-						$body
-					</td></tr>
-				</table>
-
-@{[ map {<<EOI} @{$_REQUEST{__invisibles}} ]}
-					<iframe name='$_' src="/i/0.html" width=0 height=0 application="yes" style="display:none">
-					</iframe>
-EOI
-
-			</body>
+			$body
 		</html>
 		
 EOH
@@ -2389,7 +2400,97 @@ EOH
 
 }
 
+################################################################################
 
+sub draw_tree {
 
+	my ($_SKIN, $node_callback, $list, $options) = @_;
+	
+	my $add = '';
+	my $menus = '';
+	
+	foreach our $i (@$list) {		
+		$add .= $i -> {__node};
+		$menus .= $i -> {__menu};		
+	}
+
+	$_REQUEST {__on_load} .= <<EOH;
+		var win = document.getElementById ('__tree_iframe').contentWindow;
+		win.d = new win.dTree ('d');
+		var c = win.d.config;
+		c.iconPath = '$_REQUEST{__static_url}/tree_';
+		c.target = '_content_iframe';
+		c.useStatusText = true;
+		win.d.icon.node = 'folderopen.gif';
+		$add
+		win.document.body.innerHTML += "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td valign=top>" + win.d + "</td></tr></table>$menus";
+EOH
+
+	return <<EOH;
+		<frameset cols="250,*">
+			<frame src="$_REQUEST{__static_url}/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
+			</frame>
+			<frame src="$_REQUEST{__static_url}/0.html" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
+			</frame>
+		<frameset>
+EOH
+	
+	my $menus;
+	
+	my $html = <<EOH;
+	
+		$$options{title}
+		
+		<table class="dtree">
+			<tr>
+				<td>
+		
+			<script type="text/javascript">
+				<!--
+		
+				d = new dTree('d');
+				
+				d.config.iconPath = '$_REQUEST{__static_url}/tree_';
+				d.config.target = '_content_iframe';
+				d.config.useStatusText = true;
+				d.icon.node = 'folderopen.gif';
+	
+
+EOH
+
+	foreach our $i (@$list) {
+		
+			$html .= $i -> {__node};
+			$menus .= $i -> {__menu};
+			
+		
+	}
+
+	$html .= <<EOH;
+				document.write(d);
+		
+				//-->
+			</script>
+				</td>
+			</tr>
+		</table>
+		$menus
+		<iframe name="_content_iframe" id="__content_iframe" style="height: expression(document.body.offsetHeight - 80); width: expression(document.body.offsetWidth - 250);" height="80%" src="/i/0.html" application="yes">
+		</iframe>
+EOH
+
+}
+
+################################################################################
+
+sub draw_node {
+
+	my ($_SKIN, $options, $i) = @_;
+
+	my $menu = $i -> {__menu} ? "'$i'" : 'null';
+	
+	return "win.d.add($options->{id}, $options->{parent}, '$options->{label}', '$options->{href}', null, null, null, null, null, $menu);\n"
+
+}
 
 1;
