@@ -70,7 +70,7 @@ sub hotkeys {
 sub hotkey {
 
 	my ($def) = $_[0];
-		
+			
 	$def -> {type} ||= 'href';
 
 	if ($def -> {code} =~ /^F(\d+)/) {
@@ -2085,7 +2085,7 @@ sub draw_centered_toolbar_button {
 	
 	if ($options -> {preset}) {
 		my $preset = $conf -> {button_presets} -> {$options -> {preset}};
-		$options -> {hotkey}     ||= $preset -> {hotkey};
+		$options -> {hotkey}     ||= Storable::dclone ($preset -> {hotkey});
 		$options -> {icon}       ||= $preset -> {icon};
 		$options -> {label}      ||= $i18n -> {$preset -> {label}};
 		$options -> {label}      ||= $preset -> {label};
@@ -2095,7 +2095,7 @@ sub draw_centered_toolbar_button {
 	}	
 
 	if ($options -> {hotkey}) {
-		$options -> {id} ||= $options;
+		$options -> {id} ||= $options . '';
 		$options -> {hotkey} -> {data}    = $options -> {id};
 		$options -> {hotkey} -> {off}     = $options -> {off};
 		hotkey ($options -> {hotkey});

@@ -728,8 +728,8 @@ function handle_basic_navigation_keys () {
 }
 
 function get_cell () {
-	var effective_scrollable_row  = Math.min (scrollable_table_row, scrollable_rows.length);
-	var effective_scrollable_cell = Math.min (scrollable_table_row_cell, scrollable_rows [scrollable_table_row].cells.length);
+	var effective_scrollable_row  = Math.min (scrollable_table_row, scrollable_rows.length - 1);
+	var effective_scrollable_cell = Math.min (scrollable_table_row_cell, scrollable_rows [scrollable_table_row].cells.length - 1);
 	return scrollable_rows [effective_scrollable_row].cells [effective_scrollable_cell];
 }
 

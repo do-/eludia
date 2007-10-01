@@ -1957,7 +1957,7 @@ EOH
 			handle_basic_navigation_keys ();
 			
 EOJS
-		
+
 		foreach my $r (@{$page -> {scan2names}}) {
 			next if $r -> {off};
 			$r -> {alt}  += 0;
@@ -1982,7 +1982,7 @@ EOJS
 		$_REQUEST {__on_load} .= "check_menu_md5 ('$menu_md5');";
 		$_REQUEST {__on_load} .= "idx_tables ($_REQUEST{__scrollable_table_row});";
 		$_REQUEST {__on_load} .= 'window.focus ();'                             if !$_REQUEST {__no_focus};
-		$_REQUEST {__on_load} .= "focus_on_input ($_REQUEST{__focused_input});" if  $_REQUEST {__focused_input};
+		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');" if  $_REQUEST {__focused_input};
 		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " parent.edit_mode = 1;" : " parent.edit_mode = 0;" if ($_REQUEST {__tree});
 	
 	}
