@@ -1859,10 +1859,15 @@ sub draw_page {
 		return <<EOH;
 <html>
 	<script for=window event=onload>
-		var a = $a;
 		var w = window.parent.parent;
-		w.document.getElementById ('main_menu').outerHTML = a[0];
-		w.menu_md5 = '$menu_md5';
+		if (w) {
+			var m = w.document.getElementById ('main_menu');
+			if (m) {
+				var a = $a;
+				m.outerHTML = a[0];
+				w.menu_md5 = '$menu_md5';
+			}
+		}
 	</script>
 	<body>
 	</body>
@@ -2069,7 +2074,7 @@ EOH
 
 
 
-	$body_scroll = 'no' if $_REQUEST {__tree};
+#	$body_scroll = 'no' if $_REQUEST {__tree};
 
 	$body =~ /\<frameset/ or $body = <<EOH;
 			<body 
@@ -2406,13 +2411,26 @@ sub draw_tree {
 
 	my ($_SKIN, $node_callback, $list, $options) = @_;
 	
-	my $add = '';
 	my $menus = '';
+	my @nodes = ();
 	
-	foreach our $i (@$list) {		
-		$add .= $i -> {__node};
-		$menus .= $i -> {__menu};		
+	our %idx = ();
+	our %lch = ();
+	
+	foreach my $i (@$list) {
+		my $node = $i -> {__node};
+		push @nodes, $node;
+		$idx {$node -> {id}} = $node;
+		$lch {$node -> {pid}} = $node if $node -> {pid};
+		$menus .= $i -> {__menu};
 	}
+	
+	while (my ($k, $v) = each %lch) {
+		$idx {$k} -> {_hc} = 1;
+		$v -> {_ls} = 1;
+	}
+	
+	my $nodes = $_JSON -> encode (\@nodes);
 
 	$_REQUEST {__on_load} .= <<EOH;
 		var win = document.getElementById ('__tree_iframe').contentWindow;
@@ -2422,7 +2440,7 @@ sub draw_tree {
 		c.target = '_content_iframe';
 		c.useStatusText = true;
 		win.d.icon.node = 'folderopen.gif';
-		$add
+		win.d.aNodes = $nodes;
 		win.document.body.innerHTML += "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td valign=top>" + win.d + "</td></tr></table>$menus";
 EOH
 
@@ -2436,6 +2454,8 @@ EOH
 EOH
 	
 	my $menus;
+	
+	$options -> {in_order} += 0;
 	
 	my $html = <<EOH;
 	
@@ -2453,6 +2473,7 @@ EOH
 				d.config.iconPath = '$_REQUEST{__static_url}/tree_';
 				d.config.target = '_content_iframe';
 				d.config.useStatusText = true;
+				d.config.inOrder = $options->{in_order};
 				d.icon.node = 'folderopen.gif';
 	
 
@@ -2486,10 +2507,19 @@ EOH
 sub draw_node {
 
 	my ($_SKIN, $options, $i) = @_;
-
-	my $menu = $i -> {__menu} ? "'$i'" : 'null';
 	
-	return "win.d.add($options->{id}, $options->{parent}, '$options->{label}', '$options->{href}', null, null, null, null, null, $menu);\n"
+	$options -> {label} =~ s{\"}{\&quot;}gsm;
+
+	my $node = {
+		id   => $options -> {id}, 
+		pid  => $options -> {parent}, 
+		name => $options -> {label}, 
+		url  => $options -> {href},
+	};
+		
+	$node -> {context_menu} = $i . '' if $i -> {__menu};
+
+	return $node;
 
 }
 

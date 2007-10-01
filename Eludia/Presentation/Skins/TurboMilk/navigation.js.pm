@@ -2737,6 +2737,12 @@ dTree.prototype.add = function(id, pid, name, url, title, target, icon, iconOpen
 
 };
 
+dTree.prototype.addAll = function (a) {
+
+	for (i in a) this.aNodes[this.aNodes.length] = new Node (i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9]);
+
+};
+
 
 
 // Open/close all nodes
@@ -2789,21 +2795,17 @@ dTree.prototype.addNode = function(pNode) {
 
 	var str = '';
 
-	var n=0;
+	for (var n = this.config.inOrder ? pNode._ai + 1 : 0; n<this.aNodes.length; n++) {
 
-	if (this.config.inOrder) n = pNode._ai;
+		var cn = this.aNodes[n];
 
-	for (n; n<this.aNodes.length; n++) {
-
-		if (this.aNodes[n].pid == pNode.id) {
-
-			var cn = this.aNodes[n];
+		if (cn.pid == pNode.id) {
 
 			cn._p = pNode;
 
 			cn._ai = n;
 
-			this.setCS(cn);
+//			this.setCS(cn);
 
 			if (!cn.target && this.config.target) cn.target = this.config.target;
 
@@ -2833,13 +2835,17 @@ dTree.prototype.addNode = function(pNode) {
 					cn.url = cn.url + '&salt=' + Math.random ();
 					if (cn.target == null || cn.target == '') cn.target = '_self';
 					var code = 'nope (\'' + cn.url + '\', \'' + cn.target + '\', \'toolbar=no,resizable=yes\')';
-					setTimeout(code,500);
+					setTimeout(code, 0);
 				}
-			}
-			
+			}			
 
 			if (cn._ls) break;
 
+		}
+		else {
+		
+			if (this.config.inOrder) break;
+		
 		}
 
 	}

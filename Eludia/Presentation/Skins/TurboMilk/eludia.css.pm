@@ -15,7 +15,7 @@ div.table-container {
 /*
       	WIDTH: expression(document.body.offsetWidth - (window.name == '_body_iframe' ? 12 : 21));
 */      	
-      	WIDTH: expression(document.body.offsetWidth - 16);
+      	WIDTH: expression(document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 16));
       	PADDING-TOP: 0px;      	
       	
 	scrollbar-base-color:#d6d3ce;
