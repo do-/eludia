@@ -704,7 +704,7 @@ INPUT {
 }
 
 .cbx {
-	border: 0px none; 
+	border: 0px solid; 
 }
 
 SELECT {
@@ -722,12 +722,9 @@ input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs
 	COLOR: #000000; 
 	background-color: #ffffff;
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';  
-	border-bottom: 2px ridge; 
-	border-right: 2px ridge; 
-	border-top: 2px inset; 
-	border-left: 2px inset;
-	padding-left: 1px;
-
+	border: 1px #7f9db9 solid;
+	padding-left: 3px;
+	padding-right: 3px;
 }
 
 td.toolbar {

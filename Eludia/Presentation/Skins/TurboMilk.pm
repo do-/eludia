@@ -303,7 +303,7 @@ sub _draw_input_datetime {
 			onKeyPress="$$options{onKeyPress}" 
 			onKeyDown="$$options{onKeyDown}"
 		>
-		<button id="calendar_trigger_$$options{id}" class="form-active-ellipsis">...</button>
+		<img id="calendar_trigger_$$options{id}" src="$_REQUEST{__static_url}/i_calendar.gif" align=absmiddle>
 EOH
 	
 	unless ($options -> {no_clear_button} || $options -> {no_read_only}) {
