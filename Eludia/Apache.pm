@@ -362,9 +362,19 @@ EOH
 		$page -> {menu}   = menu_subset ($page -> {menu}) if $preconf -> {subset} or ($_SUBSET && $_SUBSET -> {items});
 		$page -> {subset} = $_SUBSET;
 
-		if (!$page -> {type} && @{$page -> {menu}} > 0) {
-			$page -> {type} = $page -> {menu} -> [0] -> {name};
-			$_REQUEST {type}= $page -> {type}; 
+		if (!$page -> {type}) {
+			
+			foreach my $i (@{$page -> {menu}}) {
+				
+				next if $i -> {off};
+				
+				$page -> {type}  = $i -> {name};
+				$_REQUEST {type} = $page -> {type};
+				
+				last;
+				
+			}
+			
 		};
 	
 		unless ($page -> {type} =~ /^_/) {

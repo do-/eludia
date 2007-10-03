@@ -2085,7 +2085,7 @@ sub draw_centered_toolbar_button {
 	
 	if ($options -> {preset}) {
 		my $preset = $conf -> {button_presets} -> {$options -> {preset}};
-		$options -> {hotkey}     ||= Storable::dclone ($preset -> {hotkey});
+		$options -> {hotkey}     ||= Storable::dclone ($preset -> {hotkey}) if $preset -> {hotkey};
 		$options -> {icon}       ||= $preset -> {icon};
 		$options -> {label}      ||= $i18n -> {$preset -> {label}};
 		$options -> {label}      ||= $preset -> {label};
