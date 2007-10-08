@@ -1663,7 +1663,7 @@ sub js_set_select_option {
 	return ($fallback_href || $i) unless $_REQUEST {select};
 	my $question = js_escape ($i18n -> {confirm_close_vocabulary} . ' ' . $item -> {label} . '?');
 	$name ||= '_' . $_REQUEST {select};
-	return 'javaScript:if (window.confirm(' . $question . ')) {parent.setSelectOption(' . js_escape ($name) . ', '	. $item -> {id} . ', ' . js_escape ($item -> {label}) . ');}';
+	return 'javaScript:if (window.confirm(' . $question . ')) {parent.setSelectOption(' . js_escape ($name) . ', '	. $item -> {id} . ', ' . js_escape ($item -> {label}) . ');} else {document.body.style.cursor = \'normal\'; nop ();}';
 }
 
 ################################################################################
