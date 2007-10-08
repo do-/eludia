@@ -630,16 +630,39 @@ sub draw_form_field_select {
 		$options -> {other} -> {width}  ||= 600;
 		$options -> {other} -> {height} ||= 400;
 
-		$options -> {onChange} .= <<EOJS;
+		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
-			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-				switchDiv(); 
-				loadSlaveDiv('${$$options{other}}{href}&select=$$options{name}');
-			}
+		if ($options -> {no_confirm}) {
 
+			$options -> {onChange} .= <<EOJS;
+
+				if (this.options[this.selectedIndex].value == -1) {
+
+					switchDiv(); 
+					loadSlaveDiv('${$$options{other}}{href}&select=$$options{name}');
+
+				}
 EOJS
+		} else {
 
-	}		
+			$options -> {onChange} .= <<EOJS;
+
+				if (this.options[this.selectedIndex].value == -1) {
+
+					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+
+						switchDiv(); 
+						loadSlaveDiv('${$$options{other}}{href}&select=$$options{name}');
+
+					} else {
+
+						this.selectedIndex = 0;
+
+					}
+				}
+EOJS
+		}
+	}
 
 
 

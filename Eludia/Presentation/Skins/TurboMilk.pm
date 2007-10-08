@@ -742,23 +742,53 @@ sub draw_form_field_select {
 		$options -> {other} -> {width}  ||= 600;
 		$options -> {other} -> {height} ||= 400;
 
-		$options -> {onChange} .= <<EOJS;
+		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
-			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-				
-				var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:no;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
-				
-				focus ();
-				
-				if (result.result == 'ok') {
-					setSelectOption (this, result.id, result.label);
+		if ($options -> {no_confirm}) {
+
+			$options -> {onChange} .= <<EOJS;
+
+				if (this.options[this.selectedIndex].value == -1) {
+
+					var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:no;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+					
+					focus ();
+					
+					if (result.result == 'ok') {
+						setSelectOption (this, result.id, result.label);
+					} else {
+						this.selectedIndex = 0;
+					}
+					
 				}
-				
-			}
-
 EOJS
+		} else {
 
-	}		
+			$options -> {onChange} .= <<EOJS;
+	
+				if (this.options[this.selectedIndex].value == -1) {
+
+					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+
+						var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:no;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+						
+						focus ();
+						
+						if (result.result == 'ok') {
+							setSelectOption (this, result.id, result.label);
+						} else {
+							this.selectedIndex = 0;
+						}
+					
+					} else {
+
+						this.selectedIndex = 0;
+
+					}
+				}
+EOJS
+		}
+	}
 
 	my $html = <<EOH;
 		<select 
