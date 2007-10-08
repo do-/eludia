@@ -1192,9 +1192,11 @@ sub draw_toolbar_input_select {
 	my $name = $$options{name};
 	
 	$name = "_$name" if defined $options -> {other};
-	
+
+	my $read_only = $options -> {read_only} ? 'disabled' : ''; 
+
 	$html .= <<EOH;
-		<select name="$name" id="${name}_select" onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression((last_vert_menu && last_vert_menu [0]) || (window.top && window.top.last_vert_menu && window.top.last_vert_menu [0]) ? 'hidden' : '')">
+		<select name="$name" id="${name}_select" $read_only onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression((last_vert_menu && last_vert_menu [0]) || (window.top && window.top.last_vert_menu && window.top.last_vert_menu [0]) ? 'hidden' : '')">
 EOH
 
 	if (defined $options -> {empty}) {
