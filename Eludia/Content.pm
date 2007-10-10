@@ -360,7 +360,8 @@ sub send_mail {
 	$options -> {content_type} ||= 'text/plain';
 	
 	if ($options -> {href}) {	
-		$options -> {href} =~ /^http/ or $options -> {href} = "http://$ENV{HTTP_HOST}" . $options -> {href};
+		my $server_name = $preconf -> {mail} -> {server_name} || $ENV{HTTP_HOST};
+		$options -> {href} =~ /^http/ or $options -> {href} = "http://$server_name" . $options -> {href};
 		$options -> {href} = "<br><br><a href='$$options{href}'>$$options{href}</a>" if $options -> {content_type} eq 'text/html';
 		$options -> {text} .= "\n\n" . $options -> {href};
 	}
