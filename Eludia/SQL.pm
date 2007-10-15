@@ -346,7 +346,6 @@ sub sql_is_temporal_table {
 
 sub sql_reconnect {
 
-
 	if ($db && $model_update && $model_update -> {core_ok}) {
 		my $ping = $db -> ping;
 		return if $ping;
@@ -354,9 +353,7 @@ sub sql_reconnect {
 	
 	$conf = {%$conf, %$preconf};
 
-#   	$conf -> {dbf_dsn} and our $dbf = DBI -> connect ($conf -> {dbf_dsn}, {RaiseError => 1});
-
-	our $db  = DBI -> connect ($conf -> {'db_dsn'}, $conf -> {'db_user'}, $conf -> {'db_password'}, {
+	our $db = DBI -> connect ($conf -> {'db_dsn'}, $conf -> {'db_user'}, $conf -> {'db_password'}, {
 		RaiseError  => 1, 
 		AutoCommit  => 1,
 		LongReadLen => 100000000,

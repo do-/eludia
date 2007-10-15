@@ -904,8 +904,10 @@ sub draw_form {
 	}
 	
 	$options -> {rows} = \@rows;
+	
+	$options -> {path} ||= $data -> {path};
 				
-	$options -> {path} = ($data -> {path} && !$_REQUEST{__no_navigation}) ? draw_path ($options, $data -> {path}) : '';
+	$options -> {path} = ($options -> {path} && !$_REQUEST{__no_navigation}) ? draw_path ($options, $options -> {path}) : '';
 	
 	delete $options -> {menu} if $_REQUEST {__edit};
 	if ($options -> {menu}) {	
@@ -3188,6 +3190,8 @@ sub draw_page {
 		
 		eval { $page -> {content} = call_for_role ($selector)} unless $_REQUEST {__only_menu};
 		
+		warn $@ if $@;
+		
 		setup_skin ();
 
 		$_REQUEST {__read_only} = 0 if ($_REQUEST {__only_field});
@@ -3243,6 +3247,7 @@ sub draw_page {
 
 		if ($_REQUEST {error} =~ s{^\#(\w+)\#\:}{}) {
 			$page -> {error_field} = $1;
+			($_REQUEST {error}) = split / at/sm, $_REQUEST {error}; 
 		}
 
 		setup_skin ();

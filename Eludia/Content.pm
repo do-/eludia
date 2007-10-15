@@ -1085,7 +1085,7 @@ sub call_for_role {
 		$_REQUEST {__benchmarks_selected} = 0;
 	
 		my $result = &$name_to_call (@_);
-		
+
 		if ($preconf -> {core_debug_profiling} == 2) {
 			
 			sql_do (
@@ -2361,13 +2361,53 @@ sub get_item_of_ ($) {
 
 sub get_page {}
 
-################################################################################^M
+################################################################################
 
 sub json_dump_to_function {
 
 	my ($name, $data) = @_;
 
 	return "\n function $name () {\n return " . $_JSON -> encode ($data) . "\n}\n";
+
+}
+
+################################################################################
+
+sub attach_globals {
+
+	my ($from, $to, @what) = @_;
+	
+	$from =~ /::$/ or $from .= '::';
+	$to   =~ /::$/ or $to   .= '::';
+
+	*{"${to}$_"} = *{"${from}$_"} foreach (@what);
+
+}
+
+################################################################################
+
+sub prev_next_n {
+
+	my ($what, $where, $options) = @_;
+	
+	$options -> {field} ||= 'id';
+	
+	my $id = $what -> {$options -> {field}};
+
+	my ($prev, $next) = ();
+	
+	for (my $i = 0; $i < @$where; $i++) {
+
+		$where -> [$i] -> {$options -> {field}} == $id or next;
+		
+		$prev = $where -> [$i - 1] if $i;
+		$next = $where -> [$i + 1];
+		
+		return ($prev, $next, $i);
+	
+	}
+	
+	return ();
 
 }
 

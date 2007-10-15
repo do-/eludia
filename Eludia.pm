@@ -177,9 +177,6 @@ BEGIN {
 
 	eval 'require Eludia::Request' unless ($INC {'Apache/Request.pm'});
 
-#	our $STATIC_ROOT = __FILE__;
-#	$STATIC_ROOT =~ s{\.pm}{/static/};
-
 	eval 'require Compress::Zlib';
 	if ($@) {
 		delete $conf -> {core_gzip};
