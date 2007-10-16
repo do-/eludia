@@ -532,12 +532,13 @@ sub draw_form_field {
 		return $field -> {html};
 	}
 				
-	my $colspan     = $field -> {colspan}     ? 'colspan=' . $field -> {colspan}     : '';
-	my $label_width = $field -> {label_width} ? 'width='   . $field -> {label_width} : '';	
-	my $cell_width  = $field -> {cell_width}  ? 'width='   . $field -> {cell_width}  : '';
+	my $colspan       = $field -> {colspan}       ? 'colspan=' . $field -> {colspan}       : '';
+	my $colspan_label = $field -> {colspan_label} ? 'colspan=' . $field -> {colspan_label} : '';
+	my $label_width   = $field -> {label_width}   ? 'width='   . $field -> {label_width}   : '';	
+	my $cell_width    = $field -> {cell_width}    ? 'width='   . $field -> {cell_width}    : '';
 	
 	return <<EOH;
-		<td class='form-$$field{state}-label' nowrap align=right $label_width>\n$$field{label}</td>
+		<td class='form-$$field{state}-label' nowrap $colspan_label align=right $label_width>\n$$field{label}</td>
 		<td class='form-$$field{state}-inputs' $colspan $cell_width>\n$$field{html}</td>
 EOH
 
