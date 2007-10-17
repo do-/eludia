@@ -380,16 +380,32 @@ EOH
 
 		if (!$page -> {type}) {
 			
-			foreach my $i (@{$page -> {menu}}) {
-				
-				next if $i -> {off};
-				
-				$page -> {type}  = $i -> {name};
-				$_REQUEST {type} = $page -> {type};
-				
-				last;
-				
+			sub select_default_type {
+				my ($items) = @_;
+
+
+				foreach my $i (@$items) {
+
+					return
+						if ($_REQUEST {type});
+					
+
+					next if $i -> {off};
+					
+					if ($i -> {no_page} && @{$i -> {items}} > 0) {
+						select_default_type ($i -> {items});
+					}
+					
+					return
+						if ($_REQUEST {type});
+
+					$_REQUEST {type} = $page -> {type}  = $i -> {name};
+					
+				}
+
 			}
+			
+			select_default_type ($page -> {menu});
 			
 		};
 	

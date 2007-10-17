@@ -1209,11 +1209,6 @@ EOH
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>};
 	}
 
-
-
-
-
-
 	if (defined $options -> {other}) {
 		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
 	}
@@ -1238,60 +1233,7 @@ EOH
 	}
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	$html .= "<td><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	return $html;
 	
@@ -1310,7 +1252,7 @@ sub draw_toolbar_input_checkbox {
 		$html .= ': ';
 	}
 
-	$html .= qq {<input type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="submit()">};
+	$html .= qq {<input type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
 
 	$html .= "<td><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
 	

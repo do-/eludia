@@ -103,7 +103,9 @@ sub draw_auth_toolbar {
 	
 	if ($_USER -> {id}) {
 	
-		$$options {user_label} = '<nobr><b>' . $_USER -> {f} . ' ' . substr ($_USER -> {i}, 0, 1) . '. ' . substr ($_USER -> {o}, 0, 1) . '.</b></nobr><br>' . $_USER -> {role_label};
+		$$options {user_label} = '<nobr><b>' . $_USER -> {f} . ' ' . substr ($_USER -> {i}, 0, 1) . '. ' . substr ($_USER -> {o}, 0, 1) . '.</b></nobr><br>' . $_USER -> {role_label}
+			if ($_USER -> {f} || $_USER -> {i}) ;
+		
 
 		if (@{$_SKIN -> {subset} -> {items}} > 1) {				
 		
@@ -1194,8 +1196,10 @@ EOH
 		$html .= q {</option>};
 	}
 
-	foreach my $value (@{$options -> {values}}) {		
-		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>};
+	foreach my $value (@{$options -> {values}}) {
+		my $attributes = dump_attributes ($value -> {attributes});
+			
+		$html .= qq {<option value="$$value{id}" $$value{selected} $attributes>$$value{label}</option>};
 	}
 
 	$html .= '</select></td><td class="toolbar">&nbsp;&nbsp;&nbsp;</td>';
@@ -1217,7 +1221,7 @@ sub draw_toolbar_input_checkbox {
 		$html .= ': ';
 	}
 
-	$html .= qq {<input class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="submit()">};
+	$html .= qq {<input class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
 
 	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
 	
@@ -2472,7 +2476,7 @@ sub draw_tree {
 		c.useStatusText = true;
 		win.d.icon.node = 'folderopen.gif';
 		win.d.aNodes = $nodes;
-		win.document.body.innerHTML += "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td valign=top>" + win.d + "</td></tr></table>$menus";
+		win.document.body.innerHTML = "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td valign=top>" + win.d + "</td></tr></table>$menus";
 EOH
 
 	return <<EOH;

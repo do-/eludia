@@ -356,7 +356,7 @@ sub sql_reconnect {
 	our $db = DBI -> connect ($conf -> {'db_dsn'}, $conf -> {'db_user'}, $conf -> {'db_password'}, {
 		RaiseError  => 1, 
 		AutoCommit  => 1,
-		LongReadLen => 100000000,
+		LongReadLen => 10000000,
 		LongTruncOk => 1,
 		InactiveDestroy => 0,
 	});
