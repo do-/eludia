@@ -398,17 +398,22 @@ $text
 EOT
 
 		##### sending attach
-		
-	if ($options -> {attach} && -f $options -> {attach} -> {real_path}) {
-	
-		my $type = $options -> {attach} -> {type};
-		$type ||= 'application/octet-stream';
-		
-		my $fn   = $options -> {attach} -> {file_name};
-		$fn ||= $options -> {attach} -> {real_path};
-		$fn =~ s{.*[\\\/]}{};
-		
-	$smtp -> datasend (<<EOT);
+
+
+	$options -> {attach} = [$options -> {attach}] if ($options -> {attach} && ref $options -> {attach} ne ARRAY);
+
+	foreach my $attach (@{$options -> {attach}}) {
+
+		if (-f $attach -> {real_path}) {
+
+			my $type = $attach -> {type};
+			$type ||= 'application/octet-stream';
+
+			my $fn   = $attach -> {file_name};
+			$fn ||= $attach -> {real_path};
+			$fn =~ s{.*[\\\/]}{};
+
+			$smtp -> datasend (<<EOT);
 --0__=4CBBE500DFA7329E8f9e8a93df938690918c4CBBE500DFA7329E
 Content-type: $type;
 	name="$fn"
@@ -417,19 +422,21 @@ Content-transfer-encoding: base64
 
 EOT
 
-	my $buf = '';
-	open (FILE, $options -> {attach} -> {real_path}) or die "Can't open ${$$options{attach}}{real_path}: $!";
-	while (read (FILE, $buf, 60*57)) {
-	       $smtp -> datasend (encode_base64 ($buf));
+			my $buf = '';
+			open (FILE, $attach -> {real_path}) or die "Can't open $attach->{real_path}: $!";
+			while (read (FILE, $buf, 60*57)) {
+				$smtp -> datasend (encode_base64 ($buf));
+			}
+			close (FILE);
+
+		}
+
 	}
-	close (FILE);
 
 	$smtp -> datasend (<<EOT);
 
 --0__=4CBBE500DFA7329E8f9e8a93df938690918c4CBBE500DFA7329E--
 EOT
-	
-	}
 
 	$smtp -> dataend ();
 	$smtp -> quit;
