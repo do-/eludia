@@ -1582,7 +1582,7 @@ sub js_set_select_option {
 
 	my $label = js_escape ($item -> {label});
 
-	return qq|javaScript:if (window.confirm ($question)) {parent._setSelectOption ($item->{id}, $label)} else {document.body.style.cursor = 'normal'; nop ();}|;
+	return qq|javaScript:if (window.confirm ($question)) {top._setSelectOption ($item->{id}, $label)} else {document.body.style.cursor = 'normal'; nop ();}|;
 
 }
 
