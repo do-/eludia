@@ -376,7 +376,8 @@ sub send_mail {
 		##### connecting...
 
 	my $smtp = Net::SMTP -> new ($preconf -> {mail} -> {host});
-	$smtp -> mail ($ENV{USER});
+#	$smtp -> mail ($ENV{USER});
+	$smtp -> mail ($options -> {from} -> {address});
 	$smtp -> to ($real_to);
 	$smtp -> data ();
 
