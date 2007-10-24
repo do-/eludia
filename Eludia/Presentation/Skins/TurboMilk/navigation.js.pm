@@ -46,7 +46,11 @@ function nope (a1, a2, a3) {
 function nop () {}
 
 function check_menu_md5 (menu_md5) {
-	if (window.parent.menu_md5 == menu_md5) return;	
+
+	var url = window.parent.location.href;
+
+	if (window.parent.menu_md5 == menu_md5 || url.indexOf ('dialog.html') > 0) return;	
+
 	var href = window.location.href + '&__only_menu=1';
 	nope (href, 'invisible', '');	
 }
