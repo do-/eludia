@@ -801,7 +801,7 @@ EOJS
 			onKeyDown="tabOnEnter()"
 			onChange="is_dirty=true; $$options{onChange}" 
 			onKeyPress="typeAhead()" 
-			style="visibility:expression(last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')"
+			style="visibility:expression(top.last_vert_menu [0] || last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')"
 		>
 EOH
 		
@@ -1187,7 +1187,7 @@ sub draw_toolbar_input_select {
 	}
 	
 	$html .= <<EOH;
-		<select name="$$options{name}" onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression(last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')">
+		<select name="$$options{name}" onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression(top.last_vert_menu [0] || last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')">
 EOH
 
 	if (defined $options -> {empty}) {
@@ -2465,6 +2465,10 @@ sub draw_tree {
 		$v -> {_ls} = 1;
 	}
 	
+  $menus = js_escape ($menus);
+  $menus =~ s/\s*\'//;
+  $menus =~ s/\'$//;
+  
 	my $nodes = $_JSON -> encode (\@nodes);
 
 	$_REQUEST {__on_load} .= <<EOH;
@@ -2543,7 +2547,7 @@ sub draw_node {
 
 	my ($_SKIN, $options, $i) = @_;
 	
-	$options -> {label} =~ s{\"}{\&quot;}gsm;
+	$options -> {label} =~ s{\"}{\&quot;}gsm; #"
 
 	my $node = {
 		id   => $options -> {id}, 

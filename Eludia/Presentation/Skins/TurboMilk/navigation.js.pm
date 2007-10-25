@@ -2892,7 +2892,7 @@ dTree.prototype.node = function(node, nodeId) {
 
 		if (this.config.useStatusText) str += ' onmouseover="window.status=\'' + node.name + '\';return true;" onmouseout="window.status=\'\';return true;" ';
 
-		if (node.context_menu) str += ' oncontextmenu="if (!edit_mode) {d.openTo (' + nodeId + ', true, true); open_popup_menu(\'' + node.context_menu + '\'); blockEvent ();}"';
+		if (node.context_menu) str += ' oncontextmenu="d.openTo (' + nodeId + ', true, true); open_popup_menu(\'' + node.context_menu + '\'); blockEvent ();"';
 		
 //		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc)) str += ' onclick="javascript: var edit_mode = check_edit_mode (); if (!edit_mode) ' + this.obj + '.s(' + nodeId + '); return !edit_mode;"';
 
