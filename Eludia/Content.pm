@@ -375,7 +375,18 @@ sub send_mail {
 		
 		##### connecting...
 
-	my $smtp = Net::SMTP -> new ($preconf -> {mail} -> {host});
+	my $repeat = 10;
+	my $smtp = undef;
+	while ($repeat || !defined $smtp) {
+		$smtp = Net::SMTP -> new ($preconf -> {mail} -> {host});
+		$repeat--;
+	}	
+
+	unless (defined $smtp) {
+		warn "Can't connect to $preconf->{mail}->{host}\n";
+		return;
+	}
+
 #	$smtp -> mail ($ENV{USER});
 	$smtp -> mail ($options -> {from} -> {address});
 	$smtp -> to ($real_to);
