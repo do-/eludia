@@ -20,6 +20,8 @@ sub format_picture {
 		$result =~ s{\d}{\*}g;
 	}
 	
+	$result =~ s{^\s+}{};
+
 	return $result;
 
 }
