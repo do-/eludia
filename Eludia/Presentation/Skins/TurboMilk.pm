@@ -742,8 +742,8 @@ sub draw_form_field_select {
 	
 	if (defined $options -> {other}) {
 
-		$options -> {other} -> {width}  ||= 600;
-		$options -> {other} -> {height} ||= 400;
+		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 600;
+		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 400;
 
 		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
@@ -753,7 +753,7 @@ sub draw_form_field_select {
 
 				if (this.options[this.selectedIndex].value == -1) {
 
-					var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:no;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+					var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
 					
 					focus ();
 					
@@ -773,7 +773,7 @@ EOJS
 
 					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
 
-						var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:no;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+						var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
 						
 						focus ();
 						
@@ -2449,12 +2449,15 @@ sub draw_tree {
 	my $menus = '';
 	my @nodes = ();
 	
+	my $root_id;
+	
 	our %idx = ();
 	our %lch = ();
 	
 	foreach my $i (@$list) {
 		my $node = $i -> {__node};
 		push @nodes, $node;
+		$root_id ||= $node -> {id};
 		$idx {$node -> {id}} = $node;
 		$lch {$node -> {pid}} = $node if $node -> {pid};
 		$menus .= $i -> {__menu};
@@ -2478,9 +2481,13 @@ sub draw_tree {
 		c.iconPath = '$_REQUEST{__static_url}/tree_';
 		c.target = '_content_iframe';
 		c.useStatusText = true;
+		c.useCookies = true;
 		win.d.icon.node = 'folderopen.gif';
 		win.d.aNodes = $nodes;
 		win.document.body.innerHTML = "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td valign=top>" + win.d + "</td></tr></table>$menus";
+		if (win.d.selectedNode == null) {
+			win.d.openTo ($root_id, true);
+		}		
 EOH
 
 	return <<EOH;
