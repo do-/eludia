@@ -2469,10 +2469,9 @@ sub draw_tree {
 		$v -> {_ls} = 1;
 	}
 	
-  $menus = js_escape ($menus);
-  $menus =~ s/\s*\'//;
-  $menus =~ s/\'$//;
-  
+	$menus =~ s{[\n\r]+}{ }gsm;
+	$menus =~ s/\"/\\"/gsm;  
+
 	my $nodes = $_JSON -> encode (\@nodes);
 
 	$_REQUEST {__on_load} .= <<EOH;
