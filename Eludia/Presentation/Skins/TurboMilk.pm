@@ -1614,11 +1614,22 @@ sub draw_text_cell {
 		$html .= '<i>'      if $data -> {italic} || $options -> {italic};
 		$html .= '<strike>' if $data -> {strike} || $options -> {strike};
 
-		$html .= qq {<a id="$$data{a_id}" class=$$data{a_class} target="$$data{target}" href="$$data{href}" onFocus="blur()">} if $data -> {href} && $data -> {href} ne $options -> {href};
+		if ($data -> {href}) {
+		
+			$html .= $data -> {href} eq $options -> {href} ? '<span style="cursor:hand">' : qq {<a id="$$data{a_id}" class=$$data{a_class} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
+		
+		}
+
 
 		$html .= $data -> {label};
 		
-		$html .= '</a>' if $data -> {href} && $data -> {href} ne $options -> {href};
+		if ($data -> {href}) {
+
+			$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
+		
+		}
+
+#		$html .= '</a>' if $data -> {href} && $data -> {href} ne $options -> {href};
 
 #		$html .= '&nbsp;';		
 		
