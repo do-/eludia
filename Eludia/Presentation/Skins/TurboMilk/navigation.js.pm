@@ -47,6 +47,8 @@ function nop () {}
 
 function check_menu_md5 (menu_md5) {
 
+	window.parent.subsets_are_visible = 0;
+
 	var url = window.parent.location.href;
 
 	if (window.parent.menu_md5 == menu_md5 || url.indexOf ('dialog.html') > 0) return;	

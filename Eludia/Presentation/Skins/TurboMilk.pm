@@ -1475,7 +1475,7 @@ EOH
 		}
 		
 		$html .= <<EOH;
-			<td onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
+			<td onmouseover="$$type{onhover}; subsets_are_visible = 0;" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
 				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1>&nbsp;$$type{label}&nbsp;</a>&nbsp;
 			</td>
 EOH
@@ -2026,6 +2026,10 @@ EOJS
 		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');" if  $_REQUEST {__focused_input};
 		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " parent.edit_mode = 1;" : " parent.edit_mode = 0;" if ($_REQUEST {__tree});
 	
+		$_REQUEST {__on_mouseover} .= <<EOS;
+			window.parent.subsets_are_visible = 0;
+EOS
+
 	}
 	else {
 	
