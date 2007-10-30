@@ -1253,7 +1253,7 @@ EOJS
 
 	
 	$html .= <<EOH;
-		<select name="$name" id="${name}_select" $read_only onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression(top.last_vert_menu [0] || last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')">
+		<select name="$name" id="${name}_select" $read_only onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression((top.last_vert_menu ? top.last_vert_menu [0] : 0) || last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')">
 EOH
 
 	if (defined $options -> {empty}) {
