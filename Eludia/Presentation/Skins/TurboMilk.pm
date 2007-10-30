@@ -802,7 +802,7 @@ EOJS
 			onKeyDown="tabOnEnter()"
 			onChange="is_dirty=true; $$options{onChange}" 
 			onKeyPress="typeAhead()" 
-			style="visibility:expression(top.last_vert_menu [0] || last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')"
+			style="visibility:expression((top.last_vert_menu ? top.last_vert_menu [0] : 0) || last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')"
 		>
 EOH
 		
@@ -1186,9 +1186,74 @@ sub draw_toolbar_input_select {
 		$html .= $options -> {label};
 		$html .= ': ';
 	}
+
+	my $name = $$options{name};
+
+	$name = "_$name" if defined $options -> {other};
+
+	my $read_only = $options -> {read_only} ? 'disabled' : ''; 
+
+	if (defined $options -> {other}) {
+		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 600;
+		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 400;
+
+		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+
+		if ($options -> {no_confirm}) {
+
+			$options -> {onChange} .= <<EOJS;
+
+				if (this.options[this.selectedIndex].value == -1) {
+
+					var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name'}, 'status:no;resizable:yes;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+					
+					focus ();
+					
+					if (result.result == 'ok') {
+						setSelectOption (this, result.id, result.label);
+						submit ();
+					} else {
+						this.selectedIndex = 0;
+					}
+					
+				} else {
+  				submit ();
+        }
+EOJS
+		} else {
+
+			$options -> {onChange} .= <<EOJS;
+	
+				if (this.options[this.selectedIndex].value == -1) {
+
+					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+
+						var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name'}, 'status:no;resizable:yes;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+						
+						focus ();
+						
+						if (result.result == 'ok') {
+							setSelectOption (this, result.id, result.label);
+  						submit ();
+						} else {
+							this.selectedIndex = 0;
+						}
+					
+					} else {
+
+						this.selectedIndex = 0;
+
+					}
+				} else {
+  				submit ();
+        }
+EOJS
+		}
+	}
+
 	
 	$html .= <<EOH;
-		<select name="$$options{name}" onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression(top.last_vert_menu [0] || last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')">
+		<select name="$name" id="${name}_select" $read_only onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression(top.last_vert_menu [0] || last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')">
 EOH
 
 	if (defined $options -> {empty}) {
@@ -1201,6 +1266,10 @@ EOH
 		my $attributes = dump_attributes ($value -> {attributes});
 			
 		$html .= qq {<option value="$$value{id}" $$value{selected} $attributes>$$value{label}</option>};
+	}
+
+	if (defined $options -> {other}) {
+		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
 	}
 
 	$html .= '</select></td><td class="toolbar">&nbsp;&nbsp;&nbsp;</td>';
@@ -2465,7 +2534,7 @@ sub draw_tree {
 	my $menus = '';
 	my @nodes = ();
 	
-	my $root_id;
+	my ($root_id, $root_url);
 	
 	our %idx = ();
 	our %lch = ();
@@ -2473,7 +2542,8 @@ sub draw_tree {
 	foreach my $i (@$list) {
 		my $node = $i -> {__node};
 		push @nodes, $node;
-		$root_id ||= $node -> {id};
+		($root_id, $root_url) = ($node -> {id}, $node -> {url})
+			unless $root_id;
 		$idx {$node -> {id}} = $node;
 		$lch {$node -> {pid}} = $node if $node -> {pid};
 		$menus .= $i -> {__menu};
@@ -2509,7 +2579,7 @@ EOH
 		<frameset cols="250,*">
 			<frame src="$_REQUEST{__static_url}/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
 			</frame>
-			<frame src="$_REQUEST{__static_url}/0.html" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
+			<frame src="${\($root_url ? $root_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
 			</frame>
 		<frameset>
 EOH

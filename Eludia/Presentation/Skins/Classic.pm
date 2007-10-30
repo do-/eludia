@@ -1191,7 +1191,49 @@ sub draw_toolbar_input_select {
 	
 	my $name = $$options{name};
 	
-	$name = "_$name" if defined $options -> {other};
+	if (defined $options -> {other}) {
+
+  	$name = "_$name";
+
+		$options -> {other} -> {width}  ||= 600;
+		$options -> {other} -> {height} ||= 400;
+
+		my $d_style_top = "d.style.top = " . (defined $options -> {other} -> {top} ? "${$$options{other}}{top};" : "this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop;");
+		my $d_style_left = "d.style.left = " . (defined $options -> {other} -> {left} ? "${$$options{other}}{left};" : "this.offsetLeft + this.offsetParent.offsetLeft + this.offsetParent.offsetParent.offsetLeft;");
+
+#				d.style.top   = this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop;
+#				d.style.left  = this.offsetLeft + this.offsetParent.offsetLeft + this.offsetParent.offsetParent.offsetLeft;
+
+		my $onchange = $_REQUEST {__windows_ce} ? "switchDiv(); loadSlaveDiv('${$$options{other}}{href}&select=$$options{name}');" : <<EOS;
+				var fname = '_$$options{name}_iframe';
+				var f = document.getElementById (fname);
+
+				var dname = '_$$options{name}_div';
+				var d = document.getElementById (dname);
+
+				f.src = '${$$options{other}}{href}&select=$$options{name}';
+
+				$d_style_top
+				$d_style_left
+
+				d.style.display = 'block';
+				this.style.display = 'none';
+
+				d.focus ();
+EOS
+
+		$options -> {onChange} .= <<EOJS;
+
+			if (this.options[this.selectedIndex].value == -1 && window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+				$onchange
+			}
+			else {
+				submit();
+			}
+
+EOJS
+
+	}		
 
 	my $read_only = $options -> {read_only} ? 'disabled' : ''; 
 
@@ -1215,17 +1257,12 @@ EOH
 
 	$html .= '</select>';
 
-	my $width;
-	if (defined $options -> {other} -> {width}) {
-		$width = "${$$options{other}}{width}";
-#	} elsif (defined $options -> {other} -> {left}) {
-#		$width = "expression(this.offsetParent.offsetWidth)"; 
-#	} else {
-#		$width = "expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)";
-	}
+
+
+
 	if (defined $options -> {other}) {
 		$html .= <<EOH;
-			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:$width}">
+			<div id="_$$options{name}_div" style="{position:absolute; display:none;width:$options->{other}->{width}px">
 				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="/i/0.html" application="yes">
 				</iframe>
 			</div>
