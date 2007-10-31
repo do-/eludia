@@ -480,9 +480,9 @@ sub draw_path {
 							<td class="toolbar" $style $$options{nowrap}>&nbsp;
 EOH
 
-	if ($conf -> {core_show_icons} || $_REQUEST {__core_show_icons}) {
-		$path .= qq{<img src="$_REQUEST{__static_url}/i_folder.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=1 align=absmiddle>&nbsp;};
-	}
+	my $icon = $options -> {status} ? "status_$options->{status}->{icon}.gif" : 'i_folder.gif';
+
+	$path .= qq{<img src="$_REQUEST{__static_url}/${icon}?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=1 align=absmiddle>&nbsp;};
 
 	for (my $i = 0; $i < @$list; $i ++) {
 	
