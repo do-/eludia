@@ -458,9 +458,16 @@ sub sql_select_vocabulary {
 
 sub sql_select_ids {
 	my ($sql, @params) = @_;
+
 	my @ids = grep {$_ > 0} sql_select_col ($sql, @params);
 	push @ids, -1;
-	return join ',', @ids;
+
+	foreach my $parameter (@params) {
+		$sql =~ s/\?/'$parameter'/ism;
+	}
+
+	return wantarray ? (join(',', @ids), $sql) : join(',', @ids);
+
 }
 
 ################################################################################
