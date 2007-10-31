@@ -1662,6 +1662,7 @@ sub draw_text_cell {
 	
 		$data -> {label} =~ s{^\s+}{};
 		$data -> {label} =~ s{\s+$}{};
+		$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
 		$html .= qq {<img src='/i/_skins/Classic/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
