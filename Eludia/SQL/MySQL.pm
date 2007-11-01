@@ -757,5 +757,26 @@ sub download_table_data {
 	lrt_ok ();
 
 }
+################################################################################
+
+sub sql_select_loop {
+
+	my ($sql, $coderef, @params) = @_;
+	$sql =~ s{^\s+}{};
+
+	my $st = $db -> prepare ($sql);
+	$st -> execute (@params);
+	
+	our $i;
+	while ($i = $st -> fetchrow_hashref) {
+		lc_hashref ($i)
+			if (exists $$_PACKAGE {'lc_hashref'});
+		&$coderef ();
+	}
+	
+	$st -> finish ();
+
+}
+
 
 1;
