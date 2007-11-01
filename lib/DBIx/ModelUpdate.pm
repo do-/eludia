@@ -66,6 +66,10 @@ sub new {
 		DBIx::MySQLite::add_all_functions ($db);
 	}
 
+	if ($driver_name eq 'Oracle') {
+  		$self -> {characterset} = $self -> sql_select_scalar('SELECT VALUE FROM V$NLS_PARAMETERS WHERE PARAMETER = '."'NLS_CHARACTERSET'");
+	}
+
 	return $self;	
 
 }
@@ -214,6 +218,7 @@ sub assert {
 			
 				$k_definition =~ s{\s+}{}g;
 			
+
 				if (
 					$existing_tables -> {$name} 
 					&& $existing_tables -> {$name} -> {keys} -> {$k_name}
@@ -243,7 +248,7 @@ sub assert {
 				my $k_definition = $definition -> {keys} -> {$k_name};
 				
 				$k_definition =~ s{\s+}{}g;
-
+				
 				$self -> create_index ($name, $k_name, $k_definition, $definition);
 
 			};
