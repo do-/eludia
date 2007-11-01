@@ -1107,11 +1107,18 @@ sub call_for_role {
 		my $result = &$name_to_call (@_);
 
 		if ($preconf -> {core_debug_profiling} == 2) {
-			
+
+
 			sql_do (
-				"UPDATE $conf->{systables}->{__benchmarks} SET cnt = cnt + 1, ms = ms + ?, selected = selected + ?, mean = ms / cnt, mean_selected = selected / cnt WHERE id = ?",
+				"UPDATE $conf->{systables}->{__benchmarks} SET cnt = cnt + 1, ms = ms + ?, selected = selected + ?  WHERE id = ?",
 				1000 * (time - $time),
 				$_REQUEST {__benchmarks_selected},
+				sql_select_id ($conf->{systables}->{__benchmarks}, {fake => 0, label => $sub_name}, ['label']),
+			);
+
+			
+			sql_do (
+				"UPDATE $conf->{systables}->{__benchmarks} SET  mean = ms / cnt, mean_selected = selected / cnt WHERE id = ?",
 				sql_select_id ($conf->{systables}->{__benchmarks}, {fake => 0, label => $sub_name}, ['label']),
 			);
 			
