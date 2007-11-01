@@ -84,6 +84,8 @@ sub sql_prepare {
 
 	my $st;
 
+	$sql = mysql_to_oracle($sql) if($conf -> {core_auto_oracle});
+
 	eval {$st = $db  -> prepare ($sql, {
 		ora_auto_lob => ($sql !~ /for\s+update\s*/ism),
 	})};
@@ -106,7 +108,7 @@ sub sql_do {
 	my ($sql, @params) = @_;
 
 	my $st = sql_prepare ($sql);
-	
+
 #	eval {
 		$st -> execute (@params);
 		$st -> finish;	
@@ -165,7 +167,11 @@ sub sql_execute_procedure {
 sub sql_select_all_cnt {
 
 	my ($sql, @params) = @_;
-		
+
+	if ($sql =~ m/\bLIMIT\s+\d+\s*$/igsm) {
+		$sql =~ s/\bLIMIT\s+(\d+)\s*$/LIMIT 0,$1/igsm;
+	}
+
 	unless ($sql =~ s{LIMIT\s+(\d+)\s*\,\s*(\d+).*}{}ism) {
 		return sql_select_all ($sql, @params);
 	}
@@ -199,6 +205,8 @@ sub sql_select_all_cnt {
 	}
 
 	my $st = sql_prepare ($sql);
+
+
 	$st -> execute (@params);
 	my $cnt = 0;	
 	my @result = ();
@@ -217,14 +225,25 @@ sub sql_select_all_cnt {
 	$st -> finish;
 
 
-	$sql =~ s{SELECT.*?[\s\n]FROM}{SELECT COUNT(*) FROM}ism;
+
 	$sql =~ s{ORDER BY.*}{}ism;
 
-	my $cnt = sql_select_scalar ($sql, @params);
+
+	my $cnt = 0;
+
+	if ($sql =~ /(\s+GROUP\s+BY|\s+UNION\s+)/i) {
+		my $temp = sql_select_all($sql, @params);
+		$cnt = (@$temp + 0);
+	}
+	else {
+		$sql =~ s/SELECT.*FROM/SELECT COUNT(*) FROM/igsm;
+		$cnt = sql_select_scalar ($sql, @params);
+	}
 			
 	return (\@result, $cnt);
 
 }
+
 
 ################################################################################
 
@@ -272,14 +291,63 @@ sub sql_select_all {
 
 ################################################################################
 
+sub sql_select_all_hash {
+
+	my ($sql, @params) = @_;
+
+	my $options = {};
+	if (@params > 0 and ref ($params [-1]) eq HASH) {
+		$options = pop @params;
+	}
+	
+	if ($options -> {fake}) {
+	
+		my $where = 'WHERE ';
+		my $fake  = $_REQUEST {fake} || 0;
+		my $condition = $fake =~ /\,/ ? "IN ($fake)" : '=' . $fake;
+	
+		foreach my $table (split /\,/, $options -> {fake}) {
+			$where .= "$table.fake $condition AND ";
+		}	
+		
+		$sql =~ s{where}{$where}i;
+			
+	}
+
+	my $result = {};
+
+	$sql = mysql_to_oracle($sql) if($conf -> {core_auto_oracle});
+
+	my $st = $db -> prepare ($sql);
+	$st -> execute (@params);
+
+	while (my $r = $st -> fetchrow_hashref) {
+		lc_hashref ($r);		                       	
+		$result -> {$r -> {id}} = $r;
+	}
+	
+	$st -> finish;
+
+	return $result;
+
+}
+
+
+################################################################################
+
 sub sql_select_col {
 
 	my ($sql, @params) = @_;
 
 	my @result = ();
-	
+
+	if ($sql =~ m/\bLIMIT\s+\d+\s*$/igsm) {
+		$sql =~ s/\bLIMIT\s+(\d+)\s*$/LIMIT 0,$1/igsm;
+	}
+
 	if ($sql =~ s{LIMIT\s+(\d+)\s*\,\s*(\d+).*}{}ism) {
 		my ($start, $portion) = ($1, $2);
+
 		($start, $portion) = (0, $start) unless ($portion);
 	
 		my $st = sql_prepare ($sql);
@@ -319,8 +387,21 @@ sub lc_hashref {
 
 	my ($hr) = @_;
 	
-	foreach my $key (keys %$hr) {
-		$hr -> {lc $key} = $hr -> {$key};
+	return undef unless (defined $hr);	
+
+	if ($conf -> {core_auto_oracle}) {	
+		foreach my $key (keys %$hr) {
+			$key =~ s/RewbfhHHkgkglld/user/igsm;
+			$key =~ s/NbhcQQehgdfjfxf/level/igsm;
+			$hr -> {lc $key} = $hr -> {$key};
+			delete $hr -> {uc $key};
+		}
+	}
+	else {
+		foreach my $key (keys %$hr) {
+			$hr -> {lc $key} = $hr -> {$key};
+			delete $hr -> {uc $key};
+		}
 	}
 	
 	return $hr;
@@ -332,6 +413,8 @@ sub lc_hashref {
 sub sql_select_hash {
 
 	my ($sql_or_table_name, @params) = @_;
+
+	$sql_or_table_name =~ s/\bLIMIT.*//igsm;		
 	
 	if ($sql_or_table_name !~ /^\s*SELECT/i) {
 	
@@ -351,7 +434,7 @@ sub sql_select_hash {
 		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE $field = ?", $id);
 		
 	}	
-
+	
 	my $st = sql_prepare ($sql_or_table_name);
 	$st -> execute (@params);
 	my $result = $st -> fetchrow_hashref ();
@@ -384,8 +467,14 @@ sub sql_select_scalar {
 
 	my @result;
 
-	if ($sql =~ s{LIMIT\s+(\d+)\s*\,?\s*(\d+)?.*}{}ism) {
+	if ($sql =~ m/\bLIMIT\s+\d+\s*$/igsm) {
+		$sql =~ s/\bLIMIT\s+(\d+)\s*$/LIMIT 0,$1/igsm;
+	}
+
+	if ($sql =~ s{LIMIT\s+(\d+)\s*\,\s*(\d+).*}{}ism) {
+
 		my ($start, $portion) = ($1, $2);
+
 		($start, $portion) = (0, $start) unless ($portion);
 	
 		my $st = sql_prepare ($sql);
@@ -495,7 +584,7 @@ sub sql_do_update {
 #	my %lobs = map {$_ => 1} @{$options -> {lobs}};
 	
 #	my @field_list = grep {!$lobs {$_}} @$field_list;
-	
+                      
 	if (@$field_list > 0) {
 		my $sql = join ', ', map {"$_ = ?"} @$field_list;
 		$options -> {stay_fake} or $sql .= ', fake = 0';
@@ -550,15 +639,42 @@ EOS
 
 	}
 
+	my $id_value;
 
 	foreach my $field (keys %$pairs) { 
 		my $comma = @params ? ', ' : '';	
-		$fields .= "$comma $field";
-		$args   .= "$comma ?";
-		push @params, $pairs -> {$field};	
+		unless (exists($DB_MODEL->{tables}->{$table_name}->{columns}->{$field}->{NULLABLE})) {
+			$fields .= "$comma $field";
+			$args   .= "$comma ?";
+			if (exists($DB_MODEL->{tables}->{$table_name}->{columns}->{$field}->{COLUMN_DEF}) && !($pairs -> {$field})) {
+				push @params, $DB_MODEL->{tables}->{$table_name}->{columns}->{$field}->{COLUMN_DEF};
+			}
+			else {
+				push @params, $pairs -> {$field};	
+			}
+			$id_value = $pairs -> {$field} if (uc $field eq 'ID');
+ 		}
+	}
+
+	if ($conf -> {core_voc_replacement_use}) {	
+		my $seq_name ='SEQ_';
+		my $curval;
+
+		if ($id_value) {
+			$seq_name .= sql_select_scalar("SELECT id FROM $conf->{systables}->{__voc_replacements} WHERE table_name='$table_name' and object_type=2");
+			$curval = sql_select_scalar("SELECT LAST_NUMBER FROM user_sequences WHERE SEQUENCE_NAME='$seq_name'");
+			my $step = $id_value - $curval;
+	 		if ($step > 1) {
+				sql_do("ALTER SEQUENCE $seq_name INCREMENT BY $step");
+			        sql_select_scalar("SELECT $seq_name.nextval FROM DUAL");
+				sql_do("ALTER SEQUENCE $seq_name INCREMENT BY 1");
+	 		}
+
+		}
 	}
 
 	my $st = sql_prepare ("INSERT INTO $table_name ($fields) VALUES ($args) RETURNING id INTO ?");
+
 	my $i = 1; 
 	$st -> bind_param ($i++, $_)
 		foreach (@params);
@@ -674,5 +790,255 @@ sub keep_alive {
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ? ", $sid);
 }
 
+################################################################################
 
-1;
+sub sql_select_loop {
+
+	my ($sql, $coderef, @params) = @_;
+	$sql =~ s{^\s+}{};
+
+	$sql = mysql_to_oracle($sql) if($conf -> {core_auto_oracle});
+
+	my $st = $db -> prepare ($sql);
+	$st -> execute (@params);
+	
+	our $i;
+	while ($i = $st -> fetchrow_hashref) {
+		lc_hashref ($i)
+			if (exists $$_PACKAGE {'lc_hashref'});
+		&$coderef ();
+	}
+	
+	$st -> finish ();
+
+}
+
+#################################################################################
+
+sub mysql_to_oracle {
+
+my ($sql) = @_;
+
+my (@items,@group_by_values_ref,@group_by_fields_ref);
+my ($pattern,$need_group_by);
+my $sc_in_quotes=0;
+
+#warn "~~~ MYSQL TO ORACLE IN: <$sql>\n";
+
+############### Заменяем неразрешенные в запросах слова на ключи (обратно восстанавливаем в lc_hashref())
+$sql =~ s/([^\W]\s*\b)user\b(?!\.)/\1RewbfhHHkgkglld/igsm;
+$sql =~ s/([^\W]\s*\b)level\b(?!\.)/\1NbhcQQehgdfjfxf/igsm;
+
+############### Делаем из выражений в скобках псевдофункции чтобы шаблон свернулся
+while ($sql =~ s/([^\w\s]+?\s*)(\()/\1VGtygvVGVYbbhyh\2/ism) {};
+
+############### Вырезаем и запоминаем все что внутри кавычек, помечая эти места.
+while ($sql =~ /(''|'.*?[^\\]')/ism)
+{	
+	my $temp = $1;
+	# Скобки и запятые внутри кавычек прячем чтобы не мешались при анализе и замене функций 
+	$temp =~ s/\(/JKghsdgfweftyfd/igsm;
+	$temp =~ s/\)/RTYfghhfFGhhjJg/igsm;
+	$temp =~ s/\,/DFgpoUUYTJjkgJj/igsm;
+	$in_quotes[++$sc_in_quotes]=$temp;
+	$sql =~ s/''|'.*?[^\\]'/POJJNBhvtgfckjh$sc_in_quotes/ism;
+}
+############### Это убираем
+
+$sql =~ s/\bBINARY\b//igsm; 
+$sql =~ s/\bAS\b//igsm;
+$sql =~ s/(.*?)#.*?\n/\1\n/igsm; 		 				# Убираем закомментированные строки
+$sql =~ s/(\s+)STRAIGHT_JOIN(\s+)/\1\2/igsm;					
+$sql =~ s/(\s+)FORCE\s+INDEX(\s+)\(.*?\)/\1\2/igsm;             		
+
+
+############### Вырезаем функции начиная с самых вложенных и совсем не вложенных
+# места помечаем ключем с номером, а сами функции с аргументами запоминаем в @items
+# до тех пор пока всё не вырежем
+while ($sql =~m/((\b\w+\s*\((?!.*\().*?)\))/igsm)
+{	
+	$items[++$sc]=$1;
+	$sql =~s/((\b\w+\s*\((?!.*\().*?)\))/NJNJNjgyyuypoht$sc/igsm;
+}
+
+$pattern = $sql;
+$need_group_by=1 if ( $sql =~ m/\s+GROUP\s+BY\s+/igsm);
+
+if ($need_group_by) {
+
+	# Запоминаем значения из GROUP BY до UNION или ORDER BY
+	# Также формируем массив хранящий ссылки на массивы значений для каждого SELECT
+	my $sc=0;
+	while ($sql =~ s/\s+GROUP\s+BY\s+(.*?)(\s+UNION\s+|\s+ORDER\s+BY\s+|$)/VJkjn;lohggff\2/ism) {
+		my @group_by_values = split(',',$1);                                            
+		$group_by_values_ref[$sc++]=\@group_by_values;
+	}
+
+	my $sc=0;
+	# Разбиваем шаблон от SELECT до FROM на поля для дальнейшего раздельного наполнения
+	# и подстановки в GROUP BY вместо цифр
+	while ($pattern =~ s/\bSELECT(.*?)\bFROM\b//ism) {
+		my @group_by_fields = split (',',$1);
+		# Удаляем алиасы
+		for (my $i = 0; $i <= $#group_by_fields; $i++) {
+			$group_by_fields[$i] =~ s/^\s*//igsm;
+			$group_by_fields[$i] =~ s/\s+.*//igsm;
+		}
+		$group_by_fields_ref[$sc++]=\@group_by_fields;	
+	}
+}
+
+# Если в шаблоне нет FROM - взводим флаг чтобы после замен добавить FROM DUAL 
+# Делаем так потому что внутри ORACLE функции EXTRACT есть FROM
+my $need_from_dual=1 if ($sql =~ m/^\s*SELECT\b/igsm && not ($sql =~ m/\bFROM\b/igsm));
+
+# Делаем замену и собираем исходный SQL начиная с нижних уровней
+for(my $i = $#items; $i >= 1; $i--) {
+	# Восстанавливаем то что было внутри кавычек в аргументах функций 
+	$items[$i] =~ s/POJJNBhvtgfckjh(\d+)/$in_quotes[$1]/igsm;			
+	######################### Блок замен SQL синтаксиса #########################
+	$items[$i] =~ s/\bIFNULL\s*(\(.*?\))/NVL\1/igsm;
+	$items[$i] =~ s/\bFLOOR\s*(\(.*?\))/CEIL\1/igsm;
+	$items[$i] =~ s/\bCONCAT\s*\((.*?)\)/join('||',split(',',$1))/iegsm;
+	$items[$i] =~ s/\bLEFT\s*\((.+?),(.+?)\)/SUBSTR\(\1,1,\2\)/igsm;
+	$items[$i] =~ s/\bRIGHT\s*\((.+?),(.+?)\)/SUBSTR\(\1,LENGTH\(\1\)-\(\2\)+1,LENGTH\(\1\)\)/igsm;
+	####### DATE_FORMAT
+	if ($items[$i] =~ m/\bDATE_FORMAT\s*\((.+?),(.+?)\)/igsm) {
+		my $expression = $1;
+		my $format = $2;
+		$format =~ s/%Y/YYYY/igsm;
+		$format =~ s/%y/YY/igsm;
+		$format =~ s/%d/DD/igsm;
+		$format =~ s/%m/MM/igsm;
+		$format =~ s/%H/HH24/igsm;
+		$format =~ s/%h/HH12/igsm;
+		$format =~ s/%i/MI/igsm;
+		$format =~ s/%s/SS/igsm;
+		$items[$i] = "TO_CHAR ($expression,$format)";
+	}
+	######## SUBDATE() и DATE_SUB()
+	if ($items[$i] =~ m/(\bSUBDATE|\bDATE_SUB)\s*\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/igsm) {
+		my $temp = $4;
+		if ($temp =~ m/DAY|HOUR|MINUTE|SECOND/igsm) {
+			$items[$i] =~ s/(\bSUBDATE|\bDATE_SUB)\s*\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/TO_DATE(\2)-NUMTODSINTERVAL\(\3,'$4')/igsm; 	
+		}
+		if ($temp =~ m/YEAR|MONTH/igsm)  {
+			$items[$i] =~ s/(\bSUBDATE|\bDATE_SUB)\s*\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/TO_DATE(\2)-NUMTOYMINTERVAL\(\3,'$4')/igsm; 		
+		}
+	}
+	######## ADDDATE() и DATE_ADD()
+	if ($items[$i] =~ m/(\bADDDATE|\bDATE_ADD)\s*\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/igsm) {
+		my $temp = $4;
+		if ($temp =~ m/DAY|HOUR|MINUTE|SECOND/igsm) {
+			$items[$i] =~ s/(\bADDDATE|\bDATE_ADD)\s*\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/TO_DATE(\2)+NUMTODSINTERVAL\(\3,'$4')/igsm; 	
+		}
+		if ($temp =~ m/YEAR|MONTH/igsm)  {
+			$items[$i] =~ s/(\bADDDATE|\bDATE_ADD)\s*\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/TO_DATE(\2)+NUMTOYMINTERVAL\(\3,'$4')/igsm; 		
+		}
+	}
+	######## NOW()
+	$items[$i] =~ s/\bNOW\s*\(.*?\)/TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS')/igsm; 	
+	######## CURDATE()
+	$items[$i] =~ s/\bCURDATE\s*\(.*?\)/SYSDATE/igsm; 		
+	######## YEAR, MONTH, DAY
+	$items[$i] =~ s/(\bYEAR\b|\bMONTH\b|\bDAY\b)\s*\((.*?)\)/EXTRACT\(\1 FROM \2\)/igsm; 		
+	######## TO_DAYS()
+	$items[$i] =~ s/\bTO_DAYS\s*\((.+?)\)/EXTRACT\(DAY FROM TO_TIMESTAMP\(\1,'YYYY-MM-DD HH24:MI:SS'\) - TO_TIMESTAMP\('0001-01-01 00:00:00','YYYY-MM-DD HH24:MI:SS'\) + NUMTODSINTERVAL\( 364 , 'DAY' \)\)/igsm; 			
+	######## DAYOFYEAR()
+	$items[$i] =~ s/\bDAYOFYEAR\s*\((.+?)\)/TO_CHAR(TO_DATE\(\1\),'DDD')/igsm;
+	######## LOCATE(), POSITION()  
+	if ($items[$i] =~ m/(\bLOCATE\s*\((.+?),(.+?)\)|\bPOSITION\s*\((.+?)\s+IN\s+(.+?)\))/igsm) {
+		$items[$i] =~ s/'\0'/'00'/;		
+		$items[$i] =~ s/\bLOCATE\s*\((.+?),(.+?)\)/INSTR\(\2,\1\)/igsm;
+		$items[$i] =~ s/\bPOSITION\s*\((.+?)\s+IN\s+(.+?)\)/INSTR\(\2,\1\)/igsm;
+	}
+	######## IF() 
+	$items[$i] =~ s/\bIF\s*\((.+?),(.+?),(.+?)\)/(CASE WHEN \1 THEN \2 ELSE \3 END)/igms;
+	##############################################################################
+	# Заполняем шаблон верхнего уровня ранее запомненными и измененными items 
+	# в помеченных местах
+	##############################################################################
+	$sql =~ s/NJNJNjgyyuypoht$i/$items[$i]/igsm;
+	# Просматриваем поля и заменяем если в них есть текущий шаблон (для дальнейшей замены GROUP BY 1,2,3 ...)
+	if ($need_group_by) {
+		for (my $x = 0; $x <= $#group_by_fields_ref; $x++) {
+			for (my $y = 0; $y <= $#{@{$group_by_fields_ref[$x]}}; $y++) {
+				$group_by_fields_ref [$x] -> [$y] =~ s/NJNJNjgyyuypoht$i/$items[$i]/igsm;
+			}
+		}  
+	}
+}
+
+################ Меняем GROUP BY 1,2,3 ...
+
+if ($need_group_by) {
+	my (@result,$group_by);
+
+	for (my $x = 0; $x <= $#group_by_values_ref; $x++) {
+		for (my $y = 0; $y <= $#{@{group_by_values_ref[$x]}}; $y++) {
+			my $index = $group_by_values_ref [$x] -> [$y];
+			# Если в GROUP BY стояла цифра - заменяем на значение
+			if ($index =~ m/\d+/igsm) {
+				push @result,$group_by_fields_ref[$x]->[$index-1];				
+			}
+			# иначе - то что стояло
+			else {
+				push @result,$group_by_values_ref[$x]->[$y];			
+			}
+
+		}
+		# Формируем GROUP BY для каждого SELECT
+		$group_by = join(',',@result);
+		$sql =~ s/VJkjn;lohggff/\n GROUP BY $group_by /ism; 
+		@result=();
+	}
+}
+
+
+############### Делаем регистронезависимый LIKE 
+$sql =~ s/([\w\'\?\.\%\_]*?\s+)LIKE(\s+[\w\'\?\.\%\_]*?[\s\)]+)/ UPPER\(\1\) LIKE UPPER\(\2\) /igsm;
+############### Удаляем псевдофункции
+$sql =~ s/VGtygvVGVYbbhyh//igsm;
+# Восстанавливаем то что было внутри кавычек НЕ в аргументах функций
+$sql =~ s/POJJNBhvtgfckjh(\d+)/$in_quotes[$1]/igsm;			
+# Восстанавливаем скобки и запятые в кавычках
+$sql =~ s/JKghsdgfweftyfd/\(/igsm;
+$sql =~ s/RTYfghhfFGhhjJg/\)/igsm;
+$sql =~ s/DFgpoUUYTJjkgJj/\,/igsm;
+# добавляем FROM DUAL если в SELECT не задано FROM
+if ($need_from_dual) {
+	$sql =~ s/\n//igsm;
+	$sql .= " FROM DUAL\n";	
+}
+
+################# Эти замены необходимо делать только после всех преобразований
+# , потому что сборка идет с верхнего уровня и мы заранее не знаем что будет стоять
+# в параметрах этих функций после всех замен
+#################
+# Делаем из (TO_TIMESTAMP(CURRENT_TIMESTAMP)) просто CURRENT_TIMESTAMP
+$sql =~ s/TO_TIMESTAMP\(CURRENT_TIMESTAMP,'YYYY-MM-DD HH24:MI:SS'\)/CURRENT_TIMESTAMP/igsm;
+#################
+# В случае если у нас данные хранятся в Unicode и есть явно заданные литералы
+# внутри CASE ... END - передаем литералы  в UNISTR()
+################################################################################### 
+if ($model_update -> {characterset} =~ /UTF/i) {
+
+	my $new_sql;
+	while ($sql =~ m/\bCASE\s+(.*?WHEN\s+.*?THEN\s+.*?ELSE\s+.*?END)/ism) {
+		$new_sql .= $`;
+		$sql = $';
+		my $temp = $1;
+		$temp =~ s/('.*?')/UNISTR\(\1\)/igsm;
+		$new_sql .= " CASE $temp ";
+	}
+	$new_sql .= $sql;
+	$sql = $new_sql;
+}
+
+#warn "~~~ MYSQL TO ORACLE OUT: <$sql>\n";
+
+return $sql;	
+
+}
+
+
