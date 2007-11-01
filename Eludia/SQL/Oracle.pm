@@ -391,9 +391,10 @@ sub lc_hashref {
 
 	if ($conf -> {core_auto_oracle}) {	
 		foreach my $key (keys %$hr) {
+		        my $old_key = $key;
 			$key =~ s/RewbfhHHkgkglld/user/igsm;
 			$key =~ s/NbhcQQehgdfjfxf/level/igsm;
-			$hr -> {lc $key} = $hr -> {$key};
+			$hr -> {lc $key} = $hr -> {$old_key};
 			delete $hr -> {uc $key};
 		}
 	}
