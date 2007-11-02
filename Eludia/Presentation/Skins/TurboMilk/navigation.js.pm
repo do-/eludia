@@ -269,12 +269,19 @@ function UpdateClock() {
 	   document.getElementById ('clock_hours').innerText = twoDigits (tDate.getHours ());
 	   document.getElementById ('clock_minutes').innerText = twoDigits (tDate.getMinutes ());
 	   document.getElementById ('clock_separator').innerText = clockSeparators [tDate.getSeconds () % 2];
-	   clockSeparatorID = 1 - clockSeparatorID;
+	   
+	   
    } catch (e) {}
 
-   clockSeparatorID = 1 - clockSeparatorID;
+	if (tDate.getSeconds () % 2) {
 
-   clockID = setTimeout("UpdateClock ()", 500);
+	   for (var i in every_second) { 
+	   	document.frames ['_every_second_' + i].location.replace (every_second [i] + '&salt=' + Math.random ()); 
+	   }
+	   
+	}
+
+   clockID = setTimeout ("UpdateClock ()", 500);
 
 }
 
