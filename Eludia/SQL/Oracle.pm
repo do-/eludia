@@ -250,6 +250,11 @@ sub sql_select_all_cnt {
 sub sql_select_all {
 
 	my ($sql, @params) = @_;
+	my $result;
+
+	if ($sql =~ m/\bLIMIT\s+\d+\s*$/igsm) {
+		$sql =~ s/\bLIMIT\s+(\d+)\s*$/LIMIT 0,$1/igsm;
+	}
 
 	my $options = {};
 	if (@params > 0 and ref ($params [-1]) eq HASH) {
@@ -270,14 +275,43 @@ sub sql_select_all {
 			
 	}
 
-	my $st = sql_prepare ($sql);
 
-	$st -> execute (@params);
+	if ($sql =~ s{LIMIT\s+(\d+)\s*\,\s*(\d+).*}{}ism) {
 
-	return $st if $options -> {no_buffering};
+		my @temp_result = ();
+		my ($start, $portion) = ($1, $2);
 
-	my $result = $st -> fetchall_arrayref ({});	
-	$st -> finish;
+		($start, $portion) = (0, $start) unless ($portion);
+		my $st = sql_prepare ($sql);
+		$st -> execute (@params);
+		my $cnt = 0;	
+ 	
+		while (my $r = $st -> fetchrow_hashref) {
+	
+			$cnt++;
+		
+			$cnt > $start or next;
+			$cnt <= $start + $portion or last;
+			
+			push @temp_result, $r;
+	
+		}
+		
+		$result = \@temp_result;
+	
+		$st -> finish;
+	}
+	else {
+		my $st = sql_prepare ($sql);
+
+		$st -> execute (@params);
+
+		return $st if $options -> {no_buffering};
+
+		$result = $st -> fetchall_arrayref ({});	
+
+		$st -> finish;
+        }
 	
 	foreach my $i (@$result) {
 		lc_hashref ($i);
