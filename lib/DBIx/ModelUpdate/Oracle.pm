@@ -178,21 +178,29 @@ sub get_canonic_type {
 	my ($self, $definition, $should_change) = @_;
 	
 	$type_name = lc $definition -> {TYPE_NAME};
-	
-        return 'VARCHAR2' 		if ($type_name =~ /char$/ && !($self -> {characterset} =~ /UTF/i));
-	return 'NVARCHAR2' 		if ($type_name =~ /char$/ && ($self -> {characterset} =~ /UTF/i));
-        return 'VARCHAR2(4000)'		if ($type_name eq 'text' && !($self -> {characterset} =~ /UTF/i));
-	return 'NVARCHAR2(2000)' 	if ($type_name eq 'text' && ($self -> {characterset} =~ /UTF/i));
-	return 'NUMBER'   		if $type_name  eq 'decimal';
-	return 'NUMBER'   		if $type_name  =~ /int$/    && $definition -> {COLUMN_SIZE};
-	return 'NUMBER(25,0)'   	if $type_name  eq 'bigint';
-	return 'NUMBER(10,0)'  		if $type_name  eq 'int';
-	return 'NUMBER(8,0)'    	if $type_name  eq 'mediumint';
-	return 'NUMBER(5,0)'    	if $type_name  eq 'smallint';
-	return 'NUMBER(3,0)'    	if $type_name  eq 'tinyint';	
-	return 'CLOB'     		if ($type_name eq 'longtext' && !($self -> {characterset} =~ /UTF/i));;
-	return 'NCLOB'    		if ($type_name eq 'longtext' && ($self -> {characterset} =~ /UTF/i));;
-	return 'RAW'      		if $type_name  eq 'varbinary';
+
+	if ($self -> {core_voc_replacement_use}) {		
+	        return 'VARCHAR2' 		if ($type_name =~ /char$/ && !($self -> {characterset} =~ /UTF/i));
+		return 'NVARCHAR2' 		if ($type_name =~ /char$/ && ($self -> {characterset} =~ /UTF/i));
+	        return 'VARCHAR2(4000)'		if ($type_name eq 'text' && !($self -> {characterset} =~ /UTF/i));
+		return 'NVARCHAR2(2000)' 	if ($type_name eq 'text' && ($self -> {characterset} =~ /UTF/i));
+		return 'NUMBER'   		if $type_name  eq 'decimal';
+		return 'NUMBER'   		if $type_name  =~ /int$/    && $definition -> {COLUMN_SIZE};
+		return 'NUMBER(25,0)'   	if $type_name  eq 'bigint';
+		return 'NUMBER(10,0)'  		if $type_name  eq 'int';
+		return 'NUMBER(8,0)'    	if $type_name  eq 'mediumint';
+		return 'NUMBER(5,0)'    	if $type_name  eq 'smallint';
+		return 'NUMBER(3,0)'    	if $type_name  eq 'tinyint';	
+		return 'CLOB'     		if ($type_name eq 'longtext' && !($self -> {characterset} =~ /UTF/i));;
+		return 'NCLOB'    		if ($type_name eq 'longtext' && ($self -> {characterset} =~ /UTF/i));;
+		return 'RAW'      		if $type_name  eq 'varbinary';
+	}
+	else {
+		return 'VARCHAR2' if $type_name eq 'varchar';
+		return 'NUMBER'   if $type_name =~ /int$/;
+		return 'NUMBER'   if $type_name eq 'decimal';
+		return 'CLOB'     if $type_name eq 'text';
+        }
 	
 	if ($type_name =~ /date|time/) {
 		if ($should_change && $type_name =~ /timestamp/) {
