@@ -2258,9 +2258,12 @@ sub draw_menu {
 		push @$types, {
 			label  => 'Dump',
 			name   => '_dump',
-			href   => create_url () . '&__dump=1',
+			href   => $_REQUEST {__skin} eq 'TurboMilk' ? 
+				"javascript: var body_iframe = top.document.getElementById('_body_iframe').contentWindow; var content_iframe = body_iframe.document.getElementById('_content_iframe'); nope((content_iframe ? content_iframe.contentWindow.location.href : body_iframe.location.href) + '&__dump=1', '_blank', 'statusbar,scrollbars')" 
+				: 
+				create_url () . '&__dump=1',
 			side   => 'right_items',
-			target => '_blank',
+			target => $_REQUEST {__skin} eq 'TurboMilk' ? undef : '_blank',
 			no_off => 1,
 		};
 
