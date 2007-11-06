@@ -76,10 +76,16 @@ EOS
 				$name = $self -> sql_select_scalar ("SELECT OBJECT_NAME FROM $core_name WHERE ID=$id_name AND OBJECT_TYPE=1");
 			}
 			else {
+
+				$name = $id_name;
+
 				$name =~ s/^${table_name}_//;	
 			}
 		}
 		else {
+
+			$name = $id_name;
+
 			$name =~ s/^${table_name}_//;	
 		}
 		
