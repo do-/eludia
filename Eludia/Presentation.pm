@@ -753,7 +753,7 @@ sub draw_auth_toolbar {
 
 	return $_SKIN -> draw_auth_toolbar ({
 		top_banner => ($conf -> {top_banner} ? interpolate ($conf -> {top_banner}) : ''),
-		user_label  => ($_REQUEST {__windows_ce} ? '' : $i18n -> {User} . ': ') . ($_USER -> {label} || $i18n -> {not_logged_in}),
+		user_label  => $i18n -> {User} . ': ' . ($_USER -> {label} || $i18n -> {not_logged_in}) . ($_REQUEST{__add_user_label} ? &{$_REQUEST{__add_user_label}} : ''),
 	});
 			
 }
@@ -2255,17 +2255,7 @@ sub draw_menu {
 
 	if ($preconf -> {core_show_dump}) {
 	
-		push @$types, {
-			label  => 'Dump',
-			name   => '_dump',
-			href   => $_REQUEST {__skin} eq 'TurboMilk' ? 
-				"javascript: var body_iframe = top.document.getElementById('_body_iframe').contentWindow; var content_iframe = body_iframe.document.getElementById('_content_iframe'); nope((content_iframe ? content_iframe.contentWindow.location.href : body_iframe.location.href) + '&__dump=1', '_blank', 'statusbar,scrollbars')" 
-				: 
-				create_url () . '&__dump=1',
-			side   => 'right_items',
-			target => $_REQUEST {__skin} eq 'TurboMilk' ? undef : '_blank',
-			no_off => 1,
-		};
+		push @$types, $_SKIN -> draw_dump_button();
 
 		push @$types, {
 			label  => 'Info',

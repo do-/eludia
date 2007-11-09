@@ -111,6 +111,7 @@ EOH
 		$subset_selector .= '</select></td>';
 	
 	}
+	$$options{user_label} =~ s/$i18n->{User}: //;
 	$$options{user_label} =~ s/(.+) (.).+ (.).+/$1 $2\.$3\./;
 #				<td class=bgr1><A class=lnk2>$calendar</A></td>
 	return <<EOH;
@@ -1344,6 +1345,20 @@ EOH
 	
 	return $html;
 
+}
+
+################################################################################
+
+sub draw_dump_button {
+
+	return {
+		label  => 'Dump',
+		name   => '_dump',
+		href   => create_url () . '&__dump=1',
+		side   => 'right_items',
+		target => '_blank',
+		no_off => 1,
+	};
 }
 
 ################################################################################

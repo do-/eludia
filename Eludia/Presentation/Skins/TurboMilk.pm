@@ -103,7 +103,8 @@ sub draw_auth_toolbar {
 	
 	if ($_USER -> {id}) {
 	
-		$$options {user_label} = '<nobr><b>' . $_USER -> {f} . ' ' . substr ($_USER -> {i}, 0, 1) . '. ' . substr ($_USER -> {o}, 0, 1) . '.</b></nobr><br>' . $_USER -> {role_label}
+		$$options {user_label} =~ s/$$i18n{User}: ${\($$_USER{label} || $$i18n{not_logged_in})}//;
+		$$options {user_label} = '<nobr><b>' . $_USER -> {f} . ' ' . substr ($_USER -> {i}, 0, 1) . '. ' . substr ($_USER -> {o}, 0, 1) . '.</b></nobr><br>' . $options -> {user_label}
 			if ($_USER -> {f} || $_USER -> {i}) ;
 		
 
@@ -875,7 +876,7 @@ sub draw_form_field_checkboxes {
 					
 					$tabindex++;
 					
-					$subhtml .= qq {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input class=cbx type="checkbox" name="_$$options{name}_$$subvalue{id}" value="1" $subchecked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;$$subvalue{label} <br>};
+					$subhtml .= $subvalue -> {no_checkbox} ? qq{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$$subvalue{label} <br>} : qq {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input class=cbx type="checkbox" name="_$$options{name}_$$subvalue{id}" value="1" $subchecked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;$$subvalue{label} <br>};
 				
 				}
 
@@ -1504,6 +1505,20 @@ EOH
 	
 	return $html;
 
+}
+
+################################################################################
+
+sub draw_dump_button {
+
+	return {
+		label  => 'Dump',
+		name   => '_dump',
+		href   => "javascript: var body_iframe = top.document.getElementById('_body_iframe').contentWindow; var content_iframe = body_iframe.document.getElementById('_content_iframe'); nope((content_iframe ? content_iframe.contentWindow.location.href : body_iframe.location.href) + '&__dump=1', '_blank', 'statusbar,scrollbars')",
+		side   => 'right_items',
+		no_off => 1,
+
+	};
 }
 
 ################################################################################
