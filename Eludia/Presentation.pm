@@ -753,7 +753,7 @@ sub draw_auth_toolbar {
 
 	return $_SKIN -> draw_auth_toolbar ({
 		top_banner => ($conf -> {top_banner} ? interpolate ($conf -> {top_banner}) : ''),
-		user_label  => $i18n -> {User} . ': ' . ($_USER -> {label} || $i18n -> {not_logged_in}) . ($_REQUEST{__add_user_label} ? &{$_REQUEST{__add_user_label}} : ''),
+		user_label  => $i18n -> {User} . ': ' . ($_USER -> {label} || $i18n -> {not_logged_in}) . $_REQUEST{__add_user_label},
 	});
 			
 }
