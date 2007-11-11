@@ -23,6 +23,8 @@ var typeAheadInfo = {last:0,
 };
 var kb_hooks = [{}, {}, {}, {}];
 
+var max_len = 50;
+
 function handle_hotkey_focus    (r) {document.form.elements [r.data].focus ()}
 function handle_hotkey_focus_id (r) {document.getElementById (r.data).focus ()}
 function handle_hotkey_href     (r) {
@@ -509,7 +511,9 @@ function restoreSelectVisibility (name, rewind) {
 };
 
 function setSelectOption (select, id, label) { 
-	
+
+	label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...');
+
 	for (var i = 0; i < select.options.length; i++) {
 		if (select.options [i].value == id) {
 			select.options [i].innerText = label;

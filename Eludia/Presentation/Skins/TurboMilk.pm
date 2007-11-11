@@ -96,8 +96,9 @@ sub draw_auth_toolbar {
 	my ($_SKIN, $options) = @_;
 
 	my $logout_url = $conf -> {exit_url} || create_url (type => '_logout', id => '');
+	my $logo_url = $conf -> {logo_url};
 
-	my ($header, $header_height, $logo_url, $subset_div, $subset_div, $subset_cell);
+	my ($header, $header_height, $subset_div, $subset_div, $subset_cell);
 	
 	my $header_prefix = 'out';
 	
@@ -190,7 +191,7 @@ EOH
 			<tr>
 			<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
 			<td width=1><table border=0 valign="middle" border=0><tr>
-				<td valign="top" width=1><img src="/i/logo_$header_prefix.gif" border="0"></td>
+				<td valign="top" width=1><a href="$logo_url"><img src="/i/logo_$header_prefix.gif" border="0"></a></td>
 				<td width=1><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 height=1 border=0></td>
 				<td width=1 valign="bottom" style='padding-bottom: 5px;'><img src="$_REQUEST{__static_url}/gsep.gif?$_REQUEST{__static_salt}" width="4" height="21"></td>
 				<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
@@ -2560,7 +2561,7 @@ sub draw_tree {
 	my $menus = '';
 	my @nodes = ();
 	
-	my ($root_id, $root_url);
+	my ($root_id, $root_url, $selected_node_url);
 	
 	our %idx = ();
 	our %lch = ();
@@ -2568,12 +2569,22 @@ sub draw_tree {
 	foreach my $i (@$list) {
 		my $node = $i -> {__node};
 		push @nodes, $node;
+		
 		($root_id, $root_url) = ($node -> {id}, $node -> {url})
 			unless $root_id;
+			
+    $selected_node_url = $node -> {url}
+      if ($node -> {id} == $options -> {selected_node});
+       		
 		$idx {$node -> {id}} = $node;
 		$lch {$node -> {pid}} = $node if $node -> {pid};
 		$menus .= $i -> {__menu};
 	}
+	
+	unless ($selected_node_url) {
+    $options -> {selected_node} = $root_id;
+    $selected_node_url = $root_url;             	 
+  }
 	
 	while (my ($k, $v) = each %lch) {
 		$idx {$k} -> {_hc} = 1;
@@ -2597,15 +2608,16 @@ sub draw_tree {
 		win.d.aNodes = $nodes;
 		win.document.body.innerHTML = "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td valign=top>" + win.d + "</td></tr></table>$menus";
 		if (win.d.selectedNode == null) {
-			win.d.openTo ($root_id, true);
+			win.d.openTo ($options->{selected_node}, true);
 		}		
 EOH
+#			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
 
 	return <<EOH;
 		<frameset cols="250,*">
 			<frame src="$_REQUEST{__static_url}/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
 			</frame>
-			<frame src="${\($root_url ? $root_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
+			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
 			</frame>
 		<frameset>
 EOH

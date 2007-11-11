@@ -2371,7 +2371,7 @@ sub draw_vert_menu {
 
 			$type -> {target}   ||= "_self";
 
-			$type -> {onclick} = $type -> {href} =~ /^javascript\:/i ? $' : "activate_link('$$type{href}', '$$type{target}')";  #'
+			$type -> {onclick} = $type -> {href} =~ /^javascript\:/i ? $' : "hideSubMenus(0); activate_link('$$type{href}', '$$type{target}')";  #'
 			$type -> {onclick} =~ s{[\n\r]}{}gsm;
 		}
 	
