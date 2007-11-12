@@ -1866,7 +1866,7 @@ sub draw_row_button {
 		$options -> {label} = "\&nbsp;[$$options{label}]\&nbsp;";
 	}
 	
-	my $vert_line = {label => $options -> {label}, href => $options -> {href}};
+	my $vert_line = {label => $options -> {label}, href => $options -> {href}, target => $options -> {target}};
 	$vert_line -> {label} =~ s{[\[\]]}{}g;
 	push @{$_SKIN -> {__current_row} -> {__types}}, $vert_line;
 		

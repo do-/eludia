@@ -1616,7 +1616,7 @@ EOH
 		}
 		else {
 		
-			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)};
+			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
 		
 			my $td = $type -> {items} ? <<EOH : qq{<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
 				<td nowrap onclick="$$type{onclick}" class="vert-menu" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}">
@@ -1814,7 +1814,7 @@ sub draw_row_button {
 		$options -> {label} = "\&nbsp;[$$options{label}]\&nbsp;";
 	}
 	
-	my $vert_line = {label => $options -> {label}, href => $options -> {href}};
+	my $vert_line = {label => $options -> {label}, href => $options -> {href}, target => $options -> {target}};
 	$vert_line -> {label} =~ s{[\[\]]}{}g;
 	push @{$_SKIN -> {__current_row} -> {__types}}, $vert_line;
 		
