@@ -1982,6 +1982,8 @@ sub draw_tree {
 	my ($_SKIN, $node_callback, $list, $options) = @_;
 	
 	my $menus;
+
+	my $target = $options -> {target} || '_content_iframe';
 	
 	my $html = <<EOH;
 	
@@ -1997,7 +1999,7 @@ sub draw_tree {
 				d = new dTree('d');
 				
 				d.config.iconPath = '/i/dtree/';
-				d.config.target = '_content_iframe';
+				d.config.target = '$target';
 				d.config.useStatusText = true;
 				d.icon.node = 'img/folderopen.gif';
 
@@ -2034,8 +2036,8 @@ sub draw_node {
 	my ($_SKIN, $options, $i) = @_;
 
 	my $menu = $i -> {__menu} ? "'$i'" : 'null';
-	
-	return "d.add($options->{id}, $options->{parent}, '$options->{label}', '$options->{href}', null, null, null, null, null, $menu);\n"
+	my $open = $options -> {open} ? 'true' : 'null';
+	return "d.add($options->{id}, $options->{parent}, '$options->{label}', '$options->{href}', null, null, null, null, $open, $menu);\n"
 
 }
 
