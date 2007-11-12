@@ -2992,7 +2992,7 @@ sub draw_node {
 	
 	my $result = '';
 	
-	$options -> {href} .= '&__tree=1';		
+	$options -> {href} .= '&__tree=1' unless ($options -> {no_tree});		
 	if ($options -> {href}) {
 		check_href ($options) ;
 	}
