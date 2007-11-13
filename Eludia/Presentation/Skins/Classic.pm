@@ -1981,6 +1981,9 @@ sub draw_tree {
 
 	my ($_SKIN, $node_callback, $list, $options) = @_;
 	
+	push @{$_REQUEST{__include_js}}, 'dtree/dtree';
+	push @{$_REQUEST{__include_css}}, 'dtree/dtree';
+
 	my $menus;
 
 	my $target = $options -> {target} || '_content_iframe';

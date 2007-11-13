@@ -2956,9 +2956,6 @@ sub draw_tree {
 	
 	return '' if $options -> {off};
 	
-	push @{$_REQUEST{__include_js}}, 'dtree/dtree';
-	push @{$_REQUEST{__include_css}}, 'dtree/dtree';
-
 	$_REQUEST {__salt} ||= rand () * time ();
 
 	if (ref $options -> {title} eq HASH) {

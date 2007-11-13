@@ -2558,6 +2558,8 @@ sub draw_tree {
 
 	my ($_SKIN, $node_callback, $list, $options) = @_;
 	
+	push @{$_REQUEST{__include_css}}, 'dtree/dtree';
+
 	my $menus = '';
 	my @nodes = ();
 	
