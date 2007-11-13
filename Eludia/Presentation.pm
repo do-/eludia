@@ -3012,9 +3012,9 @@ sub draw_node {
 
 		if ($button -> {confirm}) {
 			my $salt = rand;
-			my $msg = js_escape ($options -> {confirm});
+			my $msg = js_escape ($button -> {confirm});
 			$button -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-			$button -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$options{href}', '$button->{target}')} else {document.body.style.cursor = 'normal'; nop ();}];
+			$button -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$button{href}', '$$button{target}')} else {document.body.style.cursor = 'normal'; nop ();}];
 		}
 
 		check_title ($button, $i);
