@@ -1992,15 +1992,21 @@ sub draw_page {
 		return <<EOH;
 <html>
 	<script for=window event=onload>
-		var w = window.parent.parent;
-		if (w) {
-			var m = w.document.getElementById ('main_menu');
-			if (m) {
-				var a = $a;
-				m.outerHTML = a[0];
-				w.menu_md5 = '$menu_md5';
-			}
+		
+		var w = window;
+		var m = null;
+		
+		while (w && !m) {
+			w = w.parent;
+			m = w.document.getElementById ('main_menu');
 		}
+	
+		if (m) {
+			var a = $a;
+			m.outerHTML = a[0];
+			w.menu_md5 = '$menu_md5';
+		}
+		
 	</script>
 	<body>
 	</body>
