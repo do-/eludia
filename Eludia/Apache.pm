@@ -344,8 +344,50 @@ EOH
 		$_REQUEST {lang} ||= $preconf -> {lang} || $conf -> {lang}; # According to NISO Z39.53	
 		our $i18n = $conf -> {i18n} -> {$_REQUEST {lang}};
 				
+		my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
+		
+		if (!$_REQUEST {type} && ref $menu eq ARRAY && @$menu > 0) {
+		
+			my $m = $menu -> [0];					
+			
+			if ($menu -> [0] -> {href}) {
+			
+				my $href = $menu -> [0] -> {href};
+				
+				if (ref $href) {
+				
+					foreach my $k (keys %$href) {
+					
+						$_REQUEST {$k} = $href -> {$k}
+					
+					}
+				
+				}
+				else {
+					
+					$href =~ s{^/?\?}{};
+				
+					foreach (split /&/, $href) {
+					
+						my ($k, $v) = split /=/;	
+					
+						$_REQUEST {$k} = $v;
+					
+					}
+				
+				}
+				
+			}
+			else {
+			
+				$_REQUEST {type} = $menu -> [0] -> {name};
+			
+			}
+			
+		}		
+		
 		my $page = {
-			menu => call_for_role ('select_menu') || call_for_role ('get_menu'),
+			menu => $menu,
 			type => $_REQUEST {type},
 		};
 		
