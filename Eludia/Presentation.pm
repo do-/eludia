@@ -1525,6 +1525,7 @@ sub draw_form_field_select {
 		check_href ($options -> {other});
 
 		$options -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
+		$options -> {other} -> {href} =~ s{([\&\?])__tree\=\w+}{$1};
 
 	}		
 
