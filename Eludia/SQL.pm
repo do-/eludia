@@ -87,7 +87,7 @@ my $time = time;
 print STDERR "sql_assert_core_tables [$$] started...\n";
 
 	my %defs = (
-	
+
 		$conf -> {systables} -> {__voc_replacements} => {
 		
 			columns => {
@@ -104,7 +104,6 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 
 		},
 	);
-
 
 	$model_update -> assert (tables => \%defs);
 
@@ -399,12 +398,12 @@ sub sql_reconnect {
 	
 		our $model_update = DBIx::ModelUpdate -> new (		
 			$db, 
-			dump_to_stderr => 1,
-			before_assert	=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
+			dump_to_stderr 		=> 1,
+			before_assert		=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
 			schema			=> $preconf -> {db_schema},
 			_db_model_checksums	=> $conf -> {systables} -> {_db_model_checksums}, 
-			__voc_replacements		=> $conf -> {systables} -> {__voc_replacements}, 
-			core_voc_replacement_use  => $conf -> {core_voc_replacement_use},
+			__voc_replacements	=> $conf -> {systables} -> {__voc_replacements}, 
+			core_voc_replacement_use=> $conf -> {core_voc_replacement_use},
 		);
 
 		sql_assert_core_tables (); # unless $driver_name eq 'Oracle';
@@ -723,21 +722,6 @@ sub assert_fake_key {
 	
 	});
 
-}
-
-################################################################################
-
-sub sql_select_ids {
-	my ($sql, @params) = @_;
-
-	my @ids = grep {$_ > 0} sql_select_col ($sql, @params);
-	push @ids, -1;
-
-	foreach my $parameter (@params) {
-		$sql =~ s/\?/'$parameter'/ism;
-	}
-
-	return wantarray ? (join(',', @ids), $sql) : join(',', @ids);
 }
 
 ################################################################################
