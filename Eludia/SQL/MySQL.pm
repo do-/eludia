@@ -777,6 +777,20 @@ sub sql_select_loop {
 	$st -> finish ();
 
 }
+################################################################################
+
+sub sql_select_ids {
+	my ($sql, @params) = @_;
+
+	my @ids = grep {$_ > 0} sql_select_col ($sql, @params);
+	push @ids, -1;
+
+	foreach my $parameter (@params) {
+		$sql =~ s/\?/'$parameter'/ism;
+	}
+
+	return wantarray ? (join(',', @ids), join(',', @ids)) : join(',', @ids);
+}
 
 
 1;
