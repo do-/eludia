@@ -2251,7 +2251,9 @@ sub draw_menu {
 	my ($types, $cursor, $_options) = @_;
 	
 	@$types or return '';
-	
+
+	delete $_REQUEST {__tree} if $_REQUEST {__only_menu};	
+
 	($_REQUEST {__no_navigation} or $_REQUEST {__tree}) and return '';	
 
 	if ($preconf -> {core_show_dump}) {
