@@ -205,7 +205,7 @@ sub get_canonic_type {
 		return 'VARCHAR2' if $type_name eq 'varchar';
 		return 'NUMBER'   if $type_name =~ /int$/;
 		return 'NUMBER'   if $type_name eq 'decimal';
-		return 'CLOB'     if $type_name eq 'text';
+		return 'CLOB'     if $type_name =~ /text$/;
         }
 	
 	if ($type_name =~ /date|time/) {
@@ -235,7 +235,7 @@ sub gen_column_definition {
 	
 	my $sql = " $name $type";
 		
-	if ($definition -> {COLUMN_SIZE} && !($type eq 'CLOB' || $type eq 'NCLOB')) {	
+	if ($definition -> {COLUMN_SIZE} && !($type eq 'CLOB' || $type eq 'NCLOB'|| $type eq 'DATE')) {	
 		$sql .= ' (' . $definition -> {COLUMN_SIZE};		
 		$sql .= ',' . $definition -> {DECIMAL_DIGITS} if $definition -> {DECIMAL_DIGITS};		
 		$sql .= ')';	
