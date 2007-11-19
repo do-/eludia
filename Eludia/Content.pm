@@ -580,7 +580,7 @@ sub require_fresh {
 
 		die $@ if $@;
 
-		if ($file_name =~ /Config\.pm$/ && $model_update && !$model_update -> {core_ok}) {
+		if ($file_name =~ /Config\.pm$/) {
 
                     $conf -> {systables} ||= {
 			_db_model_checksums => '_db_model_checksums',
@@ -598,7 +598,11 @@ sub require_fresh {
     	                users                   => 'users',
 		    };
 		    
-		    sql_assert_core_tables ();
+		    if ($model_update && !$model_update -> {core_ok}) {
+
+			sql_assert_core_tables ();
+
+		    }		    
 
 		}
 		if (

@@ -6,6 +6,7 @@ Eludia/Content.pm
 Eludia/Docs.pm
 Eludia/FileDumpHash.pm
 Eludia/Flix.pm
+Eludia/IIS.pm
 Eludia/InternalRequest.pm
 Eludia/Loader.pm
 Eludia/Offline.pm
