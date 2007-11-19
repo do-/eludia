@@ -745,8 +745,8 @@ sub draw_form_field_select {
 	
 	if (defined $options -> {other}) {
 
-		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 600;
-		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 400;
+		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
+		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
 
 		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
@@ -756,7 +756,10 @@ sub draw_form_field_select {
 
 				if (this.options[this.selectedIndex].value == -1) {
 
-					var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+					var dialog_width = $options->{other}->{width};
+					var dialog_height = $options->{other}->{height};
+
+					var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 					
 					focus ();
 					
@@ -776,7 +779,10 @@ EOJS
 
 					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
 
-						var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+						var dialog_width = $options->{other}->{width};
+						var dialog_height = $options->{other}->{height};
+
+						var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 						
 						focus ();
 						
