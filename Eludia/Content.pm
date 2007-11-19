@@ -580,10 +580,10 @@ sub require_fresh {
 
 		die $@ if $@;
 
-		if ($file_name =~ /Config\.pm$/ && ! $conf -> {systables}) {
-        
-                    $conf -> {systables} = {
-	                    _db_model_checksums => '_db_model_checksums',
+		if ($file_name =~ /Config\.pm$/ && $model_update && !$model_update -> {core_ok}) {
+
+                    $conf -> {systables} ||= {
+			_db_model_checksums => '_db_model_checksums',
 			__voc_replacements		=> '__voc_replacements',
     	                __access_log            => '__access_log',
     	                __benchmarks            => '__benchmarks',
@@ -597,6 +597,8 @@ sub require_fresh {
     	                sessions                => 'sessions',
     	                users                   => 'users',
 		    };
+		    
+		    sql_assert_core_tables ();
 
 		}
 		if (
@@ -1639,6 +1641,8 @@ sub select__info {
 				$imm == 240 ? 'NT 4.0 ' :
 				$imm == 250 ? '2000 ' :
 				$imm == 251 ? 'XP ' :
+				$imm == 252 ? '2003 ' :
+				$imm == 260 ? 'Vista ' :
 				"Unknown ($id . $major . $minor)"
 			) . $string . " Build $build"
 		};	
@@ -1684,7 +1688,7 @@ sub select__info {
 
 		{
 			id    => 'DB driver',
-			label => 'DBD::' . $SQL_VERSION -> {driver} . ' ' . ${'DBD::' . $SQL_VERSION -> {driver}.'::VERSION'},
+			label => 'DBD::' . $db -> {Driver} -> {Name} . ' ' . ${'DBD::' . $db -> {Driver} -> {Name} . '::VERSION'},
 			path  => $INC {'DBD/' . $SQL_VERSION -> {driver} . '.pm'},
 		},
 
@@ -1715,21 +1719,7 @@ sub select__info {
 			id    => 'Skin',
 			label => $_SKIN,
 			path  => $INC {$skin . '.pm'},
-		},
-				
-		
-#		{			
-#			id    => '$preconf',
-#			label => '<pre>' . Dumper ($preconf),
-#		},
-
-#		{			
-#			id    => '$conf',
-#			label => '<pre>' . Dumper ($conf),
-#		},
-		
-
-#		map {{id => $_, label => $ENV {$_}}} sort keys %ENV
+		},		
 
 	]	
 

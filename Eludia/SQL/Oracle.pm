@@ -1091,4 +1091,4 @@ sub sql_select_ids {
 	return wantarray ? (join(',', @ids), $sql) : join(',', @ids);
 }
 
-
+1;

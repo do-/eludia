@@ -15,17 +15,16 @@ sub get_request {
 		return;
 	}
 	elsif ($ENV {SERVER_SOFTWARE} =~ /IIS/) {
-		require ISAPI;
-		our $r = new ISAPI;
+	        our $r = new Eludia::Request ($preconf, $conf);
 		our $apr = $r;
 	}
 	else {
-	
+
 		our $use_cgi = $ENV {SCRIPT_NAME} =~ m{index\.pl} || ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} && !$ENV{MOD_PERL}) || $conf -> {use_cgi} || $preconf -> {use_cgi} || !$INC{'Apache/Request.pm'};
 
 		our $r   = $use_cgi ? new Eludia::Request ($preconf, $conf) : $_[0];
 		our $apr = $use_cgi ? $r : Apache::Request -> new ($r);
-		
+
 	}
 
 	if (ref $apr eq 'Apache::Request') {
@@ -50,7 +49,7 @@ sub setup_skin {
 	eval {$_REQUEST {__skin} ||= get_skin_name ()};
 
 	unless ($_REQUEST {__skin}) {
-	
+
 		if ($_REQUEST {xls}) {
 			$_REQUEST {__skin} = 'XL';
 		}
@@ -66,14 +65,14 @@ sub setup_skin {
 		elsif ($_REQUEST {__windows_ce}) {
 			$_REQUEST {__skin} = 'WinCE';
 		}
-		
+
 	}
 
 	$_REQUEST {__skin} ||= $preconf -> {core_skin};
 	$_REQUEST {__skin} ||= 'Classic';
-	
+
 	$options -> {kind} = 'error' if $_REQUEST {error};
-	
+
 	if ($options -> {kind}) {
 		eval "require Eludia::Presentation::Skins::$_REQUEST{__skin}";
 		$_REQUEST {__skin} = (${"Eludia::Presentation::Skins::$_REQUEST{__skin}::replacement"} -> {$options->{kind}} ||= $_REQUEST {__skin});
@@ -82,17 +81,17 @@ sub setup_skin {
 	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
 	eval "require $_SKIN";
 	warn $@ if $@;
-	
+
 	$_REQUEST {__static_url}  = '/i/_skins/' . $_REQUEST {__skin};
 	$_REQUEST {__static_salt} = $_REQUEST {sid} || rand ();
 
 	$_SKIN -> {options} ||= $_SKIN -> options;
-	
+
 	$_REQUEST {__no_navigation} ||= $_SKIN -> {options} -> {no_navigation};
 
 	if (
-		!$_SKIN -> {static_ok} && 
-		!$_SKIN -> {options} -> {no_presentation} && 
+		!$_SKIN -> {static_ok} &&
+		!$_SKIN -> {options} -> {no_presentation} &&
 		!$_SKIN -> {options} -> {no_static} &&
 		$r
 	) {
@@ -108,45 +107,45 @@ sub setup_skin {
 		};
 
 		unless ($skin_version eq $Eludia_VERSION) {
-		
+
 			my $static_path = $_SKIN -> static_path;
-			
+
 			opendir (DIR, $static_path) || die "can't opendir $static_path: $!";
 			my @files = readdir (DIR);
 			closedir DIR;
-			
+
 			my $buf;
-			
+
 			foreach my $src (@files) {
-			
+
 				$src =~ /\.pm$/ or next;
-				
+
 				my $dst = '>' . $skin_root . '/' . $`;
-				
+
 				$src = $static_path . $src;
-				
+
 				open (S, $src) || die "can't open $src: $!";
 				read S, $buf, -s $src;
 				close (S);
-			
+
 				open (D, $dst) || die "can't write to $dst: $!";
 				binmode (D);
 				print D $buf;
 				close (D);
 
 			}
-			
+
 			open (D, '>' . $skin_root . '/VERSION') || die "can't write to VERSION: $!";
 			binmode (D);
 			print D $Eludia_VERSION;
-			close (D);			
-			
+			close (D);
+
 		}
 
 		$_SKIN -> {static_ok} = 1;
 
 	}
-	
+
 	attach_globals ($_PACKAGE => $_SKIN, qw(
 		_PACKAGE
 		_REQUEST
@@ -169,7 +168,7 @@ sub handler {
 	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
 
 	$_PACKAGE ||= __PACKAGE__ . '::';
-		
+
 	get_request (@_);
 
 	my $parms = $apr -> parms;
@@ -177,11 +176,11 @@ sub handler {
 	our %_REQUEST = %{$parms};
 	$_REQUEST {__skin} = '';
 	our $_REQUEST_TO_INHERIT = undef;
-	
+
 	delete $_REQUEST {__x} if $preconf -> {core_no_xml};
-	
+
 	$_REQUEST {__no_navigation} ||= $_REQUEST {select};
-		
+
 	$_REQUEST {type} =~ s/_for_.*//;
 	$_REQUEST {__uri} = $r -> uri;
 	$_REQUEST {__uri} =~ s{/cgi-bin/.*}{/};
@@ -197,7 +196,7 @@ sub handler {
 	}
 
 	if ($_REQUEST {action}) {
-	
+
 		foreach my $key (keys %_REQUEST) {
 
 			$key =~ /^_[^_]/ or next;
@@ -209,17 +208,17 @@ sub handler {
 
 				$_REQUEST {$key} =~ s{ }{}g;
 				$_REQUEST {$key} =~ y{,}{.};
-				
+
 				if ($^V ge v5.8.0 && $Math::FixedPrecision::VERSION) {
 					$_REQUEST {$field} = new Math::FixedPrecision ($_REQUEST {$field}, ($conf -> {precision} || 3));
-				}				
+				}
 
 			}
 
 		}
-		
+
 	}
-	
+
    	sql_reconnect ();
 
 	require_fresh ($_PACKAGE . 'Config');
@@ -227,25 +226,25 @@ sub handler {
 	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
 
 		my $fn = "$1.$2";
-		
+
 		if ($fn eq 'favicon.ico' && -f $r -> document_root () . '/i/favicon.ico') {
 			$r -> internal_redirect ('/i/favicon.ico');
 			return OK;
 		}
-		
+
 		setup_skin ();
-		
+
 		$r -> internal_redirect ("/i/_skins/$_REQUEST{__skin}/$fn");
-	
+
 		return OK;
-		
+
 	}
 
 	if ($preconf -> {core_auth_cookie}) {
 		my $c = $_COOKIES {sid};
 		$_REQUEST {sid} ||= $c -> value if $c;
 	}
-			   	   	   	   	   	   	
+
 	if ($_REQUEST {keepalive}) {
 		my $timeout = 60 * $conf -> {session_timeout} - 1;
 		$_REQUEST {virgin} or keep_alive ($_REQUEST {keepalive});
@@ -254,17 +253,17 @@ sub handler {
 		print <<EOH;
 			<html><head>
 				<META HTTP-EQUIV=Refresh CONTENT="$timeout; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}">
-			</head></html>			
+			</head></html>
 EOH
 		return OK;
-	}		
-	
+	}
+
 	if ($_REQUEST {__whois}) {
 		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
 		out_html ({}, Dumper ({data => $user}));
 		return OK;
 	}
-   	
+
 	our $_USER = get_user ();
 
 	$number_format or our $number_format = Number::Format -> new (%{$conf -> {number_format}});
@@ -276,7 +275,7 @@ EOH
 
    	$_REQUEST {__include_css} ||= [];
    	push @{$_REQUEST {__include_css}}, @{$conf -> {include_css}} if $conf -> {include_css};
-						
+
 	if ((!$_USER -> {id} and $_REQUEST {type} ne 'logon' and $_REQUEST {type} ne '_boot')) {
 
 		delete $_REQUEST {sid};
@@ -286,37 +285,36 @@ EOH
 		delete $_REQUEST {__include_css};
 
 		my $type = ($preconf -> {core_skip_boot} || $conf -> {core_skip_boot}) || $_REQUEST {__windows_ce} ? 'logon' : '_boot';
-		
+
 		redirect ("/?type=$type&redirect_params=" . b64u_freeze (\%_REQUEST), kind => 'js', target => '_top');
-		
+
 	}
 
 	elsif (exists ($_USER -> {redirect})) {
-		
+
 		redirect (create_url ());
-		
+
 	}
 
 	elsif ($_REQUEST {keepalive}) {
-	
+
 		redirect ("/\?type=logon&_frame=$_REQUEST{_frame}");
-		
+
 	}
 	else {
-			
+
 		require_fresh ("${_PACKAGE}Content::subset");
 
 		our $_SUBSET = call_for_role ('select_subset');
-						
 		if ($_SUBSET && $_SUBSET -> {items}) {
-				
+
 			$_SUBSET -> {items} = [ grep {!$_ -> {off}} @{$_SUBSET -> {items}} ];
-			
+
 			if ($preconf -> {subset}) {
 
 				$_SUBSET -> {items} = [ grep {$preconf -> {subset_names} -> {$_ -> {name}}} @{$_SUBSET -> {items}} ];
 
-			}				
+			}
 
 			$_REQUEST {__subset} ||= $_USER -> {subset};
 			$_SUBSET -> {name}   ||= $_REQUEST {__subset};
@@ -326,7 +324,7 @@ EOH
 
 			foreach my $item (@{$_SUBSET -> {items}}) {
 				$n ++;
-				$found = 1 if $item -> {name} eq $_SUBSET -> {name};
+	 			$found = 1 if $item -> {name} eq $_SUBSET -> {name};
 			}
 
 			$found or delete $_SUBSET -> {name};
@@ -334,16 +332,16 @@ EOH
 			$_SUBSET -> {name} ||= $_SUBSET -> {items} -> [0] -> {name} if $n > 0;
 
 			$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ("UPDATE $conf->{systables}->{users} SET subset = ? WHERE id = ?", $_SUBSET -> {name}, $_USER -> {id});
-			
+
 		}
 
 
 		require_fresh ("${_PACKAGE}Content::menu");
 
 		$_REQUEST {lang} ||= $_USER -> {lang} if $_USER;
-		$_REQUEST {lang} ||= $preconf -> {lang} || $conf -> {lang}; # According to NISO Z39.53	
+		$_REQUEST {lang} ||= $preconf -> {lang} || $conf -> {lang}; # According to NISO Z39.53
 		our $i18n = $conf -> {i18n} -> {$_REQUEST {lang}};
-				
+
 		my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
 		
 		if (!$_REQUEST {type} && ref $menu eq ARRAY && @$menu > 0) {
@@ -390,9 +388,9 @@ EOH
 			menu => $menu,
 			type => $_REQUEST {type},
 		};
-		
+
 		if ($conf -> {core_extensible_menu} && $_USER -> {systems}) {
-			
+
 			foreach my $sys (sort grep {/\w/} split /\,/, $_USER -> {systems}) {
 				my @items = ();
 				eval {@items = &{"_${sys}_menu"}()};
@@ -402,7 +400,7 @@ EOH
 		}
 
 		call_for_role ('get_page');
-					
+
 		$page -> {menu}   = menu_subset ($page -> {menu}) if $preconf -> {subset} or ($_SUBSET && $_SUBSET -> {items});
 		$page -> {subset} = $_SUBSET;
 
@@ -436,12 +434,12 @@ EOH
 			select_default_type ($page -> {menu});
 			
 		};
-	
+
 		unless ($page -> {type} =~ /^_/) {
 			require_fresh ("${_PACKAGE}Content::$$page{type}");
 			require_fresh ("${_PACKAGE}Presentation::$$page{type}");
 		};
-		
+
 		$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
 
 		my $action = $_REQUEST {action};
@@ -451,35 +449,35 @@ EOH
 			undef $__last_insert_id;
 
 			eval { $db -> {AutoCommit} = 0; };
-	
+
 			our %_OLD_REQUEST = %_REQUEST;
-			
+
 			log_action_start ();
-		
-			my $sub_name = "validate_${action}_$$page{type}";		
-			
-			my $error_code = undef;			
+
+			my $sub_name = "validate_${action}_$$page{type}";
+
+			my $error_code = undef;
 			eval {	$error_code = call_for_role ($sub_name); };
 			$error_code = $@ if $@;
-						
+
 			if ($_USER -> {demo_level} > 0) {
 				($action =~ /^execute/ and $$page{type} eq 'logon') or $error_code ||= '»звините, вы работаете в демонстрационном режиме';
 			}
-			
-			if ($error_code) {		
+
+			if ($error_code) {
 				my $error_message_template = $error_messages -> {"${action}_$$page{type}_${error_code}"} || $error_code;
 				$_REQUEST {error} = interpolate ($error_message_template);
 			}
 			if ($_REQUEST {error}) {
 				out_html ({}, draw_page ($page));
 			}
-			else {						
-				
+			else {
+
 				unless ($_REQUEST {__peer_server}) {
-				
+
 					delete $_REQUEST {__response_sent};
 
-					eval {					
+					eval {
 
 						delete_fakes () if $action eq 'create';
 
@@ -493,7 +491,7 @@ EOH
 
 							foreach my $key (keys %$VAR1) {
 								$_REQUEST {$key} = $VAR1 -> {$key};
-							}					
+							}
 
 						} elsif ($conf -> {core_cache_html}) {
 							sql_do ("DELETE FROM $conf->{systables}->{cache_html}");
@@ -502,28 +500,28 @@ EOH
 						}
 
 					};
-					
+
 					$_REQUEST {error} = $@ if $@;
-								
+
 				}
 				if ($_REQUEST {error}) {
 					out_html ({}, draw_page ($page));
 				}
 				elsif (!$_REQUEST {__response_sent}) {
-								
-					if ($action eq 'delete' && $conf -> {core_auto_esc} == 2) {						
+
+					if ($action eq 'delete' && $conf -> {core_auto_esc} == 2) {
 						esc ({label => $_REQUEST {__redirect_alert}});
 					}
 					else {
 
 						redirect (
 							{
-								action => '', 
+								action => '',
 								redirect_params => '',
 								__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
-							}, 
+							},
 							{
-								kind => 'js', 
+								kind => 'js',
 								label => $_REQUEST {__redirect_alert},
 							}
 						);
@@ -542,11 +540,11 @@ EOH
 
 		}
 		else {
-					
+
 #		   	sql_reconnect ();
 
 			if (
-				$conf -> {core_auto_esc} == 2 && 
+				$conf -> {core_auto_esc} == 2 &&
 				$_REQUEST {sid} &&
 				!$_REQUEST {__top} &&
 				(
@@ -555,40 +553,40 @@ EOH
 					$r -> headers_in -> {'Referer'} !~ /type=$_REQUEST{type}(\W.*)?$/
 				)
 			) {
-			
+
 				my ($method, $url) = split /\s+/, $r -> the_request;
-				
+
 				$url =~ s{\&?_?salt=[\d\.]+}{}gsm;
 				$url =~ s{\&?sid=\d+}{}gsm;
 
 				my $no = sql_select_scalar ("SELECT no FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND href LIKE ?", $_REQUEST {sid}, $url);
-	
+
 				unless ($no) {
 					$no = 1 + sql_select_scalar ("SELECT MAX(no) FROM $conf->{systables}->{__access_log} WHERE id_session = ?", $_REQUEST {sid});
 					sql_do ("INSERT INTO $conf->{systables}->{__access_log} (id_session, no, href) VALUES (?, ?, ?)", $_REQUEST {sid}, $no, $url);
 				}
 
 				$_REQUEST {__last_query_string} = $no;
-				
+
 				$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
-			
+
 			}
-				
+
 			$r -> headers_out -> {'Expires'} = '-1';
-				
+
 			out_html ({}, draw_page ($page));
-			
-		}   
+
+		}
 
 	}
-   
+
 #   	$db -> disconnect;
 
 	if ($_REQUEST {__suicide}) {
 		$r -> print (' ' x 8096);
 		CORE::exit (0);
 	}
-	
+
 	return OK;
 
 }
@@ -600,16 +598,16 @@ sub out_html {
 	my ($options, $html) = @_;
 
 	$html or return;
-	
+
 	return if $_REQUEST {__response_sent};
 
 	if ($conf -> {core_sweep_spaces}) {
-		$html =~ s{^\s+}{}gsm; 
+		$html =~ s{^\s+}{}gsm;
 		$html =~ s{[ \t]+}{ }g;
 	}
 
 	unless ($preconf -> {core_no_morons}) {
-		$html =~ s{window\.open}{nope}gsm; 
+		$html =~ s{window\.open}{nope}gsm;
 	}
 
 
@@ -624,9 +622,9 @@ sub out_html {
 	}
 
 	$preconf -> {core_mtu} ||= 1500;
-	
+
 	if (
-		($conf -> {core_gzip} or $preconf -> {core_gzip}) && 
+		($conf -> {core_gzip} or $preconf -> {core_gzip}) &&
 		400 + length $html > $preconf -> {core_mtu} &&
 		($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/)
 	) {
@@ -639,20 +637,20 @@ sub out_html {
 	$r -> headers_out -> {'Content-Length'} = length $html;
 
 	if ($preconf -> {core_auth_cookie}) {
-	
+
 		set_cookie (
 			-name    =>  'sid',
 			-value   =>  $_REQUEST {sid} || 0,
 			-expires =>  $preconf -> {core_auth_cookie},
 			-path    =>  '/',
-		)      
-		
+		)
+
 	}
 
 
 	$r -> send_http_header unless (MP2);
-	
-	$r -> header_only or print $html;		
+
+	$r -> header_only or print $html;
 
 }
 
@@ -661,27 +659,27 @@ sub out_html {
 sub pub_handler {
 
 	$_PACKAGE ||= __PACKAGE__ . '::';
-	
+
 	get_request (@_);
-	
+
 	my $parms = $apr -> parms;
 	if ($parms -> {debug1} or $r -> uri =~ m{/(navigation\.js|0\.html|0\.gif|eludia\.css)}) {
 		handler (@_);
-		return OK;		
+		return OK;
 	};
 	our %_REQUEST = %{$parms};
-		
+
 	$_REQUEST {__uri} = $r -> uri;
-	
+
 	$_REQUEST {__uri} =~ s{^http://[^/]+}{};
 	$_REQUEST {__uri} =~ s{\/\w+\.\w+$}{};
 
 	$_REQUEST {__uri_chomped} = $_REQUEST {__uri};
 	$_REQUEST {__uri_chomped} =~ s{/+$}{};
-	
+
 	my $c = $_COOKIES {psid};
 	$_REQUEST {sid} = $c -> value if $c;
-	
+
 	$_REQUEST {__content_type} ||= 'text/html; charset=' . ($conf -> {_charset} || 'windows-1251');
 
 	sql_reconnect ();
@@ -690,24 +688,24 @@ sub pub_handler {
 		require_fresh ("${_PACKAGE}Content::pub_users");
 		our $_USER = get_public_user ();
 	};
-	
+
 	my $cache_key = $_REQUEST {__uri_chomped} . '/' . $r -> args;
 	my $cache_fn  = $r -> document_root . '/cache/' . uri_escape ($cache_key, "/.") . '.html';
-	
+
 	if ($conf -> {core_cache_html} && !$_USER -> {id}) {
-		
+
 		my $time = sql_select_scalar ("SELECT UNIX_TIMESTAMP(ts) FROM $conf->{systables}->{cache_html} WHERE uri = ?", $cache_key);
-		
+
 		my $ims = $r -> headers_in -> {"If-Modified-Since"};
 		$ims =~ s{\;.*}{};
-		
+
 		if ($ims && $time && (str2time ($ims) >= $time)) {
 			$r -> status (304);
 			$r -> send_http_header unless (MP2);
 			$_REQUEST {__response_sent} = 1;
 			return OK;
-		}		
-		
+		}
+
 		$r -> content_type ($_REQUEST {__content_type});
 		$r -> headers_out -> {'Last-Modified'} = time2str ($time);
 		$r -> headers_out -> {'Cache-Control'} = 'max-age=0';
@@ -723,7 +721,7 @@ sub pub_handler {
 
 		my $use_gzip = ($conf -> {core_gzip} or $preconf -> {core_gzip}) && ($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/);
 
-#		my $field = $use_gzip ? 'gzipped' : 'html';		
+#		my $field = $use_gzip ? 'gzipped' : 'html';
 #		my $html = sql_select_scalar ("SELECT $field FROM cache_html WHERE uri = ?", $cache_key);
 
 		my $cache_fn_to_read = $cache_fn;
@@ -731,7 +729,7 @@ sub pub_handler {
 			$cache_fn_to_read .= '.gz';
 			$r -> content_encoding ('gzip');
 		}
-		
+
 		if (-f $cache_fn_to_read) {
 			$r -> content_type ($_REQUEST {__content_type});
 			$r -> headers_out -> {'Content-Length'} = -s $cache_fn_to_read;
@@ -747,37 +745,37 @@ sub pub_handler {
 				$r -> send_fd (F);
 				close (F);
 			}
-			
-			$_REQUEST {__response_sent} = 1;			
+
+			$_REQUEST {__response_sent} = 1;
 			return OK;
 		}
-		
+
 #		if ($html) {
 #			$_REQUEST {__is_gzipped} = $use_gzip;
 #			out_html ({}, $html);
 #			return OK;
 #		}
-	
+
 	}
-   	
+
 	require_fresh ("${_PACKAGE}Config");
 	require_fresh ("${_PACKAGE}Content::pub_page");
-	
+
 	our $_PAGE = select_pub_page ();
 	return 0 if $_REQUEST {__response_sent};
-	
+
 	my $type   = $_PAGE -> {type};
 	my $id     = $_PAGE -> {id};
 	my $action = $_REQUEST {action};
-	
+
 	if ($action) {
 
 		require_fresh ("${_PACKAGE}Content::${type}");
-		
+
 		$_REQUEST {error} = call_for_role ("validate_${action}_${type}");
-		
+
 		if ($_REQUEST {error}) {
-		
+
 #			redirect ("?error=$error_code", {kind => 'http'});
 
 			redirect (
@@ -789,36 +787,36 @@ sub pub_handler {
 		else {
 
 			eval { $db -> {AutoCommit} = 0; };
-			
+
 			call_for_role ("do_${action}_${type}");
-			
+
 			flix_reindex_record ($_REQUEST {type}, $_REQUEST {id}) if $DB_MODEL -> {tables} -> {$_REQUEST {type}} && $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {flix_keys};
-			
-			eval { 
+
+			eval {
 				$db -> commit unless $_REQUEST {error};
 				$db -> {AutoCommit} = 1;
 			};
 
 			$_REQUEST {__response_sent} or redirect ({action => ''}, {kind => 'http'});
-			
+
 		}
-		
+
 	}
-	else {	
+	else {
 
 		require_fresh ("${_PACKAGE}Presentation::pub_page");
 
 		require_fresh ("${_PACKAGE}Content::$type");
 		require_fresh ("${_PACKAGE}Presentation::$type");
-		
-		my ($selector, $renderrer) =  $id ? 
+
+		my ($selector, $renderrer) =  $id ?
 			("get_item_of_$type", "draw_item_of_$type") :
-			("select_$type", "draw_$type"); 
-		
-		
+			("select_$type", "draw_$type");
+
+
 		eval {
 			my $content = &$selector ();
-			return OK if $_REQUEST {__response_sent}; 
+			return OK if $_REQUEST {__response_sent};
 			$_PAGE -> {body} = &$renderrer ($content);
 		};
 		print STDERR $@ if $@;
@@ -826,33 +824,33 @@ sub pub_handler {
 		my $html = draw_pub_page ();
 
 		if ($conf -> {core_cache_html}) {
-			
-			my $gzipped = (($conf -> {core_gzip} or $preconf -> {core_gzip})) ? Compress::Zlib::memGzip ($html) : '';		
+
+			my $gzipped = (($conf -> {core_gzip} or $preconf -> {core_gzip})) ? Compress::Zlib::memGzip ($html) : '';
 #			sql_do ('REPLACE INTO cache_html (uri, html, gzipped) VALUES (?, ?, ?)', $cache_key, $html, $gzipped);
 			sql_do ("REPLACE INTO $conf->{systables}->{cache_html} (uri) VALUES (?)", $cache_key);
-			
+
 			open (F, ">$cache_fn") or die ("Can't write to $cache_fn: $!\n");
 			print F $html;
 			close (F);
-			
+
 			if ($gzipped) {
 				open (F, ">$cache_fn.gz") or die ("Can't write to $cache_fn.gz: $!\n");
 				binmode (F);
 				print F $gzipped;
 				close (F);
 			}
-						
+
 		}
-		
+
 		$r -> headers_out -> {'Last-Modified'} = time2str (time);
 		$r -> headers_out -> {'Cache-Control'} = 'max-age=0';
 
 		out_html ({}, $html);
-		
+
 	}
 
 #   	$db -> disconnect;
-	
+
 	return OK;
 
 }

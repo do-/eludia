@@ -15,20 +15,20 @@ sub new {
 
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
-	
+
 	my ($preconf, $conf) = @_;
 
 	my $self  = {
 		preconf => $preconf,
 		conf => $conf,
 	};
-	
+
 	undef @CGI::QUERY_PARAM;
 	$self -> {Q} = new CGI;
-	
+
 	$self -> {Filename} = $ENV{PATH_INFO};
 	$self -> {Filename} = '/' if $self -> {Filename} =~ /index\./;
-	
+
 	$self -> {Document_root} = $ENV{DOCUMENT_ROOT};
 	$self -> {Out_headers} = {-type => 'text/html', -status=> 200};
 
@@ -45,19 +45,19 @@ sub internal_redirect {
 	my $q = $self -> {Q};
 
 	my $url = $_[0];
-	
+
 	unless ($url =~ /^http:\/\//) {
 		$url =~ s{^/}{};
 		$url = "http://$ENV{HTTP_HOST}/$url";
 	}
-	
+
 #	my $http_host = $ENV {HTTP_X_FORWARDED_HOST} || $self -> {preconf} -> {http_host};
 #	if ($http_host) {
 #		substr ($url, index ($url, $ENV{HTTP_HOST}), length ($ENV{HTTP_HOST})) = $http_host;
 #	}
 
 	print $q -> redirect (-uri => $url);
-	
+
 }
 
 ################################################################################
@@ -76,6 +76,36 @@ sub header_in {
 
 ################################################################################
 
+sub headers_in {
+	my $self = shift;
+	my $q = $self -> {Q};
+	my @inheaders = $q -> http ($_ [1]);
+	shift(@inheaders);
+	foreach $header (@inheaders){
+		@arr=();
+		$strout="";
+		@arr=split(/_/,$header);
+		shift(@arr);
+		foreach $key ( @arr){
+			if (length($key)>0) {
+				$str=ucfirst(lc($key));
+		    			if (length($strout)>0) {
+						$strout=$strout."-";
+					}
+			$strout=$strout.$str;
+			}
+		}
+		$ret->{$strout}=$ENV{$header};
+
+	}
+      #	$ret->{'Accept-Encoding'}=$ENV{'HTTP_ACCEPT_ENCODING'};
+      #	$ret->{'Accept-Language'}=$ENV{'HTTP_ACCEPT_LANGUAGE'};
+	return $ret;
+}
+
+
+################################################################################
+
 sub content_type {
 
 	my $self = shift;
@@ -86,7 +116,7 @@ sub content_type {
 	} else {
 		return $self -> {Out_headers} -> {-type};
 	}
-	
+
 }
 
 ################################################################################
@@ -101,7 +131,7 @@ sub content_encoding {
 	} else {
 		return $self -> {Out_headers} -> {-content_encoding};
 	}
-	
+
 }
 
 ################################################################################
@@ -115,7 +145,7 @@ sub status {
 	} else {
 		return $self -> {Out_headers} -> {-status};
 	}
-	
+
 }
 
 ################################################################################
@@ -126,9 +156,19 @@ sub header_out {
 	my $q = $self -> {Q};
 
 	$self -> {Out_headers} -> {"-$_[0]"} = $_[1];
-	
+
 }
 
+################################################################################
+
+sub headers_out {
+
+	my $self = shift;
+	my $q = $self -> {Q};
+
+	return ($self -> {Out_headers} ||= {});
+
+}
 ################################################################################
 
 sub send_http_header {
@@ -137,11 +177,11 @@ sub send_http_header {
 	my $q = $self -> {Q};
 
 	my @params = ();
-	
+
 	foreach $header (keys %{$self -> {Out_headers}}) {
 		push (@params, $header, $self -> {Out_headers} -> {$header});
 	}
-	
+
 	print $q -> header (@params);
 }
 
@@ -160,7 +200,7 @@ sub send_fd {
 	while (read ($fh, $buff, 8 * 2**10)) {
 		print STDOUT $buff;
 	}
-	
+
 }
 
 ################################################################################
@@ -170,7 +210,7 @@ sub filename {
 	my $self = shift;
 
 	return $self -> {Filename};
-	
+
 }
 
 ################################################################################
@@ -180,7 +220,7 @@ sub connection {
 	my $self = shift;
 
 	return $self;
-	
+
 }
 
 ################################################################################
@@ -188,7 +228,7 @@ sub connection {
 sub remote_ip {
 
 	return $ENV {REMOTE_ADDR};
-	
+
 }
 
 ################################################################################
@@ -198,7 +238,7 @@ sub document_root {
 	my $self = shift;
 
 	return $self -> {Document_root};
-	
+
 }
 
 ################################################################################
@@ -209,7 +249,7 @@ sub parms {
 	my $q = $self -> {Q};
 	my %vars = $q -> Vars;
 	return \%vars;
-	
+
 }
 
 ################################################################################
@@ -220,7 +260,7 @@ sub param {
 	my $q = $self -> {Q};
 
 	return $q -> param ($_ [0]);
-	
+
 }
 
 ################################################################################
@@ -236,7 +276,7 @@ sub upload {
 	$self -> {$param} = Eludia::Request::Upload -> new($q, $param);
 
 	return $self -> {$param};
-	
+
 }
 
 ################################################################################
@@ -264,12 +304,12 @@ sub the_request {
 	my @names = $q -> param;
         my %vars = $q -> Vars;
 	my $url;
-	
+
 	foreach my $name (@names) {
 		my @values = split ("\0", $vars{$name});
 		$url .= '&' . (@values > 0 ? join ('&', (map {"$name=$_"} @values)) : "$name=");
 	}
-	
+
 	$url =~ s/^\&//;
 
         return "$ENV{REQUEST_METHOD} $self->{Filename}?$url $ENV{SERVER_PROTOCOL}";
@@ -279,10 +319,10 @@ sub the_request {
 
 ################################################################################
 
-#package Apache::Constants;
+package Apache::Constants;
 
-#sub OK () {
-#	return 200;
-#} 
+sub OK () {
+	return 200;
+}
 
 1;

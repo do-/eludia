@@ -406,7 +406,6 @@ sub sql_reconnect {
 			core_voc_replacement_use=> $conf -> {core_voc_replacement_use},
 		);
 
-		sql_assert_core_tables (); # unless $driver_name eq 'Oracle';
 		$preconf -> {no_model_update} = 1;
 		
 	}
