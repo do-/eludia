@@ -11,7 +11,7 @@ sub sql_weave_model {
 	foreach my $table_name ($db -> tables) {	
 		$table_name =~ s{.*?(\w+)\W*$}{$1}gsm;
 		next if $table_name eq $conf -> {systables} -> {log};
-		push @tables, $table_name;
+		push @tables, lc $table_name;
 	}
 		
 	foreach my $table_name (@tables) {
@@ -410,9 +410,9 @@ sub sql_reconnect {
 		
 	}
 	
-	if ($driver_name =~ m/ORACLE/i) {
-		sql_do ("ALTER SESSION SET NLS_NUMERIC_CHARACTERS='.,' TIME_ZONE = '+4:00' NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");		
-	}
+#	if ($driver_name =~ m/ORACLE/i) {
+#		sql_do ("ALTER SESSION SET NLS_NUMERIC_CHARACTERS='.,' TIME_ZONE = '+4:00' NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");		
+#	}
 
 	our %sts = ();
 
