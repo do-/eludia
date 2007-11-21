@@ -2,6 +2,7 @@ no strict;
 no warnings;
 
 #use DBD::Oracle qw(:ora_types);
+#use Carp qw(cluck);
 
 ################################################################################
 
@@ -236,7 +237,7 @@ sub sql_select_all_cnt {
 		$cnt = (@$temp + 0);
 	}
 	else {
-		$sql =~ s/SELECT.*FROM/SELECT COUNT(*) FROM/igsm;
+		$sql =~ s/SELECT.*?FROM/SELECT COUNT(*) FROM/igsm;
 		$cnt = sql_select_scalar ($sql, @params);
 	}
 			
