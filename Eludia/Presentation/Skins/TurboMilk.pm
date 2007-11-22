@@ -1997,23 +1997,21 @@ sub draw_page {
 
 		return <<EOH;
 <html>
-	<script for=window event=onload>
-		
-		var w = window;
-		var m = null;
-		
-		while (w && !m) {
-			w = w.parent;
-			m = w.document.getElementById ('main_menu');
-		}
-	
-		if (m) {
-			var a = $a;
-			m.outerHTML = a[0];
-			w.menu_md5 = '$menu_md5';
-		}
-		
-	</script>
+	<head>
+		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
+		</script>
+		<script for=window event=onload>
+
+			var wm = ancestor_window_with_child ('main_menu');
+
+			if (wm) {
+				var a = $a;
+				wm.child.outerHTML = a [0];
+				wm.window.menu_md5 = '$menu_md5';
+			}
+
+		</script>
+	<head>
 	<body>
 	</body>
 </html>

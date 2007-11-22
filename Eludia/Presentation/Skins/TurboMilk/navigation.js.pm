@@ -47,6 +47,27 @@ function nope (a1, a2, a3) {
 
 function nop () {}
 
+function ancestor_window_with_child (id) {
+
+	var w = window;
+	var m = null;
+	var tries = 20;
+		
+	while (tries && w && !m) {
+		w = w.parent;
+		m = w.document.getElementById (id);
+		tries --;
+	}
+
+	if (!m) return null;
+	
+	return {
+		window: w,
+		child:  m
+	};
+
+}
+
 function check_menu_md5 (menu_md5) {
 
 	window.parent.subsets_are_visible = 0;
@@ -97,7 +118,7 @@ function idx_tables (__scrollable_table_row) {
 	if (!scrollable_table) return;
 
 	scrollable_table          = scrollable_table.tBodies (0);
-	scrollable_table_row      = __scrollable_table_row;
+	if (__scrollable_table_row < scrollable_rows.length) scrollable_table_row = __scrollable_table_row;
 	scrollable_table_row_cell = 0;
 
 	if (scrollable_rows.length > 0) {
