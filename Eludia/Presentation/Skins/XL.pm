@@ -517,6 +517,13 @@ sub draw_input_cell {
 
 ################################################################################
 
+sub draw_dump_button {
+	my ($_SKIN, $data, $options) = @_;
+	return '';
+}
+
+################################################################################
+
 sub draw_row_button {
 	my ($_SKIN, $options) = @_;
 	return '' if $conf -> {core_hide_row_buttons} == 2;	
