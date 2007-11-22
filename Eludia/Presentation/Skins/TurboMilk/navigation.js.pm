@@ -68,6 +68,23 @@ function ancestor_window_with_child (id) {
 
 }
 
+function _dumper_href () {
+
+	var wf = ancestor_window_with_child ('_body_iframe');
+
+	if (!wf) return alert ('_body_iframe not found :-((');
+
+	var body_iframe    = wf.child.contentWindow; 
+	var content_iframe = body_iframe.document.getElementById ('_content_iframe');
+
+	var href = content_iframe ? content_iframe.contentWindow.location.href : body_iframe.location.href;
+
+	nope (href + '&__dump=1', '_blank', 'statusbar,scrollbars');
+
+	document.body.style.cursor = 'default';
+
+}
+
 function check_menu_md5 (menu_md5) {
 
 	window.parent.subsets_are_visible = 0;
