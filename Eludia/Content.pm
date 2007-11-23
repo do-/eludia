@@ -580,31 +580,8 @@ sub require_fresh {
 
 		die $@ if $@;
 
-		if ($file_name =~ /Config\.pm$/) {
+		sql_assert_core_tables () if $file_name =~ /Config\.pm$/;
 
-                    $conf -> {systables} ||= {
-			_db_model_checksums => '_db_model_checksums',
-			__voc_replacements		=> '__voc_replacements',
-    	                __access_log            => '__access_log',
-    	                __benchmarks            => '__benchmarks',
-    	                __last_update           => '__last_update',
-    	                __moved_links           => '__moved_links',
-    	                __required_files=> '__required_files',
-    	                __screenshots           => '__screenshots',
-    	                cache_html                      => 'cache_html',
-    	                log                     => 'log',
-    	                roles                   => 'roles',
-    	                sessions                => 'sessions',
-    	                users                   => 'users',
-		    };
-		    
-		    if ($model_update && !$model_update -> {core_ok}) {
-
-			sql_assert_core_tables ();
-
-		    }		    
-
-		}
 		if (
 			$file_name =~ /Config\.pm$/
 			&& $DB_MODEL

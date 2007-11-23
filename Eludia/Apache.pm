@@ -222,6 +222,8 @@ sub handler {
    	sql_reconnect ();
 
 	require_fresh ($_PACKAGE . 'Config');
+	
+	sql_assert_core_tables ();
 
 	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
 
