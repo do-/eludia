@@ -1,32 +1,20 @@
 package Eludia::Auth::NTLM;
 
 use Apache::AuthenNTLM;
-
-use Data::Dumper;
+use Apache::Request;
 
 @ISA = ('Apache::AuthenNTLM');
 
-sub verify_user {
+sub handler ($$) {
 
 	my ($self, $r) = @_;
 
-	$self -> {dummy_user} = Apache::AuthenNTLM::verify_user (@_) ? 0 : 1;
-	
-warn 'Eludia::Auth::NTLM::verify_user: ' . Dumper ($self);
-	
-	return 1;    
-	
+	our $apr = Apache::Request -> new ($r);
+
+	return OK if $apr -> param ('sid');
+
+	return Apache::AuthenNTLM::handler ($self, $r);
+
 }
 
-sub map_user {
-
-	my ($self, $r) = @_;
-
-warn 'Eludia::Auth::NTLM::map_user: ' . Dumper ($self);
-
-	return '' if $self -> {dummy_user};
-	return Apache::AuthenNTLM::map_user ($self, $r);
-	
-}
-    
 1;
