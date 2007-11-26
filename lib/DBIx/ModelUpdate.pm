@@ -175,7 +175,7 @@ sub assert {
 	foreach my $name (keys %$needed_tables) {
 		exists $existing_tables -> {$name} or next;
 		$existing_tables -> {$name} -> {columns} = $self -> get_columns ($name); 
-		$existing_tables -> {$name} -> {keys}    = $self -> get_keys    ($name); 
+		$existing_tables -> {$name} -> {keys}    = $self -> get_keys    ($name, $params {core_voc_replacement_use}); 
 	} 
 	
 #	while (my ($name, $definition) = each %$needed_tables) {
@@ -225,7 +225,7 @@ sub assert {
 				) {
 				
 					if ($existing_tables -> {$name} -> {keys} -> {$k_name} -> {columns} ne $k_definition) {
-						$self -> drop_index ($name, $k_name);
+						$self -> drop_index ($name, $k_name, $params {core_voc_replacement_use});
 					}
 					else {
 						next;
@@ -233,7 +233,7 @@ sub assert {
 				
 				}						
 				
-				$self -> create_index ($name, $k_name, $k_definition, $definition);
+				$self -> create_index ($name, $k_name, $k_definition, $definition, $params {core_voc_replacement_use});
 
 			};
 
@@ -241,7 +241,7 @@ sub assert {
 		else {
 		
 
-			$self -> create_table ($name, $definition);
+			$self -> create_table ($name, $definition, $params {core_voc_replacement_use});
 		
 			foreach my $k_name (keys %{$definition -> {keys}}) {
 			
@@ -249,7 +249,7 @@ sub assert {
 				
 				$k_definition =~ s{\s+}{}g;
 				
-				$self -> create_index ($name, $k_name, $k_definition, $definition);
+				$self -> create_index ($name, $k_name, $k_definition, $definition, $params {core_voc_replacement_use});
 
 			};
 
