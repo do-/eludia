@@ -198,7 +198,7 @@ sub assert {
 				if ($existing_columns -> {$c_name}) {
 				
 					my $existing_column = $existing_columns -> {$c_name};										
-					$self -> update_column ($name, $c_name, $existing_column, $c_definition);
+					$self -> update_column ($name, $c_name, $existing_column, $c_definition,,$params {core_voc_replacement_use});
 								
 				}
 				else {
@@ -209,7 +209,7 @@ sub assert {
 
 			};
 
-			$self -> add_columns ($name, $new_columns) if keys %$new_columns;
+			$self -> add_columns ($name, $new_columns,,$params {core_voc_replacement_use}) if keys %$new_columns;
 
 #			while (my ($k_name, $k_definition) = each %{$definition -> {keys}}) {
 			foreach my $k_name (keys %{$definition -> {keys}}) {
