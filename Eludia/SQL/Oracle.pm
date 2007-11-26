@@ -237,7 +237,7 @@ sub sql_select_all_cnt {
 		$cnt = (@$temp + 0);
 	}
 	else {
-		$sql =~ s/SELECT.*?FROM/SELECT COUNT(*) FROM/igsm;
+		$sql =~ s/SELECT.*?FROM/SELECT COUNT(*) FROM/ism;
 		$cnt = sql_select_scalar ($sql, @params);
 	}
 			
