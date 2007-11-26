@@ -129,7 +129,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 		},
 	);
 
-	$model_update -> assert (tables => \%defs);
+	$model_update -> assert (tables => \%defs,core_voc_replacement_use => $conf -> {core_voc_replacement_use});
 
 	my %defs = (
 	
@@ -302,7 +302,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 		},
 	};
 
-	$model_update -> assert (tables => \%defs);
+	$model_update -> assert (tables => \%defs,core_voc_replacement_use => $conf -> {core_voc_replacement_use});
 
 	$model_update -> {core_ok} = 1;
 	
@@ -433,10 +433,6 @@ sub sql_reconnect {
 		$preconf -> {no_model_update} = 1;
 		
 	}
-	
-#	if ($driver_name =~ m/ORACLE/i) {
-#		sql_do ("ALTER SESSION SET NLS_NUMERIC_CHARACTERS='.,' TIME_ZONE = '+4:00' NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");		
-#	}
 
 	our %sts = ();
 
@@ -741,9 +737,9 @@ sub assert_fake_key {
 	
 		$table_name => {
 			keys => {fake => 'fake'},
-		}
+		},
 	
-	});
+	},core_voc_replacement_use => $conf -> {core_voc_replacement_use});
 
 }
 
@@ -757,7 +753,7 @@ sub delete_fakes {
 
 	return if is_recyclable ($table_name);
 	
-	assert_fake_key ($table_name);
+	assert_fake_key ($table_name,core_voc_replacement_use => $conf -> {core_voc_replacement_use});
 	
 	my $ids = sql_select_ids (<<EOS);
 		SELECT
