@@ -1686,6 +1686,7 @@ sub draw_text_cell {
 	
 	my $html = "\n\t<td ";
 	$html .= dump_attributes ($data -> {attributes}) if $data -> {attributes};
+	$html .= ' style="padding-left:' . ($data -> {level} * 15 + 3) . '"' if (defined $data -> {level});
 	$html .= '>';
 	
 	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
@@ -2631,7 +2632,7 @@ EOH
 			</frame>
 			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
 			</frame>
-		<frameset>
+		</frameset>
 EOH
 	
 	my $menus;
