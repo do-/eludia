@@ -42,7 +42,7 @@ sub prepare {
 
 sub get_keys {
 
-	my ($self, $table_name) = @_;
+	my ($self, $table_name, $core_voc_replacement_use) = @_;
 	
 	my $keys = {};
 
@@ -67,7 +67,7 @@ EOS
 
 		my $name;
 
-		if ($self -> {core_voc_replacement_use}) {
+		if ($core_voc_replacement_use) {
 
 			my $core_name = $self -> {__voc_replacements};
 
@@ -181,11 +181,11 @@ EOS
 
 sub get_canonic_type {
 
-	my ($self, $definition, $should_change) = @_;
+	my ($self, $definition, $should_change, $core_voc_replacement_use) = @_;
 	
 	$type_name = lc $definition -> {TYPE_NAME};
 
-	if ($self -> {core_voc_replacement_use}) {		
+	if ($core_voc_replacement_use) {		
 	        return 'VARCHAR2' 		if ($type_name =~ /char$/ && !($self -> {characterset} =~ /UTF/i));
 		return 'NVARCHAR2' 		if ($type_name =~ /char$/ && ($self -> {characterset} =~ /UTF/i));
 	        return 'VARCHAR2(4000)'		if ($type_name eq 'text' && !($self -> {characterset} =~ /UTF/i));
@@ -200,12 +200,14 @@ sub get_canonic_type {
 		return 'CLOB'     		if ($type_name eq 'longtext' && !($self -> {characterset} =~ /UTF/i));;
 		return 'NCLOB'    		if ($type_name eq 'longtext' && ($self -> {characterset} =~ /UTF/i));;
 		return 'RAW'      		if $type_name  eq 'varbinary';
+		return 'BLOB'      		if $type_name  eq 'longblob';		
 	}
 	else {
 		return 'VARCHAR2' if $type_name eq 'varchar';
 		return 'NUMBER'   if $type_name =~ /int$/;
 		return 'NUMBER'   if $type_name eq 'decimal';
 		return 'CLOB'     if $type_name =~ /text$/;
+		return 'BLOB'     if $type_name eq 'longblob';		
         }
 	
 	if ($type_name =~ /date|time/) {
@@ -223,11 +225,11 @@ sub get_canonic_type {
 
 sub gen_column_definition {
 
-	my ($self, $name, $definition, $table_name) = @_;
+	my ($self, $name, $definition, $table_name, $core_voc_replacement_use) = @_;
 	
 	$definition -> {NULLABLE} = 1 unless defined $definition -> {NULLABLE};
 	
-	my $type = $self -> get_canonic_type ($definition, 1);
+	my $type = $self -> get_canonic_type ($definition, 1,, $core_voc_replacement_use);
 
 	if (lc $name eq 'date') {
 		$name = '"'.$name.'"';
@@ -235,7 +237,7 @@ sub gen_column_definition {
 	
 	my $sql = " $name $type";
 		
-	if ($definition -> {COLUMN_SIZE} && !($type eq 'CLOB' || $type eq 'NCLOB'|| $type eq 'DATE')) {	
+	if ($definition -> {COLUMN_SIZE} && !($type eq 'CLOB' || $type eq 'NCLOB' || $type eq 'DATE' || $type eq 'BLOB')) {	
 		$sql .= ' (' . $definition -> {COLUMN_SIZE};		
 		$sql .= ',' . $definition -> {DECIMAL_DIGITS} if $definition -> {DECIMAL_DIGITS};		
 		$sql .= ')';	
@@ -251,7 +253,7 @@ sub gen_column_definition {
 
 	my ($nn_constraint_name, $pk_constraint_name) = ('nn_' . $table_name . '_' . $name, 'pk_' . $table_name . '_' . $name);
 
-	if ($self -> {core_voc_replacement_use}) {	
+	if ($core_voc_replacement_use) {	
 		unless ($definition -> {NULLABLE}) {
 		   if (uc $table_name ne uc $self -> {__voc_replacements}) { 	
 
@@ -311,7 +313,7 @@ sub gen_column_definition {
 
 sub create_table {
 
-	my ($self, $name, $definition) = @_;
+	my ($self, $name, $definition, $core_voc_replacement_use) = @_;
 
 	$name = $self -> unquote_table_name ($name);
 	my $q = $name =~ /^_/ ? $self -> {quote} : '';
@@ -322,7 +324,7 @@ sub create_table {
 
 	if ($pk_column) {
 
-		if ($self -> {core_voc_replacement_use}) {			
+		if ($core_voc_replacement_use) {			
 			my ($sequence_name,$trigger_name);
 
 			if (uc $name ne uc $self -> {__voc_replacements}) { 	
@@ -429,7 +431,7 @@ sub update_column {
 
 	my ($self, $name, $c_name, $existing_column, $c_definition) = @_;
 	
-	my $eq_types = ($self -> get_canonic_type ($existing_column) eq $self -> get_canonic_type ($c_definition, 1));
+	my $eq_types = ($self -> get_canonic_type ($existing_column,,,$core_voc_replacement_use) eq $self -> get_canonic_type ($c_definition, 1,,$core_voc_replacement_use));
 	my $eq_sizes = ($existing_column -> {COLUMN_SIZE} >= $c_definition -> {COLUMN_SIZE});
 
 	my $existing_def = $self -> get_column_def ($existing_column);
@@ -447,7 +449,7 @@ sub update_column {
 
 	return if $eq_types && $eq_sizes && $eq_defaults;
 	
-	return if $self -> get_canonic_type ($existing_column) =~ /LOB/;
+	return if $self -> get_canonic_type ($existing_column,,,$core_voc_replacement_use) =~ /LOB/;
 	
 	$c_definition -> {_PK} = 0 if ($existing_column -> {_PK} == 1);
 	delete $c_definition -> {NULLABLE} if (exists $existing_column -> {NULLABLE} && $existing_column -> {NULLABLE} == 0);
@@ -503,12 +505,12 @@ sub insert_or_update {
 
 sub drop_index {
 	
-	my ($self, $table_name, $index_name) = @_;
+	my ($self, $table_name, $index_name, $core_voc_replacement_use) = @_;
 
 	$table_name = $self -> unquote_table_name ($table_name);
 	my $q = $table_name =~ /^_/ ? $self -> {quote} : '';
 
-	if ($self -> {core_voc_replacement_use}) {			
+	if ($core_voc_replacement_use) {
 		my $replaced_name;
 
 		if ($replaced_name = voc_replacements ($self ,$table_name, $index_name, 1,'DELETE')) {
@@ -532,8 +534,8 @@ sub drop_index {
 ################################################################################
 
 sub create_index {
-	
-	my ($self, $table_name, $index_name, $index_def, $table_def) = @_;
+
+	my ($self, $table_name, $index_name, $index_def, $table_def, $core_voc_replacement_use) = @_;
 
 	$table_name = $self -> unquote_table_name ($table_name);
 	my $q = $table_name =~ /^_/ ? $self -> {quote} : '';
@@ -550,7 +552,9 @@ sub create_index {
 		}
 	}
 
-	if ($self -> {core_voc_replacement_use}) {			
+
+	if ($core_voc_replacement_use) {
+	
 		my $replaced_name = voc_replacements ($self ,$table_name, $index_name, 1,'CREATE');
 
 		warn "CREATE INDEX $q${replaced_name}$q ON $q${table_name}$q ($index_def)\n";
