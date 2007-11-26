@@ -318,7 +318,7 @@ sub create_table {
 	$name = $self -> unquote_table_name ($name);
 	my $q = $name =~ /^_/ ? $self -> {quote} : '';
 
-	$self -> do ("CREATE TABLE $q$name$q (\n  " . (join "\n ,", map {$self -> gen_column_definition ($_, $definition -> {columns} -> {$_}, $name)} keys %{$definition -> {columns}}) . "\n)\n");
+	$self -> do ("CREATE TABLE $q$name$q (\n  " . (join "\n ,", map {$self -> gen_column_definition ($_, $definition -> {columns} -> {$_}, $name,,$core_voc_replacement_use)} keys %{$definition -> {columns}}) . "\n)\n");
 
 	my $pk_column = (grep {$definition -> {columns} -> {$_} -> {_PK}} keys %{$definition -> {columns}}) [0];
 
@@ -398,12 +398,12 @@ EOS
 
 sub add_columns {
 
-	my ($self, $name, $columns) = @_;
+	my ($self, $name, $columns,$core_voc_replacement_use) = @_;
 
 	$name = $self -> unquote_table_name ($name);
 	my $q = $name =~ /^_/ ? $self -> {quote} : '';
 
-	my $sql = "ALTER TABLE $q$name$q ADD (\n  " . (join "\n ,", map {$self -> gen_column_definition ($_, $columns -> {$_}, $name)} keys %$columns) . "\n)\n";
+	my $sql = "ALTER TABLE $q$name$q ADD (\n  " . (join "\n ,", map {$self -> gen_column_definition ($_, $columns -> {$_}, $name,,$core_voc_replacement_use)} keys %$columns) . "\n)\n";
 			
 	$self -> do ($sql);
 
@@ -429,7 +429,7 @@ sub get_column_def {
 
 sub update_column {
 
-	my ($self, $name, $c_name, $existing_column, $c_definition) = @_;
+	my ($self, $name, $c_name, $existing_column, $c_definition,$core_voc_replacement_use) = @_;
 	
 	my $eq_types = ($self -> get_canonic_type ($existing_column,,,$core_voc_replacement_use) eq $self -> get_canonic_type ($c_definition, 1,,$core_voc_replacement_use));
 	my $eq_sizes = ($existing_column -> {COLUMN_SIZE} >= $c_definition -> {COLUMN_SIZE});
@@ -457,7 +457,7 @@ sub update_column {
 	$name = $self -> unquote_table_name ($name);
 	my $q = $name =~ /^_/ ? $self -> {quote} : '';
 
-	my $sql = "ALTER TABLE $q$name$q MODIFY" . $self -> gen_column_definition ($c_name, $c_definition, $name);
+	my $sql = "ALTER TABLE $q$name$q MODIFY" . $self -> gen_column_definition ($c_name, $c_definition, $name,,$core_voc_replacement_use);
 	
 	$self -> do ($sql);
 	
