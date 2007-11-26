@@ -13,7 +13,22 @@ sub handler ($$) {
 	
 	our $apr = undef;
 	
-	return OK if $r -> method eq 'POST' && $r -> header_in ('Content-Length') > 0;
+	if ($r -> method eq 'POST') {
+
+		if ($r -> header_in ('Content-Length') == 0) {
+		
+			$r -> status (401);
+			$r -> header_out ('WWW-Authenticate' => 'NTLM TlRMTVNTUAACAAAAAAAAACgAAAABggAAo2hTWy/PW2AAAAAAAAAAAA==');
+			$r -> send_http_header ();
+						
+			return 401;
+
+		}
+		else {
+			return 200;
+		}
+
+	}
 
 	our $apr = Apache::Request -> new ($r);
 
