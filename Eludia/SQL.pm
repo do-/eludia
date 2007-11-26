@@ -86,12 +86,6 @@ sub sql_assert_core_tables {
 
 	$model_update or die "\$db && !\$model_update ?!! Can't believe it.\n";
 
-	return if $model_update -> {core_ok};
-
-my $time = time;
-
-print STDERR "sql_assert_core_tables [$$] started...\n";
-
 	foreach (qw(
 		_db_model_checksums	
 		__voc_replacements	
@@ -109,6 +103,12 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 	)) {
 		$conf -> {systables} -> {$_} ||= $_;
 	}
+
+	return if $model_update -> {core_ok};
+
+my $time = time;
+
+print STDERR "sql_assert_core_tables [$$] started...\n";
 
 	my %defs = (
 
