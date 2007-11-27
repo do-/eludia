@@ -1671,10 +1671,18 @@ sub js_set_select_option {
 	return ($fallback_href || $i) unless $_REQUEST {select};
 	my $question = js_escape ($i18n -> {confirm_close_vocabulary} . ' ' . $item -> {label} . '?');
 	$name ||= '_' . $_REQUEST {select};
+	
+	my $a = $_JSON -> encode ({
+		question => "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?",
+		id       => $item -> {id},
+		label    => $item -> {label},
+	});
+	
+	my $var = "sso_$item->{id}";
+	
+	$_REQUEST {__script} .= " var $var = $a; ";
 
-	my $label = js_escape ($item -> {label});
-
-	return qq|javaScript:if (window.confirm ($question)) {top._setSelectOption ($item->{id}, $label)} else {document.body.style.cursor = 'normal'; nop ();}|;
+	return "javaScript:invoke_setSelectOption ($var)";
 
 }
 

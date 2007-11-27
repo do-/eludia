@@ -24,7 +24,7 @@
 			open(dialogArguments.href, '_body_iframe');
 		"
 	>
-		<iframe name='_body_iframe' src="0.html" width=100% height=100% scrolling=no>
+		<iframe name='_body_iframe' id='__body_iframe' src="0.html" width=100% height=100% scrolling=no application=yes>
 		</iframe>
 	</body>
 </html>

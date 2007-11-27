@@ -548,6 +548,19 @@ function restoreSelectVisibility (name, rewind) {
 	}
 };
 
+function invoke_setSelectOption (a) {
+
+	if (window.confirm (a.question)) {	
+		var ws = ancestor_window_with_child ('__body_iframe');		
+		if (ws) ws.window._setSelectOption (a.id, a.label);
+	} 
+	else {
+		document.body.style.cursor = 'normal'; 
+		nop ();
+	};
+
+}
+
 function setSelectOption (select, id, label) { 
 
 	label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...');
