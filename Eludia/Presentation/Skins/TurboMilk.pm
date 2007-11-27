@@ -1915,6 +1915,7 @@ sub draw_table {
 					<input type=hidden name=type value=$$options{type}>
 					<input type=hidden name=action value=$$options{action}>
 					<input type=hidden name=sid value=$_REQUEST{sid}>
+					<input type=hidden name=__tree value=$_REQUEST{__tree}>
 					<input type=hidden name=__last_query_string value="$_REQUEST{__last_last_query_string}">
 					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
 EOH
