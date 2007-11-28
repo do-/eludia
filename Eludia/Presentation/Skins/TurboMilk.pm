@@ -1667,19 +1667,18 @@ EOH
 
 sub js_set_select_option {
 
-	my ($_SKIN, $name, $item, $fallback_href) = @_;	
+	my ($_SKIN, $name, $item, $fallback_href) = @_;
+
 	return ($fallback_href || $i) unless $_REQUEST {select};
-	my $question = js_escape ($i18n -> {confirm_close_vocabulary} . ' ' . $item -> {label} . '?');
-	$name ||= '_' . $_REQUEST {select};
-	
+
 	my $a = $_JSON -> encode ({
 		question => "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?",
 		id       => $item -> {id},
 		label    => $item -> {label},
 	});
-	
-	my $var = "sso_$item->{id}";
-	
+
+	my $var = "sso_" . (0 + $item);
+
 	$_REQUEST {__script} .= " var $var = $a; ";
 
 	return "javaScript:invoke_setSelectOption ($var)";
