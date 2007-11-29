@@ -2187,10 +2187,14 @@ EOIFRAME
 	
 	my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
 	
+	my $__read_only = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
+	
 	$_REQUEST {__script} .= <<EOH;
 		var menu_md5 = '$menu_md5';
+		var __read_only = $__read_only;
+		var __last_last_query_string = '$_REQUEST{__last_query_string}';
 EOH
-	
+
 	if ($$page{auth_toolbar}) {
 		$$page{auth_toolbar} = "<tr height=48><td height=48>$$page{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>";
 	}
