@@ -1788,7 +1788,7 @@ EOJ
 	$html .= <<EOH;
 		history.go (-1); 
 		alert ($message);
-		window.parent.document.body.style.cursor = 'normal';
+		window.parent.document.body.style.cursor = 'default';
 	">
 				</body>
 			</html>				

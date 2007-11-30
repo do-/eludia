@@ -49,7 +49,7 @@ EOJ
 			history.go (-1);
 			var data = $data;
 			alert (data [0]);
-			window.parent.document.body.style.cursor = 'normal';
+			window.parent.document.body.style.cursor = 'default';
 		}
 EOJ
 

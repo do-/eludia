@@ -564,7 +564,7 @@ function invoke_setSelectOption (a) {
 		if (ws) ws.window._setSelectOption (a.id, a.label);
 	} 
 	else {
-		document.body.style.cursor = 'normal'; 
+		document.body.style.cursor = 'default'; 
 		nop ();
 	};
 

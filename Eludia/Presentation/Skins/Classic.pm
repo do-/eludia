@@ -1658,7 +1658,7 @@ sub js_set_select_option {
 	return ($fallback_href || $i) unless $_REQUEST {select};
 	my $question = js_escape ($i18n -> {confirm_close_vocabulary} . ' ' . $item -> {label} . '?');
 	$name ||= '_' . $_REQUEST {select};
-	return 'javaScript:if (window.confirm(' . $question . ')) {parent.setSelectOption(' . js_escape ($name) . ', '	. $item -> {id} . ', ' . js_escape ($item -> {label}) . ');} else {document.body.style.cursor = \'normal\'; nop ();}';
+	return 'javaScript:if (window.confirm(' . $question . ')) {parent.setSelectOption(' . js_escape ($name) . ', '	. $item -> {id} . ', ' . js_escape ($item -> {label}) . ');} else {document.body.style.cursor = \'default\'; nop ();}';
 }
 
 ################################################################################
@@ -2185,7 +2185,7 @@ EOCSS
 					function check_edit_mode () {
 						if (edit_mode) {
 							alert('$$i18n{save_or_cancel}'); 
-							document.body.style.cursor = 'normal'; 
+							document.body.style.cursor = 'default'; 
 							return true;
 						}
 						return false;

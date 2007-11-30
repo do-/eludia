@@ -2084,7 +2084,7 @@ sub draw_centered_toolbar_button {
 		$options -> {preconfirm} ||= 1;
 		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
 		my $href = js_escape ($options -> {href});
-		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {nope($href, '$target')} else {window.parent.document.body.style.cursor = 'normal'; nop ();} ];
+		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {nope($href, '$target')} else {window.parent.document.body.style.cursor = 'default'; nop ();} ];
 	} 	
 
 	if ($options -> {href} =~ /^java/) {
@@ -2309,10 +2309,10 @@ sub draw_menu {
 		register_hotkey ($type, 'href', 'main_menu_' . $type -> {name}, $conf -> {kb_options_menu});
 		
 		if ($_REQUEST {__edit} && !$type -> {no_off}) {
-			$type -> {href} = "javaScript:alert('$$i18n{save_or_cancel}'); document.body.style.cursor = 'normal'; nop ();";
+			$type -> {href} = "javaScript:alert('$$i18n{save_or_cancel}'); document.body.style.cursor = 'default'; nop ();";
 		}
 		elsif ($type -> {no_page}) {
-			$type -> {href} = "javaScript:document.body.style.cursor = 'normal'; nop ()";
+			$type -> {href} = "javaScript:document.body.style.cursor = 'default'; nop ()";
 		} 
 		else {
 			$type -> {href} ||= "/?type=$$type{name}";
@@ -2686,7 +2686,7 @@ sub draw_row_button {
 		my $salt = rand;
 		my $msg = js_escape ($options -> {confirm});
 		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$options{href}', '_self')} else {document.body.style.cursor = 'normal'; nop ();}];
+		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$options{href}', '_self')} else {document.body.style.cursor = 'default'; nop ();}];
 	}
 
 	if (
@@ -3014,7 +3014,7 @@ sub draw_node {
 			my $salt = rand;
 			my $msg = js_escape ($button -> {confirm});
 			$button -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-			$button -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$button{href}', '$$button{target}')} else {document.body.style.cursor = 'normal'; nop ();}];
+			$button -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$button{href}', '$$button{target}')} else {document.body.style.cursor = 'default'; nop ();}];
 		}
 
 		check_title ($button, $i);
