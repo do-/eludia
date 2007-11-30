@@ -679,17 +679,18 @@ EOS
 
 	foreach my $field (keys %$pairs) { 
 		my $comma = @params ? ', ' : '';	
-		unless (exists($DB_MODEL->{tables}->{$table_name}->{columns}->{$field}->{NULLABLE})) {
-			$fields .= "$comma $field";
-			$args   .= "$comma ?";
-			if (exists($DB_MODEL->{tables}->{$table_name}->{columns}->{$field}->{COLUMN_DEF}) && !($pairs -> {$field})) {
-				push @params, $DB_MODEL->{tables}->{$table_name}->{columns}->{$field}->{COLUMN_DEF};
-			}
-			else {
-				push @params, $pairs -> {$field};	
-			}
-			$id_value = $pairs -> {$field} if (uc $field eq 'ID');
- 		}
+		
+		$fields .= "$comma $field";
+		$args   .= "$comma ?";
+
+		if (exists($DB_MODEL->{tables}->{$table_name}->{columns}->{$field}->{COLUMN_DEF}) && !($pairs -> {$field})) {
+			push @params, $DB_MODEL->{tables}->{$table_name}->{columns}->{$field}->{COLUMN_DEF};
+		}
+		else {
+			push @params, $pairs -> {$field};	
+		}
+		$id_value = $pairs -> {$field} if (uc $field eq 'ID');
+ 		
 	}
 
 	if ($conf -> {core_voc_replacement_use}) {	
@@ -1071,7 +1072,7 @@ if ($model_update -> {characterset} =~ /UTF/i) {
 	$sql = $new_sql;
 }
 
-#warn "~~~ MYSQL TO ORACLE OUT: <$sql>\n";
+warn "ORACLE OUT: <$sql>\n";
 
 return $sql;	
 
