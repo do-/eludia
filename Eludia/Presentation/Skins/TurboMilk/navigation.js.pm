@@ -548,6 +548,15 @@ function restoreSelectVisibility (name, rewind) {
 	}
 };
 
+function setCursor (w, c) {
+
+	if (!w) w = window;
+	if (!c) c = 'default';
+
+	return void (w.document.body.style.cursor = c);
+	
+}
+
 function invoke_setSelectOption (a) {
 
 	if (window.confirm (a.question)) {	
