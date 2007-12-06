@@ -408,6 +408,8 @@ sub sql_reconnect {
 	});
 
 	my $driver_name = $db -> get_info ($GetInfoType {SQL_DBMS_NAME});
+	
+	$driver_name =~ s{\W}{}gsm;
 
 	eval "require Eludia::SQL::$driver_name";
 
