@@ -1015,7 +1015,7 @@ if ($need_group_by) {
 		for (my $y = 0; $y <= $#{@{group_by_values_ref[$x]}}; $y++) {
 			my $index = $group_by_values_ref [$x] -> [$y];
 			# Если в GROUP BY стояла цифра - заменяем на значение
-			if ($index =~ m/\d+/igsm) {
+			if ($index =~ m/\b\d+\b/igsm) {
 				push @result,$group_by_fields_ref[$x]->[$index-1];				
 			}
 			# иначе - то что стояло
@@ -1072,7 +1072,7 @@ if ($model_update -> {characterset} =~ /UTF/i) {
 	$sql = $new_sql;
 }
 
-warn "ORACLE OUT: <$sql>\n";
+#warn "ORACLE OUT: <$sql>\n";
 
 return $sql;	
 
