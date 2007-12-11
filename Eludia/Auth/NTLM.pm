@@ -30,6 +30,8 @@ sub handler ($$) {
 
 	}
 
+	return OK if $r -> uri =~ m{favicon\.ico$};
+
 	our $apr = Apache::Request -> new ($r);
 
 	return OK if $apr -> param ('sid');

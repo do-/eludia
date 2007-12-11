@@ -126,7 +126,7 @@ EOH
 				
 					$subset_cell = <<EOH;
 						<td width="5" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2px" height="28px"></td>
-						<td><img src="images/0.gif" border="0" hspace="0" width=5 height=1></td>
+						<td><img src="$_REQUEST{__static_url}/0.gif" border="0" hspace="0" width=5 height=1></td>
 						<td><div id="admin" onClick="subsets_are_visible = 1 - subsets_are_visible; document.getElementById ('_body_iframe').contentWindow.subsets_are_visible = subsets_are_visible"><a href="#">$$item{label}</a></div></td>
 EOH
 				
@@ -2216,7 +2216,7 @@ EOH
 
 	foreach (@{$_REQUEST {__include_js}}) {
 		$_REQUEST {__head_links} .= <<EOH;
-			<script type="text/javascript" src="/i/${_}.js?$_REQUEST{__static_salt}">
+			<script type="text/javascript" src="$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}">
 			</script>
 EOH
 	}
@@ -2268,7 +2268,7 @@ EOH
 				</table>
 
 @{[ map {<<EOI} @{$_REQUEST{__invisibles}} ]}
-					<iframe name='$_' src="/i/0.html" width=0 height=0 application="yes" style="display:none">
+					<iframe name='$_' src="$_REQUEST{__static_url}/i/0.html" width=0 height=0 application="yes" style="display:none">
 					</iframe>
 EOI
 

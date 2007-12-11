@@ -41,6 +41,8 @@ sub get_request {
 
 }
 
+#################################################################################
+
 sub setup_skin {
 
 	my ($options) = @_;
@@ -80,70 +82,39 @@ sub setup_skin {
 	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
 	eval "require $_SKIN";
 	warn $@ if $@;
+	
+	$_REQUEST {__static_site} = '';
+	
+	if ($preconf -> {static_site}) {
+	
+		if (ref $preconf -> {static_site} eq CODE) {
+		
+			$_REQUEST {__static_site} = &{$preconf -> {static_site}} ();
+		
+		}
+		elsif (! ref $preconf -> {static_site}) {
 
+			$_REQUEST {__static_site} = $preconf -> {static_site};
+
+		}
+		else {
+		
+			die "Invalid \$preconf -> {static_site}: " . Dumper ($preconf -> {static_site});
+		
+		}
+			
+	}	
+	
 	$_REQUEST {__static_url}  = '/i/_skins/' . $_REQUEST {__skin};
 	$_REQUEST {__static_salt} = $_REQUEST {sid} || rand ();
 
 	$_SKIN -> {options} ||= $_SKIN -> options;
 
 	$_REQUEST {__no_navigation} ||= $_SKIN -> {options} -> {no_navigation};
-
-	if (
-		!$_SKIN -> {static_ok} &&
-		!$_SKIN -> {options} -> {no_presentation} &&
-		!$_SKIN -> {options} -> {no_static} &&
-		$r
-	) {
-
-		my $skin_root = $r -> document_root () . $_REQUEST {__static_url};
-		-d $skin_root or mkdir $skin_root;
-		my $skin_VERSION = '';
-
-		eval {
-			open (V, "$skin_root/VERSION");
-			($skin_VERSION) = (<V>);
-			close (V);
-		};
-
-		unless ($skin_version eq $Eludia_VERSION) {
-
-			my $static_path = $_SKIN -> static_path;
-
-			opendir (DIR, $static_path) || die "can't opendir $static_path: $!";
-			my @files = readdir (DIR);
-			closedir DIR;
-
-			my $buf;
-
-			foreach my $src (@files) {
-
-				$src =~ /\.pm$/ or next;
-
-				my $dst = '>' . $skin_root . '/' . $`;
-
-				$src = $static_path . $src;
-
-				open (S, $src) || die "can't open $src: $!";
-				read S, $buf, -s $src;
-				close (S);
-
-				open (D, $dst) || die "can't write to $dst: $!";
-				binmode (D);
-				print D $buf;
-				close (D);
-
-			}
-
-			open (D, '>' . $skin_root . '/VERSION') || die "can't write to VERSION: $!";
-			binmode (D);
-			print D $Eludia_VERSION;
-			close (D);
-
-		}
-
-		$_SKIN -> {static_ok} = 1;
-
-	}
+	
+	check_static_files ();
+	
+	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
 
 	attach_globals ($_PACKAGE => $_SKIN, qw(
 		_PACKAGE
@@ -161,6 +132,58 @@ sub setup_skin {
 	));
 
 }
+
+#################################################################################
+
+sub check_static_files {
+
+	return if $_SKIN -> {static_ok};
+	return if $_SKIN -> {options} -> {no_presentation};
+	return if $_SKIN -> {options} -> {no_static};
+	$r or return;
+	
+	my $skin_root = $r -> document_root () . $_REQUEST {__static_url};
+	-d $skin_root or mkdir $skin_root;
+
+	my $static_path = $_SKIN -> static_path;
+
+	opendir (DIR, $static_path) || die "can't opendir $static_path: $!";
+	my @files = readdir (DIR);
+	closedir DIR;
+
+	foreach my $src (@files) {
+		$src =~ /\.pm$/ or next;
+		File::Copy::copy ($static_path . $src, $skin_root . '/' . $`) or die "can't copy $src: $!";
+	}
+	
+	my $favicon = $r -> document_root () . '/i/favicon.ico';
+	
+	if (-f $favicon) {
+		
+		File::Copy::copy ($favicon, $skin_root . '/favicon.ico') or die "can't copy favicon.ico: $!";
+		
+	}
+
+	my $over_root = $r -> document_root () . '/i/skins/' . $_REQUEST {__skin};
+
+	if (-d $over_root) {
+
+		opendir (DIR, $over_root) || die "can't opendir $over_root: $!";
+		my @files = readdir (DIR);
+		closedir DIR;
+
+		foreach my $src (@files) {
+			$src =~ /\.\w+$/ or next;
+			File::Copy::copy ($over_root . '/' . $src,  $skin_root . '/' . $src) or die "can't copy $src: $!";
+		}
+
+	}
+		
+	$_SKIN -> {static_ok} = 1;
+
+}
+
+#################################################################################
 
 sub handler {
 
@@ -228,11 +251,6 @@ sub handler {
 	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
 
 		my $fn = "$1.$2";
-
-		if ($fn eq 'favicon.ico' && -f $r -> document_root () . '/i/favicon.ico') {
-			$r -> internal_redirect ('/i/favicon.ico');
-			return OK;
-		}
 
 		setup_skin ();
 
