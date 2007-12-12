@@ -351,7 +351,7 @@ sub sql_select_all_hash {
 
 	my $result = {};
 
-	$sql = mysql_to_oracle($sql) if($conf -> {core_auto_oracle});
+	$sql = mysql_to_oracle ($sql) if ($conf -> {core_auto_oracle});
 
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);

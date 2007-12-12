@@ -792,7 +792,7 @@ div.grey-submit a:hover {color:#222323;text-decoration:underline;}
 	font-size: 11px;
 	_color: #666;
 	white-space: nowrap;
-	_float: left;
+	float: left;
 
 
       	PADDING-RIGHT: 0px;

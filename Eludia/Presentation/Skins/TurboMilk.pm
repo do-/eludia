@@ -843,6 +843,60 @@ EOH
 
 ################################################################################
 
+sub draw_form_field_tree {
+
+	my ($_SKIN, $options, $data) = @_;
+	
+	push @{$_REQUEST{__include_css}}, 'dtree/dtree';
+
+	my @nodes = ();
+	
+	our %idx = ();
+	our %lch = ();
+	
+	foreach my $value (@{$options -> {values}}) {
+	
+		my $node = $value -> {__node};
+		push @nodes, $node;
+		
+		$idx {$node -> {id}} = $node;
+		$lch {$node -> {pid}} = $node if $node -> {pid};
+	}
+	
+	while (my ($k, $v) = each %lch) {
+		$idx {$k} -> {_hc} = 1;
+		$v -> {_ls} = 1;
+	}
+	
+	my $name = $options -> {name} || 'd';
+	$options->{height} ||= 200;
+	
+	my $nodes = $_JSON -> encode (\@nodes);
+
+	return <<EOH;
+<table class=dtree width=100% height="$options->{height}" celspacing=0 cellpadding=0 border=0><tr><td valign=top height="$options->{height}">
+		<script type="text/javascript">
+			var $name = new dTree ('$name');
+			var c = $name.config;
+			c.iconPath = '$_REQUEST{__static_url}/tree_';
+			c.useStatusText = false;
+			c.useSelection = false;
+			$name.icon.node = 'folderopen.gif';
+			$name.aNodes = $nodes;
+			document.write($name);
+			for (var n = 0; n < $name.checkedNodes.length; n++) {
+				$name.openTo ($name.checkedNodes [n], true, true);
+			}
+			
+		</script>
+</td></tr></table>
+EOH
+	
+
+}
+
+################################################################################
+
 sub draw_form_field_checkboxes {
 
 	my ($_SKIN, $options, $data) = @_;
@@ -2598,8 +2652,8 @@ sub draw_tree {
 		($root_id, $root_url) = ($node -> {id}, $node -> {url})
 			unless $root_id;
 			
-    $selected_node_url = $node -> {url}
-      if ($node -> {id} == $options -> {selected_node});
+		$selected_node_url = $node -> {url}
+			if ($node -> {id} == $options -> {selected_node});
        		
 		$idx {$node -> {id}} = $node;
 		$lch {$node -> {pid}} = $node if $node -> {pid};
@@ -2607,9 +2661,9 @@ sub draw_tree {
 	}
 	
 	unless ($selected_node_url) {
-    $options -> {selected_node} = $root_id;
-    $selected_node_url = $root_url;             	 
-  }
+    		$options -> {selected_node} = $root_id;
+    		$selected_node_url = $root_url;             	 
+  	}
 	
 	while (my ($k, $v) = each %lch) {
 		$idx {$k} -> {_hc} = 1;
@@ -2709,8 +2763,13 @@ sub draw_node {
 		pid  => $options -> {parent}, 
 		name => $options -> {label}, 
 		url  => $options -> {href},
+		title   => $options -> {title} || $options -> {label},
+		target  => $options -> {target},
+		icon    => $options -> {icon},
+		iconOpen    => $options -> {iconOpen},
+		is_checkbox => $options -> {is_checkbox},
 	};
-		
+
 	$node -> {context_menu} = $i . '' if $i -> {__menu};
 
 	return $node;

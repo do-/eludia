@@ -2736,7 +2736,7 @@ Calendar.setup = function (params) {
 
 // Node object
 
-function Node (id, pid, name, url, title, target, icon, iconOpen, open, context_menu) {
+function Node (id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox) {
 
 	this.id = id;
 	this.pid = pid;
@@ -2748,6 +2748,7 @@ function Node (id, pid, name, url, title, target, icon, iconOpen, open, context_
 	this.iconOpen = iconOpen;
 	this._io = open || false;
 	this.context_menu = context_menu;
+	this.is_checkbox = is_checkbox;
 	this._is = false;
 	this._ls = false;
 	this._hc = false;
@@ -2801,22 +2802,23 @@ function dTree (objName) {
 	this.selectedNode = null;
 	this.selectedFound = false;
 	this.completed = false;
-
+	
+	this.checkedNodes = [];
 };
 
 
 
 // Adds a new node to the node array
 
-dTree.prototype.add = function(id, pid, name, url, title, target, icon, iconOpen, open, context_menu) {
+dTree.prototype.add = function(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox) {
 
-	this.aNodes[this.aNodes.length] = new Node(id, pid, name, url, title, target, icon, iconOpen, open, context_menu);
+	this.aNodes[this.aNodes.length] = new Node(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox);
 
 };
 
 dTree.prototype.addAll = function (a) {
 
-	for (i in a) this.aNodes[this.aNodes.length] = new Node (i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9]);
+	for (i in a) this.aNodes[this.aNodes.length] = new Node (i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10]);
 
 };
 
@@ -2954,7 +2956,13 @@ dTree.prototype.node = function(node, nodeId) {
 		str += '<img id="i' + this.obj + nodeId + '" src="' + this.config.iconPath + ((node._io) ? node.iconOpen : node.icon) + '" alt="" />';
 
 	}
-
+	
+	if (node.is_checkbox) {
+		str += '<input class=cbx type=checkbox name="_' + this.obj + '_' + node.id + '"' + (node.is_checkbox > 1 ? 'checked' : '') + ' value=1 tabindex=-1 onChange="is_dirty=true" />';
+		if (node.is_checkbox > 1)
+			this.checkedNodes[this.checkedNodes.length] = nodeId;
+	}
+  
 	if (node.url) {
 
 		str += '<a id="s' + this.obj + nodeId + '" class="' + ((this.config.useSelection) ? ((node._is ? 'nodeSel' : 'node')) : 'node') + '" href="' + node.url + '"';
@@ -2990,7 +2998,7 @@ dTree.prototype.node = function(node, nodeId) {
 		str += '</div>';
 
 	}
-
+	
 	this.aIndent.pop();
 
 	return str;

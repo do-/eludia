@@ -996,6 +996,9 @@ sub draw_form_field {
 		elsif ($field -> {type} eq 'checkbox') {
 			$field -> {value} = $data -> {$field -> {name}} || $field -> {checked} ? $i18n -> {yes} : $i18n -> {no};
 		}
+		elsif ($field -> {type} eq 'tree') {
+			$field -> {value} ||= $data -> {$field -> {name}} || [map {$_ -> {id}} grep {$_ -> {is_checkbox} > 1} @{$field -> {values}}];
+		}
 		else {
 			$field -> {value} ||= $data -> {$field -> {name}};
 		}	
@@ -1590,6 +1593,36 @@ EOJS
 	}
 
 	return $_SKIN -> draw_form_field_select (@_);
+	
+}
+
+################################################################################
+
+sub draw_form_field_tree {
+
+	my ($options, $data) = @_;
+	
+	return '' if $options -> {off};
+	
+	my $v = $options -> {value} || $data -> {$options -> {name}};
+
+	foreach my $value (@{$options -> {values}}) {
+		my $checked = 0 + (grep {$_ eq $value -> {id}} @$v);
+		
+		$value -> {__node} = draw_node ({
+			label	=> $value -> {label},
+			id	=> $value -> {id},
+			parent	=> $value -> {parent},
+			is_checkbox	=> $value -> {is_checkbox} + $checked,
+			icon    	=> $value -> {icon},
+			iconOpen    	=> $value -> {iconOpen},
+		})
+
+	}
+
+
+
+	return $_SKIN -> draw_form_field_tree ($options, $data);
 	
 }
 
@@ -2992,8 +3025,8 @@ sub draw_node {
 	
 	my $result = '';
 	
-	$options -> {href} .= '&__tree=1' unless ($options -> {no_tree});		
 	if ($options -> {href}) {
+		$options -> {href} .= '&__tree=1' unless ($options -> {no_tree});		
 		check_href ($options) ;
 	}
 	
