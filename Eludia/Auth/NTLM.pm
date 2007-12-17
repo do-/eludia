@@ -1,7 +1,7 @@
 package Eludia::Auth::NTLM;
 
 use Apache::AuthenNTLM;
-use Apache::Request;
+#use Apache::Request;
 
 use Data::Dumper;
 
@@ -10,8 +10,6 @@ use Data::Dumper;
 sub handler ($$) {
 
 	my ($self, $r) = @_;
-	
-	our $apr = undef;
 	
 	if ($r -> method eq 'POST') {
 
@@ -30,11 +28,11 @@ sub handler ($$) {
 
 	}
 
-	our $apr = Apache::Request -> new ($r);
-
+	my %arg = $r -> args;
+	
 	return OK if $r -> uri =~ m{favicon\.ico$};
 
-	return OK if $apr -> param ('sid');
+	return OK if $arg {sid};
 
 	my $code = Apache::AuthenNTLM::handler ($self, $r);
 	

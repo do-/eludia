@@ -2538,7 +2538,7 @@ EOH
 
 
 
-	$_REQUEST {__on_load} .= 'document.forms[0].elements["login"].focus ()';
+	$_REQUEST {__on_load} .= 'document.forms[0].elements["login"].focus (); ';
 	
 	
 	
