@@ -1684,11 +1684,11 @@ sub draw_text_cell {
 
 		$html .= '&nbsp;' unless (defined $data -> {level});		
 
+		$html .= qq {<a id="$$data{a_id}" class=$$data{a_class} target="$$data{target}" href="$$data{href}" onFocus="blur()">} if $data -> {href};
+
 		$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 		$html .= '<i>'      if $data -> {italic} || $options -> {italic};
 		$html .= '<strike>' if $data -> {strike} || $options -> {strike};
-
-		$html .= qq {<a id="$$data{a_id}" class=$$data{a_class} target="$$data{target}" href="$$data{href}" onFocus="blur()">} if $data -> {href};
 
 		$html .= $data -> {label};
 		
