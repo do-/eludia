@@ -55,7 +55,10 @@ sub vld_unique {
 	$options -> {value} ||= $_REQUEST {'_' . $options -> {field}};
 	$options -> {id}    ||= $_REQUEST {id};
 	
-	my $id = sql_select_scalar ("SELECT id FROM $table WHERE $$options{field} = ? AND fake = 0 AND id <> ? LIMIT 1", $options -> {value}, $options -> {id});
+	my $filter = "$$options{field} = ? AND fake = 0 AND id <> ?";
+	$filter .= " AND $$options{filter}" if $options -> {filter};
+	
+	my $id = sql_select_scalar ("SELECT id FROM $table WHERE $filter LIMIT 1", $options -> {value}, $options -> {id});
 
 	return $id ? 0 : 1;
 

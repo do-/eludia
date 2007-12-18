@@ -831,7 +831,7 @@ EOH
 #	if (defined $options -> {other}) {
 #		$html .= <<EOH;
 #			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)}">
-#				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="/i/0.html" application="yes">
+#				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="$_REQUEST{__static_url}/0.html" application="yes">
 #				</iframe>
 #			</div>
 #EOH
@@ -2231,7 +2231,7 @@ EOIFRAME
 	
 		if (ref $_REQUEST {__every_second} eq ARRAY) {
 		
-			for (my $i = 0; $i < @{$_REQUEST{__every_second}}; $i++) {$body .= "<iframe name='_every_second_$i' src='/i/0.html' style='display:none'></iframe>"}
+			for (my $i = 0; $i < @{$_REQUEST{__every_second}}; $i++) {$body .= "<iframe name='_every_second_$i' src='$_REQUEST{__static_url}/0.html' style='display:none'></iframe>"}
 			
 			$_REQUEST {__script} .= ' every_second = ' . $_JSON -> encode ($_REQUEST {__every_second}) . ';';
 		
@@ -2322,7 +2322,7 @@ EOH
 				</table>
 
 @{[ map {<<EOI} @{$_REQUEST{__invisibles}} ]}
-					<iframe name='$_' src="$_REQUEST{__static_url}/i/0.html" width=0 height=0 application="yes" style="display:none">
+					<iframe name='$_' src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes" style="display:none">
 					</iframe>
 EOI
 
@@ -2744,7 +2744,7 @@ EOH
 			</tr>
 		</table>
 		$menus
-		<iframe name="_content_iframe" id="__content_iframe" style="height: expression(document.body.offsetHeight - 80); width: expression(document.body.offsetWidth - 250);" height="80%" src="/i/0.html" application="yes">
+		<iframe name="_content_iframe" id="__content_iframe" style="height: expression(document.body.offsetHeight - 80); width: expression(document.body.offsetWidth - 250);" height="80%" src="$_REQUEST{__static_url}/0.html" application="yes">
 		</iframe>
 EOH
 
