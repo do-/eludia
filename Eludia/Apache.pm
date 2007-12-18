@@ -173,7 +173,7 @@ sub check_static_files {
 		closedir DIR;
 
 		foreach my $src (@files) {
-			$src =~ /\.\w+$/ or next;
+			$src =~ /\w\.\w+$/ or next;
 			File::Copy::copy ($over_root . '/' . $src,  $skin_root . '/' . $src) or die "can't copy $src: $!";
 		}
 
