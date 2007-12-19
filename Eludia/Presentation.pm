@@ -889,7 +889,8 @@ sub draw_form {
 			$row -> [$i] -> {form_name} = $options -> {name};
 			$row -> [$i] -> {colspan} ||= 1;
 			$sum_colspan += $row -> [$i] -> {colspan};
-			$sum_colspan ++;
+			$sum_colspan ++ 
+				unless ($row -> [$i] -> {label_off});
 			next if $i < @$row - 1;
 			$row -> [$i] -> {sum_colspan} = $sum_colspan;
 		}
@@ -1011,13 +1012,15 @@ sub draw_form_field {
 	
 	if ($_REQUEST {__only_field}) {
 	
+		my @fields = split (',', $_REQUEST {__only_field});
+
 		if ($field -> {type} eq 'hgroup') {
 			my $html = '';
 			foreach (@{$field -> {items}}) {$html .= draw_form_field ($_, $data)}
 			return $html;
 		}
 		else {
-			$_REQUEST {__only_field} eq $field -> {name} or return '';
+			(grep {$_ eq $field -> {name}} @fields) > 0 or return '';
 		}
 
 	}
@@ -1039,7 +1042,7 @@ sub draw_form_field {
 
 	$field -> {label_width} = '20%' unless $field -> {is_slave};	
 
-	return $_SKIN -> draw_form_field ($field);
+	return $_REQUEST {__only_field} ? $_JS_SKIN -> draw_form_field ($field) : $_SKIN -> draw_form_field ($field);
 
 }
 
@@ -1425,57 +1428,83 @@ sub draw_form_field_radio {
 		if (defined $options -> {detail}) {
 
 			ref $options -> {detail} eq ARRAY or $options -> {detail} = [$options -> {detail}];
+			
+
+			my ($codetail_js, $tab_js);
+			my (@all_details, @all_codetails); 
 
 			foreach my $detail_ (@{$options -> {detail}}) {
 
-				my $codetails;
-				if (ref $detail eq HASH) {
+				my ($detail, $codetails);
+				if (ref $detail_ eq HASH) {
 					($detail, $codetails) = each (%{$detail_}); 
 				} else {
 					$detail = $detail_;
 				}
-				my $codetail_js;
 				if (defined $codetails) {
 					ref $codetails eq ARRAY or $codetails = [$codetails];
 					foreach my $codetail (@{$codetails}) {
+						next
+							if ((grep {$_ eq $codetail} @all_codetails) > 0);
+						push (@all_codetails, $codetail);
 						$codetail_js .= <<EOS
 						'&_$codetail=' +
 						document.getElementById('_${codetail}_select').options[document.getElementById('_${codetail}_select').selectedIndex].value +  
 EOS
 					}
+				
 				}
- 
-				my $h = {href => {}};
+	
+				push @all_details, $detail;
+	
+				$tab_js .= <<EOJS;
+					element = this.form.elements['_${detail}'];
+					if (element) {
+						tabs.push (element.tabIndex);
+				}
+EOJS
+			
+			}
 
-				check_href ($h);
+			my $h = {href => {}};
 
-				my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_field=${detail}&__only_form=' + this.form.name + '&_$$options{name}=' + this.options[this.selectedIndex].value);" : <<EOS;
-					activate_link (
+			check_href ($h);
 
-						'$$h{href}&__only_field=${detail}&__only_form=' + 
-						this.form.name + 
-						'&_$$options{name}=' + 
-						this.value + 
-$codetail_js
-						tab
+			my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}=this.value&__only_field=" . (join ',', @all_details) : <<EOJS;
+				activate_link (
+	
+					'$$h{href}&__only_field=${\(join (',', @all_details))}&__only_form=' + 
+					this.form.name + 
+					'&_$$options{name}=' + 
+					this.value + 
+	$codetail_js
+					tab
+	
+					, 'invisible_$$options{name}'
+	
+				);
+EOJS
 
-						, 'invisible_${detail}'
 
-					);
+			push @{$_REQUEST{__invisibles}}, 'invisible_' . $options -> {name};
 
-EOS
+			$value -> {onclick} .= <<EOJS;
+				var element;
+				var tabs = [];
 
-				$value -> {onclick} .= <<EOJS;
+				if (this.options[this.selectedIndex].value && this.options[this.selectedIndex].value != -1) {
 
-					var element = this.form.elements['_${detail}'];
-					
-					var tab = element ? '&__only_tabindex=' + element.tabIndex : '';
-					
-$onchange
+					$tab_js
+					var tab = tabs.length > 0 ? '&__only_tabindex=' + tabs.join (',') : '' 
+				
+					$onchange
+
+				}
 
 EOJS
-	
- 			}
+
+
+			
 		}
 
 		$value -> {type} ||= 'select' if $value -> {values};		
@@ -1488,9 +1517,6 @@ EOJS
 						
 	}
 
-	foreach my $detail (@{$options -> {detail}}) {
-		push @{$_REQUEST{__invisibles}}, 'invisible_' . $detail;
-	}
 
 	return $_SKIN -> draw_form_field_radio (@_);
 	
@@ -1536,60 +1562,80 @@ sub draw_form_field_select {
 
 		ref $options -> {detail} eq ARRAY or $options -> {detail} = [$options -> {detail}];
 
-		foreach my $detail (@{$options -> {detail}}) {
+		my ($codetail_js, $tab_js);
+		my (@all_details, @all_codetails); 
+warn Dumper \@all_details;
 
-			my $codetails;
-			if (ref $detail eq HASH) {
-				($detail, $codetails) = each (%{$detail}); 
+		foreach my $detail_ (@{$options -> {detail}}) {
+
+			my ($detail, $codetails);
+			if (ref $detail_ eq HASH) {
+				($detail, $codetails) = each (%{$detail_}); 
+			} else {
+				$detail = $detail_;
 			}
-			my $codetail_js;
 			if (defined $codetails) {
 				ref $codetails eq ARRAY or $codetails = [$codetails];
 				foreach my $codetail (@{$codetails}) {
+					next
+						if ((grep {$_ eq $codetail} @all_codetails) > 0);
+					push (@all_codetails, $codetail);
 					$codetail_js .= <<EOS
-						'&_$codetail=' +
-						document.getElementById('_${codetail}_select').options[document.getElementById('_${codetail}_select').selectedIndex].value +  
+					'&_$codetail=' +
+					document.getElementById('_${codetail}_select').options[document.getElementById('_${codetail}_select').selectedIndex].value +  
 EOS
 				}
+				
 			}
- 
-			my $h = {href => {}};
 
-			check_href ($h);
+			push @all_details, $detail;
+			$tab_js .= <<EOJS;
+				element = this.form.elements['_${detail}'];
+				if (element) {
+					tabs.push (element.tabIndex);
+				}
+EOJS
+			
+		}
 
-			push @{$_REQUEST{__invisibles}}, 'invisible_' . $detail;
+		my $h = {href => {}};
 
-			my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_field=${detail}&__only_form=' + this.form.name + '&_$$options{name}=' + this.options[this.selectedIndex].value);" : <<EOS;
-					activate_link (
+		check_href ($h);
 
-						'$$h{href}&__only_field=${detail}&__only_form=' + 
-						this.form.name + 
-						'&_$$options{name}=' + 
-						this.options[this.selectedIndex].value + 
+warn Dumper \@all_details;
+		my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}=this.value&__only_field=" . (join ',', @all_details) : <<EOJS;
+			activate_link (
+
+				'$$h{href}&__only_field=${\(join (',', @all_details))}&__only_form=' + 
+				this.form.name + 
+				'&_$$options{name}=' + 
+				this.value + 
 $codetail_js
-						tab
+				tab
 
-						, 'invisible_${detail}'
+				, 'invisible_$$options{name}'
 
-					);
+			);
+EOJS
 
-EOS
 
-			$options -> {onChange} .= <<EOJS;
+		push @{$_REQUEST{__invisibles}}, 'invisible_' . $options -> {name};
+
+		$options -> {onChange} .= <<EOJS;
+				var element;
+				var tabs = [];
 
 				if (this.options[this.selectedIndex].value && this.options[this.selectedIndex].value != -1) {
 
-					var element = this.form.elements['_${detail}'];
-					
-					var tab = element ? '&__only_tabindex=' + element.tabIndex : '';
-					
-$onchange
+					$tab_js
+					var tab = tabs.length > 0 ? '&__only_tabindex=' + tabs.join (',') : '' 
+				
+					$onchange
 
 				}
 
 EOJS
 	
- 		}
 	}
 
 	return $_SKIN -> draw_form_field_select (@_);
@@ -3058,8 +3104,6 @@ sub draw_node {
 
 	$i -> {__menu} = draw_vert_menu ($i, \@buttons) 
 		if ((grep {$_ ne BREAK} @buttons) > 0);
-#	warn $options -> {__menu};
-#	warn "draw_node: " . Dumper ($options);
 		
 	return 	$_SKIN -> draw_node ($options, $i);
 	
@@ -3238,8 +3282,17 @@ sub draw_page {
 		$html = $_SKIN -> draw_error_page ($page);		
 
 	}
+	
+	if ($_REQUEST {__only_field}) {
 
-	$html ||= $_SKIN -> draw_page ($page);
+		$html ||= $_JS_SKIN -> draw_page ($page);
+		
+	} else {
+	
+		$html ||= $_SKIN -> draw_page ($page);
+	
+	}
+
 
 	if (
 		   $conf -> {core_screenshot} -> {allow}

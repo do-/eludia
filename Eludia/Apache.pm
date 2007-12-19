@@ -82,6 +82,10 @@ sub setup_skin {
 	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
 	eval "require $_SKIN";
 	warn $@ if $@;
+
+	our $_JS_SKIN = "Eludia::Presentation::Skins::JS";
+	eval "require $_JS_SKIN";
+	warn $@ if $@;
 	
 	$_REQUEST {__static_site} = '';
 	
@@ -117,6 +121,21 @@ sub setup_skin {
 	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
 
 	attach_globals ($_PACKAGE => $_SKIN, qw(
+		_PACKAGE
+		_REQUEST
+		_USER
+		Eludia_VERSION_NAME
+		SQL_VERSION
+		conf
+		preconf
+		r
+		i18n
+		create_url
+		_SUBSET
+		_JSON
+	));
+
+	attach_globals ($_PACKAGE => $_JS_SKIN, qw(
 		_PACKAGE
 		_REQUEST
 		_USER

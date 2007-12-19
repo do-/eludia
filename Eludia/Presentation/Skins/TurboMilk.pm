@@ -417,11 +417,7 @@ sub draw_form {
 	my ($_SKIN, $options) = @_;
 		
 	if ($_REQUEST {__only_field}) {
-		my $html .= '';
-		foreach my $row (@{$options -> {rows}}) {
-			foreach (@$row) { $html .= $_ -> {html} };
-		}
-		return $html;	
+		return '';	
 	}
 			
 	my $html = $options -> {hr};
@@ -524,10 +520,6 @@ sub draw_form_field {
 
 	my ($_SKIN, $field, $data) = @_;
 	
-	if ($_REQUEST {__only_field} && $_REQUEST {__only_field} eq $field -> {name}) {
-		return $field -> {html};
-	}
-							
 	if ($field -> {type} eq 'banner') {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
 		return qq{<td class='form-$$field{state}-label' $colspan nowrap align=center>$$field{html}</td>};
@@ -541,8 +533,12 @@ sub draw_form_field {
 	my $label_width   = $field -> {label_width}   ? 'width='   . $field -> {label_width}   : '';	
 	my $cell_width    = $field -> {cell_width}    ? 'width='   . $field -> {cell_width}    : '';
 	
+	my $label_cell;
+	$label_cell = qq {<td class='form-$$field{state}-label' nowrap $colspan_label align=right $label_width>\n$$field{label}</td>}
+		unless ($field -> {label_off});
+		
 	return <<EOH;
-		<td class='form-$$field{state}-label' nowrap $colspan_label align=right $label_width>\n$$field{label}</td>
+		$label_cell		
 		<td class='form-$$field{state}-inputs' $colspan $cell_width>\n$$field{html}</td>
 EOH
 
@@ -2081,27 +2077,7 @@ sub draw_page {
 EOH
 	}
 
-	if ($_REQUEST {__only_form}) {
-
-		my $a = $_JSON -> encode ([$page -> {body}]);
-
-		return <<EOH;
-<html>
-	<script for=window event=onload>
-		var a = $a;				
-		var doc = window.parent.document;				
-		var           element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$_REQUEST{__only_field}'];
-		if (!element) element = doc.getElementById ('input_$_REQUEST{__only_field}');
-		if (!element) return;					
-		element.outerHTML = a [0];
-		element.tabIndex = "$_REQUEST{__only_tabindex}";
-	</script>
-	<body>
-	</body>
-</html>
-EOH
-	}
-			
+	
 	$_REQUEST {__scrollable_table_row} ||= 0;
 		
 	$_REQUEST {__head_links} .= <<EOH if $_REQUEST {__meta_refresh};

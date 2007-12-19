@@ -428,11 +428,7 @@ sub draw_form {
 	my ($_SKIN, $options) = @_;
 		
 	if ($_REQUEST {__only_field}) {
-		my $html .= '';
-		foreach my $row (@{$options -> {rows}}) {
-			foreach (@$row) { $html .= $_ -> {html} };
-		}
-		return $html;	
+		return '';	
 	}
 			
 	my $html = $options -> {hr};
@@ -534,10 +530,6 @@ sub draw_form_field {
 
 	my ($_SKIN, $field, $data) = @_;
 	
-	if ($_REQUEST {__only_field} && $_REQUEST {__only_field} eq $field -> {name}) {
-		return $field -> {html};
-	}
-							
 	if ($field -> {type} eq 'banner') {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
 		return qq{<td class='form-$$field{state}-label' $colspan nowrap align=center>$$field{html}</td>};
@@ -2038,37 +2030,6 @@ sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 
-	if ($_REQUEST {__only_form}) {
-
-		$page -> {body} =~ s{\\}{\\\\}gsm;
-		$page -> {body} =~ s{\"}{\\\"}gsm; #"
-		$page -> {body} =~ s{[\n\r\s]+}{ }gsm;
-
-		return <<EOH;
-		<body onLoad="main()">
-			<script>
-				function main () {
-					
-					var element = window.parent.document.getElementById ('input_$_REQUEST{__only_field}');
-				
-					var html = "$page->{body}";
-
-					if (element) {
-						element.outerHTML = html;
-						element.tabIndex = "$_REQUEST{__only_tabindex}";
-					}
-					else {
-						element = window.parent.document.forms ['$_REQUEST{__only_form}'].elements ['_$_REQUEST{__only_field}'];
-						element.outerHTML = html;
-						element.tabIndex = "$_REQUEST{__only_tabindex}";
-					}
-					
-				}
-			</script>
-		</body>
-EOH
-	}
-		
 	$_REQUEST {__scrollable_table_row} ||= 0;
 	
 	my $meta_refresh = $_REQUEST {__meta_refresh} ? qq{<META HTTP-EQUIV=Refresh CONTENT="$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1">} : '';	

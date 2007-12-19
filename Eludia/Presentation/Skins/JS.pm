@@ -101,4 +101,41 @@ sub static_path {
 
 };
 
+################################################################################
+
+sub draw_form_field {
+
+	my ($_SKIN, $field, $data) = @_;
+	
+
+	if ($_REQUEST {__only_form}) {
+		my $js;
+		my @fields = split (',', $_REQUEST {__only_field});
+		my @tabs = split (',', $_REQUEST {__only_tabindex});
+		my $i;
+		for ($i = 0; $i < @fields; $i ++) {
+			last if $fields [$i] eq $field -> {name};
+		}
+		
+		my $a = $_JSON -> encode ([$field -> {html}]);
+		
+		$_REQUEST{__on_load} .= " load_$field->{name} (); ";
+			
+		$_REQUEST {__script} .= <<EOJS;
+	function load_$field->{name} () {
+		var a = $a;				
+		var doc = window.parent.document;				
+		var element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field->{name}'];
+		if (!element) element = doc.getElementById ('input_$field->{name}');
+		if (!element) return;					
+		element.outerHTML = a [0];
+		element.tabIndex = "$tabs[$i]";
+	}
+EOJS
+		
+		return '';
+	}
+	
+}			
+
 1;
