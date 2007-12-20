@@ -2409,4 +2409,57 @@ sub prev_next_n {
 
 }
 
+################################################################################
+
+sub tree_sort {
+
+	my ($list, $options) = @_;
+	
+	my $id        = $options -> {id}        || 'id';
+	my $parent    = $options -> {parent}    || 'parent';
+	my $ord_local = $options -> {ord_local} || 'ord_local';
+	my $ord       = $options -> {ord}       || 'ord';
+	my $level     = $options -> {level}     || 'level';
+
+	my $idx = {};
+
+	foreach my $i (@$list) {$idx -> {$i -> {$id}} = $i};
+		
+	my $template = '%0' . length ('' . (0 + @$list)) . 'd';
+	
+	my $cnt = {};
+	
+	foreach my $i (@$list) {$i -> {$ord_local} = sprintf ($template, ++ $cnt -> {$i -> {$parent}}) }
+
+	foreach my $i (@$list) {
+	
+		$i -> {ord}   = '';
+		$i -> {level} = 0;
+	
+		my $j = $i;
+		
+		while ($j) {
+
+warn Dumper ($j);		
+		
+		 	if ($j -> {ord}) {			
+				$i -> {ord}    = $j -> {ord} . $i -> {ord};
+				$i -> {level} += $j -> {level};				
+				last;			
+			}
+		
+			$i -> {ord} .= $j -> {ord_local} . $i -> {ord};
+			
+			$i -> {level} ++;
+			
+			$j = $idx -> {$j -> {$parent}};
+		
+		}
+	
+	}
+	
+	return [sort {$a -> {ord} cmp $b -> {ord}} @$list];
+
+}
+
 1;

@@ -497,8 +497,20 @@ sub sql_select_vocabulary {
 		$options -> {label} =~ s/ AS.*//i;
 		$options -> {label} .= ' AS label';
 	}
+	
+	$options -> {label} .= ', parent' if $options -> {tree};
 		
-	return sql_select_all ("SELECT id, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit");
+	my $list = sql_select_all ("SELECT id, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit");
+	
+	if ($options -> {tree}) {
+	
+		$list = tree_sort ($list);
+		
+		foreach (@$list) { $_ -> {label} = ' ' . ('-' x $_ -> {level}) . ' '. $_ -> {label} }
+	
+	}
+
+	return $list;
 	
 }
 
