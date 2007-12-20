@@ -1684,8 +1684,8 @@ EOH
 EOH
 			$html .= <<EOH;
 					<tr>
-						<td width=1 bgcolor=#5d6496><img height=1 src=/0.gif width=1 border=0></td>
-						<td width=1 bgcolor=#5d6496><img height=1 src=/0.gif width=1 border=0></td>
+						<td width=1 bgcolor=#5d6496><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
+						<td width=1 bgcolor=#5d6496><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
 					$td
 				</tr>
 EOH
