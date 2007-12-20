@@ -504,7 +504,7 @@ EOJS
 
 	return <<EOH
 	
-			<img src="/0.gif" width=100% height=20%>
+			<img src="$_REQUEST{__static_url}/0.gif" width=100% height=20%>
 		
 			<center>
 
