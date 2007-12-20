@@ -458,7 +458,7 @@ function menuItemOver (td, child, div, level) {
 
 
 		last_vert_menu [level].td = td;
-		td.style.backgroundImage='url(menu_bg_s.gif)';
+		td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg_s.gif)';
 
 		if (child) {
 			var submenu = document.getElementById ('vert_menu_' + child);
