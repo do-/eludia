@@ -1863,7 +1863,7 @@ sub draw_toolbar {
 		if (ref $button eq HASH) {
 			next if $button -> {off};
 			$button -> {type} ||= 'button';
-			$button -> {html} = &{'draw_toolbar_' . $button -> {type}} ($button);
+			$button -> {html} = &{'draw_toolbar_' . $button -> {type}} ($button, $options -> {_list});
 		}
 		else {
 			$button = {html => $button, type => 'input_raw'};
@@ -2069,9 +2069,11 @@ sub draw_toolbar_input_date {
 
 sub draw_toolbar_pager {
 
-	my ($options) = @_;
+	my ($options, $list) = @_;
 	
-	$options -> {portion} ||= $conf -> {portion};
+	$options -> {portion} ||= $_REQUEST {__page_content} -> {portion} || $conf -> {portion};
+	$options -> {total}   ||= $_REQUEST {__page_content} -> {cnt};
+	$options -> {cnt}     ||= 0 + @$list;
 
 	$options -> {start} = $_REQUEST {start} + 0;
 
@@ -2968,7 +2970,8 @@ sub draw_table {
 		
 	}
 	
-	if (ref $options -> {top_toolbar} eq ARRAY) {			
+	if (ref $options -> {top_toolbar} eq ARRAY) {
+		$options -> {top_toolbar} -> [0] -> {_list} = $list;		
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
 	
@@ -3216,6 +3219,8 @@ sub draw_page {
 		undef $page -> {content};		
 		
 		eval { $page -> {content} = call_for_role ($selector)} unless $_REQUEST {__only_menu};
+		
+		$_REQUEST {__page_content} = $page -> {content};
 		
 		warn $@ if $@;
 		
