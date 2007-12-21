@@ -745,7 +745,7 @@ warn "undo relink $$column_def{table_name} ($$column_def{name}): $old_id";
 
 sub assert_fake_key {
 
-	$DB_MODEL or return;
+	$DB_MODEL -> {tables} -> {$table_name} or return;
 	
 	my ($table_name) = @_;
 

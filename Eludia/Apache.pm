@@ -28,7 +28,7 @@ sub get_request {
 
 	if (ref $apr eq 'Apache::Request') {
 		require Apache::Cookie;
-		our %_COOKIES = Apache::Cookie -> fetch ($r);
+		our %_COOKIES = Apache::Cookie -> fetch; # ($r);
 	}
 	elsif ($ENV {SERVER_SOFTWARE} =~ /IIS/) {
 		our %_COOKIES = ();
@@ -38,6 +38,7 @@ sub get_request {
 		require CGI::Cookie;
 		our %_COOKIES = CGI::Cookie -> fetch;
 	}
+	
 
 }
 
