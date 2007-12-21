@@ -287,8 +287,6 @@ sub _draw_input_datetime {
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
 	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
-
-	$options -> {no_read_only} or $options -> {attributes} -> {readonly} = 1;
 	
 	my $attributes = dump_attributes ($options -> {attributes});
 		
@@ -309,11 +307,7 @@ sub _draw_input_datetime {
 		>
 		<img id="calendar_trigger_$$options{id}" src="$_REQUEST{__static_url}/i_calendar.gif" align=absmiddle>
 EOH
-	
-	unless ($options -> {no_clear_button} || $options -> {no_read_only}) {
-		$html .= qq{&nbsp;<button class="txt7" onClick="document.getElementById ('$options->{attributes}->{id}').value=''">X</button>};
-	}
-		
+			
 	$html .= <<EOH;
 		</nobr>		
 		<script type="text/javascript">
