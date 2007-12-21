@@ -2422,35 +2422,35 @@ sub tree_sort {
 	my $level     = $options -> {level}     || 'level';
 
 	my $idx = {};
-
-	foreach my $i (@$list) {$idx -> {$i -> {$id}} = $i};
 		
 	my $template = '%0' . length ('' . (0 + @$list)) . 'd';
 	
-	my $cnt = {};
+	for (my $i = 0; $i < @$list; $i++) {
 	
-	foreach my $i (@$list) {$i -> {$ord_local} = sprintf ($template, ++ $cnt -> {$i -> {$parent}}) }
+		$list -> [$i] -> {$ord_local} = sprintf ($template, $i);
+		
+		$idx -> {$list -> [$i] -> {$id}} = $list -> [$i];
+	
+	}
 
 	foreach my $i (@$list) {
 	
-		$i -> {ord}   = '';
-		$i -> {level} = 0;
+		$i -> {$ord}   = '';
+		$i -> {$level} = 0;
 	
 		my $j = $i;
 		
 		while ($j) {
-
-warn Dumper ($j);		
 		
-		 	if ($j -> {ord}) {			
-				$i -> {ord}    = $j -> {ord} . $i -> {ord};
-				$i -> {level} += $j -> {level};				
+		 	if ($j -> {$ord}) {			
+				$i -> {$ord}    = $j -> {$ord} . $i -> {$ord};
+				$i -> {$level} += $j -> {$level};				
 				last;			
 			}
 		
-			$i -> {ord} .= $j -> {ord_local} . $i -> {ord};
+			$i -> {$ord} = $j -> {$ord_local} . $i -> {$ord};
 			
-			$i -> {level} ++;
+			$i -> {$level} ++;
 			
 			$j = $idx -> {$j -> {$parent}};
 		
@@ -2458,7 +2458,7 @@ warn Dumper ($j);
 	
 	}
 	
-	return [sort {$a -> {ord} cmp $b -> {ord}} @$list];
+	return [sort {$a -> {$ord} cmp $b -> {$ord}} @$list];
 
 }
 

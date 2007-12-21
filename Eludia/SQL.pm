@@ -506,8 +506,12 @@ sub sql_select_vocabulary {
 	
 		$list = tree_sort ($list);
 		
-		foreach (@$list) { $_ -> {label} = ' ' . ('-' x $_ -> {level}) . ' '. $_ -> {label} }
+		unless ($_REQUEST {__read_only}) {
+		
+			foreach (@$list) { $_ -> {label} = ('&nbsp;&nbsp;' x $_ -> {level}) . $_ -> {label} }
 	
+		}
+		
 	}
 
 	return $list;
