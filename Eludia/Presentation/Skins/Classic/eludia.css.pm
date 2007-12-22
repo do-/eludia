@@ -824,6 +824,7 @@ A.form-passive-inputs, A.form-passive-inputs:link, A.form-passive-inputs:hover, 
 	padding-right: 10px;
 }
 
+
 A.form-active-inputs, A.form-active-inputs:link, A.form-active-inputs:hover, A.form-active-inputs:visited {
 	FONT-WEIGHT: normal; 
 	FONT-SIZE: 10pt; 
@@ -848,7 +849,13 @@ input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs
 	padding-left: 1px;
 }
 
-
+input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
+	FONT-SIZE: 10pt; 
+	FONT-FAMILY: Arial; 
+	background-color: #f4ff00;
+	border-color: #dededc;
+	padding-left: 1px;
+}
 
 
 div.table-container {

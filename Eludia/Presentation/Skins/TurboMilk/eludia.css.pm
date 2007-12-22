@@ -727,6 +727,16 @@ input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs
 	padding-right: 3px;
 }
 
+input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
+	FONT-SIZE: 8pt; 
+	COLOR: #000000; 
+	background-color: #f4ff00;
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';  
+	border: 1px #7f9db9 solid;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
 td.toolbar {
 	FONT-SIZE: 8pt; 
 	COLOR: #000000; 

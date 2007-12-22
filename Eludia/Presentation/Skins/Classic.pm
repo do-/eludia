@@ -537,7 +537,7 @@ sub draw_form_field_button {
 
 sub draw_form_field_string {
 	my ($_SKIN, $options, $data) = @_;
-	$options -> {attributes} -> {class} ||= 'form-active-inputs';
+
 	return '<input type="text"' . dump_attributes ($options -> {attributes}) . ' onKeyPress="if (window.event.keyCode != 27) is_dirty=true" onKeyDown="tabOnEnter()" onFocus="scrollable_table_is_blocked = true; " onBlur="scrollable_table_is_blocked = false; ">';
 }
 
@@ -547,7 +547,6 @@ sub draw_form_field_datetime {
 
 	my ($_SKIN, $options, $data) = @_;
 		
-	$options -> {attributes} -> {class} ||= 'form-active-inputs';	
 	$options -> {name} = '_' . $options -> {name};
 	$options -> {onKeyDown} ="tabOnEnter()";
 
@@ -561,11 +560,14 @@ sub draw_form_field_file {
 
 	my ($_SKIN, $options, $data) = @_;	
 		
+	my $attributes = dump_attributes ($options -> {attributes});
+
 	return <<EOH;
 		<input 
 			type="file"
 			name="_$$options{name}"
 			size=$$options{size}
+			$attributes
 			onFocus="scrollable_table_is_blocked = true; "
 			onBlur="scrollable_table_is_blocked = false; "
 			onChange="is_dirty=true; $$options{onChange}"

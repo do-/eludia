@@ -1117,6 +1117,8 @@ sub draw_form_field_string {
 	$options -> {max_len} ||= $options -> {size};
 	$options -> {max_len} ||= 255;
 	$options -> {attributes} -> {maxlength} = $options -> {max_len};
+	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
+
 
 	$options -> {size}    ||= 120;
 	$options -> {attributes} -> {size}      = $options -> {size};
@@ -1181,6 +1183,8 @@ sub draw_form_field_datetime {
 	
 	$options -> {attributes} -> {id} = 'input_' . $options -> {name};
 
+	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
+
 	$options -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
 
 	return $_SKIN -> draw_form_field_datetime (@_);
@@ -1190,9 +1194,14 @@ sub draw_form_field_datetime {
 ################################################################################
 
 sub draw_form_field_file {
+
 	my ($options, $data) = @_;
+
 	$options -> {size} ||= 60;
+	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
+
 	return $_SKIN -> draw_form_field_file (@_);
+
 }
 
 ################################################################################
@@ -1226,6 +1235,8 @@ sub draw_form_field_hgroup {
 			
 		}
 		
+		$item -> {mandatory} = exists $item -> {mandatory} ? $item -> {mandatory} : $options -> {mandatory}; 
+		
 		$item -> {type} ||= 'string';
 		
 		$item -> {html}   = &{'draw_form_field_' . $item -> {type}} ($item, $data);
@@ -1247,7 +1258,8 @@ sub draw_form_field_text {
 	$options -> {cols} ||= 60;
 	$options -> {rows} ||= 25;
 
-	$options -> {attributes} -> {class} ||= 'form-active-inputs';	
+	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
+	
 	$options -> {attributes} -> {readonly} = 1 if $_REQUEST {__read_only} or $options -> {read_only};	
 	$options -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
 	
@@ -1263,6 +1275,7 @@ sub draw_form_field_password {
 
 	$options -> {size} ||= $conf -> {size} || 120;	
 	$options -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
+	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
 	
 	return $_SKIN -> draw_form_field_password (@_);
 	
@@ -1529,7 +1542,7 @@ sub draw_form_field_select {
 	my ($options, $data) = @_;
 	
 	$options -> {max_len} ||= $conf -> {max_len};
-	$options -> {attributes} -> {class} ||= 'form-active-inputs';	
+	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
 	$options -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
 
 	if ($options -> {rows}) {
