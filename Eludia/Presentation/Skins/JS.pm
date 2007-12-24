@@ -130,7 +130,7 @@ sub draw_form_field {
 		if (!element) return;					
 		element.outerHTML = a [0];
 		element.tabIndex = "$tabs[$i]";
-		if (element.onChange) element.onChange ();
+//		if (element.onChange) element.onChange ();
 	}
 EOJS
 		

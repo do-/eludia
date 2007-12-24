@@ -1577,7 +1577,7 @@ sub draw_form_field_select {
 
 		my ($codetail_js, $tab_js);
 		my (@all_details, @all_codetails); 
-warn Dumper \@all_details;
+#warn Dumper \@all_details;
 
 		foreach my $detail_ (@{$options -> {detail}}) {
 
@@ -1615,7 +1615,7 @@ EOJS
 
 		check_href ($h);
 
-warn Dumper \@all_details;
+#warn Dumper \@all_details;
 		my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}=this.value&__only_field=" . (join ',', @all_details) : <<EOJS;
 			activate_link (
 

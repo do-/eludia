@@ -471,7 +471,7 @@ sub sql_select_subtree {
 	
 		my $ids = join ',', @ids;
 	
-		my @new_ids = sql_select_col ("SELECT id FROM $table_name WHERE parent IN ($ids) AND id NOT IN ($ids)");
+		my @new_ids = sql_select_col ("SELECT id FROM $table_name WHERE fake = 0 AND parent IN ($ids) AND id NOT IN ($ids)");
 		
 		last unless @new_ids;
 	
