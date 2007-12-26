@@ -808,8 +808,9 @@ sub draw_form {
 	my ($options, $data, $fields) = @_;
 	
 	return '' if $options -> {off};
-	
-	$options -> {hr} = $_REQUEST {__tree} ? '' : draw_hr (height => 10);
+
+	$options -> {hr} = defined $options -> {hr} ? $options -> {hr} : 10;
+	$options -> {hr} = $_REQUEST {__tree} ? '' : draw_hr (height => $options -> {hr});
 	
 	if (ref $data eq HASH && $data -> {fake} == -1 && !exists $options -> {no_edit}) {
 		$options -> {no_edit} = 1;
