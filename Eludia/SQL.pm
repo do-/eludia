@@ -432,7 +432,7 @@ sub sql_reconnect {
 			core_voc_replacement_use=> $conf -> {core_voc_replacement_use},
 		);
 
-		$preconf -> {no_model_update} = 1;
+#		$preconf -> {no_model_update} = 1;
 		
 	}
 
