@@ -157,9 +157,14 @@ function code_alt_ctrl (code, alt, ctrl) {
 	return 1;
 }
 
+function endsWith (str, s){
+	var reg = new RegExp (s + "$");
+	return reg.test (str);
+}
+
 function check_top_window () {
 	try {
-		if (window.name != '_body_iframe' && window.name != '_content_iframe') window.location.href = window.location.href + '&__top=1'
+		if (!endsWith (window.name, '_iframe')) window.location.href = window.location.href + '&__top=1'
 	} catch (e) {}
 }
 

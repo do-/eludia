@@ -134,6 +134,7 @@ sub setup_skin {
 		create_url
 		_SUBSET
 		_JSON
+		tree_sort
 	));
 
 	attach_globals ($_PACKAGE => $_JS_SKIN, qw(
@@ -149,6 +150,7 @@ sub setup_skin {
 		create_url
 		_SUBSET
 		_JSON
+		tree_sort
 	));
 
 }

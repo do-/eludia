@@ -2450,8 +2450,10 @@ sub tree_sort {
 	my $level     = $options -> {level}     || 'level';
 
 	my $idx = {};
+	
+	my $len = length ('' . (0 + @$list));
 		
-	my $template = '%0' . length ('' . (0 + @$list)) . 'd';
+	my $template = '%0' . $len . 'd';
 	
 	for (my $i = 0; $i < @$list; $i++) {
 	
@@ -2462,6 +2464,8 @@ sub tree_sort {
 	}
 
 	foreach my $i (@$list) {
+	
+		my @parents_without_ord = ();
 	
 		$i -> {$ord}   = '';
 		$i -> {$level} = 0;
@@ -2480,7 +2484,15 @@ sub tree_sort {
 			
 			$i -> {$level} ++;
 			
+			$parents_without_ord [$level] = $j;
+			
 			$j = $idx -> {$j -> {$parent}};
+		
+		}
+		
+		for (my $level = 1; $level < @parents_without_ord; $level ++) {
+		
+			$parents_without_ord [$level] -> {$ord} = substr $i -> {$ord}, 0, $len * ($i -> {$level} - $level);
 		
 		}
 	

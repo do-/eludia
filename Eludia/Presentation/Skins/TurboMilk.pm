@@ -2617,6 +2617,8 @@ sub draw_tree {
 	our %idx = ();
 	our %lch = ();
 	
+	$options -> {in_order} or $list = tree_sort ($list);
+	
 	foreach my $i (@$list) {
 		my $node = $i -> {__node};
 		push @nodes, $node;
@@ -2643,7 +2645,7 @@ sub draw_tree {
 	}
 	
 	$menus =~ s{[\n\r]+}{ }gsm;
-	$menus =~ s/\"/\\"/gsm;  
+	$menus =~ s/\"/\\"/gsm;  #"
 
 	my $nodes = $_JSON -> encode (\@nodes);
 
@@ -2674,9 +2676,7 @@ EOH
 EOH
 	
 	my $menus;
-	
-	$options -> {in_order} += 0;
-	
+		
 	my $html = <<EOH;
 	
 		$$options{title}
@@ -2693,7 +2693,7 @@ EOH
 				d.config.iconPath = '$_REQUEST{__static_url}/tree_';
 				d.config.target = '_content_iframe';
 				d.config.useStatusText = true;
-				d.config.inOrder = $options->{in_order};
+				d.config.inOrder = 1;
 				d.icon.node = 'folderopen.gif';
 	
 
