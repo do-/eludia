@@ -1027,14 +1027,16 @@ sub do_update_DEFAULT {
 
 sub do_download_DEFAULT {
 
+	my $name = $_REQUEST {_name} || 'file';
+
 	sql_download_file ({
-		name => 'file',
+		name => $name,
 		dir => 'upload/images',
 		table => $_REQUEST{type},
-		file_name_column => 'file_name',
-		size_column => 'file_size',
-		type_column => 'file_type',
-		path_column => 'file_path',
+		file_name_column => $name . '_name',
+		size_column => $name . '_size',
+		type_column => $name . '_type',
+		path_column => $name . '_path',
 	});
 
 }
