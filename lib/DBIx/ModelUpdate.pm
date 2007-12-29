@@ -43,7 +43,6 @@ sub new {
 	my ($package_name, $db, @options) = @_;
 	
 	my $driver_name = $db -> get_info ($GetInfoType {SQL_DBMS_NAME});
-#	my $driver_name = $db -> {Driver} -> {Name};
 	
 	is_implemented ($driver_name) or die ("DBIx::ModelUpdate error: $driver_name driver is not supported");
 	
@@ -67,10 +66,14 @@ sub new {
 	}
 
 	if ($driver_name eq 'Oracle') {
-  		$self -> {characterset} = $self -> sql_select_scalar('SELECT VALUE FROM V$NLS_PARAMETERS WHERE PARAMETER = '."'NLS_CHARACTERSET'");
+  		$self -> {characterset} = $self -> sql_select_scalar ('SELECT VALUE FROM V$NLS_PARAMETERS WHERE PARAMETER = ?', 'NLS_CHARACTERSET');
+  		$self -> {schema} ||= uc $db -> {Username};
+  		$self -> {__voc_replacements} = "$self->{quote}$self->{__voc_replacements}$self->{quote}" if $self -> {__voc_replacements} =~ /^_/;
 	}
+	
+	$self -> {schema} ||= '';
 
-	return $self;	
+	return $self;
 
 }
 
@@ -84,15 +87,14 @@ sub checksum {
 
 sub assert {
 
-#warn Dumper (\@_);
-
 	my ($self, %params) = @_;
 	
 	$Storable::canonical = 1;
 	
 	my $checksum = '';
-	my $_db_model_checksums = $self -> {_db_model_checksums} ? $self -> {_db_model_checksums} 
-		: $self -> {driver_name} eq 'Oracle' ? '"_db_model_checksums"' 
+	my $_db_model_checksums = 
+		$self -> {_db_model_checksums}     ? $self -> {_db_model_checksums} : 
+		$self -> {driver_name} eq 'Oracle' ? '"_db_model_checksums"' 
 		: '_db_model_checksums';
 
 	unless ($params {no_checksums}) {
@@ -104,24 +106,26 @@ sub assert {
 
 	}	
 
-	my @tables = $self -> {db} -> tables;
-
-	my $existing_tables =  { 
-		map { 
-			$_ => {} 
-		} 
-		map {
-			$self -> unquote_table_name ($_)
-		}
-		@tables
-	};
+	my $existing_tables = {}; 
+	
+	foreach ($self -> {db} -> tables ('', $self -> {schema}, '%', "'TABLE'")) {
+	
+		$existing_tables -> {$self -> unquote_table_name ($_)} = {};
+	
+	}
 
 	unless ($params {no_checksums}) {
 
-		unless (exists $existing_tables -> {$_db_model_checksums}) {
+		unless (exists $existing_tables -> {_db_model_checksums}) {
+			
+			my $index_name = $_db_model_checksums;
+			$index_name =~ s{\w+}{$1_pk};
+		
 			$self -> do ("CREATE TABLE $_db_model_checksums (checksum CHAR(22))");
-			$self -> do ("CREATE INDEX ${_db_model_checksums}_pk ON $_db_model_checksums (checksum)");
-		} else {
+			$self -> do ("CREATE INDEX $index_name ON $_db_model_checksums (checksum)");
+			
+		} 
+		else {
 
 			my $st = $self -> {db} -> prepare ("SELECT COUNT(*) FROM $_db_model_checksums WHERE checksum = ?");
 			$st -> execute ($checksum);
@@ -178,7 +182,6 @@ sub assert {
 		$existing_tables -> {$name} -> {keys}    = $self -> get_keys    ($name, $params {core_voc_replacement_use}); 
 	} 
 	
-#	while (my ($name, $definition) = each %$needed_tables) {
 	foreach my $name (keys %$needed_tables) {
 	
 		my $definition = $needed_tables -> {$name};
@@ -211,7 +214,6 @@ sub assert {
 
 			$self -> add_columns ($name, $new_columns,,$params {core_voc_replacement_use}) if keys %$new_columns;
 
-#			while (my ($k_name, $k_definition) = each %{$definition -> {keys}}) {
 			foreach my $k_name (keys %{$definition -> {keys}}) {
 			
 				my $k_definition = $definition -> {keys} -> {$k_name};

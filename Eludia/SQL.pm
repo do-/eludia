@@ -80,14 +80,9 @@ sub sql_weave_model {
 
 ################################################################################
 
-sub sql_assert_core_tables {
+sub check_systables {
 
-	$db or return;
-
-	$model_update or die "\$db && !\$model_update ?!! Can't believe it.\n";
-
-	foreach (qw(
-		_db_model_checksums	
+	foreach (qw(	
 		__voc_replacements	
 		__access_log		
 		__benchmarks		
@@ -104,11 +99,21 @@ sub sql_assert_core_tables {
 		$conf -> {systables} -> {$_} ||= $_;
 	}
 
+}
+
+################################################################################
+
+sub sql_assert_core_tables {
+
+	$db or return;
+
+	$model_update or die "\$db && !\$model_update ?!! Can't believe it.\n";
+
 	return if $model_update -> {core_ok};
 
 my $time = time;
 
-print STDERR "sql_assert_core_tables [$$] started...\n";
+warn "sql_assert_core_tables [$$] started...\n";
 
 	my %defs = (
 
@@ -307,7 +312,7 @@ print STDERR "sql_assert_core_tables [$$] started...\n";
 	$model_update -> {core_ok} = 1;
 	
 	
-print STDERR "sql_assert_core_tables [$$] finished:" . (time - $time) . " ms\n";	
+warn "sql_assert_core_tables [$$] finished:" . (time - $time) . " ms\n";	
 	
 }
 
@@ -397,9 +402,9 @@ sub sql_reconnect {
 		return if $ping;
 	}
 	
-	$conf = {%$conf, %$preconf};
+	check_systables ();
 
-	our $db = DBI -> connect ($conf -> {'db_dsn'}, $conf -> {'db_user'}, $conf -> {'db_password'}, {
+	our $db = DBI -> connect ($preconf -> {'db_dsn'}, $preconf -> {'db_user'}, $preconf -> {'db_password'}, {
 		RaiseError  => 1, 
 		AutoCommit  => 1,
 		LongReadLen => 1000000,
@@ -413,7 +418,7 @@ sub sql_reconnect {
 
 	eval "require Eludia::SQL::$driver_name";
 
-	print STDERR $@ if $@;
+	die $@ if $@;
 	
 	our $SQL_VERSION = sql_version ();
 	$SQL_VERSION -> {driver} = $driver_name;
