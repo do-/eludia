@@ -530,7 +530,7 @@ sub require_fresh {
 
 	my ($module_name, $fatal) = @_;	
 
-#print STDERR ("require_fresh ('$module_name') called...\n");
+	check_systables ();
 	
 	my $file_name = $module_name;
 	$file_name =~ s{(::)+}{\/}g;
@@ -580,7 +580,10 @@ sub require_fresh {
 
 		die $@ if $@;
 
-		sql_assert_core_tables () if $file_name =~ /Config\.pm$/;
+		if ($file_name =~ /Config\.pm$/) {
+			check_systables ();
+			sql_assert_core_tables ();
+		}
 
 		if (
 			$file_name =~ /Config\.pm$/

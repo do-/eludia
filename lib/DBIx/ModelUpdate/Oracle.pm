@@ -187,7 +187,7 @@ sub get_canonic_type {
 		
 			$type_name eq 'int'       ? 10 : 
 			$type_name eq 'tinyint'   ? 3  : 
-			$type_name eq 'bigint'    ? 25 : 
+			$type_name eq 'bigint'    ? 22 : 
 			$type_name eq 'smallint'  ? 5  : 
 			$type_name eq 'mediumint' ? 8  :
 			undef;
@@ -437,8 +437,12 @@ sub update_column {
 	
 	my $existing_type = $self -> get_canonic_type ($existing_column);
 
+#warn Dumper ($existing_column);
+
 	my $c_type = $self -> get_canonic_type ($c_definition, 1);
 	
+#warn Dumper ($c_definition);
+
 	if ($c_type =~ /(\w+)\s*\(\s*(\d+)\s*\,\s*(\d+)/) {
 		$c_type = $1;
 		$c_definition -> {COLUMN_SIZE} = $2;
