@@ -4,7 +4,7 @@ use IO;
 
 our $fake_stderr = new IO::File;
 
-open STDERR, ">c:/error.log" or die "Can't wite to c:/error.log: $!\n";
+open STDERR, ">c:/error.log" or die "Can't write to c:/error.log: $!\n";
 
 print STDERR "Eludia::IIS is starting\n";
 
@@ -21,7 +21,7 @@ while ($request -> Accept >= 0) {
 	my $app = $ENV {DOCUMENT_ROOT};
 	$app =~ s{\\docroot\\?$}{};
 	
-	open STDERR, ">$app\\logs\\error.log" or die "Can't wite to $app\\logs\\error.log: $!\n";
+	open STDERR, ">>$app\\logs\\error.log" or die "Can't write to $app\\logs\\error.log: $!\n";
 	
 	unless ($configs -> {$app}) {
 	
