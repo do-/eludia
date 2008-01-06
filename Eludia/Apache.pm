@@ -20,15 +20,15 @@ sub get_request {
 	}
 	else {
 
-		our $use_cgi = $ENV {SCRIPT_NAME} =~ m{index\.pl} || ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} && !$ENV{MOD_PERL}) || $conf -> {use_cgi} || $preconf -> {use_cgi} || !$INC{'Apache/Request.pm'};
+		our $use_cgi = $ENV {SCRIPT_NAME} =~ m{index\.pl} || ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} && !$ENV{MOD_PERL}) || $preconf -> {use_cgi} || !$INC{"${Apache}/Request.pm"};
 		our $r   = $use_cgi ? new Eludia::Request ($preconf, $conf) : $_[0];
-		our $apr = $use_cgi ? $r : ($Eludia::Auth::NTLM::apr || Apache::Request -> new ($r));
+		our $apr = $use_cgi ? $r : ("${Apache}::Request" -> new ($r));
 
 	}
 
-	if (ref $apr eq 'Apache::Request') {
-		require Apache::Cookie;
-		our %_COOKIES = Apache::Cookie -> fetch; # ($r);
+	if (ref $apr eq "${Apache}::Request") {
+		eval "require ${Apache}::Cookie";
+		our %_COOKIES = "${Apache}::Cookie" -> fetch; # ($r);
 	}
 	elsif ($ENV {SERVER_SOFTWARE} =~ /IIS/) {
 		our %_COOKIES = ();
@@ -214,8 +214,8 @@ sub handler {
 	$_PACKAGE ||= __PACKAGE__ . '::';
 
 	get_request (@_);
-
-	my $parms = $apr -> parms;
+		
+	my $parms = ref $apr eq 'Apache2::Request' ? $apr -> param : $apr -> parms;
 	undef %_REQUEST;
 	our %_REQUEST = %{$parms};
 

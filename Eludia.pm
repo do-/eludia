@@ -23,8 +23,15 @@ use JSON::XS;
 use constant MP2 => ( exists $ENV{MOD_PERL_API_VERSION} and 
                         $ENV{MOD_PERL_API_VERSION} >= 2 or $ENV{MOD_PERL} =~ m{mod_perl/1.99}); 
 
-BEGIN {	
-	if (MP2) {
+BEGIN {
+
+	our $Apache = 'Apache';
+	
+	if ($ENV{MOD_PERL_API_VERSION} >= 2) {
+		require Apache2::compat;
+		$Apache = 'Apache2';
+	}
+	elsif (MP2) {
 		require Apache::RequestRec;
 		require Apache::RequestUtil;
 		require Apache::RequestIO;
@@ -163,10 +170,11 @@ BEGIN {
 		require DBIx::ModelUpdate;
 	}
 
-	if ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} || $conf -> {use_cgi} || $preconf -> {use_cgi}) {
+	if ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} || $preconf -> {use_cgi}) {
 		eval 'require CGI';
 	} else {
-		eval 'require Apache::Request';
+		eval "require ${Apache}::Request";
+
 		if ($@) {
 			warn "$@\n";
 
@@ -188,8 +196,7 @@ BEGIN {
 		delete $INC {$name} if $name =~ m{Eludia[\./]}; 
 	}
 
-	$conf = {%$conf, %$preconf};
-	if ($conf -> {core_load_modules}) {
+	if ($preconf -> {core_load_modules}) {
 	
 		foreach my $module (qw(Config Content::menu Content::logon Presentation::logon)) {
 			require_fresh ($_PACKAGE . '::' . $module);
@@ -238,7 +245,7 @@ BEGIN {
 		Apache -> push_handlers (PerlChildExitHandler => \&sql_disconnect);
 	}
 
-	if ($conf -> {db_dsn}) {
+	if ($preconf -> {db_dsn}) {
 		eval {	sql_disconnect;	};
 		warn $@ if $@;
 	}

@@ -1,7 +1,6 @@
 package Eludia::Auth::NTLM;
 
 use Apache::AuthenNTLM;
-#use Apache::Request;
 
 use Data::Dumper;
 

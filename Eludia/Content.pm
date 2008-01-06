@@ -1543,9 +1543,9 @@ sub add_vocabularies {
 
 sub set_cookie {
 
-	if (ref $r eq 'Apache') {
-		require Apache::Cookie;
-		my $cookie = Apache::Cookie -> new ($r, @_);
+	if (ref $r eq $Apache) {
+		eval "require ${Apache}::Cookie";
+		my $cookie = "${Apache}::Cookie" -> new ($r, @_);
 		$cookie -> bake;
 	}
 	else {
