@@ -307,7 +307,7 @@ sub check_href {
 	}
 	
 	$_REQUEST {__salt}     ||= rand () * time ();
-	$_REQUEST {__uri_root} ||= $_REQUEST {__uri} . '?sid=' . $_REQUEST {sid} . '&salt=' . $_REQUEST {__salt};
+	$_REQUEST {__uri_root} ||= $_REQUEST {__uri} . $_REQUEST {__script_name} . '?sid=' . $_REQUEST {sid} . '&salt=' . $_REQUEST {__salt};
 	
 	my $url = $_REQUEST {__uri_root};
 				

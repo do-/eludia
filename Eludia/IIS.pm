@@ -1,6 +1,8 @@
 use FCGI;
 use CGI;
 use IO;
+use Data::Dumper;
+use Time::HiRes 'time';
 
 our $fake_stderr = new IO::File;
 
@@ -16,7 +18,28 @@ my $configs = {};
 
 my $request = FCGI::Request (\*STDIN, \*STDOUT, $fake_stderr, \%ENV, 0, 0);
 
-while ($request -> Accept >= 0) {
+my $handling_request = 0;
+my $exit_requested = 0;
+
+sub sig_handler {
+	$exit_requested = 1;
+	exit (0) if !$handling_request;
+}
+
+$SIG{USR1} = \&sig_handler;
+$SIG{TERM} = \&sig_handler;
+#$SIG{PIPE} = 'IGNORE';
+$SIG{PIPE} = sub {warn "PIPE!\n"};
+
+while (1) {
+
+	$handling_request = $request -> Accept;
+
+	warn "$$:accepted $handling_request...\n";
+	
+	last if $handling_request < 0;
+	
+	my $time = time;
 
 	my $app = $ENV {DOCUMENT_ROOT};
 	$app =~ s{\\docroot\\?$}{};
@@ -70,11 +93,23 @@ while ($request -> Accept >= 0) {
 		$ENV {$k} = $configs -> {$app} -> {env} -> {$k};
 	
 	}
+	
+	warn "$$:calling handler...\n";
 
 	&{"$configs->{$app}->{handler}::handler"} ();
 
-	$request ->  Finish;
+	warn "$$:handler complete. (" . ((time - $time) * 1000) . " ms)\n";
+
+#	warn Dumper (\%{"$configs->{$app}->{handler}::_REQUEST"});
+
+	$handling_request = 0;
+
+	last if $exit_requested;
 
 }
+
+$request ->  Finish;
+
+exit (0);
 
 1;

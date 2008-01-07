@@ -121,6 +121,10 @@ sub setup_skin {
 	
 	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
 
+	require JSON::XS;
+
+	our $_JSON ||= JSON::XS -> new -> latin1 (1);
+
 	attach_globals ($_PACKAGE => $_SKIN, qw(
 		_PACKAGE
 		_REQUEST
@@ -233,6 +237,8 @@ sub handler {
 	$_REQUEST {__uri} =~ s{\?.*}{};
 	$_REQUEST {__uri} =~ s{^/+}{/};
 	$_REQUEST {__uri} =~ s{\&salt\=[\d\.]+}{}gsm;
+	
+	$_REQUEST {__script_name} = $ENV {SERVER_SOFTWARE} =~ /IIS\/5/ ? $ENV {SCRIPT_NAME} : '';
 #	$_REQUEST {__uri_root} =  $_REQUEST {__uri} . '?sid=' . $_REQUEST {sid} . '&salt=' . rand * time;
 
 	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;

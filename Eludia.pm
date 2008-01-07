@@ -17,7 +17,7 @@ use Time::HiRes 'time';
 use URI::Escape;
 use Storable;
 use Net::SMTP;
-use JSON::XS;
+#use JSON::XS;
 #use Math::FixedPrecision;
 
 use constant MP2 => ( exists $ENV{MOD_PERL_API_VERSION} and 
@@ -143,7 +143,7 @@ BEGIN {
 		error => 1,
 	};
 	
-	our $_JSON ||= JSON::XS -> new -> latin1 (1);
+#	our $_JSON ||= JSON::XS -> new -> latin1 (1);
 		
 	unless ($ENV {ELUDIA_BANNER_PRINTED}) {
 

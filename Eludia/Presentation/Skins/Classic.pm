@@ -411,11 +411,12 @@ sub draw_form {
 
 	$html .=  <<EOH;
 		<table cellspacing=1 width="100%">
+			
 			<form 
 				name="$$options{name}"
 				method="$$options{method}"
 				enctype="$$options{enctype}"
-				action="$_REQUEST{__uri}"
+				action="$_REQUEST{__uri}$_REQUEST{__script_name}"
 				target="$$options{target}"
 			>
 EOH
@@ -1892,7 +1893,7 @@ sub draw_table {
 		
 		<table cellspacing=0 cellpadding=0 width="100%">		
 			<tr>		
-				<form name=$$options{name} action=$_REQUEST{__uri} method=post enctype=multipart/form-data target=invisible>
+				<form name=$$options{name} action="$_REQUEST{__uri}$_REQUEST{__script_name}" method=post enctype=multipart/form-data target=invisible>
 					<input type=hidden name=type value=$$options{type}>
 					<input type=hidden name=action value=$$options{action}>
 					<input type=hidden name=sid value=$_REQUEST{sid}>
@@ -2375,7 +2376,7 @@ sub draw_logon_form {
 			<tr>
 				<td align=middle>   
 					<table cellspacing=0 cellpadding=0 border=0>      
-						<form action=$_REQUEST{__uri} method=post autocomplete="off">
+						<form action="$_REQUEST{__uri}$_REQUEST{__script_name}" method=post autocomplete="off">
 							<input type=hidden name=type value=logon>
 							<input type=hidden name=_url value="$_REQUEST{_url}">
 							<input type=hidden name=action value=execute>
