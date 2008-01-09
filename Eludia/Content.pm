@@ -2507,4 +2507,46 @@ sub tree_sort {
 
 }
 
+################################################################################
+
+sub fill_in_template {
+
+	return if $_REQUEST {__response_sent};
+
+	my ($template_name, $file_name, $options) = @_;
+
+	$template_name .= '.htm' unless $template_name =~ /\.\w{2,4}$/;
+
+	my $root = $r -> document_root;	
+	my $fn = $root . "/templates/$template_name";
+	
+	my $template = '';
+	open (T, $fn) or die ("Can't open $fn: $!\n");
+	binmode T;
+	while (<T>) {
+		s{\\}{\\\\}g;
+		s{\@([^\{])}{\\\@$1}g;
+		$template .= $_;
+	}
+	close (T);
+
+	my $result = interpolate ($template);
+	
+	$result =~ s{\n}{\r\n}gsm;
+	
+	return $result if ($_REQUEST {no_print});	
+
+	$r -> status (200);
+	
+	unless ($options -> {skip_headers}) {
+		$r -> header_out ('Content-Disposition' => "attachment;filename=$file_name");
+		$r -> send_http_header ('application/octet-stream');
+	}
+	
+	$r -> print ($result);
+
+	$_REQUEST {__response_sent} = 1;
+
+}
+
 1;

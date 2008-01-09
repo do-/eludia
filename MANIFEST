@@ -281,12 +281,14 @@ Eludia/Request.pm
 Eludia/Request/Upload.pm
 Eludia/Server.pm
 Eludia/SQL.pm
+Eludia/SQL/MicrosoftSQLServer.pm
 Eludia/SQL/MySQL.pm
 Eludia/SQL/Oracle.pm
 Eludia/SQL/SQLite.pm
 Eludia/Util.pm
 Eludia/Validators.pm
 lib/DBIx/ModelUpdate.pm
+lib/DBIx/ModelUpdate/MicrosoftSQLServer.pm
 lib/DBIx/ModelUpdate/MySQL.pm
 lib/DBIx/ModelUpdate/Oracle.pm
 lib/DBIx/ModelUpdate/SQLite.pm
