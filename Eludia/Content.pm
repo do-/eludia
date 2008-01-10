@@ -362,10 +362,19 @@ sub send_mail {
 	if ($options -> {href}) {	
 		my $server_name = $preconf -> {mail} -> {server_name} || $ENV{HTTP_HOST};
 		$options -> {href} =~ /^http/ or $options -> {href} = "http://$server_name" . $options -> {href};
+	}
+
+	if ($options -> {template}) {
+		our $DATA = $options -> {data} if $options -> {data};
+		$DATA -> {href} = $options -> {href};
+		$options -> {text} = fill_in_template ($options -> {template}, '', {no_print => 1});
+		undef $DATA if $options -> {data};
+	}
+	elsif ($options -> {href}) {
 		$options -> {href} = "<br><br><a href='$$options{href}'>$$options{href}</a>" if $options -> {content_type} eq 'text/html';
 		$options -> {text} .= "\n\n" . $options -> {href};
 	}
-#	my $text = encode_qp ($options -> {text});
+	
 	my $text = encode_base64 ($options -> {text});
 	
 	unless ($^O eq 'MSWin32') {
@@ -2514,6 +2523,8 @@ sub fill_in_template {
 	return if $_REQUEST {__response_sent};
 
 	my ($template_name, $file_name, $options) = @_;
+	
+	$options -> {no_print} ||= $_REQUEST {no_print};
 
 	$template_name .= '.htm' unless $template_name =~ /\.\w{2,4}$/;
 
@@ -2534,7 +2545,7 @@ sub fill_in_template {
 	
 	$result =~ s{\n}{\r\n}gsm;
 	
-	return $result if ($_REQUEST {no_print});	
+	return $result if ($options -> {no_print});	
 
 	$r -> status (200);
 	
