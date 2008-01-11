@@ -555,9 +555,16 @@ sub draw_form_field_button {
 ################################################################################
 
 sub draw_form_field_string {
-	my ($_SKIN, $options, $data) = @_;
 
-	return '<input type="text"' . dump_attributes ($options -> {attributes}) . ' onKeyPress="if (window.event.keyCode != 27) is_dirty=true" onKeyDown="tabOnEnter()" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false">';
+	my ($_SKIN, $options, $data) = @_;
+	
+	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
+	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
+	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
+	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
+
+	return '<input type="text"' . dump_attributes ($options -> {attributes}) . ' >';
+
 }
 
 ################################################################################
