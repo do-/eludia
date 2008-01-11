@@ -839,8 +839,6 @@ sub draw_form_field_tree {
 
 	my ($_SKIN, $options, $data) = @_;
 	
-	push @{$_REQUEST{__include_css}}, 'dtree/dtree';
-
 	my @nodes = ();
 	
 	our %idx = ();
@@ -866,7 +864,15 @@ sub draw_form_field_tree {
 	my $nodes = $_JSON -> encode (\@nodes);
 
 	return <<EOH;
-<table class=dtree width=100% height="$options->{height}" celspacing=0 cellpadding=0 border=0><tr><td valign=top height="$options->{height}">
+<table 
+	width=100% 
+	height="$options->{height}" 
+	celspacing=0 
+	cellpadding=0 
+	class='dtree'
+>	
+	<tr>
+		<td valign=top height="$options->{height}">
 		<script type="text/javascript">
 			var $name = new dTree ('$name');
 			var c = $name.config;

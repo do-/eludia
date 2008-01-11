@@ -808,10 +808,8 @@ div.grey-submit a:hover {color:#222323;text-decoration:underline;}
 .dtree {
 	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 	font-size: 11px;
-	_color: #666;
 	white-space: nowrap;
 	float: left;
-
 
       	PADDING-RIGHT: 0px;
       	PADDING-LEFT: 0px;
@@ -825,6 +823,7 @@ div.grey-submit a:hover {color:#222323;text-decoration:underline;}
 	scrollbar-darkshadow-color:#b0b0b0;
 
 }
+
 .dtree img {
 	border: 0px;
 	vertical-align: middle;
