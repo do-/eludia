@@ -2879,7 +2879,20 @@ sub draw_table_header_cell {
 
 	check_title ($cell);
 	
-	foreach my $field (qw(href href_asc href_desc)) {
+	if ($cell -> {order}) {
+	
+		$cell -> {href} = {
+			order                    => $cell -> {order}, 
+			__last_last_query_string => $_REQUEST {__last_last_query_string},
+		};
+		
+		$cell -> {href} -> {desc} = 1 - $_REQUEST {desc} if $_REQUEST {order} eq $cell -> {order};
+
+	}
+
+	check_href ($cell);	
+	
+	foreach my $field (qw(href_asc href_desc)) {
 	
 		$cell -> {$field} or next;
 		
