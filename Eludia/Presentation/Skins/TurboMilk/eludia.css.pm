@@ -506,6 +506,14 @@ td.vert-menu {
 
 }
 
+a.row-cell-header-a, a.row-cell-header-a:link, a.row-cell-header-a:hover, a.row-cell-header-a:visited {
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	FONT-WEIGHT: bold;   
+	FONT-SIZE: 10pt; 
+	COLOR: #000000; 
+	TEXT-DECORATION: none;
+}
+
 .row-cell-hilite {
 	background-color: #dededc;
 }
