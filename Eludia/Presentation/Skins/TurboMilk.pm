@@ -2748,4 +2748,58 @@ sub draw_node {
 
 }
 
+################################################################################
+
+sub dialog_close {
+
+	my ($_SKIN, $result) = @_;
+	
+	my $a = $_JSON -> encode ({
+		result => $result,
+		alert  => $_REQUEST {__redirect_alert},
+	});
+	
+	$r -> content_type ("text/html; charset=$i18n->{_charset}");
+	$r -> send_http_header ();
+	$r -> print (<<EOH);
+<html>
+	<head>
+		<script>
+			
+			function load () {
+				var a = $a;
+				if (a.alert) alert (a.alert);
+				var w = window.parent.parent;		
+				w.returnValue = a.result;
+				w.close ();
+			}
+			
+		</script>
+	</head>
+	<body onLoad="load ()"></body>
+</html>
+EOH
+
+}
+
+################################################################################
+
+sub dialog_open {
+
+	my ($_SKIN, $arg, $options) = @_;
+	
+	my $id = 0 + $arg;
+	
+	foreach (qw(status resizable help)) {$options -> {$_} ||= 'no'}
+	
+	$options -> {dialogHeight} ||= '150px';
+	$options -> {dialogWidth}  ||= '600px';
+	
+	my $url = $_REQUEST {__static_url} . '/dialog.html?' . rand ();
+	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
+	
+	return "javaScript:var result=window.showModalDialog('$url', dialog_open_$id (), '$o');document.body.style.cursor='default';void(0);";
+
+}
+
 1;

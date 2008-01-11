@@ -25,6 +25,17 @@ var kb_hooks = [{}, {}, {}, {}];
 
 var max_len = 50;
 
+
+function dialog_open (href, arg, options) {
+						
+	var result = window.showModalDialog (href, arg, options);
+
+	document.body.style.cursor = 'default';
+	
+	return result;
+
+}
+
 function handle_hotkey_focus    (r) {document.form.elements [r.data].focus ()}
 function handle_hotkey_focus_id (r) {document.getElementById (r.data).focus ()}
 function handle_hotkey_href     (r) {

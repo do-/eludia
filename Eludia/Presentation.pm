@@ -3389,4 +3389,37 @@ warn "\$href='$href'(2)\n";
 	
 }
 
+################################################################################
+
+sub dialog_close {
+
+	my ($result) = @_;
+	
+	$result ||= {};
+	
+	setup_skin ();
+	
+	$_SKIN -> dialog_close ($result);
+	
+	$_REQUEST {__response_sent} = 1;
+
+}
+
+################################################################################
+
+sub dialog_open {
+
+	my ($arg, $options) = @_;
+	
+	$arg ||= {};
+	
+	my $id = 0 + $arg;
+	check_href ($arg);
+
+	$_REQUEST {__script} .= json_dump_to_function ("dialog_open_$id" => $arg);
+
+	return $_SKIN -> dialog_open ($arg, $options);
+
+}
+
 1;
