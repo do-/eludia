@@ -20,6 +20,7 @@
 		marginheight=0
 		scroll=no
 		onLoad="
+			if (dialogArguments.title) document.title = dialogArguments.title;
 			window.returnValue = {'result': 'esc'};
 			open(dialogArguments.href, '_body_iframe');
 		"

@@ -2505,12 +2505,19 @@ sub draw_cells {
 	foreach my $cell (order_cells (@{$_[0]})) {
 	
 		if ($options -> {href}) {
+
 			ref $cell or $cell = {label => $cell};
+
 			$cell -> {a_class} ||= $options -> {a_class};
 			$cell -> {target}  ||= $options -> {target} || '_self';
+
 			unless ($cell -> {href}) {
 				$cell -> {href} = $options -> {href};
 				$cell -> {no_check_href} = 1;
+			}
+
+			if ($options -> {dialog} && !$cell -> {dialog}) {
+				$cell -> {dialog} = $options -> {dialog};
 			}
 		}
 		
@@ -2618,6 +2625,18 @@ sub draw_text_cell {
 		}
 		else {
 			delete $data -> {href};
+		}
+		
+		if ($data -> {dialog}) {
+		
+			$data -> {href} = dialog_open ({
+					
+				title => $data -> {dialog} -> {title},
+					
+				href => $data -> {href},
+						
+			}, $data -> {dialog} -> {options}) . $data -> {dialog} -> {after} . ';void (0)',
+			
 		}
 
 		if ($data -> {add_hidden}) {
@@ -3424,6 +3443,9 @@ sub dialog_open {
 
 	my ($arg, $options) = @_;
 	
+	$options -> {dialogHeight} ||= $options -> {height} . 'px' if $options -> {height};
+	$options -> {dialogWidth}  ||= $options -> {width}  . 'px' if $options -> {width};
+
 	$arg ||= {};
 	
 	my $id = 0 + $arg;
