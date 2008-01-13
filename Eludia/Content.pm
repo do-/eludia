@@ -2557,6 +2557,8 @@ sub fill_in_template {
 	$r -> print ($result);
 
 	$_REQUEST {__response_sent} = 1;
+	
+	return $result;
 
 }
 
