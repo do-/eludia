@@ -385,10 +385,24 @@ sub send_mail {
 		##### connecting...
 
 	my $repeat = 10;
+	
 	my $smtp = undef;
-	while ($repeat || !defined $smtp) {
-		$smtp = Net::SMTP -> new ($preconf -> {mail} -> {host});
+	
+	while ($repeat) {
+
 		$repeat--;
+
+		$smtp = Net::SMTP -> new ($preconf -> {mail} -> {host}, %{$preconf -> {mail} -> {options}});
+
+		$smtp or next;
+		
+		if ($preconf -> {mail} -> {user}) {
+			$smtp -> auth ($preconf -> {mail} -> {user}, $preconf -> {mail} -> {password}) or die "SMTP AUTH error: " . $smtp -> code . ' ' . $smtp -> message;
+		}
+		
+		last if $smtp;
+
+
 	}	
 
 	unless (defined $smtp) {
