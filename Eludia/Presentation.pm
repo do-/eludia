@@ -201,21 +201,32 @@ sub order {
 	
 	$result ||= $default;
 	
-	if ($_REQUEST {desc}) {
-	
-		$result .= ',';
-		$result =~ s/\s+/ /g;	
-		$result =~ s/ \,/\,/g;	
-		$result =~ s/([^(ASC|DESC)])\,/$1 ASC\,/g;
-		$result =~ s/ DESC\,/ BCSC\,/g;
-		$result =~ s/ ASC\,/ DESC\,/g;
-		$result =~ s/ BCSC\,/ ASC\,/g;
-
-		chop $result;	
-		
+	unless ($_REQUEST {desc}) {
+		$result =~ s{(?<=SC)\!}{}g;
+		return $result;
 	}
-			
-	return $result;
+	
+	
+	my @new = ();
+	
+	foreach my $token (split /\s*\,\s*/gsm, $result) {
+	
+		unless ($token =~ s{\!$}{}) {
+
+			unless ($token =~ s{DESC$}{}i) {
+
+				$token =~ s{ASC$}{}i;
+				$token .= ' DESC';
+
+			}
+
+		}
+	
+		push @new, $token;
+	
+	}
+	
+	return join ', ', @new;
 
 }
 
@@ -2905,11 +2916,11 @@ sub draw_table_header_cell {
 			__last_last_query_string => $_REQUEST {__last_last_query_string},
 		};
 		
-		$cell -> {href} -> {desc} = 1 - $_REQUEST {desc} if $_REQUEST {order} eq $cell -> {order};
+		$cell -> {href} -> {desc} = $_REQUEST {order} eq $cell -> {order} ? 1 - $_REQUEST {desc} : 0;
 
 	}
 
-	check_href ($cell);	
+	check_href ($cell) if $cell -> {href};	
 	
 	foreach my $field (qw(href_asc href_desc)) {
 	
