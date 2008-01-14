@@ -43,7 +43,7 @@ sub sql_do_refresh_sessions {
 
 	sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session NOT IN ($ids)");
 	
-	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = NULL WHERE id = ? ", $_REQUEST {sid});
+	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = GETDATE() WHERE id = ? ", 0+$_REQUEST {sid});
 	
 }
 
