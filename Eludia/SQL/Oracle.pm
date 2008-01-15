@@ -486,6 +486,8 @@ sub sql_select_array {
 
 	my ($sql, @params) = @_;
 
+	$sql =~ s/\bLIMIT\s+\d+\s*$//igsm;
+
 	my $st = sql_prepare ($sql);
 	$st -> execute (@params);
 	my @result = $st -> fetchrow_array ();
@@ -675,8 +677,6 @@ EOS
 
 	}
 
-	my $id_value;
-
 	foreach my $field (keys %$pairs) { 
 		my $comma = @params ? ', ' : '';	
 		
@@ -689,7 +689,6 @@ EOS
 		else {
 			push @params, $pairs -> {$field};	
 		}
-		$id_value = $pairs -> {$field} if (uc $field eq 'ID');
  		
 	}
 
@@ -697,10 +696,10 @@ EOS
 		my $seq_name ='SEQ_';
 		my $curval;
 
-		if ($id_value) {
+		if ($pairs -> {id}) {
 			$seq_name .= sql_select_scalar("SELECT id FROM $conf->{systables}->{__voc_replacements} WHERE table_name='$table_name' and object_type=2");
 			$curval = sql_select_scalar("SELECT LAST_NUMBER FROM user_sequences WHERE SEQUENCE_NAME='$seq_name'");
-			my $step = $id_value - $curval;
+			my $step = $pairs -> {id} - $curval;
 	 		if ($step > 1) {
 				sql_do("ALTER SEQUENCE $seq_name INCREMENT BY $step");
 			        sql_select_scalar("SELECT $seq_name.nextval FROM DUAL");
@@ -860,7 +859,7 @@ my (@items,@group_by_values_ref,@group_by_fields_ref);
 my ($pattern,$need_group_by);
 my $sc_in_quotes=0;
 
-#warn "~~~ MYSQL TO ORACLE IN: <$sql>\n";
+#warn "ORACLE IN: <$sql>\n";
 
 ############### «амен€ем неразрешенные в запросах слова на ключи (обратно восстанавливаем в lc_hashref())
 $sql =~ s/([^\W]\s*\b)user\b(?!\.)/\1RewbfhHHkgkglld/igsm;
@@ -939,6 +938,12 @@ for(my $i = $#items; $i >= 1; $i--) {
 	$items[$i] =~ s/\bCONCAT\s*\((.*?)\)/join('||',split(',',$1))/iegsm;
 	$items[$i] =~ s/\bLEFT\s*\((.+?),(.+?)\)/SUBSTR\(\1,1,\2\)/igsm;
 	$items[$i] =~ s/\bRIGHT\s*\((.+?),(.+?)\)/SUBSTR\(\1,LENGTH\(\1\)-\(\2\)+1,LENGTH\(\1\)\)/igsm;
+	if ($model_update -> {characterset} =~ /UTF/i) {
+		$items[$i] =~ s/\bHEX\s*(\(.*?\))/RAWTONHEX\1/igsm;
+	}
+	else {
+		$items[$i] =~ s/\bHEX\s*(\(.*?\))/RAWTOHEX\1/igsm;	
+	}
 	####### DATE_FORMAT
 	if ($items[$i] =~ m/\bDATE_FORMAT\s*\((.+?),(.+?)\)/igsm) {
 		my $expression = $1;
