@@ -625,7 +625,7 @@ sub require_fresh {
 		) {
 				
 			my $__last_update = sql_select_scalar ("SELECT unix_ts FROM $conf->{systables}->{__last_update}");
-			my $__time = time ();
+			my $__time = int(time ());
 
 			if ($DB_MODEL && !$DB_MODEL -> {splitted}) {
 
@@ -733,7 +733,7 @@ print STDERR "[$$] OK, $name is up to date\n";
 				eval {
 
 					my $__last_update = sql_select_scalar ("SELECT unix_ts FROM $conf->{systables}->{__last_update}");
-					my $__time = time ();
+					my $__time = int(time ());
 
 					opendir (DIR, "$the_path/Updates") || die "can't opendir $the_path/Updates: $!";
 					my @scripts = readdir (DIR);
@@ -1159,26 +1159,25 @@ sub select_subset { return {} }
 ################################################################################
 
 sub get_user {
-
 	return if $_REQUEST {type} eq '_static_files';
 
 	sql_do_refresh_sessions ();
 
 	my $user = undef;
-	
+
 	if ($_REQUEST {__login}) {
 		$user = sql_select_hash ("SELECT * FROM $conf->{systables}->{users} WHERE login = ? AND password = PASSWORD(?) AND fake <> -1", $_REQUEST {__login}, $_REQUEST {__password});
 		$user -> {id} or undef $user;
 	}
 	
 	my $peer_server = undef;
-	
+
 	if ($r -> headers_in -> {'User-Agent'} =~ m{^Eludia/.*? \((.*?)\)}) {
-	
+
 		$peer_server = $1;
 
 		my $local_sid = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE peer_id = ? AND peer_server = ?", $_REQUEST {sid}, $peer_server);
-		
+
 		unless ($local_sid) {
 		
 			my $user = peer_query ($peer_server, {__whois => $_REQUEST {sid}});
