@@ -641,17 +641,19 @@ sub start_page {
 
 	$_REQUEST {__response_sent} = 1;
 
-	$_REQUEST {_xml} = "<xml>$_REQUEST{_xml}</xml>" if $_REQUEST{_xml};
+	$_REQUEST {_xml}   = "<xml>$_REQUEST{_xml}</xml>" if $_REQUEST {_xml};
+	$_REQUEST {_style} = "<style><!--$_REQUEST{_style}</style>" if $_REQUEST {_style};
 
 	$r -> print (<<EOH);
 		<html xmlns:x="urn:schemas-microsoft-com:office/excel" xmlns:o="urn:schemas-microsoft-com:office:office">
 			<head>
 				<title>$$i18n{_page_title}</title>
 				<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
+				$_REQUEST{_style}
 				$_REQUEST{_xml}
-				</head>
-				<body bgcolor=white leftMargin=0 topMargin=0 marginwidth="0" marginheight="0">
-$_REQUEST{__before_xls}
+			</head>
+			<body bgcolor=white leftMargin=0 topMargin=0 marginwidth="0" marginheight="0">
+				$_REQUEST{__before_xls}
 EOH
 
 }
