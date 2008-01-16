@@ -677,7 +677,8 @@ sub draw_form_field_static {
 		
 	}
 	else {
-		$html .= ($options -> {value} || '&nbsp;');
+		$html .= $options -> {value};
+		$html .= '&nbsp;' unless defined $options -> {value};
 	}
 	
 	

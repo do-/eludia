@@ -1313,7 +1313,7 @@ sub draw_form_field_static {
 		delete $options -> {href};
 	}
 	
-	my $value = $options -> {value} || $data -> {$options -> {name}};	
+	my $value = defined $options -> {value} ? $options -> {value} : $data -> {$options -> {name}};
 
 	my $static_value = '';
 	
@@ -1412,7 +1412,7 @@ sub draw_form_field_static {
 			$static_value = $options -> {values} -> {$value};
 		}
 		else {
-			$static_value = $options -> {value} || $value;
+			$static_value = defined $options -> {value} ? $options -> {value} : $value;
 		}
 		
 	}
