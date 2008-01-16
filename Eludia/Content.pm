@@ -618,7 +618,7 @@ sub require_fresh {
 			$DB_MODEL -> {tables} = \%tables;
 			$DB_MODEL -> {splitted} = 1;
 		}
-
+            #   if (!$db ){sql_do ("SELECT 1+1")};
 		if (
 			$db
 			&& $last_modified > 0 + sql_select_scalar ("SELECT unix_ts FROM $conf->{systables}->{__required_files} WHERE file_name = ?", $module_name)
