@@ -106,10 +106,10 @@ sub assert {
 
 	unless ($params {no_checksums}) {
 
-		unless (exists $existing_tables -> {_db_model_checksums}) {
+		unless (exists $existing_tables -> {$_db_model_checksums}) {
 			
 			my $index_name = $_db_model_checksums;
-			$index_name =~ s{\w+}{$1_pk};
+			$index_name =~ s{(\w+)}{$1_pk};
 		
 			$self -> do ("CREATE TABLE $_db_model_checksums (checksum CHAR(22))");
 			$self -> do ("CREATE INDEX $index_name ON $_db_model_checksums (checksum)");
