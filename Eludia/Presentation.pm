@@ -2741,9 +2741,6 @@ sub draw_input_cell {
 	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit}) || $data -> {read_only} || $data -> {off};
 
 	$data -> {size} ||= 30;
-
-	$data -> {attributes} ||= {};
-	$data -> {attributes} -> {class} ||= 'row-cell';
 	
 	_adjust_row_cell_style ($data, $options);
 						
