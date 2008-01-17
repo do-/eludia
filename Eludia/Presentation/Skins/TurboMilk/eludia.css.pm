@@ -12,9 +12,24 @@ div.table-container {
       	OVERFLOW-X: auto;
       	PADDING-BOTTOM: 0px;
       	MARGIN: 0px;
-/*
-      	WIDTH: expression(document.body.offsetWidth - (window.name == '_body_iframe' ? 12 : 21));
-*/      	
+      	WIDTH: expression(document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 16));
+      	PADDING-TOP: 0px;      	
+      	
+	scrollbar-base-color:#d6d3ce;
+	scrollbar-arrow-color:#485f70;
+	scrollbar-3dlight-color: #efefef;
+	scrollbar-darkshadow-color:#b0b0b0;
+
+}
+
+div.table-container-x {
+
+      	PADDING-RIGHT: 0px;
+      	OVERFLOW-Y: visible;
+      	PADDING-LEFT: 0px;
+      	OVERFLOW-X: auto;
+      	PADDING-BOTTOM: 0px;
+      	MARGIN: 0px;
       	WIDTH: expression(document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 16));
       	PADDING-TOP: 0px;      	
       	
@@ -447,6 +462,47 @@ td.vert-menu {
 	COLOR: #293869; 
 
 }
+.row-cell-no-scroll {
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	FONT-WEIGHT: normal; 
+	FONT-SIZE:  10pt; 
+	COLOR: #000000; 
+	background-color: #ffffff;
+	padding-top: 3px;
+	padding-bottom: 2px;
+
+	padding-left: 5px;
+	padding-right: 5px;
+
+	border-right:solid 1px #D6D3CE;
+	border-bottom:solid 1px #D6D3CE;
+
+	COLOR: #293869; 
+
+	position: relative;
+	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+
+}
+.row-cell-transparent-no-scroll {
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	FONT-WEIGHT: normal; 
+	FONT-SIZE:  10pt; 
+	COLOR: #000000; 
+	padding-top: 3px;
+	padding-bottom: 2px;
+
+	padding-left: 5px;
+	padding-right: 5px;
+
+	border-right:solid 1px #D6D3CE;
+	border-bottom:solid 1px #D6D3CE;
+
+	COLOR: #293869; 
+
+	position: relative;
+	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+
+}
 .row-cell-transparent {
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	FONT-WEIGHT: normal; 
@@ -487,6 +543,19 @@ td.vert-menu {
 	padding-bottom: 5px;
 
 }
+.row-cell-total-no-scroll {
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	FONT-WEIGHT: bold;   
+	FONT-SIZE: 10pt; 
+	COLOR: #000000; 
+	background-color: #efefef;
+	padding-top: 5px;
+	padding-bottom: 5px;
+
+	position: relative;
+	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+
+}
 
 .row-cell-header {
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
@@ -505,6 +574,27 @@ td.vert-menu {
 	border-top:solid 1px #D6D3CE;
 
 }
+.row-cell-header-no-scroll {
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	FONT-WEIGHT: bold;   
+	FONT-SIZE: 10pt; 
+	COLOR: #000000; 
+	background-color: #efefef;
+	padding-top: 3px;
+	padding-bottom: 2px;
+	
+	position: relative;
+	top: expression(this.parentElement.parentElement.parentElement.parentElement.scrollTop);
+
+	border-right:solid 1px #D6D3CE;
+	border-bottom:solid 1px #D6D3CE;
+	border-top:solid 1px #D6D3CE;
+
+	position: relative;
+	top: expression(this.parentElement.parentElement.parentElement.parentElement.scrollTop);
+	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+
+}
 
 a.row-cell-header-a, a.row-cell-header-a:link, a.row-cell-header-a:hover, a.row-cell-header-a:visited {
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
@@ -516,6 +606,15 @@ a.row-cell-header-a, a.row-cell-header-a:link, a.row-cell-header-a:hover, a.row-
 
 .row-cell-hilite {
 	background-color: #dededc;
+}
+.row-cell-hilite-no-scroll {
+
+	background-color: #dededc;
+
+	position: relative;
+	top: expression(this.parentElement.parentElement.parentElement.parentElement.scrollTop);
+	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+
 }
 
 A.lnk0, A.lnk0:link, A.lnk0:active, A.lnk0:hover, A.lnk0:visited {

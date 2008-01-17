@@ -1946,7 +1946,9 @@ sub draw_table_header_cell {
 
 	my $attributes = dump_attributes ($cell -> {attributes});
 	
-	return "<th $attributes $$cell{title}>\&nbsp;$$cell{label}\&nbsp;</th>";
+	my $z_index = $cell -> {no_scroll} ? 'style="z-index:110"' : 'style="z-index:100"';
+
+	return "<th $attributes $$cell{title} $z_index>\&nbsp;$$cell{label}\&nbsp;</th>";
 
 }
 
@@ -1984,7 +1986,13 @@ EOH
 		$html .= qq {<input type=hidden name=$key value="$_REQUEST{$key}">\n};
 	}
 
-	$html .= qq {<td class=bgr8><div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));"><table cellspacing=0 cellpadding=0 width="100%" id="scrollable_table" lpt=$$options{lpt}>\n};
+	$html .= $options -> {no_scroll} ?
+		qq {<td class=bgr8><div class="table-container-x">} :
+		qq {<td class=bgr8><div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
+
+	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="scrollable_table" lpt=$$options{lpt}>\n};
+
+#	$html .= qq {<td class=bgr8><div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));"><table cellspacing=0 cellpadding=0 width="100%" id="scrollable_table" lpt=$$options{lpt}>\n};
 
 	$html .= $options -> {header} if $options -> {header};
 
