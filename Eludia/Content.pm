@@ -810,7 +810,7 @@ print STDERR "[$$] OK, $script is over and out.\n";
 		
 		if ($db && $db -> ping) {
 			sql_do ("DELETE FROM $conf->{systables}->{__required_files} WHERE file_name = ?", $module_name);
-			sql_do ("INSERT INTO $conf->{systables}->{__required_files} (file_name, unix_ts) VALUES (?, ?)", $module_name, time);
+			sql_do ("INSERT INTO $conf->{systables}->{__required_files} (file_name, unix_ts) VALUES (?, ?)", $module_name, int(time));
 		}
 	
 		$INC_FRESH {$module_name} = $last_modified;
