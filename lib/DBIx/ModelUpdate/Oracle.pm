@@ -337,8 +337,13 @@ sub create_table {
 			else {
 				$sequence_name = "SEQ_"."$name";			
 			}
+	
+			unless ($self -> sql_select_scalar("SELECT COUNT(*) FROM USER_SEQUENCES WHERE SEQUENCE_NAME = '${sequence_name}' ")) {		
 
-			$self -> do ("CREATE SEQUENCE $q${sequence_name}$q START WITH 1 INCREMENT BY 1 MINVALUE 1");
+				$self -> do ("CREATE SEQUENCE $q${sequence_name}$q START WITH 1 INCREMENT BY 1 MINVALUE 1");
+
+			}
+
 			if (uc $name ne uc $self -> {__voc_replacements}) { 			
 				$trigger_name = voc_replacements($self, $name, $name, 3, 'CREATE');		
 			}
@@ -346,15 +351,17 @@ sub create_table {
 				$trigger_name = "TRG_"."$name";			
 			}
 
-			$self -> do (<<EOS);
-				CREATE TRIGGER $q${trigger_name}$q BEFORE INSERT ON $q${name}$q
-				FOR EACH ROW
-				WHEN (new.$pk_column is null)
-				BEGIN
-					SELECT $q${sequence_name}$q.nextval INTO :new.$pk_column FROM DUAL;
-				END;		
+			unless ($self -> sql_select_scalar("SELECT COUNT(*) FROM USER_TRIGGERS WHERE TRIGGER_NAME = '${trigger_name}'")) {		
+				$self -> do (<<EOS);
+					CREATE TRIGGER $q${trigger_name}$q BEFORE INSERT ON $q${name}$q
+					FOR EACH ROW
+					WHEN (new.$pk_column is null)
+					BEGIN
+						SELECT $q${sequence_name}$q.nextval INTO :new.$pk_column FROM DUAL;
+					END;		
 EOS
-			$self -> do ("ALTER TRIGGER $q${trigger_name}$q COMPILE");
+				$self -> do ("ALTER TRIGGER $q${trigger_name}$q COMPILE");
+			}
 		}
 		else {
 
