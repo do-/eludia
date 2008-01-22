@@ -826,6 +826,7 @@ EOH
 		$width = "expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)";
 	}
 	if (defined $options -> {other}) {
+		$options -> {other} -> {height} ||= 300;
 		$html .= <<EOH;
 			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:$width}">
 				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="/i/0.html" application="yes">
@@ -953,7 +954,7 @@ EOH
 sub draw_form_field_iframe {
 	
 	my ($_SKIN, $options, $data) = @_;
-
+	$options -> {height} += 0;
 	return <<EOH;
 		<iframe name="$$options{name}" src="$$options{href}" width="$$options{width}" height="$$options{height}" application="yes"></iframe>
 EOH
@@ -1256,6 +1257,7 @@ EOH
 
 
 	if (defined $options -> {other}) {
+		$options -> {other} -> {height} ||= 300;
 		$html .= <<EOH;
 			<div id="_$$options{name}_div" style="{position:absolute; display:none;width:$options->{other}->{width}px">
 				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="/i/0.html" application="yes">
