@@ -2629,12 +2629,10 @@ sub draw_tree {
 
 	my ($_SKIN, $node_callback, $list, $options) = @_;
 	
-	push @{$_REQUEST{__include_css}}, 'dtree/dtree';
-
 	my $menus = '';
 	my @nodes = ();
 	
-	my ($root_id, $root_url, $selected_node_url);
+	my ($root_id, $root_url, $selected_node_url, $selected_code);
 	
 	our %idx = ();
 	our %lch = ();
@@ -2642,18 +2640,22 @@ sub draw_tree {
 	$options -> {in_order} or $list = tree_sort ($list);
 	
 	foreach my $i (@$list) {
+
 		my $node = $i -> {__node};
+
 		push @nodes, $node;
 		
-		($root_id, $root_url) = ($node -> {id}, $node -> {url})
-			unless $root_id;
+		($root_id, $root_url) = ($node -> {id}, $node -> {url}) unless $root_id;
 			
-		$selected_node_url = $node -> {url}
-			if ($node -> {id} == $options -> {selected_node});
+		if ($node -> {id} == $options -> {selected_node}) {
+			$selected_node_url = $node -> {url};
+			$selected_code = 'win.d.selectedFound = true; win.d.selectedNode = ' . (@nodes - 1);
+		}
        		
 		$idx {$node -> {id}} = $node;
 		$lch {$node -> {pid}} = $node if $node -> {pid};
 		$menus .= $i -> {__menu};
+
 	}
 	
 	unless ($selected_node_url) {
@@ -2681,12 +2683,12 @@ sub draw_tree {
 		c.useCookies = true;
 		win.d.icon.node = 'folderopen.gif';
 		win.d.aNodes = $nodes;
+		$selected_code
 		win.document.body.innerHTML = "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td valign=top>" + win.d + "</td></tr></table>$menus";
 		if (win.d.selectedNode == null) {
 			win.d.openTo ($options->{selected_node}, true);
 		}		
 EOH
-#			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
 
 	return <<EOH;
 		<frameset cols="250,*">
