@@ -832,7 +832,8 @@ sub draw_form {
 	$options -> {name}    ||= 'form';
 	
 	!$_REQUEST {__only_form} or $_REQUEST {__only_form} eq $options -> {name} or return '';
-	
+
+	$options -> {no_esc}    = 1 if $apr -> param ('__last_query_string') < 0;
 	$options -> {target}  ||= 'invisible';	
 	$options -> {method}  ||= 'post';
 	$options -> {enctype} ||= 'multipart/form-data';
@@ -3129,8 +3130,13 @@ sub draw_node {
 	my $result = '';
 	
 	if ($options -> {href}) {
-		$options -> {href} .= '&__tree=1' unless ($options -> {no_tree});		
-		check_href ($options) ;
+
+		my $__last_query_string = $_REQUEST {__last_query_string};
+		$_REQUEST {__last_query_string} = -1;
+		check_href ($options);
+		$options -> {href} .= '&__tree=1' unless ($options -> {no_tree});
+		$_REQUEST {__last_query_string} = $__last_query_string;
+
 	}
 	
 	$options -> {parent} = -1 if ($options -> {parent} == 0);
