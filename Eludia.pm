@@ -43,9 +43,18 @@ BEGIN {
 	}
   
 	$Data::Dumper::Sortkeys = 1;
+	
+	'$LastChangedDate$' =~ /(\d\d)(\d\d)\-(\d\d)\-(\d\d)/;
+	
+	my $year = "$1$2";
 
-	$Eludia_VERSION      = $Eludia::VERSION      = '07.12.11';
-	$Eludia_VERSION_NAME = $Eludia::VERSION_NAME = 'Statist';
+	$Eludia::VERSION      = "$2.$3.$4";
+
+	'$LastChangedRevision$' =~ /(\d+)/;
+	
+	$Eludia::VERSION      .= ".$1";
+
+	$Eludia_VERSION = $Eludia::VERSION;
 
 	eval {
 		require Math::FixedPrecision;
@@ -148,15 +157,15 @@ BEGIN {
 	unless ($ENV {ELUDIA_BANNER_PRINTED}) {
 
 		print STDERR "\n";
-		print STDERR " ----------------------------------------------------------------\n";
+		print STDERR " -------------------------------------------------------\n";
 		print STDERR "\n";
-		print STDERR " *****     *    ELUDIA / Perl                                    \n";
-		print STDERR "     *    *                                                      \n";
-		print STDERR "     *   *                                                       \n";
-		print STDERR " ********       Version: $Eludia_VERSION [$Eludia::VERSION_NAME] \n";
-		print STDERR "     * *                                                         \n";
-		print STDERR "     **                                                          \n";
-		print STDERR " *****          Copyright (c) 2002-2007 by Eludia                \n";
+		print STDERR " *****     *    ELUDIA / Perl\n";
+		print STDERR "     *    *\n";
+		print STDERR "     *   *\n";
+		print STDERR " ********       Version: $Eludia_VERSION\n";
+		print STDERR "     * *\n";
+		print STDERR "     **\n";
+		print STDERR " *****          Copyright (c) 2002-$year by Eludia\n";
 		print STDERR "\n";
 		print STDERR " ----------------------------------------------------------------\n\n";
 
