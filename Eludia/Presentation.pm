@@ -339,7 +339,17 @@ sub check_href {
 		
 	}
 
-#	$url .= '#';
+	if ($options -> {dialog}) {
+	
+		$url = dialog_open ({
+				
+			title => $options -> {dialog} -> {title},
+				
+			href => $url . '#',
+					
+		}, $options -> {dialog} -> {options}) . $options -> {dialog} -> {after} . ';void (0)',
+		
+	}
 
 	$options -> {href} = $url;
 
@@ -2639,17 +2649,17 @@ sub draw_text_cell {
 			delete $data -> {href};
 		}
 		
-		if ($data -> {dialog}) {
-		
-			$data -> {href} = dialog_open ({
-					
-				title => $data -> {dialog} -> {title},
-					
-				href => $data -> {href},
-						
-			}, $data -> {dialog} -> {options}) . $data -> {dialog} -> {after} . ';void (0)',
-			
-		}
+#		if ($data -> {dialog}) {
+#		
+#			$data -> {href} = dialog_open ({
+#					
+#				title => $data -> {dialog} -> {title},
+#					
+#				href => $data -> {href},
+#						
+#			}, $data -> {dialog} -> {options}) . $data -> {dialog} -> {after} . ';void (0)',
+#			
+#		}
 
 		if ($data -> {add_hidden}) {
 			$data -> {hidden_name}  ||= $data -> {name};
