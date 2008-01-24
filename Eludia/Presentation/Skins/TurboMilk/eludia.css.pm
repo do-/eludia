@@ -647,10 +647,12 @@ A.row-cell, A.row-cell:link, A.row-cell:active, A.row-cell:hover, A.row-cell:vis
 	FONT-SIZE: 10pt; 
 	COLOR: #293869; 
 	TEXT-DECORATION: none;
-	border:none;
-
+      	margin: 0px;
+      	padding: 0px;
+      	border: 0px;
 	background-color: transparent;
 }
+
 A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-button:visited {
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	FONT-SIZE: 10pt; 

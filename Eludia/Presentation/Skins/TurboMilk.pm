@@ -678,7 +678,7 @@ sub draw_form_field_static {
 	}
 	else {
 		$html .= $options -> {value};
-		$html .= '&nbsp;' unless defined $options -> {value};
+		$html .= '&nbsp;' if $options -> {value} eq '';
 	}
 	
 	
@@ -741,6 +741,8 @@ sub draw_form_field_select {
 
 	my ($_SKIN, $options, $data) = @_;
 	
+	$options -> {attributes} ||= {};
+	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
 	my $attributes = dump_attributes ($options -> {attributes});
 	
 	if (defined $options -> {other}) {
@@ -810,7 +812,6 @@ EOJS
 			onKeyDown="tabOnEnter()"
 			onChange="is_dirty=true; $$options{onChange}" 
 			onKeyPress="typeAhead()" 
-			style="visibility:expression((top.last_vert_menu ? top.last_vert_menu [0] : 0) || last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')"
 		>
 EOH
 		
@@ -1319,9 +1320,12 @@ EOJS
 		}
 	}
 
+	$options -> {attributes} ||= {};
+	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
+	my $attributes = dump_attributes ($options -> {attributes});
 	
 	$html .= <<EOH;
-		<select name="$name" id="${name}_select" $read_only onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression((top.last_vert_menu ? top.last_vert_menu [0] : 0) || last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')">
+		<select name="$name" id="${name}_select" $read_only onChange="$$options{onChange}" onkeypress="typeAhead()" $attributes>
 EOH
 
 	if (defined $options -> {empty}) {
@@ -1401,6 +1405,11 @@ sub draw_toolbar_input_text {
 		$html .= ': ';
 	}
 
+
+	$options -> {attributes} ||= {};
+	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
+	my $attributes = dump_attributes ($options -> {attributes});
+
 	$html .= <<EOH;
 		<input 
 			onKeyPress="if (window.event.keyCode == 13) {form.submit()}" 
@@ -1410,7 +1419,7 @@ sub draw_toolbar_input_text {
 			value="$$options{value}" 
 			onFocus="scrollable_table_is_blocked = true; q_is_focused = true" 
 			onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
-			style="visibility:expression(last_vert_menu [0] || subsets_are_visible ? 'hidden' : '')"
+			$attributes
 			class='form-active-inputs'
 			id="$options->{id}"
 		>
@@ -2325,6 +2334,21 @@ EOI
 		
 EOH
 
+	
+	unless ($r -> headers_in -> {'User-Agent'} =~ /MSIE 7/) {
+		
+		$_REQUEST {__script} .= <<EOS;
+			function select_visibility () {
+				if (top.last_vert_menu && top.last_vert_menu [0]) return 'hidden';
+				if (last_vert_menu [0]) return 'hidden';
+				if (subsets_are_visible) return 'hidden';
+				return '';
+			}
+EOS
+	
+	}
+	
+	
 	return <<EOH;
 		<html>		
 			<head>
