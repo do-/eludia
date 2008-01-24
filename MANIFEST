@@ -3,7 +3,6 @@ Eludia.pm
 Eludia/Apache.pm
 Eludia/Auth/NTLM.pm
 Eludia/Content.pm
-Eludia/Docs.pm
 Eludia/FileDumpHash.pm
 Eludia/Flix.pm
 Eludia/IIS.pm

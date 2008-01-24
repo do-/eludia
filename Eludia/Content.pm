@@ -1713,7 +1713,7 @@ sub select__info {
 		
 		{			
 			id    => 'Engine',
-			label => "Eludia $Eludia_VERSION ($Eludia_VERSION_NAME)",
+			label => "Eludia $Eludia_VERSION",
 			path  => $preconf -> {core_path},
 		},
 

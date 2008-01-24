@@ -129,7 +129,6 @@ sub setup_skin {
 		_PACKAGE
 		_REQUEST
 		_USER
-		Eludia_VERSION_NAME
 		SQL_VERSION
 		conf
 		preconf
@@ -145,7 +144,6 @@ sub setup_skin {
 		_PACKAGE
 		_REQUEST
 		_USER
-		Eludia_VERSION_NAME
 		SQL_VERSION
 		conf
 		preconf

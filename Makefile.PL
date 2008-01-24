@@ -1,7 +1,7 @@
 use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME'		=> 'Eludia',
-    'VERSION_FROM'	=> 'Eludia.pm',
+#   'VERSION_FROM'	=> 'Eludia.pm',
     'PREREQ_PM'		=> {
 	'Net::SMTP'		=> '',
 	'Apache'		=> '',
