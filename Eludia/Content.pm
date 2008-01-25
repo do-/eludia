@@ -574,6 +574,8 @@ sub require_fresh {
 		$the_path =~ s{[\\\/]*(Content|Presentation)}{};
 		last;
 	}
+	
+	my $is_config = $file_name =~ /Config\.pm$/ ? 1 : 0;
 
 	$found or return "File not found: $file_name\n";
 	
@@ -581,7 +583,7 @@ sub require_fresh {
 	
 	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $last_modified, $ctime, $blksize, $blocks);
 
-	if ($need_refresh) {
+	if ($need_refresh && (!$is_config || !$CONFIG_IS_LOADED)) {
 		($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $last_modified, $ctime, $blksize, $blocks) = stat ($file_name);
 		my $last_load = $INC_FRESH {$module_name} + 0;
 		$need_refresh = $last_load < $last_modified;
@@ -603,13 +605,13 @@ sub require_fresh {
 
 		die $@ if $@;
 
-		if ($file_name =~ /Config\.pm$/) {
+		if ($is_config) {
 			check_systables ();
 			sql_assert_core_tables ();
 		}
 
 		if (
-			$file_name =~ /Config\.pm$/
+			$is_config
 			&& $DB_MODEL
 			&& !exists $DB_MODEL -> {tables}
 		) {
@@ -618,10 +620,16 @@ sub require_fresh {
 			$DB_MODEL -> {tables} = \%tables;
 			$DB_MODEL -> {splitted} = 1;
 		}
-            #   if (!$db ){sql_do ("SELECT 1+1")};
+
 		if (
-			$db
-			&& $last_modified > 0 + sql_select_scalar ("SELECT unix_ts FROM $conf->{systables}->{__required_files} WHERE file_name = ?", $module_name)
+			$db && (
+				!$CONFIG_IS_LOADED || (
+					$last_modified > 0 + sql_select_scalar (
+						"SELECT unix_ts FROM $conf->{systables}->{__required_files} WHERE file_name = ?",
+						$module_name
+					)
+				)
+			)
 		) {
 				
 			my $__last_update = sql_select_scalar ("SELECT unix_ts FROM $conf->{systables}->{__last_update}");
@@ -820,7 +828,10 @@ print STDERR "[$$] OK, $script is over and out.\n";
         if ($@) {
 		$_REQUEST {error} = $@;
 		print STDERR "require_fresh: error load module $module_name: $@\n";
-        }	
+        }
+        else {
+        	$CONFIG_IS_LOADED ||= $is_config if $db;
+        }
         
         return $@;
 	
@@ -1111,7 +1122,7 @@ sub call_for_role {
 			
 		}
 		elsif ($preconf -> {core_debug_profiling} == 1) {
-			warn "Profiling [$$] " . 1000 * (time - $time) . " ms $name_to_call\n";
+			__log_profilinig ($time, $name_to_call);
 		}
 		
 		return $result;
@@ -1126,6 +1137,16 @@ sub call_for_role {
 
 	return $name_to_call ? &$name_to_call (@_) : undef;
 		
+}
+
+################################################################################
+
+sub __log_profilinig {
+
+	printf STDERR "Profiling [$$] %20.10f ms %s\n", 1000 * (time - $_[0]), $_[1] if ($preconf -> {core_debug_profiling} == 1);
+	
+	return time ();
+
 }
 
 ################################################################################

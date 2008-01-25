@@ -211,6 +211,9 @@ sub check_static_files {
 
 sub handler {
 
+	my $time = time;
+	my $first_time = $time;
+
 	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
 
 	$_PACKAGE ||= __PACKAGE__ . '::';
@@ -266,12 +269,14 @@ sub handler {
 		}
 
 	}
+
+	$time = __log_profilinig ($time, '<REQUEST>');
 	
 	require_config ({no_db => 1});
-
    	sql_reconnect ();   	
-
 	require_config ();
+
+	$time = __log_profilinig ($time, '<require_config>');
 	
 	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
 
@@ -309,7 +314,11 @@ EOH
 		return OK;
 	}
 
+	$time = __log_profilinig ($time, '<misc>');
+
 	our $_USER = get_user ();
+
+	$time = __log_profilinig ($time, '<got user>');
 
 	$number_format or our $number_format = Number::Format -> new (%{$conf -> {number_format}});
 
@@ -624,13 +633,13 @@ EOH
 		}
 
 	}
-
-#   	$db -> disconnect;
-
+	
 	if ($_REQUEST {__suicide}) {
 		$r -> print (' ' x 8096);
 		CORE::exit (0);
 	}
+
+	__log_profilinig ($first_time, '<TOTAL>');
 
 	return OK;
 
