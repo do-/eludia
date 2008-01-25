@@ -1848,7 +1848,18 @@ sub draw_select_cell {
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	my $multiple = $data -> {rows} > 1 ? "multiple size=$$data{rows}" : '';
-	my $html = qq {<td $attributes><nobr><select name="$$data{name}" onChange="is_dirty=true; $$options{onChange}" onkeypress="typeAhead()" $multiple>};
+	my $html = qq {<td $attributes><select 
+		name="$$data{name}" 
+		onChange="is_dirty=true; $$options{onChange}" 
+		onkeypress='typeAhead();' 
+		$multiple
+	};
+	
+	if (($options -> {__fixed_cols} > 0) && ($r -> headers_in -> {'User-Agent'} !~ /MSIE 7/)) {
+		$html .= qq {style= "visibility:expression(cell_select_visibility(this, $options->{__fixed_cols}))"};
+	}
+
+	$html .= '>';
 
 	$html .= qq {<option value="0">$$data{empty}</option>\n} if defined $data -> {empty};
 
@@ -1856,7 +1867,7 @@ sub draw_select_cell {
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
 	}
 	
-	$html .= qq {</select></nobr></td>};
+	$html .= qq {</select></td>};
 	
 	return $html;
 
@@ -2338,16 +2349,46 @@ EOH
 	unless ($r -> headers_in -> {'User-Agent'} =~ /MSIE 7/) {
 		
 		$_REQUEST {__script} .= <<EOS;
+
 			function select_visibility () {
 				if (top.last_vert_menu && top.last_vert_menu [0]) return 'hidden';
 				if (last_vert_menu [0]) return 'hidden';
 				if (subsets_are_visible) return 'hidden';
 				return '';
 			}
+
+			function cell_select_visibility (select, fixed_cols) {
+
+				var td    = select.offsetParent;
+				var tr    = td.parentElement;
+				var cells = tr.cells;
+				var last_fixed_cell_offset_right = 0;
+
+				for (i = 0; i < fixed_cols; i ++) {
+					last_fixed_cell_offset_right += cells [i].offsetWidth;
+				}
+
+				var table = td.offsetParent;
+				var div   = table.offsetParent;
+				var select_left = select.offsetLeft + td.offsetLeft - div.scrollLeft;
+				var result = select_left < last_fixed_cell_offset_right ? 'hidden' : '';
+
+				return result;
+
+			}
+
 EOS
 	
 	}
 	
+
+		$_REQUEST {__script} .= <<EOS;
+				
+
+EOS
+
+
+
 	
 	return <<EOH;
 		<html>		

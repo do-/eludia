@@ -2524,6 +2524,8 @@ sub draw_cells {
 		$i -> {__target} ||= $options -> {target};
 	}
 	
+	$options -> {__fixed_cols} = 0;
+	
 	foreach my $cell (order_cells (@{$_[0]})) {
 	
 		if ($options -> {href}) {
@@ -2542,6 +2544,8 @@ sub draw_cells {
 				$cell -> {dialog} = $options -> {dialog};
 			}
 		}
+		
+		$options -> {__fixed_cols} ++ if ref $cell eq HASH && $cell -> {no_scroll};
 		
 		$result .= 
 			!ref ($cell) || ($cell -> {type} ne 'button' && !$cell -> {icon} && $cell -> {off}) || $cell -> {read_only} ? draw_text_cell ($cell, $options) :

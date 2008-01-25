@@ -322,7 +322,9 @@ We wrote an application developer manual. It is ~400K of DocBook sources, ~2M PD
 
 But, sorry, we are really sorry, it is in Russian only. We know, some people consider this insulting, but, honest, we force nobody to study our language. Writing such a manual en English is not easier to us than learning Russian to you.
 
-Having said that, we humbly invite all Russian-speaking Perl WEB developpers to visit L<http://dev.eludia.ru/docs>.
+Having said that, we humbly invite all Russian-speaking Perl WEB developpers to visit L<http://eludia.ru/wiki>.
+
+=back
 
 =head1 DISCLAIMER
 
