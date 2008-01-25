@@ -508,6 +508,12 @@ sub sql_do_update {
 	my @params = @_REQUEST {(map {"_$_"} @$field_list)};
 	push @params, $options -> {id};
 
+	# ѕри передаче пустой строки в численное поле генерируетс€ ошибка преобразовани€ типов
+	if ($table_name eq 'core_log')
+	{
+		$params[2] = 0 if $params[2] eq '';
+	}
+
 	sql_do ($sql, @params);
 	
 }
