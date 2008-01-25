@@ -830,30 +830,6 @@ print STDERR "[$$] OK, $script is over and out.\n";
 
 sub add_totals {
 
-#	my ($ar, $options) = @_;	
-#	my $totals = {};
-	
-#	foreach my $r (@$ar) {
-		
-#		foreach my $key (keys %$r) {
-			
-#			next if $key =~ /^id|label$/;
-			
-#			$totals -> {$key} += $r -> {$key};
-			
-#		}
-		
-#	}
-	
-#	$totals -> {label} = 'Итого';
-	
-#	$options -> {position} = 0 + @$ar unless defined $options -> {position};
-	
-#	splice (@$ar, $options -> {position}, 0, $totals);
-
-
-
-
 	my ($ar, $options) = @_;
 
 	my @ar = ({_root => -1}, @$ar, {_root => 1});	
@@ -2401,6 +2377,28 @@ sub simple_svn_prompt {
 
 sub require_content ($) {
 	require_fresh ("${_PACKAGE}Content::$_[0]");
+}
+
+################################################################################
+
+sub require_config {
+	
+	my ($options) = @_;
+	
+	if ($options -> {no_db}) {
+		$options -> {_db} = $db;
+		$db = undef;
+	}
+	
+	delete $INC {$_PACKAGE . '/Config.pm'};
+	my $module_name = $_PACKAGE . 'Config';
+	delete $INC_FRESH {$module_name};
+	require_fresh ($module_name);
+
+	if ($options -> {no_db}) {
+		$db = $options -> {_db};
+	}
+
 }
 
 ################################################################################

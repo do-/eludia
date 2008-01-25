@@ -237,7 +237,6 @@ sub handler {
 	$_REQUEST {__uri} =~ s{\&salt\=[\d\.]+}{}gsm;
 	
 	$_REQUEST {__script_name} = $ENV {SERVER_SOFTWARE} =~ /IIS\/5/ ? $ENV {SCRIPT_NAME} : '';
-#	$_REQUEST {__uri_root} =  $_REQUEST {__uri} . '?sid=' . $_REQUEST {sid} . '&salt=' . rand * time;
 
 	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;
 	if ($_REQUEST {fake}) {
@@ -267,13 +266,13 @@ sub handler {
 		}
 
 	}
-
-   	sql_reconnect ();
-
-	require_fresh ($_PACKAGE . 'Config');
 	
-	sql_assert_core_tables ();
+	require_config ({no_db => 1});
 
+   	sql_reconnect ();   	
+
+	require_config ();
+	
 	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
 
 		my $fn = "$1.$2";

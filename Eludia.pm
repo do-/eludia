@@ -200,38 +200,32 @@ BEGIN {
 	while (my ($name, $path) = each %INC) {
 		delete $INC {$name} if $name =~ m{Eludia[\./]}; 
 	}
+	
+	require_config ();
 
 	if ($preconf -> {core_load_modules}) {
 	
-		foreach my $module (qw(Config Content::menu Content::logon Presentation::logon)) {
-			require_fresh ($_PACKAGE . '::' . $module);
-		}	
-			
+		my @files = ("Content/menu.pm", "Content/logon.pm", "Presentation/logon.pm");
+				
 		if ($conf -> {auto_load}) {
 			
 			foreach my $type (@{$conf -> {auto_load}}) {				
 				push @files, "${_PACKAGE}/Content/$type.pm";
 				push @files, "${_PACKAGE}/Presentation/$type.pm";
 			}
-			
-			eval {
-				my $auto_load_expiry = $preconf -> {auto_load_expiry} || 5 * 24;
-				sql_do ('DELETE FROM __required_files WHERE unix_ts < ?', time - $auto_load_expiry * 60 * 60);
-				push @files, sql_select_col ('SELECT file_name FROM __required_files');
-			};						
-			
+						
 		}
 		else {
 		
 			foreach my $path (reverse (@$PACKAGE_ROOT)) {
+			
+				foreach my $dir ('Content', 'Presentation') {
 
-				opendir (DIR, "$path/Content") || die "can't opendir $PACKAGE_ROOT/Content: $!";
-				push @files, grep {/\.pm$/} map { "${_PACKAGE}/Content/$_" } readdir (DIR);
-				closedir DIR;	
+					opendir (DIR, "$path/$dir") || die "can't opendir $path/$dir: $!";
+					push @files, grep {/\.pm$/} map { "${_PACKAGE}/$dir/$_" } readdir (DIR);
+					closedir DIR;	
 
-				opendir (DIR, "$path/Presentation") || die "can't opendir $PACKAGE_ROOT/Presentation: $!";
-				push @files, grep {/\.pm$/} map { "${_PACKAGE}/Presentation/$_" } readdir (DIR);
-				closedir DIR;	
+				}
 
 			}
 						
@@ -250,12 +244,8 @@ BEGIN {
 		Apache -> push_handlers (PerlChildExitHandler => \&sql_disconnect);
 	}
 
-	if ($preconf -> {db_dsn}) {
-		eval {	sql_disconnect;	};
-		warn $@ if $@;
-	}
-
 	print STDERR "\r Loading $pkg_banner ok.\n";
+
 }
 
 1;
