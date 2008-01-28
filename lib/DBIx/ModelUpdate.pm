@@ -106,7 +106,7 @@ sub assert {
 
 	unless ($params {no_checksums}) {
 
-		unless (exists $existing_tables -> {$self -> unquote_table_name($_db_model_checksums)}) {
+		unless (exists $existing_tables -> {_db_model_checksums}) {
 			
 			my $index_name = $_db_model_checksums;
 			$index_name =~ s{(\w+)}{$1_pk};
