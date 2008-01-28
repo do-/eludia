@@ -2235,6 +2235,9 @@ Calendar.prototype.hide = function () {
  */
 Calendar.prototype.showAt = function (x, y) {
 	var s = this.element.style;
+	var calendarWidth = 228;
+	var gap = x + calendarWidth - window.parent.document.body.offsetWidth;
+	if (gap > 0) x -= gap;
 	s.left = x + "px";
 	s.top = y + "px";
 	this.show();
