@@ -1696,12 +1696,6 @@ sub select__info {
 			label => 'DBD::' . $db -> {Driver} -> {Name} . ' ' . ${'DBD::' . $db -> {Driver} -> {Name} . '::VERSION'},
 			path  => $INC {'DBD/' . $SQL_VERSION -> {driver} . '.pm'},
 		},
-
-		{
-			id    => 'DB maintainer',
-			label => 'DBIx::ModelUpdate ' . $DBIx::ModelUpdate::VERSION,
-			path  => $INC {'DBIx/ModelUpdate.pm'},
-		},
 		
 		{			
 			id    => 'Parameters module',
