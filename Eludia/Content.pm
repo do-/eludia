@@ -1122,7 +1122,7 @@ sub call_for_role {
 			
 		}
 		elsif ($preconf -> {core_debug_profiling} == 1) {
-			__log_profilinig ($time, $name_to_call);
+			__log_profilinig ($time, ' ' . $name_to_call);
 		}
 		
 		return $result;

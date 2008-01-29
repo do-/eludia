@@ -111,17 +111,15 @@ sub sql_assert_core_tables {
 
 	return if $model_update -> {core_ok};
 
-my $time = time;
+	my $time = time;
+	
+	if ($conf -> {core_voc_replacement_use}) {
+	
+		$model_update -> assert (tables => {$conf -> {systables} -> {__voc_replacements} => {
 
-warn "sql_assert_core_tables [$$] started...\n";
-
-	my %defs = (
-
-		$conf -> {systables} -> {__voc_replacements} => {
-		
 			columns => {
-				id         => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-				table_name => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+				id          => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
+				table_name  => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				object_name => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				object_type => {TYPE_NAME => 'int', COLUMN_SIZE => 1},
 			},
@@ -131,10 +129,9 @@ warn "sql_assert_core_tables [$$] started...\n";
 				ix2 => 'object_name',
 			},
 
-		},
-	);
-
-	$model_update -> assert (tables => \%defs,core_voc_replacement_use => $conf -> {core_voc_replacement_use});
+		}});
+	
+	}
 
 	my %defs = (
 	
@@ -266,10 +263,12 @@ warn "sql_assert_core_tables [$$] started...\n";
 	);
 	
 	$conf -> {core_cache_html} and $defs {$conf -> {systables} -> {cache_html}} = {
+
 		columns => {
 			uri     => {TYPE_NAME  => 'varchar', COLUMN_SIZE  => 255, _PK    => 1},
 			ts      => {TYPE_NAME  => 'timestamp'},
 		}
+
 	};
 	
 	$preconf -> {core_debug_profiling} == 2 and $defs {$conf->{systables}->{__benchmarks}} = {
@@ -293,6 +292,7 @@ warn "sql_assert_core_tables [$$] started...\n";
 	};
 
 	$conf -> {core_screenshot} and $defs {$conf -> {systables} -> {__screenshots}} = {
+
 		columns => {
 			id        => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
 			subset    => {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
@@ -305,14 +305,14 @@ warn "sql_assert_core_tables [$$] started...\n";
 			gziped    => {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
 			params    => {TYPE_NAME => 'text'},
 		},
+
 	};
 
-	$model_update -> assert (tables => \%defs,core_voc_replacement_use => $conf -> {core_voc_replacement_use});
+	$model_update -> assert (tables => \%defs, core_voc_replacement_use => $conf -> {core_voc_replacement_use});
 
 	$model_update -> {core_ok} = 1;
-	
-	
-warn "sql_assert_core_tables [$$] finished:" . (time - $time) . " ms\n";	
+		
+	__log_profilinig ($time, ' <sql_assert_core_tables>');
 	
 }
 

@@ -167,7 +167,8 @@ sub check_static_files {
 	$r or return;
 	
 	my $skin_root = $r -> document_root () . $_REQUEST {__static_url};
-	-d $skin_root or mkdir $skin_root;
+		
+	-d $skin_root or mkdir $skin_root or die "Can't create $skin_root: $!";
 
 	my $static_path = $_SKIN -> static_path;
 
@@ -177,7 +178,7 @@ sub check_static_files {
 
 	foreach my $src (@files) {
 		$src =~ /\.pm$/ or next;
-		File::Copy::copy ($static_path . $src, $skin_root . '/' . $`) or die "can't copy $src: $!";
+		File::Copy::copy ($static_path . $src, $skin_root . '/' . $`) or die "can't copy ${static_path}${src} to ${skin_root}/${`}: $!";
 	}
 	
 	my $favicon = $r -> document_root () . '/i/favicon.ico';
