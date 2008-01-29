@@ -24,7 +24,12 @@ sub new {
 	};
 
 	undef @CGI::QUERY_PARAM;
+
+$Data::Dumper::Useqq = 1;
+
 	$self -> {Q} = new CGI;
+
+warn Dumper ($self -> {Q});
 
 	$self -> {Filename} = $ENV{PATH_INFO};
 	$self -> {Filename} = '/' if $self -> {Filename} =~ /index\./;
@@ -33,6 +38,8 @@ sub new {
 	$self -> {Out_headers} = {-type => 'text/html', -status=> 200};
 
 	bless ($self, $class);
+
+warn Dumper ($self -> parms);
 
 	return $self;
 }
@@ -247,7 +254,13 @@ sub parms {
 
 	my $self = shift;
 	my $q = $self -> {Q};
-	my %vars = $q -> Vars;
+	my $params = $self -> {Q} -> Vars;
+	my %vars = ();
+
+	foreach my $k (keys %$params) {
+		($vars {$k}) = grep {$_} split ("\0", $params -> {$k});
+	}
+
 	return \%vars;
 
 }
