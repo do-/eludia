@@ -210,13 +210,14 @@ sub assert {
 			
 				$k_definition =~ s{\s+}{}g;
 			
-
 				if (
 					$existing_tables -> {$name} 
 					&& $existing_tables -> {$name} -> {keys} -> {$k_name}
 				) {
 				
-					if ($existing_tables -> {$name} -> {keys} -> {$k_name} -> {columns} ne $k_definition) {
+					$existing_tables -> {$name} -> {keys} -> {$k_name} =~ s{\s+}{}g; 					
+
+					if ($existing_tables -> {$name} -> {keys} -> {$k_name} ne $k_definition) {
 						$self -> drop_index ($name, $k_name, $params {core_voc_replacement_use});
 					}
 					else {

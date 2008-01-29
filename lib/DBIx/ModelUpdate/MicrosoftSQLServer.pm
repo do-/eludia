@@ -18,10 +18,17 @@ sub _db_model_checksums {
 ################################################################################
 
 sub unquote_table_name {
+
 	my ($self, $name) = @_;
-#	$name =~ s{\W}{}g;
-	$name =~ s{.+?(\w+)\W*$}{$1};
+
+	my @tokens = split /\./, $name;
+
+	$name = $tokens [-1];
+
+	$name =~ s{^\W*(\w+)\W*$}{$1};
+
 	return $name;
+
 }
 
 ################################################################################
@@ -31,28 +38,17 @@ sub get_keys {
 	my ($self, $table_name) = @_;
 	
 	my $keys = {};
-
-	my $st = $self -> {db} -> prepare ("select * from INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '$table_name' AND TABLE_CATALOG='$CATALOG'");
 	
+	my $st = $self -> {db} -> prepare ("exec sp_helpindex '$table_name'");
+
 	$st -> execute ();
 		
 	while (my $r = $st -> fetchrow_hashref) {
-		
-		my $name = $r -> {CONSTRAINT_NAME};
-		
-		next if $name eq 'PK_id';
-		
-		my $column = $r -> {COLUMN_NAME};
-		
-		$column .= '(' . $r -> {Sub_part} . ')' if $r -> {Sub_part};
 
-		if (exists $keys -> {$name}) {
-			$keys -> {$name} -> {columns} .= ',' . $column;
-		}
-		else {
-			$keys -> {$name} = {columns => $column};
-		}
-	
+		$r -> {index_name} =~ s{^${table_name}_}{};
+
+		$keys -> {$r -> {index_name}} = $r -> {index_keys};
+
 	}
 	
 	return $keys;
@@ -229,7 +225,7 @@ sub update_column {
 	$c_definition -> {_PK} = 0 if ($existing_column -> {_PK} == 1);
 	delete $c_definition -> {NULLABLE} if (exists $existing_column -> {NULLABLE} && $existing_column -> {NULLABLE} == 0);
 
-	my $sql = "ALTER TABLE $name MODIFY" . $self -> gen_column_definition ($c_name, $c_definition, $name);
+	my $sql = "ALTER TABLE $name ALTER COLUMN " . $self -> gen_column_definition ($c_name, $c_definition, $name);
 	
 	$self -> do ($sql);
 	
