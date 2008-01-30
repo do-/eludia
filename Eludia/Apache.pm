@@ -124,36 +124,26 @@ sub setup_skin {
 	require JSON::XS;
 
 	our $_JSON ||= JSON::XS -> new -> latin1 (1);
+	
+	foreach my $package ($_SKIN, $_JS_SKIN) {
 
-	attach_globals ($_PACKAGE => $_SKIN, qw(
-		_PACKAGE
-		_REQUEST
-		_USER
-		SQL_VERSION
-		conf
-		preconf
-		r
-		i18n
-		create_url
-		_SUBSET
-		_JSON
-		tree_sort
-	));
+		attach_globals ($_PACKAGE => $package, qw(
+			_PACKAGE
+			_REQUEST
+			_USER
+			SQL_VERSION
+			conf
+			preconf
+			r
+			i18n
+			create_url
+			_SUBSET
+			_JSON
+			tree_sort
+			adjust_esc
+		));
 
-	attach_globals ($_PACKAGE => $_JS_SKIN, qw(
-		_PACKAGE
-		_REQUEST
-		_USER
-		SQL_VERSION
-		conf
-		preconf
-		r
-		i18n
-		create_url
-		_SUBSET
-		_JSON
-		tree_sort
-	));
+	}
 
 }
 

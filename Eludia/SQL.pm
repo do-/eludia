@@ -111,7 +111,7 @@ sub sql_assert_core_tables {
 
 	return if $model_update -> {core_ok};
 
-	my $time = time;
+my $time = time;
 	
 	if ($conf -> {core_voc_replacement_use}) {
 	
@@ -132,6 +132,8 @@ sub sql_assert_core_tables {
 		}});
 	
 	}
+
+$time = __log_profilinig ($time, ' <sql_assert_core_tables>: 136');
 
 	my %defs = (
 	
@@ -312,7 +314,7 @@ sub sql_assert_core_tables {
 
 	$model_update -> {core_ok} = 1;
 		
-	__log_profilinig ($time, ' <sql_assert_core_tables>');
+__log_profilinig ($time, ' <sql_assert_core_tables>');
 	
 }
 

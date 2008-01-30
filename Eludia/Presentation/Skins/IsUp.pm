@@ -1,4 +1,4 @@
-package Eludia::Presentation::Skins::TurboMilk;
+package Eludia::Presentation::Skins::IsUp;
 
 use Data::Dumper;
 use Storable ('freeze');
@@ -18,7 +18,7 @@ BEGIN {
 ################################################################################
 
 sub options {
-	return {};
+	return {home_esc_forward => 1};
 }
 
 ################################################################################
@@ -96,111 +96,58 @@ sub draw_auth_toolbar {
 	my ($_SKIN, $options) = @_;
 
 	my $logout_url = $conf -> {exit_url} || create_url (type => '_logout', id => '');
-	my $logo_url = $conf -> {logo_url};
+#	my $logo_url = $conf -> {logo_url};
+	my $logo_url = create_url (type => '', id => '', __subset => $_SUBSET -> {name});
 
-	my ($header, $header_height, $subset_div, $subset_div, $subset_cell);
+	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime (time);
+	
+	$year += 1900;
+	
+	$_REQUEST {__clock_separator} ||= ':';
+	
+	my ($header, $header_height);
 	
 	my $header_prefix = 'out';
 	
 	if ($_USER -> {id}) {
 	
-		$$options {user_label} =~ s/$$i18n{User}: ${\($$_USER{label} || $$i18n{not_logged_in})}//;
-		$$options {user_label} = '<nobr><b>' . $_USER -> {f} . ' ' . substr ($_USER -> {i}, 0, 1) . '. ' . substr ($_USER -> {o}, 0, 1) . '.</b></nobr><br>' . $options -> {user_label}
-			if ($_USER -> {f} || $_USER -> {i}) ;
-		
-
-		if (@{$_SKIN -> {subset} -> {items}} > 1) {				
-		
-			my $href = create_url (type => '', id => '');
-		
-			$subset_div = <<EOH;
-				<div id="Menu">
-					<table border="0" cellpadding="0" cellspacing="0">
-EOH
-		
-			for (my $i = 0; $i < @{$_SKIN -> {subset} -> {items}}; $i++) {
-			
-				my $item = $_SKIN -> {subset} -> {items} -> [$i];
-
-				if ($item -> {name} eq $_SKIN -> {subset} -> {name}) {
-				
-					$subset_cell = <<EOH;
-						<td width="5" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2px" height="28px"></td>
-						<td><img src="$_REQUEST{__static_url}/0.gif" border="0" hspace="0" width=5 height=1></td>
-						<td><div id="admin" onClick="subsets_are_visible = 1 - subsets_are_visible; document.getElementById ('_body_iframe').contentWindow.subsets_are_visible = subsets_are_visible"><a href="#">$$item{label}</a></div></td>
-EOH
-				
-				}
-#				else {
-				
-					my $class = $i == @{$_SKIN -> {subset} -> {items}} - 1 ? 'mm0' : 'mm';
-
-					$subset_div .= <<EOH;
-						<tr @{[$item -> {name} eq $_SKIN -> {subset} -> {name} ? 'style="display: none"' : '']} id="_subset_tr_$$item{name}"><td class="$class"><a id="_subset_a_$$item{name}" onClick="subset_on_change('$$item{name}', '$href&__subset=$$item{name}')" href="#">$$item{label}</a></td></tr>
-EOH
-#				}
-			
-			}
-			
-			$subset_div .= <<EOH;
-				<tr><td><img src="$_REQUEST{__static_url}/menu_bottom.gif?$_REQUEST{__static_salt}" border="0"></td></tr>
-			</table>
-		</div>
-EOH
-		
-		}
-
 		my $calendar = draw_calendar ();
+
 		$header_height = 48;
 		$header_prefix = 'in';
 
-		$header = <<EOU;
-
-			$subset_cell
-
-			<td>&nbsp;</td>
-
-			<td width="1" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2" height="28" hspace=10></td>
-			<td align="left" class="txt1" nowrap>$calendar</td>
-
-			<td width="1" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2" height="28" hspace=10></td>
-			<td align="left" class="txt1">$$options{user_label}</td>
-
-			<td width="1" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2px" height="28" hspace=10></td>
-			<td width="50" align="right" nowrap><nobr><a class="button" href="$logout_url">&nbsp;$i18n->{Exit}&nbsp;<img src="$_REQUEST{__static_url}/i_exit.gif?$_REQUEST{__static_salt}" width="14px" height="10px" border="0"></a></nobr></td>
-EOU
-	} elsif ($$conf{logon_hint}) {
-		$header_height = 90;
-
-		$header = <<EOH;
-			<td><table border=0 cellspacing=0 cellpadding=0>
-				<tr>
-					<td><img src="$_REQUEST{__static_url}/hint_l.gif?$_REQUEST{__static_salt}" width="6" height="61" border=0></td>
-					<td background="$_REQUEST{__static_url}/hint_bg.gif?$_REQUEST{__static_salt}" style='padding-left: 10px; padding-right: 10px;'><img src="$_REQUEST{__static_url}/exclam.gif?$_REQUEST{__static_salt}" width="30" height="34" border=0></td>
-					<td background="$_REQUEST{__static_url}/hint_bg.gif?$_REQUEST{__static_salt}" style='padding: 2px;' class="txt1"><img src="$_REQUEST{__static_url}/hint_title.gif?$_REQUEST{__static_salt}" width="144" height="16" border=0><br>$$conf{logon_hint}</td>
-					<td><img src="$_REQUEST{__static_url}/hint_r.gif?$_REQUEST{__static_salt}" width="6" height="61" border=0></td>
-				</tr>
-			</table></td>
-
-EOH
 	} else {
 		$header_height = 90;
 	}
+
 	return <<EOH;
 		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
-			<tr>
-			<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
-			<td width=1><table border=0 valign="middle" border=0><tr>
-				<td valign="top" width=1><a href="$logo_url"><img src="/i/logo_$header_prefix.gif" border="0"></a></td>
-				<td width=1><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 height=1 border=0></td>
-				<td width=1 valign="bottom" style='padding-bottom: 5px;'><img src="$_REQUEST{__static_url}/gsep.gif?$_REQUEST{__static_salt}" width="4" height="21"></td>
-				<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
-			</tr></table></td>
 
-			$header
-			<td width="20px" align="right">&nbsp;</td></tr>
+			<tr>
+
+				<td rowspan=2 width="15"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=15 height=$header_height border=0></td>
+
+				<td rowspan=2 valign="middle" align="center" width=1><a href="$logo_url" target="_body_iframe"><img src="/i/logo_$header_prefix.gif" border="0"></a></td>
+
+				<td rowspan=2 width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
+
+				<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
+
+				<td align="left" class="txt1"><span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></td>
+
+				<td rowspan=2 width="20px" align="right">&nbsp;</td>
+
+				<td rowspan=2 valign="middle" align="center" width=38><a width=38 height=30 href="$logo_url"><img src="$_REQUEST{__static_url}/diary.gif?$_REQUEST{__static_salt}" border="0"></a></td>
+			
+				<td rowspan=2 width="20px" align="right">&nbsp;</td>
+
+			</tr>
+			<tr>
+				<td valign=top align="left" class="txt1">$$options{user_label}</td>
+				<td valign=top width=1 nowrap align="left" class="txt1"><nobr>$mday $i18n->{months}->[$mon] $year</nobr></td>
+			</tr>
+			
 		 </table>
-		$subset_div
 EOH
 
 
@@ -457,8 +404,8 @@ EOH
 sub draw_path {
 
 	my ($_SKIN, $options, $list) = @_;
-	
-	my $style = $options -> {nowrap} ? qq{style="background:url('/i/_skins/TurboMilk/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
+
+	my $style = $options -> {nowrap} ? qq{style="background:url('/i/_skins/IsUp/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
 		
 	my $path = <<EOH;
 		<table cellspacing=0 cellpadding=0 width="100%" border=0>
@@ -469,12 +416,13 @@ sub draw_path {
 							<td class="toolbar" $style>
 								<img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0>
 							</td>
-							<td class="toolbar" $style $$options{nowrap}>&nbsp;
+							<td class="toolbar" $style width=1><nobr>&nbsp;
 EOH
 
-	my $icon = $options -> {status} ? "status_$options->{status}->{icon}.gif" : 'i_folder.gif';
+	$path .= qq{<a href="$options->{esc}#"><img src="$_REQUEST{__static_url}/i_left.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=1 align=absmiddle></a>&nbsp;};
+	$path .= qq{<a href="$options->{forward}#"><img src="$_REQUEST{__static_url}/i_right.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=1 align=absmiddle></a>&nbsp;};
 
-	$path .= qq{<img src="$_REQUEST{__static_url}/${icon}?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=1 align=absmiddle>&nbsp;};
+	$path .= "</nobr></td><td class=toolbar $style $$options{nowrap}>";
 
 	for (my $i = 0; $i < @$list; $i ++) {
 	
@@ -1199,7 +1147,7 @@ EOH
 
 sub _icon_path {
 
-	-r $r -> document_root . "/i/_skins/TurboMilk/i_$_[0].gif" ?
+	-r $r -> document_root . "/i/_skins/IsUp/i_$_[0].gif" ?
 	"$_REQUEST{__static_url}/i_$_[0].gif?$_REQUEST{__static_salt}" :
 	"/i/buttons/$_[0].gif"			
 
@@ -1605,56 +1553,58 @@ sub draw_dump_button {
 
 sub draw_menu {
 
-	my ($_SKIN, $_options) = @_;
-	
-	my @types = (@{$_options -> {left_items}}, BREAK, @{$_options -> {right_items}});
-	
-	my $colspan = 1 + @types;
+return '';
 
-	my $html = <<EOH;
+#	my ($_SKIN, $_options) = @_;
 
-	<div style="position:relative" id="main_menu">
+#	my @types = (@{$_options -> {left_items}}, BREAK, @{$_options -> {right_items}});
 
-		<table width="100%" class=bgr8 cellspacing=0 cellpadding=0 border=0>
-			<tr>
-				<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=1><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
-				<td background="$_REQUEST{__static_url}/menu_bg_s.gif?$_REQUEST{__static_salt}" width=0><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=0 border=0></td>
-EOH
+#	my $colspan = 1 + @types;
 
-	foreach my $type (@types) {
+#	my $html = <<EOH;
 
-		next if ($type -> {name} eq '_logout');
-		
-		$_REQUEST {__menu_links} .= "<a id='main_menu_$$type{name}' target='$$type{target}' href='$$type{href}'>-</a>";
-		
-		$type -> {target} = '_body_iframe' if $type -> {target} eq '_self';
+#	<div style="position:relative" id="main_menu">
 
-		if ($type eq BREAK) {
-			$html .= qq{<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>};
-			next;
-		}
-		
-		$html .= <<EOH;
-			<td onmouseover="$$type{onhover}; subsets_are_visible = 0;" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
-				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1>&nbsp;$$type{label}&nbsp;</a>&nbsp;
-			</td>
-EOH
-			
-	}
+#		<table width="100%" class=bgr8 cellspacing=0 cellpadding=0 border=0>
+#			<tr>
+#				<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=1><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+#				<td background="$_REQUEST{__static_url}/menu_bg_s.gif?$_REQUEST{__static_salt}" width=0><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=0 border=0></td>
+#EOH
 
-	$html .= <<EOH;
-		</table>
-EOH
+#	foreach my $type (@types) {
 
-	foreach my $type (@types) {
-		$html .= $type -> {vert_menu};
-	}
+#		next if ($type -> {name} eq '_logout');
 
-	$html .= <<EOH;
-	</div>
-EOH
+#		$_REQUEST {__menu_links} .= "<a id='main_menu_$$type{name}' target='$$type{target}' href='$$type{href}'>-</a>";
 
-	return $html;
+#		$type -> {target} = '_body_iframe' if $type -> {target} eq '_self';
+
+#		if ($type eq BREAK) {
+#			$html .= qq{<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>};
+#			next;
+#		}
+
+#		$html .= <<EOH;
+#			<td onmouseover="$$type{onhover}; subsets_are_visible = 0;" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
+#				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1>&nbsp;$$type{label}&nbsp;</a>&nbsp;
+#			</td>
+#EOH
+
+#	}
+
+#	$html .= <<EOH;
+#		</table>
+#EOH
+
+#	foreach my $type (@types) {
+#		$html .= $type -> {vert_menu};
+#	}
+
+#	$html .= <<EOH;
+#	</div>
+#EOH
+
+#	return $html;
 	
 }
 
@@ -1773,7 +1723,7 @@ sub draw_text_cell {
 		$data -> {label} =~ s{\s+$}{}gsm;
 		$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
-		$html .= qq {<img src='/i/_skins/TurboMilk/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
+		$html .= qq {<img src='/i/_skins/IsUp/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
 		$html .= '<nobr>' unless $data -> {no_nobr};
 
@@ -2159,12 +2109,7 @@ EOH
 		$_REQUEST {__on_load} .= "check_top_window ();";
 				
 		$_REQUEST {__on_keydown} = <<EOJS;
-		
-//			if (code_alt_ctrl (88, 1, 0)) {
-//				nope ('$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}', '_top', '');
-//				blockEvent ();
-//			}
-			
+					
 			if (code_alt_ctrl (116, 0, 0)) {
 			
 				if (is_dirty) {

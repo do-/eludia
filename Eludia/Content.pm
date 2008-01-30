@@ -588,7 +588,7 @@ sub require_fresh {
 		my $last_load = $INC_FRESH {$module_name} + 0;
 		$need_refresh = $last_load < $last_modified;
 	}
-		
+
 	if ($need_refresh) {
 	
 		if ($_OLD_PACKAGE) {

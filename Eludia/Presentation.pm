@@ -774,7 +774,7 @@ sub draw_auth_toolbar {
 
 	return $_SKIN -> draw_auth_toolbar ({
 		top_banner => ($conf -> {top_banner} ? interpolate ($conf -> {top_banner}) : ''),
-		user_label  => $i18n -> {User} . ': ' . ($_USER -> {label} || $i18n -> {not_logged_in}) . $_REQUEST{__add_user_label},
+		user_label  => $_USER -> {__label} || $i18n -> {User} . ': ' . ($_USER -> {label} || $i18n -> {not_logged_in}) . $_REQUEST{__add_user_label},
 	});
 			
 }
@@ -824,6 +824,28 @@ sub draw_logon_form {
 
 ################################################################################
 
+sub adjust_esc {
+
+	my ($options, $data, $fields) = @_;
+
+	if (
+		$_REQUEST {__edit} 
+		&& !$_REQUEST{__from_table} 
+		&& !(ref $data eq HASH && $data -> {fake} > 0)
+	) {
+		$options -> {esc} = create_url (
+			__last_query_string => $_REQUEST {__last_last_query_string},
+			__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
+		);
+	}	
+	elsif ($conf -> {core_auto_esc} > 0 && $_REQUEST {__last_query_string}) {
+		$options -> {esc} ||= esc_href ();
+	}
+
+}
+
+################################################################################
+
 sub draw_form {
 
 	my ($options, $data, $fields) = @_;
@@ -861,21 +883,8 @@ sub draw_form {
 	push @keep_params, {name  => '__last_scrollable_table_row', value => $_REQUEST {__last_scrollable_table_row} } unless ($_REQUEST {__windows_ce});
 	$options -> {keep_params} = \@keep_params;	
 
-		
-	if (
-		$_REQUEST {__edit} 
-		&& !$_REQUEST{__from_table} 
-		&& !(ref $data eq HASH && $data -> {fake} > 0)
-	) {
-		$options -> {esc} = create_url (
-			__last_query_string => $_REQUEST {__last_last_query_string},
-			__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
-		);
-	}	
-	elsif ($conf -> {core_auto_esc} > 0 && $_REQUEST {__last_query_string}) {
-		$options -> {esc} ||= esc_href ();
-	}
-
+	adjust_esc ($options);
+	
 	our $tabindex = 1;
 
 	my @rows = ();
@@ -1084,6 +1093,20 @@ sub draw_path {
 	$options -> {max_len}  ||= $conf -> {max_len};
 	$options -> {max_len}  ||= 30;
 	$options -> {nowrap}     = $options -> {multiline} ? '' : 'nowrap';
+	
+	if ($_SKIN -> {options} -> {home_esc_forward}) {
+	
+		adjust_esc ($options);
+		
+		my $one_more_query_string = $_REQUEST {__last_query_string} - 1;
+		
+		if ($one_more_query_string != $_REQUEST {__last_last_query_string}) {
+		
+			$options -> {forward} = sql_select_scalar ("SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?", $_REQUEST {sid}, $one_more_query_string) . '&sid=' . $_REQUEST {sid};
+		
+		}
+	
+	}
 	
 	$_REQUEST {__path} = [];
 	

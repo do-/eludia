@@ -4,8 +4,6 @@ use 5.005;
 
 require Exporter;
 
-our $VERSION = '6.06.30';
-
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
 use DBI::Const::GetInfoType;
@@ -15,6 +13,16 @@ use Digest::MD5 'md5_base64';
 
 no strict;
 no warnings;
+
+################################################################################
+
+sub __log_profilinig {
+
+	printf STDERR "Profiling [$$] %20.10f ms %s\n", 1000 * (time - $_[0]), $_[1];
+	
+	return time ();
+
+}
 
 ################################################################################
 
@@ -77,6 +85,8 @@ sub checksum {
 
 sub assert {
 
+my $time = time;
+
 	my ($self, %params) = @_;
 	
 	$Storable::canonical = 1;
@@ -92,11 +102,35 @@ sub assert {
 		$checksum = checksum (\%params);
 
 		return if exists $self -> {checksums} -> {$checksum};
+				
+		eval {
+		
+			my $st = $self -> {db} -> prepare ("SELECT COUNT(*) FROM $_db_model_checksums WHERE checksum = ?");
+			$st -> execute ($checksum);
+			($self -> {checksums} -> {$checksum}) = $st -> fetchrow_array;
+			$st -> finish;
 
+my $time = __log_profilinig ($time, '   checksum selected');
+		
+		};
+		
+		return if $self -> {checksums} -> {$checksum};
+		
+		if ($@) {
+		
+			my $index_name = $_db_model_checksums;
+			$index_name =~ s{(\w+)}{$1_pk};
+		
+			$self -> do ("CREATE TABLE $_db_model_checksums (checksum CHAR(22))");
+			$self -> do ("CREATE INDEX $index_name ON $_db_model_checksums (checksum)");
+		
+my $time = __log_profilinig ($time, '   checksum table created');
+
+		}
 
 	}	
 
-	my $existing_tables = {}; 
+	my $existing_tables = {};	
 	
 	foreach ($self -> {db} -> tables ('', $self -> {schema}, '%', "'TABLE'")) {
 	
@@ -104,29 +138,7 @@ sub assert {
 	
 	}
 
-	unless ($params {no_checksums}) {
-	
-		unless (exists $existing_tables -> {$self -> unquote_table_name ($_db_model_checksums)}) {
-			
-			my $index_name = $_db_model_checksums;
-			$index_name =~ s{(\w+)}{$1_pk};
-		
-			$self -> do ("CREATE TABLE $_db_model_checksums (checksum CHAR(22))");
-			$self -> do ("CREATE INDEX $index_name ON $_db_model_checksums (checksum)");
-			
-		} 
-		else {
-
-			my $st = $self -> {db} -> prepare ("SELECT COUNT(*) FROM $_db_model_checksums WHERE checksum = ?");
-			$st -> execute ($checksum);
-			my ($cnt) = $st -> fetchrow_array;
-			$st -> finish;
-
-			return if $cnt;
-
-		}
-			
-	}
+my $time = __log_profilinig ($time, '   got existing_tables');
 
 	&{$self -> {before_assert}} (@_) if ref $self -> {before_assert} eq CODE;		
 	
@@ -165,12 +177,15 @@ sub assert {
 	
 	};
 
+my $time = __log_profilinig ($time, '   needed_tables filtered');
 		
 	foreach my $name (keys %$needed_tables) {
 		exists $existing_tables -> {$name} or next;
 		$existing_tables -> {$name} -> {columns} = $self -> get_columns ($name); 
 		$existing_tables -> {$name} -> {keys}    = $self -> get_keys    ($name, $params {core_voc_replacement_use}); 
 	} 
+
+my $time = __log_profilinig ($time, '   got keys & columns');
 	
 	foreach my $name (keys %$needed_tables) {
 	
@@ -192,7 +207,9 @@ sub assert {
 				
 					my $existing_column = $existing_columns -> {$c_name};										
 					$self -> update_column ($name, $c_name, $existing_column, $c_definition,,$params {core_voc_replacement_use});
-								
+
+my $time = __log_profilinig ($time, "    $name.$c_name updated");
+
 				}
 				else {
 				
@@ -203,6 +220,8 @@ sub assert {
 			};
 
 			$self -> add_columns ($name, $new_columns,,$params {core_voc_replacement_use}) if keys %$new_columns;
+
+my $time = __log_profilinig ($time, "    columns added");
 
 			foreach my $k_name (keys %{$definition -> {keys}}) {
 			
@@ -219,6 +238,7 @@ sub assert {
 
 					if ($existing_tables -> {$name} -> {keys} -> {$k_name} ne $k_definition) {
 						$self -> drop_index ($name, $k_name, $params {core_voc_replacement_use});
+my $time = __log_profilinig ($time, "    key $name.$k_name dropped");
 					}
 					else {
 						next;
@@ -228,6 +248,7 @@ sub assert {
 				
 				$self -> create_index ($name, $k_name, $k_definition, $definition, $params {core_voc_replacement_use});
 
+my $time = __log_profilinig ($time, "    key $name.$k_name created");
 			};
 
 		}
@@ -250,15 +271,17 @@ sub assert {
 
 		map { $self -> insert_or_update ($name, $_, $definition) } @{$definition -> {data}} if $definition -> {data};
 		
-		$self -> do ("INSERT INTO $_db_model_checksums (checksum) VALUES ('$checksum')") unless $params {no_checksums};
-		
+		unless ($params {no_checksums}) {
+			$self -> do ("INSERT INTO $_db_model_checksums (checksum) VALUES ('$checksum')") unless $params {no_checksums};
+		}
+
 	}
-			
+
 	unless ($params {no_checksums}) {
 		$self -> do ("INSERT INTO $_db_model_checksums (checksum) VALUES ('$checksum')");
 		$self -> {checksums} -> {$checksum} = 1;	
 	}
-				
+
 }
 
 ################################################################################
