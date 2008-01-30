@@ -25,11 +25,7 @@ sub new {
 
 	undef @CGI::QUERY_PARAM;
 
-$Data::Dumper::Useqq = 1;
-
 	$self -> {Q} = new CGI;
-
-warn Dumper ($self -> {Q});
 
 	$self -> {Filename} = $ENV{PATH_INFO};
 	$self -> {Filename} = '/' if $self -> {Filename} =~ /index\./;
@@ -39,9 +35,8 @@ warn Dumper ($self -> {Q});
 
 	bless ($self, $class);
 
-warn Dumper ($self -> parms);
-
 	return $self;
+	
 }
 
 ################################################################################
