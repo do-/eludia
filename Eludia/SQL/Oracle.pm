@@ -439,7 +439,10 @@ sub lc_hashref {
 			delete $hr -> {uc $key};
 		}
 	}
-	
+
+	delete $hr -> {RewbfhHHkgkglld};
+	delete $hr -> {NbhcQQehgdfjfxf};
+
 	return $hr;
 
 }
