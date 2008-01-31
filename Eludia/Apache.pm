@@ -646,6 +646,8 @@ sub out_html {
 
 	return if $_REQUEST {__response_sent};
 
+	my $time = time;
+
 	if ($conf -> {core_sweep_spaces}) {
 		$html =~ s{^\s+}{}gsm;
 		$html =~ s{[ \t]+}{ }g;
@@ -697,6 +699,7 @@ sub out_html {
 
 	$r -> header_only or print $html;
 
+	__log_profilinig ($time, ' <out_html>');
 }
 
 #################################################################################
