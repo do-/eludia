@@ -117,7 +117,7 @@ sub esc_href {
 
 		$href = check_href ({href => $href}, 1);
 
-		return uri_unescape ($href);
+		return uri_unescape ($href) . '&__next_query_string' . $_REQUEST {__last_query_string};
 		
 	}
 
@@ -826,7 +826,9 @@ sub draw_logon_form {
 
 sub adjust_esc {
 
-	my ($options, $data, $fields) = @_;
+	my ($options, $data) = @_;
+	
+	$data ||= $_REQUEST {__page_content};
 
 	if (
 		$_REQUEST {__edit} 
@@ -883,7 +885,7 @@ sub draw_form {
 	push @keep_params, {name  => '__last_scrollable_table_row', value => $_REQUEST {__last_scrollable_table_row} } unless ($_REQUEST {__windows_ce});
 	$options -> {keep_params} = \@keep_params;	
 
-	adjust_esc ($options);
+	adjust_esc ($options, $data);
 	
 	our $tabindex = 1;
 
@@ -1098,11 +1100,9 @@ sub draw_path {
 	
 		adjust_esc ($options);
 		
-		my $one_more_query_string = $_REQUEST {__last_query_string} - 1;
+		if ($_REQUEST {__next_query_string}) {
 		
-		if ($one_more_query_string != $_REQUEST {__last_last_query_string}) {
-		
-			$options -> {forward} = sql_select_scalar ("SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?", $_REQUEST {sid}, $one_more_query_string) . '&sid=' . $_REQUEST {sid};
+			$options -> {forward} = sql_select_scalar ("SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?", $_REQUEST {sid}, $_REQUEST {__next_query_string}) . '&sid=' . $_REQUEST {sid};
 		
 		}
 	
