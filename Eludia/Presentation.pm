@@ -117,7 +117,7 @@ sub esc_href {
 
 		$href = check_href ({href => $href}, 1);
 
-		return uri_unescape ($href) . '&__next_query_string' . $_REQUEST {__last_query_string};
+		return uri_unescape ($href) . '&__next_query_string=' . $_REQUEST {__last_query_string};
 		
 	}
 

@@ -413,16 +413,11 @@ sub draw_path {
 				<td>
 					<table cellspacing=0 cellpadding=0 width="100%" border=0>
 						<tr>
-							<td class="toolbar" $style>
-								<img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0>
-							</td>
-							<td class="toolbar" $style width=1><nobr>&nbsp;
+							<td class=toolbar $style width=9><img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=9 border=0></td>
+							<td class=toolbar $style width=1><nobr><a href="$options->{esc}#"><img src="$_REQUEST{__static_url}/i_left.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=0 align=absmiddle></a><a href="$options->{forward}#"><img src="$_REQUEST{__static_url}/i_right.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=0 align=absmiddle></a></nobr></td>
+							<td class=toolbar $style width=3><img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=3 border=0></td>
+							<td class=toolbar $style $$options{nowrap}>
 EOH
-
-	$path .= qq{<a href="$options->{esc}#"><img src="$_REQUEST{__static_url}/i_left.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=1 align=absmiddle></a>&nbsp;};
-	$path .= qq{<a href="$options->{forward}#"><img src="$_REQUEST{__static_url}/i_right.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=1 align=absmiddle></a>&nbsp;};
-
-	$path .= "</nobr></td><td class=toolbar $style $$options{nowrap}>";
 
 	for (my $i = 0; $i < @$list; $i ++) {
 	
@@ -444,7 +439,7 @@ EOH
 &nbsp;</td>
 						</tr>
 						<tr>
-							<td bgcolor="#e4e9ee" colspan=2><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+							<td bgcolor="#e4e9ee" colspan=5><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 						</tr>
 					</table>
 				</td>
