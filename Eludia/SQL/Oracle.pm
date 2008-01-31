@@ -440,8 +440,8 @@ sub lc_hashref {
 		}
 	}
 
-	delete $hr -> {RewbfhHHkgkglld};
-	delete $hr -> {NbhcQQehgdfjfxf};
+	delete $hr -> {REWBFHHHKGKGLLD};
+	delete $hr -> {NBHCQQEHGDFJFXF};
 
 	return $hr;
 
