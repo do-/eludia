@@ -2690,7 +2690,7 @@ sub draw_tree {
 		win.d.aNodes = $nodes;
 		$selected_code
 		win.document.body.innerHTML = "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td valign=top>" + win.d + "</td></tr></table>$menus";
-		if (win.d.selectedNode == null) {
+		if (win.d.selectedNode == null || win.d.selectedFound) {
 			win.d.openTo ($options->{selected_node}, true);
 		}		
 EOH
