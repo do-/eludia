@@ -33,6 +33,8 @@ BEGIN {
 	
 	eval "\$^W = 0; $conf";
 	
+	die $@ if $@;
+	
 	require Eludia;
 	
 	sql_reconnect ();
