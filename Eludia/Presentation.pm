@@ -3039,6 +3039,7 @@ sub draw_table {
 	
 	$options -> {action} ||= 'add';
 	$options -> {name}   ||= 'form';
+	$options -> {target} ||= 'invisible';
 	$options -> {header}   = draw_table_header ($headers) if @$headers > 0;
 
 	return '' if $options -> {off};		

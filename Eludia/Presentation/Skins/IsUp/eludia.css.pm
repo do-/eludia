@@ -330,7 +330,7 @@ BODY {
 
 .header_0 {
 	FONT-WEIGHT: bold; 
-	FONT-SIZE: 12pt; 
+	FONT-SIZE: 14pt; 
 	COLOR: #63a014; 
 	FONT-FAMILY: 'Trebuchet MS', 'MS Sans Serif'; 
 }
@@ -396,7 +396,7 @@ a.tab-1, a.tab-1:link, a.tab-1:active, a.tab-1:visited, a.tab-1:hover {
 
 A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
 	FONT-WEIGHT: normal; 
-	FONT-SIZE: 8pt; 
+	FONT-SIZE: 12pt; 
 /*	
 	COLOR: #000000; 
 */	

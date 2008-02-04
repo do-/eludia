@@ -131,9 +131,9 @@ sub draw_auth_toolbar {
 
 				<td rowspan=2 width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
 
-				<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
+				<td align="left" valign="middle" class='header_0' width=1><nobr id="nobr_page_title">$$conf{page_title}</nobr></td>
 
-				<td align="left" class="txt1"><span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></td>
+				<td align="center" class="txt1"><span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></td>
 
 				<td rowspan=2 width="20px" align="right">&nbsp;</td>
 
@@ -368,6 +368,8 @@ sub draw_form {
 
 	$html .= _draw_bottom (@_);
 	
+	$html .= $options -> {bottom_toolbar};
+
 	$html .=  <<EOH;
 		<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 			<form 
@@ -391,6 +393,8 @@ EOH
 	}
 
 	$html .=  '</form></table>';
+
+	$html .= $options -> {footer};
 	
 	$html .= $options -> {bottom_toolbar};
 	
@@ -406,6 +410,17 @@ sub draw_path {
 	my ($_SKIN, $options, $list) = @_;
 
 	my $style = $options -> {nowrap} ? qq{style="background:url('/i/_skins/IsUp/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
+	
+	my $page_title = $_JSON -> encode ([$list -> [-1] -> {label}]);	
+	
+	$_REQUEST {__on_load} .= <<EOH;
+	
+		var page_title = $page_title;
+	
+		parent.document.getElementById ('nobr_page_title').innerText = page_title [0];
+	
+EOH
+	
 		
 	my $path = <<EOH;
 		<table cellspacing=0 cellpadding=0 width="100%" border=0>
@@ -413,10 +428,10 @@ sub draw_path {
 				<td>
 					<table cellspacing=0 cellpadding=0 width="100%" border=0>
 						<tr>
-							<td class=toolbar $style width=9><img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=9 border=0></td>
-							<td class=toolbar $style width=1><nobr><a href="$options->{esc}#"><img src="$_REQUEST{__static_url}/i_left.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=0 align=absmiddle></a><a href="$options->{forward}#"><img src="$_REQUEST{__static_url}/i_right.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=0 align=absmiddle></a></nobr></td>
-							<td class=toolbar $style width=3><img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=3 border=0></td>
-							<td class=toolbar $style $$options{nowrap}>
+							<td _class=toolbar width=9><img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=9 border=0></td>
+							<td _class=toolbar width=1><nobr><a href="$options->{esc}#"><img src="$_REQUEST{__static_url}/i_left.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=0 align=absmiddle></a><a href="$options->{forward}#"><img src="$_REQUEST{__static_url}/i_right.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=0 align=absmiddle></a></nobr></td>
+							<td _class=toolbar width=3><img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=15 border=0></td>
+							<td _class=toolbar $$options{nowrap}>
 EOH
 
 	for (my $i = 0; $i < @$list; $i ++) {
@@ -1937,7 +1952,7 @@ sub draw_table {
 		
 		<table cellspacing=0 cellpadding=0 width="100%">		
 			<tr>		
-				<form name=$$options{name} action=$_REQUEST{__uri} method=post enctype=multipart/form-data target=invisible>
+				<form name=$$options{name} action=$_REQUEST{__uri} method=post enctype=multipart/form-data target=$$options{target}>
 					<input type=hidden name=type value=$$options{type}>
 					<input type=hidden name=action value=$$options{action}>
 					<input type=hidden name=sid value=$_REQUEST{sid}>
@@ -2556,7 +2571,7 @@ EOH
 					<td valign="top" width=1><img src="/i/logo_out.gif" border="0"></td>
 					<td width=1><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 height=1 border=0></td>
 					<td width=1 valign="bottom" style='padding-bottom: 5px;'><img src="$_REQUEST{__static_url}/gsep.gif?$_REQUEST{__static_salt}" width="4" height="21"></td>
-					<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
+					<td align="left" valign="middle" class='header_0' width=1><nobr>$$conf{page_title}</nobr></td>
 				</tr></table></td>				
 				
 				<td width="20px" align="right">&nbsp;</td></tr>
