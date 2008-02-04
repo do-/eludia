@@ -16,7 +16,7 @@ sub _db_model_checksums {
 
 sub unquote_table_name {
 	my ($self, $name) = @_;
-	$name =~ s{^\W*(\w+)\W*$}{$1};
+	$name =~ s{^.*?(\w+)\W*$}{$1};
 	return $name;
 }
 
