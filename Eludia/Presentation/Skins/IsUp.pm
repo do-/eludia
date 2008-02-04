@@ -131,15 +131,15 @@ sub draw_auth_toolbar {
 
 				<td rowspan=2 width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
 
-				<td align="left" valign="middle" class='header_0' width=1><nobr id="nobr_page_title">$$conf{page_title}</nobr></td>
+				<td align="left" valign="middle" class='header_0' width=*><nobr id="nobr_page_title">$$conf{page_title}</nobr></td>
 
-				<td align="center" class="txt1"><span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></td>
+				<td align="center" width="30" class="txt1"><span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></td>
 
-				<td rowspan=2 width="20px" align="right">&nbsp;</td>
+				<td rowspan=2 width="20" align="right">&nbsp;</td>
 
-				<td rowspan=2 valign="middle" align="center" width=38><a width=38 height=30 href="$logo_url"><img src="$_REQUEST{__static_url}/diary.gif?$_REQUEST{__static_salt}" border="0"></a></td>
+				<td rowspan=2 valign="middle" align="center" width=38><a height=30 href="$logo_url"><img width=38 src="$_REQUEST{__static_url}/diary.gif?$_REQUEST{__static_salt}" border="0"></a></td>
 			
-				<td rowspan=2 width="20px" align="right">&nbsp;</td>
+				<td rowspan=2 width="20" align="right">&nbsp;</td>
 
 			</tr>
 			<tr>
