@@ -1330,8 +1330,9 @@ sub interpolate {
 ################################################################################
 
 sub get_filehandle {
-#	return $q -> upload ($_[0]);	
-	return $apr -> upload ($_[0]) -> fh;	
+
+	return ref $apr eq 'Apache2::Request' ? $apr -> upload ($_[0]) -> upload_fh : $apr -> upload ($_[0]) -> fh;	
+
 }
 
 ################################################################################
@@ -1496,12 +1497,30 @@ sub upload_file {
 	
 	my $upload = $apr -> upload ('_' . $options -> {name});
 	
-	return undef unless ($upload and $upload -> size > 0);
+	my ($fh, $filename, $file_size, $file_type);
+
+	if (ref $apr eq 'Apache2::Request') {
 	
-	my $fh = $upload -> fh;
+		return undef unless ($upload and $upload -> upload_size > 0);
+		
+		$fh = $upload -> upload_fh;
+		$filename = $upload -> upload_filename;
+		$file_size = $upload -> upload_size;
+		$file_type = $upload -> upload_type;
+		  
+	} else {
 	
-	$upload -> filename =~ /[A-Za-z0-9]+$/;
+		return undef unless ($upload and $upload -> size > 0);
+
+		$fh = $upload -> fh;
+		$filename = $upload -> filename;
+		$file_size = $upload -> size;
+		$file_type = $upload -> type;
+
+		
+	}
 	
+	$filename =~ /[A-Za-z0-9]+$/;
 	my $path = "/i/$$options{dir}/" . time . "-$$.$&";
 	
 	my $real_path = $r -> document_root . $path;
@@ -1517,13 +1536,13 @@ sub upload_file {
 	}
 	close (OUT);
 	
-	my $filename = $upload -> filename;
 	$filename =~ s{.*\\}{};
+	
 	
 	return {
 		file_name => $filename,
-		size      => $upload -> size,
-		type      => $upload -> type,
+		size      => $file_size,
+		type      => $file_type,
 		path      => $path,
 		real_path => $real_path,
 	}

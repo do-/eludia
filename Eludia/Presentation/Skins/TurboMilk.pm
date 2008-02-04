@@ -2126,8 +2126,8 @@ EOH
 	my $mod_perl = $ENV {MOD_PERL};
 	$mod_perl ||= 'NO mod_perl AT ALL';
 								
-	my $parameters = ${$_PACKAGE . 'apr'} -> parms;
-  
+	my $parameters = ref ${$_PACKAGE . 'apr'} eq 'Apache2::Request' ? ${$_PACKAGE . 'apr'} -> param : ${$_PACKAGE . 'apr'} -> parms;
+
 	my $body = '';
 #	my $onKeyDown = '';	
 	my $body_scroll = 'yes';

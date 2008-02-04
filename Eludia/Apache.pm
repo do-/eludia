@@ -123,7 +123,7 @@ sub setup_skin {
 
 	require JSON::XS;
 
-	our $_JSON ||= JSON::XS -> new -> latin1 (1);
+	our $_JSON = JSON::XS -> new -> latin1 (1);
 	
 	foreach my $package ($_SKIN, $_JS_SKIN) {
 
@@ -699,7 +699,7 @@ sub out_html {
 
 	$r -> header_only or print $html;
 
-	__log_profilinig ($time, ' <out_html>');
+	__log_profilinig ($time, ' <out_html: ' . (length $html) . ' bytes>');
 }
 
 #################################################################################
