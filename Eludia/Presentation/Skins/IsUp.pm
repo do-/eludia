@@ -416,9 +416,11 @@ sub draw_path {
 	$_REQUEST {__on_load} .= <<EOH;
 	
 		var page_title = $page_title;
-	
-		parent.document.getElementById ('nobr_page_title').innerText = page_title [0];
-	
+		
+		var nobr_page_title = parent.document.getElementById ('nobr_page_title');
+		
+		if (nobr_page_title) nobr_page_title.innerText = page_title [0];
+
 EOH
 	
 		
