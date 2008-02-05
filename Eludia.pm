@@ -162,7 +162,7 @@ BEGIN {
 		print STDERR "     **\n";
 		print STDERR " *****          Copyright (c) 2002-$year by Eludia\n";
 		print STDERR "\n";
-		print STDERR " ----------------------------------------------------------------\n\n";
+		print STDERR " -------------------------------------------------------\n\n";
 
 		$ENV {ELUDIA_BANNER_PRINTED} = 1;
 

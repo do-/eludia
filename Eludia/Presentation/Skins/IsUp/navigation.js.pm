@@ -110,6 +110,14 @@ function check_menu_md5 (menu_md5) {
 
 function idx_tables (__scrollable_table_row) {
 
+	scrollable_table = null;
+	scrollable_table_row = 0;
+	scrollable_table_row_id = 0;
+	scrollable_table_row = 0;
+	scrollable_table_row_length = 0;
+	scrollable_table_row_cell_old_style = '';
+	scrollable_rows = [];
+
 	var tables = document.body.getElementsByTagName ('table');
 
 	if (!tables) return; 
