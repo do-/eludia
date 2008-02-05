@@ -141,6 +141,10 @@ sub draw_auth_toolbar {
 			
 				<td rowspan=2 width="20" align="right">&nbsp;</td>
 
+				<td rowspan=2 width="50" align="right" nowrap><nobr><a class="button" href="$logout_url">&nbsp;$i18n->{Exit}&nbsp;<img src="$_REQUEST{__static_url}/i_exit.gif?$_REQUEST{__static_salt}" width="14px" height="10px" border="0"></a></nobr></td>
+
+				<td rowspan=2 width="20" align="right">&nbsp;</td>
+
 			</tr>
 			<tr>
 				<td valign=top align="left" class="txt1">$$options{user_label}</td>
