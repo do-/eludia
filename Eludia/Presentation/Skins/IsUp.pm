@@ -411,7 +411,7 @@ sub draw_path {
 
 	my $style = $options -> {nowrap} ? qq{style="background:url('/i/_skins/IsUp/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
 	
-	my $page_title = $_JSON -> encode ([$list -> [-1] -> {label}]);	
+	my $page_title = $_JSON -> encode ([$list -> [-1] -> {label} || 'Новая запись']);	
 	
 	$_REQUEST {__on_load} .= <<EOH;
 	
@@ -2598,11 +2598,6 @@ EOH
 							<input type=hidden name=type value=logon>
 							<input type=hidden name=action value=execute>
 							<input type=hidden name=redirect_params value="$_REQUEST{redirect_params}">
-<!--							
-							<tr>
-								<td colspan="2" align="center"><a id="logon_url" style="text-decoration:none" href="javascript: document.forms['form'].elements['action'].value='execute_ip'; document.forms['form'].submit()"><div class="green-title"><div style="float:left;margin-top:6px;">Войти как Овсянко Дмитрий Евгеньевич</div><div style="float:right;"><img src="/i/logon_turbo_milk/images/green_ear_right.gif" border="0"></div></div></td>
-							</tr>
--->							
 							<tr class="logon">
 								<td><b>Логин:</b></td>
 								<td><input type="text" name="login" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
