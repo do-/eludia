@@ -1979,7 +1979,7 @@ sub draw_toolbar_button {
 		my $salt = rand;
 		my $msg = js_escape ($options -> {confirm});
 		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$options{href}', '$$options{target}')}];
+		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$options{href}', '$$options{target}')} else {document.body.style.cursor = 'default'; nop ();}];
 	} 
 	
 	if ($options -> {href} =~ /^java/) {
@@ -2224,7 +2224,7 @@ sub draw_centered_toolbar_button {
 		$options -> {preconfirm} ||= 1;
 		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
 		my $href = js_escape ($options -> {href});
-		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {nope($href, '$target')} else {window.parent.document.body.style.cursor = 'default'; nop ();} ];
+		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {nope($href, '$target')} else {document.body.style.cursor = 'default'; nop ();} ];
 	} 	
 
 	if ($options -> {href} =~ /^java/) {
