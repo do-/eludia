@@ -982,7 +982,7 @@ for(my $i = $#items; $i >= 1; $i--) {
 		}
 	}
 	######## NOW()
-	$items[$i] =~ s/\bNOW\s*\(.*?\)/TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS')/igsm; 	
+	$items[$i] =~ s/\bNOW\s*\(.*?\)/LOCALTIMESTAMP/igsm; 	
 	######## CURDATE()
 	$items[$i] =~ s/\bCURDATE\s*\(.*?\)/SYSDATE/igsm; 		
 	######## YEAR, MONTH, DAY
