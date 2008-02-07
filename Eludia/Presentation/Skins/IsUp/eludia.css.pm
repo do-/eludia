@@ -330,9 +330,9 @@ BODY {
 
 .header_0 {
 	FONT-WEIGHT: bold; 
-	FONT-SIZE: 14pt; 
-	COLOR: #63a014; 
-	FONT-FAMILY: 'Trebuchet MS', 'MS Sans Serif'; 
+	FONT-SIZE: 13pt; 
+	COLOR: #008d7f; 
+	FONT-FAMILY: 'Tahoma, MS Sans Serif'; 
 }
 
 .header_1 {
