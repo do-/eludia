@@ -3170,7 +3170,7 @@ sub draw_node {
 	if ($options -> {href}) {
 
 		my $__last_query_string = $_REQUEST {__last_query_string};
-		$_REQUEST {__last_query_string} = -1;
+		$_REQUEST {__last_query_string} = $options -> {no_no_esc} ? $__last_query_string : -1;
 		check_href ($options);
 		$options -> {href} .= '&__tree=1' unless ($options -> {no_tree});
 		$_REQUEST {__last_query_string} = $__last_query_string;
