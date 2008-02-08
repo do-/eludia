@@ -36,6 +36,24 @@ function dialog_open (href, arg, options) {
 
 }
 
+function encode1251 (str) {
+
+	var r = /[à-ÿÀ-ß]/g;
+	var result = str.replace (r, function (chr) {
+		result = chr.charCodeAt(0) - 848;
+		return '%' + result.toString(16);
+	});
+	r = /¸/g;
+	result = result.replace (r, '%b8');
+	r = /¨/g;
+	result = result.replace (r, '%à8');
+	r = / /g;
+	result = result.replace (r, '%20');
+	
+	return result;
+
+}
+
 function handle_hotkey_focus    (r) {document.form.elements [r.data].focus ()}
 function handle_hotkey_focus_id (r) {document.getElementById (r.data).focus ()}
 function handle_hotkey_href     (r) {

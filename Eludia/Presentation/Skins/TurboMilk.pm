@@ -844,6 +844,56 @@ EOH
 
 ################################################################################
 
+sub draw_form_field_string_voc {
+
+	my ($_SKIN, $options, $data) = @_;
+	
+	$options -> {attributes} ||= {};
+
+	$options -> {attributes} -> {onKeyPress} .= qq[;if (window.event.keyCode != 27) {is_dirty=true;document.getElementById('${options}_id').value = 0; }];
+	$options -> {attributes} -> {onKeyDown}  .= qq[;if (window.event.keyCode == 8 || window.event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter();];
+	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
+	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
+
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	if (defined $options -> {other}) {
+
+		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
+		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+
+		$options -> {other} -> {onChange} .= <<EOJS;
+
+			var dialog_width = $options->{other}->{width};
+			var dialog_height = $options->{other}->{height};
+
+			var q = encode1251(document.getElementById('${options}_label').value);
+
+			var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&$options->{other}->{param}=' + q + '&select=$options->{name}&$options->{other}->{cgi_tail}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+			
+			focus ();
+			
+			if (result.result == 'ok') {
+				document.getElementById('${options}_label').value=result.label;
+				document.getElementById('${options}_id').value=result.id;
+			} else {
+				this.selectedIndex = 0;
+			}
+EOJS
+	}
+
+
+	my $html = qq[<span style="white-space: nowrap"><input type="text" $attributes id="${options}_label" >]
+		. ($options -> {other} ? qq [ <input type="button" value="..." onclick="$options->{other}->{onChange}">] : '')
+		. qq[<input type="hidden" name="_$options->{name}" value="$options->{id}" id="${options}_id"></span>];
+		
+
+	return $html;
+	
+}
+
+################################################################################
+
 sub draw_form_field_tree {
 
 	my ($_SKIN, $options, $data) = @_;
