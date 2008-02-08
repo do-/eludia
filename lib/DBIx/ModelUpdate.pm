@@ -10,6 +10,7 @@ use DBI::Const::GetInfoType;
 
 use Storable    ('freeze', 'dclone');
 use Digest::MD5 'md5_base64';
+use Time::HiRes 'time';
 
 no strict;
 no warnings;

@@ -49,7 +49,7 @@ BEGIN {
 
 	'$LastChangedRevision$' =~ /(\d+)/;
 	
-	$Eludia::VERSION      .= ".$1";
+	$Eludia::VERSION     .= ".$1";
 
 	$Eludia_VERSION = $Eludia::VERSION;
 
