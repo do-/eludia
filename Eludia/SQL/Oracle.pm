@@ -905,10 +905,10 @@ $need_group_by=1 if ( $sql =~ m/\s+GROUP\s+BY\s+/igsm);
 
 if ($need_group_by) {
 
-	# Запоминаем значения из GROUP BY до UNION или ORDER BY
+	# Запоминаем значения из GROUP BY до UNION или ORDER BY или HAVING
 	# Также формируем массив хранящий ссылки на массивы значений для каждого SELECT
 	my $sc=0;
-	while ($sql =~ s/\s+GROUP\s+BY\s+(.*?)(\s+UNION\s+|\s+ORDER\s+BY\s+|$)/VJkjn;lohggff\2/ism) {
+	while ($sql =~ s/\s+GROUP\s+BY\s+(.*?)(\s+HAVING\s+|\s+UNION\s+|\s+ORDER\s+BY\s+|$)/VJkjn;lohggff\2/ism) {
 		my @group_by_values = split(',',$1);                                            
 		$group_by_values_ref[$sc++]=\@group_by_values;
 	}
