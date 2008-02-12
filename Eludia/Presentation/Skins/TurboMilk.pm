@@ -187,11 +187,11 @@ EOH
 		$header_height = 90;
 	}
 	return <<EOH;
-		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
+		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="$_REQUEST{__static_site}/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
 			<tr>
 			<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
 			<td width=1><table border=0 valign="middle" border=0><tr>
-				<td valign="top" width=1><a href="$logo_url"><img src="/i/logo_$header_prefix.gif" border="0"></a></td>
+				<td valign="top" width=1><a href="$logo_url"><img src="$_REQUEST{__static_site}/i/logo_$header_prefix.gif" border="0"></a></td>
 				<td width=1><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 height=1 border=0></td>
 				<td width=1 valign="bottom" style='padding-bottom: 5px;'><img src="$_REQUEST{__static_url}/gsep.gif?$_REQUEST{__static_salt}" width="4" height="21"></td>
 				<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
@@ -458,7 +458,7 @@ sub draw_path {
 
 	my ($_SKIN, $options, $list) = @_;
 	
-	my $style = $options -> {nowrap} ? qq{style="background:url('/i/_skins/TurboMilk/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
+	my $style = $options -> {nowrap} ? qq{style="background:url('$_REQUEST{__static_url}/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
 		
 	my $path = <<EOH;
 		<table cellspacing=0 cellpadding=0 width="100%" border=0>
@@ -1251,7 +1251,7 @@ sub _icon_path {
 
 	-r $r -> document_root . "/i/_skins/TurboMilk/i_$_[0].gif" ?
 	"$_REQUEST{__static_url}/i_$_[0].gif?$_REQUEST{__static_salt}" :
-	"/i/buttons/$_[0].gif"			
+	"$_REQUEST{__static_site}/i/buttons/$_[0].gif"			
 
 }
 
@@ -1823,7 +1823,7 @@ sub draw_text_cell {
 		$data -> {label} =~ s{\s+$}{}gsm;
 		$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
-		$html .= qq {<img src='/i/_skins/TurboMilk/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
+		$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
 		$html .= '<nobr>' unless $data -> {no_nobr};
 
@@ -2323,7 +2323,7 @@ EOH
 
 	foreach (@{$_REQUEST {__include_css}}) {
 		$_REQUEST {__head_links} .= <<EOH;
-			<LINK href="/i/$_.css" type=text/css rel=STYLESHEET>
+			<LINK href="$_REQUEST{__static_site}/i/$_.css" type=text/css rel=STYLESHEET>
 EOH
 	}
 
@@ -2659,11 +2659,11 @@ EOH
 	<tr>
 
 		<td valign=top height=90>
-			<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="/i/bg_logo_out.gif" style="background-repeat: repeat-x" height=90>
+			<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="$_REQUEST{__static_site}/i/bg_logo_out.gif" style="background-repeat: repeat-x" height=90>
 				<tr>
 				<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=90 border=0></td>
 				<td width=1><table border=0 valign="middle" border=0><tr>
-					<td valign="top" width=1><img src="/i/logo_out.gif" border="0"></td>
+					<td valign="top" width=1><img src="$_REQUEST{__static_site}/i/logo_out.gif" border="0"></td>
 					<td width=1><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 height=1 border=0></td>
 					<td width=1 valign="bottom" style='padding-bottom: 5px;'><img src="$_REQUEST{__static_url}/gsep.gif?$_REQUEST{__static_salt}" width="4" height="21"></td>
 					<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
@@ -2693,7 +2693,7 @@ EOH
 							<input type=hidden name=redirect_params value="$_REQUEST{redirect_params}">
 <!--							
 							<tr>
-								<td colspan="2" align="center"><a id="logon_url" style="text-decoration:none" href="javascript: document.forms['form'].elements['action'].value='execute_ip'; document.forms['form'].submit()"><div class="green-title"><div style="float:left;margin-top:6px;">Войти как Овсянко Дмитрий Евгеньевич</div><div style="float:right;"><img src="/i/logon_turbo_milk/images/green_ear_right.gif" border="0"></div></div></td>
+								<td colspan="2" align="center"><a id="logon_url" style="text-decoration:none" href="javascript: document.forms['form'].elements['action'].value='execute_ip'; document.forms['form'].submit()"><div class="green-title"><div style="float:left;margin-top:6px;">Войти как Овсянко Дмитрий Евгеньевич</div><div style="float:right;"><img src="$_REQUEST{__static_site}/i/logon_turbo_milk/images/green_ear_right.gif" border="0"></div></div></td>
 							</tr>
 -->							
 							<tr class="logon">
