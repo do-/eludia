@@ -1080,6 +1080,25 @@ if ($model_update -> {characterset} =~ /UTF/i) {
 	$sql = $new_sql;
 }
 
+my @order_by;
+
+if ($sql =~ /\s+ORDER\s+BY\s+(.*)/igsm) {
+      
+    @order_by = split ',',$1;
+         
+    foreach my $field (@order_by) {
+	next 			   if ($field =~ m/NULLS\s+(\bFIRST\b|\bLAST\b)/igsm); 
+        $field .= ' NULLS LAST '   if ($field =~ m/\bDESC\b/igsm); 	
+	next 			   if ($field =~ m/NULLS\s+(\bFIRST\b|\bLAST\b)/igsm); 
+        $field .= ' NULLS FIRST '; 		
+    }
+			     
+    $new_order_by = join ',',@order_by;
+			      
+    $sql =~ s/(\s+ORDER\s+BY\s+)(.*)/\1$new_order_by/igsm;
+}
+
+
 #warn "ORACLE OUT: <$sql>\n";
 
 return $sql;	
