@@ -79,9 +79,12 @@ sub header_in {
 ################################################################################
 
 sub headers_in {
+
 	my $self = shift;
+
 	my $q = $self -> {Q};
 	my @inheaders = $q -> http ($_ [1]);
+
 	shift(@inheaders);
 	foreach $header (@inheaders){
 		@arr=();
@@ -100,11 +103,10 @@ sub headers_in {
 		$ret->{$strout}=$ENV{$header};
 
 	}
-      #	$ret->{'Accept-Encoding'}=$ENV{'HTTP_ACCEPT_ENCODING'};
-      #	$ret->{'Accept-Language'}=$ENV{'HTTP_ACCEPT_LANGUAGE'};
-	return $ret;
-}
 
+	return $ret;
+
+}
 
 ################################################################################
 

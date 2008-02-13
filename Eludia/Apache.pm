@@ -554,7 +554,7 @@ EOH
 				}
 				elsif (!$_REQUEST {__response_sent}) {
 
-					if ($action eq 'delete' && $conf -> {core_auto_esc} == 2) {
+					if ($action eq 'delete') {
 						esc ({label => $_REQUEST {__redirect_alert}});
 					}
 					else {
@@ -585,35 +585,46 @@ EOH
 
 		}
 		else {
-
-#		   	sql_reconnect ();
-
-			if (
-				$conf -> {core_auto_esc} == 2 &&
-				$_REQUEST {sid} &&
-				!$_REQUEST {__top} &&
-				(
-					$r -> headers_in -> {'Referer'} =~ /action=\w/ ||
-					$r -> headers_in -> {'Referer'} !~ /__last_query_string=$_REQUEST{__last_query_string}/ ||
-					$r -> headers_in -> {'Referer'} !~ /type=$_REQUEST{type}(\W.*)?$/
-				)
-			) {
-
-				my ($method, $url) = split /\s+/, $r -> the_request;
-
-				$url =~ s{\&?_?salt=[\d\.]+}{}gsm;
-				$url =~ s{\&?sid=\d+}{}gsm;
-
-				my $no = sql_select_scalar ("SELECT no FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND href LIKE ?", $_REQUEST {sid}, $url);
-
-				unless ($no) {
-					$no = 1 + sql_select_scalar ("SELECT MAX(no) FROM $conf->{systables}->{__access_log} WHERE id_session = ?", $_REQUEST {sid});
-					sql_do ("INSERT INTO $conf->{systables}->{__access_log} (id_session, no, href) VALUES (?, ?, ?)", $_REQUEST {sid}, $no, $url);
+		
+			if ($_REQUEST {sid} && !$_REQUEST {__top}) {
+						
+				my @qs = split /\?/, $r -> headers_in -> {Referer};
+				
+				my %p = ();
+				
+				foreach (split /\&/, $qs [-1]) {
+				
+					my ($k, $v) = split /\=/;
+					
+					$p {$k} = $v;
+				
 				}
 
-				$_REQUEST {__last_query_string} = $no;
+				if (
+					$p {action} 
+					|| $_REQUEST {__next_query_string}
+					|| $p {__last_query_string} != $_REQUEST{__last_query_string}
+					|| $p {type} ne $_REQUEST {type}
+				) {
 
-				$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
+					my ($method, $url) = split /\s+/, $r -> the_request;
+
+					$url =~ s{\&?_?salt=[\d\.]+}{}gsm;
+					$url =~ s{\&?sid=\d+}{}gsm;
+					$url =~ s{\&?__next_query_string=\d+}{}gsm;
+
+					my $no = sql_select_scalar ("SELECT no FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND href LIKE ?", $_REQUEST {sid}, $url);
+
+					unless ($no) {
+						$no = 1 + sql_select_scalar ("SELECT MAX(no) FROM $conf->{systables}->{__access_log} WHERE id_session = ?", $_REQUEST {sid});
+						sql_do ("INSERT INTO $conf->{systables}->{__access_log} (id_session, no, href) VALUES (?, ?, ?)", $_REQUEST {sid}, $no, $url);
+					}
+
+					$_REQUEST {__last_query_string} = $no;
+
+					$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
+				
+				}
 
 			}
 
