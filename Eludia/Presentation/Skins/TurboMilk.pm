@@ -1796,9 +1796,10 @@ sub js_set_select_option {
 		label    => $item -> {label},
 	});
 
-	my $var = "sso_" . (0 + $item);
+	my $var = "sso_" . (0 + $item -> {id});
 
-	$_REQUEST {__script} .= " var $var = $a; ";
+	$_REQUEST {__script} .= " var $var = $a; "
+		unless ($_REQUEST {__script} =~ / var $var =/);
 
 	return "javaScript:invoke_setSelectOption ($var)";
 
