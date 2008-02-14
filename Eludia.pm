@@ -27,6 +27,7 @@ BEGIN {
 	if ($ENV{MOD_PERL_API_VERSION} >= 2) {
 		require Apache2::compat;
 		$Apache = 'Apache2';
+		$ENV{PERL_JSON_BACKEND} = 'JSON::PP'		
 	}
 	elsif (MP2) {
 		require Apache::RequestRec;
@@ -34,9 +35,11 @@ BEGIN {
 		require Apache::RequestIO;
 		require Apache::Const;
 		require Apache::Upload;
+		$ENV{PERL_JSON_BACKEND} = 'JSON::PP'		
 	} else {
 		require Apache::Constants;
 		Apache::Constants->import(qw(OK));
+		$ENV{PERL_JSON_BACKEND} = 'JSON::XS'		
 	}
   
 	$Data::Dumper::Sortkeys = 1;
@@ -194,6 +197,18 @@ BEGIN {
 		delete $conf -> {core_gzip};
 		delete $preconf -> {core_gzip};
 	};
+
+	if (MP2) {
+		eval "require JSON";
+		if ($@) {
+			delete $INC {'JSON.pm'};
+			delete $INC {'JSON/PP.pm'};
+			delete $INC {'JSON/XS.pm'};
+			require JSON::XS;
+		}
+	} else {
+		require JSON::XS;
+	}
 
 	our %INC_FRESH = ();	
 	while (my ($name, $path) = each %INC) {

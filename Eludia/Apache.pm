@@ -121,10 +121,8 @@ sub setup_skin {
 	
 	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
 
-	require JSON::XS;
+	our $_JSON = $INC {'JSON.pm'} ? JSON -> new -> latin1 (1) : JSON::XS -> new -> latin1 (1);
 
-	our $_JSON = JSON::XS -> new -> latin1 (1);
-	
 	foreach my $package ($_SKIN, $_JS_SKIN) {
 
 		attach_globals ($_PACKAGE => $package, qw(

@@ -1,7 +1,5 @@
 package Eludia::Presentation::Skins::JS;
 
-use JSON::XS;
-
 ################################################################################
 
 sub options {

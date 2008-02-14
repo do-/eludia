@@ -1739,6 +1739,13 @@ sub select__info {
 			path  => $INC {$skin . '.pm'},
 		},		
 
+		{			
+			id    => 'JSON module',
+			label => ref ($_JSON) eq 'JSON' ? ('JSON' . ' ' . $JSON::VERSION . ' (backend: ' . JSON->backend . ')', path => $INC {'JSON.pm'})
+				:
+				ref ($_JSON) eq 'JSON::XS' ? ('JSON::XS' . ' ' . $JSON::XS::VERSION, path => $INC {'JSON/XS.pm'})
+				: 'none',
+		},		
 	]	
 
 }
