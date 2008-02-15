@@ -780,13 +780,33 @@ sub sql_download_file {
 	
 	$_REQUEST {id} ||= $_PAGE -> {id};
 	
-	my $r = sql_select_hash ("SELECT * FROM $$options{table} WHERE id = ?", $_REQUEST {id});
-	$options -> {path} = $r -> {$options -> {path_column}};
-	$options -> {type} = $r -> {$options -> {type_column}};
-	$options -> {file_name} = $r -> {$options -> {file_name_column}};
+	my $item = sql_select_hash ("SELECT * FROM $$options{table} WHERE id = ?", $_REQUEST {id});
+	$options -> {size} = $item -> {$options -> {size_column}};
+	$options -> {path} = $item -> {$options -> {path_column}};
+	$options -> {type} = $item -> {$options -> {type_column}};
+	$options -> {file_name} = $item -> {$options -> {file_name_column}};	
 	
-	download_file ($options);
-	
+	if ($options -> {body_column}) {
+		
+		my $st = $db -> prepare ("SELECT $options->{body_column} FROM $options->{table} WHERE id = ?", {ora_auto_lob => 0});
+		$st -> execute ($_REQUEST {id});
+		(my $lob_locator) = $st -> fetchrow_array ();
+
+		my $chunk_size = 1034;
+		my $offset = 1 + download_file_header (@_);
+		
+		while (my $data = $db -> ora_lob_read ($lob_locator, $offset, $chunk_size)) {
+		      $r -> print ($data);
+		      $offset += $chunk_size;
+		}
+
+		$st -> finish ();
+
+	}
+	else {
+		download_file ($options);
+	}
+
 }
 
 ################################################################################
@@ -794,10 +814,38 @@ sub sql_download_file {
 sub sql_upload_file {
 	
 	my ($options) = @_;
+	
+	$options -> {id} ||= $_REQUEST {id};
 
 	my $uploaded = upload_file ($options) or return;
 	
-	sql_delete_file ($options);
+	$options -> {body_column} or sql_delete_file ($options);
+						
+	if ($options -> {body_column}) {
+	
+		my $st = $db -> prepare ("SELECT $options->{body_column} FROM $options->{table} WHERE id = ? FOR UPDATE", {ora_auto_lob => 0});
+		$st -> execute ($options -> {id});
+		(my $lob_locator) = $st -> fetchrow_array ();
+		$st -> finish ();
+		
+		$db -> ora_lob_trim ($lob_locator, 0);
+
+		my $chunk_size = 4096; 
+		my $buffer = '';		
+		
+		open F, $uploaded -> {real_path} or die "Can't open $uploaded->{real_path}: $!\n";
+		
+		while (read (F, $buffer, $chunk_size)) {
+			$db -> ora_lob_append ($lob_locator, $buffer);
+		}
+
+		close F;
+
+	}
+	
+	unlink $uploaded -> {real_path};
+	
+	delete $uploaded -> {real_path};
 	
 	my (@fields, @params) = ();
 	
@@ -811,12 +859,14 @@ sub sql_upload_file {
 		push @fields, "$field = ?";
 		push @params, $options -> {add_columns} -> {$field};
 	}
+
+	if (@fields) {
 	
-	@fields or return;
+		my $tail = join ', ', @fields;
+
+		sql_do ("UPDATE $$options{table} SET $tail WHERE id = ?", @params, $options -> {id});
 	
-	my $tail = join ', ', @fields;
-		
-	sql_do ("UPDATE $$options{table} SET $tail WHERE id = ?", @params, $_REQUEST {id});
+	}
 	
 	return $uploaded;
 	

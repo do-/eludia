@@ -93,7 +93,7 @@ BEGIN {
 	
 	if ($docroot) {
 
-		foreach my $subdir ('_skins', 'upload/dav_rw', 'upload/dav_ro') {
+		foreach my $subdir ('_skins', 'upload/dav_rw', 'upload/dav_ro', 'upload/images') {
 
 			my $dir = $docroot . $subdir;
 

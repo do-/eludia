@@ -7,7 +7,7 @@ sub vld_date {
 	$name = "_" . $name;
 	
 	if (!$_REQUEST {$name} && $nullable) {
-		delete $_REQUEST {$name};
+		$_REQUEST {$name} = undef;
 		return undef;
 	}
 	

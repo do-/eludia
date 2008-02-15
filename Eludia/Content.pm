@@ -966,13 +966,58 @@ sub add_totals {
 	
 }
 
-
 ################################################################################
 
 sub do_add_DEFAULT {
 	
 	sql_do_relink ($_REQUEST {type}, [get_ids ('clone')] => $_REQUEST {id});
 
+}
+
+################################################################################
+
+sub do_kill_DEFAULT {
+	
+	foreach my $id (get_ids ($_REQUEST {type})) {
+	
+		sql_do ("UPDATE $_REQUEST{type} SET fake = -1 WHERE id = ?", $id);
+		
+	}
+
+}
+
+################################################################################
+
+sub do_unkill_DEFAULT {
+	
+	my $extra = '';
+	$extra .= ', is_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {is_merged_to};
+	$extra .= ', id_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {id_merged_to};
+	
+	foreach my $id (get_ids ($_REQUEST {type})) {
+	
+		sql_do ("UPDATE $_REQUEST{type} SET fake = 0 $extra WHERE id = ?", $id);
+
+		sql_undo_relink ($_REQUEST{type}, $_REQUEST{id});
+		
+	}
+
+	$_REQUEST {fake} = 0;
+
+}
+
+################################################################################
+
+sub validate_kill_DEFAULT {
+	get_ids ($_REQUEST {type}) > 0 or return 'Вы не выделили ни одной строки';
+	return undef;
+}
+
+################################################################################
+
+sub validate_unkill_DEFAULT {
+	get_ids ($_REQUEST {type}) > 0 or return 'Вы не выделили ни одной строки';
+	return undef;
 }
 
 ################################################################################
@@ -1006,8 +1051,10 @@ sub do_create_DEFAULT {
 ################################################################################
 
 sub do_update_DEFAULT {
-	
-	sql_upload_file ({
+
+	my $columns = $model_update -> get_columns ($_REQUEST {type});
+
+	my $options = {
 		name => 'file',
 		dir => 'upload/images',
 		table => $_REQUEST{type},
@@ -1015,10 +1062,12 @@ sub do_update_DEFAULT {
 		size_column => 'file_size',
 		type_column => 'file_type',
 		path_column => 'file_path',
-	});
-		
-	my $columns = $model_update -> get_columns ($_REQUEST {type});
+	};
 	
+	$options -> {body_column} = 'file_body' if $columns -> {file_body};
+	
+	sql_upload_file ($options);
+			
 	my @fields = ();
 	
 	foreach my $key (keys %_REQUEST) {	
@@ -1038,8 +1087,8 @@ sub do_update_DEFAULT {
 sub do_download_DEFAULT {
 
 	my $name = $_REQUEST {_name} || 'file';
-
-	sql_download_file ({
+	
+	my $options = {
 		name => $name,
 		dir => 'upload/images',
 		table => $_REQUEST{type},
@@ -1047,7 +1096,11 @@ sub do_download_DEFAULT {
 		size_column => $name . '_size',
 		type_column => $name . '_type',
 		path_column => $name . '_path',
-	});
+	};
+	
+	$options -> {body_column} = $name . '_body' if $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {$name . '_body'};
+
+	sql_download_file ($options);
 
 }
 
@@ -1442,25 +1495,27 @@ sub select__boot {
 
 ################################################################################
 
-sub download_file {
+sub download_file_header {
 
 	my ($options) = @_;	
-		
+
 	$r -> status (200);
 
 	$options -> {file_name} =~ s{.*\\}{};
 		
 	my $type = 
-		$options -> {charset} ? $options -> {'ty' . "pe"} . '; charset=' . $options -> {charset} :
-		$options -> {'ty' . "pe"};
+		$options -> {charset} ? $options -> {type} . '; charset=' . $options -> {charset} :
+		$options -> {type};
 
 	$type ||= 'application/octet-stream';
 
 	my $path = $r -> document_root . $options -> {path};
 	
 	my $start = 0;
-	my $content_length = -s $path;
+	my $content_length = $options -> {size} || -s $path;
+	
 	my $range_header = $r -> headers_in -> {"Range"};
+
 	if ($range_header =~ /bytes=(\d+)/) {
 		$start = $1;
 		my $finish = $content_length - 1;
@@ -1475,17 +1530,30 @@ sub download_file {
 	
 	$r -> send_http_header () unless (MP2);
 
+	$_REQUEST {__response_sent} = 1;
+	
+	return $start;
+
+}
+
+################################################################################
+
+sub download_file {
+
+	my ($options) = @_;	
+
+	my $path = $r -> document_root . $options -> {path};
+
+	my $start = download_file_header (@_);
+
 	if (MP2) {
-		$r->sendfile($path, $start);
+		$r -> sendfile ($path, $start);
 	} else {
 		open (F, $path) or die ("Can't open file $path: $!");
 		seek (F, $start, 0);
 		$r -> send_fd (F);
 		close F;
 	}
-
-
-	$_REQUEST {__response_sent} = 1;
 	
 }
 

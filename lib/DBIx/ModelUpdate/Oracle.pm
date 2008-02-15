@@ -213,12 +213,12 @@ sub get_canonic_type {
 	return $N . 'CLOB'     if $type_name eq 'longtext';
 	return 'RAW'           if $type_name eq 'varbinary';
 	return 'BLOB'          if $type_name eq 'longblob';
+	return 'DATE'          if $type_name eq 'date';
 			
-	if ($type_name =~ /date|time/) {
-	
-		$definition -> {COLUMN_DEF} = 'SYSDATE' if $should_change && ($type_name eq 'timestamp');
-		
-		return 'DATE';
+	if ($type_name =~ /time/) {
+			
+		$definition -> {COLUMN_DEF} = 'LOCALTIMESTAMP' if $should_change && ($type_name eq 'timestamp');		
+		return 'TIMESTAMP';
 		
 	};
 	
@@ -251,8 +251,16 @@ sub gen_column_definition {
 	if ($type eq 'CLOB' || $type eq 'NCLOB') {
 		$sql .= ' DEFAULT empty_clob()';
 	} 
+	elsif ($type eq 'BLOB') {
+		$sql .= ' DEFAULT empty_blob()';
+	} 
 	elsif (exists $definition -> {COLUMN_DEF}) {
-		$sql .= ' DEFAULT ' . ($definition -> {COLUMN_DEF} eq 'SYSDATE' ? 'SYSDATE' : $self -> {db} -> quote ($definition -> {COLUMN_DEF}));
+	
+		if ($definition -> {COLUMN_DEF} !~ /^[A-Z]+$/) {
+			$definition -> {COLUMN_DEF} = $self -> {db} -> quote ($definition -> {COLUMN_DEF});
+		}
+	
+		$sql .= ' DEFAULT ' . $definition -> {COLUMN_DEF};
 	}
 
 	my ($nn_constraint_name, $pk_constraint_name) = ('nn_' . $table_name . '_' . $name, 'pk_' . $table_name . '_' . $name);
@@ -527,15 +535,20 @@ sub drop_index {
 	my $q = $table_name =~ /^_/ ? $self -> {quote} : '';
 
 	if ($core_voc_replacement_use) {
+		
 		my $replaced_name;
 
-		if ($replaced_name = voc_replacements ($self ,$table_name, $index_name, 1,'DELETE')) {
+		if ($replaced_name = voc_replacements ($self ,$table_name, $index_name, 1, 'DELETE')) {
 			$index_name = $replaced_name;
+		}
+		else {
+			return;
 		}
 
 		warn "DROP INDEX $q$index_name$q\n";
 
 		$self -> {db} -> do ("DROP INDEX $q$index_name$q");
+		
 	}
 	else {
 
@@ -571,17 +584,22 @@ sub create_index {
 
 	if ($core_voc_replacement_use) {
 	
-		my $replaced_name = voc_replacements ($self ,$table_name, $index_name, 1,'CREATE');
+		my $replaced_name = voc_replacements ($self, $table_name, $index_name, 1,'CREATE');
 
 		warn "CREATE INDEX $q${replaced_name}$q ON $q${table_name}$q ($index_def)\n";
 
-		$self -> {db} -> do ("CREATE INDEX $q${replaced_name}$q ON $q${table_name}$q ($index_def)");
+		eval {
+			$self -> {db} -> do ("CREATE INDEX $q${replaced_name}$q ON $q${table_name}$q ($index_def)");
+		};
+		
+		warn "$@" if $@;
+		
 	}
 	else {
 	
 		warn "CREATE INDEX $q${table_name}_${index_name}$q ON $q$table_name$q ($index_def)\n";
 
-		$self -> {db} -> do ("CREATE INDEX $q${table_name}_${index_name}$q ON $q$table_name$q ($index_def)");	
+		$self -> {db} -> do ("CREATE INDEX $q${table_name}_${index_name}$q ON $q$table_name$q ($index_def)");
 	
 	}
 	
@@ -620,11 +638,13 @@ sub voc_replacements {
 
 	if ($action eq 'DELETE') {
 
-		my $id = $self -> sql_select_scalar ("SELECT id FROM $core_name WHERE table_name= '${table_name}' AND object_name='${object_name}' AND object_type=$object_type");		
+		my $id = $self -> sql_select_scalar ("SELECT id FROM $core_name WHERE table_name= '${table_name}' AND object_name='${object_name}' AND object_type=$object_type");
+		
+		$id or return;
 	
 		$replaced_name .= $id; 
 	
-		$self -> {db} -> do ("DELETE FROM $core_name WHERE id = $id");		
+		$self -> {db} -> do ("DELETE FROM $core_name WHERE id = $id");
 	
 	}
 	

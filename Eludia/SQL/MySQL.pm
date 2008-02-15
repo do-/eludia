@@ -638,6 +638,8 @@ sub sql_upload_file {
 	
 	my ($options) = @_;
 
+	$options -> {id} ||= $_REQUEST {id};
+
 	my $uploaded = upload_file ($options) or return;
 		
 	sql_delete_file ($options);
@@ -659,7 +661,7 @@ sub sql_upload_file {
 	
 	my $tail = join ', ', @fields;
 		
-	sql_do ("UPDATE $$options{table} SET $tail WHERE id = ?", @params, $_REQUEST {id});
+	sql_do ("UPDATE $$options{table} SET $tail WHERE id = ?", @params, $options -> {id});
 	
 	return $uploaded;
 	
