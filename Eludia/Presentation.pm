@@ -2618,7 +2618,7 @@ sub draw_cells {
 			$cell -> {a_class} ||= $options -> {a_class};
 			$cell -> {target}  ||= $options -> {target} || '_self';
 
-			unless ($cell -> {href}) {
+			unless (exists $cell -> {href}) {
 				$cell -> {href} = $options -> {href};
 				$cell -> {no_check_href} = 1;
 			}
