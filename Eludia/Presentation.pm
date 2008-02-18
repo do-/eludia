@@ -2598,7 +2598,7 @@ sub draw_cells {
 		if ((@cell = grep {$_ -> {select_href}} @cells) == 0) {
 
 			foreach my $cell (@cells) {
-				unless ($cell -> {no_select_href}) {
+				if (!$cell -> {no_select_href} && $cell -> {label}) {
 					$options -> {select_label} = $cell -> {label};
 					last;
 				} 
