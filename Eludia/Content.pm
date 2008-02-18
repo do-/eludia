@@ -1606,7 +1606,6 @@ sub upload_file {
 	
 	$filename =~ s{.*\\}{};
 	
-	
 	return {
 		file_name => $filename,
 		size      => $file_size,

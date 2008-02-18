@@ -710,6 +710,9 @@ sub sql_undo_relink {
 	ref $old_ids eq ARRAY or $old_ids = [$old_ids];
 			
 	foreach my $old_id (@$old_ids) {
+		
+		$old_id > 0 or next;
+
 warn "undo relink $table_name: $old_id";
 
 		my $record = sql_select_hash ($table_name, $old_id);

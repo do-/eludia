@@ -811,6 +811,41 @@ sub sql_download_file {
 
 ################################################################################
 
+sub sql_store_file {
+
+	my ($options) = @_;
+
+	my $st = $db -> prepare ("SELECT $options->{body_column} FROM $options->{table} WHERE id = ? FOR UPDATE", {ora_auto_lob => 0});
+
+	$st -> execute ($options -> {id});
+	(my $lob_locator) = $st -> fetchrow_array ();
+	$st -> finish ();
+	
+	$db -> ora_lob_trim ($lob_locator, 0);
+
+	$options -> {chunk_size} ||= 4096; 
+	my $buffer = '';		
+		
+	open F, $options -> {real_path} or die "Can't open $options->{real_path}: $!\n";
+		
+	while (read (F, $buffer, $options -> {chunk_size})) {
+		$db -> ora_lob_append ($lob_locator, $buffer);
+	}
+
+	sql_do (
+		"UPDATE $$options{table} SET $options->{size_column} = ?, $options->{type_column} = ?, $options->{file_name_column} = ? WHERE id = ?",
+		-s $options -> {real_path},
+		$options -> {type},
+		$options -> {file_name},
+		$options -> {id},
+	);
+
+	close F;
+
+}
+
+################################################################################
+
 sub sql_upload_file {
 	
 	my ($options) = @_;
@@ -823,24 +858,10 @@ sub sql_upload_file {
 						
 	if ($options -> {body_column}) {
 	
-		my $st = $db -> prepare ("SELECT $options->{body_column} FROM $options->{table} WHERE id = ? FOR UPDATE", {ora_auto_lob => 0});
-		$st -> execute ($options -> {id});
-		(my $lob_locator) = $st -> fetchrow_array ();
-		$st -> finish ();
+		$options -> {real_path} = $uploaded -> {real_path};
 		
-		$db -> ora_lob_trim ($lob_locator, 0);
-
-		my $chunk_size = 4096; 
-		my $buffer = '';		
-		
-		open F, $uploaded -> {real_path} or die "Can't open $uploaded->{real_path}: $!\n";
-		
-		while (read (F, $buffer, $chunk_size)) {
-			$db -> ora_lob_append ($lob_locator, $buffer);
-		}
-
-		close F;
-
+		sql_store_file ($options);
+	
 		unlink $uploaded -> {real_path};
 
 		delete $uploaded -> {real_path};
