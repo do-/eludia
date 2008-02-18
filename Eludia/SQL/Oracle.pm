@@ -841,11 +841,11 @@ sub sql_upload_file {
 
 		close F;
 
+		unlink $uploaded -> {real_path};
+
+		delete $uploaded -> {real_path};
+
 	}
-	
-	unlink $uploaded -> {real_path};
-	
-	delete $uploaded -> {real_path};
 	
 	my (@fields, @params) = ();
 	
