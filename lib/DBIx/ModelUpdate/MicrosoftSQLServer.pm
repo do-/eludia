@@ -27,7 +27,7 @@ sub unquote_table_name {
 
 	$name =~ s{^\W*(\w+)\W*$}{$1};
 
-	return $name;
+	return lc $name;
 
 }
 
