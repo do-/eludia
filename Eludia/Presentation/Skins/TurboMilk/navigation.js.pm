@@ -168,8 +168,7 @@ function idx_tables (__scrollable_table_row) {
 	scrollable_table_row_cell = 0;
 
 	if (scrollable_rows.length > 0) {
-		var cell = cell_on ();
-		if (scrollable_table_row > 0) scrollCellToVisibleTop (cell);
+		if (scrollable_table_row > 0) scrollCellToVisibleTop (cell_on ());
 	}
 	else {
 		scrollable_table = null;
@@ -674,7 +673,7 @@ function absTop (element) {
 
 function scrollCellToVisibleTop (td) {
 	
-	var table = td.parentElement.parentElement.parentElement;
+	var table = td.parentElement.parentElement.parentElement.parentElement;
 	var thead = table.tHead;
 	var div   = table.parentElement;
 
