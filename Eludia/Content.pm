@@ -376,7 +376,7 @@ sub send_mail {
 		$options -> {text} .= "\n\n" . $options -> {href};
 	}
 	
-	my $text = encode_base64 ($options -> {text});
+	my $text = encode_base64 ($options -> {text} . "\n" . $original_to);
 	
 	unless ($^O eq 'MSWin32') {
 		defined (my $child_pid = fork) or die "Cannot fork: $!\n";
@@ -431,7 +431,6 @@ Content-Type: $$options{content_type}; charset="$$options{body_charset}"
 Content-Transfer-Encoding: base64
 
 $text
-$original_to
 EOT
 
 		##### sending attach
