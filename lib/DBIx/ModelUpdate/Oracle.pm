@@ -214,14 +214,25 @@ sub get_canonic_type {
 	return 'RAW'           if $type_name eq 'varbinary';
 	return 'BLOB'          if $type_name eq 'longblob';
 	return 'DATE'          if $type_name eq 'date';
-			
-	if ($type_name =~ /time/) {
-			
-		$definition -> {COLUMN_DEF} = 'LOCALTIMESTAMP' if $should_change && ($type_name eq 'timestamp');		
-		return 'TIMESTAMP';
+
+	if ($self -> {db} -> {Driver} -> {Name} eq 'ODBC') {
+		if ($type_name =~ /date|time/) {
 		
-	};
+			$definition -> {COLUMN_DEF} = 'SYSDATE' if $should_change && ($type_name eq 'timestamp');
 	
+			
+			return 'DATE';
+			
+		};
+	} else {			
+		if ($type_name =~ /time/) {
+				
+			$definition -> {COLUMN_DEF} = 'LOCALTIMESTAMP' if $should_change && ($type_name eq 'timestamp');		
+			return 'TIMESTAMP';
+			
+		};
+	}
+		
 	return uc $type_name;
 
 }    
