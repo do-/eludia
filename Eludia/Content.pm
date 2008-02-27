@@ -325,8 +325,9 @@ sub send_mail {
 		$to = sql_select_hash ("SELECT label, mail FROM $conf->{systables}->{users} WHERE id = ?", $to);
 	}
 
+	my $original_to;
 	if ($preconf -> {mail} -> {to}) {
-		$options -> {text} .= Dumper ($to);
+		$original_to = Dumper ($to);
 		$to = $preconf -> {mail} -> {to};
 	}
 
@@ -430,6 +431,7 @@ Content-Type: $$options{content_type}; charset="$$options{body_charset}"
 Content-Transfer-Encoding: base64
 
 $text
+$original_to
 EOT
 
 		##### sending attach
