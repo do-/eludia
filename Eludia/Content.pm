@@ -327,7 +327,7 @@ sub send_mail {
 
 	my $original_to;
 	if ($preconf -> {mail} -> {to}) {
-		$original_to = Dumper ($to);
+		$original_to = '' . Dumper ($to);
 		$to = $preconf -> {mail} -> {to};
 	}
 
