@@ -107,21 +107,15 @@ sub sql_prepare {
 sub sql_do {
 
 	my ($sql, @params) = @_;
+	
+	my $time = time;
 
 	my $st = sql_prepare ($sql);
 
-#	eval {
-		$st -> execute (@params);
-		$st -> finish;	
-#	};
+	my $affected = $st -> execute (@params);
+	$st -> finish;	
 
-#	if ($@ && $@ =~ /ORA\-02292/) {	
-#		$_REQUEST {error} = 'Нарушено ограничение целостности. Операция недопустима.';	
-#	} 
-#	elsif ($@) {
-#		die $@;
-#	}
-	
+	__log_sql_profilinig ({time => $time, sql => $sql, selected => $affected});	
 }
 
 ################################################################################
@@ -129,7 +123,9 @@ sub sql_do {
 sub sql_execute_procedure {
 
 	my ($sql, @params) = @_;
-	
+
+	my $time = time;	
+
 	$sql .= ';' unless $sql =~ /;[\n\r\s]*$/;
 	
 	my $st = sql_prepare ($sql);
@@ -149,6 +145,7 @@ sub sql_execute_procedure {
 		$st -> execute;
 	};
 	
+
 	if ($@) {
 		local $SIG {__DIE__} = 'DEFAULT';
 		if ($@ =~ /ORA-\d+:(.*)/) {
@@ -158,8 +155,10 @@ sub sql_execute_procedure {
 		}
 		
 	}
-	
+
 	$st -> finish;	
+
+	__log_sql_profilinig ({time => $time, sql => $sql, selected => 0});	
 	
 }
 
@@ -205,6 +204,8 @@ sub sql_select_all_cnt {
 		return ($result, $cnt);
 	}
 
+	my $time = time;	
+
 	my $st = sql_prepare ($sql);
 
 
@@ -225,6 +226,7 @@ sub sql_select_all_cnt {
 	
 	$st -> finish;
 
+	__log_sql_profilinig ({time => $time, sql => $sql, selected => @result + 0});	
 
 
 	$sql =~ s{ORDER BY.*}{}ism;
@@ -276,6 +278,7 @@ sub sql_select_all {
 			
 	}
 
+	my $time = time;	
 
 	if ($sql =~ s{LIMIT\s+(\d+)\s*\,\s*(\d+).*}{}ism) {
 
@@ -314,6 +317,8 @@ sub sql_select_all {
 		$st -> finish;
         }
 	
+	__log_sql_profilinig ({time => $time, sql => $sql, selected => @$result + 0});	
+
 	foreach my $i (@$result) {
 		lc_hashref ($i);
 	}
@@ -353,6 +358,8 @@ sub sql_select_all_hash {
 
 	$sql = mysql_to_oracle ($sql) if ($conf -> {core_auto_oracle});
 
+	my $time = time;	
+
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
 
@@ -362,6 +369,7 @@ sub sql_select_all_hash {
 	}
 	
 	$st -> finish;
+	__log_sql_profilinig ({time => $time, sql => $sql, selected => (keys %$result) + 0});	
 
 	return $result;
 
@@ -379,6 +387,8 @@ sub sql_select_col {
 	if ($sql =~ m/\bLIMIT\s+\d+\s*$/igsm) {
 		$sql =~ s/\bLIMIT\s+(\d+)\s*$/LIMIT 0,$1/igsm;
 	}
+
+	my $time = time;	
 
 	if ($sql =~ s{LIMIT\s+(\d+)\s*\,\s*(\d+).*}{}ism) {
 		my ($start, $portion) = ($1, $2);
@@ -411,6 +421,8 @@ sub sql_select_col {
 		}
 		$st -> finish;
 	}
+
+	__log_sql_profilinig ({time => $time, sql => $sql, selected => @result + 0});	
 	
 	return @result;
 
@@ -474,10 +486,14 @@ sub sql_select_hash {
 		
 	}	
 	
+	my $time = time;	
+
 	my $st = sql_prepare ($sql_or_table_name);
 	$st -> execute (@params);
 	my $result = $st -> fetchrow_hashref ();
 	$st -> finish;		
+
+	__log_sql_profilinig ({time => $time, sql => $sql_or_table_name, selected => 1});	
 	
 	return lc_hashref ($result);
 
@@ -491,10 +507,14 @@ sub sql_select_array {
 
 	$sql =~ s/\bLIMIT\s+\d+\s*$//igsm;
 
+	my $time = time;	
+
 	my $st = sql_prepare ($sql);
 	$st -> execute (@params);
 	my @result = $st -> fetchrow_array ();
 	$st -> finish;
+
+	__log_sql_profilinig ({time => $time, sql => $sql_or_table_name, selected => 1});	
 	
 	return wantarray ? @result : $result [0];
 
@@ -511,6 +531,8 @@ sub sql_select_scalar {
 	if ($sql =~ m/\bLIMIT\s+\d+\s*$/igsm) {
 		$sql =~ s/\bLIMIT\s+(\d+)\s*$/LIMIT 0,$1/igsm;
 	}
+
+	my $time = time;	
 
 	if ($sql =~ s{LIMIT\s+(\d+)\s*\,\s*(\d+).*}{}ism) {
 
@@ -545,6 +567,8 @@ sub sql_select_scalar {
 		$st -> finish;
 	}
 	
+	__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
+
 	return $result [0];
 
 }
@@ -712,7 +736,10 @@ EOS
 		}
 	}
 
-	my $st = sql_prepare ("INSERT INTO $table_name ($fields) VALUES ($args) RETURNING id INTO ?");
+	my $time = time;
+	
+	my $sql = "INSERT INTO $table_name ($fields) VALUES ($args) RETURNING id INTO ?";
+	my $st = sql_prepare ($sql);
 
 	my $i = 1; 
 	$st -> bind_param ($i++, $_)
@@ -723,6 +750,8 @@ EOS
 	
 	$st -> execute;
 	$st -> finish;	
+
+	__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
 
 	return $id;
 		
@@ -787,8 +816,11 @@ sub sql_download_file {
 	$options -> {file_name} = $item -> {$options -> {file_name_column}};	
 	
 	if ($options -> {body_column}) {
+
+		my $time = time;
 		
-		my $st = $db -> prepare ("SELECT $options->{body_column} FROM $options->{table} WHERE id = ?", {ora_auto_lob => 0});
+		my $sql = "SELECT $options->{body_column} FROM $options->{table} WHERE id = ?";
+		my $st = $db -> prepare ($sql, {ora_auto_lob => 0});
 		$st -> execute ($_REQUEST {id});
 		(my $lob_locator) = $st -> fetchrow_array ();
 
@@ -801,6 +833,8 @@ sub sql_download_file {
 		}
 
 		$st -> finish ();
+
+		__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
 
 	}
 	else {
@@ -908,6 +942,8 @@ sub sql_select_loop {
 	$sql =~ s{^\s+}{};
 
 	$sql = mysql_to_oracle($sql) if($conf -> {core_auto_oracle});
+	
+	my $time = time;
 
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
@@ -920,6 +956,8 @@ sub sql_select_loop {
 	}
 	
 	$st -> finish ();
+
+	__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
 
 }
 

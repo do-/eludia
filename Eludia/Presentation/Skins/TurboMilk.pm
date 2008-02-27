@@ -201,6 +201,7 @@ EOH
 			<td width="20px" align="right">&nbsp;</td></tr>
 		 </table>
 		$subset_div
+		$$options{top_banner}
 EOH
 
 
@@ -2043,9 +2044,11 @@ sub draw_table {
 		
 EOH
 
-	$html .= $options -> {no_scroll} ?
-		qq {<div class="table-container-x">} :
-		qq {<div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
+	$html .= $options -> {container} ?
+		$options -> {container} :
+			$options -> {no_scroll} ?
+			qq {<div class="table-container-x">} :
+			qq {<div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
 
 	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="scrollable_table" lpt=$$options{lpt}>\n};
 
@@ -2319,7 +2322,7 @@ EOH
 		$$page{auth_toolbar} = "<tr height=48><td height=48>$$page{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>";
 	}
 		
-	$_REQUEST {__head_links} .= <<EOH;
+	$_REQUEST {__head_links} .= <<EOH unless ($_REQUEST {type} eq '_boot');
 		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
 EOH
 
@@ -2329,7 +2332,7 @@ EOH
 EOH
 	}
 
-	$_REQUEST {__head_links} .= <<EOH;
+	$_REQUEST {__head_links} .= <<EOH unless ($_REQUEST {type} eq 'logon' or $_REQUEST {type} eq '_boot');
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
 		</script>
 EOH
@@ -2393,8 +2396,6 @@ EOH
 EOI
 
 			</body>
-		</html>
-		
 EOH
 
 	

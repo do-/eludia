@@ -86,6 +86,8 @@ sub check_systables {
 		__voc_replacements	
 		__access_log		
 		__benchmarks		
+		__sql_benchmarks
+		__request_benchmarks
 		__last_update		
 		__moved_links		
 		__required_files	
@@ -104,7 +106,7 @@ sub check_systables {
 ################################################################################
 
 sub sql_assert_core_tables {
-
+ 
 	$db or return;
 
 	$model_update or die "\$db && !\$model_update ?!! Can't believe it.\n";
@@ -273,7 +275,7 @@ $time = __log_profilinig ($time, ' <sql_assert_core_tables>: 136');
 
 	};
 	
-	$preconf -> {core_debug_profiling} == 2 and $defs {$conf->{systables}->{__benchmarks}} = {
+	$preconf -> {core_debug_profiling} > 1 and $defs {$conf->{systables}->{__benchmarks}} = {
 
 		columns => {
 			id       => {TYPE_NAME  => 'int'    , _EXTRA => 'auto_increment', _PK => 1},
@@ -283,7 +285,6 @@ $time = __log_profilinig ($time, ' <sql_assert_core_tables>: 136');
 			ms       => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
 			mean     => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
 			selected => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			mean     => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
 			mean_selected => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
 		},
 		
@@ -291,6 +292,48 @@ $time = __log_profilinig ($time, ' <sql_assert_core_tables>: 136');
 			label => 'label',
 		},
 		
+	};
+
+	$preconf -> {core_debug_profiling} > 2 and $defs {$conf->{systables}->{__sql_benchmarks}} = {
+
+		columns => {
+			id       => {TYPE_NAME  => 'int'    , _EXTRA => 'auto_increment', _PK => 1},
+			fake     => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
+			label    => {TYPE_NAME  => 'text'},
+			cnt      => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
+			ms       => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
+			mean     => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
+			selected => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
+			mean_selected => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
+		},
+		
+		keys => {
+			label => 'label(255)',
+		},
+		
+	};
+
+	$preconf -> {core_debug_profiling} > 2 and $defs {$conf->{systables}->{__request_benchmarks}} = {
+
+		columns => {
+			id	=> {TYPE_NAME  => 'int'    , _EXTRA => 'auto_increment', _PK => 1},
+			fake	=> {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
+			id_user	=> {TYPE_NAME => 'int'},
+			dt	=> {TYPE_NAME => 'timestamp'},
+			params	=> {TYPE_NAME => 'longtext'},
+			ip =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+			ip_fw =>  {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+			type =>   {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+			mac    => {TYPE_NAME  => 'varchar', COLUMN_SIZE => 17},
+
+			request_time		=> {TYPE_NAME => 'int'},
+			application_time	=> {TYPE_NAME => 'int'},
+			sql_time		=> {TYPE_NAME => 'int'},
+			response_time		=> {TYPE_NAME => 'int'},
+			
+			bytes_sent		=> {TYPE_NAME => 'int'},
+		},
+
 	};
 
 	$conf -> {core_screenshot} and $defs {$conf -> {systables} -> {__screenshots}} = {
@@ -797,5 +840,78 @@ EOS
 
 ################################################################################
 	
+sub __log_sql_profilinig {
+	
+	my ($options) = @_;
 
+	return 
+		unless ($preconf -> {core_debug_profiling} > 2 && $model_update -> {core_ok}); 
+	
+	return 
+		if $options -> {sql} =~ /$conf->{systables}->{__sql_benchmarks}/; 
+
+	my $time = int(1000 * (time - $options -> {time}));
+	$_REQUEST {__sql_time} += $time;
+	 
+	my $selected = $options -> {selected} == -1 ? 0 : $options -> {selected} + 0;
+	my $id = sql_select_scalar ("SELECT id FROM $conf->{systables}->{__sql_benchmarks} WHERE label = ?", $options -> {sql});
+	unless ($id) {
+		sql_do_insert ($conf->{systables}->{__sql_benchmarks}, {fake => 0, label => $options -> {sql}});
+	}
+	sql_do (<<EOS, $time, $selected, $time, $selected, $id); 
+		UPDATE $conf->{systables}->{__sql_benchmarks} 
+		SET 
+			mean = (ms + ?) / (cnt + 1), 
+			mean_selected = (selected + ? ) / (cnt + 1), 
+			cnt = cnt + 1, 
+			ms = ms + ?, 
+			selected = selected + ?  
+		WHERE id = ?
+EOS
+
+}
+
+################################################################################
+	
+sub __log_request_profilinig {
+
+	my ($request_time) = @_;
+
+	return 
+		unless ($preconf -> {core_debug_profiling} > 2 && $model_update -> {core_ok}); 
+
+	$_REQUEST {_id_request_log} = sql_do_insert ($conf -> {systables} -> {__request_benchmarks}, {
+		id_user	=> $_USER -> {id}, 
+		ip	=> $ENV {REMOTE_ADDR}, 
+		ip_fw	=> $ENV {HTTP_X_FORWARDED_FOR},
+		fake	=> 0,
+		type	=> $_REQUEST {type},
+		mac	=> (!$preconf -> {core_no_log_mac}) ? get_mac () : '',
+		request_time	=> $request_time, 
+	});
+	
+	sql_do ("UPDATE $conf->{systables}->{__request_benchmarks} SET params = ? WHERE id = ?",
+		Data::Dumper -> Dump ([\%_REQUEST], ['_REQUEST']), $_REQUEST {_id_request_log}); 
+
+}
+
+################################################################################
+	
+sub __log_request_finish_profilinig {
+
+	my ($options) = @_;
+
+	return 
+		unless ($preconf -> {core_debug_profiling} > 2 && $model_update -> {core_ok}); 
+
+	my $time = time;
+
+	sql_do ("UPDATE $conf->{systables}->{__request_benchmarks} SET application_time = ?, sql_time = ?, response_time = ?, bytes_sent = ? WHERE id = ?",
+		$options -> {application_time}, 
+		$options -> {sql_time}, 
+		$options -> {out_html_time} ? int(1000 * (time - $options -> {out_html_time})) : 0, 
+		$r -> bytes_sent, 
+		$options -> {id_request_log},
+	);
+}
 1;

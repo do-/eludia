@@ -200,15 +200,16 @@ sub check_static_files {
 
 sub handler {
 
-	my $time = time;
-	my $first_time = $time;
-
 	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
 
 	$_PACKAGE ||= __PACKAGE__ . '::';
 
 	get_request (@_);
-		
+
+	my $time = $r -> request_time ();
+	my $first_time = $time;
+	$_REQUEST {__sql_time} = 0;
+
 	my $parms = ref $apr eq 'Apache2::Request' ? $apr -> param : $apr -> parms;
 	undef %_REQUEST;
 	our %_REQUEST = %{$parms};
@@ -259,11 +260,14 @@ sub handler {
 
 	}
 
+	my $request_time = int(1000 * (time - $first_time));
 	$time = __log_profilinig ($time, '<REQUEST>');
 	
 	require_config ({no_db => 1});
    	sql_reconnect ();   	
 	require_config ();
+
+	__log_request_profilinig ($request_time);
 
 	$time = __log_profilinig ($time, '<require_config>');
 	
@@ -633,6 +637,15 @@ EOH
 		}
 
 	}
+
+	$r -> pool -> cleanup_register (\&__log_request_finish_profilinig, {
+		id_request_log		=> $_REQUEST {_id_request_log}, 
+
+		out_html_time		=> $_REQUEST {__out_html_time},
+		application_time	=> int(1000 * (time - $first_time)) - $_REQUEST {__sql_time}, 
+		sql_time		=> $_REQUEST {__sql_time},
+		
+	}) if $preconf -> {core_debug_profiling} > 2;
 	
 	if ($_REQUEST {__suicide}) {
 		$r -> print (' ' x 8096);
@@ -652,10 +665,12 @@ sub out_html {
 	my ($options, $html) = @_;
 
 	$html or return;
-
+	
 	return if $_REQUEST {__response_sent};
 
 	my $time = time;
+
+	$_REQUEST {__out_html_time} = $time;  
 
 	if ($conf -> {core_sweep_spaces}) {
 		$html =~ s{^\s+}{}gsm;
@@ -706,7 +721,7 @@ sub out_html {
 
 	$r -> send_http_header unless (MP2);
 
-	$r -> header_only or print $html;
+	$r -> header_only && !MP2 or print $html;
 
 	__log_profilinig ($time, ' <out_html: ' . (length $html) . ' bytes>');
 }

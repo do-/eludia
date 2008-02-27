@@ -1157,20 +1157,24 @@ sub call_for_role {
 	
 		my $result = &$name_to_call (@_);
 
-		if ($preconf -> {core_debug_profiling} == 2) {
+		if ($preconf -> {core_debug_profiling} > 1) {
 
+			my $id = sql_select_scalar ("SELECT id FROM $conf->{systables}->{__benchmarks} WHERE label = ?", $sub_name);
+			unless ($id) {
+				sql_do_insert ($conf->{systables}->{__benchmarks}, {fake => 0, label => $sub_name});
+			}
 
 			sql_do (
 				"UPDATE $conf->{systables}->{__benchmarks} SET cnt = cnt + 1, ms = ms + ?, selected = selected + ?  WHERE id = ?",
-				1000 * (time - $time),
+				int(1000 * (time - $time)),
 				$_REQUEST {__benchmarks_selected},
-				sql_select_id ($conf->{systables}->{__benchmarks}, {fake => 0, label => $sub_name}, ['label']),
+				$id,
 			);
 
 			
 			sql_do (
 				"UPDATE $conf->{systables}->{__benchmarks} SET  mean = ms / cnt, mean_selected = selected / cnt WHERE id = ?",
-				sql_select_id ($conf->{systables}->{__benchmarks}, {fake => 0, label => $sub_name}, ['label']),
+				$id,
 			);
 			
 		}
@@ -1196,7 +1200,7 @@ sub call_for_role {
 
 sub __log_profilinig {
 
-	printf STDERR "Profiling [$$] %20.10f ms %s\n", 1000 * (time - $_[0]), $_[1] if ($preconf -> {core_debug_profiling} == 1);
+	printf STDERR "Profiling [$$] %20.10f ms %s\n", 1000 * (time - $_[0]), $_[1] if ($preconf -> {core_debug_profiling} > 0);
 	
 	return time ();
 
@@ -1714,6 +1718,42 @@ EOS
 	
 }
 
+################################################################################
+
+sub select__sql_benchmarks {
+
+	my $q = '%' . $_REQUEST {q} . '%';
+
+	my $start = $_REQUEST {start} + 0;
+	
+	my $order = order ('mean DESC',
+		ms            => 'ms  DESC',
+		cnt           => 'cnt DESC',
+		selected      => 'selected  DESC',
+		mean_selected => 'mean_selected DESC',
+		label         => 'label',
+	);
+
+	my ($_benchmarks, $cnt)= sql_select_all_cnt (<<EOS, $q);
+		SELECT
+			*
+		FROM
+			$conf->{systables}->{__sql_benchmarks}
+		WHERE
+			(label LIKE ?)
+		ORDER BY
+			$order
+		LIMIT
+			$start, $$conf{portion}
+EOS
+
+	return {
+		_benchmarks => $_benchmarks,
+		cnt => $cnt,
+		portion => $$conf{portion},
+	};
+	
+}
 ################################################################################
 
 sub select__info {

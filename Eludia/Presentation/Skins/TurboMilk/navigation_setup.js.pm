@@ -64,3 +64,8 @@ function SetupHTA (app_code, app_title, app_url, content, icon, hotkey) {
 	window.close ();
 	
 }
+
+function nope (a1, a2, a3) {
+	var w = window;
+	w.open (a1, a2, a3);
+}

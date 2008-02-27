@@ -91,6 +91,16 @@ BEGIN {
 	my $docroot = $PACKAGE_ROOT -> [0];
 	$docroot =~ s{/lib(/.*)?}{/docroot/i/};
 	
+	if (open (IN, $0)) {
+		my $httpd_conf = join ('', <IN>);
+		close (IN);
+		if ($httpd_conf =~ /^\s*DocumentRoot\s+$/mi) {
+			$docroot = $';
+			$docroot =~ s/\"\'//g; #'"						
+		}
+		
+	}
+
 	if ($docroot) {
 
 		foreach my $subdir ('_skins', 'upload/dav_rw', 'upload/dav_ro', 'upload/images') {
