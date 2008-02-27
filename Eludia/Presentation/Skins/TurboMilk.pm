@@ -1697,8 +1697,8 @@ EOH
 		}
 		
 		$html .= <<EOH;
-			<td onmouseover="$$type{onhover}; subsets_are_visible = 0;" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
-				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1>&nbsp;$$type{label}&nbsp;</a>&nbsp;
+			<td onmouseover="if (!edit_mode) {$$type{onhover}; subsets_are_visible = 0;}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
+				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1 onclick="return !check_edit_mode ();">&nbsp;$$type{label}&nbsp;</a>&nbsp;
 			</td>
 EOH
 			
@@ -2274,7 +2274,8 @@ EOJS
 		$_REQUEST {__on_load} .= "idx_tables ($_REQUEST{__scrollable_table_row});";
 		$_REQUEST {__on_load} .= 'window.focus ();'                             if !$_REQUEST {__no_focus};
 		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');" if  $_REQUEST {__focused_input};
-		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " parent.edit_mode = 1;" : " parent.edit_mode = 0;" if ($_REQUEST {__tree});
+		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " top.edit_mode = 1;" : " top.edit_mode = 0;"
+			unless ($_REQUEST {select});
 	
 		$_REQUEST {__on_mouseover} .= <<EOS;
 			window.parent.subsets_are_visible = 0;
@@ -2324,9 +2325,19 @@ EOIFRAME
 	my $__read_only = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
 	
 	$_REQUEST {__script} .= <<EOH;
+		var edit_mode = null;
 		var menu_md5 = '$menu_md5';
 		var __read_only = $__read_only;
 		var __last_last_query_string = '$_REQUEST{__last_query_string}';
+
+		function check_edit_mode () {
+			if (edit_mode) {
+				alert('$$i18n{save_or_cancel}'); 
+				document.body.style.cursor = 'default'; 
+				return true;
+			}
+			return false;
+		}
 EOH
 
 	if ($$page{auth_toolbar}) {
