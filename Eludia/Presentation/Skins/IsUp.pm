@@ -162,6 +162,9 @@ EOH
 sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
+
+	return ''
+		if $_REQUEST {select};
 	
 	return <<EOH
 		<table cellspacing=0 cellpadding=0 width="100%"><tr><td bgcolor="#edf1f5" class="header_3"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr><tr><td bgcolor="#e4e9ee"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=1></td></tr></table>

@@ -3204,7 +3204,8 @@ sub draw_table {
 				draw_window_title ($options -> {title}) if $options -> {title} -> {label};
 		}
 		else {
-			$options -> {title} = '';
+			$options -> {title} = draw_window_title ($options -> {title}) 
+				if $options -> {title} -> {label};
 		}
 		
 	}

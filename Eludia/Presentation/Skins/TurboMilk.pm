@@ -213,9 +213,20 @@ sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
 	
-	return <<EOH
-		<table cellspacing=0 cellpadding=0 width="100%"><tr><td bgcolor="#edf1f5" class="header_3"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr><tr><td bgcolor="#e4e9ee"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=1></td></tr></table>
+	if ($_REQUEST {select}) {
+	
+		$_REQUEST {__script} .= <<EOJ;
+			top.document.title = '$$options{label}';
+EOJ
+		return '';
+		
+	} else {
+	 
+		return <<EOH
+			<table cellspacing=0 cellpadding=0 width="100%"><tr><td bgcolor="#edf1f5" class="header_3"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr><tr><td bgcolor="#e4e9ee"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=1></td></tr></table>
 EOH
+
+	}
 
 }
 
