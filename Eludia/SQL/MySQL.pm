@@ -465,13 +465,15 @@ sub sql_select_subtree {
 
 	my ($table_name, $id, $options) = @_;
 	
+	$options -> {filter} = " AND $options->{filter}"
+		if $options->{filter};
 	my @ids = ($id);
 	
 	while (TRUE) {
 	
 		my $ids = join ',', @ids;
 	
-		my @new_ids = sql_select_col ("SELECT id FROM $table_name WHERE fake = 0 AND parent IN ($ids) AND id NOT IN ($ids)");
+		my @new_ids = sql_select_col ("SELECT id FROM $table_name WHERE fake = 0 AND parent IN ($ids) AND id NOT IN ($ids) $options->{filter}");
 		
 		last unless @new_ids;
 	

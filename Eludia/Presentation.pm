@@ -1842,6 +1842,16 @@ sub draw_form_field_tree {
 	foreach my $value (@{$options -> {values}}) {
 		my $checked = 0 + (grep {$_ eq $value -> {id}} @$v);
 		
+		if ($value -> {href}) {
+	
+			my $__last_query_string = $_REQUEST {__last_query_string};
+			$_REQUEST {__last_query_string} = $options -> {no_no_esc} ? $__last_query_string : -1;
+			check_href ($options);
+			$options -> {href} .= '&__tree=1' unless ($options -> {no_tree});
+			$_REQUEST {__last_query_string} = $__last_query_string;
+	
+		}
+		
 		$value -> {__node} = draw_node ({
 			label	=> $value -> {label},
 			id	=> $value -> {id},
@@ -1849,6 +1859,7 @@ sub draw_form_field_tree {
 			is_checkbox	=> $value -> {is_checkbox} + $checked,
 			icon    	=> $value -> {icon},
 			iconOpen    	=> $value -> {iconOpen},
+			href  		=> $value -> {href},
 		})
 
 	}

@@ -470,7 +470,7 @@ sub draw_path {
 
 	my ($_SKIN, $options, $list) = @_;
 	
-	my $style = $options -> {nowrap} ? qq{style="background:url('$_REQUEST{__static_url}/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
+	$options -> {style} ||= $options -> {nowrap} ? qq{style="background:url('$_REQUEST{__static_url}/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
 		
 	my $path = <<EOH;
 		<table cellspacing=0 cellpadding=0 width="100%" border=0>
@@ -478,10 +478,10 @@ sub draw_path {
 				<td>
 					<table cellspacing=0 cellpadding=0 width="100%" border=0>
 						<tr>
-							<td class="toolbar" $style>
+							<td class="toolbar" $$options{style}>
 								<img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0>
 							</td>
-							<td class="toolbar" $style $$options{nowrap}>&nbsp;
+							<td class="toolbar" $$options{style} $$options{nowrap}>&nbsp;
 EOH
 
 	my $icon = $options -> {status} ? "status_$options->{status}->{icon}.gif" : 'i_folder.gif';

@@ -853,7 +853,9 @@ function cell_on () {
 
 function cell_off () {
 	var cell = get_cell ();
-	cell.className = scrollable_table_row_cell_old_style;
+	if (scrollable_table_row_cell_old_style) 
+		cell.className = scrollable_table_row_cell_old_style;
+		
 	return cell;	
 }
 
