@@ -1936,6 +1936,49 @@ sub draw_select_cell {
 
 }
 
+
+################################################################################
+
+sub draw_string_voc_cell {
+
+	my ($_SKIN, $data, $options) = @_;
+
+	my $attributes = dump_attributes ($data -> {attributes});
+
+	if (defined $data -> {other}) {
+		
+		$data -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
+		$data -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+	
+		$data -> {other} -> {onChange} .= <<EOJS;
+			var dialog_width = $data->{other}->{width};
+			var dialog_height = $data->{other}->{height};
+
+			var q = encode1251(document.all['$$data{name}_label'].value);		
+	
+			var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$data->{other}->{href}&$data->{other}->{param}=' + q + '&select=$data->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+			
+			focus ();
+			
+			if (result.result == 'ok') {						
+				document.all['$$data{name}_label'].value = result.label;
+				document.all['$$data{name}_id'].value = result.id;
+			} else {
+				this.selectedIndex = 0;
+			}
+EOJS
+	}
+	
+		
+	my $html = qq {<td $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
+		. ($data -> {other} ? qq [<input type="button" value="$data->{other}->{button}" onclick="$data->{other}->{onChange}">] : '')
+		. qq[<input type="hidden" name="_$$data{name}" value="$$data{id}" id="$$data{name}_id"></span>]
+		. qq[</nobr></td>];	
+	
+	return $html;
+ 
+}
+
 ################################################################################
 
 sub draw_input_cell {
@@ -2103,9 +2146,9 @@ EOH
 			}
 
 			$html .= '>';
-			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $i -> {__href};
+			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $i -> {__href} && $_REQUEST {__read_only};
 			$html .= $tr;
-			$html .= qq {</a>} if $i -> {__href};
+			$html .= qq {</a>} if $i -> {__href} && $_REQUEST {__read_only};
 			$html .= '</tr>';
 			
 		}

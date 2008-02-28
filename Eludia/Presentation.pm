@@ -2725,7 +2725,7 @@ sub draw_cells {
 			}
 		}
 		
-		$options -> {__fixed_cols} ++ if ref $cell eq HASH && $cell -> {no_scroll};
+		$options -> {__fixed_cols} ++ if ref $cell eq HASH && $cell -> {no_scroll};		
 		
 		$result .= 
 			!ref ($cell) || ($cell -> {type} ne 'button' && !$cell -> {icon} && $cell -> {off}) || $cell -> {read_only} ? draw_text_cell ($cell, $options) :
@@ -2736,6 +2736,7 @@ sub draw_cells {
 			$cell  -> {type} eq 'textarea' ? draw_textarea_cell  ($cell, $options) :
 			$cell  -> {type} eq 'select'   ? draw_select_cell ($cell, $options) :
 			$cell  -> {type} eq 'embed'    ? draw_embed_cell ($cell, $options) :
+			$cell  -> {type} eq 'string_voc' ? draw_string_voc_cell ($cell, $options) :			
 			draw_text_cell ($cell, $options);
 	
 	}
@@ -2924,6 +2925,45 @@ sub draw_select_cell {
 	}
 
 	return $_SKIN -> draw_select_cell ($data, $options);
+	
+}
+
+################################################################################
+
+sub draw_string_voc_cell {
+
+	my ($data, $options) = @_;
+
+	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit}) || $data -> {read_only} || $data -> {off};
+	
+	$data -> {max_len} ||= $conf -> {max_len};
+
+	_adjust_row_cell_style ($data, $options);
+
+	foreach my $value (@{$data -> {values}}) {
+		$value -> {selected} = ($value -> {id} eq $data -> {value}) ? 'selected' : '';
+		$value -> {label} = trunc_string ($value -> {label}, $data -> {max_len});
+		$value -> {id} =~ s{\"}{\&quot;}g; #";		
+		if (($value -> {id} eq $data -> {$data -> {name}}) or ($value -> {id} eq $data -> {value})) {
+			
+ 			$data -> {id} = $value -> {id};
+		}
+	}
+	
+	if (defined $data -> {other}) {
+
+		ref $data -> {other} or $data -> {other} = {href => $data -> {other}};
+
+		check_href ($data -> {other});
+
+		$data -> {other} -> {param} ||= 'q';
+		$data -> {other} -> {button} ||= '...';
+		$data -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
+		$data -> {other} -> {href} =~ s{([\&\?])__tree\=\w+}{$1};
+		$data -> {other} -> {href} = check_href ({href => $data -> {other} -> {href}});
+	}		
+	
+	return $_SKIN -> draw_string_voc_cell ($data, $options);
 	
 }
 
