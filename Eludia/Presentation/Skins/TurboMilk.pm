@@ -2146,9 +2146,9 @@ EOH
 			}
 
 			$html .= '>';
-			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $i -> {__href} && $_REQUEST {__read_only};
+			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id});
 			$html .= $tr;
-			$html .= qq {</a>} if $i -> {__href} && $_REQUEST {__read_only};
+			$html .= qq {</a>} if $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id});
 			$html .= '</tr>';
 			
 		}
