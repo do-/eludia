@@ -306,7 +306,7 @@ $time = __log_profilinig ($time, ' <sql_assert_core_tables>: 136');
 			type =>   {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 			mac    => {TYPE_NAME  => 'varchar', COLUMN_SIZE => 17},
 
-			connection		=> {TYPE_NAME => 'int'},
+			connection_id		=> {TYPE_NAME => 'int'},
 			connection_no		=> {TYPE_NAME => 'int'},
 
 			request_time		=> {TYPE_NAME => 'int'},
@@ -851,7 +851,7 @@ sub __log_request_profilinig {
 		type	=> $_REQUEST {type},
 		mac	=> (!$preconf -> {core_no_log_mac}) ? get_mac () : '',
 		request_time	=> int ($request_time),
-		connection	=> $c -> id (),
+		connection_id	=> $c -> id (),
 		connection_no	=> $c -> keepalives (),
 	});
 	
