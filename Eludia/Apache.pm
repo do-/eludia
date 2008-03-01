@@ -260,7 +260,8 @@ sub handler {
 
 	}
 
-	my $request_time = int(1000 * (time - $first_time));
+	my $request_time = 1000 * (time - $first_time);
+	
 	$time = __log_profilinig ($time, '<REQUEST>');
 	
 	require_config ({no_db => 1});
@@ -642,8 +643,9 @@ EOH
 		id_request_log		=> $_REQUEST {_id_request_log}, 
 
 		out_html_time		=> $_REQUEST {__out_html_time},
-		application_time	=> int(1000 * (time - $first_time)) - $_REQUEST {__sql_time}, 
+		application_time	=> 1000 * (time - $first_time) - $_REQUEST {__sql_time}, 
 		sql_time		=> $_REQUEST {__sql_time},
+		is_gzipped		=>  $_REQUEST {__is_gzipped},
 		
 	}) if $preconf -> {core_debug_profiling} > 2;
 	
@@ -702,6 +704,7 @@ sub out_html {
 		$r -> content_encoding ('gzip');
 		unless ($_REQUEST {__is_gzipped}) {
 			$html = Compress::Zlib::memGzip ($html);
+			$_REQUEST {__is_gzipped} = 1;
 		}
 	}
 

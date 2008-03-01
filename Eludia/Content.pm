@@ -1549,8 +1549,10 @@ sub download_file {
 
 	my $path = $r -> document_root . $options -> {path};
 
-	my $start = download_file_header (@_);
+	$_REQUEST {__out_html_time} = time;
 
+	my $start = download_file_header (@_);
+	
 	if (MP2) {
 		$r -> sendfile ($path, $start);
 	} else {
