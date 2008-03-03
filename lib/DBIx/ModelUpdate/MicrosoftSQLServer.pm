@@ -45,13 +45,16 @@ sub get_keys {
 		
 	while (my $r = $st -> fetchrow_hashref) {
 
+		$r -> {index_name} = lc $r -> {index_name};
 		$r -> {index_name} =~ s{^${table_name}_}{};
+		#$r -> {index_name} =~ s{^pk_${table_name}_}{pk_};
 
+		$r -> {index_keys} = lc $r -> {index_keys};
 		$keys -> {$r -> {index_name}} = $r -> {index_keys};
-
 	}
 	
-	return lc $keys;
+print STDERR "Возвращаю ключи: ($table_name) " . Dumper($keys);
+	return $keys;
 
 }
 
