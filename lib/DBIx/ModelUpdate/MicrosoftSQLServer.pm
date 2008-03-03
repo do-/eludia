@@ -51,7 +51,7 @@ sub get_keys {
 
 	}
 	
-	return $keys;
+	return lc $keys;
 
 }
 
