@@ -896,9 +896,7 @@ function actual_table_height (table, min_height, height, id_toolbar) {
 
 	var real_height       = table.firstChild.offsetHeight;
 	
-//	if (table.offsetWidth > table.parentElement.offsetWidth) {
-		real_height += 14;
-//	}
+	real_height += 18;
 
 	var max_screen_height = document.body.offsetHeight - absTop (table) - 23;
 	
