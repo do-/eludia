@@ -268,7 +268,8 @@ function td_on_click () {
 	var new_scrollable_table_row = td2sr [uid];
 	var new_scrollable_table_row_cell = td2sc [uid];
 	if (new_scrollable_table_row == null || new_scrollable_table_row_cell == null) return;
-	scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className = scrollable_table_row_cell_old_style;
+	if (scrollable_table_row_cell_old_style)
+		scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className = scrollable_table_row_cell_old_style;
 	scrollable_table_row = new_scrollable_table_row;
 	scrollable_table_row_cell = new_scrollable_table_row_cell;
 	scrollable_table_row_cell_old_style = scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className;
