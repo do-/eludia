@@ -1817,7 +1817,9 @@ EOJS
 EOH
 	}
 	
-	$html .= qq {<td $attributes><nobr><span style="white-space: nowrap"><input type="text" id="$$data{name}_label" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}"> }
+	$html .= qq {<td $attributes><nobr><span style="white-space: nowrap"><input type="text"}
+		. ($data -> {need_label} ? qq { name="_$$data{name}_label" } : '')
+	 	. qq { id="$$data{name}_label" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}"> }
 		. ($data -> {other} ? qq [<input type="button" value="$data->{other}->{button}" id="_$$data{name}_button" onclick="$data->{onChange}">] : '')
 		. qq[<input type="hidden" name="_$$data{name}" value="$$data{id}" id="$$data{name}_id"></span>]
 		. qq[</nobr></td>];
