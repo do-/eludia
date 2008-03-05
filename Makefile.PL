@@ -1,7 +1,27 @@
 use ExtUtils::MakeMaker;
+
+'$LastChangedDate: 2008-03-04 12:34:56 +0300 (¬т, 04 мар 2008) $' =~ /(\d\d)(\d\d)\-(\d\d)\-(\d\d)/;
+	
+my $VERSION  = "$2.$3.$4";
+
+'$LastChangedRevision: 1086 $' =~ /(\d+)/;
+	
+$VERSION .= ".$1";
+
+my $VERSION = '';
+
+open S, 'Eludia.pm';
+
+while (<S>) {
+	if (/LastChangedDate\: (\d\d)(\d\d)-(\d\d)-(\d\d)/) {$VERSION = "$2.$3.$4"}
+	if (/LastChangedRevision\: (\d+)/)                  {$VERSION .= ".$1"}
+}
+
+close S;
+
 WriteMakefile(
     'NAME'		=> 'Eludia',
-#   'VERSION_FROM'	=> 'Eludia.pm',
+    'VERSION'	        => $VERSION,
     'PREREQ_PM'		=> {
 	'Net::SMTP'		=> '',
 	'Apache'		=> '',

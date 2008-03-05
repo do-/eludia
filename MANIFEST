@@ -36,6 +36,7 @@ Eludia/Presentation/Skins/Classic/notify.gif.pm
 Eludia/Presentation/Skins/Classic/offer.gif.pm
 Eludia/Presentation/Skins/Classic/ok.gif.pm
 Eludia/Presentation/Skins/Classic/razd1.gif.pm
+Eludia/Presentation/Skins/Classic/restore.gif.pm
 Eludia/Presentation/Skins/Classic/right.gif.pm
 Eludia/Presentation/Skins/Classic/section_open.gif.pm
 Eludia/Presentation/Skins/Classic/status_100.gif.pm
@@ -311,7 +312,9 @@ Eludia/Presentation/Skins/TurboMilk/tree_base.gif.pm
 Eludia/Presentation/Skins/TurboMilk/tree_cd.gif.pm
 Eludia/Presentation/Skins/TurboMilk/tree_empty.gif.pm
 Eludia/Presentation/Skins/TurboMilk/tree_folder.gif.pm
+Eludia/Presentation/Skins/TurboMilk/tree_folder_inaccessible.gif.pm
 Eludia/Presentation/Skins/TurboMilk/tree_folderopen.gif.pm
+Eludia/Presentation/Skins/TurboMilk/tree_folderopen_inaccessible.gif.pm
 Eludia/Presentation/Skins/TurboMilk/tree_globe.gif.pm
 Eludia/Presentation/Skins/TurboMilk/tree_imgfolder.gif.pm
 Eludia/Presentation/Skins/TurboMilk/tree_join.gif.pm
@@ -399,4 +402,5 @@ lib/DBIx/ModelUpdate/SQLite.pm
 lib/DBIx/MySQLite.pm
 Makefile.PL
 MANIFEST			This list of files
+README
 t/use.t
