@@ -1059,7 +1059,11 @@ sub draw_toolbar {
 			icon    => 'cancel',
 			id      => 'cancel',
 			label   => $i18n -> {close},
-			href    => "javaScript:window.parent.restoreSelectVisibility('_$_REQUEST{select}', true);window.parent.focus();",
+			href    => !$_REQUEST {result_kind} 
+						? "javaScript:window.parent.restoreSelectVisibility('_$_REQUEST{select}', true);window.parent.focus();"  						 
+						: $_REQUEST {result_kind} == 2 
+							?  "javaScript:window.parent.restoreStringVocVisibility('_$_REQUEST{select}');window.parent.focus();"
+							: undef,			
 		};
 		
 		$button -> {html} = $_SKIN -> draw_toolbar_button ($button);
@@ -1657,8 +1661,16 @@ sub js_set_select_option {
 	my ($_SKIN, $name, $item, $fallback_href) = @_;	
 	return ($fallback_href || $i) unless $_REQUEST {select};
 	my $question = js_escape ($i18n -> {confirm_close_vocabulary} . ' ' . $item -> {label} . '?');
-	$name ||= '_' . $_REQUEST {select};
-	return 'javaScript:if (window.confirm(' . $question . ')) {parent.setSelectOption(' . js_escape ($name) . ', '	. $item -> {id} . ', ' . js_escape ($item -> {label}) . ');} else {document.body.style.cursor = \'default\'; nop ();}';
+	
+	if ( !$_REQUEST {result_kind} ) {
+		$name ||= '_' . $_REQUEST {select};
+		return 'javaScript:if (window.confirm(' . $question . ')) {parent.setSelectOption(' . js_escape ($name) . ', '	. $item -> {id} . ', ' . js_escape ($item -> {label}) . ');} else {document.body.style.cursor = \'default\'; nop ();}';		
+	}
+	elsif ( $_REQUEST {result_kind} == 2 ) {
+		$name ||= $_REQUEST {select};
+		return 'javaScript:if (window.confirm(' . $question . ')) {parent.setStringVocValue(' . js_escape ($name) . ', '	. $item -> {id} . ', ' . js_escape ($item -> {label}) . ');} else {document.body.style.cursor = \'default\'; nop ();}';
+	} 
+
 }
 
 ################################################################################
@@ -1755,7 +1767,6 @@ sub draw_select_cell {
 
 }
 
-
 ################################################################################
 
 sub draw_string_voc_cell {
@@ -1764,38 +1775,54 @@ sub draw_string_voc_cell {
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
-	if (defined $data -> {other}) {
+	my $html;
+	
+	if (defined $data -> {other}) {		
 		
-		$data -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
-		$data -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
-	
-		$data -> {other} -> {onChange} .= <<EOJS;
-			var dialog_width = $data->{other}->{width};
-			var dialog_height = $data->{other}->{height};
+		$data -> {other} -> {width}  ||= 600;
+		$data -> {other} -> {height} ||= 400;
 
-			var q = encode1251(document.all['$$data{name}_label'].value);		
-	
-			var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$data->{other}->{href}&$data->{other}->{param}=' + q + '&select=$data->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-			
-			focus ();
-			
-			if (result.result == 'ok') {						
-				document.all['$$data{name}_label'].value = result.label;
-				document.all['$$data{name}_id'].value = result.id;
-			} else {
-				this.selectedIndex = 0;
-			}
+		my $d_style_top = "d.style.top = " . (defined $data -> {other} -> {top} ? "${$$data{other}}{top};" : "this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop + 50;");
+		my $d_style_left = "d.style.left = " . (defined $data -> {other} -> {left} ? "${$$data{other}}{left};" : "this.offsetLeft + this.offsetParent.offsetLeft + this.offsetParent.offsetParent.offsetLeft;");
+
+		my $onchange = <<EOJS;
+			var fname = '_$$data{name}_iframe';
+			var f = document.getElementById (fname);
+
+			var dname = '_$$data{name}_div';
+			var d = document.getElementById (dname);
+
+			var q = encode1251(document.getElementById('$$data{name}_label').value);
+
+			f.src = '${$$data{other}}{href}&${$$data{other}}{param}=' + q + '&select=$$data{name}&result_kind=2';
+
+			$d_style_top
+			$d_style_left
+
+			document.getElementById ( '_table_div' ).style.overflow = 'visible';
+
+			d.style.display = 'block';			
+			this.style.display = 'none';
+
+			d.focus ();		
 EOJS
+
+		$data -> {onChange} = $onchange . $data -> {onChange}; 
+		
+		$html = <<EOH;
+			<div id="_$$data{name}_div" style="{position:absolute; display:none; z-index:200; width:${$$data{other}}{width}}">
+				<iframe name="_$$data{name}_iframe" id="_$$data{name}_iframe" width=100% height=${$$data{other}}{height} src="/i/0.html" application="yes">
+				</iframe>
+			</div>
+EOH
 	}
 	
-		
-	my $html = qq {<td $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
-		. ($data -> {other} ? qq [<input type="button" value="$data->{other}->{button}" onclick="$data->{other}->{onChange}">] : '')
+	$html .= qq {<td $attributes><nobr><span style="white-space: nowrap"><input type="text" id="$$data{name}_label" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}"> }
+		. ($data -> {other} ? qq [<input type="button" value="$data->{other}->{button}" id="_$$data{name}_button" onclick="$data->{onChange}">] : '')
 		. qq[<input type="hidden" name="_$$data{name}" value="$$data{id}" id="$$data{name}_id"></span>]
-		. qq[</nobr></td>];	
+		. qq[</nobr></td>];
 	
-	return $html;
- 
+	return $html; 
 }
 
 ################################################################################
@@ -1955,8 +1982,8 @@ EOH
 	}
 
 	$html .= $options -> {no_scroll} ?
-		qq {<td class=bgr8><div class="table-container-x">} :
-		qq {<td class=bgr8><div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
+		qq {<td class=bgr8><div class="table-container-x" id="_table_div">} :
+		qq {<td class=bgr8><div class="table-container" id="_table_div" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
 		
 	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="scrollable_table" lpt=$$options{lpt}>\n};
 

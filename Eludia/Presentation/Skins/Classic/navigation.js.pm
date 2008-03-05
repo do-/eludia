@@ -50,6 +50,24 @@ function UpdateClock() {
    
 }
 
+function encode1251 (str) {
+
+	var r = /[à-ÿÀ-ß]/g;
+	var result = str.replace (r, function (chr) {
+		result = chr.charCodeAt(0) - 848;
+		return '%' + result.toString(16);
+	});
+	r = /¸/g;
+	result = result.replace (r, '%b8');
+	r = /¨/g;
+	result = result.replace (r, '%à8');
+	r = / /g;
+	result = result.replace (r, '%20');
+	
+	return result;
+
+}
+
 function twoDigits (n) {
    if (n > 9) return n;
    return '0' + n;
@@ -456,6 +474,44 @@ function setVisible (id, isVisible, markSublevel) {
         }
 };
 
+
+function restoreStringVocVisibility (name) {
+	
+	var stringVocButton;
+	
+	if (window.parent && window.parent.document.getElementById (name + '_button'))
+		stringVocButton = window.parent.document.getElementById (name + '_button');
+	else
+		stringVocButton = document.getElementById (name + '_button');   		
+	 
+	stringVocButton.style.display = 'inline';
+	
+	setVisible (name + '_div', false);
+	
+	var iframe;
+	if (window.parent && window.parent.document.getElementById (name + '_iframe'))
+		iframe = window.parent.document.getElementById (name + '_iframe');
+	else 
+		iframe = document.getElementById (name + '_iframe');
+	 	
+	iframe.src = '/0.html';
+	
+	var table_div;
+	if (window.parent && window.parent.document.getElementById ('_table_div'))
+		table_div = window.parent.document.getElementById ('_table_div');
+	else 
+		table_div = document.getElementById ('_table_div');
+	
+	if ( table_div.className == 'table-container' ) {
+		table_div.style.overflow = 'auto';
+		
+	}
+	else {
+		table_div.style.overflow = 'visible';
+	}
+};
+
+
 function restoreSelectVisibility (name, rewind) {
 	setVisible (name + '_select', true);
 //	setVisible (name + '_iframe', false);
@@ -472,6 +528,34 @@ function restoreSelectVisibility (name, rewind) {
 	if (rewind) {
 		document.getElementById (name + '_select').selectedIndex = 0;
 	}
+};
+
+function setStringVocValue (name, id, label) { 
+
+	restoreStringVocVisibility ( '_' + name);
+	
+	var form_id;
+	var form_label;
+	var tree = 0;
+	
+	if (window.parent && window.parent.document.getElementById (name + '_id')) {
+			form_id = window.parent.document.getElementById (name + '_id')
+			form_label = window.parent.document.getElementById (name + '_label')
+			tree = 1; 
+	} else { 			
+			form_id = document.getElementById (name + '_id')
+			form_label = document.getElementById (name + '_label')
+	} 
+			
+	form_id.value = id;
+	form_label.value = label; 
+	 
+	if (tree)
+		window.parent.focus ();
+	else 
+		window.focus ();
+	form_label.focus ();
+	
 };
 
 function setSelectOption (name, id, label) { 

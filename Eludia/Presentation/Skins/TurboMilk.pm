@@ -1950,27 +1950,24 @@ sub draw_string_voc_cell {
 		$data -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
 		$data -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
 	
-		$data -> {other} -> {onChange} .= <<EOJS;
+		$data -> {other} -> {onChange} .= <<EOJS;			
 			var dialog_width = $data->{other}->{width};
 			var dialog_height = $data->{other}->{height};
-
-			var q = encode1251(document.all['$$data{name}_label'].value);		
-	
+			
+			var q = encode1251(document.getElementById('$$data{name}_label').value);
+			
 			var result = window.showModalDialog ('$_REQUEST{__static_url}/dialog.html?@{[rand ()]}', {href: '$data->{other}->{href}&$data->{other}->{param}=' + q + '&select=$data->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 			
 			focus ();
 			
 			if (result.result == 'ok') {						
-				document.all['$$data{name}_label'].value = result.label;
-				document.all['$$data{name}_id'].value = result.id;
-			} else {
-				this.selectedIndex = 0;
+				document.getElementById('$$data{name}_label').value = result.label;
+				document.getElementById('$$data{name}_id').value = result.id;
 			}
 EOJS
 	}
-	
 		
-	my $html = qq {<td $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
+	my $html = qq {<td $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" value="$$data{label}" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
 		. ($data -> {other} ? qq [<input type="button" value="$data->{other}->{button}" onclick="$data->{other}->{onChange}">] : '')
 		. qq[<input type="hidden" name="_$$data{name}" value="$$data{id}" id="$$data{name}_id"></span>]
 		. qq[</nobr></td>];	
