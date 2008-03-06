@@ -1009,17 +1009,17 @@ sub do_unkill_DEFAULT {
 
 ################################################################################
 
-sub validate_kill_DEFAULT {
-	get_ids ($_REQUEST {type}) > 0 or return 'Вы не выделили ни одной строки';
-	return undef;
-}
+#sub validate_kill_DEFAULT {
+#	get_ids ($_REQUEST {type}) > 0 or return 'Вы не выделили ни одной строки';
+#	return undef;
+#}
 
 ################################################################################
 
-sub validate_unkill_DEFAULT {
-	get_ids ($_REQUEST {type}) > 0 or return 'Вы не выделили ни одной строки';
-	return undef;
-}
+#sub validate_unkill_DEFAULT {
+#	get_ids ($_REQUEST {type}) > 0 or return 'Вы не выделили ни одной строки';
+#	return undef;
+#}
 
 ################################################################################
 
