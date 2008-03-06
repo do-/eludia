@@ -555,8 +555,8 @@ function open_popup_menu (type, level) {
 		hideSubMenus (level);
 	}
 
-	div.style.top  = event.y - 5 + document.body.scrollTop;
-	div.style.left = event.x - 5 + document.body.scrollLeft;
+	div.style.top  = event.clientY - 5 + document.body.scrollTop;
+	div.style.left = event.clientX - 5 + document.body.scrollLeft;
 	
 
 	last_vert_menu [level] = {
