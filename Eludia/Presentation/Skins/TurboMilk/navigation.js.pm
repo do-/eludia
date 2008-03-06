@@ -674,7 +674,7 @@ function absTop (element) {
 
 function scrollCellToVisibleTop (td) {
 	
-	var table = td.parentElement.parentElement.parentElement.parentElement;
+	var table = td.parentElement.parentElement.parentElement;
 	var thead = table.tHead;
 	var div   = table.parentElement;
 
