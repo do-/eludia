@@ -1867,6 +1867,7 @@ sub draw_text_cell {
 		
 		$html .= '</nobr>' unless $data -> {no_nobr};
 		
+		$html .= qq {<input type=hidden name="$$data{hidden_name}" value="$$data{hidden_value}">} if ($data -> {add_hidden});
 		
 	} else {
 		$html .= '&nbsp;';
@@ -2262,10 +2263,20 @@ EOH
 		delete $h {salt};
 		delete $h {_salt};
 		
+		my $url_dump = create_url (__dump => 1);
+
 		my $href = create_url (%h);
 
 		$_REQUEST {__on_load} .= "check_top_window ();";
-				
+
+		$preconf -> {core_show_dump} and $_REQUEST {__on_mousedown} .= <<EODUMP;
+
+		    if (window.event.button == 2 && window.event.ctrlKey) {
+    			nope ('$url_dump', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');
+		    }
+		    
+EODUMP
+
 		$_REQUEST {__on_keydown} = <<EOJS;
 		
 //			if (code_alt_ctrl (88, 1, 0)) {
