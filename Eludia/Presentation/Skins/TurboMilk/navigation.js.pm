@@ -168,7 +168,7 @@ function idx_tables (__scrollable_table_row) {
 	scrollable_table_row_cell = 0;
 
 	if (scrollable_rows.length > 0) {
-		if (scrollable_table_row > 0) scrollCellToVisibleTop (cell_on ());
+		if (scrollable_table_row > 0) scrollCellToVisibleTop (cell_on (), 1);
 	}
 	else {
 		scrollable_table = null;
@@ -672,7 +672,7 @@ function absTop (element) {
 
 }
 
-function scrollCellToVisibleTop (td) {
+function scrollCellToVisibleTop (td, force_top) {
 	
 	var table = td.parentElement.parentElement.parentElement;
 	var thead = table.tHead;
@@ -682,7 +682,16 @@ function scrollCellToVisibleTop (td) {
 	if (thead) delta += thead.offsetHeight;
 	if (delta > 0) div.scrollTop -= delta;
 
-	var delta = td.offsetTop + td.offsetHeight - div.offsetHeight - div.scrollTop;
+	var delta = td.offsetTop - div.scrollTop;
+	
+	if (force_top) {
+		if (thead) delta -= thead.offsetHeight;
+	}
+	else {
+		delta -= div.offsetHeight;
+		delta += td.offsetHeight;
+	}
+	
 	if (div.scrollWidth > div.offsetWidth - 12) delta += 12;
 	if (delta > 0) div.scrollTop += delta;
 
