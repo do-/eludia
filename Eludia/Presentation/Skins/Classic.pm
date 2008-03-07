@@ -2163,7 +2163,9 @@ EOH
 					</iframe>
 EOI
 	}
-		
+
+	my $url_dump = create_url (__dump => 1);
+
 	return <<EOH;
 		<html>		
 			<head>
@@ -2260,7 +2262,14 @@ EOCSS
 					
 					@{[ map {&{"handle_hotkey_$$_{type}"} ($_)} @{$page->{scan2names}} ]}
 					
-				"						
+				"
+				@{[ $preconf -> {core_show_dump} ? <<EODUMP : '' ]}
+				onmousedown="
+				    if (window.event.button == 2 && window.event.ctrlKey) {
+		    			nope ('$url_dump', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');
+				    }
+				"
+EODUMP
 			>
 				
 				@{[ $_REQUEST{__help_url} ? <<EOHELP : '' ]}
