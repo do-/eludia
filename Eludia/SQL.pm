@@ -904,6 +904,13 @@ sub sql_extract_params {
 		}
 		elsif (
 
+			$token =~ /^0(\d+)$/
+
+		) {
+			$token = $1;
+		}
+		elsif (
+
 			$flag && (
 				$token =~ /^(\-?\d+)$/
 				|| $token =~ /^\'(.*?)\'$/
