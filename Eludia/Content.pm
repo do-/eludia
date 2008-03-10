@@ -1201,9 +1201,11 @@ sub call_for_role {
 
 sub __log_profilinig {
 
-	printf STDERR "Profiling [$$] %20.10f ms %s\n", 1000 * (time - $_[0]), $_[1] if ($preconf -> {core_debug_profiling} > 0);
+	my $now = time ();
+
+	printf STDERR "Profiling [$$] %20.10f ms %s\n", 1000 * ($now - $_[0]), $_[1] if ($preconf -> {core_debug_profiling} > 0);
 	
-	return time ();
+	return $now;
 
 }
 
@@ -1214,6 +1216,7 @@ sub select_subset { return {} }
 ################################################################################
 
 sub get_user {
+
 	return if $_REQUEST {type} eq '_static_files';
 
 	sql_do_refresh_sessions ();
@@ -1271,19 +1274,6 @@ sub get_user {
 		$_REQUEST {sid} = $local_sid;
 		
 	}
-	
-	my $session = sql_select_hash ($conf->{systables}->{sessions}, $_REQUEST {sid});
-
-	if ($session -> {ip}) {	
-		$session -> {ip}    eq $ENV {REMOTE_ADDR}          or return undef;
-		$session -> {ip_fw} eq $ENV {HTTP_X_FORWARDED_FOR} or return undef;	
-	}	else {
-		sql_do (
-			"UPDATE $conf->{systables}->{sessions} SET ip = ?, ip_fw = ? WHERE id = ?",
-			$ENV {REMOTE_ADDR},
-			$ENV {HTTP_X_FORWARDED_FOR}, $_REQUEST {sid},
-		);
-	}
 
 	$user ||= sql_select_hash (<<EOS, $_REQUEST {sid});
 		SELECT
@@ -1291,6 +1281,8 @@ sub get_user {
 			, $conf->{systables}->{roles}.name AS role
 			, $conf->{systables}->{roles}.label AS role_label
 			, $conf->{systables}->{sessions}.id_role AS session_role
+			, $conf->{systables}->{sessions}.ip
+			, $conf->{systables}->{sessions}.id_role AS session_id_role
 		FROM
 			$conf->{systables}->{sessions}
 			, $conf->{systables}->{users}
@@ -1302,7 +1294,25 @@ sub get_user {
 			AND $conf->{systables}->{users}.fake <> -1
 EOS
 
-	if ($user && $user -> {id}) {
+	my $session = {
+		id      => $_REQUEST {sid},
+		ip      => $user -> {ip},
+		id_role => $user -> {session_id_role},
+	};
+	
+	if ($session -> {ip}) {	
+		$session -> {ip}    eq $ENV {REMOTE_ADDR}          or return undef;
+		$session -> {ip_fw} eq $ENV {HTTP_X_FORWARDED_FOR} or return undef;	
+	}	
+	elsif ($user && $user -> {id}) {
+		sql_do (
+			"UPDATE $conf->{systables}->{sessions} SET ip = ?, ip_fw = ? WHERE id = ?",
+			$ENV {REMOTE_ADDR},
+			$ENV {HTTP_X_FORWARDED_FOR}, $_REQUEST {sid},
+		);
+	}
+	
+	if ($user && $user -> {id} && $session -> {id_role}) {
 		$user -> {session_role_name} = sql_select_scalar ("SELECT name FROM $conf->{systables}->{sessions}, $conf->{systables}->{roles} WHERE $conf->{systables}->{sessions}.id_role = $conf->{systables}->{roles}.id AND $conf->{systables}->{sessions}.id = ?", $_REQUEST {sid});
 	}
 

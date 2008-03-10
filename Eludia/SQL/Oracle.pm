@@ -25,6 +25,7 @@ sub sql_version {
 sub sql_do_refresh_sessions {
 
 	my $timeout = $conf -> {session_timeout} || 30;
+
 	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
 		$timeout = $1;
 		$timeout *= 
@@ -33,16 +34,31 @@ sub sql_do_refresh_sessions {
 			1;
 	}
 
-	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ? / 1440", $timeout);
-	
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
+	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?", $timeout / 1440);
 
-	$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
+	if ($ids ne '-1') {
 
-	sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session NOT IN ($ids)");
+		sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)") ;
+
+		$ids = sql_select_ids ("SELECT DISTINCT id_session FROM $conf->{systables}->{__access_log} MINUS SELECT id FROM $conf->{systables}->{sessions}");
+
+		sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session IN ($ids)") if $ids ne '-1';
+
+	}	
+
+	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?", $_REQUEST {sid});
+
+}
+
+################################################################################
+
+sub sql_execute {
 	
-	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ? ", $_REQUEST {sid});
+	my ($st, @params) = sql_prepare (@_);
+
+	my $affected = $st -> execute (@params);
 	
+	return wantarray ? ($st, $affected) : $st;
 
 }
 
@@ -50,7 +66,7 @@ sub sql_do_refresh_sessions {
 
 sub sql_prepare {
 
-	my ($sql) = @_;
+	my ($sql, @params) = @_;
 
 	$sql =~ s{^\s+}{};
 	
@@ -85,8 +101,14 @@ sub sql_prepare {
 
 	my $st;
 
-	$sql = mysql_to_oracle($sql) if($conf -> {core_auto_oracle});
+	$sql = mysql_to_oracle ($sql) if $conf -> {core_auto_oracle};
+	
+	if ($conf -> {core_sql_extract_params}) {
 
+		($sql, @params) = sql_extract_params ($sql, @params);
+	
+	}
+	
 	eval {$st = $db  -> prepare ($sql, {
 		ora_auto_lob => ($sql !~ /for\s+update\s*/ism),
 	})};
@@ -96,9 +118,8 @@ sub sql_prepare {
 		print STDERR $msg;
 		die $msg;
 	}
-	
-	
-	return $st;
+		
+	return ($st, @params);
 
 }
 
@@ -110,12 +131,12 @@ sub sql_do {
 	
 	my $time = time;
 
-	my $st = sql_prepare ($sql);
+	(my $st, $affected) = sql_execute ($sql, @params);
 
-	my $affected = $st -> execute (@params);
 	$st -> finish;	
 
 	__log_sql_profilinig ({time => $time, sql => $sql, selected => $affected});	
+	
 }
 
 ################################################################################
@@ -128,7 +149,7 @@ sub sql_execute_procedure {
 
 	$sql .= ';' unless $sql =~ /;[\n\r\s]*$/;
 	
-	my $st = sql_prepare ($sql);
+	(my $st, @params) = sql_prepare ($sql, @params);
 
 	my $i = 1;
 	while (@params > 0) {
@@ -206,10 +227,8 @@ sub sql_select_all_cnt {
 
 	my $time = time;	
 
-	my $st = sql_prepare ($sql);
-
-
-	$st -> execute (@params);
+	my $st = sql_execute ($sql, @params);
+	
 	my $cnt = 0;	
 	my @result = ();
 	
@@ -286,8 +305,7 @@ sub sql_select_all {
 		my ($start, $portion) = ($1, $2);
 
 		($start, $portion) = (0, $start) unless ($portion);
-		my $st = sql_prepare ($sql);
-		$st -> execute (@params);
+		my $st = sql_execute ($sql, @params);
 		my $cnt = 0;	
  	
 		while (my $r = $st -> fetchrow_hashref) {
@@ -306,15 +324,15 @@ sub sql_select_all {
 		$st -> finish;
 	}
 	else {
-		my $st = sql_prepare ($sql);
-
-		$st -> execute (@params);
+	
+		my $st = sql_execute ($sql, @params);
 
 		return $st if $options -> {no_buffering};
 
 		$result = $st -> fetchall_arrayref ({});	
 
 		$st -> finish;
+
         }
 	
 	__log_sql_profilinig ({time => $time, sql => $sql, selected => @$result + 0});	
@@ -391,12 +409,13 @@ sub sql_select_col {
 	my $time = time;	
 
 	if ($sql =~ s{LIMIT\s+(\d+)\s*\,\s*(\d+).*}{}ism) {
+
 		my ($start, $portion) = ($1, $2);
 
 		($start, $portion) = (0, $start) unless ($portion);
 	
-		my $st = sql_prepare ($sql);
-		$st -> execute (@params);
+		my $st = sql_execute ($sql, @params);
+
 		my $cnt = 0;	
  	
 		while (my @r = $st -> fetchrow_array ()) {
@@ -414,12 +433,14 @@ sub sql_select_col {
 
 	} else {
 
-		my $st = sql_prepare ($sql);
-		$st -> execute (@params);
+		my $st = sql_execute ($sql, @params);
+
 		while (my @r = $st -> fetchrow_array ()) {
 			push @result, @r;
 		}
+
 		$st -> finish;
+
 	}
 
 	__log_sql_profilinig ({time => $time, sql => $sql, selected => @result + 0});	
@@ -488,9 +509,10 @@ sub sql_select_hash {
 	
 	my $time = time;	
 
-	my $st = sql_prepare ($sql_or_table_name);
-	$st -> execute (@params);
+	my $st = sql_execute ($sql_or_table_name, @params);
+
 	my $result = $st -> fetchrow_hashref ();
+
 	$st -> finish;		
 
 	__log_sql_profilinig ({time => $time, sql => $sql_or_table_name, selected => 1});	
@@ -509,9 +531,10 @@ sub sql_select_array {
 
 	my $time = time;	
 
-	my $st = sql_prepare ($sql);
-	$st -> execute (@params);
+	my $st = sql_execute ($sql, @params);
+
 	my @result = $st -> fetchrow_array ();
+
 	$st -> finish;
 
 	__log_sql_profilinig ({time => $time, sql => $sql_or_table_name, selected => 1});	
@@ -540,8 +563,8 @@ sub sql_select_scalar {
 
 		($start, $portion) = (0, $start) unless ($portion);
 	
-		my $st = sql_prepare ($sql);
-		$st -> execute (@params);
+		my $st = sql_execute ($sql, @params);
+
 		my $cnt = 0;	
 	
 		while (my @r = $st -> fetchrow_array ()) {
@@ -558,13 +581,15 @@ sub sql_select_scalar {
 	
 		$st -> finish;
 
-	} else {
+	} 
+	else {
 
-		my $st = sql_prepare ($sql);
+		my $st = sql_execute ($sql, @params);
 
-		$st -> execute (@params);
 		@result = $st -> fetchrow_array ();
+
 		$st -> finish;
+
 	}
 	
 	__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
@@ -739,11 +764,11 @@ EOS
 	my $time = time;
 	
 	my $sql = "INSERT INTO $table_name ($fields) VALUES ($args) RETURNING id INTO ?";
-	my $st = sql_prepare ($sql);
+	
+	my $st = $db -> prepare ($sql);
 
 	my $i = 1; 
-	$st -> bind_param ($i++, $_)
-		foreach (@params);
+	$st -> bind_param ($i++, $_) foreach (@params);
 		
 	my $id;		
 	$st -> bind_param_inout ($i, \$id, 20);

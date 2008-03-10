@@ -5,6 +5,7 @@ no warnings;
 sub get_request {
 
 	my $http_host = $ENV {HTTP_X_FORWARDED_HOST} || $self -> {preconf} -> {http_host};
+	
 	if ($http_host) {
 		$ENV {HTTP_HOST} = $ENV {HTTP_X_FORWARDED_HOST};
 	}
@@ -38,7 +39,6 @@ sub get_request {
 		require CGI::Cookie;
 		our %_COOKIES = CGI::Cookie -> fetch;
 	}
-	
 
 }
 
@@ -200,6 +200,8 @@ sub check_static_files {
 
 sub handler {
 
+	my $handler_time = time ();
+
 	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
 
 	$_PACKAGE ||= __PACKAGE__ . '::';
@@ -207,7 +209,11 @@ sub handler {
 	get_request (@_);
 
 	my $time = $r -> request_time ();
+
+	$time = __log_profilinig ($handler_time, '<get_request>');
+
 	my $first_time = $time;
+
 	$_REQUEST {__sql_time} = 0;
 
 	my $parms = ref $apr eq 'Apache2::Request' ? $apr -> param : $apr -> parms;
@@ -261,11 +267,15 @@ sub handler {
 	}
 
 	my $request_time = 1000 * (time - $first_time);
-	
-	$time = __log_profilinig ($time, '<REQUEST>');
-	
+		
 	require_config ({no_db => 1});
+	
+	$time = __log_profilinig ($time, '<require_config no_db>');
+
    	sql_reconnect ();   	
+
+	$time = __log_profilinig ($time, '<sql_reconnect>');
+
 	require_config ();
 
 	__log_request_profilinig ($request_time);
@@ -632,7 +642,7 @@ EOH
 			}
 
 			$r -> headers_out -> {'Expires'} = '-1';
-
+			
 			out_html ({}, draw_page ($page));
 
 		}
