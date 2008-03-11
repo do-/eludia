@@ -1219,7 +1219,11 @@ sub get_user {
 
 	return if $_REQUEST {type} eq '_static_files';
 
+	my $time = time;
+	
 	sql_do_refresh_sessions ();
+
+	$time = __log_profilinig ($time, ' <refresh_sessions>');
 
 	my $user = undef;
 

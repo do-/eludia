@@ -886,8 +886,6 @@ sub sql_extract_params {
 
 		) {
 
-		$flag ||= 1 if $token =~ /\bWHERE\b/is;
-		$flag = 0   if $token =~ /\bORDER\s+BY\b/i;
 
 		$token =~ s{\s+}{ }gsm;
 
@@ -897,32 +895,39 @@ sub sql_extract_params {
 		) {
 			$token = ' ';
 		}
-		elsif ($token eq '?') {
+		else {
+		
+			$flag = 1 if $token =~ /^WHERE$/i;
+			$flag = 0 if $token =~ /^ORDER$/i || $token =~ /^GROUP$/ || $token =~ /^SELECT$/i;
+		
+			if ($token eq '?') {
 
-			push @params1, $params [$i ++];
+				push @params1, $params [$i ++];
 
-		}
-		elsif (
+			}
+			elsif (
 
-			$token =~ /^0(\d+)$/
+				$token =~ /^0(\d+)$/
 
-		) {
-			$token = $1;
-		}
-		elsif (
+			) {
+				$token = $1;
+			}
+			elsif (
 
-			$flag && (
-				$token =~ /^(\-?\d+)$/
-				|| $token =~ /^\'(.*?)\'$/
-			)
+				$flag && (
+					$token =~ /^(\-?\d+)$/
+					|| $token =~ /^\'(.*?)\'$/
+				)
 
-		) {
+			) {
 
-			my $value = $1;
-			$value =~ s{\\\'}{\'}gsm;
-			push @params1, $value;
-			$token = '?';
+				my $value = $1;
+				$value =~ s{\\\'}{\'}gsm;
+				push @params1, $value;
+				$token = '?';
 
+			}
+		
 		}
 
 		$token =~ /^\"(.*?)\"$/ or $token = uc $token;
@@ -944,7 +949,29 @@ sub sql_extract_params {
 }
 
 ################################################################################
+
+sub sql_adjust_fake_filter {
+
+	my ($sql, $options) = @_;
 	
+	$options -> {fake} or return $sql;
+	
+	my $where    = 'WHERE ';
+	my $fake      = $_REQUEST {fake} || 0;
+	my $condition = $fake =~ /\,/ ? "IN ($fake)" : '=' . $fake;
+	
+	foreach my $table (split /\,/, $options -> {fake}) {
+		$where .= "$table.fake $condition AND ";
+	}	
+
+	$sql =~ s{where}{$where}i;
+	
+	return $sql;
+
+}
+
+################################################################################
+
 sub __log_request_profilinig {
 
 	my ($request_time) = @_;

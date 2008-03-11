@@ -33,7 +33,7 @@ sub sql_do_refresh_sessions {
 			$2 eq 'd' ? 1440 :
 			1;
 	}
-
+	
 	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?", $timeout / 1440);
 
 	if ($ids ne '-1') {
@@ -99,16 +99,12 @@ sub sql_prepare {
 	$sql =~ s/^(\s*INSERT\s+INTO\s+)(_\w+)/$1$qoute$2$qoute/is;
 	$sql =~ s/^(\s*DELETE\s+FROM\s+)(_\w+)/$1$qoute$2$qoute/is;
 
-	my $st;
-
+	($sql, @params) = sql_extract_params ($sql, @params) if $conf -> {core_sql_extract_params};
+	
 	$sql = mysql_to_oracle ($sql) if $conf -> {core_auto_oracle};
 	
-	if ($conf -> {core_sql_extract_params}) {
+	my $st;
 
-		($sql, @params) = sql_extract_params ($sql, @params);
-	
-	}
-	
 	eval {$st = $db  -> prepare ($sql, {
 		ora_auto_lob => ($sql !~ /for\s+update\s*/ism),
 	})};
@@ -204,20 +200,8 @@ sub sql_select_all_cnt {
 		$options = pop @params;
 	}
 	
-	if ($options -> {fake}) {
+	$sql = sql_adjust_fake_filter ($sql, $options);
 	
-		my $where = 'WHERE ';
-		my $fake  = $_REQUEST {fake} || 0;
-		my $condition = $fake =~ /\,/ ? "IN ($fake)" : '=' . $fake;
-	
-		foreach my $table (split /\,/, $options -> {fake}) {
-			$where .= "$table.fake $condition AND ";
-		}	
-
-		$sql =~ s{where}{$where}i;
-			
-	}
-
 	if ($_REQUEST {xls} && $conf -> {core_unlimit_xls} && !$_REQUEST {__limit_xls}) {
 		$sql =~ s{LIMIT.*}{}ism;
 		my $result = sql_select_all ($sql, @params, $options);
@@ -283,19 +267,7 @@ sub sql_select_all {
 		$options = pop @params;
 	}
 	
-	if ($options -> {fake}) {
-	
-		my $where = 'WHERE ';
-		my $fake  = $_REQUEST {fake} || 0;
-		my $condition = $fake =~ /\,/ ? "IN ($fake)" : '=' . $fake;
-	
-		foreach my $table (split /\,/, $options -> {fake}) {
-			$where .= "$table.fake $condition AND ";
-		}	
-		
-		$sql =~ s{where}{$where}i;
-			
-	}
+	$sql = sql_adjust_fake_filter ($sql, $options);
 
 	my $time = time;	
 
@@ -358,28 +330,12 @@ sub sql_select_all_hash {
 		$options = pop @params;
 	}
 	
-	if ($options -> {fake}) {
-	
-		my $where = 'WHERE ';
-		my $fake  = $_REQUEST {fake} || 0;
-		my $condition = $fake =~ /\,/ ? "IN ($fake)" : '=' . $fake;
-	
-		foreach my $table (split /\,/, $options -> {fake}) {
-			$where .= "$table.fake $condition AND ";
-		}	
-		
-		$sql =~ s{where}{$where}i;
-			
-	}
+	$sql = sql_adjust_fake_filter ($sql, $options);
 
 	my $result = {};
-
-	$sql = mysql_to_oracle ($sql) if ($conf -> {core_auto_oracle});
-
 	my $time = time;	
 
-	my $st = $db -> prepare ($sql);
-	$st -> execute (@params);
+	my $st = sql_execute ($sql, @params);
 
 	while (my $r = $st -> fetchrow_hashref) {
 		lc_hashref ($r);		                       	
@@ -964,19 +920,15 @@ sub keep_alive {
 sub sql_select_loop {
 
 	my ($sql, $coderef, @params) = @_;
-	$sql =~ s{^\s+}{};
-
-	$sql = mysql_to_oracle($sql) if($conf -> {core_auto_oracle});
 	
 	my $time = time;
 
-	my $st = $db -> prepare ($sql);
-	$st -> execute (@params);
+	my $st = sql_execute ($sql, @params);
 	
 	our $i;
+	
 	while ($i = $st -> fetchrow_hashref) {
-		lc_hashref ($i)
-			if (exists $$_PACKAGE {'lc_hashref'});
+		lc_hashref ($i) if exists $$_PACKAGE {lc_hashref};
 		&$coderef ();
 	}
 	
@@ -991,6 +943,14 @@ sub sql_select_loop {
 sub mysql_to_oracle {
 
 my ($sql) = @_;
+
+our $mysql_to_oracle_cache;
+
+my $cached = $mysql_to_oracle_cache -> {$sql};
+
+my $src_sql = $sql;
+
+return $cached if $cached;
 
 my (@items,@group_by_values_ref,@group_by_fields_ref);
 my ($pattern,$need_group_by);
@@ -1235,6 +1195,8 @@ if ($model_update -> {characterset} =~ /UTF/i) {
 
 #warn "ORACLE OUT: <$sql>\n";
 
+$mysql_to_oracle_cache -> {$src_sql} = $sql;
+
 return $sql;	
 
 }
@@ -1242,16 +1204,23 @@ return $sql;
 ################################################################################
 
 sub sql_select_ids {
+
 	my ($sql, @params) = @_;
-
-	my @ids = grep {$_ > 0} sql_select_col ($sql, @params);
-	push @ids, -1;
-
-	foreach my $parameter (@params) {
-		$sql =~ s/\?/'$parameter'/ism;
+	
+	my $ids = '-1';
+	
+	my $st = sql_execute ($sql, @params);
+		
+	while ((my $id) = $st -> fetchrow_array) {
+		$id > 0 or next;
+		$ids .= ',';
+		$ids .= $id;
 	}
+	
+	$st -> finish ();
 
-	return wantarray ? (join(',', @ids), $sql) : join(',', @ids);
+	return wantarray ? ($ids, $sql) : $ids;
+
 }
 
 1;

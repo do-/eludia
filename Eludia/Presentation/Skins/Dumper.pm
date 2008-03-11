@@ -18,16 +18,22 @@ sub draw_page {
 	my ($_SKIN, $page) = @_;
 
 	$_REQUEST {__content_type} ||= 'text/plain; charset=' . $i18n -> {_charset};
-						
-	return Dumper ({
-		request => \%_REQUEST,
-		user    => $_USER,
-		content => $page -> {content},								
-	}) if $_REQUEST {__dump};	
 
 	return Dumper ({
 		data    => $page -> {content},								
 	}) if $_REQUEST {__d};
+
+	$_REQUEST {__content_type} ||= 'application/octet-stream';
+
+	$r -> headers_out -> {'Content-Disposition'} = "attachment;filename=$_REQUEST{type}_$_REQUEST{id}.txt"; 
+
+	my $dump = Dumper ({
+		request => \%_REQUEST,
+		user    => $_USER,
+		content => $page -> {content},								
+	});
+							
+	return $dump;
 
 }
 
