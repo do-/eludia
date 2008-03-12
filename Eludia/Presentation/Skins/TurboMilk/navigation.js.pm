@@ -653,10 +653,13 @@ function focus_on_first_input (td) {
 }
 
 function blockEvent () {
-	window.event.keyCode = 0;	
-	window.event.cancelBubble = true;
-	window.event.returnValue = false;
+
+	try { window.event.keyCode = 0         } catch (e) {}
+	try { window.event.cancelBubble = true } catch (e) {}
+	try { window.event.returnValue = false } catch (e) {}
+
 	return false;
+	
 }
 
 function absTop (element) {
