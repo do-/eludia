@@ -347,3 +347,5 @@ Dmitry Ovsyanko, <'do_' -- like this, with a trailing underscore -- at 'pochta.r
 Pavel Kudryavtzev
 
 Roman Lobzin
+
+Vadim Stepanov

@@ -105,9 +105,9 @@ sub sql_prepare {
 	
 	my $st;
 
-	eval {$st = $db  -> prepare ($sql, {
+	eval {$st = $db  -> prepare_cached ($sql, {
 		ora_auto_lob => ($sql !~ /for\s+update\s*/ism),
-	})};
+	}, 4)};
 	
 	if ($@) {
 		my $msg = "sql_prepare: $@ (SQL = $sql)\n";

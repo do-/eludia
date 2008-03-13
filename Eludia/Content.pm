@@ -1807,9 +1807,6 @@ sub select__info {
 		
 	require Config;
 	
-	my $skin = $_SKIN;
-	$skin =~ s{\:\:}{\/}g;
-
 	return [
 	
 		{
@@ -1835,6 +1832,12 @@ sub select__info {
 		},
 
 		{
+			id    => 'DB interface',
+			label => 'DBI ' . $DBI::VERSION,
+			path  => $INC {'DBI.pm'},
+		},
+
+		{
 			id    => 'DB driver',
 			label => 'DBD::' . $db -> {Driver} -> {Name} . ' ' . ${'DBD::' . $db -> {Driver} -> {Name} . '::VERSION'},
 			path  => $INC {'DBD/' . $SQL_VERSION -> {driver} . '.pm'},
@@ -1857,19 +1860,6 @@ sub select__info {
 			path  => join ',', @$PACKAGE_ROOT,
 		},
 
-		{			
-			id    => 'Skin',
-			label => $_SKIN,
-			path  => $INC {$skin . '.pm'},
-		},		
-
-		{			
-			id    => 'JSON module',
-			label => ref ($_JSON) eq 'JSON' ? ('JSON' . ' ' . $JSON::VERSION . ' (backend: ' . JSON->backend . ')', path => $INC {'JSON.pm'})
-				:
-				ref ($_JSON) eq 'JSON::XS' ? ('JSON::XS' . ' ' . $JSON::XS::VERSION, path => $INC {'JSON/XS.pm'})
-				: 'none',
-		},		
 	]	
 
 }
