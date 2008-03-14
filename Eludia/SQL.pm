@@ -848,11 +848,14 @@ sub __log_sql_profilinig {
 sub sql_extract_params {
 
 	my ($sql, @params) = @_;
-	
+
+	return ($sql, @params) if $sql !~ /^\s*(SELECT|INSERT|UPDATE|DELETE)/i;
+
 	my $sql1 = '';
 	my @params1 = ();
 	my $i = 0;
 	my $flag = $sql =~ /SELECT/i ? 0 : 1;
+	my $flag1 = 1;
 
 	foreach my $token ( # stolen from http://search.cpan.org/src/IZUT/SQL-Tokenizer-0.09/lib/SQL/Tokenizer.pm
 
@@ -874,6 +877,8 @@ sub sql_extract_params {
 			    |
 			    --[\ \t\S]*             # comments
 			    |
+			    \#[\ \t\S]*             # mysql style comments
+			    |
 			    /\*[\ \t\n\S]*?\*/      # C style comments
 			    |
 			    [^\s\(\),=;]+           # everything that doesn't matches with above
@@ -891,14 +896,17 @@ sub sql_extract_params {
 
 		if (
 			$token =~ /^--\s/
-			|| $token =~ /^\/\*\s*[^\+]/
+			|| $token =~ /^\/\*\s*[^\+]/ || $token =~ /^\#*\s/
 		) {
 			$token = ' ';
 		}
 		else {
 		
-			$flag = 1 if $token =~ /^WHERE$/i;
-			$flag = 0 if $token =~ /^ORDER$/i || $token =~ /^GROUP$/ || $token =~ /^SELECT$/i;
+			$flag  = 1 if $token =~ /^WHERE$/i;
+			$flag1 = 1 if $token =~ /^END$/i;
+			$flag  = 0 if $token =~ /^ORDER$/i || $token =~ /^GROUP$/i || $token =~ /^SELECT$/i;
+			$flag1 = 0 if $token =~ /^CASE$/i;
+			
 		
 			if ($token eq '?') {
 
@@ -914,10 +922,11 @@ sub sql_extract_params {
 			}
 			elsif (
 
-				$flag && (
+				($flag && $flag1) && (
 					$token =~ /^(\-?\d+)$/
 					|| $token =~ /^\'(.*?)\'$/
-				)
+				) 
+
 
 			) {
 

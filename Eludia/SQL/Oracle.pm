@@ -99,9 +99,9 @@ sub sql_prepare {
 	$sql =~ s/^(\s*INSERT\s+INTO\s+)(_\w+)/$1$qoute$2$qoute/is;
 	$sql =~ s/^(\s*DELETE\s+FROM\s+)(_\w+)/$1$qoute$2$qoute/is;
 
-	($sql, @params) = sql_extract_params ($sql, @params) if $conf -> {core_sql_extract_params};
-	
 	$sql = mysql_to_oracle ($sql) if $conf -> {core_auto_oracle};
+
+	($sql, @params) = sql_extract_params ($sql, @params) if ($conf -> {core_sql_extract_params} && $sql =~ /^\s*(SELECT|INSERT|UPDATE|DELETE)/i);
 	
 	my $st;
 
