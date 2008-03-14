@@ -902,7 +902,7 @@ sub sql_extract_params {
 		}
 		else {
 		
-			$flag  = 1 if $token =~ /^WHERE$/i;
+			$flag  = 1 if $token =~ /^FROM$/i;
 			$flag1 = 1 if $token =~ /^END$/i;
 			$flag  = 0 if $token =~ /^ORDER$/i || $token =~ /^GROUP$/i || $token =~ /^SELECT$/i;
 			$flag1 = 0 if $token =~ /^CASE$/i;

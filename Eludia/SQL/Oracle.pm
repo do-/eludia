@@ -99,9 +99,19 @@ sub sql_prepare {
 	$sql =~ s/^(\s*INSERT\s+INTO\s+)(_\w+)/$1$qoute$2$qoute/is;
 	$sql =~ s/^(\s*DELETE\s+FROM\s+)(_\w+)/$1$qoute$2$qoute/is;
 
-	$sql = mysql_to_oracle ($sql) if $conf -> {core_auto_oracle};
+	if ($sql =~ /\bIF\s*\((.+?),(.+?),(.+?)\s*\)/igsm) {
+		
+		$sql = mysql_to_oracle ($sql) if $conf -> {core_auto_oracle};
 
-	($sql, @params) = sql_extract_params ($sql, @params) if ($conf -> {core_sql_extract_params} && $sql =~ /^\s*(SELECT|INSERT|UPDATE|DELETE)/i);
+		($sql, @params) = sql_extract_params ($sql, @params) if ($conf -> {core_sql_extract_params} && $sql =~ /^\s*(SELECT|INSERT|UPDATE|DELETE)/i);
+
+	} else {
+
+		($sql, @params) = sql_extract_params ($sql, @params) if ($conf -> {core_sql_extract_params} && $sql =~ /^\s*(SELECT|INSERT|UPDATE|DELETE)/i);
+
+		$sql = mysql_to_oracle ($sql) if $conf -> {core_auto_oracle};
+
+	}
 	
 	my $st;
 
@@ -1198,7 +1208,7 @@ if ($model_update -> {characterset} =~ /UTF/i) {
 
 #warn "ORACLE OUT: <$sql>\n";
 
-$mysql_to_oracle_cache -> {$src_sql} = $sql;
+$mysql_to_oracle_cache -> {$src_sql} = $sql if ($src_sql !~ /\bIF\((.+?),(.+?),(.+?)\)/igsm);
 
 return $sql;	
 
