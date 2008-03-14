@@ -506,11 +506,11 @@ EOH
 
 			undef $__last_insert_id;
 
-			eval { $db -> {AutoCommit} = 0; };
-
 			our %_OLD_REQUEST = %_REQUEST;
 
 			log_action_start ();
+
+			eval { $db -> {AutoCommit} = 0; };
 
 			my $sub_name = "validate_${action}_$$page{type}";
 
@@ -590,7 +590,11 @@ EOH
 			}
 
 			eval {
-				$db -> commit unless $_REQUEST {error} || $db -> {AutoCommit};
+				if ($_REQUEST {error}) {
+					$db -> rollback
+				} else {
+					$db -> commit
+				} 
 				$db -> {AutoCommit} = 1;
 			};
 
