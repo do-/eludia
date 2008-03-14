@@ -994,8 +994,8 @@ while ($sql =~ s/([^\w\s]+?\s*)(\()/\1VGtygvVGVYbbhyh\2/ism) {};
 $sql =~ s/\bBINARY\b//igsm; 
 $sql =~ s/\bAS\b//igsm;
 $sql =~ s/(.*?)#.*?\n/\1\n/igsm; 		 				# Убираем закомментированные строки
-$sql =~ s/(\s+)STRAIGHT_JOIN(\s+)/\1\2/igsm;					
-$sql =~ s/(\s+)FORCE\s+INDEX(\s+)\(.*?\)/\1\2/igsm;             		
+$sql =~ s/STRAIGHT_JOIN//igsm;					
+$sql =~ s/FORCE\s+INDEX\(.*?\)//igsm;             		
 
 
 ############### Вырезаем функции начиная с самых вложенных и совсем не вложенных
