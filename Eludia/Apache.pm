@@ -6,16 +6,14 @@ sub get_request {
 
 	my $http_host = $ENV {HTTP_X_FORWARDED_HOST} || $self -> {preconf} -> {http_host};
 	
-	if ($http_host) {
-		$ENV {HTTP_HOST} = $ENV {HTTP_X_FORWARDED_HOST};
-	}
+	$ENV {HTTP_HOST} = $http_host if $http_host;
 
 	if ($connection) {
 		our $r   = new Eludia::InternalRequest ($connection, $request);
 		our $apr = $r;
 		return;
 	}
-	elsif ($ENV {SERVER_SOFTWARE} =~ /IIS/) {
+	elsif ($ENV {SERVER_SOFTWARE} =~ /IIS/ || $ENV {SERVER_SOFTWARE} =~ /^lighttpd/) {
 	        our $r = new Eludia::Request ($preconf, $conf);
 		our $apr = $r;
 	}

@@ -1231,12 +1231,14 @@ sub sql_select_ids {
 	}
 	
 	$st -> finish ();
+	
+	wantarray or return $ids;
 
 	foreach my $parameter (@params) {
 		$sql =~ s/\?/'$parameter'/ism;
 	}
 
-	return wantarray ? ($ids, $sql) : $ids;
+	return ($ids, $sql);
 
 }
 

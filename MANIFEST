@@ -7,6 +7,7 @@ Eludia/FileDumpHash.pm
 Eludia/Flix.pm
 Eludia/IIS.pm
 Eludia/InternalRequest.pm
+Eludia/lighttpd.pm
 Eludia/Loader.pm
 Eludia/Offline.pm
 Eludia/Presentation.pm
