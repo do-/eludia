@@ -116,21 +116,23 @@ my $time = time;
 	
 	if ($conf -> {core_voc_replacement_use}) {
 	
-		$model_update -> assert (tables => {$conf -> {systables} -> {__voc_replacements} => {
-
-			columns => {
-				id          => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-				table_name  => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				object_name => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				object_type => {TYPE_NAME => 'int', COLUMN_SIZE => 1},
+		$model_update -> assert (
+			tables => {
+				$conf -> {systables} -> {__voc_replacements} => {
+					columns => {
+						id          => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
+						table_name  => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+						object_name => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+						object_type => {TYPE_NAME => 'int', COLUMN_SIZE => 1},
+					},
+					keys => {
+						ix => 'table_name',
+						ix2 => 'object_name',
+					},
+				}
 			},
-			
-			keys => {
-				ix => 'table_name',
-				ix2 => 'object_name',
-			},
-
-		}});
+			core_voc_replacement_use => $conf -> {core_voc_replacement_use}
+		);
 	
 	}
 
