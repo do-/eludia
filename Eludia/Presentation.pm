@@ -1947,6 +1947,8 @@ sub draw_form_field_iframe {
 ################################################################################
 
 sub draw_form_field_dir {
+
+	require File::Find;
 	
 	my ($options, $data) = @_;
 

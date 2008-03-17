@@ -7,7 +7,6 @@ use DBI::Const::GetInfoType;
 use Digest::MD5;
 use Fcntl ':flock';
 use File::Copy 'move';
-use File::Find;
 use HTTP::Date;
 use MIME::Base64;
 use Number::Format;
