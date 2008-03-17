@@ -866,6 +866,7 @@ sub draw_form_field_string_voc {
 	$options -> {attributes} -> {onKeyDown}  .= qq[;if (window.event.keyCode == 8 || window.event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter();];
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
+    $options -> {attributes} -> {onChange}   .= "is_dirty=true; $options->{onChange}";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -888,6 +889,7 @@ sub draw_form_field_string_voc {
 			if (result.result == 'ok') {
 				document.getElementById('${options}_label').value=result.label;
 				document.getElementById('${options}_id').value=result.id;
+$options->{onChange}
 			} else {
 				this.selectedIndex = 0;
 			}
@@ -1808,7 +1810,8 @@ sub js_set_select_option {
 		label    => $item -> {label},
 	});
 
-	my $var = "sso_" . (0 + $item -> {id});
+	my $var = "sso_" . (0 + $item -> {id}) . int (rand() * time ());
+	$var =~ s/[.]//g;
 
 	$_REQUEST {__script} .= " var $var = $a; "
 		unless ($_REQUEST {__script} =~ / var $var =/);
