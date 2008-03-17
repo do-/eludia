@@ -66,7 +66,7 @@ sub send_mail {
 	
 	if ($options -> {href}) {	
 		my $server_name = $preconf -> {mail} -> {server_name} || $ENV{HTTP_HOST};
-		$options -> {href} =~ /^http/ or $options -> {href} = "http://$server_name" . $options -> {href};
+		$options -> {href} =~ /^http/ or $options -> {href} = ($server_name =~ /^http/ ? $server_name : "http://$server_name") . $options -> {href};
 	}
 
 	if ($options -> {template}) {
