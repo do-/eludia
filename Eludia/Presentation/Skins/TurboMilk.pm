@@ -2725,11 +2725,12 @@ EOH
 
 
 
-	$_REQUEST {__on_load} .= 'document.forms[0].elements["login"].focus (); ';
+	$_REQUEST {__on_load} .= $_COOKIES{user_login} && $_COOKIES{user_login}->value ? 
+		'document.forms[0].elements["password"].focus (); '
+		:
+		'document.forms[0].elements["login"].focus (); ';
 	
 	
-	
-
 	return <<EOH;
 
 <table border="0" cellpadding="0" cellspacing="0" align=center height=100% width=100%>
@@ -2776,7 +2777,7 @@ EOH
 -->							
 							<tr class="logon">
 								<td><b>Логин:</b></td>
-								<td><input type="text" name="login" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
+								<td><input type="text" name="login" value="${\( $_COOKIES{user_login} && $_COOKIES{user_login}->value )}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
 							</tr>
 							<tr class="logon">
 								<td><b>Пароль:</b></td>

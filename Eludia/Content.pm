@@ -1669,15 +1669,17 @@ sub add_vocabularies {
 
 sub set_cookie {
 
-	if (ref $r eq $Apache) {
+	if (ref $apr eq "${Apache}::Request") {
+
 		eval "require ${Apache}::Cookie";
 		my $cookie = "${Apache}::Cookie" -> new ($r, @_);
-		$cookie -> bake;
+		$r->err_headers_out->add("Set-Cookie" => $cookie->as_string);		
+
 	}
 	else {
 		require CGI::Cookie;
 		my $cookie = CGI::Cookie -> new (@_);
-		$r -> headers_out -> {'cookie'} = $cookie -> as_string;
+		$r -> headers_out -> {'Set-Cookie'} = $cookie -> as_string;
 	}
 
 }

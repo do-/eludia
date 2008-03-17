@@ -126,6 +126,7 @@ sub setup_skin {
 		attach_globals ($_PACKAGE => $package, qw(
 			_PACKAGE
 			_REQUEST
+			_COOKIES
 			_USER
 			SQL_VERSION
 			conf
@@ -541,6 +542,15 @@ EOH
 
 						flix_reindex_record ($_REQUEST {type}, $_REQUEST {id}) if $DB_MODEL -> {tables} -> {$_REQUEST {type}} && $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {flix_keys};
 
+						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_USER -> {id}) {
+							set_cookie (
+								-name    =>  'user_login',
+								-value   =>  sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
+								-expires =>  'Sat, 31-Dec-2050 23:59:59 GMT',
+								-path    =>  '/',
+							)
+						}
+
 						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_REQUEST {redirect_params}) {
 
 							my $VAR1 = b64u_thaw ($_REQUEST {redirect_params});
@@ -548,7 +558,7 @@ EOH
 							foreach my $key (keys %$VAR1) {
 								$_REQUEST {$key} = $VAR1 -> {$key};
 							}
-
+							
 						} elsif ($conf -> {core_cache_html}) {
 							sql_do ("DELETE FROM $conf->{systables}->{cache_html}");
 							my $cache_path = $r -> document_root . '/cache/*';
