@@ -9,14 +9,11 @@ use Fcntl ':flock';
 use File::Copy 'move';
 use File::Find;
 use HTTP::Date;
-use HTTP::Request::Common;
-use LWP::UserAgent;
 use MIME::Base64;
 use Number::Format;
 use Time::HiRes 'time';
 use URI::Escape;
 use Storable;
-use Net::SMTP;
  
 use constant MP2 => (exists $ENV{MOD_PERL_API_VERSION} and $ENV{MOD_PERL_API_VERSION} >= 2 or $ENV{MOD_PERL} =~ m{mod_perl/1.99}); 
 
@@ -73,6 +70,14 @@ BEGIN {
 		require Eludia::FileDumpHash;
 		$preconf -> {core_path} = __FILE__;
 	}
+	
+	if ($preconf -> {peer_servers}) {
+		require Eludia::Peering;
+	}
+
+	if ($preconf -> {mail}) {
+		require Eludia::Mail;
+	}
 		
 	$| = 1;
 
@@ -96,7 +101,7 @@ BEGIN {
 		close (IN);
 		if ($httpd_conf =~ /^\s*DocumentRoot\s+$/mi) {
 			$docroot = $';
-			$docroot =~ s/\"\'//g; #'"						
+			$docroot =~ s/\"\'//g; #'
 		}
 		
 	}

@@ -87,7 +87,9 @@ while (1) {
 	
 	}
 	
-	&{"$configs->{$app}->{handler}::handler"} ();
+	eval &{"$configs->{$app}->{handler}::handler"} ();
+	
+	warn $@ if $@;
 
 	$handling_request = 0;
 

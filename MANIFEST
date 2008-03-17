@@ -1,4 +1,5 @@
 CHANGES
+Eludia-core.tar.gz
 Eludia.pm
 Eludia/Apache.pm
 Eludia/Auth/NTLM.pm
@@ -9,7 +10,9 @@ Eludia/IIS.pm
 Eludia/InternalRequest.pm
 Eludia/lighttpd.pm
 Eludia/Loader.pm
+Eludia/Mail.pm
 Eludia/Offline.pm
+Eludia/Peering.pm
 Eludia/Presentation.pm
 Eludia/Presentation/Skins/Classic.pm
 Eludia/Presentation/Skins/Classic/0.gif.pm
