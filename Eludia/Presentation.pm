@@ -2301,6 +2301,8 @@ sub draw_toolbar_pager {
 		$options -> {rewind_url} = create_url (__last_query_string => $last_query_string, start => 0);
 	}
 	
+	my @keep_params	= map {$_ => $_REQUEST {$_}} @{$options -> {keep_params}};
+	
 	if ($options -> {start} > 0) {
 
 		hotkey ({
@@ -2309,7 +2311,7 @@ sub draw_toolbar_pager {
 			%{$conf -> {kb_options_pager}},
 		});
 		
-		$options -> {back_url} = create_url (__last_query_string => $last_query_string, start => ($options -> {start} - $options -> {portion} < 0 ? 0 : $options -> {start} - $options -> {portion}));
+		$options -> {back_url} = create_url (__last_query_string => $last_query_string, start => ($options -> {start} - $options -> {portion} < 0 ? 0 : $options -> {start} - $options -> {portion}), @keep_params);
 
 	}
 	
@@ -2321,11 +2323,11 @@ sub draw_toolbar_pager {
 			%{$conf -> {kb_options_pager}},
 		});
 		
-		$options -> {next_url} = create_url (__last_query_string => $last_query_string, start => $options -> {start} + $options -> {portion});
+		$options -> {next_url} = create_url (__last_query_string => $last_query_string, start => $options -> {start} + $options -> {portion}, @keep_params);
 
 	}
 	
-	$options -> {infty_url}   = create_url (__last_query_string => $last_query_string, __infty => 1 - $_REQUEST {__infty}, __no_infty => 1 - $_REQUEST {__no_infty});
+	$options -> {infty_url}   = create_url (__last_query_string => $last_query_string, __infty => 1 - $_REQUEST {__infty}, __no_infty => 1 - $_REQUEST {__no_infty}, @keep_params);
 	
 	$options -> {infty_label} = $options -> {total} > 0 ? $options -> {total} : $i18n -> {infty};
 
