@@ -723,10 +723,19 @@ sub out_html {
 		400 + length $html > $preconf -> {core_mtu} &&
 		($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/)
 	) {
+		
 		$r -> content_encoding ('gzip');
+		
 		unless ($_REQUEST {__is_gzipped}) {
-			$html = Compress::Zlib::memGzip ($html);
+			
+			my $z;
+		
+			IO::Compress::Gzip::gzip (\$html, \$z);
+			
+			$html = $z;
+		
 			$_REQUEST {__is_gzipped} = 1;
+			
 		}
 	}
 
