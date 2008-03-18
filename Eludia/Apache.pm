@@ -728,14 +728,22 @@ sub out_html {
 		
 		unless ($_REQUEST {__is_gzipped}) {
 			
-			my $z;
-		
-			IO::Compress::Gzip::gzip (\$html, \$z);
+			my $time = time;
+			my $old_size = length $html;
 			
-			$html = $z;
-		
+			my $z;
+			my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
+			$x -> deflate ($html, $z) ;
+			$x -> flush ($z) ;
+			$html = "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $html);
 			$_REQUEST {__is_gzipped} = 1;
 			
+			my $new_size = length $html;
+
+			my $ratio = int (10000 * ($old_size - $new_size) / $old_size) / 100;
+			
+			__log_profilinig ($time, " <gzip: $old_size -> $new_size, $ratio%>");
+
 		}
 	}
 

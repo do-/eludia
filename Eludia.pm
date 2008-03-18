@@ -206,7 +206,7 @@ BEGIN {
 
 	eval 'require Eludia::Request' unless ($INC {'Apache/Request.pm'});
 
-	eval 'require IO::Compress::Gzip';
+	eval 'require Compress::Raw::Zlib';
 	if ($@) {
 		delete $conf -> {core_gzip};
 		delete $preconf -> {core_gzip};
