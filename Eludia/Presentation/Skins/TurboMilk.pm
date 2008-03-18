@@ -866,7 +866,7 @@ sub draw_form_field_string_voc {
 	$options -> {attributes} -> {onKeyDown}  .= qq[;if (window.event.keyCode == 8 || window.event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter();];
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
-    $options -> {attributes} -> {onChange}   .= "is_dirty=true; $options->{onChange}";
+	$options -> {attributes} -> {onChange}   .= 'is_dirty=true;' . ( $options->{onChange} ? $options->{onChange} . ' try { window.event.cancelBubble = false } catch (e) {} try { window.event.returnValue = true } catch (e) {}': '');
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
