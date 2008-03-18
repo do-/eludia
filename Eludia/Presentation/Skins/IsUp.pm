@@ -2123,9 +2123,19 @@ EOH
 		delete $h {salt};
 		delete $h {_salt};
 		
+		my $url_dump = create_url (__dump => 1);
+
 		my $href = create_url (%h);
 
 		$_REQUEST {__on_load} .= "check_top_window ();";
+
+		$preconf -> {core_show_dump} and $_REQUEST {__on_mousedown} .= <<EODUMP;
+
+		    if (window.event.button == 2 && window.event.ctrlKey) {
+    			nope ('$url_dump', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');
+		    }
+		    
+EODUMP
 				
 		$_REQUEST {__on_keydown} = <<EOJS;
 					
