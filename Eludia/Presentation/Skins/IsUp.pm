@@ -876,6 +876,8 @@ sub draw_form_field_checkboxes {
 	my ($_SKIN, $options, $data) = @_;
 	
 	my $html = '';
+
+	$html .= qq{<div class="checkboxes" style="height:$$options{height}px;" id="input_$$options{name}">} if $options -> {height};
 	
 	my $tabindex = $_REQUEST {__tabindex} + 1;
 	
@@ -938,23 +940,8 @@ EOH
 		$html .= '</table>';
 	
 	}
-	else {
-	
-		foreach my $value (@{$options -> {values}}) {
-			my $checked = $v eq $value -> {id} ? 'checked' : '';
-			$tabindex++;
-			$html .= qq {<input class=cbx type="checkbox" name="_$$options{name}" value="$$value{id}" $checked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;$$value{label} <br>};
-		}
-		
-	}
-		
-	if ($options -> {height}) {
-		$html = <<EOH;
-			<div class="checkboxes" style="height:$$options{height}px;" id="input_$$options{name}">
-				$html
-			</div>
-EOH
-	}
+
+	$html .= '</div>' if $options -> {height};
 	
 	$_REQUEST {__tabindex} = $tabindex;
 	

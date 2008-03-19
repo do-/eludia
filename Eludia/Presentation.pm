@@ -1137,9 +1137,15 @@ sub draw_form_field {
 		elsif ($field -> {type} eq 'tree') {
 			$field -> {value} ||= $data -> {$field -> {name}} || [map {$_ -> {id}} grep {$_ -> {is_checkbox} > 1} @{$field -> {values}}];
 		}
+		elsif ($field -> {type} eq 'checkboxes' && !ref $data -> {$field -> {name}}) {
+
+			$data -> {$field -> {name}} = [grep {$_} split /\,/, $data -> {$field -> {name}}];
+
+		}
 		else {
 			$field -> {value} ||= $data -> {$field -> {name}};
 		}	
+		
 		
 		$field -> {type} = 'static';
 		
@@ -1983,6 +1989,12 @@ sub draw_form_field_checkboxes {
 	my ($options, $data) = @_;
 
 	$options -> {cols} ||= 1;
+	
+	if (!ref $data -> {$options -> {name}}) {
+	
+		$data -> {$options -> {name}} = [grep {$_} split /\,/, $data -> {$options -> {name}}];
+		
+	}
 	
 	foreach my $value (@{$options -> {values}}) {
 	
