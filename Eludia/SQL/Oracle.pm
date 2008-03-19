@@ -715,16 +715,27 @@ EOS
 		my $curval;
 
 		if ($pairs -> {id}) {
-			$seq_name .= sql_select_scalar("SELECT id FROM $conf->{systables}->{__voc_replacements} WHERE table_name='$table_name' and object_type=2");
-			$curval = sql_select_scalar("SELECT LAST_NUMBER FROM user_sequences WHERE SEQUENCE_NAME='$seq_name'");
-			my $step = $pairs -> {id} - $curval;
-	 		if ($step > 1) {
-				sql_do("ALTER SEQUENCE $seq_name INCREMENT BY $step");
-			        sql_select_scalar("SELECT $seq_name.nextval FROM DUAL");
-				sql_do("ALTER SEQUENCE $seq_name INCREMENT BY 1");
-	 		}
+		
+			my $id = sql_select_scalar("SELECT id FROM $conf->{systables}->{__voc_replacements} WHERE table_name='$table_name' and object_type=2");
+			
+			if ($id) {
+
+				$seq_name .= $id;
+
+				$curval = sql_select_scalar("SELECT LAST_NUMBER FROM user_sequences WHERE SEQUENCE_NAME='$seq_name'");
+
+				my $step = $pairs -> {id} - $curval;
+
+				if ($step > 1) {
+					sql_do("ALTER SEQUENCE $seq_name INCREMENT BY $step");
+					sql_select_scalar("SELECT $seq_name.nextval FROM DUAL");
+					sql_do("ALTER SEQUENCE $seq_name INCREMENT BY 1");
+				}
+
+			}
 
 		}
+
 	}
 
 	my $time = time;

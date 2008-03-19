@@ -420,7 +420,7 @@ sub draw_path {
 	
 	my $page_title = $_JSON -> encode ([$list -> [-1] -> {label} || 'Новая запись']);	
 	
-	$_REQUEST {__on_load} .= <<EOH;
+	$_REQUEST {__only_form} or $_REQUEST {__on_load} .= <<EOH;
 	
 		var page_title = $page_title;
 		
