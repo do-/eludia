@@ -3452,6 +3452,8 @@ sub draw_tree {
 	my ($node_callback, $list, $options) = @_;
 	
 	return '' if $options -> {off};
+
+	check_href ($options -> {top}) if $options -> {top};
 	
 	$_REQUEST {__salt} ||= rand () * time ();
 

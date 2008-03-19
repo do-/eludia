@@ -2688,14 +2688,16 @@ sub draw_tree {
 		$idx {$k} -> {_hc} = 1;
 		$v -> {_ls} = 1;
 	}
-	
+		
 	$menus =~ s{[\n\r]+}{ }gsm;
 	$menus =~ s/\"/\\"/gsm;  #"
 
 	my $nodes = $_JSON -> encode (\@nodes);
-
+	
 	$_REQUEST {__on_load} .= <<EOH;
-		var win = document.getElementById ('__tree_iframe').contentWindow;
+	
+		var tree_iframe = document.getElementById ('__tree_iframe');
+		var win = tree_iframe.contentWindow;	
 		win.d = new win.dTree ('d');
 		var c = win.d.config;
 		c.iconPath = '$_REQUEST{__static_url}/tree_';
@@ -2711,60 +2713,29 @@ sub draw_tree {
 		}		
 EOH
 
-	return <<EOH;
+	my $frameset = <<EOH;
 		<frameset cols="250,*">
 			<frame src="$ENV{SCRIPT_URI}/i/_skins/IsUp/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
 			</frame>
-			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
+			<frame src="${\($selected_node_url ? $selected_node_url : '$ENV{SCRIPT_URI}/i/_skins/IsUp/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
 			</frame>
 		</frameset>
 EOH
-	
-	my $menus;
-		
-	my $html = <<EOH;
-	
-		$$options{title}
-		
-		<table class="dtree">
-			<tr>
-				<td>
-		
-			<script type="text/javascript">
-				<!--
-		
-				d = new dTree('d');
-				
-				d.config.iconPath = '$_REQUEST{__static_url}/tree_';
-				d.config.target = '_content_iframe';
-				d.config.useStatusText = true;
-				d.config.inOrder = 1;
-				d.icon.node = 'folderopen.gif';
-	
 
-EOH
-
-	foreach our $i (@$list) {
-		
-			$html .= $i -> {__node};
-			$menus .= $i -> {__menu};
+	if ($options -> {top}) {
 			
-		
-	}
-
-	$html .= <<EOH;
-				document.write(d);
-		
-				//-->
-			</script>
-				</td>
-			</tr>
-		</table>
-		$menus
-		<iframe name="_content_iframe" id="__content_iframe" style="height: expression(document.body.offsetHeight - 80); width: expression(document.body.offsetWidth - 250);" height="80%" src="$_REQUEST{__static_url}/0.html" application="yes">
-		</iframe>
+		$frameset = <<EOH;
+			<frameset rows="$options->{top}->{heigth},*">
+				<frame src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" application="yes" noresize>
+				</frame>
+				$frameset
+			</frameset>
 EOH
-
+	
+	}	
+	
+	return $frameset;
+	
 }
 
 ################################################################################

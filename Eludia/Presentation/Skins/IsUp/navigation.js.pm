@@ -2915,7 +2915,7 @@ dTree.prototype.addNode = function(pNode) {
 
 			if (!cn.target && this.config.target) cn.target = this.config.target;
 
-			if (cn._hc && !cn._io && this.config.useCookies) cn._io = this.isOpen(cn.id);
+			if (cn._hc != null && cn._hc && !cn._io && this.config.useCookies) cn._io = this.isOpen(cn.id);
 
 			if (!this.config.folderLinks && cn._hc) cn.url = null;
 
