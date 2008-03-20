@@ -32,6 +32,7 @@ sub draw_page {
 		user    => $_USER,
 		content => $page -> {content},								
 	});
+	$dump =~ s/\x0A/\x0D\x0A/g;
 							
 	return $dump;
 
