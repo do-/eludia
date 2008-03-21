@@ -897,7 +897,7 @@ EOJS
 	}
 
 
-	my $html = qq[<span style="white-space: nowrap"><input type="text" $attributes id="${options}_label" >]
+	my $html = qq[<span style="white-space: nowrap" id="_$options->{name}_span"><input type="text" $attributes id="${options}_label" >]
 		. ($options -> {other} ? qq [ <input type="button" value="..." onclick="$options->{other}->{onChange}">] : '')
 		. qq[<input type="hidden" name="_$options->{name}" value="$options->{id}" id="${options}_id"></span>];
 		

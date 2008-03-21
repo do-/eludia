@@ -118,13 +118,17 @@ sub draw_form_field {
 		my $a = $_JSON -> encode ([$field -> {html}]);
 		
 		$_REQUEST{__on_load} .= " load_$field->{name} (); ";
-			
+
+		my $field_name = $field -> {name};
+		$field_name .= '_span' if ($field -> {type} eq 'string_voc');
+
 		$_REQUEST {__script} .= <<EOJS;
 	function load_$field->{name} () {
 		var a = $a;				
-		var doc = window.parent.document;				
-		var element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field->{name}'];
-		if (!element) element = doc.getElementById ('input_$field->{name}');
+		var doc = window.parent.document;
+		var element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
+		if (!element) element = doc.getElementById ('input_$field_name');
+		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
 		if (!element) return;					
 		element.outerHTML = a [0];
 		element.tabIndex = "$tabs[$i]";
