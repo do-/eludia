@@ -2476,8 +2476,7 @@ sub draw_centered_toolbar_button {
 		$options -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
 	}
 
-	my $target = $options -> {target};
-	$target ||= '_self';
+	$options -> {target} ||= '_self';
 
 	if ($options -> {confirm}) {
 		my $salt = rand;
@@ -2485,7 +2484,7 @@ sub draw_centered_toolbar_button {
 		$options -> {preconfirm} ||= 1;
 		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
 		my $href = js_escape ($options -> {href});
-		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {nope($href, '$target')} else {document.body.style.cursor = 'default'; nop ();} ];
+		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {nope ($href, '$options->{target}')} else {document.body.style.cursor = 'default'; nop ();} ];
 	} 	
 
 	if ($options -> {href} =~ /^java/) {
@@ -2500,17 +2499,16 @@ sub draw_centered_toolbar_button {
 
 sub draw_centered_toolbar {
 
-	$_REQUEST{lpt} and return '';
+	$_REQUEST {lpt} and return '';
 
 	my ($options, $list) = @_;
 
-#	our $__last_centered_toolbar_id = 'toolbar_' . int $list;
-
 	$options -> {cnt} = 0;
 	
-	foreach (@$list) {
-		next if $_ -> {off};
-		$_ -> {html} = draw_centered_toolbar_button ($_);
+	foreach my $i (@$list) {
+		next if $i -> {off};
+		$i -> {target} ||= $options -> {path_target};
+		$i -> {html} = draw_centered_toolbar_button ($i);
 		$options -> {cnt} ++;
 	}
 

@@ -438,7 +438,7 @@ EOH
 					<table cellspacing=0 cellpadding=0 width="100%" border=0>
 						<tr>
 							<td _class=toolbar width=9><img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=9 border=0></td>
-							<td _class=toolbar width=1><nobr><a href="$options->{esc}#"><img src="$_REQUEST{__static_url}/i_left.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=0 align=absmiddle></a><a href="$options->{forward}#"><img src="$_REQUEST{__static_url}/i_right.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=0 align=absmiddle></a></nobr></td>
+							<td _class=toolbar width=1><nobr><a href="$options->{esc}#" target="$options->{path_target}"><img src="$_REQUEST{__static_url}/i_left.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=0 align=absmiddle></a><a href="$options->{forward}#"  target="$options->{path_target}"><img src="$_REQUEST{__static_url}/i_right.gif?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=0 align=absmiddle></a></nobr></td>
 							<td _class=toolbar width=3><img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=15 border=0></td>
 							<td _class=toolbar $$options{nowrap}>
 EOH
@@ -455,7 +455,7 @@ EOH
 		
 		my $item = $list -> [$i];		
 		
-		$path .= qq{<a class=path ${\($$item{href} ? "href='$$item{href}'" : '')} TABINDEX=-1>$$item{label}</a>};
+		$path .= qq{<a class=path ${\($$item{href} ? "href='$$item{href}' target='$options->{path_target}'" : '')} TABINDEX=-1>$$item{label}</a>};
 	
 	}
 	
@@ -2725,8 +2725,8 @@ EOH
 	if ($options -> {top}) {
 			
 		$frameset = <<EOH;
-			<frameset rows="$options->{top}->{heigth},*">
-				<frame src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" application="yes" noresize>
+			<frameset rows="$options->{top}->{height},*">
+				<frame src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" application="yes" noresize scrolling=no>
 				</frame>
 				$frameset
 			</frameset>
