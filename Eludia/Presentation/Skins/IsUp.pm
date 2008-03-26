@@ -1457,6 +1457,30 @@ sub draw_toolbar_pager {
 sub draw_centered_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
+	
+	return <<EOH if $options -> {type} eq 'break';
+									<td width="45%">
+										<table cellspacing=0 cellpadding=0 width="100%" border=0>
+											<tr>
+												<td background="/i/_skins/IsUp/cnt_tbr_bg.gif?174883348133484"><img height=40 hspace=0 src="/i/_skins/IsUp/0.gif?174883348133484" width=1 border=0></td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</td>
+						</tr>
+					</table>
+					<table cellspacing=0 cellpadding=0 width="100%" border=0>
+						<tr>
+							<td width="45%">
+								<table cellspacing=0 cellpadding=0 width="100%" border=0>
+									<tr>
+										<td background="/i/_skins/IsUp/cnt_tbr_bg.gif?174883348133484"><img height=40 hspace=0 src="/i/_skins/IsUp/0.gif?174883348133484" width=1 border=0></td>
+									</tr>
+								</table>
+							</td>
+				
+EOH
 
 	my $img_path = "$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}";
 

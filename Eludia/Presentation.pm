@@ -1441,6 +1441,8 @@ sub draw_form_field_password {
 sub draw_form_field_static {
 
 	my ($options, $data) = @_;
+	
+	$options -> {crlf} ||= '; ';
 		
 	if ($options -> {add_hidden}) {
 		$options -> {hidden_name}  ||= '_' . $options -> {name};
@@ -1467,19 +1469,25 @@ sub draw_form_field_static {
 		foreach my $item (@{$options -> {values}}) {
 		
 			$v {$item -> {id}} or next;
+			
+			if ($item -> {type} || $item -> {name}) {
+			
+				if ($static_value) {
 
-			if ($item -> {type} eq 'hgroup') {
-				$static_value .= '; ' if $static_value;
+					$static_value =~ s{\s+$}{}sm;
+					$static_value .= $options -> {crlf} if $static_value;
+
+				}
+
+				$static_value .= $item -> {label};
+				$static_value .= ' ';
+
 				$item -> {read_only} = 1;
-				$static_value .= $item -> {label};
-				$static_value .= ' ';
-				$static_value .= draw_form_field_hgroup ($item, $data);
-			}
-			elsif ($item -> {type} || $item -> {name}) {
-				$static_value .= '; ' if $static_value;
-				$static_value .= $item -> {label};
-				$static_value .= ' ';
-				$static_value .= draw_form_field_static ($item, $data);
+			
+				$static_value .= $item -> {type} eq 'hgroup' ? 
+					draw_form_field_hgroup ($item, $data):
+					draw_form_field_static ($item, $data);
+			
 			}
 			else {
 				
