@@ -30,16 +30,20 @@ sub ids {
 	my $idx = $options -> {idx};
 	
 	foreach my $i (@$ar) {
+
 		my $id = $i -> {$options -> {field}};
+		
+		if (ref $idx eq HASH && $id) {
+			$idx -> {$id} = $i;
+		}
+		elsif (ref $idx eq ARRAY && $id > 0) {
+			$idx -> [$id] = $i;
+		}
+		
 		$id > 0 or next;
 		$ids .= ',';
 		$ids .= $id;
-		if (ref $idx eq HASH) {
-			$idx -> {$id} = $i;
-		}
-		elsif (ref $idx eq ARRAY) {
-			$idx -> [$id] = $i;
-		}
+
 	}
 	
 	return wantarray ? ($ids, $idx) : $ids;
