@@ -1003,7 +1003,7 @@ while ($sql =~ s/([^\w\s]+?\s*)(\()/\1VGtygvVGVYbbhyh\2/ism) {};
 ############### Это убираем
 
 $sql =~ s/\bBINARY\b//igsm; 
-$sql =~ s/\bAS\b//igsm;
+$sql =~ s/\bAS\b\s+(?!\bSELECT\b)//igsm;
 $sql =~ s/(.*?)#.*?\n/\1\n/igsm; 		 				# Убираем закомментированные строки
 $sql =~ s/STRAIGHT_JOIN//igsm;					
 $sql =~ s/FORCE\s+INDEX\(.*?\)//igsm;             		
