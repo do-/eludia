@@ -2321,7 +2321,37 @@ sub fill_in_template {
 	
 	unless ($options -> {skip_headers}) {
 		$r -> header_out ('Content-Disposition' => "attachment;filename=$file_name");
+
+		if (
+			($conf -> {core_gzip} or $preconf -> {core_gzip}) &&
+			400 + length $result > $preconf -> {core_mtu} &&
+			($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/)
+		) {
+		
+			$r -> content_encoding ('gzip');
+			
+				
+			my $time = time;
+			my $old_size = length $result;
+			
+			my $z;
+			my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
+			$x -> deflate ($result, $z) ;
+			$x -> flush ($z) ;
+			$result = "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $result);
+			$_REQUEST {__is_gzipped} = 1;
+			
+			my $new_size = length $result;
+	
+			my $ratio = int (10000 * ($old_size - $new_size) / $old_size) / 100;
+			
+			__log_profilinig ($time, " <gzip: $old_size -> $new_size, $ratio%>");
+	
+		}
+
 		$r -> send_http_header ('application/octet-stream');
+
+
 	}
 	
 	$r -> print ($result);
