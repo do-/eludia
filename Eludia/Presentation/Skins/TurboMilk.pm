@@ -2295,7 +2295,7 @@ EODUMP
 				
 				}
 			
-				window.location.href = '$href';
+				window.location.href = encode1251 ('$href');
 				
 				return blockEvent ();
 			

@@ -63,8 +63,6 @@ BEGIN {
 		require Eludia::Validators;
 		require Eludia::InternalRequest;
 		require Eludia::Presentation;
-		require Eludia::Request;
-		require Eludia::Request::Upload;
 		require Eludia::SQL;
 		require Eludia::FileDumpHash;
 		$preconf -> {core_path} = __FILE__;
@@ -204,7 +202,7 @@ BEGIN {
 		}
 	}
 
-	eval 'require Eludia::Request' unless ($INC {'Apache/Request.pm'});
+	eval 'require Eludia::Request' unless ($INC {"${Apache}/Request.pm"});
 
 	eval 'require Compress::Raw::Zlib';
 	if ($@) {

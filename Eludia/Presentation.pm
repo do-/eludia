@@ -1230,7 +1230,7 @@ sub draw_path {
 		$item -> {cgi_tail} .= '&__tree=1'
 			if ($_REQUEST {__tree});
 			
-		unless ($_REQUEST {__edit} || $i == @$list - 1) {
+		unless ($options -> {no_path_href} || $_REQUEST {__edit} || $i == @$list - 1) {
 			$item -> {href} = "/?type=$$item{type}&$$item{id_param}=$$item{id}&$$item{cgi_tail}";
 			check_href ($item);
 			push @{$_REQUEST {__path}}, $item -> {href};
