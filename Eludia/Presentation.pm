@@ -2408,11 +2408,11 @@ sub draw_toolbar_pager {
 	
 	my $last_query_string = $_REQUEST {id} ? $_REQUEST {__last_last_query_string} : $_REQUEST {__last_query_string};
 	
-	if ($options -> {start} > $options -> {portion}) {
-		$options -> {rewind_url} = create_url (__last_query_string => $last_query_string, start => 0);
-	}
-	
 	my @keep_params	= map {$_ => $_REQUEST {$_}} @{$options -> {keep_params}};
+	
+	if ($options -> {start} > $options -> {portion}) {
+		$options -> {rewind_url} = create_url (__last_query_string => $last_query_string, start => 0, @keep_params);
+	}
 	
 	if ($options -> {start} > 0) {
 
@@ -3394,7 +3394,7 @@ sub draw_table {
 	}
 	
 	if (ref $options -> {path} eq ARRAY) {
-		$options -> {path} = draw_path ({}, $options -> {path});
+		$options -> {path} = draw_path ($options, $options -> {path});
 	}
 	
 	if ($options -> {'..'} && !$_REQUEST{lpt}) {
