@@ -701,7 +701,7 @@ sub draw_form_field_radio {
 	
 		my $attributes = dump_attributes ($value -> {attributes});
 
-		$html .= qq {\n<tr><td valign=top width=1%><nobr><input $attributes id="$value" onFocus="scrollable_table_is_blocked = true; " onBlur="scrollable_table_is_blocked = false; " type="radio" name="_$$options{name}" value="$$value{id}" onClick="is_dirty=true;$$value{onclick}" onKeyDown="tabOnEnter()">&nbsp;$$value{label}</nobr>};
+		$html .= qq {\n<tr><td valign=top width=1%><nobr><input $attributes id="$value" onFocus="scrollable_table_is_blocked = true; " onBlur="scrollable_table_is_blocked = false; " type="radio" name="_$$options{name}" value="$$value{id}" onClick="is_dirty=true;$$value{onclick}" onChange="is_dirty=true;$$options{onchange}" onKeyDown="tabOnEnter()">&nbsp;$$value{label}</nobr>};
 							
 		$value -> {html} or next;
 		
