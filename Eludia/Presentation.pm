@@ -14,6 +14,8 @@ sub format_picture {
 
 	my ($txt, $picture) = @_;
 	
+	return '' if $txt == 0;
+	
 	my $result = $number_format -> format_picture ($txt, $picture);
 	
 	if ($_USER -> {demo_level} > 1) {
@@ -2513,9 +2515,11 @@ sub draw_centered_toolbar {
 
 	$options -> {cnt} = 0;
 	
+	$options -> {target} ||= $options -> {path_target};
+	
 	foreach my $i (@$list) {
 		next if $i -> {off};
-		$i -> {target} ||= $options -> {path_target};
+		$i -> {target} ||= $options -> {target};
 		$i -> {html} = draw_centered_toolbar_button ($i);
 		$options -> {cnt} ++;
 	}
