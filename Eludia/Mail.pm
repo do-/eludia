@@ -102,7 +102,11 @@ sub send_mail {
 		$smtp or next;
 		
 		if ($preconf -> {mail} -> {user}) {
+		
+			require Authen::SASL;
+		
 			$smtp -> auth ($preconf -> {mail} -> {user}, $preconf -> {mail} -> {password}) or die "SMTP AUTH error: " . $smtp -> code . ' ' . $smtp -> message;
+			
 		}
 		
 		last if $smtp;
