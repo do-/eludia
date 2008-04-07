@@ -2514,12 +2514,10 @@ sub draw_centered_toolbar {
 	my ($options, $list) = @_;
 
 	$options -> {cnt} = 0;
-	
-	$options -> {target} ||= $options -> {path_target};
-	
+		
 	foreach my $i (@$list) {
 		next if $i -> {off};
-		$i -> {target} ||= $options -> {target};
+		$i -> {target} ||= $options -> {buttons_target};
 		$i -> {html} = draw_centered_toolbar_button ($i);
 		$options -> {cnt} ++;
 	}
