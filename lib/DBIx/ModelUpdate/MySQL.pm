@@ -203,13 +203,36 @@ sub update_column {
 sub insert_or_update {
 
 	my ($self, $name, $data) = @_;
+	
+	my $pk_column = 'id';
+	
+	my $st = $self -> {db} -> prepare ("SELECT * FROM $name WHERE $pk_column = ?");
+	$st -> execute ($data -> {$pk_column});
+	my $existing_data = $st -> fetchrow_hashref;
+	$st -> finish;
+	
+	if ($existing_data -> {$pk_column}) {
+	
+		my @terms = ();
+		
+		foreach my $key (keys (%$data)) {
+			my $value = $data -> {$key};
+  			
+			next if $key eq $pk_column;
+			next if $value eq $existing_data -> {$key};
+			push @terms, "$key = " . $self -> {db} -> quote ($value);
+		}
+		
+		if (@terms) {
+			$self -> do ("UPDATE $name SET " . (join ', ', @terms) . " WHERE $pk_column = " . $data -> {$pk_column});
+		}
+	
+	} else {
+		my @names = keys %$data;
+		$self -> do ("INSERT INTO $name (" . (join ', ', @names) . ") VALUES (" . (join ', ', map {$self -> {db} -> quote ($data -> {$_})} @names) . ')');
+	}
 
-	my @names = keys %$data;
-
-	my $sql = "REPLACE INTO $name (" . (join ', ', @names) . ") VALUES (" . (join ', ', map {$self -> {db} -> quote ($data -> {$_})} @names) . ')';
-
-	$self -> do ($sql);
-
+	
 }
 
 ################################################################################
