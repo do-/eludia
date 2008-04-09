@@ -570,23 +570,26 @@ sub sql_select_path {
 	
 	my ($table_name, $id, $options) = @_;
 	
-	$options -> {name} ||= 'name';
-	$options -> {type} ||= $table_name;
+	$options -> {name}     ||= 'name';
+	$options -> {type}     ||= $table_name;
 	$options -> {id_param} ||= 'id';
 
 	my ($parent) = $id;
 
 	my @path = ();
 
-	while ($parent) {	
-		my $r = sql_select_hash ("SELECT id, parent, $$options{name} as name, '$$options{type}' as type, '$$options{id_param}' as id_param FROM $table_name WHERE id = ?", $parent);
-		$r -> {cgi_tail} = $options -> {cgi_tail},
-		unshift @path, $r;		
-		$parent = $r -> {parent};	
-	}
+	sql_select_loop (
+		
+		"SELECT id, parent, $options->{name} AS name FROM $table_name START WITH id = ? CONNECT BY PRIOR parent = id",
+		
+		sub { foreach (qw(type id_param cgi_tail)) { $i -> {$_} = $options -> {$_}}; push @path, $i },
+		
+		$id,
+		
+	);
 	
 	if ($options -> {root}) {
-		unshift @path, {
+		push @path, {
 			id => 0, 
 			parent => 0, 
 			name => $options -> {root}, 
@@ -596,7 +599,7 @@ sub sql_select_path {
 		};
 	}
 
-	return \@path;
+	return [reverse @path];
 
 }
 
@@ -606,22 +609,8 @@ sub sql_select_subtree {
 
 	my ($table_name, $id, $options) = @_;
 	
-	my @ids = ($id);
+	return sql_select_col ("SELECT id FROM $table_name START WITH id IN ($id) CONNECT BY PRIOR id = parent");
 	
-	while (TRUE) {
-	
-		my $ids = join ',', @ids;
-	
-		my @new_ids = sql_select_col ("SELECT id FROM $table_name WHERE parent IN ($ids) AND id NOT IN ($ids)");
-		
-		last unless @new_ids;
-	
-		push @ids, @new_ids;
-	
-	}
-	
-	return @ids;
-
 }
 
 ################################################################################
