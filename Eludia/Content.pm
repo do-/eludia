@@ -1146,8 +1146,13 @@ sub download_file_header {
 
 	$r -> content_type ($type);
 	$options -> {no_force_download} or $r -> headers_out -> {'Content-Disposition'} = "attachment;filename=" . $options -> {file_name}; 
-	$r -> headers_out -> {'Content-Length'} = $content_length;
-	$r -> headers_out -> {'Accept-Ranges'} = 'bytes';
+	
+	if ($content_length > 0) {
+		$r -> headers_out -> {'Content-Length'} = $content_length;
+		$r -> headers_out -> {'Accept-Ranges'} = 'bytes';
+	} 
+	
+	delete $r -> headers_out -> {'Content-Encoding'};
 	
 	$r -> send_http_header () unless (MP2);
 

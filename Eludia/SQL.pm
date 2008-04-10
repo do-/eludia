@@ -2,6 +2,54 @@ no warnings;
 
 ################################################################################
 
+sub sql_export_json {
+
+	my ($sql, $out, @params) = @_;
+
+	$_JSON or setup_json ();
+	
+	$sql =~ /\bFROM\s+(\w+)/gsm or die "Invalid SQL (no table): $sql";
+	
+	my $table = $1;
+	
+	sql_select_loop ($sql, sub {print $out $_JSON -> encode ([$table => $i]) . "\n"}, @params);
+
+}
+
+################################################################################
+
+sub sql_import_json {
+
+	my ($in) = @_;
+	
+	$_JSON or setup_json ();
+		
+	while (my $line = <$in>) {
+	
+		my $r = $_JSON -> decode ($line);
+	
+		my %h = ();
+		
+		while (my ($k, $v) = each %{$r -> [1]}) {
+		
+			$k eq 'id' or $k = '-' . $k;
+			
+			foreach (split //, $v) {
+			
+				$h {$k} .= chr (ord ($_));
+
+			}
+
+		}
+		
+		sql_select_id ($r -> [0] => \%h, ['id']);
+	
+	}
+
+}
+
+################################################################################
+
 sub sql_weave_model {
 
 	my ($db_model) = @_;

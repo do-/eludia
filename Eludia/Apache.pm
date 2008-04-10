@@ -42,6 +42,14 @@ sub get_request {
 
 #################################################################################
 
+sub setup_json {
+
+	our $_JSON = $INC {'JSON.pm'} ? JSON -> new -> latin1 (1) : JSON::XS -> new -> latin1 (1);
+
+}
+
+#################################################################################
+
 sub setup_skin {
 
 	my ($options) = @_;
@@ -119,7 +127,7 @@ sub setup_skin {
 	
 	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
 
-	our $_JSON = $INC {'JSON.pm'} ? JSON -> new -> latin1 (1) : JSON::XS -> new -> latin1 (1);
+	setup_json ();
 
 	foreach my $package ($_SKIN, $_JS_SKIN) {
 
