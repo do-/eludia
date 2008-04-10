@@ -1700,7 +1700,7 @@ EOH
 		
 		$html .= <<EOH;
 			<td onmouseover="if (!edit_mode) {$$type{onhover}; subsets_are_visible = 0;}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
-				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1 onclick="return !check_edit_mode ();">&nbsp;$$type{label}&nbsp;</a>&nbsp;
+				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1 @{[ $type -> {name} eq '_dump' ? '' : 'onclick="return !check_edit_mode ();"' ]}>&nbsp;$$type{label}&nbsp;</a>&nbsp;
 			</td>
 EOH
 			
