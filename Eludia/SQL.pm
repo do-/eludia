@@ -10,9 +10,16 @@ sub sql_export_json {
 
 	$_JSON or setup_json ();
 	
-	$sql =~ /\bFROM\s+(\w+)/gsm or die "Invalid SQL (no table): $sql";
+	my $table;
 	
-	my $table = $1;
+	if ($sql =~ /\bSELECT\s+(\w+)\.*/gsm) {
+		$table = $1;
+	}
+	elsif ($sql =~ /\bFROM\s+(\w+)/gsm) {
+		$table = $1;
+	}
+	
+	$table or die "Invalid SQL (no table): $sql";
 	
 	sql_select_loop ($sql, sub {&$cb ($_JSON -> encode ([$table => $i]) . "\n")}, @params);
 
@@ -32,7 +39,11 @@ sub sql_import_json {
 	
 		my %h = ();
 		
+		my $columns = $DB_MODEL -> {tables} -> {$r -> [0]} -> {columns};
+				
 		while (my ($k, $v) = each %{$r -> [1]}) {
+		
+			$DB_MODEL -> {default_columns} -> {$k} or $columns -> {$k} or next;
 		
 			$k eq 'id' or $k = '-' . $k;
 			
