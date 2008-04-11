@@ -5,6 +5,8 @@ no warnings;
 sub sql_export_json {
 
 	my ($sql, $out, @params) = @_;
+	
+	my $cb = ref $out eq CODE ? $out : sub {print $out $_[0]};
 
 	$_JSON or setup_json ();
 	
@@ -12,7 +14,7 @@ sub sql_export_json {
 	
 	my $table = $1;
 	
-	sql_select_loop ($sql, sub {print $out $_JSON -> encode ([$table => $i]) . "\n"}, @params);
+	sql_select_loop ($sql, sub {&$cb ($_JSON -> encode ([$table => $i]) . "\n")}, @params);
 
 }
 
