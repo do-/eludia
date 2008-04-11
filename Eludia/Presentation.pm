@@ -2825,7 +2825,7 @@ sub draw_cells {
 		if ((@cell = grep {$_ -> {select_href}} @cells) == 0) {
 
 			foreach my $cell (@cells) {
-				if (!$cell -> {no_select_href} && $cell -> {label}) {
+				if (!$cell -> {no_select_href} && ($cell -> {label} ne '')) {
 					$options -> {select_label} = $cell -> {label};
 					last;
 				} 
@@ -2921,7 +2921,7 @@ sub _adjust_row_cell_style {
 sub draw_text_cell {
 
 	my ($data, $options) = @_;
-	
+
 	return '' if ref $data eq HASH && $data -> {hidden};
 
 	ref $data eq HASH or $data = {label => $data};
@@ -2947,8 +2947,9 @@ sub draw_text_cell {
 		$data -> {attributes} -> {align} ||= 'right' if $options -> {is_total};
 
 		check_title ($data);	
-		
+
 		if ($_REQUEST {select}) {
+
 			$data -> {href}   = js_set_select_option ('', {id => $i -> {id}, label => $options -> {select_label}});
 		}
 #		else {
