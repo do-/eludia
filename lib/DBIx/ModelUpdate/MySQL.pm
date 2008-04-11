@@ -43,10 +43,10 @@ sub get_keys {
 		$column .= '(' . $r -> {Sub_part} . ')' if $r -> {Sub_part};
 
 		if (exists $keys -> {$name}) {
-			$keys -> {$name} -> {columns} .= ',' . $column;
+			$keys -> {$name} .= ',' . $column;
 		}
 		else {
-			$keys -> {$name} = {columns => $column};
+			$keys -> {$name} = $column;
 		}
 	
 	}

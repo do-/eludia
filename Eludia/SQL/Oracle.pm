@@ -683,8 +683,33 @@ EOS
 		}
 
 	}
+	
+	my $seq_name;
+	
+	if ($conf -> {core_voc_replacement_use}) {
+		my $id = sql_select_scalar ("SELECT id FROM $conf->{systables}->{__voc_replacements} WHERE table_name='$table_name' and object_type=2");
+		$seq_name ='SEQ_' . $id if $id;
+	}
+	
+	$seq_name ||= $table_name . '_SEQ';
+		
+	my $curval = sql_select_scalar ("SELECT LAST_NUMBER FROM user_sequences WHERE SEQUENCE_NAME='$seq_name'");
+
+	my $step = $pairs -> {id} > 0 ? 
+		$pairs -> {id} - $curval : 
+		sql_select_scalar ("SELECT MAX(id) FROM $table_name") + 1 - $curval
+	;
+
+	if ($step > 1) {
+		sql_do            ("ALTER SEQUENCE $seq_name INCREMENT BY $step");
+		sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
+		sql_do            ("ALTER SEQUENCE $seq_name INCREMENT BY 1");
+	}
+		
+	$pairs -> {id} ||= sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
 
 	foreach my $field (keys %$pairs) { 
+	
 		my $comma = @params ? ', ' : '';	
 		
 		$fields .= "$comma $field";
@@ -699,53 +724,40 @@ EOS
  		
 	}
 
-	if ($conf -> {core_voc_replacement_use}) {	
-		my $seq_name ='SEQ_';
-		my $curval;
+	my $time = time;
+	
+	if ($pairs -> {id}) {
+	
+		my $sql = "INSERT INTO $table_name ($fields) VALUES ($args)";
 
-		if ($pairs -> {id}) {
-		
-			my $id = sql_select_scalar("SELECT id FROM $conf->{systables}->{__voc_replacements} WHERE table_name='$table_name' and object_type=2");
-			
-			if ($id) {
+		sql_do ($sql, @params);
+	
+		__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
 
-				$seq_name .= $id;
+		return $pairs -> {id};
 
-				$curval = sql_select_scalar("SELECT LAST_NUMBER FROM user_sequences WHERE SEQUENCE_NAME='$seq_name'");
+	}
+	else {
 
-				my $step = $pairs -> {id} - $curval;
+		my $sql = "INSERT INTO $table_name ($fields) VALUES ($args) RETURNING id INTO ?";
 
-				if ($step > 1) {
-					sql_do("ALTER SEQUENCE $seq_name INCREMENT BY $step");
-					sql_select_scalar("SELECT $seq_name.nextval FROM DUAL");
-					sql_do("ALTER SEQUENCE $seq_name INCREMENT BY 1");
-				}
+		my $st = $db -> prepare ($sql);
 
-			}
+		my $i = 1; 
+		$st -> bind_param ($i++, $_) foreach (@params);
 
-		}
+		my $id;		
+		$st -> bind_param_inout ($i, \$id, 20);
+
+		$st -> execute;
+		$st -> finish;	
+
+		__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
+
+		return $id;
 
 	}
 
-	my $time = time;
-	
-	my $sql = "INSERT INTO $table_name ($fields) VALUES ($args) RETURNING id INTO ?";
-	
-	my $st = $db -> prepare ($sql);
-
-	my $i = 1; 
-	$st -> bind_param ($i++, $_) foreach (@params);
-		
-	my $id;		
-	$st -> bind_param_inout ($i, \$id, 20);
-	
-	$st -> execute;
-	$st -> finish;	
-
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
-
-	return $id;
-		
 }
 
 ################################################################################

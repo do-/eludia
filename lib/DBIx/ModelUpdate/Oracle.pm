@@ -92,10 +92,10 @@ EOS
 		my $column = lc $r -> {COLUMN_NAME};
 		
 		if (exists $keys -> {$name}) {
-			$keys -> {$name} -> {columns} .= ',' . $column;
+			$keys -> {$name} .= ',' . $column;
 		}
 		else {
-			$keys -> {$name} = {columns => $column};
+			$keys -> {$name} = $column;
 		}
 	
 	}

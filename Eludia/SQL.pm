@@ -11,11 +11,33 @@ sub sql_export_json {
 	$_JSON or setup_json ();
 	
 	my $table;
+
+	if ($sql =~ /^\s*DESC(?:RIBE)?\s+(\w+)\s*$/gism) {
 	
-	if ($sql =~ /\bSELECT\s+(\w+)\.*/gsm) {
+		$table = $1;
+		
+		my $def = {
+			name    => $table,
+			columns => $model_update -> get_columns ($table),
+		};
+	
+		my $keys = $model_update -> get_keys ($table, $conf -> {core_voc_replacement_use});
+		
+		foreach my $k (keys %$keys) {
+			next if $k =~ /^pk/;
+			$def -> {keys} -> {$k} = $keys -> {$k};
+		}
+				
+		&$cb ($_JSON -> encode ($def) . "\n");
+		
+		return;
+				
+	}	
+	
+	if ($sql =~ /\bSELECT\s+(\w+)\.*/gism) {
 		$table = $1;
 	}
-	elsif ($sql =~ /\bFROM\s+(\w+)/gsm) {
+	elsif ($sql =~ /\bFROM\s+(\w+)/gism) {
 		$table = $1;
 	}
 	
@@ -32,18 +54,36 @@ sub sql_import_json {
 	my ($in, $cb) = @_;
 	
 	$_JSON or setup_json ();
+	
+	my $defs = {};
 		
 	while (my $line = <$in>) {
 	
 		my $r = $_JSON -> decode ($line);
+		
+		if (ref $r eq HASH) {
+		
+			$model_update -> assert (
+				
+				tables => {$r -> {name} => $r}, 
+				
+				default_columns => $DB_MODEL -> {default_columns},
+				
+				core_voc_replacement_use => $conf -> {core_voc_replacement_use}
+				
+			);
+			
+			next;
+		
+		}
 	
 		my %h = ();
 		
-		my $columns = $DB_MODEL -> {tables} -> {$r -> [0]} -> {columns};
+		my $columns = ($defs -> {$r -> [0]} ||= $model_update -> get_columns ($r -> [0]));
 				
 		while (my ($k, $v) = each %{$r -> [1]}) {
 		
-			$DB_MODEL -> {default_columns} -> {$k} or $columns -> {$k} or next;
+			$columns -> {$k} or next;
 		
 			$k eq 'id' or $k = '-' . $k;
 			
