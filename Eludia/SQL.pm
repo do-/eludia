@@ -29,7 +29,7 @@ sub sql_export_json {
 
 sub sql_import_json {
 
-	my ($in) = @_;
+	my ($in, $cb) = @_;
 	
 	$_JSON or setup_json ();
 		
@@ -56,6 +56,8 @@ sub sql_import_json {
 		}
 		
 		sql_select_id ($r -> [0] => \%h, ['id']);
+		
+		&$cb ($r, \%h) if $cb;
 	
 	}
 
