@@ -2480,7 +2480,7 @@ sub draw_logon_form {
 													<tr>
 														<td bgcolor=#8e8e8e rowspan=2><img height=1 src="/i/0.gif" width=16 border=0></td>
 														<td class=color0 bgcolor=#8e8e8e>&nbsp;<b>$$i18n{name}:</b>&nbsp;</td>
-														<td align=middle bgcolor=#8e8e8e><input style="width: 130px" size=15 name=login ></td>
+														<td align=middle bgcolor=#8e8e8e><input style="width: 130px" size=15 name=login value="${\( $_COOKIES{user_login} && $_COOKIES{user_login}->value )}"></td>
 													</tr>
 													<tr>
 														<td class=color0 bgcolor=#8e8e8e>&nbsp;<b>$$i18n{password}:</b>&nbsp;</td>
