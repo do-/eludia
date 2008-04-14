@@ -646,6 +646,20 @@ sub sql_do_update {
 
 ################################################################################
 
+sub sql_increment_sequence {
+
+	my ($seq_name, $step) = @_;
+	
+	sql_do            ("ALTER SEQUENCE $seq_name INCREMENT BY $step");
+	my $id = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
+	sql_do            ("ALTER SEQUENCE $seq_name INCREMENT BY 1");
+	
+	return $id;
+
+}
+
+################################################################################
+
 sub sql_do_insert {
 
 	my ($table_name, $pairs) = @_;
@@ -691,23 +705,37 @@ EOS
 		$seq_name ='SEQ_' . $id if $id;
 	}
 	
-	$seq_name ||= $table_name . '_SEQ';
+	$seq_name ||= $table_name . '_SEQ';	
+	
+	my $nextval = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
+	
+	while (1) {
+	
+		my $max = sql_select_scalar ("SELECT MAX(id) FROM $table_name");
 		
-	my $curval = sql_select_scalar ("SELECT LAST_NUMBER FROM user_sequences WHERE SEQUENCE_NAME='$seq_name'");
-
-	my $step = $pairs -> {id} > 0 ? 
-		$pairs -> {id} - $curval : 
-		sql_select_scalar ("SELECT MAX(id) FROM $table_name") + 1 - $curval
-	;
-
-	if ($step > 1) {
-		sql_do            ("ALTER SEQUENCE $seq_name INCREMENT BY $step");
-		sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
-		sql_do            ("ALTER SEQUENCE $seq_name INCREMENT BY 1");
+		last if $nextval > $max;
+		
+		$nextval = sql_increment_sequence ($seq_name, $max + 1 - $nextval);
+	
 	}
-		
-	$pairs -> {id} ||= sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
 
+	if ($pairs -> {id}) {
+		
+		if ($pairs -> {id} > $nextval) {
+		
+			my $step = $pairs -> {id} - $nextval;
+
+			sql_increment_sequence ($seq_name, $pairs -> {id} - $nextval);
+
+		}
+	
+	}
+	else {
+		
+		$pairs -> {id} = $nextval;
+		
+	}
+	
 	foreach my $field (keys %$pairs) { 
 	
 		my $comma = @params ? ', ' : '';	
