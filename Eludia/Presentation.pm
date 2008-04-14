@@ -2512,7 +2512,7 @@ sub draw_centered_toolbar {
 	$_REQUEST {lpt} and return '';
 
 	my ($options, $list) = @_;
-
+	
 	$options -> {cnt} = 0;
 		
 	foreach my $i (@$list) {
@@ -2521,6 +2521,8 @@ sub draw_centered_toolbar {
 		$i -> {html} = draw_centered_toolbar_button ($i);
 		$options -> {cnt} ++;
 	}
+
+	$options -> {cnt} or return '';
 
 	return $_SKIN -> draw_centered_toolbar (@_);
 
