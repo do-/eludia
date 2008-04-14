@@ -1472,11 +1472,14 @@ sub draw_toolbar_input_text {
 
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
+	
+	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {form.submit()}";
+
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
 		<input 
-			onKeyPress="if (window.event.keyCode == 13) {form.submit()}" 
+			onKeyPress="$$options{onKeyPress}" 
 			type=text 
 			size=$$options{size} 
 			name=$$options{name} 
