@@ -2455,6 +2455,8 @@ EOH
 sub draw_logon_form {
 
 	my ($options) = @_;
+
+	$_REQUEST {__on_load} = "document.getElementsByName(\"password\")[0].focus()";
 		
 	return <<EOH;
 	
