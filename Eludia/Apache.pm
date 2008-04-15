@@ -560,9 +560,9 @@ EOH
 						}
 
 						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_REQUEST {redirect_params}) {
-
+							my $VAR1;
 							eval {
-								my $VAR1 = b64u_thaw ($_REQUEST {redirect_params});
+								$VAR1 = b64u_thaw ($_REQUEST {redirect_params});
 							};
 							
 							if ($@) {
