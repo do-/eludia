@@ -2456,7 +2456,7 @@ sub draw_logon_form {
 
 	my ($options) = @_;
 
-	$_REQUEST {__on_load} = "document.getElementsByName(\"password\")[0].focus()";
+	$_REQUEST {__on_load} = "document.getElementsByName(\"password\")[0].focus()" if ($_COOKIES{user_login} && $_COOKIES{user_login}->value);
 		
 	return <<EOH;
 	
