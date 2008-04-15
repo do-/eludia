@@ -561,10 +561,16 @@ EOH
 
 						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_REQUEST {redirect_params}) {
 
-							my $VAR1 = b64u_thaw ($_REQUEST {redirect_params});
-
-							foreach my $key (keys %$VAR1) {
-								$_REQUEST {$key} = $VAR1 -> {$key};
+							eval {
+								my $VAR1 = b64u_thaw ($_REQUEST {redirect_params});
+							};
+							
+							if ($@) {
+								warn "b64u_thaw error: $@\n";
+							} else {
+								foreach my $key (keys %$VAR1) {
+									$_REQUEST {$key} = $VAR1 -> {$key};
+								}
 							}
 							
 						} elsif ($conf -> {core_cache_html}) {
