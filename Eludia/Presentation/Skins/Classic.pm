@@ -1782,7 +1782,7 @@ sub draw_string_voc_cell {
 		$data -> {other} -> {width}  ||= 600;
 		$data -> {other} -> {height} ||= 400;
 
-		my $d_style_top = "d.style.top = " . (defined $data -> {other} -> {top} ? "${$$data{other}}{top};" : "this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop + 50;");
+		my $d_style_top = "d.style.top = " . (defined $data -> {other} -> {top} ? "${$$data{other}}{top};" : "this.offsetTop + this.offsetParent.offsetTop + this.offsetParent.offsetParent.offsetTop;");
 		my $d_style_left = "d.style.left = " . (defined $data -> {other} -> {left} ? "${$$data{other}}{left};" : "this.offsetLeft + this.offsetParent.offsetLeft + this.offsetParent.offsetParent.offsetLeft;");
 
 		my $onchange = <<EOJS;
@@ -1799,12 +1799,10 @@ sub draw_string_voc_cell {
 			$d_style_top
 			$d_style_left
 
-			document.getElementById ( '_table_div' ).style.overflow = 'visible';
-
 			d.style.display = 'block';			
 			this.style.display = 'none';
-
-			d.focus ();		
+			
+			d.focus ();			
 EOJS
 
 		$data -> {onChange} = $onchange . $data -> {onChange}; 
@@ -1984,8 +1982,8 @@ EOH
 	}
 
 	$html .= $options -> {no_scroll} ?
-		qq {<td class=bgr8><div class="table-container-x" id="_table_div">} :
-		qq {<td class=bgr8><div class="table-container" id="_table_div" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
+		qq {<td class=bgr8><div class="table-container-x">} :
+		qq {<td class=bgr8><div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
 		
 	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="scrollable_table" lpt=$$options{lpt}>\n};
 
