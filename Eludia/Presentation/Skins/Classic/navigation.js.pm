@@ -496,19 +496,6 @@ function restoreStringVocVisibility (name) {
 	 	
 	iframe.src = '/0.html';
 	
-	var table_div;
-	if (window.parent && window.parent.document.getElementById ('_table_div'))
-		table_div = window.parent.document.getElementById ('_table_div');
-	else 
-		table_div = document.getElementById ('_table_div');
-	
-	if ( table_div.className == 'table-container' ) {
-		table_div.style.overflow = 'auto';
-		
-	}
-	else {
-		table_div.style.overflow = 'visible';
-	}
 };
 
 
@@ -539,12 +526,13 @@ function setStringVocValue (name, id, label) {
 	var tree = 0;
 	
 	if (window.parent && window.parent.document.getElementById (name + '_id')) {
-			form_id = window.parent.document.getElementById (name + '_id')
-			form_label = window.parent.document.getElementById (name + '_label')
-			tree = 1; 
-	} else { 			
-			form_id = document.getElementById (name + '_id')
-			form_label = document.getElementById (name + '_label')
+		form_id = window.parent.document.getElementById (name + '_id')
+		form_label = window.parent.document.getElementById (name + '_label')
+		tree = 1; 
+	} 
+	else { 			
+		form_id = document.getElementById (name + '_id')
+		form_label = document.getElementById (name + '_label')
 	} 
 			
 	form_id.value = id;
