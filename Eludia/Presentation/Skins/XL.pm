@@ -636,7 +636,9 @@ sub draw_error_page {
 sub start_page {
 
 	$r -> content_type ('application/octet-stream');
-	$r -> header_out ('Content-Disposition' => "attachment;filename=$$conf{page_title}.xls"); 	
+	my $page_title = $conf -> {page_title};
+	$page_title =~ s/[\"\?]/_/g;
+	$r -> header_out ('Content-Disposition' => "attachment;filename=$page_title.xls"); 	
 	$r -> send_http_header ();
 
 	$_REQUEST {__response_sent} = 1;
