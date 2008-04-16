@@ -707,7 +707,25 @@ EOS
 	
 	$seq_name ||= $table_name . '_SEQ';	
 	
-	my $nextval = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
+	my $nextval;
+	
+	eval {$nextval = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL")};
+	
+	if ($@) {
+	
+		if (sql_select_scalar ("SELECT trigger_body FROM user_triggers WHERE table_name = ? AND triggering_event like '%INSERT%'", uc $table_name) =~ /(\S+)\.nextval/ism) {
+		
+			$seq_name = $1;
+			
+			$nextval = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
+		
+		}
+		
+		else {
+			die $@;
+		}
+	
+	}
 	
 	while (1) {
 	

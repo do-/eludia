@@ -204,7 +204,13 @@ sub get_canonic_type {
 	
 	if ($type_name eq 'text') {
 	
-		$definition -> {COLUMN_SIZE} ||= $utf ? 2000 : 4000;
+		$definition -> {COLUMN_SIZE} ||= 4000;
+	
+	}
+	
+	if ($utf && $definition -> {COLUMN_SIZE} > 2000) {
+	
+		$definition -> {COLUMN_SIZE} = 2000;
 	
 	}
 

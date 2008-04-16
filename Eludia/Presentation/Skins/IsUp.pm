@@ -877,7 +877,7 @@ sub draw_form_field_checkboxes {
 	
 	my $html = '';
 
-	$html .= qq{<div class="checkboxes" style="height:$$options{height}px;" id="input_$$options{name}">} if $options -> {height};
+	$html .= $options -> {height} ? qq{<div class="checkboxes" style="height:$$options{height}px;" id="input_$$options{name}">} : qq{<div id="input_$$options{name}">};
 	
 	my $tabindex = $_REQUEST {__tabindex} + 1;
 	
@@ -941,7 +941,7 @@ EOH
 	
 	}
 
-	$html .= '</div>' if $options -> {height};
+	$html .= '</div>';
 	
 	$_REQUEST {__tabindex} = $tabindex;
 	
