@@ -1573,6 +1573,8 @@ sub draw_form_field_static {
 	$options -> {value} = $static_value;		
 	$options -> {value} = format_picture ($options -> {value}, $options -> {picture}) if $options -> {picture};
 
+	$options -> {value} =~ s/\n/\<br\>/gsm;
+
 	return $_SKIN -> draw_form_field_static (@_);
 			
 }
