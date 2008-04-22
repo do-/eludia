@@ -2941,7 +2941,7 @@ sub draw_text_cell {
 		if (ref $data -> {values} eq ARRAY) {
 
 			foreach (@{$data -> {values}}) {
-				$_ -> {id} == $data -> {value} or next;
+				$_ -> {id} eq $data -> {value} or next;
 				$data -> {label} = $_ -> {label};
 				last;
 			}
