@@ -2772,7 +2772,7 @@ EOH
 						
 					
 						<table border="0" cellpadding="8" cellspacing="0">
-						<form action=/ method=post autocomplete="off" name=form>
+						<form action=/ method=post autocomplete="off" name=form target="$options->{target}">
 							<input type=hidden name=type value=logon>
 							<input type=hidden name=action value=execute>
 							<input type=hidden name=redirect_params value="$_REQUEST{redirect_params}">
