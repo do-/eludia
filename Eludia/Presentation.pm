@@ -1128,9 +1128,9 @@ sub draw_form_field {
 	{
 		
 		if ($field -> {type} eq 'file') {
+			$field -> {href}      ||= {action => 'download', _name => $field -> {name}};
 			$field -> {file_name} ||= $field -> {name} . '_name';
 			$field -> {name}        = $field -> {file_name};
-			$field -> {href}      ||= {action => 'download'};
 			$field -> {target}    ||= 'invisible';
 		}
 		elsif ($field -> {type} eq 'checkbox') {
