@@ -294,6 +294,7 @@ sub check_href {
 		}
 			
 		$h {select} ||= $_REQUEST {select} if $_REQUEST {select};
+		$h {__no_navigation} ||= $_REQUEST {__no_navigation} if $_REQUEST {__no_navigation};
 		$h {__tree} ||= $_REQUEST {__tree} if $_REQUEST {__tree};
 
 		if ($conf -> {core_auto_esc} == 2) {
@@ -982,6 +983,7 @@ sub draw_form {
 	my   @keep_params = map {{name => $_, value => $_REQUEST {$_}}} @{$options -> {keep_params}};
 	push @keep_params, {name  => 'sid',                         value => $_REQUEST {sid}                         };
 	push @keep_params, {name  => 'select',                      value => $_REQUEST {select}                      };
+	push @keep_params, {name  => '__no_navigation',              value => $_REQUEST {__no_navigation}              };
 	push @keep_params, {name  => '__tree',                      value => $_REQUEST {__tree}                      };
 	push @keep_params, {name  => 'type',                        value => $options -> {type} || $_REQUEST {type}  };
 	push @keep_params, {name  => 'id',                          value => $options -> {id} || $_REQUEST {id}      };
