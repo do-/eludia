@@ -428,7 +428,6 @@ sub lc_hashref {
 		        my $old_key = $key;
 			$key =~ s/RewbfhHHkgkglld/user/gsm;
 			$key =~ s/NbhcQQehgdfjfxf/level/gsm;
-			$key =~ s/Iuhjdwxsttebnmn/minus/gsm;
 			$hr -> {lc $key} = $hr -> {$old_key};
 			delete $hr -> {uc $key};
 		}
@@ -442,7 +441,6 @@ sub lc_hashref {
 
 	delete $hr -> {REWBFHHHKGKGLLD};
 	delete $hr -> {NBHCQQEHGDFJFXF};
-	delete $hr -> {IUHJDWXSTTEBNMN};
 
 	return $hr;
 
@@ -1034,7 +1032,6 @@ my $sc_in_quotes=0;
 ############### «амен€ем неразрешенные в запросах слова на ключи (обратно восстанавливаем в lc_hashref())
 $sql =~ s/([^\W]\s*\b)user\b(?!\.)/\1RewbfhHHkgkglld/igsm;
 $sql =~ s/([^\W]\s*\b)level\b(?!\.)/\1NbhcQQehgdfjfxf/igsm;
-$sql =~ s/([^\W]\s*\b)minus\b(?!\.)/\1Iuhjdwxsttebnmn/igsm;
 
 ############### ¬ырезаем и запоминаем все что внутри кавычек, помеча€ эти места.
 while ($sql =~ /(''|'.*?[^\\]')/ism)
