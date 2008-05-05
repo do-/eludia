@@ -426,8 +426,9 @@ sub lc_hashref {
 	if ($conf -> {core_auto_oracle}) {	
 		foreach my $key (keys %$hr) {
 		        my $old_key = $key;
-			$key =~ s/RewbfhHHkgkglld/user/igsm;
-			$key =~ s/NbhcQQehgdfjfxf/level/igsm;
+			$key =~ s/RewbfhHHkgkglld/user/gsm;
+			$key =~ s/NbhcQQehgdfjfxf/level/gsm;
+			$key =~ s/Iuhjdwxsttebnmn/minus/gsm;
 			$hr -> {lc $key} = $hr -> {$old_key};
 			delete $hr -> {uc $key};
 		}
@@ -441,6 +442,7 @@ sub lc_hashref {
 
 	delete $hr -> {REWBFHHHKGKGLLD};
 	delete $hr -> {NBHCQQEHGDFJFXF};
+	delete $hr -> {IUHJDWXSTTEBNMN};
 
 	return $hr;
 
@@ -1032,15 +1034,16 @@ my $sc_in_quotes=0;
 ############### Заменяем неразрешенные в запросах слова на ключи (обратно восстанавливаем в lc_hashref())
 $sql =~ s/([^\W]\s*\b)user\b(?!\.)/\1RewbfhHHkgkglld/igsm;
 $sql =~ s/([^\W]\s*\b)level\b(?!\.)/\1NbhcQQehgdfjfxf/igsm;
+$sql =~ s/([^\W]\s*\b)minus\b(?!\.)/\1Iuhjdwxsttebnmn/igsm;
 
 ############### Вырезаем и запоминаем все что внутри кавычек, помечая эти места.
 while ($sql =~ /(''|'.*?[^\\]')/ism)
 {	
 	my $temp = $1;
 	# Скобки и запятые внутри кавычек прячем чтобы не мешались при анализе и замене функций 
-	$temp =~ s/\(/JKghsdgfweftyfd/igsm;
-	$temp =~ s/\)/RTYfghhfFGhhjJg/igsm;
-	$temp =~ s/\,/DFgpoUUYTJjkgJj/igsm;
+	$temp =~ s/\(/JKghsdgfweftyfd/gsm;
+	$temp =~ s/\)/RTYfghhfFGhhjJg/gsm;
+	$temp =~ s/\,/DFgpoUUYTJjkgJj/gsm;
 	$in_quotes[++$sc_in_quotes]=$temp;
 	$sql =~ s/''|'.*?[^\\]'/POJJNBhvtgfckjh$sc_in_quotes/ism;
 }
@@ -1185,12 +1188,12 @@ for(my $i = $#items; $i >= 1; $i--) {
 	# Заполняем шаблон верхнего уровня ранее запомненными и измененными items 
 	# в помеченных местах
 	##############################################################################
-	$sql =~ s/NJNJNjgyyuypoht$i/$items[$i]/igsm;
+	$sql =~ s/NJNJNjgyyuypoht$i/$items[$i]/gsm;
 	# Просматриваем поля и заменяем если в них есть текущий шаблон (для дальнейшей замены GROUP BY 1,2,3 ...)
 	if ($need_group_by) {
 		for (my $x = 0; $x <= $#group_by_fields_ref; $x++) {
 			for (my $y = 0; $y <= $#{@{$group_by_fields_ref[$x]}}; $y++) {
-				$group_by_fields_ref [$x] -> [$y] =~ s/NJNJNjgyyuypoht$i/$items[$i]/igsm;
+				$group_by_fields_ref [$x] -> [$y] =~ s/NJNJNjgyyuypoht$i/$items[$i]/gsm;
 			}
 		}  
 	}
@@ -1216,7 +1219,7 @@ if ($need_group_by) {
 		}
 		# Формируем GROUP BY для каждого SELECT
 		$group_by = join(',',@result);
-		$sql =~ s/VJkjn;lohggff/\n GROUP BY $group_by /ism; 
+		$sql =~ s/VJkjn;lohggff/\n GROUP BY $group_by /sm; 
 		@result=();
 	}
 }
@@ -1225,13 +1228,13 @@ if ($need_group_by) {
 ############### Делаем регистронезависимый LIKE 
 $sql =~ s/([\w\'\?\.\%\_]*?\s+)(NOT\s+)*LIKE(\s+[\w\'\?\.\%\_]*?[\s\)]+)/ UPPER\(\1\) \2 LIKE UPPER\(\3\) /igsm;
 ############### Удаляем псевдофункции
-$sql =~ s/VGtygvVGVYbbhyh//igsm;
+$sql =~ s/VGtygvVGVYbbhyh//gsm;
 # Восстанавливаем то что было внутри кавычек НЕ в аргументах функций
-$sql =~ s/POJJNBhvtgfckjh(\d+)/$in_quotes[$1]/igsm;			
+$sql =~ s/POJJNBhvtgfckjh(\d+)/$in_quotes[$1]/gsm;			
 # Восстанавливаем скобки и запятые в кавычках
-$sql =~ s/JKghsdgfweftyfd/\(/igsm;
-$sql =~ s/RTYfghhfFGhhjJg/\)/igsm;
-$sql =~ s/DFgpoUUYTJjkgJj/\,/igsm;
+$sql =~ s/JKghsdgfweftyfd/\(/gsm;
+$sql =~ s/RTYfghhfFGhhjJg/\)/gsm;
+$sql =~ s/DFgpoUUYTJjkgJj/\,/gsm;
 # добавляем FROM DUAL если в SELECT не задано FROM
 if ($need_from_dual) {
 	$sql =~ s/\n//igsm;
