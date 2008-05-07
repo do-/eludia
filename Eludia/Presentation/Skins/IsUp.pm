@@ -403,7 +403,7 @@ EOH
 
 	$html .= $options -> {footer};
 	
-	$html .= $options -> {bottom_toolbar};
+	$html .= $options -> {bottom_toolbar} unless $options -> {no_bottom_bottom_toolbar};
 	
 	return $html;	
 
