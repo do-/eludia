@@ -2412,7 +2412,7 @@ sub draw_toolbar_pager {
 	$conf -> {kb_options_pager} ||= $conf -> {kb_options_buttons};
 	$conf -> {kb_options_pager} ||= {ctrl => 1};
 	
-	my $last_query_string = $_REQUEST {id} ? $_REQUEST {__last_last_query_string} : $_REQUEST {__last_query_string};
+	my $last_query_string = $_REQUEST {id} && !$options -> {keep_esc} ? $_REQUEST {__last_last_query_string} : $_REQUEST {__last_query_string};
 	
 	my @keep_params	= map {$_ => $_REQUEST {$_}} @{$options -> {keep_params}};
 	
