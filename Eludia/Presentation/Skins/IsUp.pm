@@ -2827,9 +2827,7 @@ EOH
 sub dialog_open {
 
 	my ($_SKIN, $arg, $options) = @_;
-	
-	my $id = 0 + $arg;
-	
+		
 	foreach (qw(status resizable help)) {$options -> {$_} ||= 'no'}
 	
 	$options -> {dialogHeight} ||= '150px';
@@ -2838,7 +2836,7 @@ sub dialog_open {
 	my $url = $_REQUEST {__static_url} . '/dialog.html?' . rand ();
 	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
 	
-	return "javaScript:var result=window.showModalDialog('$url', dialog_open_$id (), '$o');document.body.style.cursor='default';void(0);";
+	return "javaScript:var result=window.showModalDialog('$url', dialog_open_$options->{id} (), '$o');document.body.style.cursor='default';void(0);";
 
 }
 

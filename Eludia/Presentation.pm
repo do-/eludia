@@ -3831,15 +3831,16 @@ sub dialog_open {
 
 	my ($arg, $options) = @_;
 	
+	$options -> {id} = ++ $_REQUEST {__dialog_cnt};
+	
 	$options -> {dialogHeight} ||= $options -> {height} . 'px' if $options -> {height};
 	$options -> {dialogWidth}  ||= $options -> {width}  . 'px' if $options -> {width};
 
 	$arg ||= {};
 	
-	my $id = 0 + $arg;
 	check_href ($arg);
 
-	$_REQUEST {__script} .= json_dump_to_function ("dialog_open_$id" => $arg);
+	$_REQUEST {__script} .= json_dump_to_function ("dialog_open_$options->{id}" => $arg);
 
 	return $_SKIN -> dialog_open ($arg, $options);
 
