@@ -1569,6 +1569,8 @@ sub draw_input_cell {
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
+	$data -> {label} =~ s{\"}{\&quot;}gsm;
+
 	return qq {<td $attributes><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}"></td>};
 
 }

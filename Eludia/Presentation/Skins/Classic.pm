@@ -1833,6 +1833,8 @@ sub draw_input_cell {
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
+	$data -> {label} =~ s{\"}{\&quot;}gsm;
+
 	return qq {<td $$data{title} $attributes><nobr><input type="text" name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}"></nobr></td>};
 
 }
