@@ -743,7 +743,7 @@ sub sql_select_id {
 
 sub sql_do_relink {
 
-	my ($table_name, $old_ids, $new_id) = @_;
+	my ($table_name, $old_ids, $new_id, $no_update) = @_;
 	
 	sql_weave_model ($DB_MODEL);
 
@@ -758,6 +758,7 @@ sub sql_do_relink {
 	my $record = sql_select_hash ($table_name, $new_id);
 	my @empty_fields = ();
 	foreach my $key (keys %$record) {
+		next if $no_update;
 		next if $record -> {$key} . '' ne '';
 		next if $key eq 'id';
 		next if $key eq 'fake';
