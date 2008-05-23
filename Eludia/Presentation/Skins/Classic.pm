@@ -2112,6 +2112,9 @@ sub draw_node {
 
 	my $menu = $i -> {__menu} ? "'$i'" : 'null';
 	my $open = $options -> {open} ? 'true' : 'null';
+
+	$options -> {label} =~ s{[\'\"]}{}g;
+
 	return "d.add($options->{id}, $options->{parent}, '$options->{label}', '$options->{href}', null, null, null, null, $open, $menu);\n"
 
 }
