@@ -1797,7 +1797,7 @@ EOJS
 		my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}=this.value&__only_field=" . (join ',', @all_details) : <<EOJS;
 			activate_link (
 
-				'$$h{href}&__only_field=${\(join (',', @all_details))}&__only_form=' + 
+				'$ENV{SCRIPT_NAME}/$$h{href}&__only_field=${\(join (',', @all_details))}&__only_form=' + 
 				this.form.name + 
 				'&_$$options{name}=' + 
 				this.value + 
@@ -1921,7 +1921,7 @@ EOJS
 		my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}_label=encode1251(document.getElementById('_$$options{name}_label').value)&__only_field=" . (join ',', @all_details) : <<EOJS;
 			activate_link (
 
-				'$$h{href}&__only_field=${\(join (',', @all_details))}&__only_form=' + 
+				'$ENV{SCRIPT_NAME}/$$h{href}&__only_field=${\(join (',', @all_details))}&__only_form=' + 
 				this.form.name + 
 				'&_$$options{name}_label=' + 
 				encode1251(document.getElementById('_$$options{name}_label').value) +
@@ -2810,6 +2810,28 @@ sub js_set_select_option {
 sub draw_cells {
 
 	my $options = (ref $_[0] eq HASH) ? shift () : {};
+
+	
+	if ($options -> {gantt}) {
+
+		$i -> {__gantt} = $options -> {gantt};
+		
+		$_REQUEST {__gantt_from_year} ||= 3000;
+		$_REQUEST {__gantt_to_year}   ||= 1;
+
+		foreach my $key (keys %{$options -> {gantt}}) {
+		
+			foreach my $ft ('from', 'to') {
+			
+				$options -> {gantt} -> {$key} -> {$ft} =~ /^(\d\d\d\d)/;
+				$_REQUEST {__gantt_from_year} <= $1 or $_REQUEST {__gantt_from_year} = $1;
+				$_REQUEST {__gantt_to_year} >= $1 or $_REQUEST {__gantt_to_year} = $1;
+			
+			}
+			
+		}
+		
+	}
 	
 	my $result = '';
 	
@@ -2877,8 +2899,20 @@ sub draw_cells {
 	
 	}
 	
+	if ($options -> {gantt}) {
+
+		$result .= draw_gantt_bars ($options -> {gantt});
+		
+	}
+
 	return $result;
 	
+}
+
+################################################################################
+
+sub draw_gantt_bars {
+	return $_SKIN -> draw_gantt_bars (@_);	
 }
 
 ################################################################################
@@ -3373,7 +3407,6 @@ sub draw_table {
 	$options -> {action} ||= 'add';
 	$options -> {name}   ||= 'form';
 	$options -> {target} ||= 'invisible';
-	$options -> {header}   = draw_table_header ($headers) if @$headers > 0;
 
 	return '' if $options -> {off};		
 
@@ -3451,6 +3484,100 @@ sub draw_table {
 		}
 		
 	}
+	
+	if ($_REQUEST {__gantt_from_year}) {
+	
+		$headers ||= [''];
+		
+		ref $headers -> [0] eq ARRAY or $headers = [$headers];
+
+		foreach my $year ($_REQUEST {__gantt_from_year} .. $_REQUEST {__gantt_to_year}) {
+		
+			push @{$headers -> [0]}, {label => $year, colspan => 12};
+			$headers -> [1] ||= [];
+			push @{$headers -> [1]}, {label => 'I', colspan => 3};
+			push @{$headers -> [1]}, {label => 'II', colspan => 3};
+			push @{$headers -> [1]}, {label => 'III', colspan => 3};
+			push @{$headers -> [1]}, {label => 'IV', colspan => 3};
+			$headers -> [2] ||= [];
+			
+			
+			
+#			push @{$headers -> [2]}, qw(Я Ф М А М И И А С О Н Д);
+
+			push @{$headers -> [2]}, {
+				label => 'Я',
+				title => "Январь ${year} г.",
+				attributes => {id => "gantt_${year}_01"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'Ф',
+				title => "февраль ${year} г.",
+				attributes => {id => "gantt_${year}_02"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'М',
+				title => "март ${year} г.",
+				attributes => {id => "gantt_${year}_03"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'А',
+				title => "апрель ${year} г.",
+				attributes => {id => "gantt_${year}_04"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'М',
+				title => "май ${year} г.",
+				attributes => {id => "gantt_${year}_05"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'И',
+				title => "июнь ${year} г.",
+				attributes => {id => "gantt_${year}_06"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'И',
+				title => "июьль ${year} г.",
+				attributes => {id => "gantt_${year}_07"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'А',
+				title => "август ${year} г.",
+				attributes => {id => "gantt_${year}_08"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'С',
+				title => "сентябрь ${year} г.",
+				attributes => {id => "gantt_${year}_09"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'О',
+				title => "октябрь ${year} г.",
+				attributes => {id => "gantt_${year}_10"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'Н',
+				title => "ноябрь ${year} г.",
+				attributes => {id => "gantt_${year}_11"},
+			};
+			push @{$headers -> [2]}, {
+				label => 'Д',
+				title => "декабрь ${year} г.",
+				attributes => {id => "gantt_${year}_12"},
+			};
+			
+			
+
+			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
+			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
+			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
+			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
+		
+		}
+	
+	}
+	
+	$options -> {header}   = draw_table_header ($headers) if @$headers > 0;
 	
 	my $html = $_SKIN -> draw_table ($tr_callback, $list, $options);
 	

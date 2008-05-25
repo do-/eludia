@@ -142,8 +142,12 @@ function idx_tables (__scrollable_table_row) {
 
 		var cells = scrollable_rows [i].cells;
 		
+		var jj = -1;
+		
 		for (var j = 0; j < cells.length; j++) {
+			jj ++;
 			var scrollable_cell = cells [j];
+			if (scrollable_cell.style.position == 'absolute') continue; 
 			td2sr [scrollable_cell.uniqueID] = i;
 			td2sc [scrollable_cell.uniqueID] = j;
 			scrollable_cell.onclick = td_on_click;

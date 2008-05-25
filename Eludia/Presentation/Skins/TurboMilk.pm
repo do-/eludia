@@ -91,6 +91,49 @@ EOH
 
 ################################################################################
 
+sub draw_gantt_bars {
+
+	my ($_SKIN, $options) = @_;
+	
+	my $top = 5;
+	my $html = '';
+	
+	$options -> {plan} -> {color} ||= 'blue';
+	$options -> {fact} -> {color} ||= 'red';
+	
+	foreach my $key ('plan', 'fact') {
+	
+		my $bar = $options -> {$key};
+	
+		my @pf = split /-/, $bar -> {from};
+		my $dpf = $pf [2] / 30;
+
+		my @pt = split /-/, $bar -> {to};
+		my $dpt = $pf [2] / 30;
+
+		$html .= <<EOH;
+			<td style="
+				border:solid black 1px;
+				height:7px;
+				z-index:0;
+				position:absolute;
+				top:  expression(this.previousSibling.offsetTop + $top);
+				left: expression(getElementById('gantt_$pf[0]_$pf[1]').offsetLeft + $dpf * getElementById('gantt_$pf[0]_$pf[1]').offsetWidth);
+				width:expression(getElementById('gantt_$pt[0]_$pt[1]').offsetLeft + $dpt * getElementById('gantt_$pt[0]_$pt[1]').offsetWidth - getElementById('gantt_$pf[0]_$pf[1]').offsetLeft - $dpf * getElementById('gantt_$pf[0]_$pf[1]').offsetWidth);
+				background-color:$bar->{color}
+			" title="$bar->{title}"><img src='/0.gif' width=1 height=1></td>
+EOH
+
+		$top = 6;
+
+	}
+	
+	return $html;
+
+}
+
+################################################################################
+
 sub draw_auth_toolbar {
 
 	my ($_SKIN, $options) = @_;

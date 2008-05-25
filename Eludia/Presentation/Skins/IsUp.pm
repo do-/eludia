@@ -65,6 +65,49 @@ sub static_path {
 
 ################################################################################
 
+sub draw_gantt_bars {
+
+	my ($_SKIN, $options) = @_;
+	
+	my $top = 5;
+	my $html = '';
+	
+	$options -> {plan} -> {color} ||= 'blue';
+	$options -> {fact} -> {color} ||= 'red';
+	
+	foreach my $key ('plan', 'fact') {
+	
+		my $bar = $options -> {$key};
+	
+		my @pf = split /-/, $bar -> {from};
+		my $dpf = $pf [2] / 30;
+
+		my @pt = split /-/, $bar -> {to};
+		my $dpt = $pf [2] / 30;
+
+		$html .= <<EOH;
+			<td style="
+				border:solid black 1px;
+				height:7px;
+				z-index:0;
+				position:absolute;
+				top:  expression(this.previousSibling.offsetTop + $top);
+				left: expression(getElementById('gantt_$pf[0]_$pf[1]').offsetLeft + $dpf * getElementById('gantt_$pf[0]_$pf[1]').offsetWidth);
+				width:expression(getElementById('gantt_$pt[0]_$pt[1]').offsetLeft + $dpt * getElementById('gantt_$pt[0]_$pt[1]').offsetWidth - getElementById('gantt_$pf[0]_$pf[1]').offsetLeft - $dpf * getElementById('gantt_$pf[0]_$pf[1]').offsetWidth);
+				background-color:$bar->{color}
+			" title="$bar->{title}"><img src='/0.gif' width=1 height=1></td>
+EOH
+
+		$top = 6;
+
+	}
+	
+	return $html;
+
+}
+
+################################################################################
+
 sub draw_hr {
 
 	my ($_SKIN, $options) = @_;
@@ -1740,9 +1783,19 @@ sub draw_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 	
+	my $data_original;
+
+	if ($data -> {no_scroll}) {
+		$data_original = Storable::dclone ($data);
+	}
+	
+	if (defined $data -> {level}) {
+		$data -> {attributes} -> {style} .= '; padding-left:';
+		$data -> {attributes} -> {style} .= ($data -> {level} * 15 + 5);
+	}
+	
 	my $html = "\n\t<td ";
 	$html .= dump_attributes ($data -> {attributes}) if $data -> {attributes};
-	$html .= ' style="padding-left:' . ($data -> {level} * 15 + 3) . '"' if (defined $data -> {level});
 	$html .= '>';
 	
 	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
@@ -1790,6 +1843,25 @@ sub draw_text_cell {
 	}
 	
 	$html .= '</td>';
+	
+	if ($data -> {no_scroll} && $options -> {gantt}) {
+			
+		delete $data_original -> {no_scroll};
+		
+		my $pad = 11 + $data -> {level} * 15;
+		
+		$data_original -> {attributes} -> {style} .= <<EOH;
+			;position:absolute;
+			z-index:150;
+			top:expression(this.previousSibling.offsetTop);
+			left:expression(this.previousSibling.offsetLeft);
+			width:expression(this.previousSibling.offsetWidth - $pad);
+			height:expression(this.previousSibling.offsetHeight);
+EOH
+
+		$html .= draw_text_cell ($_SKIN, $data_original, $options);
+	
+	}
 
 	return $html;
 
