@@ -2823,6 +2823,8 @@ sub draw_cells {
 		
 			foreach my $ft ('from', 'to') {
 			
+				$options -> {gantt} -> {$key} -> {$ft} =~ s{^(\d\d).(\d\d).(\d\d\d\d)$}{$3-$2-$1};
+
 				$options -> {gantt} -> {$key} -> {$ft} =~ /^(\d\d\d\d)/;
 				$_REQUEST {__gantt_from_year} <= $1 or $_REQUEST {__gantt_from_year} = $1;
 				$_REQUEST {__gantt_to_year} >= $1 or $_REQUEST {__gantt_to_year} = $1;
@@ -3582,6 +3584,9 @@ sub draw_table {
 	my $html = $_SKIN -> draw_table ($tr_callback, $list, $options);
 	
 	$lpt = 1 if $options -> {lpt};
+	
+	delete $_REQUEST {__gantt_from_year};
+	delete $_REQUEST {__gantt_to_year};
 	
 	return $html;
 
