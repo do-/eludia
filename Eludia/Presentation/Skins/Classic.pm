@@ -1878,7 +1878,7 @@ sub draw_input_cell {
 
 	$data -> {label} =~ s{\"}{\&quot;}gsm;
 
-	return qq {<td $$data{title} $attributes><nobr><input type="text" name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}"></nobr></td>};
+	return qq {<td $$data{title} $attributes><nobr><input type="text" name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" onKeyDown="tabOnEnter()"></nobr></td>};
 
 }
 
@@ -2211,6 +2211,7 @@ EOI
 	}
 
 	my $url_dump = create_url (__dump => 1);
+#						nope ("/?type=log_band&sid=$_REQUEST{sid}&action=update", 'invisible');
 
 	return <<EOH;
 		<html>		
@@ -2267,7 +2268,7 @@ EOCSS
 
 						initialize_controls ($_REQUEST{__no_focus}, $_REQUEST{__pack}, '$_REQUEST{__focused_input}', $_REQUEST{__blur_all}, $_REQUEST{__scrollable_table_row});
 						
-						$_REQUEST{__on_load}
+						$_REQUEST{__on_load};
 					
 					}
 
