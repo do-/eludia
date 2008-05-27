@@ -1795,10 +1795,12 @@ EOJS
 
 #warn Dumper \@all_details;
 		my $script_name = $ENV{SCRIPT_NAME} eq '/' ? '' : $ENV{SCRIPT_NAME};
+		my $href = $$h{href};
+		$href =~ s{^/}{};
 		my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}=this.value&__only_field=" . (join ',', @all_details) : <<EOJS;
 			activate_link (
 
-				'$script_name/$$h{href}&__only_field=${\(join (',', @all_details))}&__only_form=' + 
+				'$script_name/$href&__only_field=${\(join (',', @all_details))}&__only_form=' + 
 				this.form.name + 
 				'&_$$options{name}=' + 
 				this.value + 
@@ -1920,10 +1922,12 @@ EOJS
 		my $h = {href => {}}; check_href ($h);
 
 		my $script_name = $ENV{SCRIPT_NAME} eq '/' ? '' : $ENV{SCRIPT_NAME};
+		my $href = $$h{href};
+		$href =~ s{^/}{};
 		my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}_label=encode1251(document.getElementById('_$$options{name}_label').value)&__only_field=" . (join ',', @all_details) : <<EOJS;
 			activate_link (
 
-				'$script_name/$$h{href}&__only_field=${\(join (',', @all_details))}&__only_form=' + 
+				'$script_name/$href&__only_field=${\(join (',', @all_details))}&__only_form=' + 
 				this.form.name + 
 				'&_$$options{name}_label=' + 
 				encode1251(document.getElementById('_$$options{name}_label').value) +
