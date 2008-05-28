@@ -2298,6 +2298,8 @@ EOH
 		$body_scroll = 'no';
 		$$page{auth_toolbar} = '';
 		$_REQUEST {__head_links} .= <<EOH;
+			<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
+			</script>
 			<script src="$_REQUEST{__static_url}/navigation_setup.js?$_REQUEST{__static_salt}">
 			</script>
 EOH
