@@ -421,8 +421,6 @@ sub lc_hashref {
 
 	my ($hr) = @_;
 
-	warn "in: <$hr>";
-	
 	return undef unless (defined $hr);	
 
 	if ($conf -> {core_auto_oracle}) {	
