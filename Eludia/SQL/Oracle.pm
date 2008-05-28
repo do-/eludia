@@ -420,14 +420,16 @@ sub sql_select_col {
 sub lc_hashref {
 
 	my ($hr) = @_;
+
+	warn "in: <$hr>";
 	
 	return undef unless (defined $hr);	
 
 	if ($conf -> {core_auto_oracle}) {	
 		foreach my $key (keys %$hr) {
 		        my $old_key = $key;
-			$key =~ s/RewbfhHHkgkglld/user/gsm;
-			$key =~ s/NbhcQQehgdfjfxf/level/gsm;
+			$key =~ s/RewbfhHHkgkglld/user/igsm;
+			$key =~ s/NbhcQQehgdfjfxf/level/igsm;
 			$hr -> {lc $key} = $hr -> {$old_key};
 			delete $hr -> {uc $key};
 		}
