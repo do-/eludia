@@ -3472,6 +3472,8 @@ sub draw_table {
 
 	}
 
+	$options -> {header}   = draw_table_header ($headers) if @$headers > 0 && $_REQUEST {xls};
+	
 	$_SKIN -> start_table ($options) if $_SKIN -> {options} -> {no_buffering};
 
 	my $n = 0;
@@ -3585,7 +3587,7 @@ sub draw_table {
 	
 	}
 	
-	$options -> {header}   = draw_table_header ($headers) if @$headers > 0;
+	$options -> {header}   = draw_table_header ($headers) if @$headers > 0 && !$_REQUEST {xls};
 	
 	my $html = $_SKIN -> draw_table ($tr_callback, $list, $options);
 	
