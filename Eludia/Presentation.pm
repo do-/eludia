@@ -342,6 +342,10 @@ sub check_href {
 		
 	}
 
+	if ($h {action} eq 'download') {
+		$options -> {no_wait_cursor} = 1;
+	}
+    
 	if ($options -> {dialog}) {
 	
 		$url = dialog_open ({
@@ -2253,12 +2257,16 @@ sub draw_toolbar_button {
 	
 	}		
 
+	my $cursor_state = $options -> {no_wait_cursor} ? q[; window.document.body.onbeforeunload = function() {document.body.style.cursor = 'default';};] : '';
+
 	if ($options -> {confirm}) {
 		$options -> {target} ||= '_self';
 		my $salt = rand;
 		my $msg = js_escape ($options -> {confirm});
 		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$options{href}', '$$options{target}')} else {document.body.style.cursor = 'default'; nop ();}];
+		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope($cursor_state '$$options{href}', '$$options{target}')} else {document.body.style.cursor = 'default'; nop ();}];
+	} elsif ($options -> {no_wait_cursor}) {
+	    $options -> {onclick} = qq[onclick="$cursor_state  void(0);"];
 	} 
 	
 	if ($options -> {href} =~ /^java/) {
@@ -2498,13 +2506,17 @@ sub draw_centered_toolbar_button {
 
 	$options -> {target} ||= '_self';
 
+	my $cursor_state = $options -> {no_wait_cursor} ? q[; window.document.body.onbeforeunload = function() {document.body.style.cursor = 'default';};] : '';
+
 	if ($options -> {confirm}) {
 		my $salt = rand;
 		my $msg = js_escape ($options -> {confirm});
 		$options -> {preconfirm} ||= 1;
 		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
 		my $href = js_escape ($options -> {href});
-		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {nope ($href, '$options->{target}')} else {document.body.style.cursor = 'default'; nop ();} ];
+		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {$cursor_state nope ($href, '$options->{target}')} else {document.body.style.cursor = 'default'; nop ();} ];
+        } elsif ($options -> {no_wait_cursor}) {
+		$options -> {onclick} = qq{onclick="$cursor_state; void(0);"};
 	} 	
 
 	if ($options -> {href} =~ /^java/) {
@@ -3008,6 +3020,9 @@ sub draw_text_cell {
 		if ($data -> {href} && !$_REQUEST {lpt}) {
 			check_href ($data) unless $data -> {no_check_href};
 			$data -> {a_class} ||= $options -> {a_class} || 'row-cell';
+			if ($data -> {no_wait_cursor}) {
+				$data -> {onclick} = qq[onclick="window.document.body.onbeforeunload = function() {document.body.style.cursor = 'default';}; void(0);"];
+			}
 		}
 		else {
 			delete $data -> {href};

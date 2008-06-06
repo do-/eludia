@@ -1879,6 +1879,7 @@ sub draw_input_cell {
 	$data -> {label} =~ s{\"}{\&quot;}gsm;
 
 	return qq {<td $$data{title} $attributes><nobr><input type="text" name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" onKeyDown="tabOnEnter()"></nobr></td>};
+#	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (window.event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="scrollable_table_is_blocked = true; " onBlur="scrollable_table_is_blocked = false; ">};
 
 }
 
