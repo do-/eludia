@@ -1851,7 +1851,7 @@ sub js_set_select_option {
 	return ($fallback_href || $i) unless $_REQUEST {select};
 
 	my $a = $_JSON -> encode ({
-		question => "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?",
+		$conf -> {core_no_confirm_other} ? () : (question => "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?"),
 		id       => $item -> {id},
 		label    => $item -> {label},
 	});

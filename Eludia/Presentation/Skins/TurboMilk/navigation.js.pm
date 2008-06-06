@@ -596,7 +596,7 @@ function setCursor (w, c) {
 
 function invoke_setSelectOption (a) {
 
-	if (window.confirm (a.question)) {	
+	if (!a.question || window.confirm (a.question)) {	
 		var ws = ancestor_window_with_child ('__body_iframe');		
 		if (ws) ws.window._setSelectOption (a.id, a.label);
 	} 
