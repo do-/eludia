@@ -718,8 +718,8 @@ sub do_delete_DEFAULT {
 sub do_undelete_DEFAULT {
 
 	my $extra = '';
-	$extra .= ', is_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {is_merged_to};
-	$extra .= ', id_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {id_merged_to};
+	$extra .= ', is_merged_to = 0' if $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {is_merged_to};
+	$extra .= ', id_merged_to = 0' if $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {id_merged_to};
 
 	sql_do ("UPDATE $_REQUEST{type} SET fake = 0 $extra WHERE id = ?", $_REQUEST{id});
 
