@@ -593,6 +593,17 @@ sub draw__boot {
 	if (($conf -> {core_gzip} or $preconf -> {core_gzip}) && ($r -> headers_in -> {'Accept-Encoding'} !~ /gzip/)) {
 		$propose_gzip = 1;
 	}
+	
+	my $delay = 0;
+	my $img = "$_REQUEST{__static_url}/0.gif";
+	my $transition = '';
+	
+	if ($conf -> {splash}) {
+		$delay = $conf -> {splash} -> {delay} || 1000;
+		$img = "$_REQUEST{__static_site}/i/$conf->{splash}->{src}";
+		$conf -> {splash} -> {effect} ||= 'Fade(Duration=1)';
+		$transition = "<HEAD><meta http-equiv='Page-Exit' content='progid:DXImageTransform.Microsoft.$conf->{splash}->{effect}'></HEAD>";
+	}
 
 	$_REQUEST {__on_load} = <<EOJS;
 	
@@ -627,15 +638,24 @@ sub draw__boot {
 			
 		}					
 						
-		nope ('$_REQUEST{__uri}?type=logon&redirect_params=$_REQUEST{redirect_params}', '_top');
+		setTimeout ("nope ('$_REQUEST{__uri}?type=logon&redirect_params=$_REQUEST{redirect_params}', '_top')", $delay);
 
-		setTimeout ("document.getElementById ('abuse_1').style.display = 'block'", 10000);
+		setTimeout ("document.getElementById ('splash').style.display = 'none'; document.getElementById ('abuse_1').style.display = 'block'", 10000);
 		
 EOJS
 
 	return <<EOH
-	
-			<img src="$_REQUEST{__static_url}/0.gif" width=100% height=20%>
+
+		$transition	
+
+
+		<table id=splash width=100% height=100% border=0 cellspacing=0 cellpadding=0>
+			<tr>
+				<td valign=center align=center>
+					<img src="$img" valign=middle align=center>
+				</td>
+			</tr>
+		</table>	
 		
 			<center>
 
