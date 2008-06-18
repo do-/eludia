@@ -6,7 +6,9 @@ sub send_mail {
 
 	my ($options) = @_;
 	
-	warn "send_mail: " . Dumper ($options);
+	my ($s, $i, $h, $d, $m, $y) = localtime (time());
+	my $time = sprintf ("%d-%02d-%02d %02d:%02d:%02d", $y + 1900, $m + 1, $d, $h, $i, $s);
+	warn "send_mail ($time): " . Dumper ($options);
 	
 	my $to = $options -> {to};
 	
