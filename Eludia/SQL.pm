@@ -646,23 +646,21 @@ sub sql_select_vocabulary {
 	}
 	
 	$options -> {label} .= ', parent' if $options -> {tree};
-		
-	my $list = sql_select_all ("SELECT id, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit");
 	
-	if ($options -> {tree}) {
-	
-		$list = tree_sort ($list);
-		
-		if (!$_REQUEST {__read_only} || $_REQUEST {__only_form}) {
+	my @list;
 
-			foreach (@$list) { $_ -> {label} = ('&nbsp;&nbsp;' x $_ -> {level}) . $_ -> {label} }
+	tie @list, 'Eludia::Vocabulary', {
 	
-		}
+		sql => "SELECT id, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit",
 		
-	}
-
-	return $list;
-	
+		_REQUEST => \%_REQUEST,
+		
+		package => __PACKAGE__,
+		
+	};
+		
+	return \@list;
+			
 }
 
 ################################################################################

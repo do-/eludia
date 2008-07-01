@@ -1547,32 +1547,41 @@ sub draw_form_field_static {
 					
 			if (defined $value && $value ne '') {
 			
-			
-				if ($value == 0) {
+				my $tied = tied @{$options -> {values}};
+					
+				if ($tied && !$tied -> {body}) {
 				
-					foreach (@{$options -> {values}}) {
-					
-						next if $_ -> {id} ne $value;
-						$item = $_;
-						$static_value = $item -> {label};
-						last;
-						
-					}
-					
+					$static_value = $tied -> _select_label ($value) if $value > 0;
+				
 				}
 				else {
-					
-					foreach (@{$options -> {values}}) {
-					
-						next if $_ -> {id} != $value;
-						$item = $_;
-						$static_value = $item -> {label};
-						last;
-						
+			
+					if ($value == 0) {
+
+						foreach (@{$options -> {values}}) {
+
+							next if $_ -> {id} ne $value;
+							$item = $_;
+							$static_value = $item -> {label};
+							last;
+
+						}
+
+					}
+					else {
+
+						foreach (@{$options -> {values}}) {
+
+							next if $_ -> {id} != $value;
+							$item = $_;
+							$static_value = $item -> {label};
+							last;
+
+						}
+
 					}
 					
 				}
-			
 			
 			}			
 			

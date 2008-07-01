@@ -247,6 +247,7 @@ Eludia/Presentation/Skins/TurboMilk/btn_r.gif.pm
 Eludia/Presentation/Skins/TurboMilk/cnt_tbr_bg.gif.pm
 Eludia/Presentation/Skins/TurboMilk/colors.html.pm
 Eludia/Presentation/Skins/TurboMilk/dialog.html.pm
+Eludia/Presentation/Skins/TurboMilk/eludia.css.gz.pm
 Eludia/Presentation/Skins/TurboMilk/eludia.css.pm
 Eludia/Presentation/Skins/TurboMilk/exclam.gif.pm
 Eludia/Presentation/Skins/TurboMilk/favicon.ico.pm
@@ -290,7 +291,9 @@ Eludia/Presentation/Skins/TurboMilk/menu_bg_s.gif.pm
 Eludia/Presentation/Skins/TurboMilk/menu_bottom.gif.pm
 Eludia/Presentation/Skins/TurboMilk/menu_button.gif.pm
 Eludia/Presentation/Skins/TurboMilk/menuarrow.gif.pm
+Eludia/Presentation/Skins/TurboMilk/navigation.js.gz.pm
 Eludia/Presentation/Skins/TurboMilk/navigation.js.pm
+Eludia/Presentation/Skins/TurboMilk/navigation_setup.js.gz.pm
 Eludia/Presentation/Skins/TurboMilk/navigation_setup.js.pm
 Eludia/Presentation/Skins/TurboMilk/pager_f.gif.pm
 Eludia/Presentation/Skins/TurboMilk/pager_l.gif.pm
@@ -398,6 +401,7 @@ Eludia/SQL/Oracle.pm
 Eludia/SQL/SQLite.pm
 Eludia/Util.pm
 Eludia/Validators.pm
+Eludia/Vocabulary.pm
 lib/DBIx/ModelUpdate.pm
 lib/DBIx/ModelUpdate/MicrosoftSQLServer.pm
 lib/DBIx/ModelUpdate/MySQL.pm

@@ -65,6 +65,7 @@ BEGIN {
 		require Eludia::Presentation;
 		require Eludia::SQL;
 		require Eludia::FileDumpHash;
+		require Eludia::Vocabulary;
 		$preconf -> {core_path} = __FILE__;
 	}
 	
