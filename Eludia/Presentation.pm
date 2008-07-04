@@ -2770,7 +2770,7 @@ sub draw_menu {
 
 		register_hotkey ($type, 'href', 'main_menu_' . $type -> {name}, $conf -> {kb_options_menu});
 		
-		if ($_REQUEST {__edit} && !$type -> {no_off}) {
+		if ($_REQUEST {__edit} && !($type -> {no_off} || $_SKIN -> {options} -> {core_unblock_navigation})) {
 			$type -> {href} = "javaScript:alert('$$i18n{save_or_cancel}'); document.body.style.cursor = 'default'; nop ();";
 		}
 		elsif ($type -> {no_page}) {
@@ -2784,8 +2784,8 @@ sub draw_menu {
 
 		$type -> {onmouseout} = "menuItemOut ()";
 
-		if (ref $type -> {items} eq ARRAY && !$_REQUEST {__edit}) {
-			$type -> {vert_menu} = draw_vert_menu ($type -> {name}, $type -> {items});
+		if (ref $type -> {items} eq ARRAY && (!$_REQUEST {__edit} || $_SKIN -> {options} -> {core_unblock_navigation})) {
+			$type -> {vert_menu} = draw_vert_menu ($type -> {name}, $type -> {items}, 0, 1);
 			$type -> {onhover} = "menuItemOver(this, '$$type{name}')";
 		} else {
 			$type -> {onhover} = "menuItemOver(this)";
@@ -2806,7 +2806,7 @@ sub draw_menu {
 
 sub draw_vert_menu {
 
-	my ($name, $types, $level) = @_;
+	my ($name, $types, $level, $is_main) = @_;
 	
 	$level ||= 1;
 	
@@ -2818,7 +2818,7 @@ sub draw_vert_menu {
 
 			my $sublevel = $level + 1;
 			$type -> {name}     ||= '' . $type if $type -> {items};
-			$type -> {vert_menu}  = draw_vert_menu ($type -> {name}, $type -> {items}, $sublevel);
+			$type -> {vert_menu}  = draw_vert_menu ($type -> {name}, $type -> {items}, $sublevel, $is_main);
 
 			$type -> {onhover} = "menuItemOver (this, '$$type{name}', '$name', $level)";
 			$type -> {onmouseout} = "menuItemOut ()";
@@ -2836,7 +2836,10 @@ sub draw_vert_menu {
 
 			$type -> {target}   ||= "_self";
 
-			$type -> {onclick} = $type -> {href} =~ /^javascript\:/i ? $' : "hideSubMenus(0); activate_link('$$type{href}', '$$type{target}')";  #'
+			$type -> {onclick} = 
+				$type -> {href} =~ /^javascript\:/i ? $' : 
+				$_SKIN -> {options} -> {core_unblock_navigation} ? "hideSubMenus(0); if (!check_edit_mode (this, '$$type{href}')) activate_link('$$type{href}', '$$type{target}')" :
+				"hideSubMenus(0); activate_link('$$type{href}', '$$type{target}')";  #'
 			$type -> {onclick} =~ s{[\n\r]}{}gsm;
 		}
 	
@@ -3723,8 +3726,7 @@ sub draw_node {
 	
 	}
 
-	$i -> {__menu} = draw_vert_menu ($i, \@buttons) 
-		if ((grep {$_ ne BREAK} @buttons) > 0);
+	$i -> {__menu} = draw_vert_menu ($i, \@buttons) if ((grep {$_ ne BREAK} @buttons) > 0);
 		
 	return 	$_SKIN -> draw_node ($options, $i);
 	

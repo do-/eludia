@@ -18,7 +18,11 @@ BEGIN {
 ################################################################################
 
 sub options {
-	return {};
+
+	return {
+		core_unblock_navigation => $preconf -> {core_unblock_navigation},
+	};
+	
 }
 
 ################################################################################
@@ -28,6 +32,8 @@ sub register_hotkey {
 	my ($_SKIN, $hashref) = @_;
 
 	$hashref -> {label} =~ s{\&(.)}{<u>$1</u>} or return undef;
+	
+	return undef if $_REQUEST {__edit};
 
 	my $c = $1;
 		
@@ -1716,7 +1722,7 @@ sub draw_dump_button {
 sub draw_menu {
 
 	my ($_SKIN, $_options) = @_;
-	
+		
 	my @types = (@{$_options -> {left_items}}, BREAK, @{$_options -> {right_items}});
 	
 	my $colspan = 1 + @types;
@@ -1731,11 +1737,13 @@ sub draw_menu {
 				<td background="$_REQUEST{__static_url}/menu_bg_s.gif?$_REQUEST{__static_salt}" width=0><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=0 border=0></td>
 EOH
 
+	my $core_unblock_navigation = $preconf -> {core_unblock_navigation} || 0;
+
 	foreach my $type (@types) {
 
 		next if ($type -> {name} eq '_logout');
 		
-		$_REQUEST {__menu_links} .= "<a id='main_menu_$$type{name}' target='$$type{target}' href='$$type{href}'>-</a>";
+		$_REQUEST {__menu_links} .= "<a id='main_menu_$$type{name}' target='$$type{target}' href='$$type{href}' onclick='return !check_edit_mode (this);'>-</a>";
 		
 		$type -> {target} = '_body_iframe' if $type -> {target} eq '_self';
 
@@ -1745,8 +1753,8 @@ EOH
 		}
 		
 		$html .= <<EOH;
-			<td onmouseover="if (!edit_mode) {$$type{onhover}; subsets_are_visible = 0;}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
-				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1 @{[ $type -> {name} eq '_dump' ? '' : 'onclick="return !check_edit_mode ();"' ]}>&nbsp;$$type{label}&nbsp;</a>&nbsp;
+			<td onmouseover="if (!edit_mode || $core_unblock_navigation) {$$type{onhover}; subsets_are_visible = 0;}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
+				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1 @{[ $type -> {name} eq '_dump' ? '' : 'onclick="return !check_edit_mode (this);"' ]}>&nbsp;$$type{label}&nbsp;</a>&nbsp;
 			</td>
 EOH
 			
@@ -1772,7 +1780,7 @@ EOH
 
 sub draw_vert_menu {
 
-	my ($_SKIN, $name, $types, $level) = @_;
+	my ($_SKIN, $name, $types, $level, $is_main) = @_;
 		
 	my $html = <<EOH;
 		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:100">
@@ -2431,20 +2439,60 @@ EOIFRAME
 	my $__read_only = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
 	
 	$_REQUEST {__script} .= <<EOH;
+
 		var edit_mode = null;
 		var menu_md5 = '$menu_md5';
 		var __read_only = $__read_only;
 		var __last_last_query_string = '$_REQUEST{__last_query_string}';
 
-		function check_edit_mode () {
-			if (edit_mode) {
-				alert('$$i18n{save_or_cancel}'); 
-				document.body.style.cursor = 'default'; 
-				return true;
-			}
-			return false;
-		}
 EOH
+
+	if ($preconf -> {core_unblock_navigation}) {
+	
+		$_REQUEST {__script} .= <<EOH;
+
+			function check_edit_mode (a, fallback_href) {
+
+				if (edit_mode) {
+
+					var arg   = Array ();
+					arg.href  = a.href ? a.href : fallback_href;
+					arg.title = a.innerText;
+
+					window.showModelessDialog('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?$_REQUEST{__static_salt}', arg, 'resizable:yes;unadorned:yes;status:yes');
+					document.body.style.cursor = 'default'; 
+					blockEvent ();
+					return true;
+
+				}
+
+				return false;
+
+			}
+EOH
+			
+	
+	}
+	else {
+	
+		$_REQUEST {__script} .= <<EOH;
+
+			function check_edit_mode (a, fallback_href) {
+
+				if (edit_mode) {
+
+					alert('$$i18n{save_or_cancel}'); 
+					document.body.style.cursor = 'default'; 
+					return true;
+
+				}
+
+				return false;
+
+			}
+EOH
+	
+	}
 
 	if ($$page{auth_toolbar}) {
 		$$page{auth_toolbar} = "<tr height=48><td height=48>$$page{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>";

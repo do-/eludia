@@ -119,16 +119,6 @@ sub setup_skin {
 	$_REQUEST {__static_url}  = '/i/_skins/' . $_REQUEST {__skin};
 	$_REQUEST {__static_salt} = $_REQUEST {sid} || rand ();
 
-	$_SKIN -> {options} ||= $_SKIN -> options;
-
-	$_REQUEST {__no_navigation} ||= $_SKIN -> {options} -> {no_navigation};
-	
-	check_static_files ();
-	
-	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
-
-	setup_json ();
-
 	foreach my $package ($_SKIN, $_JS_SKIN) {
 
 		attach_globals ($_PACKAGE => $package, qw(
@@ -149,6 +139,16 @@ sub setup_skin {
 		));
 
 	}
+
+	$_SKIN -> {options} ||= $_SKIN -> options;
+
+	$_REQUEST {__no_navigation} ||= $_SKIN -> {options} -> {no_navigation};
+	
+	check_static_files ();
+	
+	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
+
+	setup_json ();
 
 }
 

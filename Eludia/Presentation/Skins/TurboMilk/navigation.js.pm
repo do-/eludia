@@ -200,8 +200,18 @@ function check_top_window () {
 }
 
 function activate_link_by_id (id) {
+
 	var a = document.getElementById (id);
-	activate_link (a.href, a.target);
+
+	if (a.onclick) {
+		try { window.event.cancelBubble = false } catch (e) {}
+		a.onclick ();
+	}
+	
+	if (!window.event.cancelBubble) {
+		a.click ();
+	}
+
 }
 
 function start_keepalive (timeout) {
@@ -473,18 +483,23 @@ function menuItemOver (td, child, div, level) {
 	clearTimeout(timer);
 
 	if (div) {
+		
 		var current_submenu = document.getElementById ('vert_menu_' + div);
+		
+		if (last_vert_menu [level] && last_vert_menu [level].div) {
 
-		if (last_vert_menu [level].div != current_submenu) {
-			hideSubMenus (level + 1);
-			last_vert_menu [level].div = current_submenu;
-		} else {
-			if (last_vert_menu [level].td && last_vert_menu [level].td != td) {
-				last_vert_menu [level].td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg.gif)';
-
+			if (last_vert_menu [level].div != current_submenu) {
 				hideSubMenus (level + 1);
+				last_vert_menu [level].div = current_submenu;
+			} else {
+				if (last_vert_menu [level].td && last_vert_menu [level].td != td) {
+					last_vert_menu [level].td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg.gif)';
 
+					hideSubMenus (level + 1);
+
+				}
 			}
+		
 		}
 
 		for (var i = last_vert_menu.length - 1; i >= level; i--) {
@@ -493,9 +508,12 @@ function menuItemOver (td, child, div, level) {
 
 		}
 
+		if (last_vert_menu [level]) {
 
-		last_vert_menu [level].td = td;
-		td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg_s.gif)';
+			last_vert_menu [level].td = td;
+			td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg_s.gif)';
+		
+		}
 
 		if (child) {
 			var submenu = document.getElementById ('vert_menu_' + child);
