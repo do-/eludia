@@ -1131,4 +1131,217 @@ sub __log_request_finish_profilinig {
 		$options -> {id_request_log},
 	);
 }
+
+################################################################################
+
+sub sql {
+
+	my ($root, @other) = @_;
+
+	my $select = "SELECT\n $root.*";
+	my $from   = "\nFROM\n $root";
+	my $where  = "\nWHERE\n 1=1";
+	my $order  = [$root . '.label'];
+	my $limit;
+	my @params = ();
+
+	if (@other == 0) {								# sql ('users')   --> sql ('users' => ['id'])
+	
+		@other = (['id']);
+	
+	}
+
+	if (!ref $other [0]) {
+	
+		$other [0] = [id => $other [0]];					# sql (users => 1) --> sql ('users' => ['id' => 1])
+	
+	}
+		
+	my ($filters, @tables) = @other;
+	
+	my $have_id_filter = 0;
+		
+	foreach my $filter (@$filters) {
+	
+		ref $filter or $filter = [$filter, $_REQUEST {$filter}];
+		
+											# 'id_org'       --> ['id_org' => $_REQUEST {id_org}]
+
+		my ($field, $values) = @$filter;
+		
+		if ($field eq 'ORDER') {
+			$order = $values;
+			next;
+		}
+		
+		if ($field eq 'LIMIT') {
+		    $limit = $values;			
+			next;
+		}
+
+		ref $values or $values = [$values];
+		
+		next if $values -> [0] eq '' or $values -> [0] eq '0';
+		
+		$have_id_filter = 1 if $field eq 'id';
+
+		$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';			# 'id_org'       --> 'id_org = '
+		$field =~ /\?/  or $field .= ' ? '; 					# 'id_org LIKE ' --> 'id_org LIKE ?'
+		
+		$field =~ s{([a-z][a-z0-9_]*)}{$root.$1}gsm;
+			
+		if ($field =~ / IN$/) {							# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
+			
+			$where .= "\n  AND ($field (-1, ";
+				
+			foreach (grep {$_} @$values) { $where .= ", $_"}
+								
+			$where .= " ))";
+			
+		}
+		else {
+
+			$where .= "\n AND ($field)";
+			push @params, @$values;
+				
+		}
+			
+	
+	}
+	
+	my $default_columns = '*';
+	
+	unless ($have_id_filter) {
+		
+		$default_columns = 'id, label';
+		
+		$_REQUEST {fake} ||= '0';
+		
+		$where .= $_REQUEST {fake} =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = $_REQUEST{fake}";
+
+	}	
+	
+	foreach my $table (@tables) {
+
+		$table =~ s{\s}{}gsm;
+
+		$table =~ /(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
+
+		my ($name, $columns) = ($1, $2);
+
+		$name =~ /^(\w+?)s?$/;
+		
+		$table = {
+		
+			src     => $table,
+			name    => $name,
+			columns => $columns,
+			single  => $1,
+			
+		}
+
+	}	
+		
+	foreach my $table (@tables) {
+			
+		my $referrer;
+		
+		my $referring_field_name = 'id_' . $table -> {single};
+		
+		my $found = 0;
+		
+		foreach my $t ({name => $root}, @tables) {
+				
+			$DB_MODEL -> {tables} -> {$t -> {name}} -> {columns} -> {$referring_field_name} or next;
+			
+			$from .= "\n LEFT JOIN $table->{name} ON $t->{name}.$referring_field_name = $table->{name}.id";
+			
+			$found = 1;
+			
+			last;
+		
+		}		
+		
+		$found or die "Referrer $referring_field_name not found\n";
+
+		$table -> {columns} ||= $default_columns;
+		
+		my @columns = ();
+		
+		if ($columns eq '*') {
+		
+			@columns = (id, @{$DB_MODEL -> {tables} -> {$table -> {name}} -> {columns}});
+		
+		}
+		else {
+		
+			@columns = split /\s*\,\s*/, $table -> {columns};
+		
+		}
+		
+		foreach my $column (@columns) {
+		
+			$select .= "\n, $table->{name}.$column AS $model_update->{quote}$table->{name}.$column$model_update->{quote}"
+		
+		}
+			
+	}
+	
+	my $sql = $select . $from . $where;
+	
+	unless ($have_id_filter) {
+	
+		$sql .= "\nORDER BY\n ";
+		$sql .= order (@$order);
+
+	}
+	
+	my @result;
+	my $records;
+	
+	if ($have_id_filter || ($limit && @$limit == 1 && $limit -> [0] == 1)) {
+
+		@result = (sql_select_hash ($sql, @params));
+
+		$records = [$result [0]];
+
+	}
+	else {
+	
+		if ($limit) {
+		
+			$sql .= "\nLIMIT\n " . (join ', ', @$limit);
+			
+			@result = (sql_select_all_cnt ($sql, @params));
+	
+			$records = $result [0];
+	
+		}
+		else {
+
+			@result = (sql_select_all ($sql, @params));
+	
+			$records = $result [0];
+		
+		}
+	
+	}	
+	
+	foreach my $record (@$records) {
+		
+		foreach my $key (keys %$record) {			
+		
+			$key =~ /(\w+?)s?\.(\w+)/ or next;						
+						
+			$record -> {$1} -> {$2} = delete $record -> {$key};
+					
+		}
+	
+	}
+	
+	return wantarray ? @result : $result [0];
+
+}
+
+
 1;
