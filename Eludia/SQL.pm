@@ -1153,7 +1153,7 @@ sub sql {
 
 	if (!ref $other [0]) {
 	
-		$other [0] = [id => $other [0]];					# sql (users => 1) --> sql ('users' => ['id' => 1])
+		$other [0] = [[id => $other [0]]];					# sql (users => 1) --> sql ('users' => ['id' => 1])
 	
 	}
 		
@@ -1187,6 +1187,8 @@ sub sql {
 
 		$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';			# 'id_org'       --> 'id_org = '
 		$field =~ /\?/  or $field .= ' ? '; 					# 'id_org LIKE ' --> 'id_org LIKE ?'
+		$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm; 
+		$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;
 		
 		$field =~ s{([a-z][a-z0-9_]*)}{$root.$1}gsm;
 			

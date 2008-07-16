@@ -15,6 +15,7 @@ sub send_mail {
 		##### Multiple recipients
 	
 	if (ref $to eq ARRAY) {
+	
 		foreach (@$to) {
 			$options -> {to} = $_;
 			send_mail ($options);
@@ -48,6 +49,16 @@ sub send_mail {
 		return;
 	}
 	
+		##### Deferred delivery
+
+	if ($preconf -> {mail} -> {defer} && !$options -> {no_defer}) {
+
+		$options -> {no_defer} = 1;
+		defer ('send_mail', [$options], {label => "$real_to: $options->{subject}"});
+		return;
+	
+	}
+
 		##### From address
 
 	$options -> {from} ||= $preconf -> {mail} -> {from};

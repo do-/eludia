@@ -28,8 +28,8 @@ BEGIN {
 	my $conf = join '', (<CONF>);
 	close (CONF);
 
-	$conf =~ s{.*<perl>}{}gsm;
-	$conf =~ s{</perl>.*}{}gsm;
+	$conf =~ s{.*<[Pp]erl\s*>}{}gsm;
+	$conf =~ s{</[Pp]erl\s*>.*}{}gsm;
 	
 	eval "\$^W = 0; $conf";
 	
