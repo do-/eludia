@@ -1136,6 +1136,25 @@ sub __log_request_finish_profilinig {
 
 sub sql {
 
+	if (ref $_[0] eq HASH) {
+	
+		my ($data, $root, @other) = @_;
+
+		my ($records, $cnt, $portion) = sql ($root, @other);
+		
+		$data -> {$root} = $records;
+		
+		if ($portion) {
+		
+			$data -> {cnt}     = $cnt;
+			$data -> {portion} = $portion;
+		
+		}
+		
+		return $data;
+	
+	}
+
 	my ($root, @other) = @_;
 
 	my $select = "SELECT\n $root.*";
@@ -1270,9 +1289,9 @@ sub sql {
 		
 		my @columns = ();
 		
-		if ($columns eq '*') {
+		if ($table -> {columns} eq '*') {
 		
-			@columns = (id, @{$DB_MODEL -> {tables} -> {$table -> {name}} -> {columns}});
+			@columns = ('id', keys %{$DB_MODEL -> {tables} -> {$table -> {name}} -> {columns}});
 		
 		}
 		else {
@@ -1293,6 +1312,8 @@ sub sql {
 	
 	unless ($have_id_filter) {
 	
+		ref $order or $order = [$order];
+		$order -> [0] =~ /\./ or $order -> [0] = $root . '.' . $order -> [0];
 		$sql .= "\nORDER BY\n ";
 		$sql .= order (@$order);
 
@@ -1314,7 +1335,7 @@ sub sql {
 		
 			$sql .= "\nLIMIT\n " . (join ', ', @$limit);
 			
-			@result = (sql_select_all_cnt ($sql, @params));
+			@result = (sql_select_all_cnt ($sql, @params), $limit -> [1]);
 	
 			$records = $result [0];
 	
@@ -1324,11 +1345,11 @@ sub sql {
 			@result = (sql_select_all ($sql, @params));
 	
 			$records = $result [0];
-		
+
 		}
 	
 	}	
-	
+
 	foreach my $record (@$records) {
 		
 		foreach my $key (keys %$record) {			
@@ -1344,6 +1365,5 @@ sub sql {
 	return wantarray ? @result : $result [0];
 
 }
-
 
 1;

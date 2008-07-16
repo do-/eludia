@@ -1428,6 +1428,8 @@ sub add_vocabularies {
 		$item -> {$name} = sql_select_vocabulary ($name, $options);
 		
 	}
+	
+	return $item;
 
 }
 
