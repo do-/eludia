@@ -635,10 +635,19 @@ sub draw_form_field_suggest {
 
 	my ($_SKIN, $options, $data) = @_;
 	
+	$_REQUEST {__script} .= qq{; 	
+	
+		function off_suggest_$options->{name} () {
+			var s = document.getElementById ('_$options->{name}__suggest'); 
+			s.style.display = 'none';
+		}; 
+		
+	};
+	
 	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
-#	$options -> {attributes} -> {onBlur}     .= ";scrollable_table_is_blocked = false; q_is_focused = false; getElementById('_$options->{name}__suggest').style.display = 'none'";
+	$options -> {attributes} -> {onBlur}     .= qq{;scrollable_table_is_blocked = false; q_is_focused = false; _suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);};
 
 	$options -> {attributes} -> {onKeyDown}  .= <<EOH;
 	
@@ -664,6 +673,9 @@ EOH
 	my $id = '' . $options;
 
 	return <<EOH;
+		<script>
+			var _suggest_timer_$options->{name} = null;
+		</script>
 		<input type="text" id="$id" $attributes>
 		<select 
 			id="_$options->{name}__suggest" 
@@ -676,6 +688,12 @@ EOH
 				left    : expression(this.parentElement.offsetLeft + 4);
 				top     : expression(this.parentElement.offsetTop + this.parentElement.parentElement.offsetTop + 5);
 				width   : $options->{attributes}->{size}ex;
+			"
+			onFocus="
+				if (_suggest_timer_$options->{name}) {
+					clearTimeout (_suggest_timer_$options->{name});
+					_suggest_timer_$options->{name} = null;
+				}
 			"
 			onDblClick="
 				var i = getElementById('$id');
