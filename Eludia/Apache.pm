@@ -510,6 +510,20 @@ EOH
 		my $action = $_REQUEST {action};
 
 		if ($action) {
+		
+			if ($_REQUEST {__suggest}) {
+			
+				setup_skin ();
+
+				call_for_role ("draw_item_of_$$page{type}");
+				
+				delete $_REQUEST {id};
+				
+				out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
+				
+				return 200;				
+				
+			}
 
 			undef $__last_insert_id;
 

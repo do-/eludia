@@ -1211,7 +1211,7 @@ sub sql {
 		
 		$field =~ s{([a-z][a-z0-9_]*)}{$root.$1}gsm;
 			
-		if ($field =~ / IN$/) {							# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
+		if ($field =~ /\s+IN\s*$/sm) {						# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
 			
 			$where .= "\n  AND ($field (-1, ";
 				

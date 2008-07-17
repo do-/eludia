@@ -491,6 +491,7 @@ sub draw_form {
 				enctype="$$options{enctype}"
 				action="$_REQUEST{__uri}"
 			>
+			<input type=hidden name="__suggest" value="">
 EOH
 	
 	foreach (@{$options -> {keep_params}}) {
@@ -625,6 +626,72 @@ sub draw_form_field_string {
 	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
 
 	return '<input type="text"' . dump_attributes ($options -> {attributes}) . ' >';
+
+}
+
+################################################################################
+
+sub draw_form_field_suggest {
+
+	my ($_SKIN, $options, $data) = @_;
+	
+	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
+	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
+	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
+	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
+
+	$options -> {attributes} -> {onKeyDown}  .= <<EOH;
+	
+		var s = getElementById('_$options->{name}__suggest');
+
+		if (window.event.keyCode == 40 && s.style.display == 'block') {
+			s.focus ();
+		}
+   
+EOH
+	
+	
+	$options -> {attributes} -> {onKeyPress} .= <<EOH;
+		; var f = this.form;
+		var s = f.elements ['__suggest'];
+		s.value = '$options->{name}';
+		f.submit ();
+		s.value = '';
+EOH
+
+	my $attributes = dump_attributes ($options -> {attributes});
+	
+	my $id = '' . $options;
+
+	return <<EOH;
+		<input type="text" id="$id" $attributes>
+		<select 
+			id="_$options->{name}__suggest" 
+			name="_$options->{name}__suggest" 
+			size="$options->{lines}"
+			style="
+				display : none;
+				position: absolute;
+				border  : solid black 1px;
+				left    : expression(this.parentElement.offsetLeft + 4);
+				top     : expression(this.parentElement.offsetTop + this.parentElement.parentElement.offsetTop + 5);
+				width   : $options->{attributes}->{size}ex;
+			"
+			onDblClick="
+				var i = getElementById('$id');
+				i.value = this.options[this.selectedIndex].text;
+				i.focus ();
+				this.style.display = 'none';
+			"
+			onKeyPress="
+				var i = getElementById('$id');
+				i.value = this.options[this.selectedIndex].text;
+				i.focus ();
+				this.style.display = 'none';
+			"
+		>
+		</select>
+EOH
 
 }
 
@@ -3118,6 +3185,41 @@ sub dialog_open {
 	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
 	
 	return "javaScript:var result=window.showModalDialog('$url', dialog_open_$options->{id} (), '$o');document.body.style.cursor='default';void(0);";
+
+}
+
+################################################################################
+
+sub draw_suggest_page {
+
+	my ($_SKIN, $data) = @_;
+			
+	my $a = $_JSON -> encode ([map {$_ -> {label}} @$data]);
+	
+	my $size = 0 + @$data;
+	
+	$size = 2  if $size < 2;
+	$size = 10 if $size > 10;
+	
+	return <<EOH;
+<html>
+	<head>
+		<script>
+			function r () {
+				var a = $a;
+				var s = parent.document.getElementById ('_$_REQUEST{__suggest}__suggest');				
+				s.options.length = 0;
+				for (var i = 0; i < a.length; i++) {
+					s.options [i] = new Option (a [i], i);
+				}
+				s.size = $size;
+				s.style.display = 'block';
+			}
+		</script>
+	</head>
+	<body onLoad="r()"></body>
+</html>
+EOH
 
 }
 

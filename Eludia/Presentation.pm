@@ -982,7 +982,7 @@ sub draw_form {
 
 	my ($options, $data, $fields) = @_;
 	
-	return '' if $options -> {off};
+	return '' if $options -> {off} && $data;
 
 	$options -> {hr} = defined $options -> {hr} ? $options -> {hr} : 10;
 	$options -> {hr} = $_REQUEST {__tree} ? '' : draw_hr (height => $options -> {hr});
@@ -1029,7 +1029,7 @@ sub draw_form {
 		if (ref $field eq ARRAY) {
 			my @row = ();
 			foreach (@$field) {
-				next if $_ -> {off};
+				next if $_ -> {off} && $data -> {id};
 				next if $_REQUEST {__read_only} && $_ -> {type} eq 'password';
 				push @row, $_;
 			}
@@ -1037,7 +1037,7 @@ sub draw_form {
 			$row = \@row;
 		}
 		else {
-			next if $field -> {off};
+			next if $field -> {off} && $data -> {id};
 			next if $_REQUEST {__read_only} && $field -> {type} eq 'password';
 			$row = [$field];
 		}
@@ -1326,6 +1326,50 @@ sub draw_form_field_string {
 
 ################################################################################
 
+sub draw_form_field_suggest {
+
+	my ($options, $data) = @_;
+
+	$options -> {max_len} ||= $options -> {size};
+	$options -> {max_len} ||= 255;
+	$options -> {attributes} -> {maxlength} = $options -> {max_len};
+	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';
+
+
+	$options -> {size}    ||= 120;
+	$options -> {attributes} -> {size}      = $options -> {size};
+	$options -> {lines}   ||= 10;
+	
+	$options -> {value}   ||= $data -> {$options -> {name}};
+	
+	my $id = $_REQUEST {id};
+	
+	if ($data -> {id}) {
+
+		$_REQUEST {id} = $options -> {value};
+		my $h = &{$options -> {values}} ();
+		$options -> {value} = $h -> {label};
+		$_REQUEST {id} = $id;
+
+	}
+	elsif ($_REQUEST {__suggest} eq $options -> {name}) {
+	
+		our $_SUGGEST_SUB = $options -> {values};
+	
+	}
+	
+	$options -> {value} =~ s/\"/\&quot\;/gsm; #";
+	
+	$options -> {attributes} -> {value} = $options -> {value};	
+	$options -> {attributes} -> {name}  = '_' . $options -> {name};
+	$options -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
+
+	return $_SKIN -> draw_form_field_suggest (@_);
+	
+}
+
+################################################################################
+
 sub draw_form_field_date {
 
 	my ($_options, $data) = @_;	
@@ -1404,7 +1448,7 @@ sub draw_form_field_hgroup {
 			
 	foreach my $item (@{$options -> {items}}) {
 	
-		next if $item -> {off};
+		next if $item -> {off} && $data -> {id};
 		
 		$item -> {label} .= ': ' if $item -> {label} && !$item -> {no_colon};
 		
@@ -1633,7 +1677,7 @@ sub draw_form_field_radio {
 
 	my ($options, $data) = @_;
 			
-	$options -> {values} = [ grep { !$_ -> {off} } @{$options -> {values}} ];
+	$options -> {values} = [ grep { !$_ -> {off} } @{$options -> {values}} ] if $data -> {id};
 
 	foreach my $value (@{$options -> {values}}) {
 	
@@ -2000,7 +2044,7 @@ sub draw_form_field_tree {
 
 	my ($options, $data) = @_;
 	
-	return '' if $options -> {off};
+	return '' if $options -> {off} && $data -> {id};
 	
 	my $v = $options -> {value} || $data -> {$options -> {name}};
 
@@ -3796,6 +3840,16 @@ sub draw__svn {
 				]),
 			}
 		);
+
+}
+
+################################################################################
+
+sub draw_suggest_page {
+
+	my ($data) = @_;
+	
+	return $_SKIN -> draw_suggest_page ($data);
 
 }
 
