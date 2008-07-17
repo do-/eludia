@@ -638,7 +638,7 @@ sub draw_form_field_suggest {
 	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
-	$options -> {attributes} -> {onBlur}     .= ";scrollable_table_is_blocked = false; q_is_focused = false; getElementById('_$options->{name}__suggest').style.display = 'none'";
+#	$options -> {attributes} -> {onBlur}     .= ";scrollable_table_is_blocked = false; q_is_focused = false; getElementById('_$options->{name}__suggest').style.display = 'none'";
 
 	$options -> {attributes} -> {onKeyDown}  .= <<EOH;
 	
