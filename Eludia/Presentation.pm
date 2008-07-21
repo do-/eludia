@@ -1345,11 +1345,20 @@ sub draw_form_field_suggest {
 	my $id = $_REQUEST {id};
 	
 	if ($data -> {id}) {
+	
+		if ($options -> {value} == 0) {
+		
+			$options -> {value} = '';
+		
+		}
+		else {
 
-		$_REQUEST {id} = $options -> {value};
-		my $h = &{$options -> {values}} ();
-		$options -> {value} = $h -> {label};
-		$_REQUEST {id} = $id;
+			$_REQUEST {id} = $options -> {value};
+			my $h = &{$options -> {values}} ();
+			$options -> {value} = $h -> {label};
+			$_REQUEST {id} = $id;
+
+		}
 
 	}
 	elsif ($_REQUEST {__suggest} eq $options -> {name}) {
@@ -1642,6 +1651,27 @@ sub draw_form_field_static {
 		}
 		elsif (ref $options -> {values} eq HASH) {
 			$static_value = $options -> {values} -> {$value};
+		}
+		elsif (ref $options -> {values} eq CODE) {
+		
+			if ($data -> {id}) {
+
+				if ($value == 0) {
+
+					$static_value = '';
+
+				}
+				else {
+
+					$_REQUEST {id} = $value;
+					my $h = &{$options -> {values}} ();
+					$static_value = $h -> {label};
+					$_REQUEST {id} = $id;
+
+				}
+
+			}		
+		
 		}
 		else {
 			$static_value = defined $options -> {value} ? $options -> {value} : $value;

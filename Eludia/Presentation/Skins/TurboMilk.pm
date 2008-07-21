@@ -647,7 +647,7 @@ sub draw_form_field_suggest {
 	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
-	$options -> {attributes} -> {onBlur}     .= qq{;scrollable_table_is_blocked = false; q_is_focused = false; _suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);};
+	$options -> {attributes} -> {onBlur}     .= qq{;scrollable_table_is_blocked = false; q_is_focused = false; getElementById('_$options->{name}__label').value = this.value; _suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);};
 
 	$options -> {attributes} -> {onKeyDown}  .= <<EOH;
 	
@@ -676,7 +676,7 @@ EOH
 		<script>
 			var _suggest_timer_$options->{name} = null;
 		</script>
-		<input type="text" id="$id" $attributes>
+		<input type="text" id="$id" $attributes><input type="hidden" id="_$options->{name}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}">
 		<select 
 			id="_$options->{name}__suggest" 
 			name="_$options->{name}__suggest" 
@@ -686,7 +686,7 @@ EOH
 				position: absolute;
 				border  : solid black 1px;
 				left    : expression(this.parentElement.offsetLeft + 4);
-				top     : expression(this.parentElement.offsetTop + this.parentElement.parentElement.offsetTop + 5);
+				top     : expression(this.parentElement.parentElement.offsetTop + 55);
 				width   : $options->{attributes}->{size}ex;
 			"
 			onFocus="
@@ -3214,9 +3214,6 @@ sub draw_suggest_page {
 			
 	my $a = $_JSON -> encode ([map {$_ -> {label}} @$data]);
 	
-	my $size = 0 + @$data;
-	
-	$size = 2  if $size < 2;
 	$size = 10 if $size > 10;
 	
 	return <<EOH;
@@ -3230,8 +3227,15 @@ sub draw_suggest_page {
 				for (var i = 0; i < a.length; i++) {
 					s.options [i] = new Option (a [i], i);
 				}
-				s.size = $size;
-				s.style.display = 'block';
+				
+				if (a.length > 0) {
+					s.size = a.length > 1 ? a.length : 2;
+					s.style.display = 'block';
+				}
+				else {
+					s.style.display = 'none';
+				}
+				
 			}
 		</script>
 	</head>

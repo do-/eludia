@@ -42,9 +42,10 @@ EOJ
 			if (e && e[0]) { try {e[0].focus ()} catch (e) {} }				
 EOJ
 	}
+	
+	$_REQUEST {__no_back} or $_REQUEST {__script} .= 'history.go (-1);';
 								
 	$_REQUEST {__script} .= <<EOJ;
-			history.go (-1);
 			var data = $data;
 			alert (data [0]);
 			window.parent.document.body.style.cursor = 'default';

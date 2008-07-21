@@ -690,6 +690,11 @@ sub sql_select_id {
 	my $record = {};
 	
 	foreach my $lookup_fields (@lookup_field_sets) {
+	
+		if (ref $lookup_fields eq CODE) {		
+			next if &$lookup_fields ();
+			return 0;		
+		}
 
 		my $sql = "SELECT * FROM $table WHERE fake <= 0";
 		my @params = ();
@@ -1200,7 +1205,7 @@ sub sql {
 
 		ref $values or $values = [$values];
 		
-		next if $values -> [0] eq '' or $values -> [0] eq '0';
+		next if $values -> [0] eq '' or $values -> [0] eq '0' or $values -> [0] eq '0000-00-00';
 		
 		$have_id_filter = 1 if $field eq 'id';
 
