@@ -1208,11 +1208,6 @@ sub sql {
 		next if $values -> [0] eq '' or $values -> [0] eq '0' or $values -> [0] eq '0000-00-00';
 		
 		$have_id_filter = 1 if $field eq 'id';
-
-		$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';			# 'id_org'       --> 'id_org = '
-		$field =~ /\?/  or $field .= ' ? '; 					# 'id_org LIKE ' --> 'id_org LIKE ?'
-		$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm; 
-		$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;
 		
 		$field =~ s{([a-z][a-z0-9_]*)}{$root.$1}gsm;
 			
@@ -1226,6 +1221,11 @@ sub sql {
 			
 		}
 		else {
+
+			$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';		# 'id_org'       --> 'id_org = '
+			$field =~ /\?/  or $field .= ' ? '; 				# 'id_org LIKE ' --> 'id_org LIKE ?'
+			$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm; 
+			$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;
 
 			$where .= "\n AND ($field)";
 			push @params, @$values;
