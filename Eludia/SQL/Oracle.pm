@@ -55,8 +55,30 @@ sub sql_do_refresh_sessions {
 sub sql_execute {
 	
 	my ($st, @params) = sql_prepare (@_);
+	
+	my $affected;
+	
+	while (1) {
 
-	my $affected = $st -> execute (@params);
+		eval { $affected = $st -> execute (@params); };
+		
+		$@                   or last;
+		
+		$@ =~ /ORA-01722/    or die $@;		
+		$@ =~ /\<\*\>p(\d+)/ or die $@;
+		
+		my $i = $1 - 1;
+		
+		my $old = $params [$i];
+		
+		$params [$i] =~ s{[^\d\.\,\-]}{}gsm;
+		$params [$i] =~ y{,}{.};
+		$params [$i] =~ s{\.+}{\.}gsm;
+		$params [$i] += 0;
+		
+		$params [$i] > 0 or $params [$i] < 0 or $params [$i] eq '0' or die "Значение '$old' не может быть истолковано как число.";
+
+	}
 	
 	return wantarray ? ($st, $affected) : $st;
 

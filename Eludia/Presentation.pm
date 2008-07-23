@@ -3638,7 +3638,7 @@ sub draw_table {
 
 			push @{$headers -> [2]}, {
 				label => '‗',
-				title => "‗םגאנü ${year} ד.",
+				title => "ÿםגאנü ${year} ד.",
 				attributes => {id => "gantt_${year}_01"},
 			};
 			push @{$headers -> [2]}, {
@@ -3668,7 +3668,7 @@ sub draw_table {
 			};
 			push @{$headers -> [2]}, {
 				label => 'È',
-				title => "ט‏üכü ${year} ד.",
+				title => "ט‏כü ${year} ד.",
 				attributes => {id => "gantt_${year}_07"},
 			};
 			push @{$headers -> [2]}, {
