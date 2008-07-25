@@ -12,7 +12,9 @@ sub vld_date {
 	}
 	
 	my ($_sec, $_min, $_hour, $_mday, $_mon, $_year, $_wday, $_yday, $_isdst) = localtime (time);
-	
+
+	$_REQUEST {$name} =~ s{^(\d\d\d\d)-(\d\d)-(\d\d)$}{$3.$2.$1};
+
 	my ($day, $month, $year) = split /\D+/, $_REQUEST {$name};
 	
 	local $SIG {__DIE__} = 'DEFAULT';

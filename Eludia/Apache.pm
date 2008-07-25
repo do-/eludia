@@ -538,6 +538,8 @@ EOH
 			my $error_code = undef;
 			eval {	$error_code = call_for_role ($sub_name); };
 			$error_code = $@ if $@;
+			
+			exit if $_REQUEST {__response_sent};
 
 			if ($_USER -> {demo_level} > 0) {
 				($action =~ /^execute/ and $$page{type} eq 'logon') or $error_code ||= '»звините, вы работаете в демонстрационном режиме';
@@ -794,6 +796,7 @@ sub out_html {
 	$r -> header_only && !MP2 or print $html;
 
 	__log_profilinig ($time, ' <out_html: ' . (length $html) . ' bytes>');
+	
 }
 
 #################################################################################

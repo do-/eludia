@@ -2565,7 +2565,7 @@ sub vb {
 		
 	}
 	
-	my $method = $length > 3000 ? 'POST' : 'GET';
+	my $method = $length > 1000 ? 'POST' : 'GET';
 	
 	out_html ({}, <<EOH);
 <html>
@@ -2593,6 +2593,8 @@ sub vb {
 </html>
 EOH
 
+	$_REQUEST {__response_sent} = 1;
+	
 	exit;
 
 }
