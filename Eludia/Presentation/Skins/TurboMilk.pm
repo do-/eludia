@@ -858,6 +858,8 @@ sub draw_form_field_radio {
 				
 	my $html = '<table border=0 cellspacing=2 cellpadding=0 width=100%>';
 	
+	my $n = 0;
+	
 	foreach my $value (@{$options -> {values}}) {
 	
 		delete $value -> {attributes} -> {name};
@@ -867,11 +869,14 @@ sub draw_form_field_radio {
 	
 		my $attributes = dump_attributes ($value -> {attributes});
 		
-		$html .= qq {\n<tr><td class="form-inner" valign=top width=1%><nobr><input class=cbx $attributes id="$value" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false" type="radio" name="_$$options{name}" value="$$value{id}" onClick="is_dirty=true;$$value{onclick}" onKeyDown="tabOnEnter()">&nbsp;$$value{label}</nobr>};
+		(!$n and $options -> {no_br}) or $html .= qq {\n<tr><td class="form-inner" valign=top width=1%>};
+		$html .= qq {\n<nobr><input class=cbx $attributes id="$value" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false" type="radio" name="_$$options{name}" value="$$value{id}" onClick="is_dirty=true;$$value{onclick}" onKeyDown="tabOnEnter()">&nbsp;$$value{label}</nobr>};
 							
 		$value -> {html} or next;
 		
 		$html .= qq{\n\t\t<td class="form-inner"><div style="display:expression(getElementById('$value').checked ? 'block' : 'none')">$$value{html}</div>};
+		
+		$n ++;
 				
 	}
 	
