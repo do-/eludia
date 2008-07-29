@@ -3046,7 +3046,8 @@ dTree.prototype.node = function(node, nodeId) {
 		if (node.context_menu) str += ' oncontextmenu="d.openTo (' + nodeId + ', true, true); open_popup_menu(\'' + node.context_menu + '\'); blockEvent ();"';
 		
 		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc)) str += ' onclick="javascript: ' + this.obj + '.s(' + nodeId + '); "';
-
+		if (node._hc && node.pid != this.root.id) str += ' onDblClick="' + this.obj + '.o(' + nodeId + '); "';
+		
 		str += '>';
 
 	}

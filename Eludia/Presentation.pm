@@ -4110,7 +4110,7 @@ sub dialog_open {
 	
 	check_href ($arg);
 
-	$_REQUEST {__script} .= json_dump_to_function ("dialog_open_$options->{id}" => $arg);
+	$_REQUEST {__script} .= "var dialog_open_$options->{id} = " . $_JSON -> encode ($arg) . ";\n";
 
 	return $_SKIN -> dialog_open ($arg, $options);
 

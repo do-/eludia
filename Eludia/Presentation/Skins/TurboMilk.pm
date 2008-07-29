@@ -3207,7 +3207,7 @@ sub dialog_open {
 	my $url = $ENV{SCRIPT_URI} . '/i/_skins/TurboMilk/dialog.html?' . rand ();
 	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
 	
-	return "javaScript:var result=window.showModalDialog('$url', dialog_open_$options->{id} (), '$o');document.body.style.cursor='default';void(0);";
+	return "javaScript:var result=window.showModalDialog('$url', dialog_open_$options->{id}, '$o');document.body.style.cursor='default';void(0);";
 
 }
 

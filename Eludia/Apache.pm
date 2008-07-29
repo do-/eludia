@@ -199,6 +199,31 @@ sub check_static_files {
 
 	}
 		
+ 	if ($conf -> {core_gzip} or $preconf -> {core_gzip}) {
+
+		foreach my $fn ('navigation.js', 'eludia.css', 'navigation_setup.js') {
+		
+			if (-f "$skin_root/$fn") {
+			
+				my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
+	
+				open (IN, "$skin_root/$fn");
+				my $js = join ('', <IN>);
+				close IN;
+	
+				open (OUT, ">$skin_root/$fn.gz");
+				binmode (OUT);
+	
+				my $z;
+				$x -> deflate ($js, $z) ;
+				$x -> flush ($z) ;
+	
+				print OUT "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $js);
+				close OUT;
+			}
+		}
+	}
+
 	$_SKIN -> {static_ok} = 1;
 
 }
