@@ -595,7 +595,7 @@ EOH
 							set_cookie (
 								-name    =>  'user_login',
 								-value   =>  sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
-								-expires =>  'Sat, 31-Dec-2050 23:59:59 GMT',
+								-expires =>  '+1M', # 'Sat, 31-Dec-2050 23:59:59 GMT',
 								-path    =>  '/',
 							)
 						}
