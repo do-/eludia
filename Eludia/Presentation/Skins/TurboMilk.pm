@@ -660,10 +660,11 @@ sub draw_form_field_suggest {
 EOH
 	
 	
-	$options -> {attributes} -> {onKeyPress} .= <<EOH;
+	$options -> {attributes} -> {onKeyUp} .= <<EOH;
 		; var f = this.form;
 		var s = f.elements ['__suggest'];
 		s.value = '$options->{name}';
+		document.getElementById ('_$options->{name}__label').value = this.value;
 		f.submit ();
 		s.value = '';
 EOH
@@ -676,7 +677,7 @@ EOH
 		<script>
 			var _suggest_timer_$options->{name} = null;
 		</script>
-		<input type="text" id="$id" $attributes><input type="hidden" id="_$options->{name}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}">
+		<input type="text" id="$id" $attributes autocomplete="off"><input type="hidden" id="_$options->{name}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}">
 		<select 
 			id="_$options->{name}__suggest" 
 			name="_$options->{name}__suggest" 
