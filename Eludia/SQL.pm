@@ -657,6 +657,8 @@ sub sql_select_vocabulary {
 		
 		package => __PACKAGE__,
 		
+		tree => $options -> {tree},
+		
 	};
 		
 	return \@list;
@@ -1357,10 +1359,10 @@ sub sql {
 
 	foreach my $record (@$records) {
 		
-		foreach my $key (keys %$record) {			
-		
-			$key =~ /(\w+?)s?\.(\w+)/ or next;						
-						
+		foreach my $key (keys %$record) {
+
+			$key =~ /(\w+?)s?\.(\w+)/ or next;
+
 			$record -> {$1} -> {$2} = delete $record -> {$key};
 					
 		}
