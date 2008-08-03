@@ -3043,7 +3043,7 @@ dTree.prototype.node = function(node, nodeId) {
 
 		if (this.config.useStatusText) str += ' onmouseover="window.status=\'' + node.name + '\';return true;" onmouseout="window.status=\'\';return true;" ';
 
-		if (node.context_menu) str += ' oncontextmenu="d.openTo (' + nodeId + ', true, true); open_popup_menu(\'' + node.context_menu + '\'); blockEvent ();"';
+		if (node.context_menu) str += ' oncontextmenu="' + this.obj + '.s(' + nodeId + '); open_popup_menu(\'' + node.context_menu + '\'); blockEvent ();"';
 		
 		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc)) str += ' onclick="javascript: ' + this.obj + '.s(' + nodeId + '); "';
 		if (node._hc && node.pid != this.root.id) str += ' onDblClick="' + this.obj + '.o(' + nodeId + '); "';
@@ -3185,10 +3185,21 @@ dTree.prototype.s = function(id) {
 dTree.prototype.o = function(id) {
 
 	var cn = this.aNodes[id];
+	
+	if (this._active && !cn._io && cn._hac == 0) {
+	
+		document.body.style.cursor = 'wait';
+	
+		nope (this._href + '&__parent=' + cn.id, 'invisible');
+	
+	}
+	else {
 
-	this.nodeStatus(!cn._io, id, cn._ls);
+		this.nodeStatus(!cn._io, id, cn._ls);
 
-	cn._io = !cn._io;
+		cn._io = !cn._io;
+
+	}
 
 	if (this.config.closeSameLevel) this.closeLevel(cn);
 
@@ -3223,7 +3234,7 @@ dTree.prototype.oAll = function(status) {
 // Opens the tree to a specific node
 
 dTree.prototype.openTo = function(nId, bSelect, bFirst) {
-//	alert (nId);
+
 	if (!bFirst) {
 
 		for (var n=0; n<this.aNodes.length; n++) {
@@ -3239,8 +3250,6 @@ dTree.prototype.openTo = function(nId, bSelect, bFirst) {
 		}
 
 	}
-
-//	alert (nId);
 
 	var cn=this.aNodes[nId];
 	

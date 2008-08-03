@@ -3728,15 +3728,81 @@ sub draw_tree {
 	my ($node_callback, $list, $options) = @_;
 	
 	return '' if $options -> {off};
+	
+	$options -> {in_order} ||= 1 if $options -> {active} >= 2;
+	
+	unless ($options -> {in_order}) {
+	
+		$list = tree_sort ($list);
+		
+		$options -> {in_order};
+	
+	}
+	
+	if ($options -> {active} == 1) {
+	
+		my $idx = {};
+		
+		my @list = ();
+		
+		my $p = {0 + $_REQUEST {__parent} => 1};
+		
+		if ($_REQUEST {__parent} == 0) {
+					
+			foreach (grep {$_ -> {id} == $options -> {selected_node}} @$list) {
+
+				$p -> {$_ -> {id}} -> {parent} = 1;
+
+			}
+		
+		}
+		
+		foreach my $i (@$list) {
+		
+			$i -> {id}     += 0;
+			$i -> {parent} += 0;
+		
+			$idx -> {$i -> {id}} = $i;
+			$idx -> {$i -> {parent}} -> {cnt_children} ++;
+			
+			push @list, $i if $p -> {$i -> {parent}};
+		
+		}
+		
+		$list = \@list;
+	
+	}
+
+	if ($options -> {active}) {
+
+		foreach my $i (@$list) {
+		
+			$i -> {id}     += 0;
+			$i -> {parent} += 0;
+		
+			$idx -> {$i -> {id}} = $i;
+			$idx -> {$i -> {parent}} -> {cnt_actual_children} ++;
+
+		}
+
+	}
 
 	check_href ($options -> {top}) if $options -> {top};
 	
+	my $__parent = delete $_REQUEST {__parent};
+	
+	$options -> {href} ||= {};
+	
+	check_href ($options);
+
+	$_REQUEST {__parent} = $__parent;
+
 	$_REQUEST {__salt} ||= rand () * time ();
 
 	if (ref $options -> {title} eq HASH) {
 				
-			$options -> {title} -> {height} ||= 10;
-			$options -> {title} = draw_window_title ($options -> {title}) if $options -> {title} -> {label};
+		$options -> {title} -> {height} ||= 10;
+		$options -> {title} = draw_window_title ($options -> {title}) if $options -> {title} -> {label};
 		
 	}
 
@@ -3751,7 +3817,7 @@ sub draw_tree {
 	
 	
 	my $html = $_SKIN -> draw_tree ($node_callback, $list, $options);
-	
+
 	return $html;
 
 }

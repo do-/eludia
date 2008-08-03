@@ -1215,11 +1215,11 @@ sub sql {
 			
 		if ($field =~ /\s+IN\s*$/sm) {						# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
 			
-			$where .= "\n  AND ($field (-1, ";
+			$where .= "\n  AND ($field (-1";
 				
-			foreach (grep {$_} @$values) { $where .= ", $_"}
+			foreach (grep {/\d/} @$values) { $where .= ", $_"}
 								
-			$where .= " ))";
+			$where .= "))";
 			
 		}
 		else {
