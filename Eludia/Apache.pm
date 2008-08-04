@@ -136,6 +136,7 @@ sub setup_skin {
 			_JSON
 			tree_sort
 			adjust_esc
+			out_html
 		));
 
 	}
@@ -819,8 +820,12 @@ sub out_html {
 	$r -> send_http_header unless (MP2);
 
 	$r -> header_only && !MP2 or print $html;
+	
+	$_REQUEST {__response_sent} = 1;
 
 	__log_profilinig ($time, ' <out_html: ' . (length $html) . ' bytes>');
+	
+	return '';
 	
 }
 

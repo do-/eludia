@@ -2097,53 +2097,142 @@ sub draw_tree {
 
 	my ($_SKIN, $node_callback, $list, $options) = @_;
 	
-	push @{$_REQUEST{__include_js}}, 'dtree/dtree';
-	push @{$_REQUEST{__include_css}}, 'dtree/dtree';
-
-	my $menus;
-
-	my $target = $options -> {target} || '_content_iframe';
+	my $menus = '';
+	my @nodes = ();
 	
-	my $html = <<EOH;
+	my ($root_id, $root_url, $selected_node_url, $selected_code);
 	
-		$$options{title}
+	our %idx = ();
+	our %lch = ();
 		
-		<table class="dtree">
-			<tr>
-				<td>
+	foreach my $i (@$list) {
+
+		my $node = $i -> {__node};
+
+		push @nodes, $node;
 		
-			<script type="text/javascript">
-				<!--
+		($root_id, $root_url) = ($node -> {id}, $node -> {url}) unless $root_id;
+			
+		if ($node -> {id} == $options -> {selected_node}) {
+			$selected_node_url = $node -> {url};
+			$selected_code = 'win.d.selectedFound = true; win.d.selectedNode = ' . (@nodes - 1);
+		}
+       		
+		$idx {$node -> {id}} = $node;
+		$lch {$node -> {pid}} = $node if $node -> {pid};
+		$menus .= $i -> {__menu};
+
+	}
+	
+	unless ($selected_node_url) {
+    		$options -> {selected_node} = $root_id;
+    		$selected_node_url = $root_url;             	 
+  	}
+	
+	while (my ($k, $v) = each %lch) {
+		$idx {$k} -> {_hc} = 1;
+		$v -> {_ls} = 1;
+	}
+	
+	my $nodes = $_JSON -> encode (\@nodes);
+	my $m     = $_JSON -> encode ([$menus]);
+	
+	if ($options -> {active} && $_REQUEST {__parent}) {
+
+		return out_html ({}, <<EOH);
+<html>
+	<head>
+		<script>
+			
+			function load () {
+			
+				var new_nodes = $nodes;
+
+				for (i = 0; i < new_nodes.length; i++) {		
+					var node = new_nodes [i];		
+					if (node.title) continue;			
+					node.title = node.label;		
+				}
+
+				var m = $m;
+				var d = parent.d;
+				var old_nodes = d.aNodes;
+				var n = -1;
+
+				for (i = 0; i < old_nodes.length; i ++) {			
+					var cn = old_nodes [i];
+					if (cn.id != $_REQUEST{__parent}) continue;	
+					n = i;
+					cn._hac += new_nodes.length;
+					cn._io = true;
+					break;
+				};
+
+				var k = 0;
+				var nodes = [];			
+
+				for (i = 0;     i <= n;               i ++) nodes [k++] = old_nodes [i];
+				for (i = 0;     i < new_nodes.length; i ++) nodes [k++] = new_nodes [i];
+				for (i = n + 1; i < old_nodes.length; i ++) nodes [k++] = old_nodes [i];
 		
-				d = new dTree('d');
+				d.aNodes = nodes;
+
+				parent.document.getElementById ('dtree_td').innerHTML = d.toString ();
+				parent.document.getElementById ('dtree_menus').innerHTML += m [0];				
+				parent.document.body.style.cursor = 'default';
 				
-				d.config.iconPath = '/i/dtree/';
-				d.config.target = '$target';
-				d.config.useStatusText = true;
-				d.icon.node = 'img/folderopen.gif';
-
-
+			}
+			
+		</script>
+	</head>
+	<body onLoad="load ()"></body>
+</html>
 EOH
 
-	foreach our $i (@$list) {
-		
-			$html .= $i -> {__node};
-			$menus .= $i -> {__menu};
-			
-		
 	}
+	
+	$options -> {active} += 0;
+	
+	my $useCookies = $options -> {active} ? 'false' : 'true';
+	
+	my $target = $options -> {target} || '_content_iframe';
 
-	$html .= <<EOH;
-				document.write(d);
+	$_REQUEST {__on_load} .= <<EOH;
+		var win = window;
+		win.d = new win.dTree ('d');
+		var c = win.d.config;
+		c.iconPath = '$_REQUEST{__static_url}/tree_';
+		c.target = '$target';
+		c.useStatusText = true;
+		c.useCookies = $useCookies;
+		win.d.icon.node = 'folderopen.gif';
 		
-				//-->
-			</script>
-				</td>
-			</tr>
-		</table>
-		$menus
-		<iframe name="_content_iframe" id="__content_iframe" style="height: expression(document.body.offsetHeight - 80); width: expression(document.body.offsetWidth - 250);" height="80%" src="/i/0.html" application="yes">
-		</iframe>
+		var nodes = $nodes;
+		
+		for (i = 0; i < nodes.length; i++) {		
+			var node = nodes [i];		
+			if (node.title) continue;			
+			node.title = node.label;		
+		}
+		
+		win.d.aNodes = nodes;
+		var m = $m;
+
+		win.d._active = $options->{active};
+		win.d._href = '$options->{href}';
+		win.document.getElementById ('dtree_td').innerHTML = d.toString ();
+		win.document.getElementById ('dtree_menus').innerHTML = m [0];				
+@{[ $options->{selected_node} ? <<EOO : '' ]}		
+		win.d.openTo ($options->{selected_node}, true);
+EOO
+EOH
+
+	return <<EOH;
+		$$options{title}
+		<table class="dtree"><tr><td id='dtree_td'></td></tr></table>
+		<iframe name="_content_iframe" id="__content_iframe" style="height: expression(document.body.offsetHeight - 80); width: expression(document.body.offsetWidth - 250);" height="80%" src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" application="yes">
+		</iframe>	
+		<div id='dtree_menus'>$menus</div>
 EOH
 
 }
@@ -2153,13 +2242,37 @@ EOH
 sub draw_node {
 
 	my ($_SKIN, $options, $i) = @_;
+	
+	$options -> {label} =~ s{\"}{\&quot;}gsm; #"
 
-	my $menu = $i -> {__menu} ? "'$i'" : 'null';
-	my $open = $options -> {open} ? 'true' : 'null';
+	my $node = {
+		id   => $options -> {id}, 
+		pid  => $options -> {parent}, 
+		name => $options -> {label}, 
+		url  => $ENV {SCRIPT_URI} . $options -> {href},
+		title   => $options -> {title} || $options -> {label},
+		target  => $options -> {target},
+		icon    => $options -> {icon},
+		iconOpen    => $options -> {iconOpen},
+		is_checkbox => $options -> {is_checkbox},
+	};
+	
+	if ($options -> {title} && $options -> {title} ne $options -> {label}) {
+		$node -> {title} = $options -> {title};
+	}
 
-	$options -> {label} =~ s{[\'\"]}{}g;
+	if ($i -> {cnt_children} > 0) {
+		$node -> {_hc}  = 1;	
+		$node -> {_hac} = 0 + $i -> {cnt_actual_children};	
+		$node -> {_io}  = $i -> {id} == $_REQUEST {__parent} ? 1 : 0;
+	}
+	else {
+		$node -> {_hc} = 0;	
+	}
+	
+	$node -> {context_menu} = $i . '' if $i -> {__menu};
 
-	return "d.add($options->{id}, $options->{parent}, '$options->{label}', '$options->{href}', null, null, null, null, $open, $menu);\n"
+	return $node;
 
 }
 

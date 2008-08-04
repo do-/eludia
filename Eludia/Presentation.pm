@@ -3729,7 +3729,7 @@ sub draw_tree {
 	
 	return '' if $options -> {off};
 	
-	$options -> {in_order} ||= 1 if $options -> {active} >= 2;
+	$options -> {in_order} ||= 1 if $options -> {active} >= 2 && $_REQUEST {__parent};
 	
 	unless ($options -> {in_order}) {
 	

@@ -3058,9 +3058,7 @@ sub draw_tree {
 	
 		my $m = $_JSON -> encode ([$menus]);
 
-		$r -> content_type ("text/html; charset=$i18n->{_charset}");
-		$r -> send_http_header ();
-		$r -> print (<<EOH);
+		return out_html ({}, <<EOH);
 <html>
 	<head>
 		<script>
@@ -3068,6 +3066,11 @@ sub draw_tree {
 			function load () {
 			
 				var new_nodes = $nodes;
+				for (i = 0; i < new_nodes.length; i++) {		
+					var node = new_nodes [i];		
+					if (node.title) continue;			
+					node.title = node.label;		
+				}
 				var m = $m;
 				var f = window.parent.parent.document.getElementById ('__tree_iframe');
 				var d = f.contentWindow.d;
@@ -3089,12 +3092,6 @@ sub draw_tree {
 				for (i = 0;     i <= n;               i ++) nodes [k++] = old_nodes [i];
 				for (i = 0;     i < new_nodes.length; i ++) nodes [k++] = new_nodes [i];
 				for (i = n + 1; i < old_nodes.length; i ++) nodes [k++] = old_nodes [i];
-		
-				for (i = 0; i < nodes.length; i++) {		
-					var node = nodes [i];		
-					if (node.title) continue;			
-					node.title = node.label;		
-				}
 
 				d.aNodes = nodes;
 
@@ -3109,10 +3106,6 @@ sub draw_tree {
 	<body onLoad="load ()"></body>
 </html>
 EOH
-
-		$_REQUEST {__response_sent} = 1;
-	
-		return '';
 	
 	}
 
