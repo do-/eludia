@@ -2960,7 +2960,7 @@ dTree.prototype.indent = function(node, nodeId) {
 
 		if (node._hc) {
 
-			str += '<a href="javascript: ' + this.obj + '.o(' + nodeId + ');"><img id="j' + this.obj + nodeId + '" src="';
+			str += '<a title=" " href="javascript: ' + this.obj + '.o(' + nodeId + ');"><img id="j' + this.obj + nodeId + '" src="';
 
 			str += this.config.iconPath;
 
