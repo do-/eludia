@@ -2805,7 +2805,9 @@ sub draw_tree {
 					node.title = node.label;		
 				}
 				var m = $m;
-				var f = window.parent.parent.document.getElementById ('__tree_iframe');
+				var w = window.parent;
+				if (w.name != '_body_iframe') w = w.parent;				
+				var f = w.document.getElementById ('__tree_iframe');
 				var d = f.contentWindow.d;
 				var old_nodes = d.aNodes;
 				var n = -1;
@@ -2880,14 +2882,28 @@ EOH
 EOO
 EOH
 
-	return <<EOH;
+	my $frameset = <<EOH;
 		<frameset cols="250,*">
-			<frame src="$ENV{SCRIPT_URI}/i/_skins/TurboMilk/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
+			<frame src="$ENV{SCRIPT_URI}/i/_skins/IsUp/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
 			</frame>
 			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
 			</frame>
 		</frameset>
 EOH
+
+	if ($options -> {top}) {
+			
+		$frameset = <<EOH;
+			<frameset rows="$options->{top}->{height},*">
+				<frame src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" application="yes" noresize scrolling=no>
+				</frame>
+				$frameset
+			</frameset>
+EOH
+	
+	}	
+
+	return $frameset;
 
 }
 
@@ -2911,6 +2927,12 @@ sub draw_node {
 		is_checkbox => $options -> {is_checkbox},
 	};
 	
+	foreach my $k (keys %$node) {
+	
+		delete $node -> {$k} if $node -> {$k} eq '';
+	
+	}
+	
 	if ($options -> {title} && $options -> {title} ne $options -> {label}) {
 		$node -> {title} = $options -> {title};
 	}
@@ -2919,9 +2941,6 @@ sub draw_node {
 		$node -> {_hc}  = 1;	
 		$node -> {_hac} = 0 + $i -> {cnt_actual_children};	
 		$node -> {_io}  = $i -> {id} == $_REQUEST {__parent} ? 1 : 0;
-	}
-	else {
-		$node -> {_hc} = 0;	
 	}
 	
 	$node -> {context_menu} = $i . '' if $i -> {__menu};

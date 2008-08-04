@@ -3112,6 +3112,8 @@ dTree.prototype.getSelected = function() {
 dTree.prototype.s = function(id) {
 
 	if (!this.config.useSelection) return;
+	
+	if (!cn) return;
 
 	var cn = this.aNodes[id];
 
