@@ -136,10 +136,21 @@ sub sql_prepare {
 	}
 	
 	my $st;
+	
+	if ($preconf -> {db_cache_statements}) {
 
-	eval {$st = $db  -> prepare_cached ($sql, {
-		ora_auto_lob => ($sql !~ /for\s+update\s*/ism),
-	}, 4)};
+		eval {$st = $db  -> prepare_cached ($sql, {
+			ora_auto_lob => ($sql !~ /for\s+update\s*/ism),
+		}, 4)};
+
+	}
+	else {
+
+		eval {$st = $db  -> prepare ($sql, {
+			ora_auto_lob => ($sql !~ /for\s+update\s*/ism),
+		})};
+
+	}
 	
 	if ($@) {
 		my $msg = "sql_prepare: $@ (SQL = $sql)\n";
