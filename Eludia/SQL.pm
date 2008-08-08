@@ -1266,7 +1266,9 @@ sub sql {
 			columns => $columns,
 			single  => $1,
 			
-		}
+		};
+		
+		$table -> {single} =~ s{ie$}{y};
 
 	}	
 		
@@ -1362,8 +1364,13 @@ sub sql {
 		foreach my $key (keys %$record) {
 
 			$key =~ /(\w+?)s?\.(\w+)/ or next;
+			
+			my ($t, $f) = ($1, $2);
 
-			$record -> {$1} -> {$2} = delete $record -> {$key};
+			$t =~ s{ie$}{y};
+			$t =~ s{statu$}{status};
+
+			$record -> {$t} -> {$f} = delete $record -> {$key};
 					
 		}
 	
