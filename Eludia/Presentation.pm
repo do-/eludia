@@ -14,7 +14,7 @@ sub format_picture {
 
 	my ($txt, $picture) = @_;
 	
-	return '' if $txt == 0;
+	return '' if $txt eq '';
 	
 	my $result = $number_format -> format_picture ($txt, $picture);
 	
