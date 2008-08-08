@@ -24,7 +24,7 @@ sub sql_version {
 
 sub sql_do_refresh_sessions {
 
-	my $timeout = $conf -> {session_timeout} || 30;
+	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
 
 	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
 		$timeout = $1;

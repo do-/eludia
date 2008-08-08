@@ -28,7 +28,8 @@ sub sql_prepare {
 
 sub sql_do_refresh_sessions {
 
-	my $timeout = $conf -> {session_timeout};
+	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
+
 	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
 		$timeout = $1;
 		$timeout *= 
@@ -38,7 +39,9 @@ sub sql_do_refresh_sessions {
 	}
 
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < ?", time - $timeout * 60);
+
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = ? WHERE id = ? ", int (time), $_REQUEST {sid});
+
 }
 
 ################################################################################
