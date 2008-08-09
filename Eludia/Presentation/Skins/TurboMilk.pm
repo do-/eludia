@@ -1844,7 +1844,7 @@ EOH
 		}
 		
 		$html .= <<EOH;
-			<td onmouseover="if (!edit_mode || $core_unblock_navigation) {$$type{onhover}; subsets_are_visible = 0;}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
+			<td onmouseover="if (!edit_mode || $core_unblock_navigation) {$$type{onhover}; subsets_are_visible = 0; document.getElementById ('_body_iframe').contentWindow.subsets_are_visible = 0}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
 				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1 @{[ $type -> {name} eq '_dump' ? '' : 'onclick="return !check_edit_mode (this);"' ]}>&nbsp;$$type{label}&nbsp;</a>&nbsp;
 			</td>
 EOH
@@ -2484,6 +2484,7 @@ EOJS
 	
 		$_REQUEST {__on_mouseover} .= <<EOS;
 			window.parent.subsets_are_visible = 0;
+			subsets_are_visible = 0;
 EOS
 
 	}
