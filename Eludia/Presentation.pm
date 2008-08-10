@@ -2308,6 +2308,7 @@ sub draw_toolbar {
 		if (ref $button eq HASH) {
 			next if $button -> {off};
 			$button -> {type} ||= 'button';
+			$_REQUEST {__toolbar_inputs} .= "$button->{name}," if $button -> {type} =~ /^input_/;
 			$button -> {html} = &{'draw_toolbar_' . $button -> {type}} ($button, $options -> {_list});
 		}
 		else {
@@ -2319,6 +2320,14 @@ sub draw_toolbar {
 	};
 
 	return '' if 0 == @{$options -> {buttons}};
+	
+	push @{$options -> {keep_params}}, qw (
+		sid
+		__last_query_string
+		__last_scrollable_table_row
+		__last_last_query_string value
+		__toolbar_inputs
+	);
 
 	return $_SKIN -> draw_toolbar ($options);
 

@@ -185,7 +185,8 @@ sub sql_weave_model {
 
 sub check_systables {
 
-	foreach (qw(	
+	foreach (qw(
+		__defaults
 		__voc_replacements	
 		__access_log		
 		__benchmarks		
@@ -243,6 +244,22 @@ $time = __log_profilinig ($time, ' <sql_assert_core_tables>: 136');
 
 	my %defs = (
 	
+		$conf -> {systables} -> {__defaults} => {
+		
+			columns => {
+				id          => {TYPE_NAME => 'int', _EXTRA => 'auto_increment', _PK => 1},
+				fake        => {TYPE_NAME => 'bigint'},
+				context     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+				name        => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+				value       => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+			},
+			
+			keys => {
+				context => 'context,name',
+			},
+
+		},
+
 		$conf -> {systables} -> {__access_log} => {
 		
 			columns => {

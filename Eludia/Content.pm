@@ -2611,4 +2611,66 @@ sub vb_yes {
 
 }
 
+################################################################################
+
+sub defaults {
+
+	my ($data, $context, %vars) = @_;
+		
+	my $names = "''";
+
+	foreach my $key (keys %vars) {
+	
+		ref $vars {$key} or $vars {$key} = {};
+		
+		$vars {$key} -> {name} ||= $key;
+		
+		$names .= ",'$vars{$key}->{name}'";
+	
+	}
+		
+	my %def = ();
+	
+	sql_select_loop ("SELECT * FROM $conf->{systables}->{__defaults} WHERE fake = 0 AND context = ? AND name IN ($names)", sub {$def {$i -> {name}} = $i -> {value}}, $context);
+	
+	if ($data -> {fake} == $_REQUEST {sid}) {
+	
+		foreach my $key (keys %$data) {
+		
+			$data -> {$key} or delete $data -> {$key};
+		
+		}
+	
+	}
+	
+	foreach my $key (keys %vars) {
+	
+		my $name = $vars {$key} -> {name};
+	
+		if (exists $data -> {$key}) {
+		
+			if ($data -> {$key} ne $def {$name}) {
+			
+				sql_select_id ($conf -> {systables} -> {__defaults} => {
+
+					fake    => 0,
+					context => $context,
+					name    => $name,
+					-value  => $data -> {$key},
+
+				}, ['context', 'name']);
+			
+			}
+		
+		}
+		else {
+		
+			$data -> {$key} = $def {$name};
+		
+		}
+	
+	}
+
+}
+
 1;

@@ -259,6 +259,18 @@ sub handler {
 	delete $_REQUEST {__x} if $preconf -> {core_no_xml};
 
 	$_REQUEST {__no_navigation} ||= $_REQUEST {select};
+	
+	if ($_REQUEST {__toolbar_inputs}) {
+	
+		foreach my $key (split /\,/, $_REQUEST {__toolbar_inputs}) {
+		
+			$key or next;
+			
+			exists $_REQUEST {$key} or $_REQUEST {$key} = '';
+		
+		}
+	
+	}
 
 	$_REQUEST {type} =~ s/_for_.*//;
 	$_REQUEST {__uri} = $r -> uri;
@@ -689,6 +701,24 @@ EOH
 				) {
 
 					my ($method, $url) = split /\s+/, $r -> the_request;
+					
+					if ($url !~ /\bsid=\d/) {
+						
+						$url .= '?';
+						
+						foreach my $k (keys %{$parms}) {
+						
+							next if $parms -> {$k} eq '';
+								
+							$url .= "$k=";
+							$url .= uri_escape ($parms -> {$k});
+							$url .= "&";
+								
+						}
+						
+						chop $url;
+						
+					}
 
 					$url =~ s{\&?_?salt=[\d\.]+}{}gsm;
 					$url =~ s{\&?sid=\d+}{}gsm;

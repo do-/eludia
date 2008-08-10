@@ -1114,43 +1114,30 @@ sub draw_toolbar {
 		unshift @{$options -> {buttons}}, $button;
 
 	}
+
+	my $spacer = qq{img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" border=0 width=};
 	
 	my $html = <<EOH;
 		<table class=bgr8 cellspacing=0 cellpadding=0 width="100%" border=0>
-			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
+			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}" method=post>
 EOH
 
 	foreach (@{$options -> {keep_params}}) {
 		$html .= qq{<input type="hidden" name="$_" value="$_REQUEST{$_}">}	
 	}
-
+	
 	$html .= <<EOH;
-					<input type=hidden name=sid value=$_REQUEST{sid}>
-					<input type=hidden name=__last_query_string value="$_REQUEST{__last_query_string}">
-					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
-					<input type=hidden name=__last_last_query_string value="$_REQUEST{__last_last_query_string}">
-
-				<tr>
-					<td class=bgr0 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
-				</tr>
-				<tr>
-					<td class=bgr6 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
-				</tr>
-				<tr>
-					<td class=bgr8 width=30><img height=1 src="/i/0.gif" width=20 border=0></td>
+				<tr><td class=bgr0 colspan=20><${spacer}1></td></tr>
+				<tr><td class=bgr6 colspan=20><${spacer}1></td></tr>
+				<tr><td class=bgr8 width=30><${spacer}20></td>
 EOH
 
-	foreach (@{$options -> {buttons}}) {	$html .= $_ -> {html};	}
+	foreach (@{$options -> {buttons}}) { $html .= $_ -> {html}; }
 
 	$html .= <<EOH;
-					<td class=bgr8 width=100%><img height=1 src="/i/0.gif" width=1 border=0></td>
-				</tr>
-				<tr>
-					<td class=bgr8 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
-				</tr>
-				<tr>
-					<td class=bgr6 colspan=20><img height=1 src="/i/0.gif" width=1 border=0></td>
-				</tr>
+					<td class=bgr8 width=100%><${spacer}1></td></tr>
+				<tr><td class=bgr8 colspan=20><${spacer}1></td></tr>
+				<tr><td class=bgr6 colspan=20><${spacer}1></td></tr>
 			</form>
 		</table>
 EOH
