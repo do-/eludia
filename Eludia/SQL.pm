@@ -1339,7 +1339,8 @@ sub sql {
 	unless ($have_id_filter) {
 	
 		ref $order or $order = [$order];
-		$order -> [0] =~ /\./ or $order -> [0] = $root . '.' . $order -> [0];
+#		$order -> [0] =~ /\./ or $order -> [0] = $root . '.' . $order -> [0];
+		$order -> [0] =~ s{(?<!\.)\b([a-z0-9_]+)\b(?!\.)}{${root}.$1}gsm;
 		$sql .= "\nORDER BY\n ";
 		$sql .= order (@$order);
 
