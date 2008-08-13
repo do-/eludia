@@ -1663,6 +1663,7 @@ sub draw_form_field_static {
 				}
 				else {
 
+					my $id = $_REQUEST {id};
 					$_REQUEST {id} = $value;
 					my $h = &{$options -> {values}} ();
 					$static_value = $h -> {label};
