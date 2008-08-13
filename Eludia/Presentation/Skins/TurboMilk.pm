@@ -2592,6 +2592,16 @@ EOH
 		
 	$_REQUEST {__head_links} .= <<EOH unless ($_REQUEST {type} eq '_boot');
 		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
+		<style>
+			.calendar .nav {  background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
+			td.main-menu {padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
+			td.vert-menu {background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
+			#admin {width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
+			td.login-head {background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
+			td.submit-area {text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
+			div.green-title {color:#ffffff;font-weight:bold;background:url('$_REQUEST{__static_url}/green_ear_left.gif') no-repeat 0 0; width:300px;padding-left:10%;}
+			div.grey-submit {background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
+		</style>
 EOH
 
 	foreach (@{$_REQUEST {__include_css}}) {

@@ -93,10 +93,6 @@ div.checkboxes {
   border-left: 1px solid #fff;
 }
 
-.calendar .nav {
-  background: transparent url(menuarrow.gif) no-repeat 100% 100%;
-}
-
 .calendar thead .title { /* This holds the current "month, year" */
   font-weight: bold;
   padding: 1px;
@@ -420,29 +416,6 @@ A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
 .bgr0 {
 	FONT-SIZE: 8pt; FONT-FAMILY: Tahoma, 'MS Sans Serif'; background-color: #b9c5d7;
 }
-
-td.main-menu {
-	padding-top:1px;
-	padding-bottom:1px;
-	background-image: url(/i/_skins/TurboMilk/menu_bg.gif);
-	cursor: pointer;
-}
-
-td.vert-menu {
-	background-color: #454a7c;
-	font-family: Tahoma, 'MS Sans Serif';
-	font-weight: normal; 
-	font-size: 8pt; 
-	color: #ffffff; 
-	text-decoration: none;
-	padding-top:4px;
-	padding-bottom:4px;
-	background-image: url(/i/_skins/TurboMilk/menu_bg.gif);
-	cursor: pointer;
-
-}
-
-
 
 .row-cell {
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
@@ -871,7 +844,6 @@ a.hint {
 
 
 
-#admin {width:205px;height:25px;padding:5px 5px 5px 9px;background:url('/i/_skins/TurboMilk/menu_button.gif') no-repeat 0 0;}
 #admin a {color:#000000;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 
 #Menu {position:absolute;top:expression(document.getElementById('admin').offsetTop+25);left:expression(document.getElementById('admin').offsetLeft + document.getElementById('admin').offsetParent.offsetLeft);visibility:expression(subsets_are_visible ? 'visible' : 'hidden');z-index:100;}
@@ -880,10 +852,6 @@ a.hint {
 #Menu a {color:#23385A;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 #Menu a:hover {color:#23385A;text-decoration:underline;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 
-td.login-head {background:url('/i/_skins/TurboMilk/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
-td.submit-area {text-align:center;height:36px;background:url('/i/_skins/TurboMilk/submit_area_bgr.gif') repeat-x 0 0;}
-div.green-title {color:#ffffff;font-weight:bold;background:url('/i/_skins/TurboMilk/green_ear_left.gif') no-repeat 0 0; width:300px;padding-left:10%;}
-div.grey-submit {background:url('/i/_skins/TurboMilk/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
 div.grey-submit a {color:#222323;text-decoration:none;}
 div.grey-submit a:hover {color:#222323;text-decoration:underline;}
 
