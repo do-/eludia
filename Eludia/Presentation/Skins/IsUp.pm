@@ -164,13 +164,13 @@ sub draw_auth_toolbar {
 	}
 
 	return <<EOH;
-		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
+		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="$_REQUEST{__static_site}/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
 
 			<tr>
 
 				<td rowspan=2 width="15"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=15 height=$header_height border=0></td>
 
-				<td rowspan=2 valign="middle" align="center" width=1><a href="$logo_url" target="_body_iframe"><img src="/i/logo_$header_prefix.gif" border="0"></a></td>
+				<td rowspan=2 valign="middle" align="center" width=1><a href="$logo_url" target="_body_iframe"><img src="$_REQUEST{__static_site}/i/logo_$header_prefix.gif" border="0"></a></td>
 
 				<td rowspan=2 width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
 
@@ -459,7 +459,7 @@ sub draw_path {
 
 	my ($_SKIN, $options, $list) = @_;
 
-	my $style = $options -> {nowrap} ? qq{style="background:url('/i/_skins/IsUp/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
+	my $style = $options -> {nowrap} ? qq{style="background:url('$_REQUEST{__static_url}/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
 	
 	my $page_title = $_JSON -> encode ([$list -> [-1] -> {label} || 'Новая запись']);	
 	
@@ -1196,7 +1196,7 @@ EOH
 
 sub _icon_path {
 
-	-r $r -> document_root . "/i/_skins/IsUp/i_$_[0].gif" ?
+	-r $r -> document_root . "$_REQUEST{__static_url}/i_$_[0].gif" ?
 	"$_REQUEST{__static_url}/i_$_[0].gif?$_REQUEST{__static_salt}" :
 	"/i/buttons/$_[0].gif"			
 
@@ -1505,7 +1505,7 @@ sub draw_centered_toolbar_button {
 									<td width="45%">
 										<table cellspacing=0 cellpadding=0 width="100%" border=0>
 											<tr>
-												<td background="/i/_skins/IsUp/cnt_tbr_bg.gif?174883348133484"><img height=40 hspace=0 src="/i/_skins/IsUp/0.gif?174883348133484" width=1 border=0></td>
+												<td background="$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}"><img height=40 hspace=0 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 											</tr>
 										</table>
 									</td>
@@ -1518,7 +1518,7 @@ sub draw_centered_toolbar_button {
 							<td width="45%">
 								<table cellspacing=0 cellpadding=0 width="100%" border=0>
 									<tr>
-										<td background="/i/_skins/IsUp/cnt_tbr_bg.gif?174883348133484"><img height=40 hspace=0 src="/i/_skins/IsUp/0.gif?174883348133484" width=1 border=0></td>
+										<td background="$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}"><img height=40 hspace=0 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 									</tr>
 								</table>
 							</td>
@@ -1806,7 +1806,7 @@ sub draw_text_cell {
 		$data -> {label} =~ s{\s+$}{}gsm;
 		$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
-		$html .= qq {<img src='/i/_skins/IsUp/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
+		$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
 		$html .= '<nobr>' unless $data -> {no_nobr};
 
@@ -2328,6 +2328,16 @@ EOH
 		
 	$_REQUEST {__head_links} .= <<EOH;
 		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
+		<style>
+			.calendar .nav {  background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
+			td.main-menu {padding-top:1px;padding-bottom:1px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
+			td.vert-menu {background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal; font-size: 8pt; color: #ffffff; text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
+			#admin {width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
+			td.login-head {background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
+			td.submit-area {text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
+			div.green-title {color:#ffffff;font-weight:bold;background:url('$_REQUEST{__static_url}/green_ear_left.gif') no-repeat 0 0; width:300px;padding-left:10%;}
+			div.grey-submit {background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
+		</style>
 EOH
 
 	foreach (@{$_REQUEST {__include_css}}) {
@@ -2884,7 +2894,7 @@ EOH
 
 	my $frameset = <<EOH;
 		<frameset cols="250,*">
-			<frame src="$ENV{SCRIPT_URI}/i/_skins/IsUp/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
+			<frame src="$ENV{SCRIPT_URI}$_REQUEST{__static_url}/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
 			</frame>
 			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
 			</frame>
