@@ -1196,9 +1196,9 @@ EOH
 
 sub _icon_path {
 
-	-r $r -> document_root . "$_REQUEST{__static_url}/i_$_[0].gif" ?
+	-r $r -> document_root . "/i/_skins/IsUp/i_$_[0].gif" ?
 	"$_REQUEST{__static_url}/i_$_[0].gif?$_REQUEST{__static_salt}" :
-	"/i/buttons/$_[0].gif"			
+	"$_REQUEST{__static_site}/i/buttons/$_[0].gif"
 
 }
 
@@ -2894,9 +2894,9 @@ EOH
 
 	my $frameset = <<EOH;
 		<frameset cols="250,*">
-			<frame src="$ENV{SCRIPT_URI}$_REQUEST{__static_url}/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
+			<frame src="$ENV{SCRIPT_URI}/i/_skins/IsUp/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
 			</frame>
-			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
+			<frame src="${\($selected_node_url ? $selected_node_url : '$ENV{SCRIPT_URI}/i/_skins/IsUp/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
 			</frame>
 		</frameset>
 EOH
