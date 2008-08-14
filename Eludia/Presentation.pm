@@ -3753,21 +3753,6 @@ sub draw_tree {
 	
 		my $idx = {};
 		
-		my @list = ();
-		
-		my $p = {
-			0 + $_REQUEST {__parent} => 1,
-		};
-		
-		if ($_REQUEST {__parent} == 0) {
-					
-			foreach (grep {$_ -> {id} == $options -> {selected_node}} @$list) {
-				$p -> {$_ -> {id}}     = 1;
-				$p -> {$_ -> {parent}} = 1;
-			}
-		
-		}
-		
 		foreach my $i (@$list) {
 		
 			$i -> {id}     += 0;
@@ -3776,14 +3761,38 @@ sub draw_tree {
 			$idx -> {$i -> {id}} = $i;
 			$idx -> {$i -> {parent}} -> {cnt_children} ++;
 
-			push @list, $i if $p -> {$i -> {parent}};
+		}
+
+		my $p = {};
+
+		if ($_REQUEST {__parent}) {
+		
+			$p -> {$_REQUEST {__parent}} = 1;
 		
 		}
+		else {
 		
+			my $n = $idx -> {$options -> {selected_node}};
+			
+			while ($n) {
+				$p -> {$n -> {id}} = 1;
+				$n = $idx -> {$n -> {parent}};
+			}
+
+		}
+				
+		my @list = ();
+
+		foreach my $i (@$list) {
+		
+			push @list, $i if $p -> {$i -> {id}};
+		
+		}
+
 		$list = \@list;
 	
 	}
-
+	
 	if ($options -> {active}) {
 
 		foreach my $i (@$list) {
