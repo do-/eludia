@@ -2809,6 +2809,7 @@ sub draw_tree {
 			function load () {
 			
 				var new_nodes = $nodes;
+
 				for (i = 0; i < new_nodes.length; i++) {		
 					var node = new_nodes [i];		
 					if (node.title) continue;			
@@ -2839,7 +2840,7 @@ sub draw_tree {
 				for (i = n + 1; i < old_nodes.length; i ++) nodes [k++] = old_nodes [i];
 
 				d.aNodes = nodes;
-
+				
 				f.contentWindow.document.getElementById ('dtree_td').innerHTML = d.toString ();
 				f.contentWindow.document.getElementById ('dtree_menus').innerHTML += m [0];				
 				f.contentWindow.document.body.style.cursor = 'default';
@@ -2930,7 +2931,6 @@ sub draw_node {
 		pid  => $options -> {parent}, 
 		name => $options -> {label}, 
 		url  => $ENV {SCRIPT_URI} . $options -> {href},
-		title   => $options -> {title} || $options -> {label},
 		target  => $options -> {target},
 		icon    => $options -> {icon},
 		iconOpen    => $options -> {iconOpen},

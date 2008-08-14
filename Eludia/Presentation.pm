@@ -3785,7 +3785,7 @@ sub draw_tree {
 
 		foreach my $i (@$list) {
 		
-			push @list, $i if $p -> {$i -> {id}};
+			push @list, $i if $p -> {$i -> {parent}} || (!$_REQUEST {__parent} && $p -> {$i -> {id}});
 		
 		}
 
