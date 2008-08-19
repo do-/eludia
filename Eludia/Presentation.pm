@@ -1165,9 +1165,32 @@ sub draw_form_field {
 		elsif ($field -> {type} eq 'tree') {
 			$field -> {value} ||= $data -> {$field -> {name}} || [map {$_ -> {id}} grep {$_ -> {is_checkbox} > 1} @{$field -> {values}}];
 		}
-		elsif ($field -> {type} eq 'checkboxes' && !ref $data -> {$field -> {name}}) {
+		elsif ($field -> {type} eq 'checkboxes') {
+	
+			$data -> {$field -> {name}} = [grep {$_} split /\,/, $data -> {$field -> {name}}] unless (ref $data -> {$field -> {name}});
 
-			$data -> {$field -> {name}} = [grep {$_} split /\,/, $data -> {$field -> {name}}];
+			my $values = $field -> {values};
+			my @spaces = (@$values + 0);
+			delete $field -> {values};
+
+			while (my $value = shift @$values) {
+                                $value -> {label} = "&nbsp; " x (2 * (@spaces - 1)) . $value -> {label};
+
+				if ($value -> {items}) {
+					unshift @spaces, @{$value -> {items}} + 0;
+					unshift @$values, @{$value -> {items}};
+					delete $value -> {items};
+				}
+
+				if (@spaces[0]) {
+					@spaces[0] -= 1;
+				} else {
+					shift @spaces;
+				};
+
+
+				push @{$field -> {values}}, $value;
+			}
 
 		}
 		else {
@@ -2115,9 +2138,9 @@ sub draw_form_field_tree {
 sub draw_form_field_checkboxes {
 
 	my ($options, $data) = @_;
-
+warn Dumper($options);
 	$options -> {cols} ||= 1;
-	
+
 	if (!ref $data -> {$options -> {name}}) {
 	
 		$data -> {$options -> {name}} = [grep {$_} split /\,/, $data -> {$options -> {name}}];
@@ -2125,15 +2148,24 @@ sub draw_form_field_checkboxes {
 	}
 	
 	foreach my $value (@{$options -> {values}}) {
-	
+
+		$value -> {type} ||= $value -> {items} ? 'checkboxes' : undef;
+		
+		if ($value -> {type} eq 'checkboxes') {
+			$value -> {values} = $value -> {items};
+			$value -> {inline} = 1;
+			$value -> {name} = $options -> {name} if ($options -> {name});
+		};
+		
 		$value -> {type} or next;
 
 		$value -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
 		$value -> {attributes} -> {checked} = 1 if $data -> {$options -> {name}} == $value -> {id};
-			
+
 		my $renderrer = "draw_form_field_$$value{type}";
 		
 		$value -> {html} = &$renderrer ($value, $data);
+		$value -> {html} =~ s/\<input/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\<input/g if ($value -> {type} eq 'checkboxes');
 		
 		delete $value -> {attributes} -> {class};
 						
