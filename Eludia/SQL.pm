@@ -1243,7 +1243,7 @@ sub sql {
 
 			$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';		# 'id_org'       --> 'id_org = '
 			$field =~ /\?/  or $field .= ' ? '; 				# 'id_org LIKE ' --> 'id_org LIKE ?'
-			$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm; 
+			$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm;
 			$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;
 
 			$where .= "\n AND ($field)";
@@ -1267,6 +1267,13 @@ sub sql {
 	}	
 	
 	foreach my $table (@tables) {
+	
+		my $alias = '';
+		
+		if ($table =~ /\s+AS\s+(\w+)\s*$/) {
+			$table = $`;
+			$alias = $1;
+		}
 
 		$table =~ s{\s}{}gsm;
 
@@ -1274,7 +1281,7 @@ sub sql {
 
 		my ($name, $columns) = ($1, $2);
 
-		$name =~ /^(\w+?)s?$/;
+		($alias ||= $name) =~ /^(\w+?)s?$/;
 		
 		$table = {
 		
@@ -1282,6 +1289,7 @@ sub sql {
 			name    => $name,
 			columns => $columns,
 			single  => $1,
+			alias   => $alias,
 			
 		};
 		
@@ -1301,7 +1309,7 @@ sub sql {
 				
 			$DB_MODEL -> {tables} -> {$t -> {name}} -> {columns} -> {$referring_field_name} or next;
 			
-			$from .= "\n LEFT JOIN $table->{name} ON $t->{name}.$referring_field_name = $table->{name}.id";
+			$from .= "\n LEFT JOIN $table->{name} AS $table->{alias} ON $t->{name}.$referring_field_name = $table->{alias}.id";
 			
 			$found = 1;
 			
@@ -1328,7 +1336,7 @@ sub sql {
 		
 		foreach my $column (@columns) {
 		
-			$select .= "\n, $table->{name}.$column AS $model_update->{quote}$table->{name}.$column$model_update->{quote}"
+			$select .= "\n, $table->{alias}.$column AS $model_update->{quote}$table->{alias}.$column$model_update->{quote}"
 		
 		}
 			
@@ -1388,7 +1396,7 @@ sub sql {
 			$t =~ s{ie$}{y};
 			$t =~ s{statu$}{status};
 
-			$record -> {$t} -> {$f} = delete $record -> {$key};
+			$record -> {$t} -> {$f} = $record -> {$key};
 					
 		}
 	
