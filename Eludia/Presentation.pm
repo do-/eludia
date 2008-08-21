@@ -3320,7 +3320,7 @@ sub draw_input_cell {
 	
 	_adjust_row_cell_style ($data, $options);
 						
-	$data -> {label} ||= '';
+	defined $data -> {label} or $data -> {label} = '';
 	
 	if ($data -> {picture}) {
 		$data -> {label} = format_picture ($data -> {label}, $data -> {picture});
