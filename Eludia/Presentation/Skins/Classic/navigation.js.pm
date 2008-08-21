@@ -2754,37 +2754,52 @@ Calendar.setup = function (params) {
 
 // Node object
 
-function Node (id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox) {
+function Node(id, pid, name, url, title, target, icon, iconOpen, open, context_menu) {
 
 	this.id = id;
+
 	this.pid = pid;
+
 	this.name = name;
+
 	this.url = url;
+
 	this.title = title;
+
 	this.target = target;
+
 	this.icon = icon;
+
 	this.iconOpen = iconOpen;
+
 	this._io = open || false;
+
 	this.context_menu = context_menu;
-	this.is_checkbox = is_checkbox;
+
 	this._is = false;
+
 	this._ls = false;
+
 	this._hc = false;
+
 	this._ai = 0;
+
 	this._p;
 
 };
 
+
+
 // Tree object
 
-function dTree (objName) {
+function dTree(objName) {
 
 	this.config = {
 
 		target		: null,
 		folderLinks	: true,
 		useSelection	: true,
-		useCookies	: true,
+		useCookies	: false,
 		useLines	: true,
 		useIcons	: true,
 		useStatusText	: false,
@@ -2820,23 +2835,16 @@ function dTree (objName) {
 	this.selectedNode = null;
 	this.selectedFound = false;
 	this.completed = false;
-	
-	this.checkedNodes = [];
+
 };
 
 
 
 // Adds a new node to the node array
 
-dTree.prototype.add = function(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox) {
+dTree.prototype.add = function(id, pid, name, url, title, target, icon, iconOpen, open, context_menu) {
 
-	this.aNodes[this.aNodes.length] = new Node(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox);
-
-};
-
-dTree.prototype.addAll = function (a) {
-
-	for (i in a) this.aNodes[this.aNodes.length] = new Node (i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10]);
+	this.aNodes[this.aNodes.length] = new Node(id, pid, name, url, title, target, icon, iconOpen, open, context_menu);
 
 };
 
@@ -2878,7 +2886,6 @@ dTree.prototype.toString = function() {
 
 	this.completed = true;
 
-//alert (str);
 
 	return str;
 
@@ -2892,17 +2899,21 @@ dTree.prototype.addNode = function(pNode) {
 
 	var str = '';
 
-	for (var n = this.config.inOrder ? pNode._ai + 1 : 0; n<this.aNodes.length; n++) {
+	var n=0;
 
-		var cn = this.aNodes[n];
+	if (this.config.inOrder) n = pNode._ai;
 
-		if (cn.pid == pNode.id) {
+	for (n; n<this.aNodes.length; n++) {
+
+		if (this.aNodes[n].pid == pNode.id) {
+
+			var cn = this.aNodes[n];
 
 			cn._p = pNode;
 
 			cn._ai = n;
 
-//			this.setCS(cn);
+			this.setCS(cn);
 
 			if (!cn.target && this.config.target) cn.target = this.config.target;
 
@@ -2932,17 +2943,13 @@ dTree.prototype.addNode = function(pNode) {
 					cn.url = cn.url + '&salt=' + Math.random ();
 					if (cn.target == null || cn.target == '') cn.target = '_self';
 					var code = 'nope (\'' + cn.url + '\', \'' + cn.target + '\', \'toolbar=no,resizable=yes\')';
-					setTimeout(code, 0);
+					setTimeout(code,500);
 				}
-			}			
+			}
+			
 
 			if (cn._ls) break;
 
-		}
-		else {
-		
-			if (this.config.inOrder) break;
-		
 		}
 
 	}
@@ -2950,6 +2957,8 @@ dTree.prototype.addNode = function(pNode) {
 	return str;
 
 };
+
+
 
 // Creates the node icon, url and text
 
@@ -2974,13 +2983,7 @@ dTree.prototype.node = function(node, nodeId) {
 		str += '<img id="i' + this.obj + nodeId + '" src="' + this.config.iconPath + ((node._io) ? node.iconOpen : node.icon) + '" alt="" />';
 
 	}
-	
-	if (node.is_checkbox) {
-		str += '<input class=cbx type=checkbox name="_' + this.obj + '_' + node.id + '"' + (node.is_checkbox > 1 ? 'checked' : '') + ' value=1 tabindex=-1 onChange="is_dirty=true" />';
-		if (node.is_checkbox > 1)
-			this.checkedNodes[this.checkedNodes.length] = nodeId;
-	}
-  
+
 	if (node.url) {
 
 		str += '<a id="s' + this.obj + nodeId + '" class="' + ((this.config.useSelection) ? ((node._is ? 'nodeSel' : 'node')) : 'node') + '" href="' + node.url + '"';
@@ -2991,16 +2994,22 @@ dTree.prototype.node = function(node, nodeId) {
 
 		if (this.config.useStatusText) str += ' onmouseover="window.status=\'' + node.name + '\';return true;" onmouseout="window.status=\'\';return true;" ';
 
-		if (node.context_menu) str += ' oncontextmenu="' + this.obj + '.s(' + nodeId + '); open_popup_menu(\'' + node.context_menu + '\'); blockEvent ();"';
+//		alert (node.name + ': ' + nodeId);
+
+		if (node.context_menu)
+				str += ' oncontextmenu="if (!edit_mode) {d.openTo (' + nodeId + ', true, true); open_popup_menu(\'' + node.context_menu + '\'); blockEvent ();}"';
 		
-		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc)) str += ' onclick="javascript: ' + this.obj + '.s(' + nodeId + '); "';
-		if (node._hc && node.pid != this.root.id) str += ' onDblClick="' + this.obj + '.o(' + nodeId + '); "';
-		
+		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc))
+
+			str += ' onclick="javascript: var edit_mode = check_edit_mode (); if (!edit_mode) ' + this.obj + '.s(' + nodeId + '); return !edit_mode;"';
+
 		str += '>';
 
 	}
 
-	else if ((!this.config.folderLinks || !node.url) && node._hc && node.pid != this.root.id) str += '<a href="javascript: ' + this.obj + '.o(' + nodeId + ');" class="node">';
+	else if ((!this.config.folderLinks || !node.url) && node._hc && node.pid != this.root.id)
+
+		str += '<a href="javascript: ' + this.obj + '.o(' + nodeId + ');" class="node">';
 
 	str += node.name;
 
@@ -3017,7 +3026,7 @@ dTree.prototype.node = function(node, nodeId) {
 		str += '</div>';
 
 	}
-	
+
 	this.aIndent.pop();
 
 	return str;
@@ -3102,7 +3111,7 @@ dTree.prototype.s = function(id) {
 
 	var cn = this.aNodes[id];
 
-	if (cn._hc && !this.config.folderLinks) return;
+//	if (cn._hc && !this.config.folderLinks) return;
 
 	if (this.selectedNode != id) {
 
@@ -3110,13 +3119,15 @@ dTree.prototype.s = function(id) {
 
 			eOld = document.getElementById("s" + this.obj + this.selectedNode);
 
-			if (eOld) eOld.className = "node";
+			eOld.className = "node";
 
 		}
 
 		eNew = document.getElementById("s" + this.obj + id);
 
 		eNew.className = "nodeSel";
+
+		eNew.parentNode.scrollIntoView();
 
 		this.selectedNode = id;
 
@@ -3133,19 +3144,10 @@ dTree.prototype.s = function(id) {
 dTree.prototype.o = function(id) {
 
 	var cn = this.aNodes[id];
-	
-	if (this._active && !cn._io && cn._hac == 0) {
-		
-		nope (this._href + '&__parent=' + cn.id, 'invisible');
-	
-	}
-	else {
 
-		this.nodeStatus(!cn._io, id, cn._ls);
+	this.nodeStatus(!cn._io, id, cn._ls);
 
-		cn._io = !cn._io;
-
-	}
+	cn._io = !cn._io;
 
 	if (this.config.closeSameLevel) this.closeLevel(cn);
 
@@ -3180,7 +3182,7 @@ dTree.prototype.oAll = function(status) {
 // Opens the tree to a specific node
 
 dTree.prototype.openTo = function(nId, bSelect, bFirst) {
-
+//	alert (nId);
 	if (!bFirst) {
 
 		for (var n=0; n<this.aNodes.length; n++) {
@@ -3197,12 +3199,16 @@ dTree.prototype.openTo = function(nId, bSelect, bFirst) {
 
 	}
 
+//	alert (nId);
+
 	var cn=this.aNodes[nId];
 	
-	if (!cn) return;
+	if (!cn)
+		return;
 
 	if (cn.pid==this.root.id || !cn._p) {
-		if (bSelect) this.s(cn._ai)	
+		if (bSelect)
+			this.s(cn._ai)	
 	 	return;
 	}
 
@@ -3289,13 +3295,12 @@ dTree.prototype.nodeStatus = function(status, id, bottom) {
 	((status)?this.icon.nlMinus:this.icon.nlPlus);
 
 	eJoin.src = this.config.iconPath + src
-
+//alert(eJoin.src);
+//alert (this.config.iconPath );
 	eDiv.style.display = (status) ? 'block': 'none';
 
-	document.body.style.cursor = 'default';
-
-//	_content_iframe.body.style.cursor = 'default';
-
+	document.body.style.cursor = 'default'
+//	_content_iframe.body.style.cursor = 'default'
 };
 
 
@@ -3394,7 +3399,9 @@ dTree.prototype.isOpen = function(id) {
 
 	var aOpen = this.getCookie('co' + this.obj).split('.');
 
-	for (var n=0; n<aOpen.length; n++) if (aOpen[n] == id) return true;
+	for (var n=0; n<aOpen.length; n++)
+
+		if (aOpen[n] == id) return true;
 
 	return false;
 
@@ -3408,7 +3415,9 @@ if (!Array.prototype.push) {
 
 	Array.prototype.push = function array_push() {
 
-		for(var i=0;i<arguments.length;i++) this[this.length]=arguments[i];
+		for(var i=0;i<arguments.length;i++)
+
+			this[this.length]=arguments[i];
 
 		return this.length;
 

@@ -1181,13 +1181,19 @@ div.checkboxes {
 .dtree {
 	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 	font-size: 11px;
+	color: #666;
 	white-space: nowrap;
 	float: left;
 
+
       	PADDING-RIGHT: 0px;
+      	OVERFLOW-Y: auto;
       	PADDING-LEFT: 0px;
+      	OVERFLOW-X: auto;
       	PADDING-BOTTOM: 0px;
       	MARGIN: 0px;
+      	WIDTH: 220;
+	height: 92%;
       	PADDING-TOP: 0px;      	
       	
 	scrollbar-base-color:#d6d3ce;
@@ -1196,7 +1202,6 @@ div.checkboxes {
 	scrollbar-darkshadow-color:#b0b0b0;
 
 }
-
 .dtree img {
 	border: 0px;
 	vertical-align: middle;
@@ -1224,4 +1229,7 @@ div.checkboxes {
 .dtree .clip {
 	overflow: hidden;
 }
-
+.dtree div.dTreeNode {
+	color: #333;
+	text-decoration: none;
+}
