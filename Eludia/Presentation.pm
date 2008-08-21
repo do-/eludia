@@ -1146,6 +1146,7 @@ sub draw_form_field {
 		($_REQUEST {__read_only} or $field -> {read_only})
 	 	 &&  $field -> {type} ne 'hgroup'
 	 	 &&  $field -> {type} ne 'banner'
+	 	 &&  $field -> {type} ne 'article'
 	 	 &&  $field -> {type} ne 'iframe'
 	 	 &&  $field -> {type} ne 'color'
 	 	 &&  $field -> {type} ne 'dir'
@@ -1299,6 +1300,18 @@ sub draw_form_field_banner {
 
 	my ($field, $data) = @_;
 	return $_SKIN -> draw_form_field_banner (@_);
+
+}
+
+################################################################################
+
+sub draw_form_field_article {
+
+	my ($field, $data) = @_;
+
+	$field -> {value} ||= $data -> {$field -> {name}};
+
+	return $_SKIN -> draw_form_field_article (@_);
 
 }
 
@@ -2314,6 +2327,8 @@ sub draw_toolbar {
 	my ($options, @buttons) = @_;
 
 	return '' if $options -> {off};	
+	
+	$_REQUEST {__toolbar_inputs} = '';
 
 	$_REQUEST {__toolbars_number} ||= 0;
 

@@ -528,6 +528,10 @@ sub draw_form_field {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
 		return qq{<td class='form-$$field{state}-label' $colspan nowrap align=center>$$field{html}</td>};
 	}
+	elsif ($field -> {type} eq 'article') {
+		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
+		return qq{<td $colspan class='form-article'>$$field{html}</td>};
+	}
 	elsif ($field -> {type} eq 'hidden') {
 		return $field -> {html};
 	}
@@ -546,6 +550,18 @@ sub draw_form_field {
 		<td class='form-$$field{state}-inputs' $colspan $cell_width>\n$$field{html}</td>
 EOH
 
+}
+
+################################################################################
+
+sub draw_form_field_article {
+
+	my ($_SKIN, $field, $data) = @_;
+
+	$field -> {value} =~ s{\n}{<br>}gsm;
+	
+	return qq{<table width=95% align=center cellpadding=10><tr minheight=200><td>$field->{value}</td></tr></table>};
+	
 }
 
 ################################################################################
