@@ -1281,14 +1281,14 @@ sub sql {
 
 		my ($name, $columns) = ($1, $2);
 
-		($alias ||= $name) =~ /^(\w+?)s?$/;
+		$alias ||= $name;
 		
 		$table = {
 		
 			src     => $table,
 			name    => $name,
 			columns => $columns,
-			single  => $1,
+			single  => en_unplural ($alias),
 			alias   => $alias,
 			
 		};
@@ -1389,20 +1389,36 @@ sub sql {
 		
 		foreach my $key (keys %$record) {
 
-			$key =~ /(\w+?)s?\.(\w+)/ or next;
+			$key =~ /(\w+)\.(\w+)/ or next;
 			
 			my ($t, $f) = ($1, $2);
 
-			$t =~ s{ie$}{y};
-			$t =~ s{statu$}{status};
-
-			$record -> {$t} -> {$f} = $record -> {$key};
+			$record -> {en_unplural ($t)} -> {$f} = $record -> {$key};
 					
 		}
 	
 	}
 	
 	return wantarray ? @result : $result [0];
+
+}
+
+sub en_unplural {
+
+	my ($s) = @_;
+
+	if ($s =~ /^(status)$/)             { return $s }
+	if ($s =~ s{ives$}{ife})            { return $s }
+	if ($s =~ s{ves$}{f})               { return $s }
+	if ($s =~ s{ies$}{y})               { return $s }
+	if ($s =~ s{(\.)ice$}{$1ouse})      { return $s }
+	if ($s =~ s{men$}{man})             { return $s }
+	if ($s =~ s{eet(h?)$}{oot$1})       { return $s }
+	if ($s =~ s{i$}{us})                { return $s }
+	if ($s =~ s{a$}{um})                { return $s }
+	if ($s =~ s{(o|ch|sh|ss|x)es$}{$1}) { return $s }
+	$s =~ s{s$}{};
+	return $s;
 
 }
 
