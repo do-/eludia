@@ -2207,6 +2207,8 @@ sub draw_node {
 		$node -> {_hc} = 0;	
 	}
 	
+	$node -> {_io} = 1 if $options -> {'open'};
+	
 	$node -> {context_menu} = $i . '' if $i -> {__menu};
 
 	foreach my $key (keys %$node) {defined $node -> {$key} or delete $node -> {$key}}
