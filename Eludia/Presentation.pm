@@ -106,35 +106,28 @@ sub trunc_string {
 
 sub esc_href {
 
-	if ($conf -> {core_auto_esc} == 2) {
-	
-		my $href = sql_select_scalar ("SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?", $_REQUEST {sid}, $_REQUEST {__last_last_query_string});
-		$href ||= "/?type=$_REQUEST{type}";
-
-		if (exists $_REQUEST {__last_scrollable_table_row}) {
-			$href =~ s{\&?__scrollable_table_row\=\d*}{}g;
-			$href .= '&__scrollable_table_row=' . $_REQUEST {__last_scrollable_table_row} unless ($_REQUEST {__windows_ce});
-		}
-
-
-		$href = check_href ({href => $href}, 1);
-
-		return uri_unescape ($href) . '&__next_query_string=' . $_REQUEST {__last_query_string};
+	my $href = 
 		
+		sql_select_scalar (
+			"SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?",
+			$_REQUEST {sid}, 
+			$_REQUEST {__last_last_query_string}
+		)
+
+		|| "/?type=$_REQUEST{type}"
+		
+	;
+
+	if (exists $_REQUEST {__last_scrollable_table_row} && !$_REQUEST {__windows_ce}) {
+		$href =~ s{\&?__scrollable_table_row\=\d*}{}g;
+		$href .= "&__scrollable_table_row=$_REQUEST{__last_scrollable_table_row}";
 	}
 
-	my $esc_query_string = $_REQUEST {__last_query_string};
-	$esc_query_string =~ y{-_.}{+/=};
-	my $query_string = MIME::Base64::decode ($esc_query_string);
-	my $salt = time (); #rand ();
-	$query_string =~ s{salt\=[\d\.]+}{salt=$salt}g;
-	$query_string =~ s{sid\=[\d\.]+}{sid=$_REQUEST{sid}}g;
-	
-	return $_REQUEST {__uri} . '?' . uri_unescape ($query_string);
-	
-	
-}
+	$href = check_href ({href => $href}, 1);
 
+	return "${href}&__next_query_string=$_REQUEST{__last_query_string}";
+
+}
 
 ################################################################################
 

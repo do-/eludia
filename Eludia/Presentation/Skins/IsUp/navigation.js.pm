@@ -192,8 +192,18 @@ function check_top_window () {
 }
 
 function activate_link_by_id (id) {
+
 	var a = document.getElementById (id);
-	activate_link (a.href, a.target);
+
+	if (a.onclick) {
+		try { window.event.cancelBubble = false } catch (e) {}
+		a.onclick ();
+	}
+	
+	if (!window.event.cancelBubble) {
+		a.click ();
+	}
+
 }
 
 function start_keepalive (timeout) {

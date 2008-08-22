@@ -2062,7 +2062,7 @@ sub draw_table {
 		
 		<table cellspacing=0 cellpadding=0 width="100%">		
 			<tr>		
-				<form name=$$options{name} action=$_REQUEST{__uri} method=post enctype=multipart/form-data target=$$options{target}>
+				<form name=$$options{name} action=$_REQUEST{__uri} method=post target=$$options{target}>
 					<input type=hidden name=type value=$$options{type}>
 					<input type=hidden name=action value=$$options{action}>
 					<input type=hidden name=sid value=$_REQUEST{sid}>
