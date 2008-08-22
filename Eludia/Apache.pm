@@ -272,6 +272,18 @@ sub handler {
 	
 	}
 
+	if ($_REQUEST {__form_checkboxes}) {
+	
+		foreach my $key (split /\,/, $_REQUEST {__form_checkboxes}) {
+		
+			$key or next;
+			
+			exists $_REQUEST {$key} or $_REQUEST {$key} += 0;
+		
+		}
+	
+	}
+
 	$_REQUEST {type} =~ s/_for_.*//;
 	$_REQUEST {__uri} = $r -> uri;
 	$_REQUEST {__uri} =~ s{/cgi-bin/.*}{/};

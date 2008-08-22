@@ -997,18 +997,7 @@ sub draw_form {
 	$options -> {action}    = 'update' unless exists $options -> {action};
 	
 	$_REQUEST {__form_options} = $options;
-
-	my   @keep_params = map {{name => $_, value => $_REQUEST {$_}}} @{$options -> {keep_params}};
-	push @keep_params, {name  => 'sid',                         value => $_REQUEST {sid}                         };
-	push @keep_params, {name  => 'select',                      value => $_REQUEST {select}                      };
-	push @keep_params, {name  => '__no_navigation',             value => $_REQUEST {__no_navigation}              };
-	push @keep_params, {name  => '__tree',                      value => $_REQUEST {__tree}                      };
-	push @keep_params, {name  => 'type',                        value => $options -> {type} || $_REQUEST {type}  };
-	push @keep_params, {name  => 'id',                          value => $options -> {id} || $_REQUEST {id}      };
-	push @keep_params, {name  => 'action',                      value => $options -> {action}                    };
-	push @keep_params, {name  => '__last_query_string',         value => $_REQUEST {__last_last_query_string}    };
-	push @keep_params, {name  => '__last_scrollable_table_row', value => $_REQUEST {__last_scrollable_table_row} } unless ($_REQUEST {__windows_ce});
-	$options -> {keep_params} = \@keep_params;	
+	$_REQUEST {__form_checkboxes} = '';
 
 	adjust_esc ($options, $data);
 	
@@ -1125,6 +1114,20 @@ sub draw_form {
 	}
 	
 	delete $_REQUEST {__form_options};
+
+	my   @keep_params = map {{name => $_, value => $_REQUEST {$_}}} @{$options -> {keep_params}};
+	push @keep_params, {name  => 'sid',                         value => $_REQUEST {sid}                         };
+	push @keep_params, {name  => 'select',                      value => $_REQUEST {select}                      };
+	push @keep_params, {name  => '__no_navigation',             value => $_REQUEST {__no_navigation}             };
+	push @keep_params, {name  => '__tree',                      value => $_REQUEST {__tree}                      };
+	push @keep_params, {name  => 'type',                        value => $options -> {type} || $_REQUEST {type}  };
+	push @keep_params, {name  => 'id',                          value => $options -> {id} || $_REQUEST {id}      };
+	push @keep_params, {name  => 'action',                      value => $options -> {action}                    };
+	push @keep_params, {name  => '__last_query_string',         value => $_REQUEST {__last_last_query_string}    };
+	push @keep_params, {name  => '__form_checkboxes',           value => $_REQUEST {__form_checkboxes}           } if $_REQUEST {__form_checkboxes};
+	push @keep_params, {name  => '__last_scrollable_table_row', value => $_REQUEST {__last_scrollable_table_row} } unless ($_REQUEST {__windows_ce});
+
+	$options -> {keep_params} = \@keep_params;	
 		
 	return $_SKIN -> draw_form ($options);
 
@@ -1726,6 +1729,8 @@ sub draw_form_field_static {
 sub draw_form_field_checkbox {
 
 	my ($options, $data) = @_;
+	
+	$_REQUEST {__form_checkboxes} .= ",_$options->{name}";
 	
 	$options -> {attributes} -> {checked}  = 1 if $options -> {checked} || $data -> {$options -> {name}};
 	$options -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
