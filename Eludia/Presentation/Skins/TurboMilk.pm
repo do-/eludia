@@ -2238,28 +2238,12 @@ sub draw_table {
 	$$options{toolbar} =~ s{^\s+}{}sm;
 	$$options{toolbar} =~ s{\s+$}{}sm;
 
-	my $html = <<EOH;
+	my $html = '';
 	
-		$$options{title}
-		$$options{path}
-		$$options{top_toolbar}
-		
-		<table cellspacing=0 cellpadding=0 width="100%">		
-			<tr>		
-				<form name=$$options{name} action=$_REQUEST{__uri} method=post enctype=multipart/form-data target=invisible>
-					<input type=hidden name=type value=$$options{type}>
-					<input type=hidden name=action value=$$options{action}>
-					<input type=hidden name=sid value=$_REQUEST{sid}>
-					<input type=hidden name=__tree value=$_REQUEST{__tree}>
-					<input type=hidden name=__last_query_string value="$_REQUEST{__last_last_query_string}">
-					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
-EOH
-
 	foreach my $key (keys %_REQUEST) {
 		next if $key =~ /^_/ or $key =~/^(type|action|sid|__last_query_string)$/;
 		$html .= qq {<input type=hidden name=$key value="$_REQUEST{$key}">\n};
 	}
-
 
 	$html .= qq {<td class=bgr8>};
 	
@@ -2282,8 +2266,6 @@ EOH
 	my $menus = '';
 
 	foreach our $i (@$list) {
-
-#warn Dumper ($i);
 		
 		foreach my $tr (@{$i -> {__trs}}) {
 			
@@ -2311,11 +2293,27 @@ EOH
 		
 EOH
 
-#</td></tr></table>
-
 	$__last_centered_toolbar_id = '';
-		
-	return $html;
+	
+	my $enctype = $html =~ /\btype\=[\'\"]?file\b/ ? 
+		'enctype="multipart/form-data"' : '';
+
+	return <<EOH . $html;
+	
+		$$options{title}
+		$$options{path}
+		$$options{top_toolbar}
+
+		<table cellspacing=0 cellpadding=0 width="100%">
+			<tr>
+				<form name=$$options{name} action=$_REQUEST{__uri} method=post target=invisible $enctype>
+					<input type=hidden name=type value=$$options{type}>
+					<input type=hidden name=action value=$$options{action}>
+					<input type=hidden name=sid value=$_REQUEST{sid}>
+					<input type=hidden name=__tree value=$_REQUEST{__tree}>
+					<input type=hidden name=__last_query_string value="$_REQUEST{__last_last_query_string}">
+					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
+EOH
 
 }
 

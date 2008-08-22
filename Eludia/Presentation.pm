@@ -993,14 +993,15 @@ sub draw_form {
 	$options -> {no_esc}    = 1 if $apr -> param ('__last_query_string') < 0 && !$_REQUEST {__edit};
 	$options -> {target}  ||= 'invisible';	
 	$options -> {method}  ||= 'post';
-	$options -> {enctype} ||= 'multipart/form-data';
 	$options -> {target}  ||= 'invisible';	
 	$options -> {action}    = 'update' unless exists $options -> {action};
+	
+	$_REQUEST {__form_options} = $options;
 
 	my   @keep_params = map {{name => $_, value => $_REQUEST {$_}}} @{$options -> {keep_params}};
 	push @keep_params, {name  => 'sid',                         value => $_REQUEST {sid}                         };
 	push @keep_params, {name  => 'select',                      value => $_REQUEST {select}                      };
-	push @keep_params, {name  => '__no_navigation',              value => $_REQUEST {__no_navigation}              };
+	push @keep_params, {name  => '__no_navigation',             value => $_REQUEST {__no_navigation}              };
 	push @keep_params, {name  => '__tree',                      value => $_REQUEST {__tree}                      };
 	push @keep_params, {name  => 'type',                        value => $options -> {type} || $_REQUEST {type}  };
 	push @keep_params, {name  => 'id',                          value => $options -> {id} || $_REQUEST {id}      };
@@ -1123,8 +1124,8 @@ sub draw_form {
 
 	}
 	
-#	$__last_centered_toolbar_id = '';
-	
+	delete $_REQUEST {__form_options};
+		
 	return $_SKIN -> draw_form ($options);
 
 }
@@ -1461,6 +1462,8 @@ sub draw_form_field_datetime {
 sub draw_form_field_file {
 
 	my ($options, $data) = @_;
+	
+	$_REQUEST {__form_options} {enctype} = 'multipart/form-data';
 
 	$options -> {size} ||= 60;
 	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	

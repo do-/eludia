@@ -2054,22 +2054,7 @@ sub draw_table {
 	$$options{toolbar} =~ s{^\s+}{}sm;
 	$$options{toolbar} =~ s{\s+$}{}sm;
 
-	my $html = <<EOH;
-	
-		$$options{title}
-		$$options{path}
-		$$options{top_toolbar}
-		
-		<table cellspacing=0 cellpadding=0 width="100%">		
-			<tr>		
-				<form name=$$options{name} action=$_REQUEST{__uri} method=post target=$$options{target}>
-					<input type=hidden name=type value=$$options{type}>
-					<input type=hidden name=action value=$$options{action}>
-					<input type=hidden name=sid value=$_REQUEST{sid}>
-					<input type=hidden name=__tree value=$_REQUEST{__tree}>
-					<input type=hidden name=__last_query_string value="$_REQUEST{__last_last_query_string}">
-					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
-EOH
+	my $html = '';
 
 	foreach my $key (keys %_REQUEST) {
 		next if $key =~ /^_/ or $key =~/^(type|action|sid|__last_query_string)$/;
@@ -2082,8 +2067,6 @@ EOH
 
 	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="scrollable_table" lpt=$$options{lpt}>\n};
 
-#	$html .= qq {<td class=bgr8><div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));"><table cellspacing=0 cellpadding=0 width="100%" id="scrollable_table" lpt=$$options{lpt}>\n};
-
 	$html .= $options -> {header} if $options -> {header};
 
 	$html .= qq {<tbody>\n};
@@ -2095,8 +2078,6 @@ EOH
 	my $menus = '';
 
 	foreach our $i (@$list) {
-
-#warn Dumper ($i);
 		
 		foreach my $tr (@{$i -> {__trs}}) {
 			
@@ -2126,7 +2107,25 @@ EOH
 
 	$__last_centered_toolbar_id = '';
 		
-	return $html;
+	my $enctype = $html =~ /\btype\=[\'\"]?file\b/ ? 
+		'enctype="multipart/form-data"' : '';
+
+	my $html = <<EOH . $html;
+	
+		$$options{title}
+		$$options{path}
+		$$options{top_toolbar}
+		
+		<table cellspacing=0 cellpadding=0 width="100%">		
+			<tr>		
+				<form name=$$options{name} action=$_REQUEST{__uri} method=post target=$$options{target} $enctype>
+					<input type=hidden name=type value=$$options{type}>
+					<input type=hidden name=action value=$$options{action}>
+					<input type=hidden name=sid value=$_REQUEST{sid}>
+					<input type=hidden name=__tree value=$_REQUEST{__tree}>
+					<input type=hidden name=__last_query_string value="$_REQUEST{__last_last_query_string}">
+					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
+EOH
 
 }
 
