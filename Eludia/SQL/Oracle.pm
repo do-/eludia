@@ -1045,9 +1045,6 @@ sub mysql_to_oracle {
 
 my ($sql) = @_;
 
-### Убираем пробелы перед скобками
-$sql =~ s/\s*(\(|\))/\1/igsm;
-
 our $mysql_to_oracle_cache;
 
 my $cached = $mysql_to_oracle_cache -> {$sql};
@@ -1077,9 +1074,11 @@ while ($sql =~ /(''|'.*?[^\\]')/ism)
 	$in_quotes[++$sc_in_quotes]=$temp;
 	$sql =~ s/''|'.*?[^\\]'/POJJNBhvtgfckjh$sc_in_quotes/ism;
 }
+
+### Убираем пробелы перед скобками
+$sql =~ s/\s*(\(|\))/\1/igsm;
 ############### Делаем из выражений в скобках псевдофункции чтобы шаблон свернулся
 while ($sql =~ s/([^\w\s]+?\s*)(\()/\1VGtygvVGVYbbhyh\2/ism) {};
-
 ############### Это убираем
 
 $sql =~ s/\bBINARY\b//igsm; 
