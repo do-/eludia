@@ -139,18 +139,25 @@ sub create_url {
 
 sub hrefs {
 
-	my ($order, $kind) = @_;
-	
+	my ($order, $options) = @_;
+
+	unless (ref $options eq 'HASH') {
+		$options -> {kind} = $options;
+	}
+
+	my $name_order = $options -> {suffix} ? "order_$$options{suffix}" : 'order';
+	my $name_desc  = $options -> {suffix} ? "desc_$$options{suffix}"  : 'desc';
+
 	return $order ?
-		$kind == 1 ?
+		$options -> {kind} == 1 ?
 			(
-				href      => create_url (order => $order, desc => $order eq $_REQUEST {order} ? 1 - $_REQUEST {desc} : 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+				href      => create_url ($name_order => $order, $name_desc => $order eq $_REQUEST {$name_order} ? 1 - $_REQUEST {$name_desc} : 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
 			)
 		:	
 			(
-				href      => create_url (order => $order, desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
-				href_asc  => create_url (order => $order, desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
-				href_desc => create_url (order => $order, desc => 1, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+				href      => create_url ($name_order => $order, $name_desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+				href_asc  => create_url ($name_order => $order, $name_desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+				href_desc => create_url ($name_order => $order, $name_desc => 1, __last_last_query_string => $_REQUEST {__last_last_query_string}),
 			)
 	:
 		();
@@ -184,19 +191,28 @@ sub headers {
 sub order {
 
 	my $default = shift;
+
+	my $options;
+	if (ref $_ [-1] eq 'HASH') {
+		$options = pop (@_);
+	}
+
 	my $result;
-	
+
+	my $name_order = $options -> {suffix} ? "order_$$options{suffix}" : 'order';
+	my $name_desc  = $options -> {suffix} ? "desc_$$options{suffix}"  : 'desc';
+
 	while (@_) {
 		my $name  = shift;
 		my $sql   = shift;
-		$name eq $_REQUEST {order} or next;
+		$name eq $_REQUEST {$name_order} or next;
 		$result   = $sql;
 		last;
 	}
-	
+
 	$result ||= $default;
-	
-	unless ($_REQUEST {desc}) {
+
+	unless ($_REQUEST {$name_desc}) {
 		$result =~ s{(?<=SC)\!}{}g;
 		return $result;
 	}
@@ -222,6 +238,7 @@ sub order {
 	}
 	
 	return join ', ', @new;
+
 
 }
 
