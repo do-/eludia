@@ -1226,7 +1226,7 @@ sub draw_form_field {
 
 	register_hotkey ($field, 'focus', '_' . $field -> {name}, $conf -> {kb_options_focus});
 
-	$field -> {label} .= ':' if $field -> {label};
+	$field -> {label} .= $field -> {label} ? ':' : '&nbsp;';
 
 	$field -> {colspan} ||= $_REQUEST {__max_cols} - 1;
 
