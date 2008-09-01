@@ -784,25 +784,105 @@ sub do_unkill_DEFAULT {
 sub do_create_DEFAULT {
 
 	my $default_values = {};
+	
+	my $def = $DB_MODEL -> {tables} -> {$_REQUEST {type}};
+	
+	my $parent;
+	
+	if ($def && $def -> {columns}) {
+	
+		my $columns = $def -> {columns};
+	
+		foreach my $key (keys %$columns) {
+		
+			my $column = $columns -> {$key};
+			
+			$column -> {parent} or next;
+			
+			$parent = {column => $key, columns => []};
+			
+			unless ($column -> {ref}) {
+			
+				foreach my $table ($db -> tables) {	
+				
+					$table =~ s{\W}{}g;
+														
+					$key eq 'id_' . en_unplural ($table) or next;
+					
+					$parent -> {table} = $table;
+					
+					last;
+					
+				}
+				
+				$parent -> {table} or die "Parent table not found for $key\n";
+				
+				my $parent_def = $DB_MODEL -> {tables} -> {$parent -> {table}} or die "Table definition not found for $parent->{table}\n";
+					
+				my $parent_columns = $parent_def -> {columns} or die "Columns definition not found for $parent->{table}\n";
+				
+				foreach my $key (%$parent_columns) {
+				
+					$key =~ /^id_/ or next;
+					
+					$columns -> {$key} or next;
+					
+					push @{$parent -> {columns}}, $key;
+				
+				}
+			
+			}
+			
+			last;
+		
+		}
+	
+	}
 
 	my $columns = $model_update -> get_columns ($_REQUEST {type});
 	
-	while (my ($k, $v) = each %_REQUEST) {
+	if ($parent && !$_REQUEST {"_$parent->{column}"}) {
 	
-		next if $k =~ /^_/;
-		next if $k eq 'sid';
-		next if $k eq 'salt';
-		next if $k eq 'select';
-		next if $k eq 'type';
-		next if $k eq 'action';
-		next if $k eq 'lang';
-		next if $k eq 'error';
-		next unless exists $columns -> {$k}; 
-				
-		$default_values -> {$k} = $v;
+		my $href = sql_select_scalar (
+			"SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?",
+			$_REQUEST {sid}, 
+			$_REQUEST {__last_last_query_string}
+		);
+		
+		if ($href =~ /\bid\=(\d+)/) {
+		
+			my $data = sql ($parent -> {table} => [[id => $1]]);
+
+			$_REQUEST {"_$parent->{column}"} = $data -> {id};
+			
+			foreach my $key (@{$parent -> {columns}}) {
+			
+				$_REQUEST {"_$key"} = $data -> {$key};
+			
+			}
+
+		}
 	
 	}
 	
+	while (my ($k, $v) = each %_REQUEST) {
+	
+		if ($k =~ /^_/) {
+		
+			exists $columns -> {$'} or next;
+			$default_values -> {$'} = $v;
+		
+		}
+		else {
+		
+			next if $k =~ /^(s(id|alt|elect)|type|action|lang|error)$/;
+			exists $columns -> {$k} or next; 
+			$default_values -> {$k} = $v;
+		
+		}				
+	
+	}
+		
 	$_REQUEST {id} = sql_do_insert ($_REQUEST {type}, $default_values);
 
 }
