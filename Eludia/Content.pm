@@ -857,7 +857,7 @@ sub do_create_DEFAULT {
 			
 			foreach my $key (@{$parent -> {columns}}) {
 			
-				$_REQUEST {"_$key"} ||= $data -> {$key};
+				exists $_REQUEST {"_$key"} or $_REQUEST {"_$key"} = $data -> {$key};
 			
 			}
 
