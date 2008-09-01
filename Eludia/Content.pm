@@ -853,11 +853,11 @@ sub do_create_DEFAULT {
 		
 			my $data = sql ($parent -> {table} => [[id => $1]]);
 
-			$_REQUEST {"_$parent->{column}"} = $data -> {id};
+			$_REQUEST {"_$parent->{column}"} ||= $data -> {id};
 			
 			foreach my $key (@{$parent -> {columns}}) {
 			
-				$_REQUEST {"_$key"} = $data -> {$key};
+				$_REQUEST {"_$key"} ||= $data -> {$key};
 			
 			}
 
