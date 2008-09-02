@@ -284,6 +284,10 @@ sub sql_do_update {
 		id        => $_REQUEST {id},
 	};
 
+	$options -> {id} ||= $_REQUEST {id};
+	
+	my $item = sql_select_hash ($table_name, $options -> {id});
+
 	my $sql = join ', ', map {"$_ = ?"} @$field_list;
 	$options -> {stay_fake} or $sql .= ', fake = 0';
 	$sql = "UPDATE $table_name SET $sql WHERE id = ?";	
@@ -291,6 +295,10 @@ sub sql_do_update {
 	push @params, $options -> {id};
 	sql_do ($sql, @params);
 	
+	if ($item -> {fake} == -1 && $conf -> {core_undelete_to_edit} && !$options -> {stay_fake}) {
+		do_undelete_DEFAULT ($table_name, $options -> {id});
+	}
+
 }
 
 ################################################################################

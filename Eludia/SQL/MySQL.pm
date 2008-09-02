@@ -505,7 +505,9 @@ sub sql_do_update {
 
 	
 	$options -> {id} ||= $_REQUEST {id};
-	
+
+	my $item = sql_select_hash ($table_name, $options -> {id});
+
 	my $have_fake_param;
 	my $sql = join ', ', map {$have_fake_param ||= ($_ eq 'fake'); "$_ = ?"} @$field_list;
 	$options -> {stay_fake} or $have_fake_param or $sql .= ', fake = 0';
@@ -515,6 +517,10 @@ sub sql_do_update {
 	push @params, $options -> {id};
 
 	sql_do ($sql, @params);
+
+	if ($item -> {fake} == -1 && $conf -> {core_undelete_to_edit} && !$options -> {stay_fake}) {
+		do_undelete_DEFAULT ($table_name, $options -> {id});
+	}
 	
 }
 

@@ -955,13 +955,17 @@ sub do_delete_DEFAULT {
 
 sub do_undelete_DEFAULT {
 
+	my ($table_name, $id) = @_;
+	$table_name ||= $_REQUEST {type};
+	$id ||= $_REQUEST {id};
+
 	my $extra = '';
-	$extra .= ', is_merged_to = 0' if $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {is_merged_to};
-	$extra .= ', id_merged_to = 0' if $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {id_merged_to};
+	$extra .= ', is_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {is_merged_to};
+	$extra .= ', id_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {id_merged_to};
 
-	sql_do ("UPDATE $_REQUEST{type} SET fake = 0 $extra WHERE id = ?", $_REQUEST{id});
+	sql_do ("UPDATE $table_name SET fake = 0 $extra WHERE id = ?", $id);
 
-	sql_undo_relink ($_REQUEST{type}, $_REQUEST{id});
+	sql_undo_relink ($table_name, $id);
 
 }
 
@@ -1875,8 +1879,13 @@ sub del {
 			preset  => 'undelete',
 			href    => {action => 'undelete'},
 			target  => 'invisible',
-			off     => $data -> {fake} >= 0 || !$_REQUEST {__read_only} || $_REQUEST {__popup},
-		}
+			off     => $data -> {fake} >= 0 || !$_REQUEST {__read_only} || $_REQUEST {__popup} || $conf -> {core_undelete_to_edit},
+		},
+		{
+			preset  => 'undelete',
+			href    => create_url() . "&__edit=1",
+			off     => $data -> {fake} >= 0 || !$_REQUEST {__read_only} || $_REQUEST {__popup} || !$conf -> {core_undelete_to_edit},
+		},
 	);
 
 }
@@ -2019,6 +2028,9 @@ sub fill_in {
 		voc                      => ' справочник...',
 		wrong_month              => 'Некорректно задан месяц',
 		wrong_day                => 'Некорректно задан день',
+		wrong_hour               => 'Некорректно заданы часы',
+		wrong_min                => 'Некорректно заданы минуты',
+		wrong_sec                => 'Некорректно заданы секунды',
 		hta_confirm              => 'Вы обратились к WEB-приложению по прямому адресу, как к публичному сайту. При этом окно браузера содержит панели, не нужные для работы, а настройки безопасности могут оказаться несовместимыми с логикой программы. Для более удобной работы с WEB-приложением мы рекомендуем установить на вашей рабочей станции специальный файл (HTML Application). Выполнить установку?',
 		months			 => [qw(
 			января
@@ -2075,6 +2087,9 @@ sub fill_in {
 		today                    => 'Today', 
 		wrong_month              => 'Invalid month',
 		wrong_day                => 'Invalid day',
+		wrong_hour               => 'Invalid hours',
+		wrong_min                => 'Invalid minutes',
+		wrong_sec                => 'Invalid seconds',
 		months			 => [qw(
 			january
 			february
@@ -2130,6 +2145,9 @@ sub fill_in {
 		today                    => "Aujourd'hui", 
 		wrong_month              => 'Format de date inconnu',
 		wrong_day                => 'Format de date inconnu',
+		wrong_hour               => 'Format de date inconnu',
+		wrong_min                => 'Format de date inconnu',
+		wrong_sec                => 'Format de date inconnu',
 		months			 => [qw(
 			janvier
 			fйvrier

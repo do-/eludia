@@ -659,6 +659,8 @@ sub sql_do_update {
 	
 	$options -> {id} ||= $_REQUEST {id};
 		
+	my $item = sql_select_hash ($table_name, $options -> {id});
+
 #	my %lobs = map {$_ => 1} @{$options -> {lobs}};
 	
 #	my @field_list = grep {!$lobs {$_}} @$field_list;
@@ -673,7 +675,10 @@ sub sql_do_update {
 		sql_do ($sql, @params);
 
 	}
-	
+
+	if ($item -> {fake} == -1 && $conf -> {core_undelete_to_edit} && !$options -> {stay_fake}) {
+		do_undelete_DEFAULT ($table_name, $options -> {id});
+	}
 
 }
 
