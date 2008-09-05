@@ -25,7 +25,9 @@ my $exit_requested = 0;
 #$SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = sub {warn "PIPE!\n"};
 
-while (1) {
+my $requests = 10;
+
+while ($requests --) {
 
 	$handling_request = $request -> Accept;
 	
@@ -89,7 +91,16 @@ while (1) {
 	
 	eval &{"$configs->{$app}->{handler}::handler"} ();
 	
-	warn $@ if $@;
+	if ($@) {
+	
+		warn $@ if $@;
+
+		print "Status: 500 Internal Auth Error\r\n";
+		print "Content-type: text/html\r\n\r\n";
+		print "<pre>$@</pre>";
+		
+	}
+	
 
 	$handling_request = 0;
 
@@ -97,7 +108,7 @@ while (1) {
 
 }
 
-$request ->  Finish;
+$request -> Finish;
 
 exit (0);
 
