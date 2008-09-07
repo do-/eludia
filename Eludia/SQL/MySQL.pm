@@ -35,14 +35,19 @@ sub sql_do_refresh_sessions {
 
 	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < now() - INTERVAL ? MINUTE", $timeout);
 	
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
+	if ($ids ne '-1') {
 
-	$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
+		sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
 
-	sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session NOT IN ($ids)");
-	
+		$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
+
+		sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session NOT IN ($ids)");
+
+
+	}
+
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = NULL WHERE id = ? ", $_REQUEST {sid});
-	
+
 }
 
 ################################################################################
@@ -790,18 +795,6 @@ sub sql_select_loop {
 }
 ################################################################################
 
-sub sql_select_ids {
-	my ($sql, @params) = @_;
-
-	my @ids = grep {$_ > 0} sql_select_col ($sql, @params);
-	push @ids, -1;
-
-	foreach my $parameter (@params) {
-		$sql =~ s/\?/'$parameter'/ism;
-	}
-
-	return wantarray ? (join(',', @ids), join(',', @ids)) : join(',', @ids);
-}
-
+sub _sql_ok_subselects { 0 }
 
 1;

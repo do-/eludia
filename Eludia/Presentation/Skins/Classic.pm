@@ -1274,24 +1274,11 @@ EOJS
 		<select name="$name" id="${name}_select" $read_only onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression((last_vert_menu && last_vert_menu [0]) || (window.top && window.top.last_vert_menu && window.top.last_vert_menu [0]) ? 'hidden' : '')">
 EOH
 
-	if (defined $options -> {empty}) {
-		$html .= q {<option value=0>};
-		$html .= $options -> {empty};
-		$html .= q {</option>};
-	}
-
 	foreach my $value (@{$options -> {values}}) {		
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>};
 	}
-
-	if (defined $options -> {other}) {
-		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
-	}
-
+	
 	$html .= '</select>';
-
-
-
 
 	if (defined $options -> {other}) {
 		$options -> {other} -> {height} ||= 300;

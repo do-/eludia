@@ -141,7 +141,7 @@ sub sql_prepare {
 
 		eval {$st = $db  -> prepare_cached ($sql, {
 			ora_auto_lob => ($sql !~ /for\s+update\s*/ism),
-		}, 4)};
+		}, 3)};
 
 	}
 	else {
@@ -1311,30 +1311,6 @@ return $sql;
 
 ################################################################################
 
-sub sql_select_ids {
-
-	my ($sql, @params) = @_;
-	
-	my $ids = '-1';
-	
-	my $st = sql_execute ($sql, @params);
-		
-	while ((my $id) = $st -> fetchrow_array) {
-		$id > 0 or next;
-		$ids .= ',';
-		$ids .= $id;
-	}
-	
-	$st -> finish ();
-	
-	wantarray or return $ids;
-
-	foreach my $parameter (@params) {
-		$sql =~ s/\?/'$parameter'/ism;
-	}
-
-	return ($ids, $sql);
-
-}
+sub _sql_ok_subselects { 1 }
 
 1;

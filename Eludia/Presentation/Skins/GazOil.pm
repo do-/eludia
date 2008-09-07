@@ -1209,23 +1209,8 @@ sub draw_toolbar_input_select {
 		<select name="$name" id="${name}_select" onChange="$$options{onChange}" onkeypress="typeAhead()" style="visibility:expression(last_vert_menu && last_vert_menu [0] ? 'hidden' : '')">
 EOH
 
-	if (defined $options -> {empty}) {
-		$html .= q {<option value=0>};
-		$html .= $options -> {empty};
-		$html .= q {</option>};
-	}
-
 	foreach my $value (@{$options -> {values}}) {		
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>};
-	}
-
-
-
-
-
-
-	if (defined $options -> {other}) {
-		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
 	}
 
 	$html .= '</select>';
@@ -1233,10 +1218,6 @@ EOH
 	my $width;
 	if (defined $options -> {other} -> {width}) {
 		$width = "${$$options{other}}{width}";
-#	} elsif (defined $options -> {other} -> {left}) {
-#		$width = "expression(this.offsetParent.offsetWidth)"; 
-#	} else {
-#		$width = "expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)";
 	}
 	if (defined $options -> {other}) {
 		$html .= <<EOH;
@@ -1247,64 +1228,10 @@ EOH
 EOH
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	$html .= "<td><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	return $html;
-	
+
 }
 
 ################################################################################

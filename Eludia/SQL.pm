@@ -666,7 +666,7 @@ sub sql_select_vocabulary {
 	
 	my @list;
 
-	tie @list, 'Eludia::Vocabulary', {
+	tie @list, 'Eludia::Tie::Vocabulary', {
 	
 		sql => "SELECT id, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit",
 		
@@ -1178,10 +1178,22 @@ sub sql {
 		return $data;
 	
 	}
+	
+	my $_args = $preconf -> {core_debug_sql} ? Storable::dclone (\@_) : undef;
 
-	my ($root, @other) = @_;
+	my ($root_table, @other) = @_;
 
-	my $select = "SELECT\n $root.*";
+	$root_table =~ /(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
+
+	my ($root, $root_columns) = ($1, $2);
+	
+	$root_columns ||= '*';
+	
+	my @root_columns = split /\s*\,\s*/, $root_columns;
+
+	my $select  = "SELECT\n ";
+	$select .= join ', ', map {"$root.$_\n "} @root_columns;
+
 	my $from   = "\nFROM\n $root";
 	my $where  = "\nWHERE\n 1=1";
 	my $order  = [$root . '.label'];
@@ -1218,33 +1230,74 @@ sub sql {
 		}
 		
 		if ($field eq 'LIMIT') {
-		    $limit = $values;			
+			$limit = $values;			
 			next;
 		}
 
-		ref $values or $values = [$values];
+		ref $values eq ARRAY or $values = [$values];
 		
-		next if $values -> [0] eq '' or $values -> [0] eq '0' or $values -> [0] eq '0000-00-00';
+		my $first_value = $values -> [0];
+
+		my $tied;
+		
+		if (ref $first_value eq SCALAR) {
+		
+			$tied = tied $$first_value;
+		
+		}
+		
+		unless ($tied) {
+
+			next if $first_value eq '' or $first_value eq '0000-00-00';
+
+		}
 		
 		$have_id_filter = 1 if $field eq 'id';
 		
 		$field =~ s{([a-z][a-z0-9_]*)}{$root.$1}gsm;
 			
-		if ($field =~ /\s+IN\s*$/sm) {						# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
+		if ($field =~ /\s+IN\s*$/sm) {
 			
-			$where .= "\n  AND ($field (-1";
+											# ['id_org IN' => sql_select_ids (...)] => "users.id_org IN (SELECT ...)"
+											# ['id_org IN' => sql ('orgs(id)' => [[id_kind => 1]])] => "users.id_org IN (SELECT ...)"
+
+			if ($tied) {							
+			
+				if (_sql_ok_subselects ()) {
 				
-			foreach (grep {/\d/} @$values) { $where .= ", $_"}
-								
-			$where .= "))";
+					$where .= "\n  AND ($field ($tied->{sql}))";
+
+					push @params, @{$tied -> {params}};
+				
+				}
+				else {
+				
+					$where .= "\n  AND ($field ($$first_value))";
+				
+				}
+
+			}
+			else {								# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
 			
+				$where .= "\n  AND ($field (-1";
+
+				foreach (grep {/\d/} @$values) { $where .= ", $_"}
+
+				$where .= "))";
+			
+			}
+
 		}
 		else {
 
-			$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';		# 'id_org'       --> 'id_org = '
-			$field =~ /\?/  or $field .= ' ? '; 				# 'id_org LIKE ' --> 'id_org LIKE ?'
+			$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';		# 'id_org'           --> 'id_org = '
+			$field =~ /\?/  or $field .= ' ? '; 				# 'id_org LIKE '     --> 'id_org LIKE ?'
 			$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm;
-			$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;
+			$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;		# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
+			if ($field =~ s{\<\+}{\<}) {			
+				my @ymd = split /\-/, $first_value;				
+				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
+			}
 
 			$where .= "\n AND ($field)";
 			push @params, @$values;
@@ -1357,6 +1410,12 @@ sub sql {
 	my @result;
 	my $records;
 	
+	if ($preconf -> {core_debug_sql}) {
+	
+		warn Dumper ({args => $_args, sql => $sql, params => \@params});
+	
+	}
+	
 	if ($have_id_filter || ($limit && @$limit == 1 && $limit -> [0] == 1)) {
 
 		@result = (sql_select_hash ($sql, @params));
@@ -1377,9 +1436,34 @@ sub sql {
 		}
 		else {
 
-			@result = (sql_select_all ($sql, @params));
-	
-			$records = $result [0];
+			if (@root_columns == 1 && $root_columns [0] ne '*') {
+							
+				my $ids;
+
+				my $tied = tie $ids, 'Eludia::Tie::IdsList', {
+
+					sql => $sql,
+
+					_REQUEST => \%_REQUEST,
+
+					package => __PACKAGE__,
+
+					params => \@params,
+
+					db => $db,
+
+				};
+
+				return \$ids;
+
+			}
+			else {
+
+				@result = (sql_select_all ($sql, @params));
+
+				$records = $result [0];
+
+			}
 
 		}
 	
@@ -1403,6 +1487,8 @@ sub sql {
 
 }
 
+################################################################################
+
 sub en_unplural {
 
 	my ($s) = @_;
@@ -1419,6 +1505,35 @@ sub en_unplural {
 	if ($s =~ s{(o|ch|sh|ss|x)es$}{$1}) { return $s }
 	$s =~ s{s$}{};
 	return $s;
+
+}
+
+################################################################################
+
+sub sql_select_ids {
+
+	my ($sql, @params) = @_;	
+
+	my $ids;
+
+	my $tied = tie $ids, 'Eludia::Tie::IdsList', {
+	
+		sql => $sql,
+		
+		_REQUEST => \%_REQUEST,
+		
+		package => __PACKAGE__,
+		
+		params => \@params,
+		
+		db => $db,
+		
+	};
+	
+	return wantarray ? (
+		$ids,
+		wantarray && _sql_ok_subselects () ? $tied -> _sql : $ids,
+	) : $ids;
 
 }
 

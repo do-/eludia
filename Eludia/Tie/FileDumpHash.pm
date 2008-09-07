@@ -1,4 +1,4 @@
-package Eludia::FileDumpHash;
+package Eludia::Tie::FileDumpHash;
 
 sub TIEHASH  {
 

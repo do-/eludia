@@ -64,8 +64,9 @@ BEGIN {
 		require Eludia::InternalRequest;
 		require Eludia::Presentation;
 		require Eludia::SQL;
-		require Eludia::FileDumpHash;
-		require Eludia::Vocabulary;
+		require Eludia::Tie::IdsList;
+		require Eludia::Tie::FileDumpHash;
+		require Eludia::Tie::Vocabulary;
 		$preconf -> {core_path} = __FILE__;
 	}
 	
@@ -76,7 +77,10 @@ BEGIN {
 	if ($preconf -> {mail}) {
 		require Eludia::Mail;
 	}
-		
+	else {
+		eval 'sub send_mail {warn "Mail parameters are not set.\n"}';
+	}
+
 	$| = 1;
 
 	$SIG {__DIE__} = \&Carp::confess;

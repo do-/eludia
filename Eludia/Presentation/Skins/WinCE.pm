@@ -1072,13 +1072,8 @@ sub draw_toolbar_input_select {
 		<select name="$$options{name}" onChange="nope('javascript:document.$form_name.submit()')">
 EOH
 
-	if (defined $options -> {empty}) {
-		$html .= q {<option value=0>};
-		$html .= $options -> {empty};
-		$html .= q {</option>};
-	}
-
-	foreach my $value (@{$options -> {values}}) {		
+	foreach my $value (@{$options -> {values}}) {
+		next if $value -> {id} == -1;
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>};
 	}
 

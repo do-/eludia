@@ -1,4 +1,4 @@
-package Eludia::Vocabulary;
+package Eludia::Tie::Vocabulary;
 
 ################################################################################
 

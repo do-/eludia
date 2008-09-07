@@ -1532,20 +1532,12 @@ EOJS
 		<select name="$name" id="${name}_select" $read_only onChange="$$options{onChange}" onkeypress="typeAhead()" $attributes>
 EOH
 
-	if (defined $options -> {empty}) {
-		$html .= q {<option value=0>};
-		$html .= $options -> {empty};
-		$html .= q {</option>};
-	}
-
 	foreach my $value (@{$options -> {values}}) {
+	
 		my $attributes = dump_attributes ($value -> {attributes});
 			
 		$html .= qq {<option value="$$value{id}" $$value{selected} $attributes>$$value{label}</option>};
-	}
-
-	if (defined $options -> {other}) {
-		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
+	
 	}
 
 	$html .= '</select></td><td class="toolbar">&nbsp;&nbsp;&nbsp;</td>';

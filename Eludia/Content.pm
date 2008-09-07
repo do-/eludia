@@ -375,7 +375,7 @@ sub require_fresh {
 			&& !exists $DB_MODEL -> {tables}
 		) {
 			my %tables = ();
-			tie %tables, Eludia::FileDumpHash, {path => $PACKAGE_ROOT -> [0] . '/Model'};
+			tie %tables, Eludia::Tie::FileDumpHash, {path => $PACKAGE_ROOT -> [0] . '/Model'};
 			$DB_MODEL -> {tables} = \%tables;
 			$DB_MODEL -> {splitted} = 1;
 		}

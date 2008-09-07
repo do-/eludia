@@ -2471,25 +2471,27 @@ sub draw_toolbar_input_select {
 	my ($options) = @_;
 		
 	$options -> {max_len} ||= $conf -> {max_len};
-	
-	foreach my $value (@{$options -> {values}}) {		
-		$value -> {label}    = trunc_string ($value -> {label}, $options -> {max_len});						
-		$value -> {selected} = (($value -> {id} eq $_REQUEST {$options -> {name}}) or ($value -> {id} eq $options -> {value})) ? 'selected' : '';
-	}
 
-	$options -> {onChange} ||= 'submit();';
-
-	$options -> {onChange} = '' if defined $options -> {other} || defined $options -> {detail};
+	exists $options -> {empty} and unshift @{$options -> {values}}, {id => '', label => $options -> {empty}};
 
 	if (defined $options -> {other}) {
 
 		ref $options -> {other} or $options -> {other} = {href => $options -> {other}, label => $i18n -> {voc}};
-
 		check_href ($options -> {other});
-
 		$options -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
+		push @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}};
 
 	}		
+	
+	$options -> {value}   ||= $_REQUEST {$options -> {name}};
+
+	foreach my $value (@{$options -> {values}}) {		
+		$value -> {label}    = trunc_string ($value -> {label}, $options -> {max_len});						
+		$value -> {selected} = $value -> {id} eq $options -> {value} ? 'selected' : '';
+	}
+
+	$options -> {onChange} ||= 'submit();';
+	$options -> {onChange} = '' if defined $options -> {other} || defined $options -> {detail};
 
 	return $_SKIN -> draw_toolbar_input_select ($options);
 	

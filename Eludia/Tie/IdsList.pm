@@ -1,0 +1,79 @@
+package Eludia::Tie::IdsList;
+
+################################################################################
+
+sub TIESCALAR {
+
+	my ($class, $options) = @_;
+
+	bless $options, $class;
+	
+}
+
+################################################################################
+
+sub _sql {
+
+	my ($self) = @_;
+	
+	return $self -> {sql_interpolated} if $self -> {sql_interpolated};
+	
+	$self -> {sql_interpolated} = $self -> {sql};
+	
+	$self -> {sql_interpolated} =~ s{\?}{\%s}g;
+	
+	$self -> {sql_interpolated} = sprintf ($self -> {sql_interpolated}, map {$self -> {db} -> quote ($_)} @{$self -> {params}});
+	
+	return $self -> {sql_interpolated};
+
+}
+
+################################################################################
+
+sub _check {
+
+	my ($self) = @_;
+
+	return if $self -> {body};		
+
+	$self -> {body} = '-1';
+	
+	my $st = $self -> {db} -> prepare_cached ($self -> {sql}, {}, 3);
+	
+	$st -> execute (@{$self -> {params}});
+	
+	my $id;
+	
+	$st -> bind_col (1, \$id);
+	
+	while ($st -> fetch) {$self -> {body} .= ",$id"}
+	
+	$st -> finish;
+
+}
+
+################################################################################
+
+sub FETCH {
+
+	my ($self) = @_;
+	
+	$self -> _check;
+
+	return $self -> {body};
+
+}
+
+################################################################################
+
+sub STORE {}
+
+################################################################################
+
+sub UNTIE {}
+
+################################################################################
+
+sub DESTROY {}
+
+1;
