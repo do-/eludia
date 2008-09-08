@@ -36,7 +36,7 @@ sub _check {
 	
 	my $time = &{"$self->{package}::time"} ();
 
-	my $list = &{"$self->{package}::sql_select_all"} ($self -> {sql});
+	my $list = &{"$self->{package}::sql_select_all"} ($self -> {sql}, @{$self -> {params}});
 
 	if ($self -> {tree}) {
 	

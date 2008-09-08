@@ -639,6 +639,54 @@ sub sql_select_vocabulary {
 	}
 	
 	$filter .= " AND $options->{filter}" if $options -> {filter};
+	
+	my @params = ();
+	
+	if ($options -> {in}) {
+	
+		my $in = $options -> {in};
+		
+		my $ref = ref $in;
+	
+		if ($ref eq SCALAR) {
+		
+			my $tied = tied $$in;
+		
+			if (_sql_ok_subselects ()) {
+				
+				$filter .= " AND id IN ($tied->{sql})";
+
+				push @params, @{$tied -> {params}};
+				
+			}
+			else {
+
+				$filter .= " AND id IN ($$in)";
+
+			}
+
+		}
+		elsif ($ref eq ARRAY) {
+		
+			@$in > 0 or return [];
+			
+			$in = join ',', @$in;
+			
+			$filter .= " AND id IN ($in)";
+		
+		}
+		elsif (!$ref) {
+		
+			$in =~ /\d/ or return [];
+
+			$filter .= " AND id IN ($in)";
+		
+		}
+		else {
+			die "Wrong IN list";
+		}
+	
+	}
 
 	if ($preconf -> {subset} && $table_name eq $conf -> {systables} -> {roles}) {
 		
@@ -668,13 +716,15 @@ sub sql_select_vocabulary {
 
 	tie @list, 'Eludia::Tie::Vocabulary', {
 	
-		sql => "SELECT id, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit",
+		sql      => "SELECT id, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit",
+		
+		params   => \@params,
 		
 		_REQUEST => \%_REQUEST,
 		
-		package => __PACKAGE__,
+		package  => __PACKAGE__,
 		
-		tree => $options -> {tree},
+		tree     => $options -> {tree},
 		
 	};
 		
