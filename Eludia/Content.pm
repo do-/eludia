@@ -803,7 +803,9 @@ sub do_create_DEFAULT {
 			
 			unless ($column -> {ref}) {
 			
-				foreach my $table ($db -> tables) {	
+				foreach my $table ($db -> tables ('', $self -> {schema}, '%', "'TABLE'")) {
+					
+					$table = $model_update -> unquote_table_name ($table);
 				
 					$table =~ s{\W}{}g;
 														
@@ -1509,7 +1511,7 @@ sub add_vocabularies {
 		
 		$options -> {item} = $item;
 		
-		$item -> {$name} = sql_select_vocabulary ($name, $options);
+		$item -> {$name} = sql_select_vocabulary ($options -> {name} || $name, $options);
 		
 	}
 	

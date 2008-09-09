@@ -417,6 +417,9 @@ Eludia/SQL/MicrosoftSQLServer.pm
 Eludia/SQL/MySQL.pm
 Eludia/SQL/Oracle.pm
 Eludia/SQL/SQLite.pm
+Eludia/Tie/FileDumpHash.pm
+Eludia/Tie/IdsList.pm
+Eludia/Tie/Vocabulary.pm
 Eludia/Util.pm
 Eludia/Validators.pm
 Eludia/Vocabulary.pm
