@@ -30,6 +30,7 @@ sub draw_page {
 	my $dump = Dumper ({
 		request => \%_REQUEST,
 		user    => $_USER,
+		query   => $_QUERY,
 		content => $page -> {content},								
 	});
 	$dump =~ s/\x0A/\x0D\x0A/g;

@@ -2768,9 +2768,194 @@ sub defaults {
 			$data -> {$key} = $def {$name};
 		
 		}
+		
+		check_query () if $key eq 'id___query';
 	
 	}
 
 }
+
+################################################################################
+
+sub get_item_of___queries {
+
+	my ($data) = @_;
+
+	return $data;
+
+}
+
+################################################################################
+
+sub do_update___queries {
+
+	my $content = {};
+	
+	my @order = ();
+	
+	foreach my $key (keys %_REQUEST) {
+	
+		$key =~ /^_(\w+)_desc$/ or next;
+		
+		my $order = $1;
+		
+		$content -> {columns} -> {$order} = {
+			ord  => $_REQUEST {"_${order}_ord"},
+			sort => $_REQUEST {"_${order}_sort"},
+			desc => $_REQUEST {"_${order}_desc"},
+		};
+		
+		if ($_REQUEST {"_${order}_sort"}) {
+		
+			$order [ $_REQUEST {"_${order}_sort"} ]  = $order;
+			$order [ $_REQUEST {"_${order}_sort"} ] .= ' DESC' if $_REQUEST {"_${order}_desc"};
+		
+		}
+	
+	}
+	
+	$content -> {order} = join ', ', grep { $_ } @order;
+	
+	foreach my $key (keys %_REQUEST) {
+	
+		$key =~ /^_filter_(\w+)$/ or next;
+				
+		$content -> {filters} -> {$1} = $_REQUEST {$key};
+	
+	}
+	
+	sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", Dumper ($content), $_REQUEST {id});
+
+	esc ();	
+
+}
+
+################################################################################
+
+sub check___query {
+
+	$_REQUEST {__order_context} ||= '';
+
+	$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?", $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context});
+
+	$_REQUEST {id___query} or return;
+	
+	our $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id___query});
+	
+	my $VAR1;
+	
+	eval $_QUERY -> {dump};
+	
+	$_QUERY -> {content} = $VAR1;
+	
+	my $filters = $_QUERY -> {content} -> {filters};
+
+	if ($_QUERY -> {label}) {
+	
+		foreach my $key (keys %$filters) {
+		
+			$_REQUEST {$key} = $filters -> {$key};
+		
+		}
+
+		$_REQUEST {id___query} = sql_select_id (		
+
+			$conf -> {systables} -> {__queries} => {
+
+				fake        => 0,
+				id_user     => $_USER -> {id},
+				type        => $_REQUEST {type},
+				-dump       => $_QUERY -> {dump},
+				label       => '',
+				order_context	    => $_REQUEST {__order_context},
+
+			}, ['id_user', 'type', 'label', 'order_context'],
+
+		)
+
+	}
+	else {
+
+		foreach my $key (keys %$filters) {
+
+			exists $_REQUEST {$key} or $_REQUEST {$key} = $filters -> {$key};
+
+		}
+
+	}
+
+}
+
+
+################################################################################
+
+sub fix___query {
+
+	$_REQUEST {__order_context} ||= '';
+	
+	if (@_ORDER > 0 && !$_REQUEST {id___query}) {
+	
+		my $content = {filters => {}, columns => {}};
+		
+		my $n = 1;
+
+		foreach my $o (@_ORDER) {
+		
+			$content -> {columns} -> {$o -> {order}} = {ord => $n ++};
+
+			foreach my $filter (@{$o -> {filters}}) {
+			
+				$content -> {filters} -> {$filter -> {name}} = $_REQUEST {$filter -> {name}};
+
+			}
+
+		}
+
+		sql_select_id (
+
+			$conf -> {systables} -> {__queries} => {
+
+				fake        => 0,
+				id_user     => $_USER -> {id},
+				type        => $_REQUEST {type},
+				-dump       => Dumper ($content),
+				label       => '',
+				order_context		=> $_REQUEST {__order_context},
+
+			}, ['id_user', 'type', 'label', 'order_context'],
+
+		);
+	
+	} elsif (@_ORDER > 0) {
+
+		foreach my $o (@_ORDER) {
+		
+			foreach my $filter (@{$o -> {filters}}) {
+			
+				$_QUERY -> {content} -> {filters} -> {$filter -> {name}} = $_REQUEST {$filter -> {name}};
+
+			}
+
+		}
+
+		$_REQUEST {id___query} = sql_select_id (		
+
+			$conf -> {systables} -> {__queries} => {
+
+				fake        => 0,
+				id_user     => $_USER -> {id},
+				type        => $_REQUEST {type},
+				-dump       => Dumper ($_QUERY -> {content}),
+				label       => '',
+				order_context		=> $_REQUEST {__order_context},
+
+			}, ['id_user', 'type', 'label', 'order_context'],
+
+		)
+
+	}
+	
+}
+
 
 1;

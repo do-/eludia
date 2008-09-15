@@ -126,6 +126,7 @@ sub setup_skin {
 			_REQUEST
 			_COOKIES
 			_USER
+			_QUERY
 			SQL_VERSION
 			conf
 			preconf

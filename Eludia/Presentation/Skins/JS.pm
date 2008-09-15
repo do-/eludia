@@ -131,6 +131,7 @@ sub draw_form_field {
 		if (!element) element = doc.getElementById ('input_$field_name');
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
 		if (!element) return;					
+
 		element.outerHTML = a [0];
 		element.tabIndex = "$tabs[$i]";
 //		if (element.onChange) element.onChange ();

@@ -350,6 +350,25 @@ sub _draw_input_datetime {
 	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
 	
 	my $attributes = dump_attributes ($options -> {attributes});
+	
+	if ($_REQUEST {__only_field}) {
+
+		return <<EOH;
+			<input 
+				type="text" 
+				name="$$options{name}"
+				id="input_$$options{name}"
+				$size 
+				$attributes 
+				autocomplete="off" 
+				onFocus="scrollable_table_is_blocked = true; q_is_focused = true; this.select()" 
+				onBlur="scrollable_table_is_blocked = false; q_is_focused = false" 
+				onKeyPress="$$options{onKeyPress}" 
+				onKeyDown="$$options{onKeyDown}"
+			>
+EOH
+
+	}
 		
 	my $shows_time = $options -> {no_time} ? 'false' : 'true';
 		
@@ -358,6 +377,7 @@ sub _draw_input_datetime {
 		<input 
 			type="text" 
 			name="$$options{name}" 
+			id="input_$$options{name}"
 			$size 
 			$attributes 
 			autocomplete="off" 

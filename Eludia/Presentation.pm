@@ -201,13 +201,68 @@ sub order {
 
 	my $name_order = $options -> {suffix} ? "order_$$options{suffix}" : 'order';
 	my $name_desc  = $options -> {suffix} ? "desc_$$options{suffix}"  : 'desc';
+	
+	my @default_order;
+	check___query ();
 
 	while (@_) {
 		my $name  = shift;
 		my $sql   = shift;
+		
+		$default_order [$_QUERY -> {content} -> {columns} -> {$name} -> {sort}] = {name => $name, sql => $sql} 
+			if ($_QUERY -> {content} -> {columns} -> {$name} -> {sort});
+			
 		$name eq $_REQUEST {$name_order} or next;
 		$result   = $sql;
 		last;
+	}
+
+	if (!$result && @default_order + 0) {
+		foreach my $order (@default_order) {
+
+			next 
+				unless $order;
+			
+			
+			unless ($_QUERY -> {content} -> {columns} -> {$order -> {name}} -> {desc}) {
+			
+				$order -> {sql} =~ s{(?<=SC)\!}{}g;
+				$result .= ','
+					if $result;
+				$result .= ' ' . $order -> {sql};
+				
+				next;
+			}
+			
+			
+			my @new = ();
+			
+			foreach my $token (split /\s*\,\s*/gsm, $order -> {sql}) {
+			
+				unless ($token =~ s{\!$}{}) {
+		
+					unless ($token =~ s{DESC$}{}i) {
+		
+						$token =~ s{ASC$}{}i;
+						$token .= ' DESC';
+		
+					}
+		
+				}
+			
+				push @new, $token;
+			
+			}
+			
+			$result .= ','
+				if $result;
+
+			$result .= ' ' . join ', ', @new;
+			
+		}
+
+		return $result;
+	
 	}
 
 	$result ||= $default;
@@ -2382,6 +2437,8 @@ sub draw_toolbar {
 		}
 
 		push @{$options -> {buttons}}, $button;
+		
+		push @{$_ORDER {$button -> {order}} -> {filters}}, $button if $button -> {order};
 
 	};
 
@@ -3049,7 +3106,23 @@ sub draw_cells {
 	
 	$options -> {__fixed_cols} = 0;
 	
+
+	for (my $i = 0; $i < @_COLUMNS; $i ++) {
+		my $h = $_COLUMNS [$i];
+
+		ref $h eq HASH or next;
+		$h -> {order}  or next;
+		
+		$_ [0] [$i] = {label => $_ [0] [$i]}
+			unless ref $_ [0] [$i] eq HASH; 
+		
+		$_ [0] [$i] -> {ord} ||= $_COLUMNS [$i] -> {ord}; 
+		$_ [0] [$i] -> {hidden} ||= $_COLUMNS [$i] -> {hidden}; 
+
+	}
+
 	my @cells = order_cells (@{$_[0]});
+
 	if ($_REQUEST {select}) {
 		my @cell;
 
@@ -3606,6 +3679,33 @@ sub draw_table {
 		$headers = shift;
 	}
 
+	my @header_cells = ();
+	
+	foreach my $h (@$headers) {push @header_cells, ref $h eq ARRAY ? @$h : $h}
+	
+	our @_ORDER = ();
+	our @_COLUMNS = ();
+	our %_ORDER = ();
+
+
+	foreach my $h (@header_cells) {
+
+		push @_COLUMNS, $h;
+	
+		ref $h eq HASH or next;
+		$h -> {order}  or next;
+		
+		if ($_REQUEST {id___query} && !$_REQUEST {__edit__query}) {
+			$h -> {ord}    = $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord};
+			$h -> {hidden} = 1 if $h -> {ord} == 0;
+		}
+		
+		$h -> {filters} = [];
+		push @_ORDER, $h;
+		$_ORDER {$h -> {order}} = $h;
+
+	}
+		
 	my ($tr_callback, $list, $options) = @_;
 	
 	$options -> {type}   ||= $_REQUEST{type};
@@ -3640,6 +3740,8 @@ sub draw_table {
 		$options -> {top_toolbar} -> [0] -> {_list} = $list;		
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
+
+	fix___query ();
 	
 	if (ref $options -> {path} eq ARRAY) {
 		$options -> {path} = draw_path ($options, $options -> {path});
@@ -4069,6 +4171,7 @@ sub draw_page {
 			$renderrer = 'dbf_write_' . $page -> {type};
 		} 
 		else {
+			check___query ();
 			$selector  = 'select_' . $page -> {type};
 			$renderrer = 'draw_' . $page -> {type};
 		}
@@ -4076,11 +4179,45 @@ sub draw_page {
 		undef $page -> {content};		
 		
 		eval { $page -> {content} = call_for_role ($selector)} unless $_REQUEST {__only_menu};
-		
+				
 		$_REQUEST {__page_content} = $page -> {content};
 		
 		warn $@ if $@;
 		
+		if ($_REQUEST {__edit_query}) {
+		
+			my $is_dump = $_REQUEST {__dump};
+			delete $_REQUEST {__dump}; 
+
+			setup_skin ();
+		
+			call_for_role ($renderrer, $page -> {content});
+			
+			$_REQUEST {__dump} = $is_dump;
+			
+			$_REQUEST {id___query} ||= sql_select_id (
+
+				$conf -> {systables} -> {__queries} => {
+					id_user     => $_USER -> {id},
+					type        => $_REQUEST {type},
+					label       => '',
+					order_context		=> $_REQUEST {__order_context} || '',
+				}, ['id_user', 'type', 'label'],
+
+			);
+			
+			check___query ();
+
+			$_REQUEST {type} = $page -> {type} = '__queries';
+			$_REQUEST {id}   = $_REQUEST {id___query};
+
+			$selector  = 'get_item_of_' . $page -> {type};
+			$renderrer = 'draw_item_of_' . $page -> {type};
+			$_REQUEST {__page_content}  = $page -> {content} = call_for_role ($selector, $page -> {content});
+			
+			delete $_REQUEST {__skin};
+		}
+
 		setup_skin ();
 
 		$_REQUEST {__read_only} = 0 if ($_REQUEST {__only_field});
@@ -4266,6 +4403,78 @@ sub dialog_open {
 	$_REQUEST {__script} .= "var dialog_open_$options->{id} = " . $_JSON -> encode ($arg) . ";\n";
 
 	return $_SKIN -> dialog_open ($arg, $options);
+
+}
+
+################################################################################
+
+sub draw_item_of___queries {
+
+	my ($data) = @_;
+	
+ 	my @fields = (
+ 	
+ 		{
+ 			type  => 'banner',
+ 			label => 'Столбцы и фильтры',
+ 		},
+ 		
+ 	);
+	
+	foreach my $o (@_ORDER) {
+	
+		my @f = (
+			{
+				label => $o -> {title} || $o -> {label},
+				type  => 'hgroup',
+				cell_width	=> '50%',
+				items => [
+					{
+						label => 'показ',
+						size  => 2,
+						name  => $o -> {order} . '_ord',
+						value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord},
+					},
+					{
+						label => 'сортировка',
+						size  => 2,
+						name  => $o -> {order} . '_sort',
+						value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {sort},
+					},
+					{
+						name  => $o -> {order} . '_desc',
+						type  => 'select',
+						values => [{id => 1, label => 'убывание'}],
+						empty => 'возрастание',
+						value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {desc},
+					},
+				],
+			},
+		);
+		
+		foreach my $filter (@{$o -> {filters}}) {
+		
+			my %f = (
+				label => $filter -> {label},
+				size  => $filter -> {size},
+				name  => 'filter_' . $filter -> {name},
+				value => $_QUERY -> {content} -> {filters} -> {$filter -> {name}},
+			);
+
+			if ($filter -> {type} eq 'input_select') {
+				$f {type}   = 'select';
+				$f {values} = $filter -> {values};
+			}
+
+			push @f, \%f;
+
+		}
+
+		push @fields, \@f;
+
+	}
+	
+	return draw_form ({}, $data, \@fields);
 
 }
 
