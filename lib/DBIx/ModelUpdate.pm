@@ -17,6 +17,18 @@ no warnings;
 
 ################################################################################
 
+sub canonic_key_definition {
+
+	my ($self, $s) = @_;
+	
+	$s =~ s{\s+}{}g;
+	
+	return $s;
+
+}
+
+################################################################################
+
 sub __log_profilinig {
 
 	printf STDERR "Profiling [$$] %20.10f ms %s\n", 1000 * (time - $_[0]), $_[1];
@@ -68,6 +80,10 @@ sub new {
   		$self -> {characterset} = $self -> sql_select_scalar ('SELECT VALUE FROM V$NLS_PARAMETERS WHERE PARAMETER = ?', 'NLS_CHARACTERSET');
   		$self -> {schema} ||= uc $db -> {Username};
   		$self -> {__voc_replacements} = "$self->{quote}$self->{__voc_replacements}$self->{quote}" if $self -> {__voc_replacements} =~ /^_/;
+	}
+	
+	if ($driver_name eq 'PostgreSQL') {
+		$self -> {schema} = $self -> sql_select_scalar ('SELECT current_schema()');
 	}
 	
 	$self -> {schema} ||= '';
@@ -133,13 +149,13 @@ my $time = __log_profilinig ($time, '   checksum table created');
 
 	my $existing_tables = {};	
 	
-	foreach ($self -> {db} -> tables ('', $self -> {schema}, '%', "'TABLE'")) {
+	foreach my $table ($self -> {db} -> tables ('', $self -> {schema}, '%', "'TABLE'")) {
 	
-		$existing_tables -> {$self -> unquote_table_name ($_)} = {};
-	
+		$existing_tables -> {$self -> unquote_table_name ($table)} = {};
+
 	}
 
-my $time = __log_profilinig ($time, '   got existing_tables');
+my $time = __log_profilinig ($time, '   got existing_tables ');
 
 	&{$self -> {before_assert}} (@_) if ref $self -> {before_assert} eq CODE;		
 	
@@ -207,9 +223,10 @@ my $time = __log_profilinig ($time, '   got keys & columns');
 				if ($existing_columns -> {$c_name}) {
 				
 					my $existing_column = $existing_columns -> {$c_name};										
-					$self -> update_column ($name, $c_name, $existing_column, $c_definition,,$params {core_voc_replacement_use});
 
-my $time = __log_profilinig ($time, "    $name.$c_name updated");
+					my $flag = $self -> update_column ($name, $c_name, $existing_column, $c_definition,,$params {core_voc_replacement_use});
+
+my $time = __log_profilinig ($time, "    $name.$c_name " . ($flag ? 'updated' : 'checked'));
 
 				}
 				else {
@@ -219,30 +236,31 @@ my $time = __log_profilinig ($time, "    $name.$c_name updated");
 				}
 
 			};
+			
+			if (keys %$new_columns) {
 
-			$self -> add_columns ($name, $new_columns,,$params {core_voc_replacement_use}) if keys %$new_columns;
+				$self -> add_columns ($name, $new_columns,,$params {core_voc_replacement_use});
 
 my $time = __log_profilinig ($time, "    columns added");
 
+			}
+
 			foreach my $k_name (keys %{$definition -> {keys}}) {
 			
-				my $k_definition = $definition -> {keys} -> {$k_name};
-			
-				$k_definition =~ s{\s+}{}g;
-			
-				if (
-					$existing_tables -> {$name} 
-					&& $existing_tables -> {$name} -> {keys} -> {$k_name}
-				) {
-				
-					$existing_tables -> {$name} -> {keys} -> {$k_name} =~ s{\s+}{}g; 					
+				my $k_definition = $self -> canonic_key_definition ($definition -> {keys} -> {$k_name});
+						
+				if ($existing_tables -> {$name}) {
+					
+					my $existing_definition = $self -> canonic_key_definition ($existing_tables -> {$name} -> {keys} -> {$k_name});
+					
+					if ($existing_definition) {
+										
+						next if $existing_definition eq $k_definition;
 
-					if ($existing_tables -> {$name} -> {keys} -> {$k_name} ne $k_definition) {
 						$self -> drop_index ($name, $k_name, $params {core_voc_replacement_use});
-my $time = __log_profilinig ($time, "    key $name.$k_name dropped");
-					}
-					else {
-						next;
+
+my $time = __log_profilinig ($time, "    key $name.$k_name dropped because '$existing_definition' ne '$k_definition'");
+
 					}
 				
 				}						
@@ -250,6 +268,7 @@ my $time = __log_profilinig ($time, "    key $name.$k_name dropped");
 				$self -> create_index ($name, $k_name, $k_definition, $definition, $params {core_voc_replacement_use});
 
 my $time = __log_profilinig ($time, "    key $name.$k_name created");
+
 			};
 
 		}

@@ -232,6 +232,8 @@ sub update_column {
 	
 	$self -> do ($sql);
 	
+	return 1;
+	
 }
 
 

@@ -1046,8 +1046,22 @@ sub call_for_role {
 sub __log_profilinig {
 
 	my $now = time ();
+	
+	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($now);
+	$year += 1900;
+	$mon ++; 
 
-	printf STDERR "Profiling [$$] %20.10f ms %s\n", 1000 * ($now - $_[0]), $_[1] if ($preconf -> {core_debug_profiling} > 0);
+	printf STDERR "Profiling [%04d-%02d-%02d %02d:%02d:%02d $$] %20.10f ms %s\n", 
+		$year,
+		$mon,
+		$mday,
+		$hour,
+		$min,
+		$sec,
+		1000 * ($now - $_[0]), 
+		$_[1] 
+		
+		if $preconf -> {core_debug_profiling} > 0;
 	
 	return $now;
 
@@ -1123,7 +1137,7 @@ sub get_user {
 		
 	}
 
-	$user ||= sql_select_hash (<<EOS, $_REQUEST {sid});
+	$user ||= sql_select_hash (<<EOS, $_REQUEST {sid}) if $_REQUEST {sid};
 		SELECT
 			$conf->{systables}->{users}.*
 			, $conf->{systables}->{roles}.name AS role
