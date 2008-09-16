@@ -1313,4 +1313,12 @@ return $sql;
 
 sub _sql_ok_subselects { 1 }
 
+sub get_sql_translator_ref {
+
+	return \ &mysql_to_oracle if $conf -> {core_auto_oracle};
+
+}
+
+
 1;
+

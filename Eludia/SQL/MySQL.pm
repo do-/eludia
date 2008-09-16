@@ -797,4 +797,6 @@ sub sql_select_loop {
 
 sub _sql_ok_subselects { 0 }
 
+sub get_sql_translator_ref { 0 }
+
 1;

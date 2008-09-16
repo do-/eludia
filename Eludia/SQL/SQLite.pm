@@ -455,4 +455,6 @@ sub keep_alive {
 
 sub _sql_ok_subselects { 1 }
 
+sub get_sql_translator_ref { 0 }
+
 1;

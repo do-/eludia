@@ -1511,15 +1511,18 @@ sub sql {
 
 				my $tied = tie $ids, 'Eludia::Tie::IdsList', {
 
-					sql => $sql,
 
-					_REQUEST => \%_REQUEST,
+					sql 			=> $sql,
 
-					package => __PACKAGE__,
+					_REQUEST 		=> \%_REQUEST,
 
-					params => \@params,
+					package 		=> __PACKAGE__,
 
-					db => $db,
+					params 			=> \@params,
+
+					db 			=> $db,
+			
+					sql_translator_ref	=> get_sql_translator_ref(),
 
 				};
 
@@ -1587,15 +1590,18 @@ sub sql_select_ids {
 
 	my $tied = tie $ids, 'Eludia::Tie::IdsList', {
 	
-		sql => $sql,
+		sql 			=> $sql,
 		
-		_REQUEST => \%_REQUEST,
+		_REQUEST 		=> \%_REQUEST,
 		
-		package => __PACKAGE__,
+		package 		=> __PACKAGE__,
 		
-		params => \@params,
+		params 			=> \@params,
 		
-		db => $db,
+		db 			=> $db,
+
+		sql_translator_ref	=> get_sql_translator_ref(),
+
 		
 	};
 	
