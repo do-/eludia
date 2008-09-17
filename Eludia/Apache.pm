@@ -623,7 +623,11 @@ EOH
 								-value   =>  sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
 								-expires =>  '+1M', # 'Sat, 31-Dec-2050 23:59:59 GMT',
 								-path    =>  '/',
-							)
+							);
+							
+							if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
+								sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
+							}
 						}
 
 						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_REQUEST {redirect_params}) {

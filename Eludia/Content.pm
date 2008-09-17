@@ -1144,6 +1144,7 @@ sub get_user {
 			, $conf->{systables}->{roles}.label AS role_label
 			, $conf->{systables}->{sessions}.id_role AS session_role
 			, $conf->{systables}->{sessions}.ip
+			, $conf->{systables}->{sessions}.tz_offset
 			, $conf->{systables}->{sessions}.ip_fw
 			, $conf->{systables}->{sessions}.id_role AS session_id_role
 		FROM

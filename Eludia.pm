@@ -13,6 +13,7 @@ use Number::Format;
 use Time::HiRes 'time';
 use URI::Escape;
 use Storable;
+use Date::Calc;
  
 use constant MP2 => (exists $ENV{MOD_PERL_API_VERSION} and $ENV{MOD_PERL_API_VERSION} >= 2 or $ENV{MOD_PERL} =~ m{mod_perl/1.99}); 
 

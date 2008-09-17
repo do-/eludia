@@ -2943,6 +2943,10 @@ EOH
 		:
 		'document.forms[0].elements["login"].focus (); ';
 	
+	if ($preconf -> {core_fix_tz}) {
+		my $tz = (Date::Calc::Timezone ()) [3] || 0;
+		$_REQUEST {__on_load} .= " var d = new Date(); document.form.tz_offset.value=$tz - d.getTimezoneOffset()/60; alert (document.form.timezone.value);";
+	} 
 	
 	return <<EOH;
 
@@ -2983,6 +2987,7 @@ EOH
 							<input type=hidden name=type value=logon>
 							<input type=hidden name=action value=execute>
 							<input type=hidden name=redirect_params value="$_REQUEST{redirect_params}">
+							<input type=hidden name=tz_offset value="">
 <!--							
 							<tr>
 								<td colspan="2" align="center"><a id="logon_url" style="text-decoration:none" href="javascript: document.forms['form'].elements['action'].value='execute_ip'; document.forms['form'].submit()"><div class="green-title"><div style="float:left;margin-top:6px;">Войти как Овсянко Дмитрий Евгеньевич</div><div style="float:right;"><img src="$_REQUEST{__static_site}/i/logon_turbo_milk/images/green_ear_right.gif" border="0"></div></div></td>

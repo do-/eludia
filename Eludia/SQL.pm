@@ -349,6 +349,7 @@ $time = __log_profilinig ($time, ' <sql_assert_core_tables>: 136');
 				peer_server => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
 				peer_id => {TYPE_NAME    => 'bigint'},
 				
+				tz_offset	=> {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
 			}
 
 		},

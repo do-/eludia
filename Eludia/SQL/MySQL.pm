@@ -101,6 +101,15 @@ sub sql_do {
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
 
 	my $st = $db -> prepare ($sql);
+
+	if ($preconf -> {core_fix_tz}) {
+		for (my $i=0; $i < @params; $i ++) {
+			if ($params [$i] =~ /^(\d{4})-(\d{1,2})-(\d{1,2}) (\d{2}):(\d{2})(:(\d{2}))?$/) {
+				$params [$i] = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', Date::Calc::Add_Delta_DHMS ($1, $2, $3, $4, $5, $6 || 0, 0, $_USER -> {tz_offset} + 0 || 0, 0, 0));
+			}
+		}
+	}
+
 	$st -> execute (@params);
 	$st -> finish;	
 	
@@ -371,7 +380,7 @@ sub sql_select_hash {
 	$st -> execute (@params);
 	my $result = $st -> fetchrow_hashref ();
 	$st -> finish;
-	
+
 	return $result;
 
 }
@@ -389,7 +398,7 @@ sub sql_select_array {
 	$st -> execute (@params);
 	my @result = $st -> fetchrow_array ();
 	$st -> finish;
-	
+
 	return wantarray ? @result : $result [0];
 
 }
