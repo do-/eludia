@@ -43,19 +43,19 @@ sub _check {
 	if ($self -> {sql_translator_ref}) {
 		$sql = $self -> {sql_translator_ref} ($self -> {sql});
 	} else {
-	        $sql = $self -> {sql};
+		$sql = $self -> {sql};
 	}
 
 	my $st = $self -> {db} -> prepare_cached ($sql, {}, 3);
 	
 	$st -> execute (@{$self -> {params}});
 	
-	my $id;
-	
-	$st -> bind_col (1, \$id);
-	
-	while ($st -> fetch) {$self -> {body} .= ",$id"}
-	
+	while (my @a = $st -> fetchrow_array) {
+		foreach my $id (@a) {
+			$self -> {body} .= ",$id" if $id
+		}
+	}
+
 	$st -> finish;
 
 }
