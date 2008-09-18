@@ -416,6 +416,7 @@ Eludia/SQL.pm
 Eludia/SQL/MicrosoftSQLServer.pm
 Eludia/SQL/MySQL.pm
 Eludia/SQL/Oracle.pm
+Eludia/SQL/PostgreSQL.pm
 Eludia/SQL/SQLite.pm
 Eludia/Tie/FileDumpHash.pm
 Eludia/Tie/IdsList.pm
@@ -427,6 +428,7 @@ lib/DBIx/ModelUpdate.pm
 lib/DBIx/ModelUpdate/MicrosoftSQLServer.pm
 lib/DBIx/ModelUpdate/MySQL.pm
 lib/DBIx/ModelUpdate/Oracle.pm
+lib/DBIx/ModelUpdate/PostgreSQL.pm
 lib/DBIx/ModelUpdate/SQLite.pm
 lib/DBIx/MySQLite.pm
 Makefile.PL

@@ -310,6 +310,8 @@ sub b64u_decode {
 
 sub require_fresh {
 
+	my $time = time;
+
 	my ($module_name, $fatal) = @_;	
 
 	check_systables ();
@@ -341,8 +343,10 @@ sub require_fresh {
 	my $need_refresh = $preconf -> {core_spy_modules} || !$INC {$inc_key};
 	
 	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $last_modified, $ctime, $blksize, $blocks);
+	
+	$need_refresh = 0 if $CONFIG_IS_LOADED && $is_config;
 
-	if ($need_refresh && (!$is_config || !$CONFIG_IS_LOADED)) {
+	if ($need_refresh) {
 		($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $last_modified, $ctime, $blksize, $blocks) = stat ($file_name);
 		my $last_load = $INC_FRESH {$module_name} + 0;
 		$need_refresh = $last_load < $last_modified;
@@ -589,9 +593,11 @@ print STDERR "[$$] OK, $script is over and out.\n";
 		print STDERR "require_fresh: error load module $module_name: $@\n";
         }
         else {
-        	$CONFIG_IS_LOADED ||= $is_config if $db;
+        	our $CONFIG_IS_LOADED ||= 1 if $is_config && $db;
         }
         
+	$time = __log_profilinig ($time, "    $module_name reloaded") if $db;
+
         return $@;
 	
 }
@@ -1051,13 +1057,14 @@ sub __log_profilinig {
 	$year += 1900;
 	$mon ++; 
 
-	printf STDERR "Profiling [%04d-%02d-%02d %02d:%02d:%02d $$] %20.10f ms %s\n", 
+	printf STDERR "Profiling [%04d-%02d-%02d %02d:%02d:%02d:%03d $$] %20.10f ms %s\n", 
 		$year,
 		$mon,
 		$mday,
 		$hour,
 		$min,
 		$sec,
+		int (1000 * ($now - int $now)),
 		1000 * ($now - $_[0]), 
 		$_[1] 
 		

@@ -241,8 +241,6 @@ my $time = time;
 	
 	}
 
-$time = __log_profilinig ($time, ' <sql_assert_core_tables>: 136');
-
 	my %defs = (
 	
 		$conf -> {systables} -> {__queries} => {
@@ -591,19 +589,26 @@ $time = __log_profilinig ($time, '  sql_reconnect: check_systables');
 $time = __log_profilinig ($time, '  sql_reconnect: connect');
 
 	my $driver_name = $db -> get_info ($GetInfoType {SQL_DBMS_NAME});
+
+$time = __log_profilinig ($time, '  sql_reconnect: driver name selected');
 	
 	$driver_name =~ s{\W}{}gsm;
 
-	eval "require Eludia::SQL::$driver_name";
+	my $path = __FILE__;
+	
+	$path =~ s{(.)SQL\.pm$}{${1}SQL$1${driver_name}.pm};
+
+	do $path;
+
+$time = __log_profilinig ($time, '  sql_reconnect: driver reloaded');
 
 	die $@ if $@;
 	
 	our $SQL_VERSION = sql_version ();
+
 	$SQL_VERSION -> {driver} = $driver_name;
 
-	delete $INC {"Eludia/SQL/${driver_name}.pm"};
-
-$time = __log_profilinig ($time, '  sql_reconnect: driver reloaded');
+$time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
 
 	unless ($preconf -> {no_model_update}) {
 	
@@ -616,9 +621,7 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver reloaded');
 			__voc_replacements	=> $conf -> {systables} -> {__voc_replacements}, 
 			core_voc_replacement_use=> $conf -> {core_voc_replacement_use},
 		);
-
-#		$preconf -> {no_model_update} = 1;
-		
+	
 	}
 
 $time = __log_profilinig ($time, '  sql_reconnect: $model_update created');

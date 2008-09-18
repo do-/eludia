@@ -121,14 +121,10 @@ my $time = time;
 		return if exists $self -> {checksums} -> {$checksum};
 				
 		eval {
-		
 			my $st = $self -> {db} -> prepare ("SELECT COUNT(*) FROM $_db_model_checksums WHERE checksum = ?");
 			$st -> execute ($checksum);
 			($self -> {checksums} -> {$checksum}) = $st -> fetchrow_array;
 			$st -> finish;
-
-my $time = __log_profilinig ($time, '   checksum selected');
-		
 		};
 		
 		return if $self -> {checksums} -> {$checksum};
