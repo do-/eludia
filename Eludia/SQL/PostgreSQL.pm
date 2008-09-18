@@ -69,7 +69,7 @@ sub sql_prepare {
 
 	if ($sql =~ /\bIF\s*\((.+?),(.+?),(.+?)\s*\)/igsm) {
 		
-		$sql = mysql_to_postgresql ($sql) if $conf -> {core_auto_oracle};
+		$sql = mysql_to_postgresql ($sql) if $conf -> {core_auto_postgresql};
 
 		($sql, @params) = sql_extract_params ($sql, @params) if ($conf -> {core_sql_extract_params} && $sql =~ /^\s*(SELECT|INSERT|UPDATE|DELETE)/i);
 
@@ -77,7 +77,7 @@ sub sql_prepare {
 
 		($sql, @params) = sql_extract_params ($sql, @params) if ($conf -> {core_sql_extract_params} && $sql =~ /^\s*(SELECT|INSERT|UPDATE|DELETE)/i);
 
-		$sql = mysql_to_postgresql ($sql) if $conf -> {core_auto_oracle};
+		$sql = mysql_to_postgresql ($sql) if $conf -> {core_auto_postgresql};
 
 	}
 	
@@ -309,7 +309,7 @@ sub lc_hashref {
 
 	return undef unless (defined $hr);	
 
-	if ($conf -> {core_auto_oracle}) {	
+	if ($conf -> {core_auto_postgresql}) {	
 		foreach my $key (keys %$hr) {
 		        my $old_key = $key;
 			$key =~ s/RewbfhHHkgkglld/user/igsm;
@@ -1114,6 +1114,10 @@ return $sql;
 
 sub _sql_ok_subselects { 1 }
 
-sub get_sql_translator_ref { 0 }
+sub get_sql_translator_ref {
+
+	return \ &mysql_to_postgresql if $conf -> {core_auto_postgresql};
+
+}
 
 1;
