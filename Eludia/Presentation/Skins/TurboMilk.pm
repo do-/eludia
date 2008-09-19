@@ -2058,8 +2058,10 @@ sub draw_checkbox_cell {
 	my ($_SKIN, $data, $options) = @_;
 
 	my $attributes = dump_attributes ($data -> {attributes});
+	
+	my $label = $data -> {label} ? '&nbsp;' . $data -> {label} : '';
 
-	return qq {<td $$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'></td>};
+	return qq {<td $$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label</td>};
 
 }
 
