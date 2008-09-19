@@ -764,7 +764,29 @@ sub download_table_data {
 
 ################################################################################
 
+sub sql_lock {
+
+	# not really sure
+
+	sql_do ("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+
+}
+
+################################################################################
+
+sub sql_unlock {
+
+	# not really sure
+
+	sql_do ("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+
+}
+
+################################################################################
+
 sub _sql_ok_subselects { 1 }
+
+################################################################################
 
 sub get_sql_translator_ref { 0 }
 

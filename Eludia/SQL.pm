@@ -781,6 +781,12 @@ sub sql_select_id {
 	
 	my $record = {};
 	
+	my $auto_commit = $db -> {AutoCommit};
+	
+	eval { $db -> {AutoCommit} = 0; };
+	
+	sql_lock ($table);
+	
 	foreach my $lookup_fields (@lookup_field_sets) {
 	
 		if (ref $lookup_fields eq CODE) {		
@@ -792,14 +798,33 @@ sub sql_select_id {
 		my @params = ();
 
 		foreach my $lookup_field (@$lookup_fields) {
-			$sql .= " AND $lookup_field = ?";
-			push @params, $values -> {$lookup_field};
+		
+			my $value = $values -> {$lookup_field};
+			
+			if ($value eq '' && $SQL_VERSION -> {driver} eq 'Oracle') {
+			
+				$value = undef;
+			
+			}
+			
+			if (defined $value) {
+			
+				$sql .= " AND $lookup_field = ?";
+				push @params, $values -> {$lookup_field};
+				
+			}
+			else {
+
+				$sql .= " AND $lookup_field IS NULL";
+
+			}
+		
 		}
 
 		$sql .= " ORDER BY fake DESC, id DESC";
 		
 		$record = sql_select_hash ($sql, @params);
-		
+
 		last if $record -> {id};
 
 	}
@@ -830,7 +855,20 @@ sub sql_select_id {
 	
 	}
 
-	return $record -> {id} || sql_do_insert ($table, $values);
+	$record -> {id} ||= sql_do_insert ($table, $values);
+
+	sql_unlock ($table);
+	
+	if ($auto_commit) {
+	
+		eval { 
+			$db -> commit;
+			$db -> {AutoCommit} = 1; 
+		};
+
+	}
+	
+	return $record -> {id};
 
 }
 

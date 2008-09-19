@@ -448,12 +448,35 @@ sub sql_select_loop {
 ################################################################################
 
 sub keep_alive {
+
 	my $sid = shift;
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = ? WHERE id = ? ", int(time), $sid);
+
 }
+
+################################################################################
+
+sub sql_lock {
+
+	sql_do ("PRAGMA locking_mode = EXCLUSIVE");
+	keep_alive ($_REQUEST {sid});
+
+}
+
+################################################################################
+
+sub sql_unlock {
+
+	sql_do ("PRAGMA locking_mode = NORMAL");
+	keep_alive ($_REQUEST {sid});
+
+}
+
 ################################################################################
 
 sub _sql_ok_subselects { 1 }
+
+################################################################################
 
 sub get_sql_translator_ref { 0 }
 
