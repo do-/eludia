@@ -1507,17 +1507,20 @@ sub sql {
 	}
 	
 	my $sql = $select . $from . $where;
+
+	my $is_ids = (@root_columns == 1 && $root_columns [0] ne '*') ? 1 : 0;
 	
-	unless ($have_id_filter) {
+	$sql =~ s{^SELECT}{SELECT DISTINCT} if $is_ids;
+
+	if (!$have_id_filter && !$is_ids) {
 	
 		ref $order or $order = [$order];
-#		$order -> [0] =~ /\./ or $order -> [0] = $root . '.' . $order -> [0];
 		$order -> [0] =~ s{(?<!\.)\b([a-z0-9_]+)\b(?!\.)}{${root}.$1}gsm;
 		$sql .= "\nORDER BY\n ";
 		$sql .= order (@$order);
 
 	}
-	
+
 	my @result;
 	my $records;
 	
@@ -1547,12 +1550,11 @@ sub sql {
 		}
 		else {
 
-			if (@root_columns == 1 && $root_columns [0] ne '*') {
+			if ($is_ids) {
 							
 				my $ids;
-
+				
 				my $tied = tie $ids, 'Eludia::Tie::IdsList', {
-
 
 					sql 			=> $sql,
 
