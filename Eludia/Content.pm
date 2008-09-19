@@ -2860,7 +2860,13 @@ sub check___query {
 
 	$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?", $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context});
 
-	$_REQUEST {id___query} or return;
+	unless ($_REQUEST {id___query}) {
+
+		our $_QUERY = {};
+		our @_COLUMNS = ();
+
+		return;
+	}
 	
 	our $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id___query});
 	
