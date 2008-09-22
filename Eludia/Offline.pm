@@ -45,15 +45,16 @@ BEGIN {
 	eval "\$conf = \$${package}::conf";
 
   $conf -> {systables} ||= {
-      _db_model_checksums => '_db_model_checksums',
-      __voc_replacements	      => '__voc_replacements',
+      _db_model_checksums     => '_db_model_checksums',
+      __voc_replacements      => '__voc_replacements',
       __access_log            => '__access_log',
       __benchmarks            => '__benchmarks',
       __last_update           => '__last_update',
       __moved_links           => '__moved_links',
-      __required_files=> '__required_files',
+      __required_files        => '__required_files',
       __screenshots           => '__screenshots',
-      cache_html                      => 'cache_html',
+      __queries               => '__queries',
+      cache_html              => 'cache_html',
       log                     => 'log',
       roles                   => 'roles',
       sessions                => 'sessions',
