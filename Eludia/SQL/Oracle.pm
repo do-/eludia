@@ -1313,7 +1313,9 @@ return $sql;
 
 sub sql_lock {
 
-	sql_do ("LOCK TABLE $_[0] IN ROW EXCLUSIVE MODE");
+	my $name = $_[0] =~ /^_/ ? "\"$_[0]\"" : $_[0];
+
+	sql_do ("LOCK TABLE $name IN ROW EXCLUSIVE MODE");
 
 }
 
