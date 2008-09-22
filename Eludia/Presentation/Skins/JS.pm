@@ -116,6 +116,22 @@ sub draw_form_field {
 			last if $fields [$i] eq $field -> {name};
 		}
 		
+		if ($field -> {type} eq 'date' || $field -> {type} eq 'datetime') {
+
+			$_REQUEST{__on_load} .= " load_$field->{name} (); ";
+
+			$_REQUEST {__script} .= <<EOJS;
+				function load_$field->{name} () {
+					var doc = window.parent.document;
+					var element = doc.getElementById ('input$field->{name}');
+					if (!element) return;					
+					element.value = '$field->{value}';
+				}
+EOJS
+			return '';
+		
+		}
+		
 		my $a = $_JSON -> encode ([$field -> {html}]);
 		
 		$_REQUEST{__on_load} .= " load_$field->{name} (); ";
