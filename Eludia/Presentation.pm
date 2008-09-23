@@ -4182,7 +4182,6 @@ sub draw_page {
 			$renderrer = 'dbf_write_' . $page -> {type};
 		} 
 		else {
-			check___query ();
 			$selector  = 'select_' . $page -> {type};
 			$renderrer = 'draw_' . $page -> {type};
 		}
