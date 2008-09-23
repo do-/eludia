@@ -786,7 +786,7 @@ sub sql_select_id {
 	eval { $db -> {AutoCommit} = 0; };
 	
 	sql_lock ($table);
-	
+
 	foreach my $lookup_fields (@lookup_field_sets) {
 	
 		if (ref $lookup_fields eq CODE) {		
@@ -1029,10 +1029,10 @@ warn "undo relink $$column_def{table_name} ($$column_def{name}): $old_id";
 
 sub assert_fake_key {
 
-	$DB_MODEL -> {tables} -> {$table_name} or return;
-	
 	my ($table_name) = @_;
 
+	$DB_MODEL -> {tables} -> {$table_name} or return;
+	
 	return if $DB_MODEL -> {tables} -> {$table_name} -> {keys} -> {fake};
 	
 	$model_update -> assert (tables => {

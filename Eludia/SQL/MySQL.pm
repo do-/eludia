@@ -807,7 +807,7 @@ sub sql_select_loop {
 
 sub sql_lock {
 
-	sql_do ("LOCK TABLE $_[0] WRITE");
+	sql_do ("LOCK TABLES $_[0] WRITE, _db_model_checksums WRITE, $conf->{systables}->{sessions} WRITE");
 
 }
 
