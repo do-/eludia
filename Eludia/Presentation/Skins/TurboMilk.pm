@@ -2466,7 +2466,7 @@ EOJS
 
 		$_REQUEST {__on_keydown} .= "if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
 
-		if ($_REQUEST {sid}) {
+		if ($_REQUEST {sid} && !$preconf -> {no_keepalive}) {
 			my $timeout = 1000 * (60 * $conf -> {session_timeout} - 1);
 			$_REQUEST {__on_load} .= "start_keepalive ($timeout);";
 		}
