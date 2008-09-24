@@ -2933,7 +2933,7 @@ EOH
 	
 	if ($preconf -> {core_fix_tz}) {
 		my $tz = (Date::Calc::Timezone ()) [3] || 0;
-		$_REQUEST {__on_load} .= " var d = new Date(); document.form.tz_offset.value=$tz - d.getTimezoneOffset()/60; alert (document.form.timezone.value);";
+		$_REQUEST {__on_load} .= " var d = new Date(); document.form.tz_offset.value=$tz - d.getTimezoneOffset()/60;";
 	} 
 	
 	return <<EOH;
