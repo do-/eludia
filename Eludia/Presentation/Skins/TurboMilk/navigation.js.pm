@@ -169,9 +169,11 @@ function idx_tables (__scrollable_table_row) {
 	scrollable_table          = scrollable_table.tBodies (0);
 	if (__scrollable_table_row < scrollable_rows.length) scrollable_table_row = __scrollable_table_row;
 	scrollable_table_row_cell = 0;
-
+	
 	if (scrollable_rows.length > 0) {
-		if (scrollable_table_row > 0) scrollCellToVisibleTop (cell_on (), 1);
+		if (scrollable_table_row > 0) {
+			scrollCellToVisibleTop (cell_on (), 1);
+		}
 	}
 	else {
 		scrollable_table = null;
@@ -698,25 +700,32 @@ function absTop (element) {
 
 function scrollCellToVisibleTop (td, force_top) {
 	
-	var table = td.parentElement.parentElement.parentElement;
+	var tr = td.parentElement;	
+	if (tr.tagName == 'A') tr = tr.parentElement;
+	var table = tr.parentElement.parentElement;
 	var thead = table.tHead;
 	var div   = table.parentElement;
-
+	
 	var delta = div.scrollTop - td.offsetTop + 2;
+
 	if (thead) delta += thead.offsetHeight;
+
 	if (delta > 0) div.scrollTop -= delta;
 
 	var delta = td.offsetTop - div.scrollTop;
 	
 	if (force_top) {
 		if (thead) delta -= thead.offsetHeight;
+		delta -= td.offsetHeight;
+		delta += 8;
 	}
 	else {
 		delta -= div.offsetHeight;
 		delta += td.offsetHeight;
 	}
-	
+
 	if (div.scrollWidth > div.offsetWidth - 12) delta += 12;
+
 	if (delta > 0) div.scrollTop += delta;
 
 }
