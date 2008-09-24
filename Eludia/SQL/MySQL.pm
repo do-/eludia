@@ -5,6 +5,10 @@ no warnings;
 
 sub sql_version {
 
+	$preconf -> {db_charset} ||= 'cp1251';
+	
+	$db -> do ("SET names $preconf->{db_charset}");
+
 	my $version = {	string => 'MySQL ' . sql_select_scalar ('SELECT VERSION()') };
 	
 	($version -> {number}) = $version -> {string} =~ /([\d\.]+)/;
