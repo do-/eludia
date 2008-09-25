@@ -96,6 +96,7 @@ sub send_mail {
 	my $text = encode_base64 ($options -> {text} . "\n" . $original_to);
 	
 	unless ($^O eq 'MSWin32') {
+		$SIG {'CHLD'} = "IGNORE";
 		defined (my $child_pid = fork) or die "Cannot fork: $!\n";
 		return $child_pid if $child_pid;
 	}
