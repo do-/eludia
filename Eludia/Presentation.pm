@@ -3118,19 +3118,19 @@ sub draw_cells {
 	$options -> {__fixed_cols} = 0;
 	
 
-	for (my $i = 0; $i < @_COLUMNS; $i ++) {
-		my $h = $_COLUMNS [$i];
-
-		ref $h eq HASH or next;
-		$h -> {order}  or next;
-		
-		$_ [0] [$i] = {label => $_ [0] [$i]}
-			unless ref $_ [0] [$i] eq HASH; 
-		
-		$_ [0] [$i] -> {ord} ||= $_COLUMNS [$i] -> {ord}; 
-		$_ [0] [$i] -> {hidden} ||= $_COLUMNS [$i] -> {hidden}; 
-
-	}
+# 	for (my $i = 0; $i < @_COLUMNS; $i ++) {
+# 		my $h = $_COLUMNS [$i];
+# 
+# 		ref $h eq HASH or next;
+# 		$h -> {order}  or next;
+# 		
+# 		$_ [0] [$i] = {label => $_ [0] [$i]}
+# 			unless ref $_ [0] [$i] eq HASH; 
+# 		
+# 		$_ [0] [$i] -> {ord} ||= $_COLUMNS [$i] -> {ord}; 
+# 		$_ [0] [$i] -> {hidden} ||= $_COLUMNS [$i] -> {hidden}; 
+# 
+# 	}
 
 	my @cells = order_cells (@{$_[0]});
 
@@ -3690,37 +3690,35 @@ sub draw_table {
 		$headers = shift;
 	}
 
-	my @header_cells = ();
-	
-	my $is_exists_subheaders;
-	foreach my $h (@$headers) {if (ref $h eq ARRAY) {$is_exists_subheaders = 1; last;}; push @header_cells, $h}
-	
-	our @_ORDER = ();
-	our @_COLUMNS = ();
-	our %_ORDER = ();
-
-
-	unless ($is_exists_subheaders) {
-	
-		foreach my $h (@header_cells) {
-	
-			push @_COLUMNS, $h;
-		
-			ref $h eq HASH or next;
-			$h -> {order}  or next;
-			
-			if ($_REQUEST {id___query} && !$_REQUEST {__edit__query}) {
-#				$h -> {ord}    = $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord};
-#				$h -> {hidden} = 1 if $h -> {ord} == 0;
-			}
-			
-			$h -> {filters} = [];
-			push @_ORDER, $h;
-			$_ORDER {$h -> {order}} = $h;
-	
-		}
-		
-	}
+# 	my @header_cells = ();
+# 	
+# 	my $is_exists_subheaders;
+# 	foreach my $h (@$headers) {if (ref $h eq ARRAY) {$is_exists_subheaders = 1; last;}; push @header_cells, $h}
+# 	
+# 	our @_ORDER = ();
+# 	our @_COLUMNS = ();
+# 	our %_ORDER = ();
+# 
+# 
+# 	unless ($is_exists_subheaders) {
+# 		foreach my $h (@header_cells) {
+# 	
+# 			push @_COLUMNS, $h;
+# 		
+# 			ref $h eq HASH or next;
+# 			$h -> {order}  or next;
+# 			
+# 			if ($_REQUEST {id___query} && !$_REQUEST {__edit__query}) {
+# 				$h -> {ord}    = $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord};
+# 				$h -> {hidden} = 1 if $h -> {ord} == 0;
+# 			}
+# 			
+# 			$h -> {filters} = [];
+# 			push @_ORDER, $h;
+# 			$_ORDER {$h -> {order}} = $h;
+# 	
+# 		}
+# 	}
 	
 	my ($tr_callback, $list, $options) = @_;
 	

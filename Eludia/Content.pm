@@ -2856,6 +2856,8 @@ sub do_update___queries {
 
 sub check___query {
 
+	return;
+
 	$_REQUEST {__order_context} ||= '';
 
 	$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?", $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context});
@@ -2918,6 +2920,8 @@ sub check___query {
 ################################################################################
 
 sub fix___query {
+
+        return;
 
 	$_REQUEST {__order_context} ||= '';
 	
