@@ -8,7 +8,7 @@ sub __d {
 
 	foreach $_ (@fields) {
 
-		if ($preconf -> {core_fix_tz} && $data -> {$_} =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/) {
+		if ($preconf -> {core_fix_tz} && $data -> {$_} !~ /^0000-00-00/ && $data -> {$_} =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/) {
 			$data -> {$_} = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', Date::Calc::Add_Delta_DHMS ($1, $2, $3, $4, $5, $6, 0, - $_USER -> {tz_offset} + 0 || 0, 0, 0));
 		}
 
@@ -2235,7 +2235,7 @@ sub draw_form_field_tree {
 sub draw_form_field_checkboxes {
 
 	my ($options, $data) = @_;
-warn Dumper($options);
+
 	$options -> {cols} ||= 1;
 
 	if (!ref $data -> {$options -> {name}}) {
@@ -3692,31 +3692,34 @@ sub draw_table {
 
 	my @header_cells = ();
 	
-	foreach my $h (@$headers) {push @header_cells, ref $h eq ARRAY ? @$h : $h}
+	my $is_exists_subheaders;
+	foreach my $h (@$headers) {if (ref $h eq ARRAY) {$is_exists_subheaders = 1; last;}; push @header_cells, $h}
 	
 	our @_ORDER = ();
 	our @_COLUMNS = ();
 	our %_ORDER = ();
 
 
-	foreach my $h (@header_cells) {
-
-		push @_COLUMNS, $h;
+	unless ($is_exists_subheaders) {
+		foreach my $h (@header_cells) {
 	
-		ref $h eq HASH or next;
-		$h -> {order}  or next;
+			push @_COLUMNS, $h;
 		
-		if ($_REQUEST {id___query} && !$_REQUEST {__edit__query}) {
-			$h -> {ord}    = $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord};
-			$h -> {hidden} = 1 if $h -> {ord} == 0;
+			ref $h eq HASH or next;
+			$h -> {order}  or next;
+			
+			if ($_REQUEST {id___query} && !$_REQUEST {__edit__query}) {
+				$h -> {ord}    = $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord};
+				$h -> {hidden} = 1 if $h -> {ord} == 0;
+			}
+			
+			$h -> {filters} = [];
+			push @_ORDER, $h;
+			$_ORDER {$h -> {order}} = $h;
+	
 		}
-		
-		$h -> {filters} = [];
-		push @_ORDER, $h;
-		$_ORDER {$h -> {order}} = $h;
-
 	}
-		
+	
 	my ($tr_callback, $list, $options) = @_;
 	
 	$options -> {type}   ||= $_REQUEST{type};
@@ -4035,7 +4038,7 @@ sub draw_node {
 		my $__last_query_string = $_REQUEST {__last_query_string};
 		$_REQUEST {__last_query_string} = $options -> {no_no_esc} ? $__last_query_string : -1;
 		check_href ($options);
-		$options -> {href} .= '&__tree=1' unless ($options -> {no_tree});
+		$options -> {href} .= '&__tree=1' if (!$options -> {no_tree} && $options -> {href} !~ /^javascript:/i);
 		$_REQUEST {__last_query_string} = $__last_query_string;
 
 	}

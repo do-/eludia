@@ -739,6 +739,7 @@ EOH
 
 					$url =~ s{\&?_?salt=[\d\.]+}{}gsm;
 					$url =~ s{\&?sid=\d+}{}gsm;
+					$url =~ s{\&?id___query=\d+}{}gsm;
 					$url =~ s{\&?__next_query_string=\d+}{}gsm;
 
 					my $no = sql_select_scalar ("SELECT no FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND href LIKE ?", $_REQUEST {sid}, $url);

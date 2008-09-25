@@ -168,6 +168,7 @@ BEGIN {
 		sid => 1,
 		password => 1,
 		error => 1,
+		id___query	=> 1,
 	};
 			
 	unless ($ENV {ELUDIA_BANNER_PRINTED}) {

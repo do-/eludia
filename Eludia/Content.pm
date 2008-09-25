@@ -2955,8 +2955,12 @@ sub fix___query {
 		);
 	
 	} elsif (@_ORDER > 0) {
+	
+		my $is_exists_any_order;
 
 		foreach my $o (@_ORDER) {
+		
+			$is_exists_any_order ||= $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord};
 		
 			foreach my $filter (@{$o -> {filters}}) {
 			
@@ -2965,21 +2969,25 @@ sub fix___query {
 			}
 
 		}
+		
+		if ($is_exists_any_order) {
 
-		$_REQUEST {id___query} = sql_select_id (		
-
-			$conf -> {systables} -> {__queries} => {
-
-				fake        => 0,
-				id_user     => $_USER -> {id},
-				type        => $_REQUEST {type},
-				-dump       => Dumper ($_QUERY -> {content}),
-				label       => '',
-				order_context		=> $_REQUEST {__order_context},
-
-			}, ['id_user', 'type', 'label', 'order_context'],
-
-		)
+			$_REQUEST {id___query} = sql_select_id (		
+	
+				$conf -> {systables} -> {__queries} => {
+	
+					fake        => 0,
+					id_user     => $_USER -> {id},
+					type        => $_REQUEST {type},
+					-dump       => Dumper ($_QUERY -> {content}),
+					label       => '',
+					order_context		=> $_REQUEST {__order_context},
+	
+				}, ['id_user', 'type', 'label', 'order_context'],
+	
+			);
+			
+		}
 
 	}
 	
