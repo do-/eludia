@@ -3701,6 +3701,7 @@ sub draw_table {
 
 
 	unless ($is_exists_subheaders) {
+	
 		foreach my $h (@header_cells) {
 	
 			push @_COLUMNS, $h;
@@ -3709,8 +3710,8 @@ sub draw_table {
 			$h -> {order}  or next;
 			
 			if ($_REQUEST {id___query} && !$_REQUEST {__edit__query}) {
-				$h -> {ord}    = $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord};
-				$h -> {hidden} = 1 if $h -> {ord} == 0;
+#				$h -> {ord}    = $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord};
+#				$h -> {hidden} = 1 if $h -> {ord} == 0;
 			}
 			
 			$h -> {filters} = [];
@@ -3718,6 +3719,7 @@ sub draw_table {
 			$_ORDER {$h -> {order}} = $h;
 	
 		}
+		
 	}
 	
 	my ($tr_callback, $list, $options) = @_;

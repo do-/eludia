@@ -3,11 +3,9 @@ Eludia.pm
 Eludia/Apache.pm
 Eludia/Auth/NTLM.pm
 Eludia/Content.pm
-Eludia/FileDumpHash.pm
 Eludia/Flix.pm
 Eludia/IIS.pm
 Eludia/InternalRequest.pm
-Eludia/JSPack.pm
 Eludia/lighttpd.pm
 Eludia/Loader.pm
 Eludia/Mail.pm
@@ -153,7 +151,6 @@ Eludia/Presentation/Skins/IsUp/btn2_r.gif.pm
 Eludia/Presentation/Skins/IsUp/btn_bg.gif.pm
 Eludia/Presentation/Skins/IsUp/btn_l.gif.pm
 Eludia/Presentation/Skins/IsUp/btn_r.gif.pm
-Eludia/Presentation/Skins/IsUp/calendar.js.pm
 Eludia/Presentation/Skins/IsUp/cnt_tbr_bg.gif.pm
 Eludia/Presentation/Skins/IsUp/colors.html.pm
 Eludia/Presentation/Skins/IsUp/dialog.html.pm
@@ -202,9 +199,7 @@ Eludia/Presentation/Skins/IsUp/menu_bottom.gif.pm
 Eludia/Presentation/Skins/IsUp/menu_button.gif.pm
 Eludia/Presentation/Skins/IsUp/menuarrow.gif.pm
 Eludia/Presentation/Skins/IsUp/navigation.js.pm
-Eludia/Presentation/Skins/IsUp/navigation_setup.js
 Eludia/Presentation/Skins/IsUp/navigation_setup.js.pm
-Eludia/Presentation/Skins/IsUp/navigation_setup.js.pm.js
 Eludia/Presentation/Skins/IsUp/pager_f.gif.pm
 Eludia/Presentation/Skins/IsUp/pager_l.gif.pm
 Eludia/Presentation/Skins/IsUp/pager_n.gif.pm
@@ -225,7 +220,6 @@ Eludia/Presentation/Skins/IsUp/tab_l_0.gif.pm
 Eludia/Presentation/Skins/IsUp/tab_l_1.gif.pm
 Eludia/Presentation/Skins/IsUp/tab_r_0.gif.pm
 Eludia/Presentation/Skins/IsUp/tab_r_1.gif.pm
-Eludia/Presentation/Skins/IsUp/tree.js.pm
 Eludia/Presentation/Skins/IsUp/tree_base.gif.pm
 Eludia/Presentation/Skins/IsUp/tree_cd.gif.pm
 Eludia/Presentation/Skins/IsUp/tree_empty.gif.pm
@@ -423,7 +417,6 @@ Eludia/Tie/IdsList.pm
 Eludia/Tie/Vocabulary.pm
 Eludia/Util.pm
 Eludia/Validators.pm
-Eludia/Vocabulary.pm
 lib/DBIx/ModelUpdate.pm
 lib/DBIx/ModelUpdate/MicrosoftSQLServer.pm
 lib/DBIx/ModelUpdate/MySQL.pm
