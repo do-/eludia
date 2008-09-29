@@ -59,7 +59,7 @@ BEGIN {
 	
 	unless ($preconf -> {core_path}) {
 		require Eludia::Apache;
-		require Eludia::Flix;
+#		require Eludia::Flix;
 		require Eludia::Content;
 		require Eludia::Validators;
 		require Eludia::InternalRequest;

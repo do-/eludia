@@ -187,7 +187,7 @@ sub vld_inn_12 {
 			
 	$checksum == 0 + substr ($value, -2, 1) or $name1 ? die "#$name1#:Не сходится первая контрольная сумма ИНН" : return 'Не сходится первая контрольная сумма ИНН';
 		
-	my $checksum =
+	$checksum =
 		$n [0]  * 3  +
 		$n [1]  * 7  +
 		$n [2]  * 2  +
