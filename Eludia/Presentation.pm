@@ -4290,9 +4290,15 @@ sub draw_page {
 		}
 
 		setup_skin ();
-
-		$html = $_SKIN -> draw_error_page ($page);		
-
+		
+		if ($_REQUEST {__response_started}) {
+			$html = $_REQUEST {error};
+			$html =~ s{\n}{<br>}gsm;
+		}
+		else {
+			$html = $_SKIN -> draw_error_page ($page);
+		}
+		
 	}
 	
 	if ($_REQUEST {__only_field}) {
@@ -4355,6 +4361,8 @@ sub lrt_ok {
 sub lrt_start {
 
 	setup_skin ();
+	
+	$_REQUEST {__response_started} = 1;
 
 	$_SKIN -> lrt_start (@_);
 	

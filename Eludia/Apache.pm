@@ -81,7 +81,7 @@ sub setup_skin {
 
 	$options -> {kind} = 'error' if $_REQUEST {error};
 
-	if ($options -> {kind}) {
+	if ($options -> {kind} && !$_REQUEST {__response_started}) {
 		eval "require Eludia::Presentation::Skins::$_REQUEST{__skin}";
 		$_REQUEST {__skin} = (${"Eludia::Presentation::Skins::$_REQUEST{__skin}::replacement"} -> {$options->{kind}} ||= $_REQUEST {__skin});
 	}
@@ -808,17 +808,21 @@ sub out_html {
 	unless ($preconf -> {core_no_morons}) {
 		$html =~ s{window\.open}{nope}gsm;
 	}
+	
+	if ($] > 5.007) {
+		require Encode;
+		$html = Encode::encode ('windows-1252', $html);
+	}
 
+	if ($_REQUEST {__response_started}) {
+		print $html;
+		return;
+	}
 
 	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
 
 	$r -> content_type ($_REQUEST {__content_type});
 	$r -> headers_out -> {'X-Powered-By'} = 'Eludia/' . $Eludia::VERSION;
-
-	if ($] > 5.007) {
-		require Encode;
-		$html = Encode::encode ('windows-1252', $html);
-	}
 
 	$preconf -> {core_mtu} ||= 1500;
 
