@@ -1399,8 +1399,15 @@ sub download_file_header {
 	my $path = $r -> document_root . $options -> {path};
 	
 	my $start = 0;
-	my $content_length = $options -> {size} || -s $path;
 	
+	my $content_length = $options -> {size};
+	
+	if (!$content_length && $options -> {path}) {
+	
+		$content_length = -s $r -> document_root . $options -> {path};
+	
+	}
+		
 	my $range_header = $r -> headers_in -> {"Range"};
 
 	if ($range_header =~ /bytes=(\d+)/) {
@@ -2576,6 +2583,36 @@ sub tree_sort {
 
 ################################################################################
 
+sub load_template {
+
+	my ($template_name, $file_name, $options) = @_;
+	
+	$template_name .= '.htm' unless $template_name =~ /\.\w{2,4}$/;
+
+	my $root = $r -> document_root;	
+	
+	my $fn = $root . "/templates/$template_name";
+	
+	my $template = '';
+	
+	open (T, $fn) or die ("Can't open $fn: $!\n");
+	
+	binmode T;
+	
+	while (<T>) {
+		s{\\}{\\\\}g;
+		s{\@([^\{])}{\\\@$1}g;
+		$template .= $_;
+	}
+	
+	close (T);
+	
+	return $template;
+
+}
+
+################################################################################
+
 sub fill_in_template {
 
 	return if $_REQUEST {__response_sent};
@@ -2583,21 +2620,8 @@ sub fill_in_template {
 	my ($template_name, $file_name, $options) = @_;
 	
 	$options -> {no_print} ||= $_REQUEST {no_print};
-
-	$template_name .= '.htm' unless $template_name =~ /\.\w{2,4}$/;
-
-	my $root = $r -> document_root;	
-	my $fn = $root . "/templates/$template_name";
 	
-	my $template = '';
-	open (T, $fn) or die ("Can't open $fn: $!\n");
-	binmode T;
-	while (<T>) {
-		s{\\}{\\\\}g;
-		s{\@([^\{])}{\\\@$1}g;
-		$template .= $_;
-	}
-	close (T);
+	my $template = load_template (@_);
 
 	my $result = interpolate ($template);
 	
@@ -2608,6 +2632,7 @@ sub fill_in_template {
 	$r -> status (200);
 	
 	unless ($options -> {skip_headers}) {
+	
 		$r -> header_out ('Content-Disposition' => "attachment;filename=$file_name");
 
 		if (
@@ -2617,8 +2642,7 @@ sub fill_in_template {
 		) {
 		
 			$r -> content_encoding ('gzip');
-			
-				
+							
 			my $time = time;
 			my $old_size = length $result;
 			
