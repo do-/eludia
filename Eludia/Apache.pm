@@ -313,6 +313,8 @@ sub handler {
 			
 			next if $key =~ /^_dt/;
 			next if $key =~ /^_label/;
+			
+			$_REQUEST {$key} =~ /^\-?[\d ]*\d([\,\.]\d+)?$/ or next;
 
 			$_REQUEST {$key} =~ s{ }{}g;
 			$_REQUEST {$key} =~ y{,}{.};
