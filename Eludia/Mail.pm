@@ -99,6 +99,7 @@ sub send_mail {
 		$SIG {'CHLD'} = "IGNORE";
 		defined (my $child_pid = fork) or die "Cannot fork: $!\n";
 		return $child_pid if $child_pid;
+		$db = undef;
 	}
 		
 		##### connecting...
