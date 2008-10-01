@@ -440,6 +440,12 @@ sub draw_text_cell {
 		my $picture = $_SKIN -> _picture ($data -> {picture});
 		$data -> {attributes} -> {style} .= "mso-number-format:$picture;";
 	}
+	elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
+		$data -> {attributes} -> {style} .= "mso-number-format:'Short date';";
+	}
+	elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:\d\d$/) {
+		$data -> {attributes} -> {style} .= "mso-number-format:'dd\\/mm\\/yyyy h\\:mm';";
+	}
 	elsif (!$data -> {no_nobr}) {
 		$data -> {attributes} -> {style} .= "mso-number-format:\\\@;";
 	}
