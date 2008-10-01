@@ -301,6 +301,8 @@ sub handler {
 	}
 
 	if ($_REQUEST {action}) {
+	
+		my $precision = $^V ge v5.8.0 && $Math::FixedPrecision::VERSION ? $conf -> {precision} || 3 : undef;
 
 		foreach my $key (keys %_REQUEST) {
 
@@ -308,17 +310,16 @@ sub handler {
 
 			$_REQUEST {$key} =~ s{^\s+}{};
 			$_REQUEST {$key} =~ s{\s+$}{};
+			
+			next if $key =~ /^_dt/;
+			next if $key =~ /^_label/;
 
-			if ($key !~ /^_dt/ && $_REQUEST {$key} =~ /^\-?[\d ]*\d([\,\.]\d+)?$/) {
+			$_REQUEST {$key} =~ s{ }{}g;
+			$_REQUEST {$key} =~ y{,}{.};
+			
+			defined $precision or next;
 
-				$_REQUEST {$key} =~ s{ }{}g;
-				$_REQUEST {$key} =~ y{,}{.};
-
-				if ($^V ge v5.8.0 && $Math::FixedPrecision::VERSION) {
-					$_REQUEST {$field} = new Math::FixedPrecision ($_REQUEST {$field}, ($conf -> {precision} || 3));
-				}
-
-			}
+			$_REQUEST {$field} = new Math::FixedPrecision ($_REQUEST {$field}, 0 + $precision);
 
 		}
 
