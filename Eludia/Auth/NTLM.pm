@@ -32,6 +32,7 @@ sub handler ($$) {
 	return OK if $r -> uri =~ m{favicon\.ico$};
 
 	return OK if $arg {sid};
+	return OK if $arg {keepalive};
 
 	my $code = Apache::AuthenNTLM::handler ($self, $r);
 	
