@@ -97,9 +97,10 @@ sub send_mail {
 	
 	unless ($^O eq 'MSWin32') {
 		$SIG {'CHLD'} = "IGNORE";
-		defined (my $child_pid = fork) or die "Cannot fork: $!\n";
-		return $child_pid if $child_pid;
 		$db = undef;
+		defined (my $child_pid = fork) or die "Cannot fork: $!\n";
+		sql_reconnect ();
+		return $child_pid if $child_pid;
 	}
 		
 		##### connecting...
@@ -201,6 +202,7 @@ EOT
 	$smtp -> quit;
 		
 	unless ($^O eq 'MSWin32') {
+		$db -> disconnect;
 		CORE::exit (0);
 	}
 
