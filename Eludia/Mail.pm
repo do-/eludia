@@ -28,7 +28,7 @@ sub send_mail {
 	
 		##### To address
 		
-	if (!ref $to && $to > 0) {
+	if (!ref $to && $to =~ /^[1-9]\d*$/) {
 		$to = sql_select_hash ("SELECT label, mail FROM $conf->{systables}->{users} WHERE id = ?", $to);
 	}
 
