@@ -2,72 +2,130 @@ use Net::SMTP;
 
 ################################################################################
 
+sub __log {
+
+	my $now = time;
+	
+	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($now);
+	$year += 1900;
+	$mon ++; 
+
+	printf STDERR "send_mail [%04d-%02d-%02d %02d:%02d:%02d:%03d %5d] %5.1f ms %s\n", 
+		$year,
+		$mon,
+		$mday,
+		$hour,
+		$min,
+		$sec,
+		int (1000 * ($now - int $now)),		
+		$$,
+		1000 * ($now - $_[0]), 
+		$_[1]
+	;
+
+	return $now;
+
+}
+
+################################################################################
+
 sub send_mail {
 
 	my ($options) = @_;
 	
-	my ($s, $i, $h, $d, $m, $y) = localtime (time());
-	my $time = sprintf ("%d-%02d-%02d %02d:%02d:%02d", $y + 1900, $m + 1, $d, $h, $i, $s);
-	warn "send_mail ($time): " . Dumper ($options);
+	my $time = time;
 	
 	my $to = $options -> {to};
 	
-		##### Multiple recipients
+	ref $to eq ARRAY or $to = [$to];
 	
-	if (ref $to eq ARRAY) {
+	my $signature = ' [' . $options . ']: ';
+	$signature   .= $options -> {subject};
+	$signature   .= " / $options->{href}" if $options -> {href};
+
+	$time = __log ($time, " $signature" . Dumper ($options));
 	
-		foreach (@$to) {
-			$options -> {to} = $_;
-			send_mail ($options);
-			delete $options -> {href};
+	my @to_char = ();
+	my @to_num  = ();
+	
+	foreach my $i (@$to) {
+	
+		if (!ref $i && $i =~ /^[1-9]\d*$/) {
+			push @to_num, $i;
 		}
-		
-		return;
+		else {
+			push @to_char, $i;
+		}
 	
 	}
 	
-		##### To address
+	if (@to_num > 0) {
+	
+		my $ids = join ',', @to_num;
 		
-	if (!ref $to && $to =~ /^[1-9]\d*$/) {
-		$to = sql_select_hash ("SELECT label, mail FROM $conf->{systables}->{users} WHERE id = ?", $to);
+		sql_select_loop ("SELECT id, label, mail FROM $conf->{systables}->{users} WHERE id IN ($ids)", sub {
+		
+			$time = __log ($time, " $signature: $i->{id} -> $i->{mail}<$i->{label}>");
+			push @to_char, $i;
+		
+		});
+	
 	}
+	
+	my @to = ();
+	
+	foreach my $i (@to_char) {
 
-	my $original_to;
+		ref $i eq HASH or $i = {mail => $i};
+		
+		if ($preconf -> {mail} -> {to}) {
+
+			$i -> {mail} = ref $preconf -> {mail} -> {to} ? $preconf -> {mail} -> {to} -> {mail} : $preconf -> {mail} -> {to};
+
+		}
+
+		if ($i -> {mail} eq '') {
+			$time = __log ($time, " $signature: empty mail address for $i->{label}, skipping");
+		}
+		elsif ($i -> {mail} !~ /\@/) {
+			$time = __log ($time, " $signature: invalid mail address ($i->{mail}) for $i->{label}, skipping");
+		}
+		else {
+			push @to, encode_mail_address ($i, $options);
+		}
+
+	}
+	
+	if (@to == 0) {	
+		$time = __log ($time, " $signature: no valid mail addresses found, returning");
+		return;	
+	}
+	
 	if ($preconf -> {mail} -> {to}) {
-		$original_to = '' . Dumper ($to);
-		$to = $preconf -> {mail} -> {to};
+	
+		$options -> {text} .= "\n\nTo: " . (join ', ', @to);
+			
 	}
+	
+	$time = __log ($time, " $signature: thus, our address list is " . join (', ', @to));
 
-	my $real_to = $to;	
-	if (ref $to eq HASH) {
-		$real_to = $to -> {mail};
-		$to = encode_mail_header ($to -> {label}, $options -> {header_charset}) . "<$real_to>";
-	}
-	
-	unless ($real_to =~ /\@/) {
-		warn "send_mail: INVALID MAIL ADDRESS '$real_to'\n";
-		return;
-	}
-	
 		##### Deferred delivery
 
 	if ($preconf -> {mail} -> {defer} && !$options -> {no_defer}) {
 
 		$options -> {no_defer} = 1;
-		defer ('send_mail', [$options], {label => "$real_to: $options->{subject}"});
+		$options -> {to} = \@to;
+		defer ('send_mail', [$options], {label => $signature});
 		return;
 	
 	}
-
+	
 		##### From address
 
-	$options -> {from} ||= $preconf -> {mail} -> {from};
-	my $from = $options -> {from};
-	if (ref $from eq HASH) {
-		$from -> {mail} ||= $from -> {address};
-		$from = encode_mail_header ($from -> {label}, $options -> {header_charset}) . "<" . $from -> {mail} . ">";
-	}
-
+	$preconf -> {mail} -> {from} -> {mail} ||= $preconf -> {mail} -> {from} -> {address};
+	$options -> {from}                     ||= $preconf -> {mail} -> {from};	
+	$from                                    = encode_mail_address ($options -> {from}, $options);
+	
 		##### Message subject
 
 	my $subject = encode_mail_header ($options -> {subject}, $options -> {header_charset});
@@ -96,11 +154,18 @@ sub send_mail {
 	my $text = encode_base64 ($options -> {text} . "\n" . $original_to);
 	
 	unless ($^O eq 'MSWin32') {
+
 		$SIG {'CHLD'} = "IGNORE";
-		$db = undef;
+
+		eval {$db -> disconnect};
+	
 		defined (my $child_pid = fork) or die "Cannot fork: $!\n";
-		sql_reconnect ();
-		return $child_pid if $child_pid;
+
+		if ($child_pid) {
+			sql_reconnect ();
+			return $child_pid;
+		}
+		
 	}
 		
 		##### connecting...
@@ -109,6 +174,8 @@ sub send_mail {
 	
 	my $smtp = undef;
 	
+	$time = __log ($time, " $signature: last message before connecting...");
+
 	while ($repeat) {
 
 		$repeat--;
@@ -127,20 +194,22 @@ sub send_mail {
 		
 		last if $smtp;
 
-
 	}	
 
 	unless (defined $smtp) {
-		warn "Can't connect to $preconf->{mail}->{host}\n";
-		return;
+		$time = __log ($time, " $signature: CAN'T CONNECT TO $preconf->{mail}->{host}! Giving up.");
+		exit;
 	}
 
-#	$smtp -> mail ($ENV{USER});
+	$time = __log ($time, " $signature: connected to $preconf->{mail}->{host}, ready to send mail");
+
 	$smtp -> mail ($options -> {from} -> {address});
-	$smtp -> to ($real_to);
+	$smtp -> to (@to, {Notify => ['NEVER'], SkipBad => 1});
 	$smtp -> data ();
 
 		##### sending main message
+		
+	my $to = join ",\t", @to;
 
 	$smtp -> datasend (<<EOT);
 From: $from
@@ -158,7 +227,6 @@ $text
 EOT
 
 		##### sending attach
-
 
 	$options -> {attach} = [$options -> {attach}] if ($options -> {attach} && ref $options -> {attach} ne ARRAY);
 
@@ -200,11 +268,25 @@ EOT
 
 	$smtp -> dataend ();
 	$smtp -> quit;
+
+	$time = __log ($time, " $signature: done with sending mail");
 		
 	unless ($^O eq 'MSWin32') {
 		$db -> disconnect;
 		CORE::exit (0);
 	}
+
+}
+
+################################################################################
+
+sub encode_mail_address {
+
+	my ($s, $options) = @_;
+	
+	ref $s or return $s;
+	
+	return encode_mail_header ($s -> {label}, $options -> {header_charset}) . " <$s->{mail}>";
 
 }
 

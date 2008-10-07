@@ -685,14 +685,22 @@ EOH
 
 			}
 
-			eval {
-				if ($_REQUEST {error}) {
-					$db -> rollback
-				} else {
-					$db -> commit
-				} 
-				$db -> {AutoCommit} = 1;
-			};
+			unless ($db -> {AutoCommit}) {
+
+				eval {
+				
+					if ($_REQUEST {error}) {
+						$db -> rollback
+					} 
+					else {
+						$db -> commit
+					} 
+					
+					$db -> {AutoCommit} = 1;
+					
+				};
+			
+			}
 
 			log_action_finish ();
 
