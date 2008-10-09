@@ -1470,10 +1470,35 @@ sub sql {
 		my $found = 0;
 		
 		foreach my $t ({name => $root}, @tables) {
+		
+			my $referring_table = $DB_MODEL -> {tables} -> {$t -> {name}};
 				
-			$DB_MODEL -> {tables} -> {$t -> {name}} -> {columns} -> {$referring_field_name} or next;
+			my $column = $referring_table -> {columns} -> {$referring_field_name};
 			
-			$from .= "\n LEFT JOIN $table->{name} AS $table->{alias} ON $t->{name}.$referring_field_name = $table->{alias}.id";
+			unless ($column) {
+			
+				my $referring_columns = $referring_table -> {columns};
+			
+				foreach my $k (keys %$referring_columns) {
+				
+					my $c = $referring_columns -> {$k};
+				
+					$c -> {ref} eq $table -> {name} or next;
+					
+					$column = $c;
+					$referring_field_name = $k;
+					
+					last;
+				
+				}
+			
+			}
+
+			$column or next;
+			
+			$from .= "\n LEFT JOIN $table->{name}";
+			$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+			$from .= " ON $t->{name}.$referring_field_name = $table->{alias}.id";
 			
 			$found = 1;
 			
