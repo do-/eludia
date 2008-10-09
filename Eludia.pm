@@ -159,6 +159,7 @@ BEGIN {
 		__no_navigation => 1,
 		__tree => 1,
 		__infty => 1,
+		__popup => 1,
 		__no_infty => 1,
 	};
 
