@@ -221,7 +221,7 @@ sub order {
 		my $sql   = shift;
 		
 		$default_order [$_QUERY -> {content} -> {columns} -> {$name} -> {sort}] = {name => $name, sql => $sql} 
-			if ($_QUERY -> {content} -> {columns} -> {$name} -> {sort});
+			if (exists $_QUERY -> {content} -> {columns} -> {$name} && $_QUERY -> {content} -> {columns} -> {$name} -> {sort});
 			
 		$name eq $_REQUEST {$name_order} or next;
 		$result   = $sql;
@@ -2207,7 +2207,7 @@ sub draw_form_field_tree {
 			my $__last_query_string = $_REQUEST {__last_query_string};
 			$_REQUEST {__last_query_string} = $options -> {no_no_esc} ? $__last_query_string : -1;
 			check_href ($options);
-			$options -> {href} .= '&__tree=1' unless ($options -> {no_tree});
+			$options -> {href} .= '&__tree=1' unless ($options -> {no_tree} && $options -> {href} !~ /^javascript:/);
 			$_REQUEST {__last_query_string} = $__last_query_string;
 	
 		}
@@ -2438,7 +2438,18 @@ sub draw_toolbar {
 	foreach my $button (@buttons) {
 
 		if (ref $button eq HASH) {
+		
 			next if $button -> {off};
+			
+			if ($button -> {hidden} && !$_REQUEST {__edit_query}) {
+			
+				push @{$_ORDER {$button -> {order}} -> {filters}}, $button 
+					if $conf -> {core_store_table_order} && $button -> {order};
+
+				next;
+				
+			}
+			
 			$button -> {type} ||= 'button';
 			$_REQUEST {__toolbar_inputs} .= "$button->{name}," if $button -> {type} =~ /^input_/;
 			$button -> {html} = &{'draw_toolbar_' . $button -> {type}} ($button, $options -> {_list});
@@ -2449,7 +2460,8 @@ sub draw_toolbar {
 
 		push @{$options -> {buttons}}, $button;
 		
-		push @{$_ORDER {$button -> {order}} -> {filters}}, $button if $button -> {order};
+		push @{$_ORDER {$button -> {order}} -> {filters}}, $button 
+				if $conf -> {core_store_table_order} && $button -> {order};
 
 	};
 
@@ -2540,17 +2552,21 @@ sub draw_toolbar_input_select {
 		
 	$options -> {max_len} ||= $conf -> {max_len};
 
-	exists $options -> {empty} and unshift @{$options -> {values}}, {id => '', label => $options -> {empty}};
-
 	if (defined $options -> {other}) {
 
 		ref $options -> {other} or $options -> {other} = {href => $options -> {other}, label => $i18n -> {voc}};
 		check_href ($options -> {other});
 		$options -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
-		push @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}};
+		if ($options -> {other} -> {top}) {
+			unshift @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}};
+		} else {
+			push @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}};
+		}
 
 	}		
 	
+	exists $options -> {empty} and unshift @{$options -> {values}}, {id => '', label => $options -> {empty}};
+
 	$options -> {value}   ||= $_REQUEST {$options -> {name}};
 
 	foreach my $value (@{$options -> {values}}) {		
@@ -3118,19 +3134,24 @@ sub draw_cells {
 	$options -> {__fixed_cols} = 0;
 	
 
-# 	for (my $i = 0; $i < @_COLUMNS; $i ++) {
-# 		my $h = $_COLUMNS [$i];
-# 
-# 		ref $h eq HASH or next;
-# 		$h -> {order}  or next;
-# 		
-# 		$_ [0] [$i] = {label => $_ [0] [$i]}
-# 			unless ref $_ [0] [$i] eq HASH; 
-# 		
-# 		$_ [0] [$i] -> {ord} ||= $_COLUMNS [$i] -> {ord}; 
-# 		$_ [0] [$i] -> {hidden} ||= $_COLUMNS [$i] -> {hidden}; 
-# 
-# 	}
+	if ($conf -> {core_store_table_order} && !$_REQUEST {__no_order}) {
+
+		for (my $i = 0; $i < @_COLUMNS; $i ++) {
+			my $h = $_COLUMNS [$i];
+	
+			ref $h eq HASH or next;
+			
+			$_ [0] [$i] or next;
+			
+			$_ [0] [$i] = {label => $_ [0] [$i]}
+				unless ref $_ [0] [$i] eq HASH; 
+			
+			$_ [0] [$i] -> {ord} ||= $_COLUMNS [$i] -> {ord}; 
+			$_ [0] [$i] -> {hidden} ||= $_COLUMNS [$i] -> {hidden}; 
+	
+		}
+
+	}
 
 	my @cells = order_cells (@{$_[0]});
 
@@ -3690,38 +3711,65 @@ sub draw_table {
 		$headers = shift;
 	}
 
-# 	my @header_cells = ();
-# 	
-# 	my $is_exists_subheaders;
-# 	foreach my $h (@$headers) {if (ref $h eq ARRAY) {$is_exists_subheaders = 1; last;}; push @header_cells, $h}
-# 	
-# 	our @_ORDER = ();
-# 	our @_COLUMNS = ();
-# 	our %_ORDER = ();
-# 
-# 
-# 	unless ($is_exists_subheaders) {
-# 		foreach my $h (@header_cells) {
-# 	
-# 			push @_COLUMNS, $h;
-# 		
-# 			ref $h eq HASH or next;
-# 			$h -> {order}  or next;
-# 			
-# 			if ($_REQUEST {id___query} && !$_REQUEST {__edit__query}) {
-# 				$h -> {ord}    = $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord};
-# 				$h -> {hidden} = 1 if $h -> {ord} == 0;
-# 			}
-# 			
-# 			$h -> {filters} = [];
-# 			push @_ORDER, $h;
-# 			$_ORDER {$h -> {order}} = $h;
-# 	
-# 		}
-# 	}
-	
 	my ($tr_callback, $list, $options) = @_;
 	
+	if ($options -> {no_order}) {
+		$_REQUEST {__no_order} = 1;
+	} else {
+		delete $_REQUEST {__no_order};
+	}
+	
+	if ($conf -> {core_store_table_order} && !$options -> {no_order}) {
+
+		our @_ORDER = ();
+		our @_COLUMNS = ();
+		our %_ORDER = ();
+	
+		my @header_cells = ();
+		
+		my $is_exists_subheaders;
+		my $cells_cnt;
+
+		foreach my $h (@$headers) {
+		
+			if (ref $h eq ARRAY) {
+				$is_exists_subheaders = 1; last;
+			};
+			 
+			ref $h eq HASH or ($h = {label => $h});
+			 
+			push @header_cells, $h;
+			
+			$cells_cnt += 1
+				if $h -> {order} && exists $_QUERY -> {content} -> {columns} -> {$h -> {order}} && $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord};
+				
+		}		
+	
+		if (!$is_exists_subheaders) {
+
+			my $i = 0;
+			foreach my $h (@header_cells) {
+			
+				$i ++;
+		
+				push @_COLUMNS, $h;
+			
+				if ($_REQUEST {id___query} && !$_REQUEST {__edit__query}) {
+					$h -> {ord}    = $cells_cnt && $h -> {order} && exists $_QUERY -> {content} -> {columns} -> {$h -> {order}} ? $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord} : $i;
+					$h -> {hidden} = 1 if $h -> {ord} == 0;
+				}
+				
+				$h -> {filters} = [];
+
+				push @_ORDER, $h;
+
+				$_ORDER {$h -> {order}} = $h
+					if $h -> {order};
+		
+			}
+		}
+	}
+		
 	$options -> {type}   ||= $_REQUEST{type};
 	
 	$options -> {action} ||= 'add';
@@ -3755,7 +3803,9 @@ sub draw_table {
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
 
-	fix___query ();
+	if ($conf -> {core_store_table_order} && !$options -> {no_order}) {
+		fix___query ();
+	}
 	
 	if (ref $options -> {path} eq ARRAY) {
 		$options -> {path} = draw_path ($options, $options -> {path});
@@ -4448,6 +4498,7 @@ sub draw_item_of___queries {
 			{
 				label => $o -> {title} || $o -> {label},
 				type  => 'hgroup',
+				nobr	=> 1,
 				cell_width	=> '50%',
 				items => [
 					{
@@ -4476,15 +4527,22 @@ sub draw_item_of___queries {
 		foreach my $filter (@{$o -> {filters}}) {
 		
 			my %f = (
-				label => $filter -> {label},
-				size  => $filter -> {size},
-				name  => 'filter_' . $filter -> {name},
-				value => $_QUERY -> {content} -> {filters} -> {$filter -> {name}},
+				label	=> $filter -> {label},
+				size	=> $filter -> {size},
+				max_len => $filter -> {max_len},
+				name	=> 'filter_' . $filter -> {name},
+				value	=> $_QUERY -> {content} -> {filters} -> {$filter -> {name}},
 			);
 
 			if ($filter -> {type} eq 'input_select') {
 				$f {type}   = 'select';
-				$f {values} = $filter -> {values};
+				$f {values} = [grep {$_ -> {id} != -1} @{$filter -> {values}}];
+				$f {other} = $filter -> {other}; 
+			}
+
+			if ($filter -> {type} eq 'input_date') {
+				$f {type}   = 'date';
+				$f {no_read_only}	= 1;
 			}
 
 			push @f, \%f;
@@ -4495,7 +4553,20 @@ sub draw_item_of___queries {
 
 	}
 	
-	return draw_form ({}, $data, \@fields);
+	return draw_form ({
+			right_buttons => [
+				{
+					icon	=> 'delete',
+					label	=> 'Очистить фильтры',
+					href	=> "javaScript:document.form.action.value='drop_filters'; document.form.fireEvent('onsubmit'); document.form.submit()",
+					target	=> 'invisible',
+					keep_esc	=> 1,
+				},
+			],
+		}, 
+		$data, 
+		\@fields
+	);
 
 }
 

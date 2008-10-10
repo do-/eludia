@@ -344,8 +344,6 @@ sub require_fresh {
 	
 	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $last_modified, $ctime, $blksize, $blocks);
 	
-	$need_refresh = 0 if $CONFIG_IS_LOADED && $is_config;
-
 	if ($need_refresh) {
 		($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $last_modified, $ctime, $blksize, $blocks) = stat ($file_name);
 		my $last_load = $INC_FRESH {$module_name} + 0;
@@ -1352,7 +1350,9 @@ sub log_action_start {
 
 sub log_action_finish {
 	
-	$_REQUEST {_params} = $_REQUEST {params} = Data::Dumper -> Dump ([\%_OLD_REQUEST], ['_REQUEST']);	
+	$_REQUEST {_params} = $_REQUEST {params} = Data::Dumper -> Dump ([\%_OLD_REQUEST], ['_REQUEST']);
+	$_REQUEST {_params} =~ s/ {2,}/\t/g;
+		
 	$_REQUEST {error} = substr ($_REQUEST {error}, 0, 255);
 	$_REQUEST {_error}  = $_REQUEST {error};
 	$_REQUEST {_id_object} = $__log_id || $_REQUEST {id} || $_OLD_REQUEST {id};
@@ -2826,8 +2826,47 @@ sub defaults {
 sub get_item_of___queries {
 
 	my ($data) = @_;
+	
+	delete $_REQUEST {__read_only};
 
 	return $data;
+
+}
+
+################################################################################
+
+sub do_drop_filters___queries {
+
+	my $QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id});
+
+	my $VAR1;
+	
+	eval $_QUERY -> {dump};
+	
+	$_QUERY -> {content} = $VAR1;
+	
+	delete $_QUERY -> {content} -> {filters};
+			
+	sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", Dumper ($_QUERY -> {content}), $_REQUEST {id});
+
+	my $esc_href = esc_href ();
+
+ 	foreach my $key (keys %_REQUEST) {
+ 	
+ 		$key =~ /^_filter_(\w+)$/ or next;
+ 
+ 		my $filter = $1;
+ 		
+		$esc_href =~ s/([\?\&]$filter=)[^\&]*/$1$content->{filters}->{$filter}/;		
+
+ 	}
+
+	$esc_href =~ s/([\?\&]__last_query_string=)(\d+)/$1$_REQUEST{__last_query_string}/;
+
+	$esc_href .= '&__edit_query=1';
+	
+	redirect ($esc_href, {kind => 'js'});
+
 
 }
 
@@ -2872,7 +2911,13 @@ sub do_update___queries {
 	
 	sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", Dumper ($content), $_REQUEST {id});
 
-	esc ();	
+	my $esc_href = esc_href ();
+
+	foreach my $filter (keys (%{$content -> {filters}})) {
+		$esc_href =~ s/([\?\&]$filter=)[^\&]*/$1$content->{filters}->{$filter}/;		
+	} 
+	
+	redirect ($esc_href, {kind => 'js'});
 
 }
 
@@ -2880,7 +2925,8 @@ sub do_update___queries {
 
 sub check___query {
 
-	return;
+	return
+		unless ($conf -> {core_store_table_order});
 
 	$_REQUEST {__order_context} ||= '';
 
@@ -2933,8 +2979,29 @@ sub check___query {
 		foreach my $key (keys %$filters) {
 
 			exists $_REQUEST {$key} or $_REQUEST {$key} = $filters -> {$key};
+ 
+		}
+
+		my $is_exists_any_column;
+				
+		foreach my $key (keys %{$_QUERY -> {content} -> {columns}}) {
+		
+			if ($_QUERY -> {content} -> {columns} -> {$key} -> {ord}) {
+				$is_exists_any_column = 1;
+				last;
+			}
 
 		}
+		
+		unless ($is_exists_any_column) {
+
+			sql_do ("DELETE FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
+
+			delete $_REQUEST {id___query};
+			$_QUERY = undef;
+
+		}
+		
 
 	}
 
@@ -2945,10 +3012,11 @@ sub check___query {
 
 sub fix___query {
 
-        return;
+	return
+		unless ($conf -> {core_store_table_order});
 
 	$_REQUEST {__order_context} ||= '';
-	
+
 	if (@_ORDER > 0 && !$_REQUEST {id___query}) {
 	
 		my $content = {filters => {}, columns => {}};

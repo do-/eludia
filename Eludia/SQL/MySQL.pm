@@ -109,7 +109,7 @@ sub sql_do {
 	if ($preconf -> {core_fix_tz}) {
 		for (my $i=0; $i < @params; $i ++) {
 			if ($params [$i] =~ /^(\d{4})-(\d{1,2})-(\d{1,2}) (\d{2}):(\d{2})(:(\d{2}))?$/) {
-				$params [$i] = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', Date::Calc::Add_Delta_DHMS ($1, $2, $3, $4, $5, $6 || 0, 0, $_USER -> {tz_offset} + 0 || 0, 0, 0));
+				$params [$i] = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', Date::Calc::Add_Delta_DHMS ($1, $2, $3, $4, $5, $7 || 0, 0, $_USER -> {tz_offset} + 0 || 0, 0, 0));
 			}
 		}
 	}
