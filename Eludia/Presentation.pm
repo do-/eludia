@@ -3141,7 +3141,8 @@ sub draw_cells {
 	
 			ref $h eq HASH or next;
 			
-			$_ [0] [$i] or next;
+            last
+                    if $i >= @{$_ [0]};
 			
 			$_ [0] [$i] = {label => $_ [0] [$i]}
 				unless ref $_ [0] [$i] eq HASH; 
@@ -3158,7 +3159,7 @@ sub draw_cells {
 	if ($_REQUEST {select}) {
 		my @cell;
 
-		if ((@cell = grep {$_ -> {select_href}} @cells) == 0) {
+		if ((@cell = grep {$_ -> {select_href}} @{$_[0]}) == 0) {
 
 			foreach my $cell (@cells) {
 				if (!$cell -> {no_select_href} && ($cell -> {label} ne '')) {
