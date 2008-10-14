@@ -897,12 +897,14 @@ sub do_create_DEFAULT {
 
 sub do_update_DEFAULT {
 
-	my $columns = $model_update -> get_columns ($_REQUEST {type});
+	my $type = $_[0] || $_REQUEST {type};
+
+	my $columns = $model_update -> get_columns ($type);
 
 	my $options = {
 		name => 'file',
 		dir => 'upload/images',
-		table => $_REQUEST{type},
+		table => $type,
 		file_name_column => 'file_name',
 		size_column => 'file_size',
 		type_column => 'file_type',
@@ -923,7 +925,7 @@ sub do_update_DEFAULT {
 	
 	@fields > 0 or return;
 
-	sql_do_update ($_REQUEST {type}, \@fields);
+	sql_do_update ($type, \@fields);
 
 }
 
