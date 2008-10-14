@@ -25,6 +25,15 @@ var kb_hooks = [{}, {}, {}, {}];
 
 var max_len = 50;
 
+function set_suggest_result (sel, id) {
+	var o = sel.options [sel.selectedIndex];
+	document.getElementById (id + '__id').value    = o.value;
+	document.getElementById (id + '__label').value = o.text;
+	var i = document.getElementById (id);
+	i.value = o.text;
+	i.focus ();
+	sel.style.display = 'none';
+}
 
 function dialog_open (href, arg, options) {
 						

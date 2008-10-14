@@ -1457,6 +1457,7 @@ sub draw_form_field_suggest {
 	$options -> {lines}   ||= 10;
 	
 	$options -> {value}   ||= $data -> {$options -> {name}};
+	$options -> {value__id} = $options -> {value};
 	
 	my $id = $_REQUEST {id};
 	

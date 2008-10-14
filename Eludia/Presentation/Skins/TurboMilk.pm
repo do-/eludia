@@ -586,6 +586,10 @@ sub draw_form_field {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
 		return qq{<td class='form-$$field{state}-label' $colspan nowrap align=center>$$field{html}</td>};
 	}
+	elsif ($field -> {type} eq 'article') {
+		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
+		return qq{<td $colspan class='form-article'>$$field{html}</td>};
+	}
 	elsif ($field -> {type} eq 'hidden') {
 		return $field -> {html};
 	}
@@ -669,10 +673,13 @@ EOH
 	$options -> {attributes} -> {onKeyUp} .= <<EOH;
 		; var f = this.form;
 		var s = f.elements ['__suggest'];
-		s.value = '$options->{name}';
-		document.getElementById ('_$options->{name}__label').value = this.value;
-		f.submit ();
-		s.value = '';
+		document.getElementById ('_$options->{name}__suggest').style.display = 'none';
+		if (this.value.length > 0) {
+			s.value = '$options->{name}';
+			document.getElementById ('_$options->{name}__label').value = this.value;
+			f.submit ();
+			s.value = '';
+		}
 EOH
 
 	my $attributes = dump_attributes ($options -> {attributes});
@@ -683,7 +690,7 @@ EOH
 		<script>
 			var _suggest_timer_$options->{name} = null;
 		</script>
-		<input type="text" id="$id" $attributes autocomplete="off"><input type="hidden" id="_$options->{name}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}">
+		<input type="text" id="$id" $attributes autocomplete="off"><input type="hidden" id="${id}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}"><input type="hidden" id="${id}__id" name="_$options->{name}__id" value="$options->{value__id}">
 		<select 
 			id="_$options->{name}__suggest" 
 			name="_$options->{name}__suggest" 
@@ -702,18 +709,8 @@ EOH
 					_suggest_timer_$options->{name} = null;
 				}
 			"
-			onDblClick="
-				var i = getElementById('$id');
-				i.value = this.options[this.selectedIndex].text;
-				i.focus ();
-				this.style.display = 'none';
-			"
-			onKeyPress="
-				var i = getElementById('$id');
-				i.value = this.options[this.selectedIndex].text;
-				i.focus ();
-				this.style.display = 'none';
-			"
+			onDblClick="set_suggest_result (this, '$id')"
+			onKeyPress="set_suggest_result (this, '$id')"
 		>
 		</select>
 EOH
@@ -3286,7 +3283,7 @@ sub draw_suggest_page {
 
 	my ($_SKIN, $data) = @_;
 			
-	my $a = $_JSON -> encode ([map {$_ -> {label}} @$data]);
+	my $a = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}]} @$data]);
 	
 	$size = 10 if $size > 10;
 	
@@ -3296,10 +3293,11 @@ sub draw_suggest_page {
 		<script>
 			function r () {
 				var a = $a;
-				var s = parent.document.getElementById ('_$_REQUEST{__suggest}__suggest');				
+				var s = parent.document.getElementById ('_$_REQUEST{__suggest}__suggest');
 				s.options.length = 0;
 				for (var i = 0; i < a.length; i++) {
-					s.options [i] = new Option (a [i], i);
+					var o = a [i];
+					s.options [i] = new Option (o [1], o [0]);
 				}
 				
 				if (a.length > 0) {
@@ -3317,6 +3315,18 @@ sub draw_suggest_page {
 </html>
 EOH
 
+}
+
+################################################################################
+
+sub draw_form_field_article {
+
+	my ($_SKIN, $field, $data) = @_;
+
+	$field -> {value} =~ s{\n}{<br>}gsm;
+	
+	return qq{<table width=95% align=center cellpadding=10><tr minheight=200><td>$field->{value}</td></tr></table>};
+	
 }
 
 1;
