@@ -43,7 +43,7 @@ EOJ
 EOJ
 	}
 	
-	$_REQUEST {__no_back} or $_REQUEST {__script} .= 'history.go (-1);';
+	$_REQUEST {__no_back} or $_REQUEST {__script} .= "\n if (window.name != 'invisible') {history.go (-1)}\n";
 								
 	$_REQUEST {__script} .= <<EOJ;
 			var data = $data;
