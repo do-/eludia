@@ -3159,7 +3159,7 @@ sub draw_cells {
 
 	my @cells = order_cells (@{$_[0]});
 
-	if ($_REQUEST {select}) {
+	if ($_REQUEST {select} && !$options -> {select_label}) {
 		my @cell;
 
 		if ((@cell = grep {$_ -> {select_href}} @{$_[0]}) == 0) {
