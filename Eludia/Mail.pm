@@ -153,6 +153,8 @@ sub send_mail {
 	
 	my $text = encode_base64 ($options -> {text} . "\n" . $original_to);
 	
+	my $is_child = 0;
+	
 	unless ($^O eq 'MSWin32') {
 
 		$SIG {'CHLD'} = "IGNORE";
@@ -165,6 +167,8 @@ sub send_mail {
 			sql_reconnect ();
 			return $child_pid;
 		}
+		
+		$is_child = 1;
 		
 	}
 		
@@ -196,9 +200,17 @@ sub send_mail {
 
 	}	
 
-	unless (defined $smtp) {
+	unless (defined $smtp) {	
+	
 		$time = __log ($time, " $signature: CAN'T CONNECT TO $preconf->{mail}->{host}! Giving up.");
-		exit;
+		
+		if ($is_child) {
+			CORE::exit (0);
+		}
+		else {
+			return;
+		}
+		
 	}
 
 	$time = __log ($time, " $signature: connected to $preconf->{mail}->{host}, ready to send mail");
