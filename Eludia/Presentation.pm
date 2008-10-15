@@ -1335,7 +1335,9 @@ sub draw_path {
 	$options -> {id_param} ||= 'id';
 	$options -> {max_len}  ||= $conf -> {max_len};
 	$options -> {max_len}  ||= 30;
-	$options -> {nowrap}     = $options -> {multiline} ? '' : 'nowrap';
+	$options -> {nowrap}   = exists $options -> {nowrap} ? $options -> {nowrap} : 
+								$options -> {multiline} ? '' : 
+								'nowrap';
 	
 	if ($_SKIN -> {options} -> {home_esc_forward}) {
 	

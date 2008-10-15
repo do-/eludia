@@ -420,6 +420,7 @@ A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
 	COLOR: #23385a; 
 	FONT-FAMILY: Tahoma, 'MS Sans Serif'; 
 	TEXT-DECORATION: underline;
+	WHITE-SPACE: nowrap;
 }
 
 .txt0 {
