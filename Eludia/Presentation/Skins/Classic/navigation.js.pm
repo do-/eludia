@@ -173,7 +173,7 @@ function initialize_controls (no_focus, pack, focused_input, blur_all, _scrollab
 						}
 
 						if (
-							   (element.tagName == 'INPUT'  && (element.type == 'text' || element.type == 'checkbox' || element.type == 'radio'))
+							   (element.tagName == 'INPUT'  && (element.type == 'text' || element.type == 'checkbox'))
 							||  element.tagName == 'TEXTAREA') 
 						{
 
@@ -598,19 +598,29 @@ function blur_all_inputs () {
 }
 
 function focus_on_first_input (td) {
+
 	if (!td) return blur_all_inputs ();
+	
 	var inputs = td.getElementsByTagName ('input');
 	var input  = null;
+	
 	for (var i = 0; i < inputs.length; i++) {
+		
 		if (inputs [i].type != 'hidden' && inputs [i].style.visibility != 'hidden') {
 			input = inputs [i];
 			break;
 		}
+		
 	}
+
 	if (input == null) return blur_all_inputs ();
+	
 	input.focus  ();
+	
 	input.select ();
+	
 	return 0;
+	
 }
 
 function blockEvent () {
