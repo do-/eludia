@@ -1338,6 +1338,7 @@ sub draw_path {
 	$options -> {nowrap}   = exists $options -> {nowrap} ? $options -> {nowrap} : 
 								$options -> {multiline} ? '' : 
 								'nowrap';
+warn $options -> {nowrap};
 	
 	if ($_SKIN -> {options} -> {home_esc_forward}) {
 	
@@ -4251,7 +4252,7 @@ sub draw_page {
 		
 		warn $@ if $@;
 		
-		if ($_REQUEST {__edit_query}) {
+		if ($_REQUEST {__edit_query} && !$_REQUEST {__only_menu}) {
 		
 			my $is_dump = $_REQUEST {__dump};
 			delete $_REQUEST {__dump}; 
