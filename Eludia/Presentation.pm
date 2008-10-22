@@ -108,9 +108,17 @@ sub hotkey {
 ################################################################################
 
 sub trunc_string {
+
 	my ($s, $len) = @_;
+	
 	return $s if $_REQUEST {xls};
-	return length $s <= $len ? $s : substr ($s, 0, $len - 3) . '...';
+	
+	$s = decode_entities ($s);
+	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
+	$s = encode_entities ($s, "\200-\277");
+
+	return $s;
+	
 }
 
 ################################################################################
@@ -1338,8 +1346,7 @@ sub draw_path {
 	$options -> {nowrap}   = exists $options -> {nowrap} ? $options -> {nowrap} : 
 								$options -> {multiline} ? '' : 
 								'nowrap';
-warn $options -> {nowrap};
-	
+
 	if ($_SKIN -> {options} -> {home_esc_forward}) {
 	
 		adjust_esc ($options);
