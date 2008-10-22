@@ -311,6 +311,13 @@ sub handler {
 			$_REQUEST {$key} =~ s{^\s+}{};
 			$_REQUEST {$key} =~ s{\s+$}{};
 			
+			my $encoded = encode_entities ($_REQUEST {$key}, "\200-\277");
+			
+			if ($_REQUEST {$key} ne $encoded) {
+				$_REQUEST {$key} = $encoded;
+				next;
+			}
+			
 			next if $key =~ /^_dt/;
 			next if $key =~ /^_label/;
 			

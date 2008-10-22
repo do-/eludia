@@ -9,6 +9,7 @@ use Fcntl ':flock';
 use File::Copy 'move';
 use HTTP::Date;
 use MIME::Base64;
+use HTML::Entities;
 use Number::Format;
 use Time::HiRes 'time';
 use URI::Escape;

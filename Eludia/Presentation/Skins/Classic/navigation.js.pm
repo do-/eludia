@@ -615,9 +615,13 @@ function focus_on_first_input (td) {
 
 	if (input == null) return blur_all_inputs ();
 	
-	input.focus  ();
-	
-	input.select ();
+	try {
+		input.focus  ();	
+	} catch (e) {}
+
+	try {
+		input.select ();
+	} catch (e) {}
 	
 	return 0;
 	
