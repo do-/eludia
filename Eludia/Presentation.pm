@@ -115,7 +115,7 @@ sub trunc_string {
 	
 	$s = decode_entities ($s);
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-	$s = encode_entities ($s, "\200-\277");
+	$s = encode_entities ($s, "\200-§©-·¹-¿");
 
 	return $s;
 	
