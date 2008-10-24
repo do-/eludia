@@ -1423,10 +1423,8 @@ sub sql {
 	unless ($have_id_filter) {
 		
 		$default_columns = 'id, label';
-		
-		$_REQUEST {fake} ||= '0';
-		
-		$where .= $_REQUEST {fake} =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = $_REQUEST{fake}";
+
+		$where .= $_REQUEST {fake} =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
 
 	}	
 	
