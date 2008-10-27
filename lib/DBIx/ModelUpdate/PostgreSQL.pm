@@ -122,8 +122,8 @@ sub get_canonic_type {
 	my $type_name = lc $definition -> {TYPE_NAME};
 
 	return 'SERIAL'           if $definition -> {_EXTRA} eq "auto_increment";
-	return uc $type_name      if $type_name =~ /(big|small)?int$/;
 	return 'SMALLINT'         if $type_name eq 'tinyint';		
+	return uc $type_name      if $type_name =~ /(big|small)?int$/;
 	return 'NUMERIC'          if $type_name eq 'decimal';
 	return 'TEXT'             if $type_name =~ /(char|text)$/;
 	return 'BYTEA'            if $type_name eq 'varbinary';
