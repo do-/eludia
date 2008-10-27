@@ -745,7 +745,7 @@ sub sql_select_vocabulary {
 		
 		_REQUEST => \%_REQUEST,
 		
-		package  => __PACKAGE__,
+		package  => $ENV {'PERL_MODULE'} || __PACKAGE__,
 		
 		tree     => $options -> {tree},
 		

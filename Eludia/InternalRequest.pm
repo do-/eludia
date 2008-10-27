@@ -59,6 +59,36 @@ sub new {
 
 ################################################################################
 
+sub the_request {
+
+	my $self = shift;
+
+	return 'NOPE ' . $self -> {Q} -> url (-query => 1);
+
+}
+
+################################################################################
+
+sub headers_in {
+
+	my $self = shift;
+
+	return {
+		'Referer'         => $self -> {Q} -> http ('Referer'),
+		'Accept-Encoding' => $self -> {Q} -> http ('Accept-Encoding'),
+		'User-Agent'      => $self -> {Q} -> http ('User-Agent'),
+	};
+	
+}
+
+################################################################################
+
+sub headers_out {
+	return {}
+}
+
+################################################################################
+
 sub internal_redirect {
 	my $self = shift;	
 	my $url = $_[0];
@@ -169,17 +199,20 @@ sub remote_ip {
 ################################################################################
 
 sub document_root {
-	my $self = shift;
-	my $path = $ENV{temp};
+	my $path = $ENV {'DOCUMENT_ROOT'};
 	$path =~ y{\\}{/}; 
-	return "$path/docroot";
+	return $path;
 }
 
 ################################################################################
 
 sub parms {
 	my $self = shift;
-	my %vars = $self -> {Q} -> Vars;
+	my %vars = ();
+	my @names = $self -> {Q} -> param;
+	foreach my $name (@names) {
+		$vars {$name} = $self -> {Q} -> param ($name);
+	}
 	return \%vars;	
 }
 
@@ -221,6 +254,12 @@ sub header_only {
 	return $self -> {Q} -> request_method () eq 'HEAD';
 }
 
+
+################################################################################
+
+sub request_time {
+	return time;
+}
 
 ################################################################################
 

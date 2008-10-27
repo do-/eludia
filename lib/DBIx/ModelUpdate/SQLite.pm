@@ -41,13 +41,13 @@ sub get_keys {
 
 		$r -> {sql} =~ m{\((.*)\)}gsm;
 		
-		$keys -> {$name} -> {columns} = $1;
+		$keys -> {$name} = $1;
 		
-		$keys -> {$name} -> {columns} =~ s{\s}{}gsm;	
+		$keys -> {$name} =~ s{\s}{}gsm;	
 
 	}
 	
-#print STDERR "keys for $table_name:" . Dumper ($keys);
+print STDERR "keys for $table_name:" . Dumper ($keys);
 	
 	return $keys;
 
@@ -293,6 +293,8 @@ sub drop_index {
 sub create_index {
 	
 	my ($self, $table_name, $index_name, $index_def) = @_;
+	
+	$index_def =~ s{\(\d+\)}{}g;
 		
 	$self -> do ("CREATE INDEX ${table_name}_${index_name} ON ${table_name} ($index_def)");
 	

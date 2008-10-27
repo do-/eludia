@@ -11,13 +11,19 @@ use Config::ApacheFormat;
 
 use File::Temp qw/:POSIX/;
 
+use Time::HiRes 'time';
+
+no strict;
+no warnings;	
+
 ################################################################################
 
 sub start {
 
-	my $config = Config::ApacheFormat -> new (
-	);
+	my $config = Config::ApacheFormat -> new ();
 
+	open (ACCESS_LOG, ">>logs/access.log");
+#	open (STDERR, ">>logs/error.log");
 
 	open (I, "conf/httpd.conf");
 	my $src = join '', (<I>);
@@ -56,6 +62,7 @@ sub start {
 			$location -> {perl_handler} .= '::handler' unless $location -> {perl_handler} =~ /\:\:/;		
 			$location -> {perl_handler} =~ /\:\:/;
 			$location -> {perl_module} = $`;
+			$location -> {perl_sub} = $';
 			eval "require $$location{perl_module}";
 		}
 
@@ -72,8 +79,9 @@ sub start {
 		if (\$uri =~ m{^$$_{uri}}) {
 			\$$$_{perl_module}::connection = \$connection;
 			\$$$_{perl_module}::request    = \$request;
-			$$_{perl_handler} (\$uri);
-			return;
+			\$ENV {'PERL_MODULE'} = '$$_{perl_module}';
+			package $$_{perl_module};
+			return $$_{perl_sub} (\$uri);			
 		}
 EOS
 
@@ -84,9 +92,11 @@ EOS
 	}
 EOS
 
+warn $sub_src;
+
 	eval $sub_src;
 	
-	my ($host, $port) = split /:/, ($ARGV [0] || 'localhost:80');
+	my ($host, $port) = split /:/, ($_[0] || $ARGV [0] || 'localhost:80');
 
 	my $daemon = new HTTP::Daemon (
 		LocalAddr => $host, 
@@ -98,25 +108,23 @@ EOS
 	
 	$ENV {'SERVER_SOFTWARE'} = $daemon -> product_tokens;
 	
-print STDERR "\$^O == '$^O\n'";
-
 	if ($^O eq 'MSWin32') {
 	
 		my $pidfile = "$temp\\eludia.pid";
-
-print STDERR "writing $pidfile\n";
-
 		open (PIDFILE, ">$pidfile");
 		print PIDFILE $$;		
 		close (PIDFILE);
-		
-print STDERR "$pidfile wrote\n";
 		
 	}
 
 	while (my $connection = $daemon -> accept) {
 
-		handle_connection ($connection);
+		eval {
+			handle_connection ($connection);
+		};
+		if ($@) {
+			$connection -> send_error (500, "<pre>$@</pre>");
+		}
 
 	}
 	
@@ -130,21 +138,17 @@ sub handle_connection {
 
 	if (my $request = $connection -> get_request) {
 
-#		$connection -> force_last_request;
-
 		my $uri = $request -> uri -> as_string;
 		
-
-print STDERR $request -> method . " $uri";
+		print ACCESS_LOG $request -> method . " $uri\n";
 
 		if ($uri =~ m{^/i/}) {
 
 			my $path = $document_root . $uri;
 			$path =~ s{\?.*}{};
 
-	$| = 1;
-print STDERR " [$path]\n";
-
+			$| = 1;
+			
 			$connection -> send_basic_header;
 			print $connection "Cache-Control: max-age=" . 24 * 60 * 60;
 			$connection -> send_file_response ($path);
@@ -155,6 +159,8 @@ print STDERR " [$path]\n";
 			$uri =~ s{^/+}{/};
 			$uri =~ s{/+$}{/};
 		
+			$ENV {'DOCUMENT_ROOT'} = $document_root;
+
 			$ENV {'REMOTE_HOST'} = $connection -> peerhost;
 			$ENV {'REMOTE_ADDR'} = $connection -> peerhost;
 			
@@ -176,17 +182,11 @@ print STDERR " [$path]\n";
 				$ENV {'PATH_INFO'}    = $uri;
 			}
 
-#print STDERR Dumper \%ENV;
-
 			local *STDOUT = $connection;
-						
-#print STDERR Dumper \%ORTHO::;
 
 			exec_handler ($connection, $request, $uri);
-
 						
-		}
-				
+		}				
 
 	}
 

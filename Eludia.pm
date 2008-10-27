@@ -25,7 +25,7 @@ BEGIN {
 	if ($ENV{MOD_PERL_API_VERSION} >= 2) {
 		require Apache2::compat;
 		$Apache = 'Apache2';
-		$ENV{PERL_JSON_BACKEND} = 'JSON::PP'		
+		$ENV{PERL_JSON_BACKEND} = 'JSON::PP';		
 	}
 	elsif (MP2) {
 		require Apache::RequestRec;
@@ -33,11 +33,11 @@ BEGIN {
 		require Apache::RequestIO;
 		require Apache::Const;
 		require Apache::Upload;
-		$ENV{PERL_JSON_BACKEND} = 'JSON::PP'		
+		$ENV{PERL_JSON_BACKEND} = 'JSON::PP';		
 	} else {
 		require Apache::Constants;
 		Apache::Constants->import(qw(OK));
-		$ENV{PERL_JSON_BACKEND} = 'JSON::XS'		
+		$ENV{PERL_JSON_BACKEND} = 'JSON::XS';		
 	}
   
 	$Data::Dumper::Sortkeys = 1;
@@ -227,7 +227,11 @@ BEGIN {
 			require JSON::XS;
 		}
 	} else {
-		require JSON::XS;
+		eval "require JSON::XS";
+		if ($@) {
+			$ENV{PERL_JSON_BACKEND} = 'JSON::PP';
+			require JSON;
+		}
 	}
 
 	our %INC_FRESH = ();	

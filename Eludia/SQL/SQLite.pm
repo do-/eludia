@@ -164,11 +164,25 @@ sub sql_select_hash {
 
 	my ($sql_or_table_name, @params) = @_;
 	
-	if (@params == 0 and $sql_or_table_name !~ /^\s*SELECT/i) {
+	if ($sql_or_table_name !~ /^\s*SELECT/i) {
 	
-		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE id = ?", $_REQUEST {id});
+		my $id = $_REQUEST {id};
+
+		my $field = 'id'; 
 		
-	}
+		if (@params) {
+			if (ref $params [0] eq HASH) {
+				($field, $id) = each %{$params [0]};
+			} else {
+				$id = $params [0];
+			}
+		}
+	
+		@params = ({}) if (@params == 0);
+		
+		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE $field = ?", $id);
+
+	}	
 	
 	my $st = sql_prepare ($sql_or_table_name);
 	$st -> execute (@params);
@@ -338,10 +352,12 @@ sub sql_do_delete {
 		
 	}
 	
-	our %_OLD_REQUEST = %_REQUEST;	
+	our %_OLD_REQUEST = %_REQUEST;
+	
 	eval {
 		my $item = sql_select_hash ($table_name);
-		foreach my $key (keys %$item) { {
+
+		foreach my $key (keys %$item) {
 			$_OLD_REQUEST {'_' . $key} = $item -> {$key};
 		}
 	};

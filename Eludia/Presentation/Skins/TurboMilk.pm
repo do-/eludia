@@ -3,6 +3,8 @@ package Eludia::Presentation::Skins::TurboMilk;
 use Data::Dumper;
 use Storable ('freeze');
 
+no warnings;
+
 BEGIN {
 
 	require Eludia::Presentation::Skins::Generic;
