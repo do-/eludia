@@ -22,7 +22,7 @@ sub handler ($$) {
 
 		}
 		else {
-			return 200;
+			MP2 ? 0 : 200;
 		}
 
 	}

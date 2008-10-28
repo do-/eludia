@@ -582,7 +582,8 @@ EOH
 				
 				out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
 				
-				return 200;				
+				return MP2 ? 0 : 200;
+					
 				
 			}
 
@@ -800,7 +801,7 @@ EOH
 
 	__log_profilinig ($first_time, '<TOTAL>');
 
-	return 200;
+	return MP2 ? 0 : 200;
 
 }
 

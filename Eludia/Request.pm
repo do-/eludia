@@ -349,7 +349,7 @@ sub the_request {
 package Apache::Constants;
 
 sub OK () {
-	return 200;
+	return MP2 ? 0 : 200;
 }
 
 1;
