@@ -736,6 +736,21 @@ sub sql_select_vocabulary {
 	$options -> {label} .= ', parent' if $options -> {tree};
 	
 	my @list;
+	
+	my $package; # = __PACKAGE__;
+	
+	my ($_package, $filename, $line, $subroutine, $hasargs, $wantarray, $evaltext, $is_require, $hints, $bitmask) = caller (0);
+	
+	if ($subroutine =~ /^(\w+)\:\:/) {
+	
+		$package = $1;
+	
+	}
+	else {
+	
+		$package = __PACKAGE__;
+	
+	}
 
 	tie @list, 'Eludia::Tie::Vocabulary', {
 	
@@ -745,7 +760,7 @@ sub sql_select_vocabulary {
 		
 		_REQUEST => \%_REQUEST,
 		
-		package  => $ENV {'PERL_MODULE'} || __PACKAGE__,
+		package  => $package,
 		
 		tree     => $options -> {tree},
 		
