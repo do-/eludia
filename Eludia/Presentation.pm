@@ -370,6 +370,8 @@ sub check_href {
 		
 	}
 	else {
+	    
+		$options -> {href} = (MP2 && $options -> {href} =~ /[\x7f-\xff]+/) ? uri_escape($options -> {href}, "\x7f-\xff") : $options -> {href};
 	
 		foreach my $token (split /[\?\&]+/, $options -> {href}) {
 			$token =~ /\=/ or next;
