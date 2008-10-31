@@ -699,11 +699,12 @@ EOH
 			size="$options->{lines}"
 			style="
 				display : none;
-				position: absolute;
+				position: relative;
 				border  : solid black 1px;
-				left    : expression(this.parentElement.offsetLeft + 4);
-				top     : expression(this.parentElement.parentElement.offsetTop + 55);
-				width   : $options->{attributes}->{size}ex;
+				left    : expression(document.getElementById('$id').offsetLeft);
+				top     : expression(document.getElementById('$id').offsetTop + 10);
+				width   : expression(document.getElementById('$id').offsetWidth);
+				z-index : 100;
 			"
 			onFocus="
 				if (_suggest_timer_$options->{name}) {
@@ -3272,10 +3273,10 @@ sub dialog_open {
 	$options -> {dialogHeight} ||= '150px';
 	$options -> {dialogWidth}  ||= '600px';
 	
-	my $url = $ENV{SCRIPT_URI} . '/i/_skins/TurboMilk/dialog.html?' . rand ();
+	my $url = $ENV{SCRIPT_URI} . '/i/_skins/TurboMilk/dialog.html?';
 	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
 	
-	return "javaScript:var result=window.showModalDialog('$url', dialog_open_$options->{id}, '$o');document.body.style.cursor='default';void(0);";
+	return "javaScript:var result=window.showModalDialog('$url' + Math.random (), dialog_open_$options->{id}, '$o');document.body.style.cursor='default';void(0);";
 
 }
 

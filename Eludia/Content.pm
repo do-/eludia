@@ -925,7 +925,7 @@ sub do_update_DEFAULT {
 	
 	@fields > 0 or return;
 
-	sql_do_update ($type, \@fields);
+	sql_do_update ($type, \@fields, {id => $_[1] || $_REQUEST {id}});
 
 }
 
@@ -1085,8 +1085,6 @@ sub get_user {
 	return if $_REQUEST {type} eq '_static_files';
 
 	my $time = time;
-
-warn Dumper (\%_REQUEST);
 	
 	sql_do_refresh_sessions ();
 
@@ -1144,7 +1142,7 @@ warn Dumper (\%_REQUEST);
 		
 		$_REQUEST {sid} = $local_sid;
 		
-	}
+	}	
 
 	$user ||= sql_select_hash (<<EOS, $_REQUEST {sid}) if $_REQUEST {sid};
 		SELECT
