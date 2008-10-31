@@ -485,7 +485,7 @@ sub sql_select_hash {
 
 	my ($sql_or_table_name, @params) = @_;
 
-	$sql_or_table_name =~ s/\bLIMIT.*//igsm;		
+	$sql_or_table_name =~ s/\bLIMIT\b.*//igsm;
 	
 	if ($sql_or_table_name !~ /^\s*SELECT/i) {
 	
