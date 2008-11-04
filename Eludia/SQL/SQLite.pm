@@ -37,10 +37,22 @@ sub sql_do_refresh_sessions {
 			$2 eq 'd' ? 1440 :
 			1;
 	}
+	
+	my @now = Date::Calc::Today_and_Now;
 
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < ?", time - $timeout * 60);
+	my $now = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', @now);
+	
+	my @new = Date::Calc::Add_Delta_YMDHMS (@now, 0, 0, 0, 0, 1 - $timeout, 0);
 
-	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = ? WHERE id = ? ", int (time), $_REQUEST {sid});
+	my $new = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', @new);
+
+	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = ? WHERE id = ? AND ts < ?", $ts, $_REQUEST {sid}, $new);
+
+	my @old = Date::Calc::Add_Delta_YMDHMS (@now, 0, 0, 0, 0, - $timeout, 0);
+	
+	my $old = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', @old);
+	
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < ?", $old);
 
 }
 
