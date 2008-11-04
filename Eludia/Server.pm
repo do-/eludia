@@ -99,8 +99,9 @@ warn $sub_src;
 	my ($host, $port) = split /:/, ($_[0] || $ARGV [0] || 'localhost:80');
 
 	my $daemon = new HTTP::Daemon (
-		LocalAddr => $host, 
+#		LocalAddr => $host, 
 		LocalPort => $port,
+		Listen    => 50,
 
 	) or die "Can't start HTTP daemon: $!\n";
 
@@ -143,6 +144,8 @@ sub handle_connection {
 		print ACCESS_LOG $request -> method . " $uri\n";
 
 		if ($uri =~ m{^/i/}) {
+		
+#warn Dumper ($request -> headers);
 
 			my $path = $document_root . $uri;
 			$path =~ s{\?.*}{};
@@ -151,7 +154,9 @@ sub handle_connection {
 			
 			$connection -> send_basic_header;
 			print $connection "Cache-Control: max-age=" . 24 * 60 * 60;
-			$connection -> send_file_response ($path);
+			$connection -> send_crlf;
+			$connection -> send_crlf;
+			$connection -> send_file ($path);
 			
 		}
 		else {

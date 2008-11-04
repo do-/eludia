@@ -5,6 +5,8 @@ use HTTP::Headers;
 
 use File::Temp qw/:POSIX/;
 
+use Data::Dumper;
+
 ################################################################################
 
 sub new {
@@ -16,8 +18,11 @@ sub new {
 	my $self  = {};
 	
 	$self -> {connection} = shift;
-	$self -> {request} = shift;
-	
+	$self -> {request}    = shift;
+	$self -> {headers}    = $self -> {request} -> headers;
+	$self -> {headers_in} = {};
+	$self -> {headers} -> scan (sub {$self -> {headers_in} -> {$_[0]} = $_[1]});
+		
 	CGI::initialize_globals ();
 
 	if ($self -> {request} -> method eq 'POST') {
@@ -51,6 +56,8 @@ sub new {
 		Content_Type => 'text/html',
        	);
 
+	$self -> {_headers} = {};
+
 	bless ($self, $class);
 	
 	return $self;
@@ -72,19 +79,19 @@ sub the_request {
 sub headers_in {
 
 	my $self = shift;
-
-	return {
-		'Referer'         => $self -> {Q} -> http ('Referer'),
-		'Accept-Encoding' => $self -> {Q} -> http ('Accept-Encoding'),
-		'User-Agent'      => $self -> {Q} -> http ('User-Agent'),
-	};
 	
+	return $self -> {headers_in};
+
 }
 
 ################################################################################
 
 sub headers_out {
-	return {}
+
+	my $self = shift;
+
+	return $self -> {_headers};
+	
 }
 
 ################################################################################
@@ -148,11 +155,15 @@ sub send_http_header {
 	
 	my $self = shift;
 	
+	foreach my $key (keys %{$self -> {_headers}}) {
+		$self -> {headers} -> header ($key, $self -> {_headers} -> {$key});
+	}
+
 	my $h = $self -> {headers} -> as_string;
 	
 	$h =~ s{[\015\012]+}{\015\012}gsm;
 	
-	$self -> {connection} -> send_basic_header;
+	$self -> {connection} -> send_basic_header ($self -> {status});
 	
 	print STDOUT "$h\015\012";	
 	
@@ -267,9 +278,17 @@ sub print {
 
 	my ($self, $html) = @_;
 	
-	my $response = new HTTP::Response ($self -> {status}, '', $self -> {headers}, $html);
+	print STDOUT $html;
 	
-	$self -> {connection} -> send_response ($response);
+#	foreach my $key (keys $self -> {_headers}) {
+	
+#		$self -> {headers} -> header ($key, $self -> {_headers} -> {$key});
+		
+#	}
+
+#	my $response = new HTTP::Response ($self -> {status}, '', $self -> {headers}, $html);
+	
+#	$self -> {connection} -> send_response ($response);
 	
 }
 
