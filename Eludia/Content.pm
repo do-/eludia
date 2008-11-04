@@ -351,7 +351,7 @@ sub require_fresh {
 	}
 
 	if ($need_refresh) {
-	
+
 		if ($_OLD_PACKAGE) {
 			open (S, $file_name);
 			my $src = join '', (<S>);
@@ -575,13 +575,13 @@ print STDERR "[$$] OK, $script is over and out.\n";
 				sql_do ("UPDATE $conf->{systables}->{__last_update} SET unix_ts = ?, pid = ?", $__time, $$);
 			}
 
+			if ($db && $db -> ping) {
+				sql_do ("DELETE FROM $conf->{systables}->{__required_files} WHERE file_name = ?", $module_name);
+				sql_do ("INSERT INTO $conf->{systables}->{__required_files} (file_name, unix_ts) VALUES (?, ?)", $module_name, int(time));
+			}
+
 		};
-		
-		if ($db && $db -> ping) {
-			sql_do ("DELETE FROM $conf->{systables}->{__required_files} WHERE file_name = ?", $module_name);
-			sql_do ("INSERT INTO $conf->{systables}->{__required_files} (file_name, unix_ts) VALUES (?, ?)", $module_name, int(time));
-		}
-	
+			
 		$INC_FRESH {$module_name} = $last_modified;
 		
 	}
@@ -1086,7 +1086,7 @@ sub get_user {
 
 	my $time = time;
 	
-	sql_do_refresh_sessions ();
+	$_REQUEST {__suggest} or sql_do_refresh_sessions ();
 
 	$time = __log_profilinig ($time, ' <refresh_sessions>');
 
