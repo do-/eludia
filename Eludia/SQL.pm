@@ -1305,7 +1305,7 @@ sub sql {
 	
 	}
 	
-	my $_args = $preconf -> {core_debug_sql} ? Storable::dclone (\@_) : undef;
+	my $_args = $preconf -> {core_debug_sql} ? [(), @_] : undef;
 
 	my ($root_table, @other) = @_;
 
@@ -1341,6 +1341,7 @@ sub sql {
 	my ($filters, @tables) = @other;
 	
 	my $have_id_filter = 0;
+	my $cnt_filters    = 0;
 		
 	foreach my $filter (@$filters) {
 	
@@ -1377,6 +1378,8 @@ sub sql {
 			next if $first_value eq '' or $first_value eq '0000-00-00';
 
 		}
+		
+		$cnt_filters ++;
 		
 		$have_id_filter = 1 if $field eq 'id';
 		
@@ -1538,7 +1541,7 @@ sub sql {
 		
 		foreach my $column (@columns) {
 		
-			$select .= "\n, $table->{alias}.$column AS $model_update->{quote}$table->{alias}.$column$model_update->{quote}"
+			$select .= "\n, $table->{alias}.$column AS $model_update->{quote}$table->{alias}!$column$model_update->{quote}"
 		
 		}
 			
@@ -1547,6 +1550,8 @@ sub sql {
 	my $sql = $select . $from . $where;
 
 	my $is_ids = (@root_columns == 1 && $root_columns [0] ne '*') ? 1 : 0;
+	
+	!$is_ids or $cnt_filters or return undef;
 	
 	$sql =~ s{^SELECT}{SELECT DISTINCT} if $is_ids;
 
@@ -1627,7 +1632,7 @@ sub sql {
 		
 		foreach my $key (keys %$record) {
 
-			$key =~ /(\w+)\.(\w+)/ or next;
+			$key =~ /(\w+)\!(\w+)/ or next;
 			
 			my ($t, $f) = ($1, $2);
 
@@ -1647,7 +1652,8 @@ sub en_unplural {
 
 	my ($s) = @_;
 
-	if ($s =~ /^(status)$/)             { return $s }
+	if ($s =~ /status$/)            { return $s }
+	if ($s =~ /goods$/)             { return $s }
 	if ($s =~ s{ives$}{ife})            { return $s }
 	if ($s =~ s{ves$}{f})               { return $s }
 	if ($s =~ s{ies$}{y})               { return $s }
