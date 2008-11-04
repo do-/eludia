@@ -673,14 +673,21 @@ EOH
 	
 	
 	$options -> {attributes} -> {onKeyUp} .= <<EOH;
-		; var f = this.form;
-		var s = f.elements ['__suggest'];
-		document.getElementById ('_$options->{name}__suggest').style.display = 'none';
-		if (this.value.length > 0) {
-			s.value = '$options->{name}';
-			document.getElementById ('_$options->{name}__label').value = this.value;
-			f.submit ();
-			s.value = '';
+		if (suggest_clicked) {
+			suggest_clicked = 0;
+		}
+		else {
+			var f = this.form;
+			f.elements ['_$options->{name}__label'].value = '';
+			f.elements ['_$options->{name}__id'].value = '';
+			var s = f.elements ['__suggest'];
+			document.getElementById ('_$options->{name}__suggest').style.display = 'none';
+			if (this.value.length > 0) {
+				s.value = '$options->{name}';
+				document.getElementById ('_$options->{name}__label').value = this.value;
+				f.submit ();
+				s.value = '';
+			}
 		}
 EOH
 
@@ -692,18 +699,14 @@ EOH
 		<script>
 			var _suggest_timer_$options->{name} = null;
 		</script>
-		<input type="text" id="$id" $attributes autocomplete="off"><input type="hidden" id="${id}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}"><input type="hidden" id="${id}__id" name="_$options->{name}__id" value="$options->{value__id}">
 		<select 
 			id="_$options->{name}__suggest" 
 			name="_$options->{name}__suggest" 
 			size="$options->{lines}"
 			style="
 				display : none;
-				position: relative;
+				position: absolute;
 				border  : solid black 1px;
-				left    : expression(document.getElementById('$id').offsetLeft);
-				top     : expression(document.getElementById('$id').offsetTop + 10);
-				width   : expression(document.getElementById('$id').offsetWidth);
 				z-index : 100;
 			"
 			onFocus="
@@ -713,9 +716,10 @@ EOH
 				}
 			"
 			onDblClick="set_suggest_result (this, '$id')"
-			onKeyPress="set_suggest_result (this, '$id')"
+			onKeyPress="set_suggest_result (this, '$id'); suggest_clicked = 1;"
 		>
 		</select>
+		<input type="text" id="$id" $attributes autocomplete="off"><input type="hidden" id="${id}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}"><input type="hidden" id="${id}__id" name="_$options->{name}__id" value="$options->{value__id}">
 EOH
 
 }
@@ -3295,8 +3299,16 @@ sub draw_suggest_page {
 	<head>
 		<script>
 			function r () {
+			
 				var a = $a;
+				
 				var s = parent.document.getElementById ('_$_REQUEST{__suggest}__suggest');
+				
+				var t = s.form.elements ['_$_REQUEST{__suggest}'];
+				
+				s.style.top    = t.offsetTop + t.offsetParent.offsetTop + t.offsetParent.offsetParent.offsetTop + 18; 
+				s.style.width  = t.offsetWidth; 
+				
 				s.options.length = 0;
 				for (var i = 0; i < a.length; i++) {
 					var o = a [i];

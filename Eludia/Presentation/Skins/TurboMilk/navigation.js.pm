@@ -15,6 +15,7 @@ var last_vert_menu = [];
 var subsets_are_visible = 0;
 var clockID = 0;
 var clockSeparatorID = 0;
+var suggest_clicked = 0;
 var typeAheadInfo = {last:0, 
 	accumString:"", 
 	delay:500,
@@ -33,6 +34,7 @@ function set_suggest_result (sel, id) {
 	i.value = o.text;
 	i.focus ();
 	sel.style.display = 'none';
+	return blockEvent ();
 }
 
 function dialog_open (href, arg, options) {
