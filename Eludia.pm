@@ -214,6 +214,7 @@ BEGIN {
 
 	eval 'require Compress::Raw::Zlib';
 	if ($@) {
+		warn "\nCompress::Raw::Zlib is not installed, so gzip encoding will be unavailable\n";
 		delete $conf -> {core_gzip};
 		delete $preconf -> {core_gzip};
 	};
