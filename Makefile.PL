@@ -32,6 +32,7 @@ WriteMakefile(
 	'Time::HiRes'		=> '',
 	'File::Temp'		=> '',
 	'Digest::MD5'		=> '',
+	'Date::Calc'		=> '',
 	'Fcntl'			=> '',
 	'XML::Simple'		=> '2.14',
 	'JSON::XS'		=> '1.43',

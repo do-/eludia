@@ -418,6 +418,7 @@ Eludia/Tie/IdsList.pm
 Eludia/Tie/Vocabulary.pm
 Eludia/Util.pm
 Eludia/Validators.pm
+lib/Authen/NTLM/Tools.pm
 lib/DBIx/ModelUpdate.pm
 lib/DBIx/ModelUpdate/MicrosoftSQLServer.pm
 lib/DBIx/ModelUpdate/MySQL.pm
