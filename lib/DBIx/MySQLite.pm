@@ -1,8 +1,7 @@
 package DBIx::MySQLite;
 
-use 5.006;
-use strict;
-use warnings;
+no strict;
+no warnings;
 
 use POSIX qw (strftime);
 
@@ -59,7 +58,14 @@ sub add_string_functions {
 		$s =~ s{$from}{$to}g;
 		return $s;
 	}, 'create_function');
-	
+
+	$db -> func ('CONCAT', 2, sub { 
+		return $_[0] . $_[1];
+	}, 'create_function');
+
+	$db -> func ('CONCAT', 3, sub { 
+		return $_[0] . $_[1] . $_[2];
+	}, 'create_function');
 	
 };
 
