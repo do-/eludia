@@ -501,8 +501,6 @@ EOH
 
 	our $_USER = get_user ();
 
-warn Dumper ($_USER);
-
 	$time = __log_profilinig ($time, '<got user>');
 
 	$number_format or our $number_format = Number::Format -> new (%{$conf -> {number_format}});
@@ -957,7 +955,7 @@ sub out_html {
 	$r -> headers_out -> {'X-Powered-By'} = 'Eludia/' . $Eludia::VERSION;
 
 	$preconf -> {core_mtu} ||= 1500;
-
+	
 	if (
 		($conf -> {core_gzip} or $preconf -> {core_gzip}) &&
 		400 + length $html > $preconf -> {core_mtu} &&
