@@ -110,12 +110,24 @@ sub hotkey {
 sub trunc_string {
 
 	my ($s, $len) = @_;
-	
+
 	return $s if $_REQUEST {xls};
 	
-	$s = decode_entities ($s);
+	my $cached = $_REQUEST {__trunc_string} -> {$s, $len};
+	
+	return $cached if $cached;
+	
+	my $length = length $s;
+	
+	return $s if $length <= $len;
+	
+	my $has_ext_chars = $s =~ y/\200-¿/\200-¿/;
+	
+	$s = decode_entities ($s) if $has_ext_chars;
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-	$s = encode_entities ($s, "\200-§©-·º-¿");
+	$s = encode_entities ($s, "\200-§©-·º-¿") if $has_ext_chars;
+	
+	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
 
 	return $s;
 	
