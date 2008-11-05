@@ -711,6 +711,52 @@ sub sql_select_vocabulary {
 	
 	}
 
+	if ($options -> {not_in}) {
+	
+		my $in = $options -> {not_in};
+		
+		my $ref = ref $in;
+	
+		if ($ref eq SCALAR) {
+		
+			my $tied = tied $$in;
+		
+			if (_sql_ok_subselects ()) {
+				
+				$filter .= " AND id NOT IN ($tied->{sql})";
+
+				push @params, @{$tied -> {params}};
+				
+			}
+			else {
+
+				$filter .= " AND id NOT IN ($$in)";
+
+			}
+
+		}
+		elsif ($ref eq ARRAY) {
+		
+			@$in > 0 or return [];
+			
+			$in = join ',', @$in;
+			
+			$filter .= " AND id NOT IN ($in)";
+		
+		}
+		elsif (!$ref) {
+		
+			$in =~ /\d/ or return [];
+
+			$filter .= " AND id NOT IN ($in)";
+		
+		}
+		else {
+			die "Wrong [NOT] IN list";
+		}
+	
+	}
+
 	if ($preconf -> {subset} && $table_name eq $conf -> {systables} -> {roles}) {
 		
 		$filter .= " AND name IN ('-1'";
