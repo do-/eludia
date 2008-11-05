@@ -3318,9 +3318,11 @@ sub draw_suggest_page {
 				if (a.length > 0) {
 					s.size = a.length > 1 ? a.length : 2;
 					s.style.display = 'block';
+					parent.suggest_is_visible = 1;
 				}
 				else {
 					s.style.display = 'none';
+					parent.suggest_is_visible = 0;
 				}
 				
 			}

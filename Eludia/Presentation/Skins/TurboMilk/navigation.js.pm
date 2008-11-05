@@ -16,6 +16,7 @@ var subsets_are_visible = 0;
 var clockID = 0;
 var clockSeparatorID = 0;
 var suggest_clicked = 0;
+var suggest_is_visible = 0;
 var typeAheadInfo = {last:0, 
 	accumString:"", 
 	delay:500,
@@ -34,6 +35,7 @@ function set_suggest_result (sel, id) {
 	i.value = o.text;
 	i.focus ();
 	sel.style.display = 'none';
+	suggest_is_visible = 0;
 	return blockEvent ();
 }
 
@@ -763,8 +765,8 @@ function handle_basic_navigation_keys () {
 		return;
 	}
 
-	if (scrollable_table && !scrollable_table_is_blocked) {
-	
+	if (scrollable_table && !scrollable_table_is_blocked && !suggest_is_visible) {
+
 		scrollable_table_row_length = scrollable_rows [scrollable_table_row].cells.length;
 
 		if (
@@ -816,7 +818,7 @@ function handle_basic_navigation_keys () {
 		}
 		
 		if (keyCode == 13) {									// Enter key
-		
+
 			var cell = get_cell ();
 
 			var children = cell.getElementsByTagName ('a');
