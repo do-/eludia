@@ -1,4 +1,4 @@
-package Eludia::Presentation::Skins::TurboMilk;
+package Eludia::Presentation::Skins::TurboMilk_Gecko;
 
 use Data::Dumper;
 use Storable ('freeze');
@@ -92,7 +92,7 @@ sub draw_calendar {
 	$_REQUEST {__clock_separator} ||= ':';
 	
 	return <<EOH;
-		$mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></span>
+а		$mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></span>
 EOH
 	
 }
@@ -912,7 +912,6 @@ sub draw_form_field_select {
 	my ($_SKIN, $options, $data) = @_;
 	
 	$options -> {attributes} ||= {};
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
 	my $attributes = dump_attributes ($options -> {attributes});
 	
 	if (defined $options -> {other}) {
@@ -1544,7 +1543,6 @@ EOJS
 	}
 
 	$options -> {attributes} ||= {};
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
 	my $attributes = dump_attributes ($options -> {attributes});
 	
 	$html .= <<EOH;
@@ -1622,7 +1620,6 @@ sub draw_toolbar_input_text {
 
 
 	$options -> {attributes} ||= {};
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
 	
 	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {form.submit()}";
 
@@ -2006,13 +2003,8 @@ sub draw_text_cell {
 		$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 		$html .= '<i>'      if $data -> {italic} || $options -> {italic};
 		$html .= '<strike>' if $data -> {strike} || $options -> {strike};
-
-		if ($data -> {href}) {
 		
-			$html .= $data -> {href} eq $options -> {href} ? '<span style="cursor:hand">' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
-		
-		}
-
+		$html .= qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">} if $data -> {href};
 
 		$html .= $data -> {label};
 		
@@ -2022,9 +2014,7 @@ sub draw_text_cell {
 		
 		}
 
-#		$html .= '</a>' if $data -> {href} && $data -> {href} ne $options -> {href};
-
-#		$html .= '&nbsp;';		
+		$html .= '</a>' if $data -> {href};
 		
 		$html .= '</nobr>' unless $data -> {no_nobr};
 		
@@ -2081,11 +2071,6 @@ sub draw_select_cell {
 		onkeypress='typeAhead();' 
 		$multiple
 	};
-	
-	if (($options -> {__fixed_cols} > 0) && ($r -> headers_in -> {'User-Agent'} !~ /MSIE 7/)) {
-		$html .= qq {style= "visibility:expression(cell_select_visibility(this, $options->{__fixed_cols}))"};
-	}
-
 	$html .= '>';
 
 	$html .= qq {<option value="0">$$data{empty}</option>\n} if defined $data -> {empty};
@@ -2509,14 +2494,13 @@ EOS
 		$_REQUEST {__on_load} = <<EOS;
 			window.focus ();
 			StartClock ();
-			nope ('$href', '_body_iframe');
 EOS
 		
 		$body = <<EOIFRAME;
 			<iframe 
 				name='_body_iframe' 
 				id='_body_iframe' 
-				src="$_REQUEST{__static_url}/0.html"
+				src="$href"
 				width=100% 
 				height=100% 
 				border=0 
@@ -2606,14 +2590,18 @@ EOH
 	$_REQUEST {__head_links} .= <<EOH unless ($_REQUEST {type} eq '_boot');
 		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
 		<style>
-			.calendar .nav {  background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
-			td.main-menu {padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
-			td.vert-menu {background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
+			.calendar 
+			.nav { background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
+			td.main-menu {padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); }
+			td.vert-menu {background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);}
+			/*
 			#admin {width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
-			td.login-head {background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
+			*/
+			td.login-head {/*background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;*/font-size:10pt;font-weight:bold;padding:7px;}
 			td.submit-area {text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
 			div.green-title {color:#ffffff;font-weight:bold;background:url('$_REQUEST{__static_url}/green_ear_left.gif') no-repeat 0 0; width:300px;padding-left:10%;}
-			div.grey-submit {background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
+			td.grey-submit a {color:#222323;text-decoration:none;}
+			td.grey-submit a:hover {color:#222323;text-decoration:underline;}
 		</style>
 EOH
 
@@ -3011,11 +2999,20 @@ EOH
 					</td>
 				</tr>
 				<tr>
-					<td class="submit-area">						
+					<td align=center>
+						<table width=1>
+							<tr>
+								<td><img src="$_REQUEST{__static_url}/i_logon.gif?$_REQUEST{__static_salt}" border="0" align="left" hspace="5"></td>
+								<td nowrap class="grey-submit"><a class="lnk0" href="javascript:document.forms['form'].submit()">Войти в систему</a></td>
+							</tr>
+						</table>
+
+<!--						
 						<div class="grey-submit">
 							<div style="float:left;margin-top:5px;"><a href="#"><img src="$_REQUEST{__static_url}/i_logon.gif?$_REQUEST{__static_salt}" border="0" align="left" hspace="5"></a><a href="javascript:document.forms['form'].submit()">Войти в систему</a></div>
 							<div style="float:right;"><img src="$_REQUEST{__static_url}/grey_ear_right.gif?$_REQUEST{__static_salt}" border="0"></div>
 						</div>
+-->						
 					</td>
 				</tr>
 			</table>
@@ -3172,7 +3169,7 @@ EOH
 		var styleNode = win.document.createElement("STYLE");
         styleNode.type = "text/css";
         win.document.body.appendChild(styleNode);
-        win.document.styleSheets[0].addRule('td.vert-menu', "background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;");
+        win.document.styleSheets[0].addRule('td.vert-menu', "background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);");
 		
 		win.document.body.innerHTML = "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td id='dtree_td' valign=top>" + win.d + "</td></tr></table><div id='dtree_menus'>$menus</div>";
 @{[ $options->{selected_node} ? <<EOO : '' ]}		

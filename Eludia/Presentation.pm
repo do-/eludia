@@ -715,7 +715,6 @@ sub draw__boot {
 			if (version < 5.5) {
 				alert ('¬нимание! ƒанное WEB-приложение разрабатывалось и тестировалось только совместно с программой просмотра MS Internet Explorer версии не ниже 5.5. Ќа вашем рабочем месте установлена верси€ ' + version + '. ѕожалуйста, попросите вашего системного администратора выполнить обновление MS Internet Explorer до текущей версии (абсолютно бесплатна€ и безопасна€ процедура) или сделайте это самосто€тельно.');
 				document.location.href = 'http://www.microsoft.com/ie';
-				return;				
 			}
 			
 			if ($propose_gzip) {
@@ -2886,7 +2885,7 @@ sub draw_ok_esc_toolbar {
 		{
 			preset => 'ok',
 			label => $options -> {label_ok}, 
-			href => $_REQUEST {__windows_ce} || $_SKIN =~ /Universal/ ? "javaScript:document.$name.submit()" : "javaScript:document.$name.fireEvent('onsubmit'); document.$name.submit()", 
+			href => $_REQUEST {__windows_ce} || $_SKIN =~ /Universal/ || $_SKIN =~ /Gecko/ ? "javaScript:document.$name.submit()" : "javaScript:document.$name.fireEvent('onsubmit'); document.$name.submit()", 
 			off  => $_REQUEST {__read_only} || $options -> {no_ok},
 		},
 		{

@@ -79,6 +79,8 @@ sub setup_skin {
 	$_REQUEST {__skin} ||= $preconf -> {core_skin};
 	$_REQUEST {__skin} ||= 'Classic';
 
+	$_REQUEST {__skin}   = 'TurboMilk_Gecko' if $_REQUEST {__skin} =~ /^TurboMilk/ && $r -> headers_in -> {'User-Agent'} =~ /Gecko/;
+
 	$options -> {kind} = 'error' if $_REQUEST {error};
 
 	if ($options -> {kind} && !$_REQUEST {__response_started}) {
@@ -826,7 +828,7 @@ EOH
 		}
 		else {
 		
-			if ($_REQUEST {sid} && !$_REQUEST {__top}) {
+			if ($_REQUEST {sid} && !$_REQUEST {__top} && !$_REQUEST {__only_menu}) {
 						
 				my @qs = split /\?/, $r -> headers_in -> {Referer};
 				

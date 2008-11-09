@@ -82,6 +82,20 @@ function handle_hotkey_href     (r) {
 	
 }
 		
+function open_in_frame (url, name) {
+
+	var frames = window.frames; 
+	
+	for (var i = 0; i < frames.length; i++) {
+		if (frames [i].name != name) continue;
+		frames [i].location.replace (url);
+		frames [i].location.reload (true);
+		break;
+	
+	}
+	
+}
+
 function nope (a1, a2, a3) {
 	var w = window;
 	w.open (a1, a2, a3);
@@ -144,7 +158,7 @@ function check_menu_md5 (menu_md5) {
 
 function idx_tables (__scrollable_table_row) {
 
-	var tables = document.body.getElementsByTagName ('table');
+	var tables = window.document.body.getElementsByTagName ('table');
 
 	if (!tables) return; 
 	

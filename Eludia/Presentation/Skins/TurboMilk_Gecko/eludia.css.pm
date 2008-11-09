@@ -33,14 +33,11 @@ div.table-container {
       	OVERFLOW-X: auto;
       	PADDING-BOTTOM: 0px;
       	MARGIN: 0px;
+/*      	
       	WIDTH: expression(document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 18));
+*/      	
       	PADDING-TOP: 0px;      	
       	
-	scrollbar-base-color:#d6d3ce;
-	scrollbar-arrow-color:#485f70;
-	scrollbar-3dlight-color: #efefef;
-	scrollbar-darkshadow-color:#b0b0b0;
-
 }
 
 div.table-container-x {
@@ -51,24 +48,16 @@ div.table-container-x {
       	OVERFLOW-X: auto;
       	PADDING-BOTTOM: 0px;
       	MARGIN: 0px;
+/*      	
       	WIDTH: expression(document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 16));
-      	PADDING-TOP: 0px;      	
+*/
+	PADDING-TOP: 0px;      	
       	
-	scrollbar-base-color:#d6d3ce;
-	scrollbar-arrow-color:#485f70;
-	scrollbar-3dlight-color: #efefef;
-	scrollbar-darkshadow-color:#b0b0b0;
-
 }
 
 div.checkboxes {
 
       	OVERFLOW: auto;
-      	
-	scrollbar-base-color:#d6d3ce;
-	scrollbar-arrow-color:#485f70;
-	scrollbar-3dlight-color: #efefef;
-	scrollbar-darkshadow-color:#b0b0b0;
 
 }
 
@@ -475,7 +464,9 @@ A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
 	COLOR: #293869; 
 
 	position: relative;
+/*	
 	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+*/	
 
 }
 .row-cell-transparent-no-scroll {
@@ -495,7 +486,9 @@ A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
 	COLOR: #293869; 
 
 	position: relative;
+/*	
 	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+*/	
 
 }
 .row-cell-transparent {
@@ -548,7 +541,9 @@ A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
 	padding-bottom: 5px;
 
 	position: relative;
+/*	
 	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+*/	
 
 }
 
@@ -562,8 +557,9 @@ A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
 	padding-bottom: 2px;
 	
 	position: relative;
+/*	
 	top: expression(this.parentElement.parentElement.parentElement.parentElement.scrollTop);
-
+*/
 	border-right:solid 1px #D6D3CE;
 	border-bottom:solid 1px #D6D3CE;
 	border-top:solid 1px #D6D3CE;
@@ -578,16 +574,15 @@ A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
 	padding-top: 3px;
 	padding-bottom: 2px;
 	
-	position: relative;
-	top: expression(this.parentElement.parentElement.parentElement.parentElement.scrollTop);
-
 	border-right:solid 1px #D6D3CE;
 	border-bottom:solid 1px #D6D3CE;
 	border-top:solid 1px #D6D3CE;
 
 	position: relative;
+/*
 	top: expression(this.parentElement.parentElement.parentElement.parentElement.scrollTop);
 	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
+*/
 
 }
 
@@ -607,9 +602,11 @@ a.row-cell-header-a, a.row-cell-header-a:link, a.row-cell-header-a:hover, a.row-
 	background-color: #dededc;
 
 	position: relative;
+
+/*
 	top: expression(this.parentElement.parentElement.parentElement.parentElement.scrollTop);
 	left: expression(this.parentElement.parentElement.parentElement.parentElement.scrollLeft);
-
+*/
 }
 
 A.lnk0, A.lnk0:link, A.lnk0:active, A.lnk0:hover, A.lnk0:visited {
@@ -868,14 +865,19 @@ a.hint {
 
 #admin a {color:#000000;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 
-#Menu {position:absolute;top:expression(document.getElementById('admin').offsetTop+25);left:expression(document.getElementById('admin').offsetLeft + document.getElementById('admin').offsetParent.offsetLeft);visibility:expression(subsets_are_visible ? 'visible' : 'hidden');z-index:100;}
+#Menu {
+	position:absolute;
+/*	
+	top:expression(document.getElementById('admin').offsetTop+25);
+	left:expression(document.getElementById('admin').offsetLeft + document.getElementById('admin').offsetParent.offsetLeft);
+	visibility:expression(subsets_are_visible ? 'visible' : 'hidden');
+*/	
+	z-index:100;
+}
 #Menu .mm {background-color:#C4C7C9;padding:6px 5px 6px 9px;border-bottom:solid 1px #E2E3E4;}
 #Menu .mm0 {background-color:#C4C7C9;padding:6px 5px 0px 9px;}
 #Menu a {color:#23385A;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 #Menu a:hover {color:#23385A;text-decoration:underline;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
-
-div.grey-submit a {color:#222323;text-decoration:none;}
-div.grey-submit a:hover {color:#222323;text-decoration:underline;}
 
 .logon {font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal;font-weight: normal;color:#414141;text-decoration: none;}
 
@@ -907,11 +909,6 @@ div.grey-submit a:hover {color:#222323;text-decoration:underline;}
       	PADDING-BOTTOM: 0px;
       	MARGIN: 0px;
       	PADDING-TOP: 0px;      	
-      	
-	scrollbar-base-color:#d6d3ce;
-	scrollbar-arrow-color:#485f70;
-	scrollbar-3dlight-color: #efefef;
-	scrollbar-darkshadow-color:#b0b0b0;
 
 }
 
