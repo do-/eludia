@@ -7,8 +7,6 @@ use HTTP::Status;
 use CGI;
 use Data::Dumper;
 
-use Config::ApacheFormat;
-
 use File::Temp qw/:POSIX/;
 
 use Time::HiRes 'time';
@@ -19,78 +17,86 @@ no warnings;
 ################################################################################
 
 sub start {
-
-	my $config = Config::ApacheFormat -> new ();
+	
+	$ENV {GATEWAY_INTERFACE} = 'CGI/';
 
 	open (ACCESS_LOG, ">>logs/access.log");
 #	open (STDERR, ">>logs/error.log");
 
-	open (I, "conf/httpd.conf");
-	my $src = join '', (<I>);
-	close (I);
+	my $src = '';
 
-	$src =~ s{\<perl\>(.*?)\</perl\>}{}gsm;
-	my $perl_section = $1;
+	my $perl_section = '';
+	my $current_section = '';
+	our $sections = {};
+
+	open (I, "conf/httpd.conf");
+	while (my $line = <I>) {
+	
+		if ($line =~ /^\s*\<\/.*\>\s*$/) {
+			$current_section = '';
+			next;
+		}
+
+		if ($line =~ /^\s*\<(.*)\>\s*$/) {
+			$current_section = $1;
+			next;
+		}
+		
+		if ($current_section =~ /^perl\s*$/i) {
+			$perl_section .= $line;
+			next;
+		}
+
+		if ($line =~ /^\s*(\w+)\s+(.*)\s*$/) {
+			my ($k, $v) = ($1, $2);
+			$v =~ s{^\"(.*)\"$}{$1};
+			$sections -> {$current_section} -> {$k} = $v;
+		}
+				
+	}
+	
+	our $document_root = $sections -> {''} -> {DocumentRoot};
+
+	$document_root or die "DocumentRoot not found\n";
 	
 	my $temp = $ENV{TEMP};
 	$temp =~ y{\\}{/};
 	
 	$perl_section =~ s/\%TEMP\%/$temp/;
 
-	eval $perl_section;	
+	eval $perl_section;
 	print STDERR $@ if $@;	
+	
+	my $sub_src = "sub exec_handler {\n my (\$connection, \$request, \$uri) = \@_;\n";
 
-	my $fn = tmpnam ();
-	open (T, ">$fn");
-	print T $src;
-	close (T);
+	foreach my $k (keys %$sections) {
+	
+		$k =~ /^Location\s+/ or next;
+		
+		my $uri = $';
+		
+		my $location = $sections -> {$k};
+		
+		$location -> {SetHandler} eq 'perl-script' or next;
+		
+		$location -> {PerlHandler} .= '::handler' unless $location -> {PerlHandler} =~ /\:\:/;		
+		$location -> {PerlHandler} =~ /\:\:/;
+		$location -> {perl_module} = $`;
+		$location -> {perl_sub} = $';
 
-	$config -> read ($fn);
-
-	unlink $fn;
-
-	our $document_root = $config -> get ('DocumentRoot');
-
-	my @locations = map {{uri => $_ -> [1]}} $config -> get ('Location');
-
-	foreach my $location (@locations) {
-
-		my $block = $config -> block (Location => $location -> {uri});
-		$location -> {handler} = $block -> get ('SetHandler');
-		if ($location -> {handler} eq 'perl-script') {
-			$location -> {perl_handler} = $block -> get ('PerlHandler');
-			$location -> {perl_handler} .= '::handler' unless $location -> {perl_handler} =~ /\:\:/;		
-			$location -> {perl_handler} =~ /\:\:/;
-			$location -> {perl_module} = $`;
-			$location -> {perl_sub} = $';
-			eval "require $$location{perl_module}";
-		}
-
-	}
-
-	my @perl_locations = 
-
-		sort { index ($a -> {uri}, $b -> {uri}) == 0 ? -1 : index ($b -> {uri}, $a -> {uri}) == 0 ? 1 : 0}
-
-			grep {$_ -> {handler} eq 'perl-script'} @locations;
-
-
-	my @sub_body = map {<<EOS} @perl_locations;
-		if (\$uri =~ m{^$$_{uri}}) {
-			\$$$_{perl_module}::connection = \$connection;
-			\$$$_{perl_module}::request    = \$request;
-			\$ENV {'PERL_MODULE'} = '$$_{perl_module}';
-			package $$_{perl_module};
-			return $$_{perl_sub} (\$uri);			
-		}
+		$sub_src .= <<EOS;
+			if (\$uri =~ m{^${uri}}) {
+				\$$$location{perl_module}::connection = \$connection;
+				\$$$location{perl_module}::request    = \$request;
+				\$ENV {'PERL_MODULE'} = '$$_{perl_module}';
+				package $$location{perl_module};
+				return $$location{perl_sub} (\$uri);			
+			}
 EOS
 
-	my $sub_src = <<EOS;
-	sub exec_handler {
-		my (\$connection, \$request, \$uri) = \@_;
-	@sub_body
 	}
-EOS
+	
+	$sub_src .= "}\n";
 
 warn $sub_src;
 
@@ -136,8 +142,10 @@ warn $sub_src;
 sub handle_connection {
 
 	my $connection = $_[0];
-
-	if (my $request = $connection -> get_request) {
+	
+	my $request = $connection -> get_request;
+	
+	if ($request) {
 
 		my $uri = $request -> uri -> as_string;
 		
@@ -145,8 +153,6 @@ sub handle_connection {
 
 		if ($uri =~ m{^/i/}) {
 		
-#warn Dumper ($request -> headers);
-
 			my $path = $document_root . $uri;
 			$path =~ s{\?.*}{};
 
