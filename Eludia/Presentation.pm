@@ -3996,6 +3996,8 @@ sub draw_tree {
 	my ($node_callback, $list, $options) = @_;
 	
 	return '' if $options -> {off};
+	
+	$options -> {width} ||= 250;
 		
 	$options -> {in_order} ||= 1 if $options -> {active} >= 2 && $_REQUEST {__parent};
 	

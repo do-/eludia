@@ -2155,7 +2155,7 @@ EOH
 			</tr>
 		</table>
 		$menus
-		<iframe name="_content_iframe" id="__content_iframe" style="height: expression(document.body.offsetHeight - 80); width: expression(document.body.offsetWidth - 250);" height="80%" src="/i/0.html" application="yes">
+		<iframe name="_content_iframe" id="__content_iframe" style="height: expression(document.body.offsetHeight - 80); width: expression(document.body.offsetWidth - $options->{width});" height="80%" src="/i/0.html" application="yes">
 		</iframe>
 EOH
 

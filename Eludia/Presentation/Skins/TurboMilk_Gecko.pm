@@ -3180,7 +3180,7 @@ EOO
 EOH
 
 	return <<EOH;
-		<frameset cols="250,*">
+		<frameset cols="$options->{width},*">
 			<frame src="$ENV{SCRIPT_URI}/i/_skins/TurboMilk/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
 			</frame>
 			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
