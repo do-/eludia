@@ -981,7 +981,7 @@ warn "relink $$column_def{table_name} ($$column_def{name}): $old_id -> $new_id";
 			if ($column_def -> {TYPE_NAME} =~ /int/) {
 			
 				sql_do (<<EOS, $old_id);
-					INSERT INTO $conf->{systables}->{__moved_links}
+					INSERT INTO $model_update->{quote}$conf->{systables}->{__moved_links}$model_update->{quote}
 						(table_name, column_name, id_from, id_to)
 					SELECT
 						'$$column_def{table_name}' AS table_name,
@@ -1003,7 +1003,7 @@ EOS
 				my $_new_id = ',' . $new_id . ',';
 			
 				sql_do (<<EOS, '%' . $old_id . '%');
-					INSERT INTO $conf->{systables}->{__moved_links}}
+					INSERT INTO $model_update->{quote}$conf->{systables}->{__moved_links}$model_update->{quote}}
 						(table_name, column_name, id_from, id_to)
 					SELECT
 						'$$column_def{table_name}' AS table_name,
@@ -1059,7 +1059,7 @@ warn "undo relink $table_name: $old_id";
 
 			my $from = <<EOS;
 				FROM
-					$conf->{systables}->{__moved_links}
+					$model_update->{quote}$conf->{systables}->{__moved_links}$model_update->{quote}
 				WHERE
 					table_name = '$$column_def{table_name}'
 					AND column_name = '$$column_def{name}'
