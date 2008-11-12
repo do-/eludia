@@ -27,6 +27,26 @@ var kb_hooks = [{}, {}, {}, {}];
 
 var max_len = 50;
 
+function switch_subsets_are_visible (sub_visible) {	
+	subsets_are_visible = sub_visible;
+	if (sub_visible == 0) {
+		document.getElementById('Menu').style.visibility = 'hidden';
+	} else {	
+		var e = document.getElementById('admin');
+		var left = 0;
+		var top = 0;
+		while (e.offsetParent) {
+       			left += e.offsetLeft + (e.currentStyle ? (parseInt(e.currentStyle.borderLeftWidth)).NaN0() : 0);
+        			top += e.offsetTop  + (e.currentStyle ? (parseInt(e.currentStyle.borderTopWidth)).NaN0() : 0);
+       			e = e.offsetParent;
+    		}	
+		top = top + 25;
+		document.getElementById('Menu').style.top = top + "px";
+		document.getElementById('Menu').style.left = left + "px";
+		document.getElementById('Menu').style.visibility = 'visible';
+	}
+}
+
 function set_suggest_result (sel, id) {
 	var o = sel.options [sel.selectedIndex];
 	document.getElementById (id + '__id').value    = o.value;
@@ -170,7 +190,7 @@ function idx_tables (__scrollable_table_row) {
 		
 		if (!scrollable_table) scrollable_table = table;
 
-		var rows = table.tBodies (0).rows;
+		var rows = table.tBodies[0].rows;
 
 		for (var j = 0; j < rows.length; j++) {
 			scrollable_rows = scrollable_rows.concat (rows [j]);
@@ -193,7 +213,7 @@ function idx_tables (__scrollable_table_row) {
 
 	if (!scrollable_table) return;
 
-	scrollable_table          = scrollable_table.tBodies (0);
+	scrollable_table          = scrollable_table.tBodies [0];
 	if (__scrollable_table_row < scrollable_rows.length) scrollable_table_row = __scrollable_table_row;
 	scrollable_table_row_cell = 0;
 	
@@ -210,7 +230,7 @@ function idx_tables (__scrollable_table_row) {
 }
 
 function code_alt_ctrl (code, alt, ctrl) {
-	var e = window.event;
+	var e = event;
 	if (e.keyCode != code) return 0;
 	if (e.altKey  != alt)  return 0;
 	if (e.ctrlKey != ctrl) return 0;
@@ -233,11 +253,11 @@ function activate_link_by_id (id) {
 	var a = document.getElementById (id);
 
 	if (a.onclick) {
-		try { window.event.cancelBubble = false } catch (e) {}
+		try { event.cancelBubble = false } catch (e) {}
 		a.onclick ();
 	}
 	
-	if (!window.event.cancelBubble) {
+	if (!event.cancelBubble) {
 		a.click ();
 	}
 
@@ -300,13 +320,13 @@ function focus_on_input (__focused_input) {
 
 
 function tabOnEnter () {
-   if (window.event && window.event.keyCode == 13 && !window.event.ctrlKey && !window.event.altKey) {
-   	window.event.keyCode = 9;
+   if (event && event.keyCode == 13 && !event.ctrlKey && !event.altKey) {
+   	event.keyCode = 9;
    }
 }
 
 function td_on_click () {
-	var uid = window.event.srcElement.uniqueID;
+	var uid = event.srcElement.uniqueID;
 	var new_scrollable_table_row = td2sr [uid];
 	var new_scrollable_table_row_cell = td2sc [uid];
 	if (new_scrollable_table_row == null || new_scrollable_table_row_cell == null) return;
@@ -352,9 +372,9 @@ function subset_on_change (subset_name, href) {
 	var fname = document.getElementById('_body_iframe');
 	fname.src = href;
 
-	subsets_are_visible = 1 - subsets_are_visible;
+	switch_subsets_are_visible (1 - subsets_are_visible);
+ 	document.getElementById ("_body_iframe").contentWindow.subsets_are_visible = subsets_are_visible;
 
-	document.getElementById ("_body_iframe").contentWindow.subsets_are_visible = subsets_are_visible;
 
 }
 
@@ -419,20 +439,20 @@ function KillClock() {
 
 function typeAhead() { // borrowed from http://www.oreillynet.com/javascript/2003/09/03/examples/jsdhtmlcb_bonus2_example.html
    
-   if (window.event && window.event.keyCode == 8) {
+   if (event && event.keyCode == 8) {
    	typeAheadInfo.accumString = "";
    	return;
    }
 
-   if (window.event && window.event.keyCode == 13 && !window.event.ctrlKey && !window.event.altKey) {
-   	window.event.keyCode = 9;
+   if (event && event.keyCode == 13 && !event.ctrlKey && !event.altKey) {
+   	event.keyCode = 9;
    	return;
    }
 
-   if (window.event && !window.event.ctrlKey) {
+   if (event && !event.ctrlKey) {
       var now = new Date();
       if (typeAheadInfo.accumString == "" || now - typeAheadInfo.last < typeAheadInfo.delay) {
-	 var evt = window.event;
+	 var evt = event;
 	 var selectElem = evt.srcElement;
 	 var charCode = evt.keyCode;
 	 var newChar =  String.fromCharCode(charCode).toUpperCase();
@@ -704,9 +724,9 @@ function focus_on_first_input (td) {
 
 function blockEvent () {
 
-	try { window.event.keyCode = 0         } catch (e) {}
-	try { window.event.cancelBubble = true } catch (e) {}
-	try { window.event.returnValue = false } catch (e) {}
+	try { event.keyCode = 0         } catch (e) {}
+	try { event.cancelBubble = true } catch (e) {}
+	try { event.returnValue = false } catch (e) {}
 
 	return false;
 	
@@ -759,7 +779,7 @@ function scrollCellToVisibleTop (td, force_top) {
 
 function handle_basic_navigation_keys () {
 
-	var e = window.event;
+	var e = event;
 	var keyCode = e.keyCode;
 	var i = 0;
 	
@@ -851,7 +871,7 @@ function handle_basic_navigation_keys () {
 
 		}		
 		
-		if (q_is_focused || !document.toolbar_form || window.event.altKey || window.event.ctrlKey) return;
+		if (q_is_focused || !document.toolbar_form || event.altKey || event.ctrlKey) return;
 
 /*		
 		if (
@@ -1195,7 +1215,7 @@ Calendar.addClass = function(el, className) {
 
 Calendar.getElement = function(ev) {
 	if (Calendar.is_ie) {
-		return window.event.srcElement;
+		return event.srcElement;
 	} else {
 		return ev.currentTarget;
 	}
@@ -1203,14 +1223,14 @@ Calendar.getElement = function(ev) {
 
 Calendar.getTargetElement = function(ev) {
 	if (Calendar.is_ie) {
-		return window.event.srcElement;
+		return event.srcElement;
 	} else {
 		return ev.target;
 	}
 };
 
 Calendar.stopEvent = function(ev) {
-	ev || (ev = window.event);
+	ev || (ev = event);
 	if (Calendar.is_ie) {
 		ev.cancelBubble = true;
 		ev.returnValue = false;
@@ -1373,7 +1393,7 @@ Calendar.tableMouseUp = function(ev) {
 		return false;
 	}
 	var target = Calendar.getTargetElement(ev);
-	ev || (ev = window.event);
+	ev || (ev = event);
 	Calendar.removeClass(el, "active");
 	if (target == el || target.parentNode == el) {
 		Calendar.cellClick(el, ev);
@@ -1426,7 +1446,7 @@ Calendar.tableMouseOver = function (ev) {
 		Calendar.removeClass(el, "hilite");
 		Calendar.removeClass(el.parentNode, "rowhilite");
 	}
-	ev || (ev = window.event);
+	ev || (ev = event);
 	if (el.navtype == 50 && target != el) {
 		var pos = Calendar.getAbsolutePos(el);
 		var w = el.offsetWidth;
@@ -1504,8 +1524,8 @@ Calendar.calDragIt = function (ev) {
 	var posX;
 	var posY;
 	if (Calendar.is_ie) {
-		posY = window.event.clientY + document.body.scrollTop;
-		posX = window.event.clientX + document.body.scrollLeft;
+		posY = event.clientY + document.body.scrollTop;
+		posX = event.clientX + document.body.scrollLeft;
 	} else {
 		posX = ev.pageX;
 		posY = ev.pageY;
@@ -1563,7 +1583,7 @@ Calendar.dayMouseDown = function(ev) {
 };
 
 Calendar.dayMouseDblClick = function(ev) {
-	Calendar.cellClick(Calendar.getElement(ev), ev || window.event);
+	Calendar.cellClick(Calendar.getElement(ev), ev || event);
 	if (Calendar.is_ie) {
 		document.selection.empty();
 	}
@@ -2003,7 +2023,7 @@ Calendar._keyEvent = function(ev) {
 	if (!window.calendar) {
 		return false;
 	}
-	(Calendar.is_ie) && (ev = window.event);
+	(Calendar.is_ie) && (ev = event);
 	var cal = window.calendar;
 	var act = (Calendar.is_ie || ev.type == "keypress");
 	if (ev.ctrlKey) {
@@ -2562,8 +2582,8 @@ Calendar.prototype._dragStart = function (ev) {
 	var posX;
 	var posY;
 	if (Calendar.is_ie) {
-		posY = window.event.clientY + document.body.scrollTop;
-		posX = window.event.clientX + document.body.scrollLeft;
+		posY = event.clientY + document.body.scrollTop;
+		posX = event.clientX + document.body.scrollLeft;
 	} else {
 		posY = ev.clientY + window.scrollY;
 		posX = ev.clientX + window.scrollX;

@@ -870,8 +870,8 @@ a.hint {
 /*	
 	top:expression(document.getElementById('admin').offsetTop+25);
 	left:expression(document.getElementById('admin').offsetLeft + document.getElementById('admin').offsetParent.offsetLeft);
-	visibility:expression(subsets_are_visible ? 'visible' : 'hidden');
-*/	
+*/
+	visibility:hidden;	
 	z-index:100;
 }
 #Menu .mm {background-color:#C4C7C9;padding:6px 5px 6px 9px;border-bottom:solid 1px #E2E3E4;}
@@ -881,11 +881,8 @@ a.hint {
 
 .logon {font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal;font-weight: normal;color:#414141;text-decoration: none;}
 
-
-
-
-
-
+div.grey-submit a {color:#222323;text-decoration:none;}
+div.grey-submit a:hover {color:#222323;text-decoration:underline;}
 
 
 

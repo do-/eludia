@@ -11,8 +11,8 @@ BEGIN {
 	delete $INC {"Eludia/Presentation/Skins/Generic.pm"};
 
 	our $replacement = {
-		error    => 'JS',
-		redirect => 'JS',
+		error    => 'JS_Gecko',
+		redirect => 'JS_Gecko',
 	};
 
 }
@@ -178,7 +178,7 @@ EOH
 					$subset_cell = <<EOH;
 						<td width="5" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2px" height="28px"></td>
 						<td><img src="$_REQUEST{__static_url}/0.gif" border="0" hspace="0" width=5 height=1></td>
-						<td><div id="admin" onClick="subsets_are_visible = 1 - subsets_are_visible; document.getElementById ('_body_iframe').contentWindow.subsets_are_visible = subsets_are_visible"><a href="#">$$item{label}</a></div></td>
+						<td><div id="admin" onClick="switch_subsets_are_visible (1 - subsets_are_visible); document.getElementById ('_body_iframe').contentWindow.subsets_are_visible = subsets_are_visible;"><a href="#">$$item{label}</a></div></td>
 EOH
 				
 				}
@@ -349,7 +349,7 @@ sub _draw_input_datetime {
 	
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
-	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
+	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
 	
 	my $attributes = dump_attributes ($options -> {attributes});
 	
@@ -632,7 +632,7 @@ sub draw_form_field_string {
 
 	my ($_SKIN, $options, $data) = @_;
 	
-	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
+	$options -> {attributes} -> {onKeyPress} .= ';if (event.keyCode != 27) is_dirty=true;';
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
@@ -656,7 +656,7 @@ sub draw_form_field_suggest {
 		
 	};
 	
-	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
+	$options -> {attributes} -> {onKeyPress} .= ';if (event.keyCode != 27) is_dirty=true;';
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$options -> {attributes} -> {onBlur}     .= qq{;scrollable_table_is_blocked = false; q_is_focused = false; getElementById('_$options->{name}__label').value = this.value; _suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);};
@@ -665,7 +665,7 @@ sub draw_form_field_suggest {
 	
 		var s = getElementById('_$options->{name}__suggest');
 
-		if (window.event.keyCode == 40 && s.style.display == 'block') {
+		if (event.keyCode == 40 && s.style.display == 'block') {
 			s.focus ();
 		}
    
@@ -816,7 +816,7 @@ EOH
 sub draw_form_field_password {
 	my ($_SKIN, $options, $data) = @_;
 	my $attributes = dump_attributes ($options -> {attributes});
-	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (window.event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false">};
+	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false">};
 }
 
 ################################################################################
@@ -1019,11 +1019,11 @@ sub draw_form_field_string_voc {
 	
 	$options -> {attributes} ||= {};
 
-	$options -> {attributes} -> {onKeyPress} .= qq[;if (window.event.keyCode != 27) {is_dirty=true;document.getElementById('${options}_id').value = 0; }];
-	$options -> {attributes} -> {onKeyDown}  .= qq[;if (window.event.keyCode == 8 || window.event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter();];
+	$options -> {attributes} -> {onKeyPress} .= qq[;if (event.keyCode != 27) {is_dirty=true;document.getElementById('${options}_id').value = 0; }];
+	$options -> {attributes} -> {onKeyDown}  .= qq[;if (event.keyCode == 8 || event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter();];
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
-	$options -> {attributes} -> {onChange}   .= 'is_dirty=true;' . ( $options->{onChange} ? $options->{onChange} . ' try { window.event.cancelBubble = false } catch (e) {} try { window.event.returnValue = true } catch (e) {}': '');
+	$options -> {attributes} -> {onChange}   .= 'is_dirty=true;' . ( $options->{onChange} ? $options->{onChange} . ' try { event.cancelBubble = false } catch (e) {} try { event.returnValue = true } catch (e) {}': '');
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -1621,7 +1621,7 @@ sub draw_toolbar_input_text {
 
 	$options -> {attributes} ||= {};
 	
-	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {form.submit()}";
+	$options -> {onKeyPress} ||= "if (event.keyCode == 13) {form.submit()}";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -1658,7 +1658,7 @@ sub draw_toolbar_input_datetime {
 	my ($_SKIN, $options) = @_;
 
 	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";	
-	$options -> {onKeyPress} = "if (window.event.keyCode == 13) {this.form.submit()}";
+	$options -> {onKeyPress} = "if (event.keyCode == 13) {this.form.submit()}";
 
 	my $html = '<td class="toolbar" nowrap>';
 		
@@ -2421,7 +2421,7 @@ EOH
 
 		$preconf -> {core_show_dump} and $_REQUEST {__on_mousedown} .= <<EODUMP;
 
-		    if (window.event.button == 2 && window.event.ctrlKey) {
+		    if (event.button == 2 && event.ctrlKey) {
     			nope ('$url_dump', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');
 		    }
 		    
@@ -2632,13 +2632,24 @@ EOHELP
 	
 		/^__on_(\w+)$/ or next;
 		
-		my $what = $1 eq 'load' ? 'window' : 'body';
-	
-		$_REQUEST {__head_links} .= <<EOH;
-			<script for="$what" event="on$1">
+		if ($1 eq 'load') {
+			$_REQUEST {__head_links} .= <<EOH;
+			<script>
+				function init() {
+                   				$_REQUEST{$&};
+                			}
+			</script>
+			<script for="window" event="onload">
+                        		document.addEventListener("DOMContentLoaded", init, false);
+            		</script>
+EOH
+		} else {
+			$_REQUEST {__head_links} .= <<EOH;
+			<script for="body" event="on$1">
 				$_REQUEST{$&};
 			</script>
 EOH
+		}
 
 	}
 	
@@ -2986,11 +2997,11 @@ EOH
 -->							
 							<tr class="logon">
 								<td><b>Логин:</b></td>
-								<td><input type="text" name="login" value="${\( $_COOKIES{user_login} && $_COOKIES{user_login}->value )}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
+								<td><input type="text" name="login" value="${\( $_COOKIES{user_login} && $_COOKIES{user_login}->value )}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (event.keyCode == 13) form.password.focus ()"></td>
 							</tr>
 							<tr class="logon">
 								<td><b>Пароль:</b></td>
-								<td><input type="password" name="password" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.submit ()"></td>
+								<td><input type="password" name="password" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (event.keyCode == 13) form.submit ()"></td>
 							</tr>
 							
 							
@@ -2998,6 +3009,7 @@ EOH
 						</table>
 					</td>
 				</tr>
+
 				<tr>
 					<td align=center>
 						<table width=1>
