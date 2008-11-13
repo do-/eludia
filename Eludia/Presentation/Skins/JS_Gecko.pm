@@ -28,12 +28,12 @@ sub draw_error_page {
 
 	my ($_SKIN, $page) = @_;
 
-	$_REQUEST {__content_type} ||= 'text/plain; charset=' . $i18n -> {_charset};
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
 
 	my $data = $_JSON -> encode ([$_REQUEST {error}]);
 
 	$_REQUEST {__script} = <<EOJ;
-		function onload () {
+		function onstart () {
 EOJ
 
 	if ($page -> {error_field}) {
@@ -48,11 +48,10 @@ EOJ
 	$_REQUEST {__script} .= <<EOJ;
 			var data = $data;
 			alert (data [0]);
-			window.parent.document.body.style.cursor = 'default';
 		}
 EOJ
 
-	return qq{<html><head><script>var scriptBody = "alert('Hello world!')"; var script = document.createElement('script'); script.type = 'text/javascript'; script.text = scriptBody; document.body.appendChild(script); $_REQUEST{__script}</script></head><body onLoad="onload ()"></body><html>};
+	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="onstart ()"></body><html>};
 
 }
 
