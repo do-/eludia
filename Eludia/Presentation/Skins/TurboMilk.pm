@@ -2229,6 +2229,13 @@ sub draw_table_header_cell {
 	$cell -> {label} .= "\&nbsp;\&nbsp;<a class=row-cell-header-a href=\"$$cell{href_asc}\"><b>\&uarr;</b></a>"  if $cell -> {href_asc};
 	$cell -> {label} .= "\&nbsp;\&nbsp;<a class=row-cell-header-a href=\"$$cell{href_desc}\"><b>\&darr;</b></a>" if $cell -> {href_desc};
 
+	if ($cell -> {order} && !$conf -> {core_no_order_arrows}) {
+		$cell -> {label} = "<nobr><img src='$_REQUEST{__static_url}/order.gif' border=0 hspace=1 vspace=0 align=absmiddle>" . $cell -> {label} . "</nobr>";
+	}	
+	else {
+		$cell -> {label} = '&nbsp;' . $cell -> {label};
+	}
+
 	if ($cell -> {href}) {
 		$cell -> {label} = "<a class=row-cell-header-a href=\"$$cell{href}\"><b>" . $cell -> {label} . "</b></a>";
 	}	
@@ -2237,7 +2244,7 @@ sub draw_table_header_cell {
 	
 	my $z_index = $cell -> {no_scroll} ? 'style="z-index:110"' : 'style="z-index:100"';
 
-	return "<th $attributes $$cell{title} $z_index>\&nbsp;$$cell{label}\&nbsp;</th>";
+	return "<th $attributes $$cell{title} $z_index>$$cell{label}\&nbsp;</th>";
 
 }
 
