@@ -47,6 +47,16 @@ function switch_subsets_are_visible (sub_visible) {
 	}
 }
 
+
+function ChangeMenuPlease (newHTML, md5) {
+	var someElement = document.getElementById('main_menu')
+	var range = document.createRange();
+            range.setStartBefore(someElement);
+            var docFrag = range.createContextualFragment(newHTML);
+            someElement.parentNode.replaceChild(docFrag, someElement); 
+            menu_md5 = md5;
+}
+
 function set_suggest_result (sel, id) {
 	var o = sel.options [sel.selectedIndex];
 	document.getElementById (id + '__id').value    = o.value;
@@ -163,7 +173,7 @@ function _dumper_href () {
 
 function check_menu_md5 (menu_md5) {
 
-	window.parent.subsets_are_visible = 0;
+	window.parent.subsets_are_visible = window.parent.switch_subsets_are_visible(0) ;
 
 	if (!window.parent.location)
 		return;
@@ -347,10 +357,10 @@ function subset_on_change (subset_name, href) {
 
 	var subset_tr = document.getElementById(subset_tr_id);
 
-	var subset_table = subset_tr.parentElement;
+	var subset_table = subset_tr.parentNode;
 
 	for (var i = 0; i < subset_table.rows.length; i++) {
-		subset_table.rows(i).style.display = '';
+		subset_table.rows[i].style.display = '';
 	}
 
 	subset_tr.style.display = 'none';
@@ -747,11 +757,11 @@ function absTop (element) {
 
 function scrollCellToVisibleTop (td, force_top) {
 	
-	var tr = td.parentElement;	
-	if (tr.tagName == 'A') tr = tr.parentElement;
-	var table = tr.parentElement.parentElement;
+	var tr = td.parentNode;	
+	if (tr.tagName == 'A') tr = tr.parentNode;
+	var table = tr.parentNode.parentNode;
 	var thead = table.tHead;
-	var div   = table.parentElement;
+	var div   = table.parentNode;
 	
 	var delta = div.scrollTop - td.offsetTop + 2;
 
@@ -859,7 +869,7 @@ function handle_basic_navigation_keys () {
 			
 			if (children == null || children.length == 0) {
 			
-				while (cell && cell.tagName != 'TR') cell = cell.parentElement;
+				while (cell && cell.tagName != 'TR') cell = cell.parentNode;
 				
 				children = cell.getElementsByTagName ('a');
 			

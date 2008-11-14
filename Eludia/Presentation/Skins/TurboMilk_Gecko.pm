@@ -2362,13 +2362,10 @@ sub draw_page {
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
 		</script>
 		<script for=window event=onload>
-
 			var wm = ancestor_window_with_child ('main_menu');
-
 			if (wm) {
 				var a = $a;
-				wm.child.outerHTML = a [0];
-				wm.window.menu_md5 = '$menu_md5';
+				wm.window.ChangeMenuPlease (a[0], '$menu_md5');
 			}
 
 		</script>
@@ -2710,7 +2707,7 @@ EOH
 			function cell_select_visibility (select, fixed_cols) {
 
 				var td    = select.offsetParent;
-				var tr    = td.parentElement;
+				var tr    = td.parentNode;
 				var cells = tr.cells;
 				var last_fixed_cell_offset_right = 0;
 
