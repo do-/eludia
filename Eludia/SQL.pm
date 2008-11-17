@@ -1330,6 +1330,123 @@ sub __log_request_finish_profilinig {
 
 ################################################################################
 
+sub sql_filters {
+
+	my ($root, $filters) = @_;
+		
+	my $have_id_filter = 0;
+	my $cnt_filters    = 0;
+	my $where          = '';
+	my $order;
+	my $limit;
+	my @params = ();
+
+	foreach my $filter (@$filters) {
+
+		ref $filter or $filter = [$filter, $_REQUEST {$filter}];
+
+											# 'id_org'       --> ['id_org' => $_REQUEST {id_org}]
+
+		my ($field, $values) = @$filter;
+
+		if ($field eq 'ORDER') {
+			$order = $values;
+			next;
+		}
+
+		if ($field eq 'LIMIT') {
+			$limit = $values;			
+			next;
+		}
+
+		ref $values eq ARRAY or $values = [$values];
+
+		my $first_value = $values -> [0];
+
+		my $tied;
+
+		if (ref $first_value eq SCALAR) {
+
+			$tied = tied $$first_value;
+
+		}
+
+		unless ($tied) {
+
+			next if $first_value eq '' or $first_value eq '0000-00-00';
+
+		}
+
+		$cnt_filters ++;
+
+		$have_id_filter = 1 if $field eq 'id';
+
+		$field =~ s{([a-z][a-z0-9_]*)}{$root.$1}gsm;
+
+		if ($field =~ /\s+IN\s*$/sm) {
+
+											# ['id_org IN' => sql_select_ids (...)] => "users.id_org IN (SELECT ...)"
+											# ['id_org IN' => sql ('orgs(id)' => [[id_kind => 1]])] => "users.id_org IN (SELECT ...)"
+
+			if ($tied) {							
+
+				if (_sql_ok_subselects ()) {
+
+					$where .= "\n  AND ($field ($tied->{sql}))";
+
+					push @params, @{$tied -> {params}};
+
+				}
+				else {
+
+					$where .= "\n  AND ($field ($$first_value))";
+
+				}
+
+			}
+			else {								# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
+
+				$where .= "\n  AND ($field (-1";
+
+				foreach (grep {/\d/} @$values) { $where .= ", $_"}
+
+				$where .= "))";
+
+			}
+
+		}
+		else {
+
+			$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';		# 'id_org'           --> 'id_org = '
+			$field =~ /\?/  or $field .= ' ? '; 				# 'id_org LIKE '     --> 'id_org LIKE ?'
+			$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm;
+			$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;		# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
+			if ($field =~ s{\<\+}{\<}) {			
+				my @ymd = split /\-/, $first_value;				
+				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
+			}
+
+			$where .= "\n AND ($field)";
+			push @params, @$values;
+
+		}
+
+
+	}
+	
+	return {
+		have_id_filter => $have_id_filter,
+		cnt_filters    => $cnt_filters,
+		order          => $order,
+		limit          => $limit,
+		where          => $where,
+		params         => \@params,
+	};
+
+}
+
+################################################################################
+
 sub sql {
 
 	if (ref $_[0] eq HASH) {
@@ -1367,9 +1484,10 @@ sub sql {
 	$select .= join ', ', map {"$root.$_\n "} @root_columns;
 
 	my $from   = "\nFROM\n $root";
-	my $where  = "\nWHERE\n 1=1";
+	my $where  = "\nWHERE 1=1 \n";
 	my $order  = [$root . '.label'];
 	my $limit;
+	my @join_params = ();
 	my @params = ();
 
 	if (@other == 0) {								# sql ('users')   --> sql ('users' => ['id'])
@@ -1386,102 +1504,15 @@ sub sql {
 		
 	my ($filters, @tables) = @other;
 	
-	my $have_id_filter = 0;
-	my $cnt_filters    = 0;
-		
-	foreach my $filter (@$filters) {
+	my $sql_filters = sql_filters ($root, $filters);
 	
-		ref $filter or $filter = [$filter, $_REQUEST {$filter}];
-		
-											# 'id_org'       --> ['id_org' => $_REQUEST {id_org}]
+	$where .= $sql_filters -> {where};
+	@params = @{$sql_filters -> {params}};
+	$limit  = $sql_filters -> {limit};
+	$order  = $sql_filters -> {order} if $sql_filters -> {order};
+	my $have_id_filter = $sql_filters -> {have_id_filter};
+	my $cnt_filters    = $sql_filters -> {cnt_filters};
 
-		my ($field, $values) = @$filter;
-		
-		if ($field eq 'ORDER') {
-			$order = $values;
-			next;
-		}
-		
-		if ($field eq 'LIMIT') {
-			$limit = $values;			
-			next;
-		}
-
-		ref $values eq ARRAY or $values = [$values];
-		
-		my $first_value = $values -> [0];
-
-		my $tied;
-		
-		if (ref $first_value eq SCALAR) {
-		
-			$tied = tied $$first_value;
-		
-		}
-		
-		unless ($tied) {
-
-			next if $first_value eq '' or $first_value eq '0000-00-00';
-
-		}
-		
-		$cnt_filters ++;
-		
-		$have_id_filter = 1 if $field eq 'id';
-		
-		$field =~ s{([a-z][a-z0-9_]*)}{$root.$1}gsm;
-			
-		if ($field =~ /\s+IN\s*$/sm) {
-			
-											# ['id_org IN' => sql_select_ids (...)] => "users.id_org IN (SELECT ...)"
-											# ['id_org IN' => sql ('orgs(id)' => [[id_kind => 1]])] => "users.id_org IN (SELECT ...)"
-
-			if ($tied) {							
-			
-				if (_sql_ok_subselects ()) {
-				
-					$where .= "\n  AND ($field ($tied->{sql}))";
-
-					push @params, @{$tied -> {params}};
-				
-				}
-				else {
-				
-					$where .= "\n  AND ($field ($$first_value))";
-				
-				}
-
-			}
-			else {								# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
-			
-				$where .= "\n  AND ($field (-1";
-
-				foreach (grep {/\d/} @$values) { $where .= ", $_"}
-
-				$where .= "))";
-			
-			}
-
-		}
-		else {
-
-			$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';		# 'id_org'           --> 'id_org = '
-			$field =~ /\?/  or $field .= ' ? '; 				# 'id_org LIKE '     --> 'id_org LIKE ?'
-			$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm;
-			$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;		# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
-			if ($field =~ s{\<\+}{\<}) {			
-				my @ymd = split /\-/, $first_value;				
-				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
-			}
-
-			$where .= "\n AND ($field)";
-			push @params, @$values;
-				
-		}
-			
-	
-	}
-	
 	my $default_columns = '*';
 	
 	unless ($have_id_filter) {
@@ -1491,9 +1522,16 @@ sub sql {
 		$where .= $_REQUEST {fake} =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
 
 	}	
-	
+		
 	foreach my $table (@tables) {
 	
+		my $filters = undef;
+	
+		if (ref $table eq ARRAY) { 
+			$filters = $table -> [1] || [];
+			$table   = $table -> [0];
+		}
+
 		my $alias = '';
 		
 		if ($table =~ /\s+AS\s+(\w+)\s*$/) {
@@ -1516,59 +1554,121 @@ sub sql {
 			columns => $columns,
 			single  => en_unplural ($alias),
 			alias   => $alias,
+			filters => $filters,
 			
 		};
 		
 		$table -> {single} =~ s{ie$}{y};
 
 	}	
-		
-	foreach my $table (@tables) {
+	
+	my @cols = ();
+	my $cols_cnt = 0;	
 			
-		my $referrer;
-		
-		my $referring_field_name = 'id_' . $table -> {single};
-		
+	foreach my $table (@tables) {
+
 		my $found = 0;
 		
-		foreach my $t ({name => $root}, @tables) {
+		if ($table -> {filters}) {
 		
-			my $referring_table = $DB_MODEL -> {tables} -> {$t -> {name}};
-				
-			my $column = $referring_table -> {columns} -> {$referring_field_name};
+			my $definition = $DB_MODEL -> {tables} -> {$table -> {name}};
+
+			my $referring_columns = $definition -> {columns};
 			
-			unless ($column) {
+			my @t = ({name => $root, single => en_unplural ($root)});
 			
-				my $referring_columns = $referring_table -> {columns};
+			foreach my $t (@tables) {
 			
-				foreach my $k (keys %$referring_columns) {
+				last if $t -> {alias} eq $table -> {alias};
 				
-					my $c = $referring_columns -> {$k};
-				
-					$c -> {ref} eq $table -> {name} or next;
-					
-					$column = $c;
-					$referring_field_name = $k;
-					
-					last;
-				
-				}
+				push @t, $t;
 			
 			}
 
-			$column or next;
+			foreach my $t (reverse @t) {
 			
-			$from .= "\n LEFT JOIN $table->{name}";
-			$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
-			$from .= " ON $t->{name}.$referring_field_name = $table->{alias}.id";
+				my $referring_field_name = 'id_' . $t -> {single};
+				
+				my $column = $referring_columns -> {$referring_field_name};
 			
-			$found = 1;
-			
-			last;
+				unless ($column) {
+
+					foreach my $k (keys %$referring_columns) {
+
+						my $c = $referring_columns -> {$k};
+
+						$c -> {ref} eq $t -> {name} or next;
+
+						$column = $c;
+						$referring_field_name = $k;
+
+						last;
+
+					}
+
+				}
+
+				$column or next;
+
+				my $sql_filters = sql_filters ($table -> {alias}, $table -> {filters});
+
+				$from .= "\n LEFT JOIN $table->{name}";
+				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+				$from .= " ON ($table->{alias}.$referring_field_name = $t->{name}.id $sql_filters->{where})";
+				
+				push @join_params, @{$sql_filters -> {params}};
+
+				$found = 1;
+
+				last;
+
+			}
 		
+		}
+		else {
+		
+			my $referring_field_name = 'id_' . $table -> {single};
+
+			foreach my $t ({name => $root}, @tables) {
+
+				my $referring_table = $DB_MODEL -> {tables} -> {$t -> {name}};
+
+				my $column = $referring_table -> {columns} -> {$referring_field_name};
+
+				unless ($column) {
+
+					my $referring_columns = $referring_table -> {columns};
+
+					foreach my $k (keys %$referring_columns) {
+
+						my $c = $referring_columns -> {$k};
+
+						$c -> {ref} eq $table -> {name} or next;
+
+						$column = $c;
+						$referring_field_name = $k;
+
+						last;
+
+					}
+
+				}
+
+				$column or next;
+
+				$from .= "\n LEFT JOIN $table->{name}";
+				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+				$from .= " ON $t->{name}.$referring_field_name = $table->{alias}.id";
+
+				$found = 1;
+
+				last;
+
+			}		
+
 		}		
-		
-		$found or die "Referrer $referring_field_name not found\n";
+
+		$found or die "Referrer for $table->{alias} not found\n";
 
 		$table -> {columns} ||= $default_columns;
 		
@@ -1587,13 +1687,19 @@ sub sql {
 		
 		foreach my $column (@columns) {
 		
-			$select .= "\n, $table->{alias}.$column AS $model_update->{quote}$table->{alias}!$column$model_update->{quote}"
+			$cols [$cols_cnt] = [en_unplural ($table -> {alias}), $column];
+		
+			$select .= "\n, $table->{alias}.$column AS gfcrelf$cols_cnt",
+
+			$cols_cnt ++;
 		
 		}
 			
 	}
 	
 	my $sql = $select . $from . $where;
+	
+	@params = (@join_params, @params);
 
 	my $is_ids = (@root_columns == 1 && $root_columns [0] ne '*') ? 1 : 0;
 	
@@ -1677,12 +1783,21 @@ sub sql {
 	foreach my $record (@$records) {
 		
 		foreach my $key (keys %$record) {
+		
+			if ($key =~ /^gfcrelf(\d+)$/) {
+				
+				my $def = $cols [$1];
+				
+				$record -> {$def -> [0]} -> {$def -> [1]} = delete $record -> {$key};
+						
+			}
+			elsif ($key =~ /(\w+)\!(\w+)/) {
 
-			$key =~ /(\w+)\!(\w+)/ or next;
-			
-			my ($t, $f) = ($1, $2);
+				my ($t, $f) = ($1, $2);
 
-			$record -> {en_unplural ($t)} -> {$f} = $record -> {$key};
+				$record -> {en_unplural ($t)} -> {$f} = delete $record -> {$key};
+
+			}
 					
 		}
 	
