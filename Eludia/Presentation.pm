@@ -1817,7 +1817,22 @@ sub draw_form_field_static {
 		
 		}
 		else {
-			$static_value = defined $options -> {value} ? $options -> {value} : $value;
+		
+			if (defined $options -> {value}) {
+
+				$static_value = $options -> {value};
+
+			}
+			elsif ($options -> {name}) {
+
+				$static_value = $data;
+
+				foreach my $chunk (split /\W+/, $options -> {name}) {
+					$static_value = $static_value -> {$chunk};					
+				}
+
+			}
+
 		}
 		
 	}
