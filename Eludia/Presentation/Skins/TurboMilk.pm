@@ -646,7 +646,7 @@ sub draw_form_field_string {
 sub draw_form_field_suggest {
 
 	my ($_SKIN, $options, $data) = @_;
-	
+warn Dumper ($options);	
 	$_REQUEST {__script} .= qq{; 	
 	
 		function off_suggest_$options->{name} () {
@@ -660,6 +660,7 @@ sub draw_form_field_suggest {
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$options -> {attributes} -> {onBlur}     .= qq{;scrollable_table_is_blocked = false; q_is_focused = false; getElementById('_$options->{name}__label').value = this.value; _suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);};
+	$options -> {attributes} -> {onChange}   .= "$$options{after};";
 
 	$options -> {attributes} -> {onKeyDown}  .= <<EOH;
 	
@@ -715,8 +716,8 @@ EOH
 					_suggest_timer_$options->{name} = null;
 				}
 			"
-			onDblClick="set_suggest_result (this, '$id')"
-			onKeyPress="set_suggest_result (this, '$id'); suggest_clicked = 1;"
+			onDblClick="set_suggest_result (this, '$id'); $$options{after}"
+			onKeyPress="set_suggest_result (this, '$id'); $$options{after}; suggest_clicked = 1"
 		>
 		</select>
 		<input type="text" id="$id" $attributes autocomplete="off"><input type="hidden" id="${id}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}"><input type="hidden" id="${id}__id" name="_$options->{name}__id" value="$options->{value__id}">
