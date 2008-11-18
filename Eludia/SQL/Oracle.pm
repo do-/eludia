@@ -1282,24 +1282,19 @@ if ($need_from_dual) {
 # ƒелаем из (TO_TIMESTAMP(CURRENT_TIMESTAMP)) просто CURRENT_TIMESTAMP
 $sql =~ s/TO_TIMESTAMP\(CURRENT_TIMESTAMP,'YYYY-MM-DD HH24:MI:SS'\)/CURRENT_TIMESTAMP/igsm;
 #################
-# ¬ случае если у нас данные хран€тс€ в Unicode и есть €вно заданные литералы
+# ¬ случае если есть €вно заданные литералы
 # внутри CASE ... END - передаем литералы  в UNISTR()
 ################################################################################### 
-if ($model_update -> {characterset} =~ /UTF/i) {
-
-	my $new_sql;
-	while ($sql =~ m/\bCASE\s+(.*?WHEN\s+.*?THEN\s+.*?ELSE\s+.*?END)/ism) {
-		$new_sql .= $`;
-		$sql = $';
-		my $temp = $1;
-		$temp =~ s/('.*?')/UNISTR\(\1\)/igsm;
-		$new_sql .= " CASE $temp ";
-	}
-	$new_sql .= $sql;
-	$sql = $new_sql;
+my $new_sql;
+while ($sql =~ m/\bCASE\s+(.*?WHEN\s+.*?THEN\s+.*?ELSE\s+.*?END)/ism) {
+	$new_sql .= $`;
+	$sql = $';
+	my $temp = $1;
+	$temp =~ s/('.*?')/UNISTR\(\1\)/igsm;
+	$new_sql .= " CASE $temp ";
 }
-
-
+$new_sql .= $sql;
+$sql = $new_sql;
 
 #warn "ORACLE OUT: <$sql>\n";
 
