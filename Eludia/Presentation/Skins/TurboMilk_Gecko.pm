@@ -716,7 +716,7 @@ EOH
 				}
 			"
 			onDblClick="set_suggest_result (event, this, '$id'); $$options{after}"
-			onKeyPress="set_suggest_result (event, this, '$id'); $$options{after}; suggest_clicked = 1"
+			onKeyPress="if (event.keyCode == 13) {set_suggest_result (event, this, '$id'); $$options{after}; suggest_clicked = 1}"
 		>
 		</select>
 		<input type="text" id="$id" $attributes autocomplete="off"><input type="hidden" id="${id}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}"><input type="hidden" id="${id}__id" name="_$options->{name}__id" value="$options->{value__id}">

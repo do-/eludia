@@ -334,9 +334,11 @@ function focus_on_input (__focused_input) {
 
 
 function tabOnEnter (event) {
-   if (event && event.keyCode == 13 && !event.ctrlKey && !event.altKey) {
-   	event.keyCode = 9;
-   }
+   /*
+	if (event && event.keyCode == 13 && !event.ctrlKey && !event.altKey) {
+   		event.keyCode = 9;
+	}
+   */
 }
 
 function td_on_click (event) {
