@@ -646,7 +646,7 @@ sub draw_form_field_string {
 sub draw_form_field_suggest {
 
 	my ($_SKIN, $options, $data) = @_;
-warn Dumper ($options);	
+
 	$_REQUEST {__script} .= qq{; 	
 	
 		function off_suggest_$options->{name} () {

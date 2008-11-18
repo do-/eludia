@@ -243,6 +243,8 @@ Eludia/Presentation/Skins/IsUp/tree_trash.gif.pm
 Eludia/Presentation/Skins/IsUp/vline.gif.pm
 Eludia/Presentation/Skins/JS.pm
 Eludia/Presentation/Skins/JS/navigation.js.pm
+Eludia/Presentation/Skins/JS_Gecko.pm
+Eludia/Presentation/Skins/JS_Gecko/navigation.js.pm
 Eludia/Presentation/Skins/JSONDumper.pm
 Eludia/Presentation/Skins/STDERR.pm
 Eludia/Presentation/Skins/TurboMilk.pm
@@ -413,6 +415,7 @@ Eludia/Presentation/Skins/TurboMilk_Gecko/menu_button.gif.pm
 Eludia/Presentation/Skins/TurboMilk_Gecko/menuarrow.gif.pm
 Eludia/Presentation/Skins/TurboMilk_Gecko/navigation.js.pm
 Eludia/Presentation/Skins/TurboMilk_Gecko/navigation_setup.js.pm
+Eludia/Presentation/Skins/TurboMilk_Gecko/order.gif.pm
 Eludia/Presentation/Skins/TurboMilk_Gecko/pager_f.gif.pm
 Eludia/Presentation/Skins/TurboMilk_Gecko/pager_l.gif.pm
 Eludia/Presentation/Skins/TurboMilk_Gecko/pager_n.gif.pm
