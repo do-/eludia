@@ -57,7 +57,7 @@ function ChangeMenuPlease (newHTML, md5) {
             menu_md5 = md5;
 }
 
-function set_suggest_result (sel, id) {
+function set_suggest_result (event, sel, id) {
 	var o = sel.options [sel.selectedIndex];
 	document.getElementById (id + '__id').value    = o.value;
 	document.getElementById (id + '__label').value = o.text;
@@ -66,7 +66,7 @@ function set_suggest_result (sel, id) {
 	i.focus ();
 	sel.style.display = 'none';
 	suggest_is_visible = 0;
-	return blockEvent ();
+	return blockEvent (event);
 }
 
 function dialog_open (href, arg, options) {
@@ -99,9 +99,9 @@ function encode1251 (str) {
 
 function handle_hotkey_focus    (r) {document.form.elements [r.data].focus ()}
 function handle_hotkey_focus_id (r) {document.getElementById (r.data).focus ()}
-function handle_hotkey_href     (r) {
+function handle_hotkey_href     (event, r) {
 
-	if (r.confirm && !confirm (r.confirm)) return blockEvent ();
+	if (r.confirm && !confirm (r.confirm)) return blockEvent (event);
 
 	if (r.href) {
 		nope (r.href + '&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');
@@ -214,6 +214,10 @@ function idx_tables (__scrollable_table_row) {
 		
 		for (var j = 0; j < cells.length; j++) {
 			var scrollable_cell = cells [j];
+			if (typeof (scrollable_cell.uniqueID) == 'undefined') {
+				var dt = new Date();
+				scrollable_cell.uniqueID = dt.toGMTString() + Math.random();
+			}
 			td2sr [scrollable_cell.uniqueID] = i;
 			td2sc [scrollable_cell.uniqueID] = j;
 			scrollable_cell.onclick = td_on_click;
@@ -329,14 +333,14 @@ function focus_on_input (__focused_input) {
 }
 
 
-function tabOnEnter () {
+function tabOnEnter (event) {
    if (event && event.keyCode == 13 && !event.ctrlKey && !event.altKey) {
    	event.keyCode = 9;
    }
 }
 
-function td_on_click () {
-	var uid = event.srcElement.uniqueID;
+function td_on_click (event) {
+	var uid = event.target.uniqueID;
 	var new_scrollable_table_row = td2sr [uid];
 	var new_scrollable_table_row_cell = td2sc [uid];
 	if (new_scrollable_table_row == null || new_scrollable_table_row_cell == null) return;
@@ -494,7 +498,7 @@ function typeAhead() { // borrowed from http://www.oreillynet.com/javascript/200
    return true;
 }					
 
-function activate_link (href, target) {
+function activate_link (event, href, target) {
 
 	if (href.indexOf ('javascript:') == 0) {
 		var code = href.substr (11).replace (/%20/g, ' ');
@@ -508,7 +512,7 @@ function activate_link (href, target) {
 	
 	}
 	
-	blockEvent ();
+	blockEvent (event);
 
 }
 
@@ -732,12 +736,10 @@ function focus_on_first_input (td) {
 	return 0;
 }
 
-function blockEvent () {
-
-	try { event.keyCode = 0         } catch (e) {}
-	try { event.cancelBubble = true } catch (e) {}
-	try { event.returnValue = false } catch (e) {}
-
+function blockEvent (event) {
+	event.preventDefault();
+	event.stopPropagation();
+ 
 	return false;
 	
 }
@@ -787,7 +789,7 @@ function scrollCellToVisibleTop (td, force_top) {
 
 }
 
-function handle_basic_navigation_keys () {
+function handle_basic_navigation_keys (event) {
 
 	var e = event;
 	var keyCode = e.keyCode;
@@ -800,12 +802,12 @@ function handle_basic_navigation_keys () {
 	
 	if (kb_hook) {
 		kb_hook [0] (kb_hook [1]);
-		return blockEvent ();
+		return blockEvent (e);
 	}
 
 	if (keyCode == 8 && !q_is_focused) {
 		typeAheadInfo.accumString = "";
-		blockEvent ();
+		blockEvent (e);
 		return;
 	}
 
@@ -820,7 +822,7 @@ function handle_basic_navigation_keys () {
 			cell_off ();
 			scrollable_table_row ++;
 			scrollCellToVisibleTop (cell_on ());
-			return blockEvent ();
+			return blockEvent (e);
 		}
 
 
@@ -832,7 +834,7 @@ function handle_basic_navigation_keys () {
 			cell_off ();			
 			scrollable_table_row --;			
 			scrollCellToVisibleTop (cell_on ());
-			return blockEvent ();
+			return blockEvent (e);
 		}
 		
 		if (!left_right_blocked) {
@@ -846,7 +848,7 @@ function handle_basic_navigation_keys () {
 				cell_off ();			
 				scrollable_table_row_cell --;
 				cell_on ();
-				return blockEvent ();
+				return blockEvent (e);
 			}
 
 			if (
@@ -856,7 +858,7 @@ function handle_basic_navigation_keys () {
 				cell_off ();			
 				scrollable_table_row_cell ++;
 				cell_on ();
-				return blockEvent ();
+				return blockEvent (e);
 			}
 		
 		}
@@ -875,7 +877,7 @@ function handle_basic_navigation_keys () {
 			
 			}
 
-			if (children != null && children.length > 0) activate_link (children [0].href, children [0].target);
+			if (children != null && children.length > 0) activate_link (event, children [0].href, children [0].target);
 			
 			return false;
 
@@ -3109,7 +3111,7 @@ dTree.prototype.node = function(node, nodeId) {
 
 		if (this.config.useStatusText) str += ' onmouseover="window.status=\'' + node.name + '\';return true;" onmouseout="window.status=\'\';return true;" ';
 
-		if (node.context_menu) str += ' oncontextmenu="' + this.obj + '.s(' + nodeId + '); open_popup_menu(\'' + node.context_menu + '\'); blockEvent ();"';
+		if (node.context_menu) str += ' oncontextmenu="' + this.obj + '.s(' + nodeId + '); open_popup_menu(\'' + node.context_menu + '\'); blockEvent (event);"';
 		
 		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc)) str += ' onclick="javascript: ' + this.obj + '.s(' + nodeId + '); "';
 		if (node._hc && node.pid != this.root.id) str += ' onDblClick="' + this.obj + '.o(' + nodeId + '); "';

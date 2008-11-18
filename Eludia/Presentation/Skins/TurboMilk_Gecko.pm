@@ -633,7 +633,7 @@ sub draw_form_field_string {
 	my ($_SKIN, $options, $data) = @_;
 	
 	$options -> {attributes} -> {onKeyPress} .= ';if (event.keyCode != 27) is_dirty=true;';
-	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
+	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter(event);';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
 
@@ -657,7 +657,7 @@ sub draw_form_field_suggest {
 	};
 	
 	$options -> {attributes} -> {onKeyPress} .= ';if (event.keyCode != 27) is_dirty=true;';
-	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
+	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter(event);';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$options -> {attributes} -> {onBlur}     .= qq{;scrollable_table_is_blocked = false; q_is_focused = false; getElementById('_$options->{name}__label').value = this.value; _suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);};
 
@@ -693,7 +693,7 @@ EOH
 
 	my $attributes = dump_attributes ($options -> {attributes});
 	
-	my $id = '' . $options;
+	my $id = '_' . $options->{name};
 
 	return <<EOH;
 		<script>
@@ -715,8 +715,8 @@ EOH
 					_suggest_timer_$options->{name} = null;
 				}
 			"
-			onDblClick="set_suggest_result (this, '$id'); $$options{after}"
-			onKeyPress="set_suggest_result (this, '$id'); $$options{after}; suggest_clicked = 1"
+			onDblClick="set_suggest_result (event, this, '$id'); $$options{after}"
+			onKeyPress="set_suggest_result (event, this, '$id'); $$options{after}; suggest_clicked = 1"
 		>
 		</select>
 		<input type="text" id="$id" $attributes autocomplete="off"><input type="hidden" id="${id}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}"><input type="hidden" id="${id}__id" name="_$options->{name}__id" value="$options->{value__id}">
@@ -731,7 +731,7 @@ sub draw_form_field_datetime {
 	my ($_SKIN, $options, $data) = @_;
 		
 	$options -> {name} = '_' . $options -> {name};
-	$options -> {onKeyDown} ="tabOnEnter()";
+	$options -> {onKeyDown} ="tabOnEnter(event)";
 
 	return $_SKIN -> _draw_input_datetime ($options);
 	
@@ -816,7 +816,7 @@ EOH
 sub draw_form_field_password {
 	my ($_SKIN, $options, $data) = @_;
 	my $attributes = dump_attributes ($options -> {attributes});
-	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false">};
+	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter(event)" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false">};
 }
 
 ################################################################################
@@ -865,7 +865,7 @@ sub draw_form_field_checkbox {
 	
 	my $attributes = dump_attributes ($options -> {attributes});
 	
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">};
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter(event)">};
 	
 }
 
@@ -889,7 +889,7 @@ sub draw_form_field_radio {
 		my $attributes = dump_attributes ($value -> {attributes});
 		
 		(!$n and $options -> {no_br}) or $html .= qq {\n<tr><td class="form-inner" valign=top width=1%>};
-		$html .= qq {\n<nobr><input class=cbx $attributes id="$value" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false" type="radio" name="_$$options{name}" value="$$value{id}" onClick="is_dirty=true;$$value{onclick}" onKeyDown="tabOnEnter()">&nbsp;$$value{label}</nobr>};
+		$html .= qq {\n<nobr><input class=cbx $attributes id="$value" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false" type="radio" name="_$$options{name}" value="$$value{id}" onClick="is_dirty=true;$$value{onclick}" onKeyDown="tabOnEnter(event)">&nbsp;$$value{label}</nobr>};
 							
 		$value -> {html} or next;
 		
@@ -978,7 +978,7 @@ EOJS
 			name="_$$options{name}"
 			id="_$$options{name}_select"
 			$attributes
-			onKeyDown="tabOnEnter()"
+			onKeyDown="tabOnEnter(event)"
 			onChange="is_dirty=true; $$options{onChange}" 
 			onKeyPress="typeAhead()" 
 		>
@@ -1020,7 +1020,7 @@ sub draw_form_field_string_voc {
 	$options -> {attributes} ||= {};
 
 	$options -> {attributes} -> {onKeyPress} .= qq[;if (event.keyCode != 27) {is_dirty=true;document.getElementById('${options}_id').value = 0; }];
-	$options -> {attributes} -> {onKeyDown}  .= qq[;if (event.keyCode == 8 || event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter();];
+	$options -> {attributes} -> {onKeyDown}  .= qq[;if (event.keyCode == 8 || event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter(event);];
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
 	$options -> {attributes} -> {onChange}   .= 'is_dirty=true;' . ( $options->{onChange} ? $options->{onChange} . ' try { event.cancelBubble = false } catch (e) {} try { event.returnValue = true } catch (e) {}': '');
@@ -2281,7 +2281,7 @@ sub draw_table {
 			
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
 				$menus .= $i -> {__menu};
-				$html  .= qq{ oncontextmenu="open_popup_menu('$i'); blockEvent ();"};
+				$html  .= qq{ oncontextmenu="open_popup_menu('$i'); blockEvent (event);"};
 			}
 
 			$html .= '>';
@@ -2435,24 +2435,24 @@ EODUMP
 		
 //			if (code_alt_ctrl (88, 1, 0)) {
 //				nope ('$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}', '_top', '');
-//				blockEvent ();
+//				blockEvent (event);
 //			}
 			
 			if (code_alt_ctrl (116, 0, 0)) {
 			
 				if (is_dirty) {
 				
-					if (!confirm ('Внимание! Вы изменили содержимое некоторых полей ввода. Перезагрузка страницы приведёт к утере этой информации. Продолжить?')) return blockEvent ();
+					if (!confirm ('Внимание! Вы изменили содержимое некоторых полей ввода. Перезагрузка страницы приведёт к утере этой информации. Продолжить?')) return blockEvent (event);
 				
 				}
 			
 				window.location.href = encode1251 ('$href');
 				
-				return blockEvent ();
+				return blockEvent (event);
 			
 			}
 			
-			handle_basic_navigation_keys ();
+			handle_basic_navigation_keys (event);
 			
 EOJS
 
@@ -2468,7 +2468,7 @@ EOJS
 			$_REQUEST {__on_load} .= '];';
 		}
 
-		$_REQUEST {__on_keydown} .= "if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
+		$_REQUEST {__on_keydown} .= "if (code_alt_ctrl (115, 0, 0)) return blockEvent (event);";
 
 		if ($_REQUEST {sid} && !$preconf -> {no_keepalive}) {
 			my $timeout = 1000 * (60 * $conf -> {session_timeout} - 1);
@@ -2554,7 +2554,7 @@ EOH
 
 					window.showModelessDialog('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?$_REQUEST{__static_salt}', arg, 'resizable:yes;unadorned:yes;status:yes');
 					document.body.style.cursor = 'default'; 
-					blockEvent ();
+					blockEvent (event);
 					return true;
 
 				}
@@ -2629,7 +2629,7 @@ EOH
 	
 	$_REQUEST {__on_help} = <<EOHELP if $_REQUEST {__help_url};
 		nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes');
-		blockEvent ();
+		blockEvent (event);
 EOHELP
 
 	foreach (keys %_REQUEST) {
@@ -2781,7 +2781,7 @@ sub handle_hotkey_focus {
 	<<EOJS
 		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) {
 			document.form.$$r{data}.focus ();
-			return blockEvent ();
+			return blockEvent (event);
 		}
 EOJS
 
@@ -2799,7 +2799,7 @@ sub handle_hotkey_focus_id {
 	<<EOJS
 		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) {
 			document.getElementById ('$r->{data}').focus ();
-			return blockEvent ();
+			return blockEvent (event);
 		}
 EOJS
 
