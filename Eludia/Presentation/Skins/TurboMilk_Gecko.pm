@@ -933,7 +933,7 @@ sub draw_form_field_select {
 					var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 					
 					focus ();
-					
+
 					if (result.result == 'ok') {
 						setSelectOption (this, result.id, result.label);
 					} else {
@@ -956,7 +956,7 @@ EOJS
 						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 						
 						focus ();
-						
+
 						if (result.result == 'ok') {
 							setSelectOption (this, result.id, result.label);
 						} else {
@@ -2433,12 +2433,12 @@ EODUMP
 
 		$_REQUEST {__on_keydown} = <<EOJS;
 		
-//			if (code_alt_ctrl (88, 1, 0)) {
+//			if (code_alt_ctrl (event, 88, 1, 0)) {
 //				nope ('$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}', '_top', '');
 //				blockEvent (event);
 //			}
 			
-			if (code_alt_ctrl (116, 0, 0)) {
+			if (code_alt_ctrl (event, 116, 0, 0)) {
 			
 				if (is_dirty) {
 				
@@ -2468,7 +2468,7 @@ EOJS
 			$_REQUEST {__on_load} .= '];';
 		}
 
-		$_REQUEST {__on_keydown} .= "if (code_alt_ctrl (115, 0, 0)) return blockEvent (event);";
+		$_REQUEST {__on_keydown} .= "if (code_alt_ctrl (event, 115, 0, 0)) return blockEvent (event);";
 
 		if ($_REQUEST {sid} && !$preconf -> {no_keepalive}) {
 			my $timeout = 1000 * (60 * $conf -> {session_timeout} - 1);
@@ -2649,10 +2649,13 @@ EOHELP
 EOH
 		} else {
 			$_REQUEST {__head_links} .= <<EOH;
-			<script for="body" event="on$1">
-				$_REQUEST{$&};
+			<script>
+				function _body_on_$1(event) {
+					$_REQUEST{$&};
+				}
 			</script>
 EOH
+			$_REQUEST {__body_event} .= " on$1='_body_on_$1(event);' ";
 		}
 
 	}
@@ -2675,6 +2678,7 @@ EOH
 				name="body" 
 				id="body"
 				onbeforeunload="document.body.style.cursor = 'wait'"
+				$_REQUEST{__body_event}
 			>
 				
 				<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
@@ -2779,7 +2783,7 @@ sub handle_hotkey_focus {
 	$r -> {alt}  += 0;
 
 	<<EOJS
-		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) {
+		if (code_alt_ctrl (event, $$r{code}, $r->{alt}, $r->{ctrl})) {
 			document.form.$$r{data}.focus ();
 			return blockEvent (event);
 		}
@@ -2797,7 +2801,7 @@ sub handle_hotkey_focus_id {
 	$r -> {alt}  += 0;
 
 	<<EOJS
-		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) {
+		if (code_alt_ctrl (event, $$r{code}, $r->{alt}, $r->{ctrl})) {
 			document.getElementById ('$r->{data}').focus ();
 			return blockEvent (event);
 		}
@@ -2819,13 +2823,13 @@ sub handle_hotkey_href {
 		$r -> {confirm} ? 'window.confirm(' . js_escape ($r -> {confirm}) . ')' : 
 		'1';
 			
-	my $code = !$r -> {href} ? "activate_link_by_id ('$$r{data}')" : "nope ('$$r{href}&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');";
+	my $code = !$r -> {href} ? "activate_link_by_id (event, '$$r{data}')" : "nope ('$$r{href}&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');";
 
 	$condition eq '1' or $code = "if ($condition) {$code}";
 	
 
 	return <<EOJS
-		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) $code;
+		if (code_alt_ctrl (event, $$r{code}, $r->{alt}, $r->{ctrl})) $code;
 EOJS
 
 }

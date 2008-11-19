@@ -107,7 +107,7 @@ function handle_hotkey_href     (event, r) {
 		nope (r.href + '&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');
 	}
 	else {
-		activate_link_by_id (r.data);
+		activate_link_by_id (event, r.data);
 	}
 	
 }
@@ -243,7 +243,7 @@ function idx_tables (__scrollable_table_row) {
 
 }
 
-function code_alt_ctrl (code, alt, ctrl) {
+function code_alt_ctrl (event, code, alt, ctrl) {
 	var e = event;
 	if (e.keyCode != code) return 0;
 	if (e.altKey  != alt)  return 0;
@@ -262,9 +262,37 @@ function check_top_window () {
 	} catch (e) {}
 }
 
-function activate_link_by_id (id) {
+function activate_link_by_id (event, id) {
 
 	var a = document.getElementById (id);
+	var attrs = a.attributes;
+      	var target = "_self"; 
+      	for(var i=attrs.length-1; i>=0; i--) {
+       		if (attrs[i].name == 'target') {
+			target = attrs[i].value;
+		}
+      	}
+	
+	window.open(a, target)
+
+/*	if (a.onclick) {
+		try { event.cancelBubble = false } catch (e) {}
+		a.onclick ();
+	}
+	
+	if (!event.cancelBubble) {
+		var evt = document.createEvent("MouseEvents");
+		evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		var canceled = !a.dispatchEvent(evt);
+  		if(canceled) {
+			alert("canceled");
+  		} else {
+ 			alert("not canceled");
+  		}
+	}
+*/
+
+/*	var a = document.getElementById (id);
 
 	if (a.onclick) {
 		try { event.cancelBubble = false } catch (e) {}
@@ -274,7 +302,7 @@ function activate_link_by_id (id) {
 	if (!event.cancelBubble) {
 		a.click ();
 	}
-
+*/
 }
 
 function start_keepalive (timeout) {
@@ -418,9 +446,9 @@ function UpdateClock() {
    var tDate = new Date ();
 
    try {
-	   document.getElementById ('clock_hours').innerText = twoDigits (tDate.getHours ());
-	   document.getElementById ('clock_minutes').innerText = twoDigits (tDate.getMinutes ());
-	   document.getElementById ('clock_separator').innerText = clockSeparators [tDate.getSeconds () % 2];
+	   document.getElementById ('clock_hours').innerHtml = twoDigits (tDate.getHours ());
+	   document.getElementById ('clock_minutes').innerHtml = twoDigits (tDate.getMinutes ());
+	   document.getElementById ('clock_separator').innerHtml = clockSeparators [tDate.getSeconds () % 2];
 	   
 	   
    } catch (e) {}
@@ -690,13 +718,12 @@ function invoke_setSelectOption (a) {
 
 }
 
-function setSelectOption (select, id, label) { 
+function setSelectOption (select, id, label) {
 
 	label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...');
 
 	for (var i = 0; i < select.options.length; i++) {
 		if (select.options [i].value == id) {
-			select.options [i].innerText = label;
 			select.selectedIndex = i;
 			window.focus ();
 			select.focus ();
@@ -707,7 +734,7 @@ function setSelectOption (select, id, label) {
 	
 	var option = document.createElement ("OPTION");
 	select.options.add (option);
-	option.innerText = label;
+	option.appendChild(document.createTextNode(label));
 	option.value = id;
 	select.selectedIndex = select.options.length - 1;
 	window.focus ();
@@ -803,7 +830,7 @@ function handle_basic_navigation_keys (event) {
 	var kb_hook = kb_hooks [i] [keyCode];
 	
 	if (kb_hook) {
-		kb_hook [0] (kb_hook [1]);
+		kb_hook [0] (e, kb_hook [1]);
 		return blockEvent (e);
 	}
 
