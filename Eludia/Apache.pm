@@ -420,7 +420,7 @@ sub handler {
 			$_REQUEST {$key} =~ s{^\s+}{};
 			$_REQUEST {$key} =~ s{\s+$}{};
 			
-			my $encoded = encode_entities ($_REQUEST {$key}, "\200-§©-·¹-¿");
+			my $encoded = encode_entities ($_REQUEST {$key}, "\200-§©-·-¿");
 			
 			if ($_REQUEST {$key} ne $encoded) {
 				$_REQUEST {$key} = $encoded;
