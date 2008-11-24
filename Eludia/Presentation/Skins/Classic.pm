@@ -693,9 +693,17 @@ sub draw_form_field_static {
 
 	if (ref $options -> {value} eq ARRAY) {
 	
+		$options -> {separator} ||= '<br>';
+
 		for (my $i = 0; $i < @{$options -> {value}}; $i++) {
-			$html .= '<br>' if $i;
+
+			if ($i) {
+				$html =~ s{\s*$}{};
+				$html =~ s{\s*$}{$options->{separator}};
+			}
+
 			$html .= $options -> {value} -> [$i] -> {label};
+
 		}
 		
 	}
