@@ -1419,15 +1419,45 @@ sub sql_filters {
 
 			$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';		# 'id_org'           --> 'id_org = '
 			$field =~ /\?/  or $field .= ' ? '; 				# 'id_org LIKE '     --> 'id_org LIKE ?'
-			$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm;
-			$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;		# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
+#			$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm;
+#			$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;		# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
+
 			if ($field =~ s{\<\+}{\<}) {			
 				my @ymd = split /\-/, $first_value;				
 				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
 			}
+			
+			my @tokens = split /(LIKE\s+\%?\?\%)/, $field;
+			
+			$where .= "\n AND (";
+			
+			foreach my $token (@tokens) {
+			
+				if ($token =~ /LIKE\s+(\%?)\?(\%)/) {
 
-			$where .= "\n AND ($field)";
-			push @params, @$values;
+					$where .= ' LIKE ?';
+					my $v = shift @$values;
+					push @params, "$1$v$2";
+
+				}
+				else {
+				
+					$where .= $token;
+					
+					foreach (1 .. $token =~ y/?/?/) {
+					
+						push @params, shift @$values;
+					
+					}
+				
+				}
+			
+			}			
+
+			$where .= ")";
+
+#			$where .= "\n AND ($field)";
+#			push @params, @$values;
 
 		}
 
@@ -1477,8 +1507,28 @@ sub sql {
 	my ($root, $root_columns) = ($1, $2);
 	
 	$root_columns ||= '*';
-	
+		
 	my @root_columns = split /\s*\,\s*/, $root_columns;
+
+	if ($root_columns [0] eq '*') {
+	
+		my $def = $DB_MODEL -> {tables} -> {$root};
+		
+		if ($def) {
+		
+			@root_columns = ('id', 'fake');
+			
+			foreach my $k (keys %{$def -> {columns}}) {
+			
+				next if $def -> {columns} -> {$k} -> {TYPE_NAME} eq 'blob';
+				
+				push @root_columns, $k;
+			
+			}
+		
+		}
+	
+	}
 
 	my $select  = "SELECT\n ";
 	$select .= join ', ', map {"$root.$_\n "} @root_columns;
@@ -1541,9 +1591,9 @@ sub sql {
 
 		$table =~ s{\s}{}gsm;
 
-		$table =~ /(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
+		$table =~ /(\-?)(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
 
-		my ($name, $columns) = ($1, $2);
+		my ($minus, $name, $columns) = ($1, $2, $3);
 
 		$alias ||= $name;
 		
@@ -1555,6 +1605,7 @@ sub sql {
 			single  => en_unplural ($alias),
 			alias   => $alias,
 			filters => $filters,
+			join    => $minus ? 'INNER JOIN' : 'LEFT JOIN',
 			
 		};
 		
@@ -1612,7 +1663,7 @@ sub sql {
 
 				my $sql_filters = sql_filters ($table -> {alias}, $table -> {filters});
 
-				$from .= "\n LEFT JOIN $table->{name}";
+				$from .= "\n $table->{join} $table->{name}";
 				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
 				$from .= " ON ($table->{alias}.$referring_field_name = $t->{name}.id $sql_filters->{where})";
 				
@@ -1623,9 +1674,10 @@ sub sql {
 				last;
 
 			}
-		
+					
 		}
-		else {
+		
+		if (!$found) {
 		
 			my $referring_field_name = 'id_' . $table -> {single};
 
@@ -1656,9 +1708,17 @@ sub sql {
 
 				$column or next;
 
-				$from .= "\n LEFT JOIN $table->{name}";
+				$from .= "\n $table->{join} $table->{name}";
 				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
-				$from .= " ON $t->{name}.$referring_field_name = $table->{alias}.id";
+
+				if ($table -> {filters}) {
+					my $sql_filters = sql_filters ($table -> {alias}, $table -> {filters});
+					$from .= " ON ($t->{name}.$referring_field_name = $table->{alias}.id $sql_filters->{where})";
+					push @join_params, @{$sql_filters -> {params}};
+				}
+				else {
+					$from .= " ON $t->{name}.$referring_field_name = $table->{alias}.id";
+				}
 
 				$found = 1;
 
@@ -1674,9 +1734,11 @@ sub sql {
 		
 		my @columns = ();
 		
+		my $def = $DB_MODEL -> {tables} -> {$table -> {name}} -> {columns};
+		
 		if ($table -> {columns} eq '*') {
 		
-			@columns = ('id', keys %{$DB_MODEL -> {tables} -> {$table -> {name}} -> {columns}});
+			@columns = ('id', keys %$def);
 		
 		}
 		else {
@@ -1686,6 +1748,8 @@ sub sql {
 		}
 		
 		foreach my $column (@columns) {
+		
+			next if $def -> {$column} -> {TYPE_NAME} eq 'blob';
 		
 			$cols [$cols_cnt] = [en_unplural ($table -> {alias}), $column];
 		
@@ -1710,7 +1774,7 @@ sub sql {
 	if (!$have_id_filter && !$is_ids) {
 	
 		ref $order or $order = [$order];
-		$order -> [0] =~ s{(?<!\.)\b([a-z0-9_]+)\b(?!\.)}{${root}.$1}gsm;
+		$order -> [0] =~ s{(?<!\.)\b([a-z][a-z0-9_]*)\b(?!\.)}{${root}.$1}gsm;
 		$sql .= "\nORDER BY\n ";
 		$sql .= order (@$order);
 
