@@ -1514,9 +1514,9 @@ sub sql {
 	
 		my $def = $DB_MODEL -> {tables} -> {$root};
 		
-		if ($def) {
-		
-			@root_columns = ('id', 'fake');
+		if ($def && $def -> {columns}) {
+
+			@root_columns = keys %{$DB_MODEL -> {default_columns}};
 			
 			foreach my $k (keys %{$def -> {columns}}) {
 			
@@ -1527,7 +1527,7 @@ sub sql {
 			}
 		
 		}
-	
+
 	}
 
 	my $select  = "SELECT\n ";
@@ -1736,7 +1736,7 @@ sub sql {
 		
 		my $def = $DB_MODEL -> {tables} -> {$table -> {name}} -> {columns};
 		
-		if ($table -> {columns} eq '*') {
+		if ($table -> {columns} eq '*' and $def) {
 		
 			@columns = ('id', keys %$def);
 		
@@ -1773,10 +1773,10 @@ sub sql {
 
 	if (!$have_id_filter && !$is_ids) {
 	
-		ref $order or $order = [$order];
-		$order -> [0] =~ s{(?<!\.)\b([a-z][a-z0-9_]*)\b(?!\.)}{${root}.$1}gsm;
-		$sql .= "\nORDER BY\n ";
-		$sql .= order (@$order);
+		$order = order ($order)  if $order !~ /\W/;
+		$order = order (@$order) if ref $order eq ARRAY;
+		$order =~ s{(?<!\.)\b([a-z][a-z0-9_]*)\b(?!\.)}{${root}.$1}gsm;
+		$sql .= "\nORDER BY\n $order";
 
 	}
 
