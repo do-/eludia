@@ -35,8 +35,8 @@ BEGIN {
 		require Apache::Upload;
 		$ENV{PERL_JSON_BACKEND} = 'JSON::PP';		
 	} else {
-		require Apache::Constants;
-		Apache::Constants->import(qw(OK));
+#		require Apache::Constants;
+#		Apache::Constants->import(qw(OK));
 		$ENV{PERL_JSON_BACKEND} = 'JSON::XS';		
 	}
   
