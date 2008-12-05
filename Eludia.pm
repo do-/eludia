@@ -154,6 +154,7 @@ BEGIN {
 	};
 
 	our $_INHERITABLE_PARAMETER_NAMES = {
+		__this_query_string => 1,
 		__last_query_string => 1,
 		__last_scrollable_table_row => 1,
 		__no_navigation => 1,

@@ -679,7 +679,7 @@ EOH
 			require_fresh ("${_PACKAGE}Presentation::$$page{type}");
 		};
 
-		$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
+		$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
 
 		my $action = $_REQUEST {action};
 
@@ -842,7 +842,13 @@ EOH
 				
 				}
 
-				if (
+				if ($_REQUEST {__this_query_string}) {
+					
+					$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
+					$_REQUEST {__last_query_string}        = $_REQUEST {__this_query_string};
+					
+				}
+				elsif (
 					$p {action} 
 					|| $_REQUEST {__next_query_string}
 					|| $p {__last_query_string} != $_REQUEST{__last_query_string}
