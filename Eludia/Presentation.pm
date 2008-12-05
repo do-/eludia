@@ -4278,10 +4278,6 @@ sub draw_page {
 			$selector  = 'get_item_of_' . $page -> {type};
 			$renderrer = 'draw_item_of_' . $page -> {type};
 		} 
-		elsif ($_REQUEST {dbf}) {
-			$selector  = 'select_' . $page -> {type};
-			$renderrer = 'dbf_write_' . $page -> {type};
-		} 
 		else {
 			$selector  = 'select_' . $page -> {type};
 			$renderrer = 'draw_' . $page -> {type};
@@ -4291,89 +4287,95 @@ sub draw_page {
 		
 		eval { $page -> {content} = call_for_role ($selector)} unless $_REQUEST {__only_menu};
 				
-		$_REQUEST {__page_content} = $page -> {content};
-		
-		warn $@ if $@;
-		
-		if ($_REQUEST {__edit_query} && !$_REQUEST {__only_menu}) {
-		
-			my $is_dump = $_REQUEST {__dump};
-			delete $_REQUEST {__dump}; 
-
-			setup_skin ();
-		
-			call_for_role ($renderrer, $page -> {content});
-			
-			$_REQUEST {__dump} = $is_dump;
-			
-			$_REQUEST {id___query} ||= sql_select_id (
-
-				$conf -> {systables} -> {__queries} => {
-					id_user     => $_USER -> {id},
-					type        => $_REQUEST {type},
-					label       => '',
-					order_context		=> $_REQUEST {__order_context} || '',
-				}, ['id_user', 'type', 'label'],
-
-			);
-			
-			check___query ();
-
-			$_REQUEST {type} = $page -> {type} = '__queries';
-			$_REQUEST {id}   = $_REQUEST {id___query};
-
-			$selector  = 'get_item_of_' . $page -> {type};
-			$renderrer = 'draw_item_of_' . $page -> {type};
-			$_REQUEST {__page_content}  = $page -> {content} = call_for_role ($selector, $page -> {content});
-			
-			delete $_REQUEST {__skin};
-		}
-
-		setup_skin ();
-
-		$_REQUEST {__read_only} = 0 if ($_REQUEST {__only_field});
-		
-		$page -> {content} -> {__read_only} = $_REQUEST {__read_only} if ref $page -> {content} eq HASH;
-
 		if ($@) {
 			warn $@;
 			$_REQUEST {error} = $@;
 		}
-		
-		return '' if $_REQUEST {__response_sent};
-				
-		unless ($_SKIN -> {options} -> {no_presentation}) {
+		else {
 
-			if ($conf -> {core_auto_edit} && $_REQUEST {id} && ref $page -> {content} eq HASH && $page -> {content} -> {fake} > 0) {
-				$_REQUEST {__edit} = 1;
+			$_REQUEST {__page_content} = $page -> {content};
+
+			if ($_REQUEST {__edit_query} && !$_REQUEST {__only_menu}) {
+
+				my $is_dump = $_REQUEST {__dump};
+				delete $_REQUEST {__dump}; 
+
+				setup_skin ();
+
+				call_for_role ($renderrer, $page -> {content});
+
+				$_REQUEST {__dump} = $is_dump;
+
+				$_REQUEST {id___query} ||= sql_select_id (
+
+					$conf -> {systables} -> {__queries} => {
+						id_user     => $_USER -> {id},
+						type        => $_REQUEST {type},
+						label       => '',
+						order_context		=> $_REQUEST {__order_context} || '',
+					}, ['id_user', 'type', 'label'],
+
+				);
+
+				check___query ();
+
+				$_REQUEST {type} = $page -> {type} = '__queries';
+				$_REQUEST {id}   = $_REQUEST {id___query};
+
+				$selector  = 'get_item_of_' . $page -> {type};
+				$renderrer = 'draw_item_of_' . $page -> {type};
+				$_REQUEST {__page_content}  = $page -> {content} = call_for_role ($selector, $page -> {content});
+
+				delete $_REQUEST {__skin};
 			}
 
-			if ($_REQUEST {__popup}) {
-				$_REQUEST {__read_only} = 1;
-				$_REQUEST {__pack} = 1;
-				$_REQUEST {__no_navigation} = 1;
-			}
+			setup_skin ();
 
-			our @scan2names = ();	
-			our $scrollable_row_id = 0;
-			our $lpt = 0;
+			$_REQUEST {__read_only} = 0 if ($_REQUEST {__only_field});
 
-			eval {
-				$_SKIN -> {subset} = $_SUBSET;
-				$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
-				$page  -> {auth_toolbar} = draw_auth_toolbar ();
-				$page  -> {body} 	 = call_for_role ($renderrer, $page -> {content}) unless $_REQUEST {__only_menu}; 
-				$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
-				$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
-			};
-
-			$page -> {scan2names} = \@scan2names;
+			$page -> {content} -> {__read_only} = $_REQUEST {__read_only} if ref $page -> {content} eq HASH;
 
 			if ($@) {
 				warn $@;
 				$_REQUEST {error} = $@;
 			}
 
+			return '' if $_REQUEST {__response_sent};
+
+			unless ($_SKIN -> {options} -> {no_presentation}) {
+
+				if ($conf -> {core_auto_edit} && $_REQUEST {id} && ref $page -> {content} eq HASH && $page -> {content} -> {fake} > 0) {
+					$_REQUEST {__edit} = 1;
+				}
+
+				if ($_REQUEST {__popup}) {
+					$_REQUEST {__read_only} = 1;
+					$_REQUEST {__pack} = 1;
+					$_REQUEST {__no_navigation} = 1;
+				}
+
+				our @scan2names = ();	
+				our $scrollable_row_id = 0;
+				our $lpt = 0;
+
+				eval {
+					$_SKIN -> {subset} = $_SUBSET;
+					$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
+					$page  -> {auth_toolbar} = draw_auth_toolbar ();
+					$page  -> {body} 	 = call_for_role ($renderrer, $page -> {content}) unless $_REQUEST {__only_menu}; 
+					$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
+					$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
+				};
+
+				$page -> {scan2names} = \@scan2names;
+
+				if ($@) {
+					warn $@;
+					$_REQUEST {error} = $@;
+				}
+
+			}
+			
 		}
 
 	}
@@ -4407,17 +4409,6 @@ sub draw_page {
 	
 		$html ||= $_SKIN -> draw_page ($page);
 	
-	}
-
-
-	if (
-		   $conf -> {core_screenshot} -> {allow}
-		&& $conf -> {core_screenshot} -> {subsets} -> {$$_SUBSET{name}}
-		&& $conf -> {core_screenshot} -> {exclude_types} !~ /\b$$page{type}\b/
-		&& ($conf -> {core_screenshot} -> {allow_edit} || !$_REQUEST {__edit})
-	) {
-		sql_do ("INSERT INTO $conf->{systables}->{__screenshots} (subset, type, id_object, id_user, html, error, params, gziped) VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
-			$_SUBSET -> {name}, $page -> {type}, $_REQUEST {id}, $_USER -> {id}, Compress::Zlib::memGzip ($html), !$validate_error && $_REQUEST {error} ? 1 : 0, Dumper (\%_REQUEST));
 	}
 
 	return $html;
