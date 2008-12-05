@@ -16,6 +16,11 @@ sub sql_version {
 	
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
 	
+	$conf -> {db_date_format} ||= 'yyyy-mm-dd hh24:mi:ss';
+	
+	sql_do ("ALTER SESSION SET nls_date_format      = '$conf->{db_date_format}'");
+	sql_do ("ALTER SESSION SET nls_timestamp_format = '$conf->{db_date_format}'");
+
 	return $version;
 	
 }
@@ -40,11 +45,11 @@ sub sql_do_refresh_sessions {
 
 		sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)") ;
 
-		$ids = sql_select_ids ("SELECT DISTINCT id_session FROM $conf->{systables}->{__access_log} MINUS SELECT id FROM $conf->{systables}->{sessions}");
+		$ids = sql_select_ids ("SELECT DISTINCT id_session FROM \"$conf->{systables}->{__access_log}\" MINUS SELECT id FROM $conf->{systables}->{sessions}");
 
-		sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session IN ($ids)") if $ids ne '-1';
+		sql_do ("DELETE FROM \"$conf->{systables}->{__access_log}\" WHERE id_session IN ($ids)") if $ids ne '-1';
 
-	}	
+	}
 
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?", $_REQUEST {sid});
 

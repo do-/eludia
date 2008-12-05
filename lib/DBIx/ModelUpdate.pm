@@ -41,9 +41,11 @@ sub __log_profilinig {
 
 sub do {
 
-	my ($self, $sql) = @_;
-	print STDERR $sql, "\n" if $self -> {dump_to_stderr};	
-	$self -> {db} -> do ($sql);
+	my ($self, $sql, @params) = @_;
+
+	warn $sql . (join ',', map {" '$_' "} @params) . "\n" if $self -> {dump_to_stderr};
+
+	$self -> {db} -> do ($sql, undef, @params);
 
 }
 

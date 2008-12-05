@@ -354,6 +354,7 @@ sub create_table {
 	if ($pk_column) {
 
 		if ($core_voc_replacement_use) {			
+
 			my ($sequence_name,$trigger_name);
 
 			if (uc $name ne uc $self -> {__voc_replacements}) { 	
@@ -427,6 +428,8 @@ EOS
 
 		$self -> do ("ALTER TABLE $q${name}$q ENABLE ALL TRIGGERS");
 	}
+	
+	$self -> do ("COMMENT ON TABLE $q${name}$q IS '$definition->{label}'");
 
 }
 
@@ -434,14 +437,21 @@ EOS
 
 sub add_columns {
 
-	my ($self, $name, $columns,$core_voc_replacement_use) = @_;
+	my ($self, $name, $columns, $core_voc_replacement_use) = @_;
 
 	$name = $self -> unquote_table_name ($name);
+
 	my $q = $name =~ /^_/ ? $self -> {quote} : '';
 
 	my $sql = "ALTER TABLE $q$name$q ADD (\n  " . (join "\n ,", map {$self -> gen_column_definition ($_, $columns -> {$_}, $name,,$core_voc_replacement_use)} keys %$columns) . "\n)\n";
-			
+	
 	$self -> do ($sql);
+
+	foreach my $k (keys %$columns) {
+	
+		$self -> do ("COMMENT ON COLUMN $q${name}$q.$k IS '$columns->{$k}->{label}'");
+	
+	}
 
 }
 
@@ -465,7 +475,7 @@ sub get_column_def {
 
 sub update_column {
 
-	my ($self, $name, $c_name, $existing_column, $c_definition,$core_voc_replacement_use) = @_;
+	my ($self, $name, $c_name, $existing_column, $c_definition, $core_voc_replacement_use) = @_;
 	
 	my $existing_type = $self -> get_canonic_type ($existing_column);
 
@@ -501,6 +511,8 @@ sub update_column {
 	my $sql = "ALTER TABLE $q$name$q MODIFY" . $self -> gen_column_definition ($c_name, $c_definition, $name,,$core_voc_replacement_use);
 	
 	$self -> do ($sql);
+		
+	$self -> do ("COMMENT ON COLUMN $q${name}$q.$c_name IS '$c_definition->{label}'");
 	
 	return 1;
 	
