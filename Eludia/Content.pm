@@ -2853,20 +2853,21 @@ sub do_drop_filters___queries {
 
 	my $esc_href = esc_href ();
 
- 	foreach my $key (keys %_REQUEST) {
- 	
- 		$key =~ /^_filter_(\w+)$/ or next;
- 
- 		my $filter = $1;
- 		
-		$esc_href =~ s/([\?\&]$filter=)[^\&]*/$1$content->{filters}->{$filter}/;		
-
- 	}
-
-	$esc_href =~ s/([\?\&]__last_query_string=)(\d+)/$1$_REQUEST{__last_query_string}/;
-
-	$esc_href .= '&__edit_query=1';
+	foreach my $key (keys %_REQUEST) {
 	
+		$key =~ /^_filter_(\w+)$/ or next;
+		
+		my $filter = $1;
+
+		$filter =~ s/_\d+//;
+
+		$esc_href =~ s/([\?\&]$filter=)[^\&]*//;                
+	
+	}
+
+	$esc_href =~ s/([\?\&]__last_query_string=)(\-?\d+)/$1$_REQUEST{__last_query_string}/;	
+	$esc_href .= '&__edit_query=1';
+
 	redirect ($esc_href, {kind => 'js'});
 
 
@@ -2902,12 +2903,31 @@ sub do_update___queries {
 	}
 	
 	$content -> {order} = join ', ', grep { $_ } @order;
+
+	foreach my $cbx (split /,/, $_REQUEST {__form_checkboxes_custom}) {
+		if ($cbx =~ /(\d+)_(\d+)/) {
+			$content -> {filters} -> {$1} .= '';
+		}
+	}
 	
 	foreach my $key (keys %_REQUEST) {
 	
 		$key =~ /^_filter_(\w+)$/ or next;
+		
+		my $filter = $1;
+		
+		if ($filter =~ /(\d+)_(\d+)/) {
+		
+			$content -> {filters} -> {$1} .= ','
+				if $content -> {filters} -> {$1};
 				
-		$content -> {filters} -> {$1} = $_REQUEST {$key};
+			$content -> {filters} -> {$1} .= $2;
+				
+		} else {
+		
+			$content -> {filters} -> {$filter} = $_REQUEST {$key} || '';
+			
+		}
 	
 	}
 	
@@ -2916,7 +2936,10 @@ sub do_update___queries {
 	my $esc_href = esc_href ();
 
 	foreach my $filter (keys (%{$content -> {filters}})) {
-		$esc_href =~ s/([\?\&]$filter=)[^\&]*/$1$content->{filters}->{$filter}/;		
+
+		unless ($esc_href =~ s/([\?\&]$filter=)[^\&]*/$1$content->{filters}->{$filter}/) {
+			$esc_href .= "&$filter=$content->{filters}->{$filter}";
+		};
 	} 
 	
 	redirect ($esc_href, {kind => 'js'});

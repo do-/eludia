@@ -586,7 +586,7 @@ sub draw_form_field {
 	
 	if ($field -> {type} eq 'banner') {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
-		return qq{<td class='form-$$field{state}-label' $colspan nowrap align=center>$$field{html}</td>};
+		return qq{<td class='form-$$field{state}-banner' $colspan nowrap align=center>$$field{html}</td>};
 	}
 	elsif ($field -> {type} eq 'article') {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
@@ -604,9 +604,9 @@ sub draw_form_field {
 	my $label_cell;
 	$label_cell = qq {<td class='form-$$field{state}-label' nowrap $colspan_label align=right $label_width>\n$$field{label}</td>}
 		unless ($field -> {label_off});
-		
+
 	return <<EOH;
-		$label_cell		
+		$label_cell
 		<td class='form-$$field{state}-inputs' $colspan $cell_width>\n$$field{html}</td>
 EOH
 
@@ -939,16 +939,29 @@ sub draw_form_field_select {
 
 					var dialog_width = $options->{other}->{width};
 					var dialog_height = $options->{other}->{height};
+					
+					try {
 
-					var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 					
-					focus ();
+						focus ();
+						
+						if (result.result == 'ok') {
+						
+							setSelectOption (this, result.id, result.label);
+							
+						} else {
+						
+							this.selectedIndex = 0;
+						
+						} 					
+
+					} catch (e) {
 					
-					if (result.result == 'ok') {
-						setSelectOption (this, result.id, result.label);
-					} else {
 						this.selectedIndex = 0;
+						
 					}
+					
 					
 				}
 EOJS
@@ -963,20 +976,27 @@ EOJS
 						var dialog_width = $options->{other}->{width};
 						var dialog_height = $options->{other}->{height};
 
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+						try {
+	
+							var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 						
-						focus ();
+							focus ();
+							
+							if (result.result == 'ok') {
+							
+								setSelectOption (this, result.id, result.label);
+								
+							} else {
+							
+								this.selectedIndex = 0;
+							
+							} 					
+	
+						} catch (e) {
 						
-						if (result.result == 'ok') {
-							setSelectOption (this, result.id, result.label);
-						} else {
 							this.selectedIndex = 0;
+							
 						}
-					
-					} else {
-
-						this.selectedIndex = 0;
-
 					}
 				}
 EOJS
@@ -1506,15 +1526,19 @@ sub draw_toolbar_input_select {
 
 				if (this.options[this.selectedIndex].value == -1) {
 
-					var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name'}, 'status:no;resizable:yes;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
-					
-					focus ();
-					
-					if (result.result == 'ok') {
-						setSelectOption (this, result.id, result.label);
-						submit ();
-					} else {
-						this.selectedIndex = 0;
+					try {
+						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name'}, 'status:no;resizable:yes;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+						
+						focus ();
+						
+						if (result.result == 'ok') {
+							setSelectOption (this, result.id, result.label);
+							submit ();
+						} else {
+							this.selectedIndex = 0;
+						}
+					} catch (e) {
+							this.selectedIndex = 0;
 					}
 					
 				} else {
@@ -1529,14 +1553,18 @@ EOJS
 
 					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
 
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name'}, 'status:no;resizable:yes;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
-						
-						focus ();
-						
-						if (result.result == 'ok') {
-							setSelectOption (this, result.id, result.label);
-  						submit ();
-						} else {
+						try {
+							var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name'}, 'status:no;resizable:yes;help:no;dialogWidth:$options->{other}->{width}px;dialogHeight:$options->{other}->{height}px');
+							
+							focus ();
+							
+							if (result.result == 'ok') {
+								setSelectOption (this, result.id, result.label);
+	  						submit ();
+							} else {
+								this.selectedIndex = 0;
+							}
+						} catch (e) {
 							this.selectedIndex = 0;
 						}
 					
@@ -2238,7 +2266,7 @@ sub draw_table_header_cell {
 	$cell -> {label} .= "\&nbsp;\&nbsp;<a class=row-cell-header-a href=\"$$cell{href_asc}\"><b>\&uarr;</b></a>"  if $cell -> {href_asc};
 	$cell -> {label} .= "\&nbsp;\&nbsp;<a class=row-cell-header-a href=\"$$cell{href_desc}\"><b>\&darr;</b></a>" if $cell -> {href_desc};
 
-	if ($cell -> {order} && !$conf -> {core_no_order_arrows}) {
+	if (($cell -> {order} || $cell -> {href} =~ /\border=/) && !$conf -> {core_no_order_arrows}) {
 		$cell -> {label} = "<nobr><img src='$_REQUEST{__static_url}/order.gif' border=0 hspace=1 vspace=0 align=absmiddle>" . $cell -> {label} . "</nobr>";
 	}	
 	else {

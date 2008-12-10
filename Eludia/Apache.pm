@@ -828,7 +828,7 @@ EOH
 		}
 		else {
 		
-			if ($_REQUEST {sid} && !$_REQUEST {__top} && !$_REQUEST {__only_menu}) {
+			if ($_REQUEST {sid} && !$_REQUEST {__top} && !$_REQUEST {__only_menu} && $_REQUEST {type} ne '__query') {
 						
 				my @qs = split /\?/, $r -> headers_in -> {Referer};
 				

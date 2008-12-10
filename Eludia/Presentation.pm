@@ -446,7 +446,7 @@ sub check_href {
 		
 	}
 
-	if ($h {action} eq 'download') {
+	if ($h {action} eq 'download' || $h {xls}) {
 		$options -> {no_wait_cursor} = 1;
 	}
     
@@ -1680,7 +1680,7 @@ sub draw_form_field_static {
 		$options -> {hidden_value} =~ s/\"/\&quot\;/gsm; #";
 	}	
 
-	if ($options -> {href} && !$_REQUEST {__edit}) {	
+	if ($options -> {href} && !$_REQUEST {__edit} && !$_REQUEST {xls}) {	
 		check_href ($options);
 	}
 	else {
@@ -1752,7 +1752,7 @@ sub draw_form_field_static {
 					
 				if ($tied && !$tied -> {body}) {
 				
-					$static_value = $tied -> _select_label ($value) if $value > 0;
+					$static_value = $tied -> _select_label ($value) if ($value && $value != -1);
 				
 				}
 				else {
@@ -2497,7 +2497,8 @@ sub draw_toolbar {
 			
 			$button -> {type} ||= 'button';
 			$_REQUEST {__toolbar_inputs} .= "$button->{name}," if $button -> {type} =~ /^input_/;
-			$button -> {html} = &{'draw_toolbar_' . $button -> {type}} ($button, $options -> {_list});
+			$button -> {html} = &{'draw_toolbar_' . $button -> {type}} ($button, $options -> {_list})
+				unless $_REQUEST {__edit_query};
 		}
 		else {
 			$button = {html => $button, type => 'input_raw'};
@@ -2949,7 +2950,7 @@ sub draw_close_toolbar {
 		@{$options -> {additional_buttons}},
 		{
 			preset => 'close',     
-			href => 'javascript:window.close()',
+			href => 'javascript: top.window.close()',
 		},
 		@{$options -> {right_buttons}},
 	 ])
@@ -3564,7 +3565,10 @@ sub draw_embed_cell {
 
 sub draw_row_button {
 
-	my ($options) = @_;	
+	my ($options) = @_;
+	
+	return ''
+		if $_REQUEST {xls};	
 			
 	check_href ($options);
 
@@ -4333,6 +4337,14 @@ sub draw_page {
 
 			setup_skin ();
 
+			$_REQUEST {__after_xls} .= <<EOXL if ($_REQUEST{xls});
+<table border=0>
+	<tr><td>&nbsp;</td></tr>
+	<tr><td>$_USER->{label}</td></tr>
+	<tr><td>@{[ sprintf ('%02d.%02d.%04d %02d:%02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4,5]) ]}</td></tr>
+</table>
+EOXL
+
 			$_REQUEST {__read_only} = 0 if ($_REQUEST {__only_field});
 
 			$page -> {content} -> {__read_only} = $_REQUEST {__read_only} if ref $page -> {content} eq HASH;
@@ -4533,6 +4545,8 @@ sub draw_item_of___queries {
  		},
  		
  	);
+
+	$_REQUEST {__form_checkboxes_custom} = '';
 	
 	foreach my $o (@_ORDER) {
 	
@@ -4567,26 +4581,39 @@ sub draw_item_of___queries {
 		);
 		
 		foreach my $filter (@{$o -> {filters}}) {
-		
-			my %f = (
-				label	=> $filter -> {label},
-				size	=> $filter -> {size},
-				max_len => $filter -> {max_len},
-				name	=> 'filter_' . $filter -> {name},
-				value	=> $_QUERY -> {content} -> {filters} -> {$filter -> {name}},
-			);
+ 		
+			my %f = %$filter;
+			
+			$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
+			
+			delete $f {type} 
+				if $f {type} eq 'input_text';
 
-			if ($filter -> {type} eq 'input_select') {
-				$f {type}   = 'select';
-				$f {values} = [grep {$_ -> {id} != -1} @{$filter -> {values}}];
-				$f {other} = $filter -> {other}; 
-			}
-
-			if ($filter -> {type} eq 'input_date') {
-				$f {type}   = 'date';
+			$f {type} =~ s/^input_//;
+			
+			if ($f {type} eq 'select') {
+				$f {values} = [grep {$_ -> {id} != -1} @{$f {values}}];
+				if ($f {other}) {
+				        $f {name} = '_' . $f {name}; 
+						$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
+				}
+			} elsif ($f {type} eq 'date') {
 				$f {no_read_only}	= 1;
+			} elsif ($f {type} eq 'checkbox') {
+				$f {checked} = $f {value};
+			} elsif ($f {type} eq 'radio') {
+				$data -> {"filter_$f{name}"} = $f {value}; 
+#				map {$_ -> {attributes} -> {checked} = $_ -> {id} == $f {value}} @{$f {values}}; 
+			} elsif ($f {type} eq 'checkboxes') {
+				$data -> {'filter_' . $f {name}} = [split /,/, $f {value}];
+				delete $f {value}; 
+				
+				$_REQUEST {__form_checkboxes_custom} .= ',' . join ',', map {"_$f{name}_$_->{id}"} @{$f {values}};
 			}
+			
 
+			$f {name} = 'filter_' . $f {name};
+			
 			push @f, \%f;
 
 		}
@@ -4594,8 +4621,9 @@ sub draw_item_of___queries {
 		push @fields, \@f;
 
 	}
-	
+
 	return draw_form ({
+			keep_params	=> ['__form_checkboxes_custom'],
 			right_buttons => [
 				{
 					icon	=> 'delete',
@@ -4603,6 +4631,7 @@ sub draw_item_of___queries {
 					href	=> "javaScript:document.form.action.value='drop_filters'; document.form.fireEvent('onsubmit'); document.form.submit()",
 					target	=> 'invisible',
 					keep_esc	=> 1,
+					off		=> $_REQUEST {__read_only},
 				},
 			],
 		}, 

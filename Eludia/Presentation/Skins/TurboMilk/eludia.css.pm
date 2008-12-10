@@ -680,6 +680,27 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 	border-bottom-width: 1px;
 }
 
+.form-active-banner, .form-passive-banner {
+	FONT-WEIGHT: bold; 
+	FONT-SIZE:  8pt; 
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	COLOR: #000000; 
+	background-color: #ececec;
+
+	padding-left: 10px;
+	padding-right: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+
+	border-color: #d6d3ce;
+	border-style:solid;
+
+	border-left-width: 0px; 
+	border-top-width: 0px;
+	border-right-width: 1px; 
+	border-bottom-width: 1px;
+}
+
 
 
 
