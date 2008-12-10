@@ -338,6 +338,8 @@ sub check_title {
 
 	my ($options) = @_;
 
+	return if exists $options -> {title} && $options -> {title} eq '';
+
 	$options -> {title} ||= $options -> {label};
 	$options -> {title} =~ s{\<.*?\>}{}g;	
 	$options -> {title} =~ s{^(\&nbsp\;)+}{};	
