@@ -964,6 +964,8 @@ sub sql_do_relink {
 #warn Dumper ($DB_MODEL -> {tables} -> {$table_name});
 #warn Dumper ($DB_MODEL -> {tables} -> {$table_name} -> {references});
 
+	my $table__moved_links = $SQL_VERSION -> {driver} eq 'Oracle' ? "\U$conf->{systables}->{__moved_links}" : $conf->{systables}->{__moved_links};
+
 	foreach my $old_id (@$old_ids) {
 	
 warn "relink $table_name: $old_id -> $new_id";
@@ -981,7 +983,7 @@ warn "relink $$column_def{table_name} ($$column_def{name}): $old_id -> $new_id";
 			if ($column_def -> {TYPE_NAME} =~ /int/) {
 			
 				sql_do (<<EOS, $old_id);
-					INSERT INTO $model_update->{quote}$conf->{systables}->{__moved_links}$model_update->{quote}
+					INSERT INTO $model_update->{quote}$table__moved_links$model_update->{quote}
 						(table_name, column_name, id_from, id_to)
 					SELECT
 						'$$column_def{table_name}' AS table_name,
@@ -1003,7 +1005,7 @@ EOS
 				my $_new_id = ',' . $new_id . ',';
 			
 				sql_do (<<EOS, '%' . $old_id . '%');
-					INSERT INTO $model_update->{quote}$conf->{systables}->{__moved_links}$model_update->{quote}}
+					INSERT INTO $model_update->{quote}$table__moved_links$model_update->{quote}}
 						(table_name, column_name, id_from, id_to)
 					SELECT
 						'$$column_def{table_name}' AS table_name,
@@ -1046,7 +1048,9 @@ sub sql_undo_relink {
 	my ($table_name, $old_ids) = @_;
 	
 	ref $old_ids eq ARRAY or $old_ids = [$old_ids];
-			
+
+	my $table__moved_links = $SQL_VERSION -> {driver} eq 'Oracle' ? "\U$conf->{systables}->{__moved_links}" : $conf->{systables}->{__moved_links};
+
 	foreach my $old_id (@$old_ids) {
 		
 		$old_id > 0 or next;
@@ -1059,7 +1063,7 @@ warn "undo relink $table_name: $old_id";
 
 			my $from = <<EOS;
 				FROM
-					$model_update->{quote}$conf->{systables}->{__moved_links}$model_update->{quote}
+					$model_update->{quote}$table__moved_links$model_update->{quote}
 				WHERE
 					table_name = '$$column_def{table_name}'
 					AND column_name = '$$column_def{name}'
