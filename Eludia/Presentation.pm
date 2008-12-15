@@ -3808,6 +3808,7 @@ sub draw_table {
 			
 				if ($_REQUEST {id___query} && !$_REQUEST {__edit__query}) {
 					$h -> {ord}    = $cells_cnt && $h -> {order} && exists $_QUERY -> {content} -> {columns} -> {$h -> {order}} ? $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord} : $i;
+					$h -> {__hidden} = $h -> {hidden};
 					$h -> {hidden} = 1 if $h -> {ord} == 0;
 				}
 				
@@ -4550,11 +4551,14 @@ sub draw_item_of___queries {
 	
 	foreach my $o (@_ORDER) {
 	
+		next
+                        if $o -> {__hidden};
+
 		my @f = (
 			{
-				label => $o -> {title} || $o -> {label},
-				type  => 'hgroup',
-				nobr	=> 1,
+				label 		=> $o -> {title} || $o -> {label},
+				type  		=> 'hgroup',
+				nobr		=> 1,
 				cell_width	=> '50%',
 				items => [
 					{
@@ -4579,7 +4583,7 @@ sub draw_item_of___queries {
 				],
 			},
 		);
-		
+
 		foreach my $filter (@{$o -> {filters}}) {
  		
 			my %f = %$filter;
@@ -4603,7 +4607,6 @@ sub draw_item_of___queries {
 				$f {checked} = $f {value};
 			} elsif ($f {type} eq 'radio') {
 				$data -> {"filter_$f{name}"} = $f {value}; 
-#				map {$_ -> {attributes} -> {checked} = $_ -> {id} == $f {value}} @{$f {values}}; 
 			} elsif ($f {type} eq 'checkboxes') {
 				$data -> {'filter_' . $f {name}} = [split /,/, $f {value}];
 				delete $f {value}; 
