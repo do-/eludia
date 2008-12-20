@@ -2622,7 +2622,7 @@ EOH
 			
 	
 	}
-	else {
+	elsif (!$_REQUEST {__only_tree_frameset}) {
 	
 		$_REQUEST {__script} .= <<EOH;
 
@@ -2654,10 +2654,11 @@ EOH
 			td.main-menu {padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
 			td.vert-menu {background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
 			#admin {width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
+			@{[$_REQUEST {type} eq 'logon' ? <<EOS : '' ]}
 			td.login-head {background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
 			td.submit-area {text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
-			div.green-title {color:#ffffff;font-weight:bold;background:url('$_REQUEST{__static_url}/green_ear_left.gif') no-repeat 0 0; width:300px;padding-left:10%;}
 			div.grey-submit {background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
+EOS
 		</style>
 EOH
 
@@ -2734,7 +2735,7 @@ EOI
 EOH
 
 	
-	unless ($r -> headers_in -> {'User-Agent'} =~ /MSIE 7/) {
+	unless ($r -> headers_in -> {'User-Agent'} =~ /MSIE 7/ || $_REQUEST {__only_tree_frameset}) {
 		
 		$_REQUEST {__script} .= <<EOS;
 
@@ -3035,11 +3036,6 @@ EOH
 							<input type=hidden name=action value=execute>
 							<input type=hidden name=redirect_params value="$_REQUEST{redirect_params}">
 							<input type=hidden name=tz_offset value="">
-<!--							
-							<tr>
-								<td colspan="2" align="center"><a id="logon_url" style="text-decoration:none" href="javascript: document.forms['form'].elements['action'].value='execute_ip'; document.forms['form'].submit()"><div class="green-title"><div style="float:left;margin-top:6px;">Войти как Овсянко Дмитрий Евгеньевич</div><div style="float:right;"><img src="$_REQUEST{__static_site}/i/logon_turbo_milk/images/green_ear_right.gif" border="0"></div></div></td>
-							</tr>
--->							
 							<tr class="logon">
 								<td><b>Логин:</b></td>
 								<td><input type="text" name="login" value="${\( $_COOKIES{user_login} && $_COOKIES{user_login}->value )}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
@@ -3105,8 +3101,13 @@ sub draw_tree {
 		($root_id, $root_url) = ($node -> {id}, $node -> {url}) unless $root_id;
 			
 		if ($node -> {id} == $options -> {selected_node}) {
-			$selected_node_url = $node -> {url};
+			$selected_node_url = $options -> {url_base} . $node -> {url};
 			$selected_code = 'win.d.selectedFound = true; win.d.selectedNode = ' . (@nodes - 1);
+
+			&{$_PACKAGE . 'set_cookie'} (
+				-name	=> "cs_$_REQUEST{type}",
+				-value	=> $node -> {id},
+			);
 		}
        		
 		$idx {$node -> {id}} = $node;
@@ -3117,7 +3118,7 @@ sub draw_tree {
 	
 	unless ($selected_node_url) {
     		$options -> {selected_node} = $root_id;
-    		$selected_node_url = $root_url;             	 
+    		$selected_node_url = $options -> {url_base} . $root_url;             	 
   	}
 	
 	while (my ($k, $v) = each %lch) {
@@ -3130,6 +3131,12 @@ sub draw_tree {
 	if ($options -> {active} && $_REQUEST {__parent}) {
 	
 		my $m = $_JSON -> encode ([$menus]);
+
+		&{$_PACKAGE . 'set_cookie'} (
+			-name	=> "co_$_REQUEST{type}",
+			-value	=> ($_COOKIES {"co_$_REQUEST{type}"} ? 
+				$_COOKIES {"co_$_REQUEST{type}"} -> value . '.' : '' ) . $_REQUEST {__parent},
+		);
 
 		return out_html ({}, <<EOH);
 <html>
@@ -3187,16 +3194,29 @@ EOH
 	
 	$options -> {active} += 0;
 	
-	my $useCookies = $options -> {active} ? 'false' : 'true';
+	if ($_COOKIES {"co_$_REQUEST{type}"}) {
+
+#		my $cookie_value = join '.', grep {$idx {$_} -> {_hac}} split /\./, $_COOKIES {"co_$_REQUEST{type}"} -> value;
+
+		&{$_PACKAGE . 'set_cookie'} (
+			-name	=> "co_$_REQUEST{type}",
+			-value	=> $_COOKIES {"co_$_REQUEST{type}"} -> value,
+		);
+		
+	}
+
+	$_REQUEST {__only_tree_frameset} = 1;
 	
 	$_REQUEST {__on_load} .= <<EOH;
 		var win = document.getElementById ('__tree_iframe').contentWindow;
 		win.d = new win.dTree ('d');
+		win.d._url_base = '$options->{url_base}';
+		win.d._cookie_name = '$_REQUEST{type}';
 		var c = win.d.config;
 		c.iconPath = '$_REQUEST{__static_url}/tree_';
 		c.target = '_content_iframe';
 		c.useStatusText = true;
-		c.useCookies = $useCookies;
+		c.useCookies = true;
 		win.d.icon.node = 'folderopen.gif';
 		
 		var nodes = $nodes;
@@ -3212,12 +3232,11 @@ EOH
 		win.d._active = $options->{active};
 		win.d._href = '$options->{href}';
 		$selected_code
-		
 		var styleNode = win.document.createElement("STYLE");
-        styleNode.type = "text/css";
-        win.document.body.appendChild(styleNode);
-        win.document.styleSheets[0].addRule('td.vert-menu', "background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;");
-		
+    		styleNode.type = "text/css";
+	        win.document.body.appendChild(styleNode);
+    		win.document.styleSheets[0].addRule('td.vert-menu', "background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;");
+
 		win.document.body.innerHTML = "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td id='dtree_td' valign=top>" + win.d + "</td></tr></table><div id='dtree_menus'>$menus</div>";
 @{[ $options->{selected_node} ? <<EOO : '' ]}		
 		if (win.d.selectedNode == null || win.d.selectedFound) {
@@ -3249,14 +3268,12 @@ sub draw_node {
 		id   => $options -> {id}, 
 		pid  => $options -> {parent}, 
 		name => $options -> {label}, 
-		url  => $ENV {SCRIPT_URI} . $options -> {href},
+		url  => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
 		title   => $options -> {title} || $options -> {label},
-		target  => $options -> {target},
-		icon    => $options -> {icon},
-		iconOpen    => $options -> {iconOpen},
-		is_checkbox => $options -> {is_checkbox},
 	};
 	
+	map {$node -> {$_} = $options -> {$_} if $options -> {$_}} qw (target icon iconOpen is_checkbox);
+
 	if ($options -> {title} && $options -> {title} ne $options -> {label}) {
 		$node -> {title} = $options -> {title};
 	}

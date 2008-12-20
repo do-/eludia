@@ -4102,6 +4102,22 @@ sub draw_tree {
 	$options -> {href} ||= {};
 	
 	check_href ($options);
+	
+	my $url_base = {
+		href	=> $options -> {url_base} || '',
+	};
+	
+	if ($options -> {url_base}) {
+
+		my $__last_query_string = $_REQUEST {__last_query_string};
+		$_REQUEST {__last_query_string} = $options -> {no_no_esc} ? $__last_query_string : -1;
+		check_href ($url_base);
+		$url_base -> {href} .= '&__tree=1' if (!$options -> {no_tree} && $url_base -> {href} !~ /^javascript:/i);
+		$_REQUEST {__last_query_string} = $__last_query_string;
+		
+		$options -> {url_base} = $url_base -> {href};
+	}
+	
 
 	$_REQUEST {__parent} = $__parent;
 
@@ -4146,6 +4162,10 @@ sub draw_node {
 		$options -> {href} .= '&__tree=1' if (!$options -> {no_tree} && $options -> {href} !~ /^javascript:/i);
 		$_REQUEST {__last_query_string} = $__last_query_string;
 
+	} elsif ($options -> {url_tail}) {
+	
+		$options -> {href} = $options -> {url_tail};
+		 
 	}
 	
 	$options -> {parent} = -1 if ($options -> {parent} == 0);
@@ -4156,7 +4176,7 @@ sub draw_node {
 	
 		next if $button -> {off};
 	
-		$button -> {href} .= '&__tree=1';		
+		$button -> {href} .= '&__tree=1';
 		check_href ($button);
 		
 		$button -> {target} ||= '_content_iframe';

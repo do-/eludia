@@ -842,7 +842,7 @@ EOH
 				
 				}
 
-				if ($_REQUEST {__this_query_string}) {
+				if ($_REQUEST {__this_query_string} && $_REQUEST {id}) {
 					
 					$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
 					$_REQUEST {__last_query_string}        = $_REQUEST {__this_query_string};
