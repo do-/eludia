@@ -450,7 +450,7 @@ function typeAhead() { // borrowed from http://www.oreillynet.com/javascript/200
    return true;
 }					
 
-function activate_link (href, target) {
+function activate_link (href, target, no_block_event) {
 
 	if (href.indexOf ('javascript:') == 0) {
 		var code = href.substr (11).replace (/%20/g, ' ');
@@ -464,7 +464,15 @@ function activate_link (href, target) {
 	
 	}
 	
-	blockEvent ();
+	if (no_block_event) {
+	
+		return true;
+		
+	} else {
+	
+		blockEvent ();
+		
+	}
 
 }
 

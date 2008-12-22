@@ -1633,6 +1633,59 @@ sub draw_form_field_hgroup {
 
 ################################################################################
 
+sub draw_form_field_multi_select {
+
+	my ($options, $data) = @_;
+
+	check_href ($options);
+	
+	my $url = dialog_open ({
+		href	=> $options -> {href} . '&multi_select=1&ids=-1',
+		title	=> $options -> {label},
+	}, {
+		dialogHeight	=> 600,
+		dialogWidth	=> 800,
+	}) . "if (result.result == 'ok') {document.getElementById ('$options').innerHTML=result.label; document.form._$options->{name}.value=result.ids;} void (0)";
+	$url =~ s/^javascript://i;
+	
+	my $url_dialog_id = $_REQUEST {__dialog_cnt};
+
+	return draw_form_field_hgroup (
+		{
+			label	=> $options -> {label},
+			type	=> 'hgroup',
+			items	=> [
+				{
+					type	=> 'static',
+					value	=> qq[<span id="$options">] . join ('<br>', map {$_ -> {label}} @{$options -> {values}}) . '</span>',
+				},
+				{
+					type	=> 'hidden',
+					name	=> $options->{name},
+					value	=> join (',', map {$_ -> {id}} @{$options -> {values}}),
+					off	=> $_REQUEST {__read_only},
+				},
+				{
+					type	=> 'button',
+					value	=> 'Изменить',
+					onclick	=> "re = /&ids=.*\$/i; dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, ''); dialog_open_$url_dialog_id.href += '&ids=' + document.form._$options->{name}.value; " . $url,
+					off	=> $_REQUEST {__read_only},
+				},
+				{
+					type	=> 'button',
+					value	=> 'Очистить',
+					onclick => "document.getElementById ('$options').innerHTML=''; document.form._$options->{name}.value=''",
+					off	=> $_REQUEST {__read_only},
+				},
+			],
+		},
+		$data
+	);
+		
+}
+
+################################################################################
+
 sub draw_form_field_text {
 
 	my ($options, $data) = @_;
@@ -1892,28 +1945,33 @@ sub draw_form_field_radio {
 
 				my ($detail, $codetails);
 				if (ref $detail_ eq HASH) {
-					($detail, $codetails) = each (%{$detail_}); 
+					($detail, $codetails) = (%{$detail_});
 				} else {
 					$detail = $detail_;
 				}
 				if (defined $codetails) {
+
 					ref $codetails eq ARRAY or $codetails = [$codetails];
+
 					foreach my $codetail (@{$codetails}) {
+
 						next
 							if ((grep {$_ eq $codetail} @all_codetails) > 0);
+
 						push (@all_codetails, $codetail);
+
 						$codetail_js .= <<EOS
 						'&_$codetail=' +
 						document.getElementById('_${codetail}_select').options[document.getElementById('_${codetail}_select').selectedIndex].value +  
 EOS
 					}
-				
+
 				}
-	
+
 				push @all_details, $detail;
-	
+
 				$tab_js .= <<EOJS;
-					element = this.form.elements['_${detail}'];
+					element = this.form.elements['_$detail'];
 					if (element) {
 						tabs.push (element.tabIndex);
 				}
@@ -1936,6 +1994,7 @@ EOJS
 					tab
 	
 					, 'invisible_$$options{name}'
+					, true
 	
 				);
 EOJS
@@ -1947,14 +2006,12 @@ EOJS
 				var element;
 				var tabs = [];
 
-				if (this.options[this.selectedIndex].value && this.options[this.selectedIndex].value != -1) {
 
-					$tab_js
-					var tab = tabs.length > 0 ? '&__only_tabindex=' + tabs.join (',') : '' 
-				
-					$onchange
+				$tab_js
+				var tab = tabs.length > 0 ? '&__only_tabindex=' + tabs.join (',') : '' 
+			
+				$onchange
 
-				}
 
 EOJS
 
@@ -2025,32 +2082,26 @@ sub draw_form_field_select {
 
 			my ($detail, $codetails);
 			if (ref $detail_ eq HASH) {
-				($detail, $codetails) = each (%{$detail_}); 
+				($detail, $codetails) = (%{$detail_}); 
 			} else {
 				$detail = $detail_;
 			}
+			
 			if (defined $codetails) {
+
 				ref $codetails eq ARRAY or $codetails = [$codetails];
+
 				foreach my $codetail (@{$codetails}) {
+
 					next
 						if ((grep {$_ eq $codetail} @all_codetails) > 0);
+
 					push (@all_codetails, $codetail);
 
-					if ($codetail =~ /.+_label$/) {
-						$codetail_js .= <<EOS
-						'&_$codetail=' +
-						encode1251(document.getElementById('_${codetail}').value) +  
-EOS
-					} else {
-						$codetail_js .= <<EOS
-						'&_$codetail=' +
-						document.getElementById('_${codetail}_select').options[document.getElementById('_${codetail}_select').selectedIndex].value +  
-EOS
-					}
-
 				}
-				
+
 			}
+
 
 			push @all_details, $detail;
 			$tab_js .= <<EOJS;
@@ -2077,7 +2128,7 @@ EOJS
 				this.form.name + 
 				'&_$$options{name}=' + 
 				this.value + 
-$codetail_js
+				codetails_url +
 				tab
 
 				, 'invisible_$$options{name}'
@@ -2087,7 +2138,10 @@ EOJS
 
 
 		push @{$_REQUEST{__invisibles}}, 'invisible_' . $options -> {name};
-
+		
+		my $codetails = $_JSON -> encode (\@all_codetails);
+		$codetails =~ s/\"/\'/g;
+		
 		$options -> {onChange} .= <<EOJS;
 				var element;
 				var tabs = [];
@@ -2095,8 +2149,38 @@ EOJS
 				if (this.options[this.selectedIndex].value && this.options[this.selectedIndex].value != -1) {
 
 					$tab_js
-					var tab = tabs.length > 0 ? '&__only_tabindex=' + tabs.join (',') : '' 
-				
+					var tab = tabs.length > 0 ? '&__only_tabindex=' + tabs.join (',') : '';
+					var codetails = $codetails;
+					var codetails_url = '';
+
+					for (i=0; i < codetails.length; i ++) {
+					
+						if (document.getElementById('_' + codetails[i] + '_select')) {
+							codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementById('_' + codetails[i] + '_select').value;
+
+							continue; 
+						} 
+						
+						if (document.getElementsByName('_' + codetails[i]).length > 1) {
+
+							for (j=0; j < document.getElementsByName('_' + codetails[i]).length; j ++) {
+							
+								r = document.getElementsByName('_' + codetails[i]) [j];
+
+								if (r.checked) {
+									codetails_url += '&' + '_' + codetails[i] + '=' + r.value;
+									break;
+								}
+							}
+							continue;
+						}
+
+						if (document.getElementById('_' + codetails[i])) {
+							codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementById('_' + codetails[i]).value;
+							continue; 
+						} 
+					}
+					
 					$onchange
 
 				}

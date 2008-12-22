@@ -429,6 +429,7 @@ sub handler {
 			
 			next if $key =~ /^_dt/;
 			next if $key =~ /^_label/;
+			next if $key =~ /_ids$/;
 			
 			$_REQUEST {$key} =~ /^\-?[\d ]*\d([\,\.]\d+)?$/ or next;
 
