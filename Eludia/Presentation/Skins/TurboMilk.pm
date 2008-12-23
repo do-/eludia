@@ -2007,6 +2007,7 @@ sub js_set_select_option {
 
 	my $var = "sso_" . (0 + $item -> {id}) . int (rand() * time ());
 	$var =~ s/[.]//g;
+	$var =~ s/-/_/g;
 
 	$_REQUEST {__script} .= " var $var = $a; "
 		unless ($_REQUEST {__script} =~ / var $var =/);
