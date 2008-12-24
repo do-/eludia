@@ -2941,6 +2941,7 @@ sub do_update___queries {
 			$esc_href .= "&$filter=$content->{filters}->{$filter}";
 		};
 	} 
+	$esc_href =~ s/\bstart=\d+\&?//;
 	
 	redirect ($esc_href, {kind => 'js'});
 

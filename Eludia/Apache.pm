@@ -843,13 +843,13 @@ EOH
 				
 				}
 
-				if ($_REQUEST {__this_query_string} && $_REQUEST {id}) {
+#				if ($_REQUEST {__this_query_string} && $_REQUEST {id}) {
 					
-					$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
-					$_REQUEST {__last_query_string}        = $_REQUEST {__this_query_string};
+#					$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
+#					$_REQUEST {__last_query_string}        = $_REQUEST {__this_query_string};
 					
-				}
-				elsif (
+#				}
+				if (
 					$p {action} 
 					|| $_REQUEST {__next_query_string}
 					|| $p {__last_query_string} != $_REQUEST{__last_query_string}
