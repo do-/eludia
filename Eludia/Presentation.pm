@@ -1446,7 +1446,8 @@ sub draw_form_field_string {
 	$options -> {max_len} ||= 255;
 	$options -> {attributes} -> {maxlength} = $options -> {max_len};
 	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
-
+	
+	exists $options -> {attributes} -> {autocomplete} or $options -> {attributes} -> {autocomplete} = 'off';
 
 	$options -> {size}    ||= 120;
 	$options -> {attributes} -> {size}      = $options -> {size};
