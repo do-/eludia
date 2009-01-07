@@ -1492,8 +1492,17 @@ sub upload_file {
 		
 	}
 	
+	my ($y, $m, $d) = split /-/, sprintf ('%04d-%02d-%02d', Date::Calc::Today);
+	
+	my $dir = $r -> document_root . "/i/$$options{dir}";
+	
+	foreach my $subdir ('', $y, $m, $d) {
+		$dir .= "/$subdir" if $subdir;
+		-d $dir or mkdir $dir;
+	}
+
 	$filename =~ /[A-Za-z0-9]+$/;
-	my $path = "/i/$$options{dir}/" . time . "-$$.$&";
+	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . "-$$.$&";
 	
 	my $real_path = $r -> document_root . $path;
 	

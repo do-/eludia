@@ -15,7 +15,7 @@ use Time::HiRes 'time';
 use URI::Escape;
 use Storable;
 use Date::Calc;
- 
+
 use constant MP2 => (exists $ENV{MOD_PERL_API_VERSION} and $ENV{MOD_PERL_API_VERSION} >= 2 or $ENV{MOD_PERL} =~ m{mod_perl/1.99}); 
 
 BEGIN {
@@ -118,17 +118,19 @@ BEGIN {
 			eval {
 				-d $dir or mkdir $dir;
 				chmod 0777, $dir;
+				`chmod a+rwx $dir`;
 			};
 
 			warn $@ if $@;
 
 		}
 
+		`chmod a+rwx $docroot/i/upload`;
+
 	}
-	
 
 	if ($preconf -> {subset}) {
-		
+
 		my $fn = $PACKAGE_ROOT -> [0] . '/Model/Subsets/' . $preconf -> {subset} . '.txt';
 		
 		open I, $fn or die "Can't open $fn:$!\n";
