@@ -763,6 +763,59 @@ EOH
 
 ################################################################################
 
+sub draw_form_field_files {
+
+	my ($_SKIN, $options, $data) = @_;	
+		
+	my $attributes = dump_attributes ($options -> {attributes});
+	
+	my $tail = qq {
+		type="file"
+		size=$$options{size}
+		$attributes
+		onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
+		onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
+		onChange="is_dirty=true; $$options{onChange}"
+		tabindex=-1
+	};
+	
+	$tail =~ y{'}{"};
+	$tail =~ s{[\n\r\t]+}{ }gsm;
+	
+	$_REQUEST {__script} .= <<EOH;
+	
+		var file_field_$options->{name}_cnt = 1;
+		
+		function file_field_add_$options->{name} () {
+		
+			document.body.style.cursor = 'default';
+
+			var d = document.getElementById ('file_field_$options->{name}');
+
+			file_field_$options->{name}_cnt ++;
+
+			d.insertAdjacentHTML ('beforeEnd', '<br><input name="_$$options{name}_' + file_field_$options->{name}_cnt  + '" $tail>');
+		
+		}
+	
+EOH
+
+	return <<EOH;
+	
+		<input 
+			type="hidden"
+			name="__$$options{name}_file_field"
+			value="$options->{field}"
+		>
+		
+		<span id="file_field_$options->{name}"><input name="_$$options{name}_1" $tail>&nbsp;<a href="javaScript:file_field_add_$options->{name}();void(0);"><img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle></a></span>
+
+EOH
+
+}
+
+################################################################################
+
 sub draw_form_field_hidden {
 	my ($_SKIN, $options, $data) = @_;
 	return qq {<input type="hidden" name="_$$options{name}" value="$$options{value}">};

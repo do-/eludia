@@ -1929,4 +1929,68 @@ sub sql_select_ids {
 
 }
 
+################################################################################
+
+sub sql_upload_files {
+
+	my ($options) = @_;
+	
+	my @nos = ();
+	
+	foreach my $k (keys %_REQUEST) {
+
+		$k =~ /^_$options->{name}_(\d+)$/ or next;
+		
+		$_REQUEST {$k} or next;
+		
+		push @nos, $1;
+
+	}
+
+	@nos > 0 or return;
+
+	my ($table, $field) = split /\./, $_REQUEST {"__$options->{name}_file_field"};
+	
+	$options -> {id} ||= $_REQUEST {id};
+	
+	sql_do ("UPDATE $table SET fake = -1 WHERE $field = ?", $options -> {id});
+	
+	my $name = $options -> {name};
+	
+	my $id = $options -> {id};
+	
+	$options -> {table}            = $table;
+	$options -> {file_name_column} = 'file_name';
+	$options -> {size_column}      = 'file_size';
+	$options -> {type_column}      = 'file_type';
+	$options -> {path_column}      = 'file_path';
+	$options -> {body_column}      = 'file_body' if $model_update -> get_columns ($table) -> {file_body};
+
+	foreach my $no (sort {$a <=> $b} @nos) {
+		
+		$options -> {name} = "${name}_${no}";
+
+		$options -> {id} = sql_do_insert ($table => {
+
+			$field => $id,
+			fake   => 0,
+			
+		});
+		
+		sql_upload_file ($options);
+	
+	}
+
+	sql_select_loop ("SELECT * FROM $table WHERE $field = ? AND fake = -1", sub {
+	
+		my $path = $i -> {$options -> {path_column}} or return;
+		
+		unlink $r -> document_root . $path;
+	
+	}, $id);
+
+	sql_do ("DELETE FROM $table WHERE $field = ? AND fake = -1", $id);
+
+}
+
 1;

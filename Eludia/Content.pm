@@ -915,6 +915,8 @@ sub do_update_DEFAULT {
 	
 	sql_upload_file ($options);
 			
+	sql_upload_files ({name => 'file'});
+
 	my @fields = ();
 	
 	foreach my $key (keys %_REQUEST) {	
@@ -1463,6 +1465,40 @@ sub download_file {
 
 ################################################################################
 
+sub upload_files {
+
+	my ($options) = @_;
+		
+	my @nos = ();
+	
+	foreach my $k (keys %_REQUEST) {
+
+		$k =~ /^_$options->{name}_(\d+)$/ or next;
+		
+		$_REQUEST {$k} or next;
+		
+		push @nos, $1;
+
+	}
+
+	my @result = ();
+
+	my $name = $options -> {name};
+
+	foreach my $no (sort {$a <=> $b} @nos) {
+		
+		$options -> {name} = "${name}_${no}";
+	
+		push @result, upload_file ($options);
+	
+	}
+	
+	return \@result;
+
+}
+
+################################################################################
+
 sub upload_file {
 	
 	my ($options) = @_;
@@ -1491,18 +1527,20 @@ sub upload_file {
 
 		
 	}
-	
+
 	my ($y, $m, $d) = split /-/, sprintf ('%04d-%02d-%02d', Date::Calc::Today);
-	
+
+	$options -> {dir} ||= 'upload/images';
+
 	my $dir = $r -> document_root . "/i/$$options{dir}";
-	
+
 	foreach my $subdir ('', $y, $m, $d) {
 		$dir .= "/$subdir" if $subdir;
 		-d $dir or mkdir $dir;
 	}
 
 	$filename =~ /[A-Za-z0-9]+$/;
-	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . "-$$.$&";
+	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . '-' . (++ $_REQUEST {__files_cnt}) . "-$$.$&";
 	
 	my $real_path = $r -> document_root . $path;
 	

@@ -1591,6 +1591,21 @@ sub draw_form_field_file {
 
 ################################################################################
 
+sub draw_form_field_files {
+
+	my ($options, $data) = @_;
+	
+	$_REQUEST {__form_options} {enctype} = 'multipart/form-data';
+
+	$options -> {size} ||= 60;
+	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
+
+	return $_SKIN -> draw_form_field_files (@_);
+
+}
+
+################################################################################
+
 sub draw_form_field_hidden {
 	my ($options, $data) = @_;	
 	$options -> {value}   ||= $data -> {$options -> {name}};
@@ -1745,9 +1760,23 @@ sub draw_form_field_static {
 
 	my $static_value = '';
 	
+	if ($options -> {field} =~ /^(\w+)\.(\w+)$/) {
+			
+		$options -> {values} = [map {{
+			type   => 'static',
+			id     => $_ -> {id},
+			value  => $_ -> {file_name},
+			href   => "/?type=$1&id=$_->{id}&action=download",
+			target => 'invisible',
+		}} @{sql_select_all ("SELECT * FROM $1 WHERE fake = 0 AND $2 = ? ORDER BY id", $data -> {id})}];
+		
+		$value = [map {$_ -> {id}} @{$options -> {values}}];
+	
+	}
+	
 	if (ref $value eq ARRAY) {
 	
-		my %v = (map {$_ => 1} @$value);
+		my %v = (map {$_ => 1} @$value);		
 
 		foreach my $item (@{$options -> {values}}) {
 		
