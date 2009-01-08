@@ -18,7 +18,7 @@ sub _select_label {
 	
 	my $sql = $self -> {sql};
 	
-	$sql =~ s{WHERE.*}{WHERE id = ?}i;
+	$sql =~ s{WHERE.*}{WHERE id = ?}gism;
 	
 	my $h = &{"$self->{package}::sql_select_hash"} ($sql, $id);
 	
