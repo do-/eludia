@@ -1188,6 +1188,7 @@ sub draw_form_field_tree {
 		<td valign=top height="$options->{height}">
 		<script type="text/javascript">
 			var $name = new dTree ('$name');
+			$name._url_base = '';
 			var c = $name.config;
 			c.iconPath = '$_REQUEST{__static_url}/tree_';
 			c.useStatusText = false;
