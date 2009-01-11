@@ -976,6 +976,7 @@ for(my $i = $#items; $i >= 1; $i--) {
 	######################### Блок замен SQL синтаксиса #########################
 	$items[$i] =~ s/\bIFNULL(\(.*?\))/NULLIF\1/igsm;
 	$items[$i] =~ s/\bRAND(\(.*?\))/RANDOM\1/igsm;
+	$items[$i] =~ s/\b(?:OLD_)?PASSWORD(\(.*?\))/MD5\1/igsm;
 	$items[$i] =~ s/\bCONCAT\((.*?)\)/join('||',split(',',$1))/iegsm;
 	$items[$i] =~ s/\bSUBSTR\((.+?),(.+?),(.+?)\)/SUBSTRING\(\1,\2,\3\)/igsm;
 	$items[$i] =~ s/\bLEFT\((.+?),(.+?)\)/SUBSTRING\(\1,1,\2\)/igsm;
