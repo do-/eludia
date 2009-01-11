@@ -111,7 +111,7 @@ BEGIN {
 
 	if ($docroot) {
 
-		foreach my $subdir ('_skins', 'upload/dav_rw', 'upload/dav_ro', 'upload/images') {
+		foreach my $subdir ('_skins', 'upload', 'upload/dav_rw', 'upload/dav_ro', 'upload/images') {
 
 			my $dir = $docroot . $subdir;
 
@@ -125,7 +125,7 @@ BEGIN {
 
 		}
 
-		`chmod a+rwx $docroot/i/upload`;
+		`chmod a+rwx ${docroot}upload`;
 
 	}
 
