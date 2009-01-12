@@ -279,7 +279,7 @@ function typeAhead() { // borrowed from http://www.oreillynet.com/javascript/200
 function activate_link (href, target) {
 
 	if (href.indexOf ('javascript:') == 0) {
-		var code = href.substr (11).replace (/%20/g, ' ');
+		var code = unescape (href.substr (11));
 		eval (code);
 	}
 	else {
