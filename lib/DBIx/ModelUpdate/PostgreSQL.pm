@@ -355,6 +355,8 @@ sub create_index {
 	
 	my $concurrently = $self -> {db} -> {AutoCommit} ? 'CONCURRENTLY' : '';
 	
+	$index_def =~ s{(\w+)\((\d+)\)}{SUBSTRING($1 FROM 1 FOR $2)};
+	
 	$self -> do ("CREATE INDEX $concurrently ix_${table_name}_${index_name} ON $table_name ($index_def)");
 
 }
