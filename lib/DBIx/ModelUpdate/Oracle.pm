@@ -479,12 +479,8 @@ sub update_column {
 	
 	my $existing_type = $self -> get_canonic_type ($existing_column);
 
-#warn Dumper ($existing_column);
-
 	my $c_type = $self -> get_canonic_type ($c_definition, 1);
 	
-#warn Dumper ($c_definition);
-
 	if ($c_type =~ /(\w+)\s*\(\s*(\d+)\s*\,\s*(\d+)/) {
 		$c_type = $1;
 		$c_definition -> {COLUMN_SIZE} = $2;
@@ -508,10 +504,20 @@ sub update_column {
 	$name = $self -> unquote_table_name ($name);
 	my $q = $name =~ /^_/ ? $self -> {quote} : '';
 
-	my $sql = "ALTER TABLE $q$name$q MODIFY" . $self -> gen_column_definition ($c_name, $c_definition, $name,,$core_voc_replacement_use);
+	if ($existing_type =~ /varchar/i && $c_definition -> {TYPE_NAME} =~ /clob/i) {
 	
-	$self -> do ($sql);
-		
+		$self -> do ("ALTER TABLE $q$name$q ADD oracle_suxx CLOB DEFAULT empty_clob()");
+		$self -> do ("UPDATE $q$name$q SET oracle_suxx = $c_name");
+		$self -> do ("ALTER TABLE $q$name$q DROP COLUMN $c_name");
+		$self -> do ("ALTER TABLE $q$name$q RENAME COLUMN oracle_suxx TO $c_name");
+	
+	}
+	else {
+
+		$self -> do ("ALTER TABLE $q$name$q MODIFY" . $self -> gen_column_definition ($c_name, $c_definition, $name,,$core_voc_replacement_use));
+
+	}
+
 	$self -> do ("COMMENT ON COLUMN $q${name}$q.$c_name IS '$c_definition->{label}'");
 	
 	return 1;
