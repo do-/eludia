@@ -222,6 +222,11 @@ BEGIN {
 		delete $preconf -> {core_gzip};
 	};
 
+	eval 'use URI::Escape::XS qw(uri_escape uri_unescape)';
+	if ($@) {
+		eval 'URI::Escape';
+	};
+
 	if (MP2) {
 		eval "require JSON";
 		if ($@) {
