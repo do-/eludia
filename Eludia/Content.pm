@@ -377,7 +377,7 @@ sub require_fresh {
 			&& !exists $DB_MODEL -> {tables}
 		) {
 			my %tables = ();
-			tie %tables, Eludia::Tie::FileDumpHash, {path => $PACKAGE_ROOT -> [0] . '/Model'};
+			tie %tables, Eludia::Tie::FileDumpHash, {path => [map {"$_/Model"} @$PACKAGE_ROOT]};
 			$DB_MODEL -> {tables} = \%tables;
 			$DB_MODEL -> {splitted} = 1;
 		}
@@ -2648,12 +2648,23 @@ sub load_template {
 	
 	binmode T;
 	
-	while (<T>) {
-		s{\\}{\\\\}g;
-		s{\@([^\{])}{\\\@$1}g;
-		$template .= $_;
+	if ($template_name =~ /\.pm$/) {
+
+		while (<T>) {
+			$template .= $_;
+		}
+
 	}
-	
+	else {
+
+		while (<T>) {
+			s{\\}{\\\\}g;
+			s{\@([^\{])}{\\\@$1}g;
+			$template .= $_;
+		}
+
+	}
+
 	close (T);
 	
 	return $template;

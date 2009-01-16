@@ -5,8 +5,14 @@ sub TIEHASH  {
 	my ($package, $options) = @_;
 
 	$options -> {path} or die "Path not defined\n";
+	
+	ref $options -> {path} or $options -> {path} = [$options -> {path}];
+	
+	foreach my $dir (@{$options -> {path}}) {
 
-	-d $options -> {path} or die "Path $options->{path} not found\n";
+		-d $dir or die "$dir is not a directory\n";
+
+	}
 
 	bless $options, $package;
 
@@ -15,24 +21,22 @@ sub TIEHASH  {
 sub FETCH {
 
 	my ($options, $key) = @_;
+	
+	my $VAR1 = {};
 
-	my $src = '$VAR1 = {';
-	
-	my $path = $options -> {path} . '/' . $key . '.pm';
-	
-	-f $path or return {};
-	
-	open (I, $path) or die "Can't open '$path': $!\n";
-	while (<I>) { $src .= $_ };
-	close I;
+	foreach my $dir (@{$options -> {path}}) {
 
-	$src .= '}';
+		my $path = "${dir}/${key}.pm";
 
-	my $VAR1;
-	
-	eval $src;
-	
-	die $@ if $@;
+		-f $path or next;
+
+		open (I, $path) or die "Can't open '$path': $!\n";
+		eval "\$VAR1 = {@{[<I>]}}"; die $@ if $@;
+		close I;
+
+		last;
+
+	}
 	
 	return $VAR1;
 
