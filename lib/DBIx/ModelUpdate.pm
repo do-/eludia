@@ -165,14 +165,20 @@ my $time = __log_profilinig ($time, '   got existing_tables ');
 	foreach my $name (keys %$needed_tables) {
 
 		my $definition = $needed_tables -> {$name};
-		$definition -> {$name} = $name;
+		
+		$definition -> {name} = $name;
+		
+		unless ($definition -> {sql}) {
+		
+			foreach my $dc_name (keys %{$params {default_columns}}) {
 
-		foreach my $dc_name (keys %{$params {default_columns}}) {
-
-			my $dc_definition = $params {default_columns} -> {$dc_name};
-			$definition -> {columns} -> {$dc_name} ||= dclone ($dc_definition);
+				my $dc_definition = $params {default_columns} -> {$dc_name};
 			
-		};
+				$definition -> {columns} -> {$dc_name} ||= dclone ($dc_definition);
+
+			}
+		
+		}
 		
 		next if $params {no_checksums};
 
@@ -195,9 +201,25 @@ my $time = __log_profilinig ($time, '   got existing_tables ');
 my $time = __log_profilinig ($time, '   needed_tables filtered');
 		
 	foreach my $name (keys %$needed_tables) {
+			
+		my $definition = $needed_tables -> {$name};
+		
+		if ($definition -> {sql}) {
+		
+			$self -> assert_view ($name, $definition);
+			
+			delete $needed_tables -> {$name};
+			
+			next;
+			
+		}
+		
 		exists $existing_tables -> {$name} or next;
+
 		$existing_tables -> {$name} -> {columns} = $self -> get_columns ($name); 
+		
 		$existing_tables -> {$name} -> {keys}    = $self -> get_keys    ($name, $params {core_voc_replacement_use}); 
+		
 	} 
 
 my $time = __log_profilinig ($time, '   got keys & columns');

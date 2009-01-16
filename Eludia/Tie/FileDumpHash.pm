@@ -31,8 +31,11 @@ sub FETCH {
 		-f $path or next;
 
 		open (I, $path) or die "Can't open '$path': $!\n";
-		eval "\$VAR1 = {@{[<I>]}}"; die $@ if $@;
+		my $src = join '', (<I>);
+		eval "\$VAR1 = {$src}"; die $@ if $@;
 		close I;
+		
+		$VAR1 -> {_src} = $src;
 
 		last;
 

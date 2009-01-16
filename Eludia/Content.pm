@@ -462,10 +462,12 @@ print STDERR "[$$]  Altering $name...\n";
 							$src .= $_;
 						}
 						$src .= '}}';
-						
+												
 print STDERR "[$$]  $src\n";
 						
 						eval $src;
+
+						$db_model {tables} -> {$name} -> {src} = $src;
 						
 						if ($@) {
 							flock (SCRIPT, LOCK_UN);

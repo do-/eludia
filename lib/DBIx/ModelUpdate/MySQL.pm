@@ -257,4 +257,26 @@ sub create_index {
 	
 }
 
+################################################################################
+
+sub assert_view {
+
+	my ($self, $name, $definition) = @_;
+	
+	my $columns = '';
+
+	foreach my $line (split /\n/, $definition -> {src}) {
+
+		last if $line =~ /^[\#\s]*(keys|data|sql)\s*=\>/;
+		next if $line =~ /^\s*columns\s*=\>/;
+		$line =~ /^\s*(\w+)\s*=\>/ or next;
+		$columns .= ', ' if $columns;
+		$columns .= $1;
+
+	}
+
+	$self -> do ("CREATE OR REPLACE VIEW $name ($columns) AS $definition->{sql}");
+
+}
+
 1;
