@@ -1359,7 +1359,8 @@ sub sql_filters {
 		}
 
 		if ($field eq 'LIMIT') {
-			$limit = $values;			
+			$limit = $values;
+			ref $limit or $limit = [$limit];
 			next;
 		}
 
@@ -1714,14 +1715,16 @@ sub sql {
 
 				$from .= "\n $table->{join} $table->{name}";
 				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+				
+				$t -> {alias} ||= $t -> {name};
 
 				if ($table -> {filters}) {
 					my $sql_filters = sql_filters ($table -> {alias}, $table -> {filters});
-					$from .= " ON ($t->{name}.$referring_field_name = $table->{alias}.id $sql_filters->{where})";
+					$from .= " ON ($t->{alias}.$referring_field_name = $table->{alias}.id $sql_filters->{where})";
 					push @join_params, @{$sql_filters -> {params}};
 				}
 				else {
-					$from .= " ON $t->{name}.$referring_field_name = $table->{alias}.id";
+					$from .= " ON $t->{alias}.$referring_field_name = $table->{alias}.id";
 				}
 
 				$found = 1;
