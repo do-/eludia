@@ -1506,7 +1506,15 @@ sub sql {
 	my $_args = $preconf -> {core_debug_sql} ? [(), @_] : undef;
 
 	my ($root_table, @other) = @_;
-
+	
+	my $sub;
+	
+	if (@other > 0 && ref $other [-1] eq CODE) {
+	
+		$sub = pop @other;
+	
+	}
+	
 	$root_table =~ /(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
 
 	my ($root, $root_columns) = ($1, $2);
@@ -1803,6 +1811,25 @@ sub sql {
 		$records = [$result [0]];
 
 	}
+	elsif ($sub) {
+	
+		return sql_select_loop (
+			
+			$sql, 
+			
+			sub {
+			
+				sql_unwrap_record ($i, \@cols);
+				
+				&$sub ($i);
+				
+			}, 
+			
+			@params
+			
+		);
+	
+	}
 	else {
 	
 		if ($limit) {
@@ -1852,29 +1879,39 @@ sub sql {
 	}	
 
 	foreach my $record (@$records) {
-		
-		foreach my $key (keys %$record) {
-		
-			if ($key =~ /^gfcrelf(\d+)$/) {
-				
-				my $def = $cols [$1];
-				
-				$record -> {$def -> [0]} -> {$def -> [1]} = delete $record -> {$key};
-						
-			}
-			elsif ($key =~ /(\w+)\!(\w+)/) {
-
-				my ($t, $f) = ($1, $2);
-
-				$record -> {en_unplural ($t)} -> {$f} = delete $record -> {$key};
-
-			}
-					
-		}
+	
+		sql_unwrap_record ($record, \@cols);
 	
 	}
 	
 	return wantarray ? @result : $result [0];
+
+}
+
+################################################################################
+
+sub sql_unwrap_record {
+
+	my ($record, $cols) = @_;
+
+	foreach my $key (keys %$record) {
+		
+		if ($key =~ /^gfcrelf(\d+)$/) {
+				
+			my $def = $cols -> [$1];
+				
+			$record -> {$def -> [0]} -> {$def -> [1]} = delete $record -> {$key};
+					
+		}
+		elsif ($key =~ /(\w+)\!(\w+)/) {
+
+			my ($t, $f) = ($1, $2);
+
+			$record -> {en_unplural ($t)} -> {$f} = delete $record -> {$key};
+
+		}
+					
+	}
 
 }
 
