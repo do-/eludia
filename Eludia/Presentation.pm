@@ -355,7 +355,7 @@ sub check_href {
 
 	my ($options) = @_;
 	
-	return $options -> {href} if !ref $options -> {href} && ($options -> {href} =~ /\#$/ || $options -> {href} =~ /^(java|mailto|\/i\/)/);
+	return $options -> {href} if !ref $options -> {href} && ($options -> {href} =~ /\#$/ || $options -> {href} =~ /^(java|mailto|file|\/i\/)/);
 	
 	my %h = ();
 	
