@@ -739,6 +739,7 @@ EOH
 						delete_fakes () if $action eq 'create';
 
 						call_for_role ("do_${action}_$$page{type}");
+						call_for_role ("recalculate_$$page{type}");
 
 						flix_reindex_record ($_REQUEST {type}, $_REQUEST {id}) if $DB_MODEL -> {tables} -> {$_REQUEST {type}} && $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {flix_keys};
 

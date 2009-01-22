@@ -1041,7 +1041,7 @@ sub call_for_role {
 		
 	}
 	else {
-		$sub_name    =~ /^validate_/ 
+		$sub_name    =~ /^(valid|recalcul)ate_/
 		or $sub_name eq 'get_menu'
 		or $sub_name eq 'select_menu'
 		or warn "call_for_role: callback procedure not found: \$sub_name = $sub_name, \$role = $role \n";
