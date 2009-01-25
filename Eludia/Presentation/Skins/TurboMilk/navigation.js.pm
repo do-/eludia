@@ -190,7 +190,8 @@ function idx_tables (__scrollable_table_row) {
 
 	if (__scrollable_table_row < scrollable_rows.length) scrollable_table_row = __scrollable_table_row;
 	
-	if (scrollable_table_row > 0) scrollCellToVisibleTop (cell_on (), 1);
+//	if (scrollable_table_row > 0) 
+		scrollCellToVisibleTop (1);
 
 }
 
@@ -299,9 +300,9 @@ function td_on_click () {
 		scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className = scrollable_table_row_cell_old_style;
 	scrollable_table_row = new_scrollable_table_row;
 	scrollable_table_row_cell = new_scrollable_table_row_cell;
-	scrollable_table_row_cell_old_style = scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className;
-	scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className += ' row-cell-hilite';
-	focus_on_first_input (scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell]);
+//	scrollable_table_row_cell_old_style = scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className;
+//	scrollable_rows [scrollable_table_row].cells [scrollable_table_row_cell].className += ' row-cell-hilite';
+	focus_on_first_input (cell_on ());
 	return false;
 }
 
@@ -673,26 +674,32 @@ function setSelectOption (select, id, label) {
 };
 
 function blur_all_inputs () {
-	var inputs = document.body.getElementsByTagName ('input');
-	if (!inputs) return 1;
-	for (var i = 0; i < inputs.length; i++) inputs [i].blur ();
+
+	$('input').each (function () {
+		try {
+			this.blur  ();
+		}
+		catch (e) {}
+	});
+	
 	return 0;
+	
 }
 
 function focus_on_first_input (td) {
-	if (!td) return blur_all_inputs ();
-	var inputs = td.getElementsByTagName ('input');
-	var input  = null;
-	for (var i = 0; i < inputs.length; i++) {
-		if (inputs [i].type != 'hidden' && inputs [i].style.visibility != 'hidden') {
-			input = inputs [i];
-			break;
+
+	if (!td) return blur_all_inputs ();	
+
+	$('input', td).each (function () {
+		try {
+			this.focus  ();
+			this.select ();
 		}
-	}
-	if (input == null) return blur_all_inputs ();
-	input.focus  ();
-	input.select ();
+		catch (e) {}
+	});
+
 	return 0;
+
 }
 
 function blockEvent () {
@@ -718,8 +725,9 @@ function absTop (element) {
 
 }
 
-function scrollCellToVisibleTop (td, force_top) {
+function scrollCellToVisibleTop (force_top) {
 	
+	var td = get_cell ();
 	var tr = td.parentElement;	
 	if (tr.tagName == 'A') tr = tr.parentElement;
 	var table = tr.parentElement.parentElement;
@@ -747,6 +755,8 @@ function scrollCellToVisibleTop (td, force_top) {
 	if (div.scrollWidth > div.offsetWidth - 12) delta += 12;
 
 	if (delta > 0) div.scrollTop += delta;
+	
+	cell_on (td);
 
 }
 
@@ -782,7 +792,7 @@ function handle_basic_navigation_keys () {
 		) {
 			cell_off ();
 			scrollable_table_row ++;
-			scrollCellToVisibleTop (cell_on ());
+			scrollCellToVisibleTop ();
 			return blockEvent ();
 		}
 
@@ -794,7 +804,7 @@ function handle_basic_navigation_keys () {
 		) {
 			cell_off ();			
 			scrollable_table_row --;			
-			scrollCellToVisibleTop (cell_on ());
+			scrollCellToVisibleTop ();
 			return blockEvent ();
 		}
 		
@@ -845,56 +855,6 @@ function handle_basic_navigation_keys () {
 		}		
 		
 		if (q_is_focused || !document.toolbar_form || window.event.altKey || window.event.ctrlKey) return;
-
-/*		
-		if (
-			   (keyCode >= 65 && keyCode <= 90)
-			|| (keyCode >= 48 && keyCode <= 57)
-			|| (keyCode >= 96 && keyCode <= 105)
-			||  keyCode == 107 
-			||  keyCode == 109
-			||  keyCode == 186 
-			||  keyCode == 188 
-			||  keyCode == 190 
-			||  keyCode == 191
-			||  keyCode == 219
-			||  keyCode == 221
-			||  keyCode == 222
-		) {
-
-			var input = null;
-
-			var children = get_cell ().getElementsByTagName ('input');
-				
-			if (children != null && children.length > 0) {
-				input = children [0];
-			}
-			else if (document.toolbar_form) {
-				input = document.toolbar_form.q;
-			}
-
-			if (input == null) return;
-
-			input.value = '';
-			input.focus ();
-
-			return;
-
-		}
-		
-*/
-
-		if (keyCode == 32) {									// Space bar
-
-			var children = get_cell ().getElementsByTagName ('input');
-			
-			if (children != null && children.length > 0 && children [0].type == 'checkbox') {
-				children [0].focus ();
-				return false;
-			}
-
-		}		
-		
 		
 	}
 
@@ -907,52 +867,35 @@ function get_cell () {
 }
 
 function cell_on () {
+
 	var cell = get_cell ();
-	scrollable_table_row_cell_old_style = cell.className;
-	cell.className += ' row-cell-hilite';
+	
+	var c          = $(cell);
+	var css        = c.offset ($(document.body));
+	
+	css.top        --;
+	css.left       --;
+	css.width      = c.outerWidth ();
+	css.height     = c.outerHeight ();
+	css.visibility = 'visible';
+
+	$('#slider').css (css);
+	
+	$('#slider_').css ({	
+		left : css.left + css.width - 3,
+		top  : css.top  + css.height - 3,
+		'visibility': 'visible'
+	});
+
 	focus_on_first_input (cell);
+
 	return cell;
+
 }
 
 function cell_off () {
-	var cell = get_cell ();
-	if (scrollable_table_row_cell_old_style) 
-		cell.className = scrollable_table_row_cell_old_style;
-		
-	return cell;	
-}
-
-
-
-
-
-function get_msword_object () {
-
-	var word;
-
-	try {
-		word = GetObject ('', 'Word.Application');
-	} catch (e) {
-		word = new ActiveXObject ('Word.Application');
-	}
-
-	word.Visible = 1;
-
-	if (word.Documents.Count == 0) {
-		word.Documents.Add ();
-	}
-		
-	return word;
-
-}
-
-function msword_line (s) {
-	
-	ms_word.Selection.InsertAfter (s); 
-	ms_word.Selection.Start = ms_word.Selection.End; 
-	ms_word.Selection.InsertParagraph (); 
-	ms_word.Selection.Start = ms_word.Selection.End; 
-
+	$('#slider').css ('visibility', 'hidden');
+	$('#slider_').css ('visibility', 'hidden');
 }
 
 function actual_table_height (table, min_height, height, id_toolbar) {

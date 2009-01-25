@@ -2778,6 +2778,9 @@ EOH
 				id="body"
 				onbeforeunload="document.body.style.cursor = 'wait'"
 			>
+			
+<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:1; visibility:hidden' strokecolor="#555555" strokeweight="2px" filled="no" id="slider" />
+<v:rect style='position:absolute; left:200px; top:300px; height:6px; width:6px; z-index:1; visibility:hidden' strokecolor="#ffffff" strokeweight="1px" filled="yes" fillcolor="#555555" id="slider_" />
 				
 				<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
 					$$page{auth_toolbar}
@@ -2840,14 +2843,16 @@ EOS
 
 	
 	return <<EOH;
-		<html>		
+<html xmlns:v="urn:schemas-microsoft-com:vml">
 			<head>
 				<title>$$i18n{_page_title}</title>
 								
 				<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with $request_package; gateway_interface is $ENV{GATEWAY_INTERFACE}; $mod_perl is in use">
 				<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
 								
-				$_REQUEST{__head_links}							
+				$_REQUEST{__head_links}
+				
+				<style> v\\:* { behavior: url(#default#VML); }</style>
 
 				<script>
 					var every_second = [];
