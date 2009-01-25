@@ -2345,6 +2345,11 @@ sub draw_table_header_cell {
 sub draw_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
+	
+	$options -> {id} ||= '' . $options;
+	$options -> {id} =~ s{[\(\)]}{}g;
+	
+	$_REQUEST {__script} .= "; scrollable_table_ids.push ('$options->{id}');";
 
 	$options -> {height}     ||= 10000;
 	$options -> {min_height} ||= 200;
@@ -2367,7 +2372,7 @@ sub draw_table {
 			qq {<div class="table-container-x">} :
 			qq {<div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
 
-	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="scrollable_table" lpt=$$options{lpt}>\n};
+	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="$options->{id}">\n};
 
 	$html .= $options -> {header} if $options -> {header};
 
