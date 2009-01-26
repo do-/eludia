@@ -1490,7 +1490,12 @@ sub sql {
 
 		my ($records, $cnt, $portion) = sql ($root, @other);
 		
-		$data -> {$root} = $records;
+		if ($root =~ /^\w+/) {
+			$data -> {$&} = $records;
+		}
+		else {
+			die "Invalid table reference: '$root'\n";
+		}
 		
 		if ($portion) {
 		
