@@ -2,6 +2,7 @@
 	<head>
 		<title>Справочник</title>
 		<script>
+			var title_set = 0;
 			function _setSelectOption (id, label) {
 				window.returnValue.result = 'ok';				
 				window.returnValue.id = id;				
@@ -20,7 +21,10 @@
 		marginheight=0
 		scroll=no
 		onLoad="
-			if (dialogArguments.title) document.title = dialogArguments.title;
+			if (dialogArguments.title) {
+				document.title = dialogArguments.title;
+				title_set = 1;
+			}
 			window.returnValue = {'result': 'esc'};
 			open(dialogArguments.href, '_body_iframe');
 		"

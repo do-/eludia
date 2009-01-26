@@ -4411,7 +4411,9 @@ sub draw_page {
 	$page -> {body} = '';
 
 	my ($selector, $renderrer);
-	
+		
+	$_REQUEST {__on_load} .= "; if (!window.top.title_set) window.top.document.title = the_page_title;";
+
 	$_REQUEST {__invisibles} = ['invisible'];
 
 	my $validate_error = 1;
@@ -4520,6 +4522,9 @@ EOXL
 					$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
 					$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
 				};
+
+				$_REQUEST {__page_title} ||= $conf -> {page_title};
+				$_REQUEST {__script} .= ";  the_page_title = '$_REQUEST{__page_title}';";
 
 				$page -> {scan2names} = \@scan2names;
 

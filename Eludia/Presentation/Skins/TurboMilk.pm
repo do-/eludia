@@ -2507,7 +2507,7 @@ EOH
 	my $body = '';
 #	my $onKeyDown = '';	
 	my $body_scroll = 'yes';
-	
+
 	if (!$_USER -> {id}) {
 		
 		$body = $page -> {body};
