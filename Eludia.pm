@@ -118,14 +118,13 @@ BEGIN {
 			eval {
 				-d $dir or mkdir $dir;
 				chmod 0777, $dir;
-				`chmod a+rwx $dir`;
 			};
 
 			warn $@ if $@;
 
 		}
-
-		`chmod a+rwx ${docroot}upload`;
+		
+		chmod 0777, "${docroot}upload";
 
 	}
 
