@@ -782,7 +782,7 @@ function handle_basic_navigation_keys () {
 		return;
 	}
 
-	if (scrollable_table_ids.length && !scrollable_table_is_blocked && !suggest_is_visible) {
+	if (scrollable_rows.length && !scrollable_table_is_blocked && !suggest_is_visible) {
 
 		scrollable_table_row_length = scrollable_rows [scrollable_table_row].cells.length;
 
