@@ -756,7 +756,7 @@ function scrollCellToVisibleTop (force_top) {
 
 	if (delta > 0) div.scrollTop += delta;
 	
-	cell_on (td);
+	cell_on ();
 
 }
 
@@ -867,6 +867,8 @@ function get_cell () {
 }
 
 function cell_on () {
+
+	if (!scrollable_rows.length) return;
 
 	var cell = get_cell ();
 	

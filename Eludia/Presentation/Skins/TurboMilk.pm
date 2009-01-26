@@ -2745,11 +2745,17 @@ EOH
 		blockEvent ();
 EOHELP
 
+	$_REQUEST {__on_resize} = <<EOH;
+		cell_on ();
+EOH
+
 	foreach (keys %_REQUEST) {
 	
 		/^__on_(\w+)$/ or next;
 		
-		my $what = $1 eq 'load' ? 'window' : 'body';
+		my $what = $1 eq 'load' ? 'window' : 
+			   $1 eq 'resize' ? 'window' : 
+		'body';
 	
 		$_REQUEST {__head_links} .= <<EOH;
 			<script for="$what" event="on$1">
@@ -2859,7 +2865,7 @@ EOS
 					var clockSeparators = ['$_REQUEST{__clock_separator}', ' '];
 					var keepalive_url = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
 					$_REQUEST{__script}
-				</script>
+				</script>				
 
 				@{[ $_REQUEST{__help_url} ? <<EOHELP : '' ]}
 					<script for="body" event="onhelp">
