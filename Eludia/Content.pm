@@ -1574,8 +1574,6 @@ sub upload_file {
 sub add_vocabularies {
 
 	my ($item, @items) = @_;
-	
-#	map {$item -> {$_} = sql_select_vocabulary ($_)} @names;
 
 	while (@items) {
 	
@@ -1591,7 +1589,22 @@ sub add_vocabularies {
 		
 		$options -> {item} = $item;
 		
-		$item -> {$name} = sql_select_vocabulary ($options -> {name} || $name, $options);
+		my $table_name = $options -> {name} || $name;
+		
+		$item -> {$name} = sql_select_vocabulary ($table_name, $options);
+		
+		if ($options -> {ids}) {
+			
+			ref $options -> {ids} eq HASH or $options -> {ids} = {table => $options -> {ids}};
+			
+			$options -> {ids} -> {from}  ||= 'id_' . en_unplural ($_REQUEST {type});
+			$options -> {ids} -> {to}    ||= 'id_' . en_unplural ($table_name);
+			
+			$options -> {ids} -> {name}  ||= $options -> {ids} -> {to};
+		
+			$item -> {$options -> {ids} -> {name}} = [sql_select_col ("SELECT $options->{ids}->{to} FROM $options->{ids}->{table} WHERE fake = 0 AND $options->{ids}->{from} = ?", $item -> {id})];
+		
+		}
 		
 	}
 	
