@@ -2369,8 +2369,8 @@ sub draw_table {
 	$html .= $options -> {container} ?
 		$options -> {container} :
 			$options -> {no_scroll} ?
-			qq {<div class="table-container-x">} :
-			qq {<div class="table-container" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
+			qq {<div class="table-container-x" onScroll="cell_on()">} :
+			qq {<div class="table-container" onScroll="cell_on()" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
 
 	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="$options->{id}">\n};
 

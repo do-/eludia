@@ -24,6 +24,7 @@ var scrollable_table_row_id = 0;
 var scrollable_table_row_cell = 0;
 var scrollable_table_row_length = 0;
 var scrollable_table_row_cell_old_style = '';
+var last_cell_id = '';
 var is_dirty = false;					
 var scrollable_table_is_blocked = false;
 var q_is_focused = false;					
@@ -689,6 +690,8 @@ function blur_all_inputs () {
 function focus_on_first_input (td) {
 
 	if (!td) return blur_all_inputs ();	
+	
+	last_cell_id = td.uniqueID;
 
 	$('input', td).each (function () {
 		try {
@@ -895,15 +898,28 @@ function cell_on () {
 	var css          = c.offset ($(document.body));
 
 	css.width        = c.outerWidth ();
+
+	var overlap      = css.left - offset.left - 1;
+	if (overlap < 0) {
+		css.left  -= overlap;
+		css.width += overlap;
+	}
+
+	if (css.width < 1) return cell_off (cell);
+
+	var cell_right   = css.left + css.width;
+	var div_right    = offset.left + div.outerWidth () - 16;	
+	var overlap      = cell_right - div_right;
+	if (overlap > 0) css.width -= overlap;
+		
+	if (css.width < 1) return cell_off (cell);
+	
 	css.height       = c.outerHeight ();
 
 	if (
 		css.top < offset.top + thead.outerHeight ()
 		|| css.top + css.height + 16 > offset.top + div.outerHeight ()
-	) {
-		cell_off ();
-		return cell;
-	}
+	) return cell_off (cell);
 	
 	css.top        --;
 	css.left       --;
@@ -917,15 +933,16 @@ function cell_on () {
 		'visibility': 'visible'
 	});
 
-	focus_on_first_input (cell);
+	if (last_cell_id != cell.uniqueID) focus_on_first_input (cell);
 
 	return cell;
 
 }
 
-function cell_off () {
+function cell_off (cell) {
 	$('#slider').css ('visibility', 'hidden');
 	$('#slider_').css ('visibility', 'hidden');
+	return cell;
 }
 
 function actual_table_height (table, min_height, height, id_toolbar) {
