@@ -726,6 +726,12 @@ function absTop (element) {
 }
 
 function scrollCellToVisibleTop (force_top) {
+
+	// hiding the slider
+
+	cell_off ();
+
+	// selecting elements
 	
 	var td = get_cell ();
 	var tr = td.parentElement;	
@@ -733,15 +739,16 @@ function scrollCellToVisibleTop (force_top) {
 	var table = tr.parentElement.parentElement;
 	var thead = table.tHead;
 	var div   = table.parentElement;
+
+	// checking top border
 	
 	var delta = div.scrollTop - td.offsetTop + 2;
-
 	if (thead) delta += thead.offsetHeight;
-
 	if (delta > 0) div.scrollTop -= delta;
+	
+	// checking bottom border
 
 	var delta = td.offsetTop - div.scrollTop;
-	
 	if (force_top) {
 		if (thead) delta -= thead.offsetHeight;
 		delta -= td.offsetHeight;
@@ -750,12 +757,25 @@ function scrollCellToVisibleTop (force_top) {
 	else {
 		delta -= div.offsetHeight;
 		delta += td.offsetHeight;
+		if (div.scrollWidth > div.offsetWidth - 12) delta += 18;
 	}
-
-	if (div.scrollWidth > div.offsetWidth - 12) delta += 12;
-
 	if (delta > 0) div.scrollTop += delta;
 	
+	// checking left border
+
+	var delta = div.scrollLeft - td.offsetLeft + 2;
+	if (delta > 0) div.scrollLeft -= delta;
+
+	// checking right border
+
+	var delta = td.offsetLeft - div.scrollLeft;
+	delta -= div.offsetWidth;
+	delta += td.offsetWidth;
+	if (div.scrollHeight > div.offsetHeight - 12) delta += 18;
+	if (delta > 0) div.scrollLeft += delta;
+
+	// showing the slider
+
 	cell_on ();
 
 }
@@ -790,7 +810,6 @@ function handle_basic_navigation_keys () {
 			keyCode == 40 								// down arrow
 			&& scrollable_table_row < scrollable_rows.length - 1
 		) {
-			cell_off ();
 			scrollable_table_row ++;
 			scrollCellToVisibleTop ();
 			return blockEvent ();
@@ -802,7 +821,6 @@ function handle_basic_navigation_keys () {
 			keyCode == 38 								// up arrow
 			&& scrollable_table_row > 0
 		) {
-			cell_off ();			
 			scrollable_table_row --;			
 			scrollCellToVisibleTop ();
 			return blockEvent ();
@@ -816,9 +834,8 @@ function handle_basic_navigation_keys () {
 				&& scrollable_table_row_cell > 0 
 				&& scrollable_table_row_length > 1 
 			) {
-				cell_off ();			
 				scrollable_table_row_cell --;
-				cell_on ();
+				scrollCellToVisibleTop ();
 				return blockEvent ();
 			}
 
@@ -826,9 +843,8 @@ function handle_basic_navigation_keys () {
 				keyCode == 39 								// right arrow
 				&& scrollable_table_row_cell < scrollable_table_row_length - 1 
 			) {
-				cell_off ();			
 				scrollable_table_row_cell ++;
-				cell_on ();
+				scrollCellToVisibleTop ();
 				return blockEvent ();
 			}
 		
@@ -883,7 +899,7 @@ function cell_on () {
 
 	if (
 		css.top < offset.top + thead.outerHeight ()
-		|| css.top + css.height > offset.top + div.outerHeight ()
+		|| css.top + css.height + 16 > offset.top + div.outerHeight ()
 	) {
 		cell_off ();
 		return cell;
