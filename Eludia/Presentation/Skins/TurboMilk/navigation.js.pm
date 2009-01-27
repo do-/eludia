@@ -870,16 +870,28 @@ function cell_on () {
 
 	if (!scrollable_rows.length) return;
 
-	var cell = get_cell ();
-	
-	var c          = $(cell);
-	var css        = c.offset ($(document.body));
+	var cell         = get_cell ();
+	var c            = $(cell);
+	var table        = c.parents ('table').eq (0);
+	var div          = table.parents ('div').eq (0);
+	var offset       = div.offset ($(document.body));
+	var thead        = $('thead', table);
+	var css          = c.offset ($(document.body));
+
+	css.width        = c.outerWidth ();
+	css.height       = c.outerHeight ();
+
+	if (
+		css.top < offset.top + thead.outerHeight ()
+		|| css.top + css.height > offset.top + div.outerHeight ()
+	) {
+		cell_off ();
+		return cell;
+	}
 	
 	css.top        --;
 	css.left       --;
-	css.width      = c.outerWidth ();
-	css.height     = c.outerHeight ();
-	css.visibility = 'visible';
+	css.visibility = 'visible';	
 
 	$('#slider').css (css);
 	
