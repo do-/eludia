@@ -918,7 +918,7 @@ function cell_on () {
 
 	if (
 		css.top < offset.top + thead.outerHeight ()
-		|| css.top + css.height + 16 > offset.top + div.outerHeight ()
+		|| css.top + css.height + ((div.scrollHeight > div.offsetHeight - 12) ? 16 : 0) > offset.top + div.outerHeight ()
 	) return cell_off (cell);
 	
 	css.top        --;
