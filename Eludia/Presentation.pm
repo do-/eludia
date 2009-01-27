@@ -1966,7 +1966,7 @@ sub draw_form_field_radio {
 	foreach my $value (@{$options -> {values}}) {
 	
 		$value -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
-		$value -> {attributes} -> {checked} = 1 if $data -> {$options -> {name}} == $value -> {id};
+		$value -> {attributes} -> {checked} = 1 if ($data -> {$options -> {name}} == $value -> {id} && $data -> {$options -> {name}} =~ /^\d+$/) or $data -> {$options -> {name}} eq $value -> {id};
 					
 		if (defined $options -> {detail}) {
 
