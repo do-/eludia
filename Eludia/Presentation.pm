@@ -4465,13 +4465,17 @@ sub draw_page {
 
 				);
 
+				require_fresh ("${_PACKAGE}Content::__queries");
+				require_fresh ("${_PACKAGE}Presentation::__queries");
+
 				check___query ();
 
 				$_REQUEST {type} = $page -> {type} = '__queries';
 				$_REQUEST {id}   = $_REQUEST {id___query};
 
-				$selector  = 'get_item_of_' . $page -> {type};
-				$renderrer = 'draw_item_of_' . $page -> {type};
+				$selector  = 'get_item_of___queries';
+				$renderrer = 'draw_item_of___queries';
+	
 				$_REQUEST {__page_content}  = $page -> {content} = call_for_role ($selector, $page -> {content});
 
 				delete $_REQUEST {__skin};

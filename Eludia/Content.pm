@@ -2522,6 +2522,7 @@ sub require_config {
 ################################################################################
 
 sub get_item_of_ ($) {
+	$_[0] or die "get_item_of_: empty type";
 	require_content ($_[0]);
 	return call_for_role ('get_item_of_' . $_[0]);
 }
