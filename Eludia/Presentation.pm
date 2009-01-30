@@ -4483,7 +4483,7 @@ sub draw_page {
 
 			setup_skin ();
 
-			$_REQUEST {__after_xls} .= <<EOXL if ($_REQUEST{xls});
+			$_REQUEST {__after_xls} .= <<EOXL if ($_REQUEST{xls} && !$_REQUEST {__no_default_after_xls});
 <table border=0>
 	<tr><td>&nbsp;</td></tr>
 	<tr><td>$_USER->{label}</td></tr>

@@ -308,7 +308,7 @@ function open_popup_menu (type, level) {
 		hideSubMenus (level);
 	}
 
-	div.style.top  = event.y - 5 + document.body.scrollTop;
+	div.style.top  = event.clientY - 5 + document.body.scrollTop;
 	div.style.left = event.x - 5 + document.body.scrollLeft;
 	
 
@@ -672,7 +672,7 @@ function handle_basic_navigation_keys () {
 	var target = window.event.srcElement;
 
 	if (keyCode == 8) {
-		if (target.type && (target.type == 'text' || target.tagName == 'TEXTAREA'))
+		if (target.type && (target.type == 'text' || target.type == 'password' || target.tagName == 'TEXTAREA'))
 			return; 
 		 
 		typeAheadInfo.accumString = "";

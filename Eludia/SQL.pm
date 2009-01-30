@@ -917,7 +917,7 @@ sub sql_select_id {
 	}
 
 	$record -> {id} ||= sql_do_insert ($table, $values);
-
+	
 	sql_unlock ($table);
 	
 	if ($auto_commit) {
@@ -937,12 +937,10 @@ sub sql_select_id {
 
 sub sql_do_relink {
 
-	my ($table_name, $old_ids, $new_id, $options) = @_;
+	my ($table_name, $old_ids, $new_id, $options) = @_;			
 	
 	sql_weave_model ($DB_MODEL);
 
-#warn Dumper ($DB_MODEL -> {aliases} -> {$table_name});
-	
 	ref $old_ids eq ARRAY or $old_ids = [$old_ids];
 	
 	my $column_name = '';
@@ -960,12 +958,16 @@ sub sql_do_relink {
 		next if $key eq 'id_merged_to';
 		push @empty_fields, $key;
 	}
-		
-#warn Dumper ($DB_MODEL -> {tables} -> {$table_name});
-#warn Dumper ($DB_MODEL -> {tables} -> {$table_name} -> {references});
-
-	my $table__moved_links = $SQL_VERSION -> {driver} eq 'Oracle' ? "\U$conf->{systables}->{__moved_links}" : $conf->{systables}->{__moved_links};
-
+			
+	my $table__moved_links;		
+				
+	if ($SQL_VERSION -> {driver} eq 'Oracle') {
+		$table__moved_links = "\U$conf->{systables}->{__moved_links}";
+		$table_name = "\U$table_name\E";		 
+	} else {
+		$table__moved_links = $conf->{systables}->{__moved_links};
+	}
+	
 	foreach my $old_id (@$old_ids) {
 	
 warn "relink $table_name: $old_id -> $new_id";
@@ -1046,10 +1048,17 @@ sub sql_undo_relink {
 	sql_weave_model ($DB_MODEL);
 
 	my ($table_name, $old_ids) = @_;
-	
+
 	ref $old_ids eq ARRAY or $old_ids = [$old_ids];
 
-	my $table__moved_links = $SQL_VERSION -> {driver} eq 'Oracle' ? "\U$conf->{systables}->{__moved_links}" : $conf->{systables}->{__moved_links};
+	my $table__moved_links; 
+	
+	if ($SQL_VERSION -> {driver} eq 'Oracle') {
+		$table__moved_links = "\U$conf->{systables}->{__moved_links}";		
+		$table_name = "\U$table_name\E";		 
+	} else {
+		$table__moved_links = $conf->{systables}->{__moved_links};
+	}
 
 	foreach my $old_id (@$old_ids) {
 		
