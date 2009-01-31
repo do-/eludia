@@ -2101,7 +2101,7 @@ sub draw_text_cell {
 
 		if ($data -> {href}) {
 		
-			$html .= $data -> {href} eq $options -> {href} ? '<span style="cursor:hand">' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
+			$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
 		
 		}
 
@@ -2369,8 +2369,8 @@ sub draw_table {
 	$html .= $options -> {container} ?
 		$options -> {container} :
 			$options -> {no_scroll} ?
-			qq {<div class="table-container-x" onScroll="cell_on()">} :
-			qq {<div class="table-container" onScroll="cell_on()" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
+			qq {<div class="table-container-x" onScroll="tableSlider.cell_on()">} :
+			qq {<div class="table-container" onScroll="tableSlider.cell_on()" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
 
 	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="$options->{id}">\n};
 
@@ -2593,7 +2593,8 @@ EOJS
 		my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
 
 		$_REQUEST {__on_load} .= "check_menu_md5 ('$menu_md5');";
-		$_REQUEST {__on_load} .= "idx_tables ($_REQUEST{__scrollable_table_row});";
+		$_REQUEST {__on_load} .= "tableSlider.set_row ($_REQUEST{__scrollable_table_row});";
+		$_REQUEST {__on_load} .= "tableSlider.cell_on ();" if $_REQUEST {__scrollable_table_row};
 		$_REQUEST {__on_load} .= 'window.focus ();'                             if !$_REQUEST {__no_focus};
 		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');" if  $_REQUEST {__focused_input};
 		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " top.edit_mode = 1;" : " top.edit_mode = 0;"
@@ -2746,7 +2747,7 @@ EOH
 EOHELP
 
 	$_REQUEST {__on_resize} = <<EOH;
-		cell_on ();
+		tableSlider.cell_on ();
 EOH
 
 	foreach (keys %_REQUEST) {
@@ -2932,7 +2933,8 @@ sub handle_hotkey_href {
 		$r -> {confirm} ? 'window.confirm(' . js_escape ($r -> {confirm}) . ')' : 
 		'1';
 			
-	my $code = !$r -> {href} ? "activate_link_by_id ('$$r{data}')" : "nope ('$$r{href}&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');";
+#	my $code = !$r -> {href} ? "activate_link_by_id ('$$r{data}')" : "nope ('$$r{href}&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');";
+	my $code = !$r -> {href} ? "activate_link_by_id ('$$r{data}')" : "nope ('$$r{href}&__from_table=1&salt=' + Math.random (), '_self');";
 
 	$condition eq '1' or $code = "if ($condition) {$code}";
 	
