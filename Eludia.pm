@@ -193,7 +193,7 @@ BEGIN {
 
 	if ($ENV {GATEWAY_INTERFACE} eq 'CGI/') {
 		eval 'require CGI';
-		eval 'require Eludia::InternalRequest';
+		eval 'require Eludia::Content::HTTP::InternalRequest';
 	}
 	elsif ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} || $preconf -> {use_cgi}) {
 		eval 'require CGI';
