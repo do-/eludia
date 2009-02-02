@@ -5,6 +5,7 @@ use HTTP::Daemon;
 use HTTP::Status;
 
 use CGI;
+use Carp;
 use Data::Dumper;
 
 use File::Temp qw/:POSIX/;
@@ -12,7 +13,10 @@ use File::Temp qw/:POSIX/;
 use Time::HiRes 'time';
 
 no strict;
-no warnings;	
+no warnings;
+
+$SIG {__DIE__} = \&Carp::confess;
+
 
 ################################################################################
 
