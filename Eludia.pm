@@ -61,7 +61,7 @@ BEGIN {
 	unless ($preconf -> {core_path}) {
 		require Eludia::Apache;
 		require Eludia::Content;
-		require Eludia::Validators;
+		require Eludia::Content::Validators;
 		require Eludia::Presentation;
 		require Eludia::SQL;
 		require Eludia::Tie::IdsList;
