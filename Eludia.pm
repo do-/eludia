@@ -197,6 +197,7 @@ BEGIN {
 	}
 	elsif ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} || $preconf -> {use_cgi}) {
 		eval 'require CGI';
+		eval 'require Eludia::Content::HTTP::Request';
 	} 
 	else {
 	
@@ -206,7 +207,7 @@ BEGIN {
 			warn "$@\n";
 
 			eval 'require CGI';
-			eval 'require Eludia::Request';
+			eval 'require Eludia::Content::HTTP::Request';
 		}
 		
 	}
