@@ -59,20 +59,20 @@ BEGIN {
 	};
 	
 	unless ($preconf -> {core_path}) {
-		require Eludia::Apache;
 		require Eludia::Content;
 		require Eludia::Content::Validators;
 		require Eludia::Presentation;
 		require Eludia::SQL;
-		require Eludia::Tie::IdsList;
-		require Eludia::Tie::FileDumpHash;
-		require Eludia::Tie::Vocabulary;
+		require Eludia::Content::Tie::IdsList;
+		require Eludia::Content::Tie::FileDumpHash;
+		require Eludia::Content::Tie::Vocabulary;
 		$preconf -> {core_path} = __FILE__;
 	}
 	
-	if ($preconf -> {peer_servers})           { require Eludia::Content::Peering; }
-	if ($preconf -> {mail})                   { require Eludia::Content::Mail;    } else { eval 'sub send_mail {warn "Mail parameters are not set.\n" }'}
-	if ($conf    -> {core_store_table_order}) { require Eludia::Content::Queries; } else { eval 'sub fix___query {}; sub check___query {}'}
+	if ($preconf -> {peer_servers})           { require Eludia::Content::Peering;    }
+	if ($preconf -> {mail})                   { require Eludia::Content::Mail;       } else { eval 'sub send_mail {warn "Mail parameters are not set.\n" }'}
+	if ($conf    -> {core_store_table_order}) { require Eludia::Content::Queries;    } else { eval 'sub fix___query {}; sub check___query {}'}
+	if ($preconf -> {ldap} -> {ntlm})         { require Eludia::Content::Auth::NTLM; } else { eval 'sub check_auth {}'}
 
 	$| = 1;
 

@@ -4680,4 +4680,291 @@ sub dialog_open {
 
 }
 
+################################################################################
+
+sub out_html {
+
+	my ($options, $html) = @_;
+
+	$html or return;
+	
+	return if $_REQUEST {__response_sent};
+
+	my $time = time;
+
+	$_REQUEST {__out_html_time} = $time;  
+
+	if ($conf -> {core_sweep_spaces}) {
+		$html =~ s{^\s+}{}gsm;
+		$html =~ s{[ \t]+}{ }g;
+	}
+
+	unless ($preconf -> {core_no_morons}) {
+		$html =~ s{window\.open}{nope}gsm;
+	}
+	
+	if ($] > 5.007) {
+		require Encode;
+		$html = Encode::encode ('windows-1252', $html);
+	}
+
+	if ($_REQUEST {__response_started}) {
+		print $html;
+		return;
+	}
+
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+
+	$r -> content_type ($_REQUEST {__content_type});
+	$r -> headers_out -> {'X-Powered-By'} = 'Eludia/' . $Eludia::VERSION;
+
+	$preconf -> {core_mtu} ||= 1500;
+	
+	if (
+		($conf -> {core_gzip} or $preconf -> {core_gzip}) &&
+		400 + length $html > $preconf -> {core_mtu} &&
+		($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/)
+	) {
+		
+		$r -> content_encoding ('gzip');
+		
+		unless ($_REQUEST {__is_gzipped}) {
+			
+			my $time = time;
+			my $old_size = length $html;
+			
+			my $z;
+			my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
+			$x -> deflate ($html, $z) ;
+			$x -> flush ($z) ;
+			$html = "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $html);
+			$_REQUEST {__is_gzipped} = 1;
+			
+			my $new_size = length $html;
+
+			my $ratio = int (10000 * ($old_size - $new_size) / $old_size) / 100;
+			
+			__log_profilinig ($time, " <gzip: $old_size -> $new_size, $ratio%>");
+
+		}
+	}
+
+	$r -> headers_out -> {'Content-Length'} = length $html;
+
+	if ($preconf -> {core_auth_cookie}) {
+
+		set_cookie (
+			-name    =>  'sid',
+			-value   =>  $_REQUEST {sid} || 0,
+			-expires =>  $preconf -> {core_auth_cookie},
+			-path    =>  '/',
+		)
+
+	}
+
+
+	$r -> send_http_header unless (MP2);
+
+	$r -> header_only && !MP2 or print $html;
+	
+	$_REQUEST {__response_sent} = 1;
+
+	__log_profilinig ($time, ' <out_html: ' . (length $html) . ' bytes>');
+	
+	return '';
+	
+}
+
+#################################################################################
+
+sub setup_json {
+
+	our $_JSON = $INC {'JSON.pm'} ? JSON -> new -> latin1 (1) : JSON::XS -> new -> latin1 (1);
+
+}
+
+#################################################################################
+
+sub setup_skin {
+
+	my ($options) = @_;
+
+	eval {$_REQUEST {__skin} ||= get_skin_name ()};
+
+	unless ($_REQUEST {__skin}) {
+
+		if ($_REQUEST {xls}) {
+			$_REQUEST {__skin} = 'XL';
+		}
+		elsif (($_REQUEST {__dump} || $_REQUEST {__d}) && $preconf -> {core_show_dump}) {
+			$_REQUEST {__skin} = 'Dumper';
+		}
+		elsif ($_REQUEST {__proto}) {
+			$_REQUEST {__skin} = 'XMLProto';
+		}
+		elsif ($_REQUEST {__x}) {
+			$_REQUEST {__skin} = 'XMLDumper';
+		}
+		elsif ($_REQUEST {__windows_ce}) {
+			$_REQUEST {__skin} = 'WinCE';
+		}
+
+	}
+
+	$_REQUEST {__skin} ||= $preconf -> {core_skin};
+	$_REQUEST {__skin} ||= 'Classic';
+
+	$_REQUEST {__skin}   = 'TurboMilk_Gecko' if $_REQUEST {__skin} =~ /^TurboMilk/ && $r -> headers_in -> {'User-Agent'} =~ /Gecko/;
+
+	$options -> {kind} = 'error' if $_REQUEST {error};
+
+	if ($options -> {kind} && !$_REQUEST {__response_started}) {
+		eval "require Eludia::Presentation::Skins::$_REQUEST{__skin}";
+		$_REQUEST {__skin} = (${"Eludia::Presentation::Skins::$_REQUEST{__skin}::replacement"} -> {$options->{kind}} ||= $_REQUEST {__skin});
+	}
+
+	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
+	eval "require $_SKIN";
+	warn $@ if $@;
+
+	our $_JS_SKIN = "Eludia::Presentation::Skins::JS";
+	eval "require $_JS_SKIN";
+	warn $@ if $@;
+	
+	$_REQUEST {__static_site} = '';
+	
+	if ($preconf -> {static_site}) {
+	
+		if (ref $preconf -> {static_site} eq CODE) {
+		
+			$_REQUEST {__static_site} = &{$preconf -> {static_site}} ();
+		
+		}
+		elsif (! ref $preconf -> {static_site}) {
+
+			$_REQUEST {__static_site} = $preconf -> {static_site};
+
+		}
+		else {
+		
+			die "Invalid \$preconf -> {static_site}: " . Dumper ($preconf -> {static_site});
+		
+		}
+			
+	}	
+	
+	$_REQUEST {__static_url}  = '/i/_skins/' . $_REQUEST {__skin};
+	$_REQUEST {__static_salt} = $_REQUEST {sid} || rand ();
+
+	foreach my $package ($_SKIN, $_JS_SKIN) {
+
+		attach_globals ($_PACKAGE => $package, qw(
+			_PACKAGE
+			_REQUEST
+			_COOKIES
+			_USER
+			_QUERY
+			SQL_VERSION
+			conf
+			preconf
+			r
+			i18n
+			create_url
+			_SUBSET
+			_JSON
+			tree_sort
+			adjust_esc
+			out_html
+		));
+
+	}
+
+	$_SKIN -> {options} ||= $_SKIN -> options;
+
+	$_REQUEST {__no_navigation} ||= $_SKIN -> {options} -> {no_navigation};
+	
+	check_static_files ();
+	
+	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
+
+	setup_json ();
+
+}
+
+#################################################################################
+
+sub check_static_files {
+
+	return if $_SKIN -> {static_ok};
+	return if $_SKIN -> {options} -> {no_presentation};
+	return if $_SKIN -> {options} -> {no_static};
+	$r or return;
+	
+	my $skin_root = $r -> document_root () . $_REQUEST {__static_url};
+		
+	-d $skin_root or mkdir $skin_root or die "Can't create $skin_root: $!";
+
+	my $static_path = $_SKIN -> static_path;
+
+	opendir (DIR, $static_path) || die "can't opendir $static_path: $!";
+	my @files = readdir (DIR);
+	closedir DIR;
+
+	foreach my $src (@files) {
+		$src =~ /\.pm$/ or next;
+		File::Copy::copy ($static_path . $src, $skin_root . '/' . $`) or die "can't copy ${static_path}${src} to ${skin_root}/${`}: $!";
+	}
+	
+	my $favicon = $r -> document_root () . '/i/favicon.ico';
+	
+	if (-f $favicon) {
+		
+		File::Copy::copy ($favicon, $skin_root . '/favicon.ico') or die "can't copy favicon.ico: $!";
+		
+	}
+
+	my $over_root = $r -> document_root () . '/i/skins/' . $_REQUEST {__skin};
+
+	if (-d $over_root) {
+
+		opendir (DIR, $over_root) || die "can't opendir $over_root: $!";
+		my @files = readdir (DIR);
+		closedir DIR;
+
+		foreach my $src (@files) {
+			$src =~ /\w\.\w+$/ or next;
+			File::Copy::copy ($over_root . '/' . $src,  $skin_root . '/' . $src) or die "can't copy $src: $!";
+		}
+
+	}
+		
+ 	if ($conf -> {core_gzip} or $preconf -> {core_gzip}) {
+
+		foreach my $fn ('navigation.js', 'eludia.css', 'navigation_setup.js') {
+		
+			if (-f "$skin_root/$fn") {
+			
+				my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
+	
+				open (IN, "$skin_root/$fn");
+				my $js = join ('', <IN>);
+				close IN;
+	
+				open (OUT, ">$skin_root/$fn.gz");
+				binmode (OUT);
+	
+				my $z;
+				$x -> deflate ($js, $z) ;
+				$x -> flush ($z) ;
+	
+				print OUT "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $js);
+				close OUT;
+			}
+		}
+	}
+
+	$_SKIN -> {static_ok} = 1;
+
+}
+
 1;

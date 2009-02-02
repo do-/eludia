@@ -3,6 +3,14 @@ Eludia.pm
 Eludia/Apache.pm
 Eludia/Auth/NTLM.pm
 Eludia/Content.pm
+Eludia/Content/Auth/NTLM.pm
+Eludia/Content/Mail.pm
+Eludia/Content/Peering.pm
+Eludia/Content/Queries.pm
+Eludia/Content/Tie/FileDumpHash.pm
+Eludia/Content/Tie/IdsList.pm
+Eludia/Content/Tie/Vocabulary.pm
+Eludia/Content/Validators.pm
 Eludia/Flix.pm
 Eludia/IIS.pm
 Eludia/InternalRequest.pm
@@ -512,6 +520,7 @@ Eludia/Presentation/Skins/WinCE/w_20_1.gif.pm
 Eludia/Presentation/Skins/XL.pm
 Eludia/Presentation/Skins/XMLDumper.pm
 Eludia/Presentation/Skins/XMLProto.pm
+Eludia/Queries.pm
 Eludia/Request.pm
 Eludia/Request/Upload.pm
 Eludia/Server.pm
