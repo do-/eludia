@@ -243,24 +243,6 @@ my $time = time;
 
 	my %defs = (
 	
-		$conf -> {systables} -> {__queries} => {
-		
-			columns => {
-				id          => {TYPE_NAME => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake        => {TYPE_NAME => 'bigint'},
-				id_user     => {TYPE_NAME => 'int', COLUMN_DEF => 0, NULLABLE => 0},
-				type        => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				dump        => {TYPE_NAME => 'longtext'},
-				label       => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				order_context     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			},
-
-			keys => {
-				ix => 'id_user,type,label',
-			},
-
-		},
-
 		$conf -> {systables} -> {__defaults} => {
 		
 			columns => {
@@ -405,6 +387,26 @@ my $time = time;
 	
 	);
 	
+	
+	$conf -> {core_store_table_order} and $defs {$conf -> {systables} -> {__queries}} = {
+
+		columns => {
+			id          => {TYPE_NAME => 'int', _EXTRA => 'auto_increment', _PK => 1},
+			parent      => {TYPE_NAME => 'int'},
+			fake        => {TYPE_NAME => 'bigint'},
+			id_user     => {TYPE_NAME => 'int', COLUMN_DEF => 0, NULLABLE => 0},
+			type        => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+			dump        => {TYPE_NAME => 'longtext'},
+			label       => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+			order_context     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+		},
+
+		keys => {
+			ix => 'id_user,type,label',
+		},
+
+	};
+		
 	$conf -> {core_cache_html} and $defs {$conf -> {systables} -> {cache_html}} = {
 
 		columns => {

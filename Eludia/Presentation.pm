@@ -2607,17 +2607,18 @@ sub draw_toolbar {
 			
 			if ($button -> {hidden} && !$_REQUEST {__edit_query}) {
 			
-				push @{$_ORDER {$button -> {order}} -> {filters}}, $button 
-					if $conf -> {core_store_table_order} && $button -> {order};
+				push @{$_ORDER {$button -> {order}} -> {filters}}, $button if $conf -> {core_store_table_order} && $button -> {order};
 
 				next;
 				
 			}
 			
 			$button -> {type} ||= 'button';
+
 			$_REQUEST {__toolbar_inputs} .= "$button->{name}," if $button -> {type} =~ /^input_/;
-			$button -> {html} = &{'draw_toolbar_' . $button -> {type}} ($button, $options -> {_list})
-				unless $_REQUEST {__edit_query};
+
+			$button -> {html} = &{'draw_toolbar_' . $button -> {type}} ($button, $options -> {_list}) unless $_REQUEST {__edit_query};
+
 		}
 		else {
 			$button = {html => $button, type => 'input_raw'};
@@ -2625,8 +2626,7 @@ sub draw_toolbar {
 
 		push @{$options -> {buttons}}, $button;
 		
-		push @{$_ORDER {$button -> {order}} -> {filters}}, $button 
-				if $conf -> {core_store_table_order} && $button -> {order};
+		push @{$_ORDER {$button -> {order}} -> {filters}}, $button if $conf -> {core_store_table_order} && $button -> {order};
 
 	};
 
@@ -3262,7 +3262,6 @@ sub js_set_select_option {
 sub draw_cells {
 
 	my $options = (ref $_[0] eq HASH) ? shift () : {};
-
 	
 	if ($options -> {gantt}) {
 
@@ -3304,17 +3303,17 @@ sub draw_cells {
 	if ($conf -> {core_store_table_order} && !$_REQUEST {__no_order}) {
 
 		for (my $i = 0; $i < @_COLUMNS; $i ++) {
+		
 			my $h = $_COLUMNS [$i];
 	
 			ref $h eq HASH or next;
 			
-            last
-                    if $i >= @{$_ [0]};
+			last if $i >= @{$_ [0]};
 			
-			$_ [0] [$i] = {label => $_ [0] [$i]}
-				unless ref $_ [0] [$i] eq HASH; 
-			
+			$_ [0] [$i] = {label => $_ [0] [$i]} unless ref $_ [0] [$i] eq HASH; 
+
 			$_ [0] [$i] -> {ord} ||= $_COLUMNS [$i] -> {ord}; 
+
 			$_ [0] [$i] -> {hidden} ||= $_COLUMNS [$i] -> {hidden}; 
 	
 		}
@@ -3324,6 +3323,7 @@ sub draw_cells {
 	my @cells = order_cells (@{$_[0]});
 
 	if ($_REQUEST {select} && !$options -> {select_label}) {
+	
 		my @cell;
 
 		if ((@cell = grep {$_ -> {select_href}} @{$_[0]}) == 0) {
@@ -4677,118 +4677,6 @@ sub dialog_open {
 	$_REQUEST {__script} .= "var dialog_open_$options->{id} = " . $_JSON -> encode ($arg) . ";\n";
 
 	return $_SKIN -> dialog_open ($arg, $options);
-
-}
-
-################################################################################
-
-sub draw_item_of___queries {
-
-	my ($data) = @_;
-	
- 	my @fields = (
- 	
- 		{
- 			type  => 'banner',
- 			label => 'Столбцы и фильтры',
- 		},
- 		
- 	);
-
-	$_REQUEST {__form_checkboxes_custom} = '';
-	
-	foreach my $o (@_ORDER) {
-	
-		next
-                        if $o -> {__hidden};
-
-		my @f = (
-			{
-				label 		=> $o -> {title} || $o -> {label},
-				type  		=> 'hgroup',
-				nobr		=> 1,
-				cell_width	=> '50%',
-				items => [
-					{
-						label => 'показ',
-						size  => 2,
-						name  => $o -> {order} . '_ord',
-						value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord},
-					},
-					{
-						label => 'сортировка',
-						size  => 2,
-						name  => $o -> {order} . '_sort',
-						value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {sort},
-					},
-					{
-						name  => $o -> {order} . '_desc',
-						type  => 'select',
-						values => [{id => 1, label => 'убывание'}],
-						empty => 'возрастание',
-						value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {desc},
-					},
-				],
-			},
-		);
-
-		foreach my $filter (@{$o -> {filters}}) {
- 		
-			my %f = %$filter;
-			
-			$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
-			
-			delete $f {type} 
-				if $f {type} eq 'input_text';
-
-			$f {type} =~ s/^input_//;
-			
-			if ($f {type} eq 'select') {
-				$f {values} = [grep {$_ -> {id} != -1} @{$f {values}}];
-				if ($f {other}) {
-				        $f {name} = '_' . $f {name}; 
-						$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
-				}
-			} elsif ($f {type} eq 'date') {
-				$f {no_read_only}	= 1;
-			} elsif ($f {type} eq 'checkbox') {
-				$f {checked} = $f {value};
-			} elsif ($f {type} eq 'radio') {
-				$data -> {"filter_$f{name}"} = $f {value}; 
-			} elsif ($f {type} eq 'checkboxes') {
-				$data -> {'filter_' . $f {name}} = [split /,/, $f {value}];
-				delete $f {value}; 
-				
-				$_REQUEST {__form_checkboxes_custom} .= ',' . join ',', map {"_$f{name}_$_->{id}"} @{$f {values}};
-			}
-			
-
-			$f {name} = 'filter_' . $f {name};
-			
-			push @f, \%f;
-
-		}
-
-		push @fields, \@f;
-
-	}
-
-	return draw_form ({
-			keep_params	=> ['__form_checkboxes_custom'],
-			right_buttons => [
-				{
-					icon	=> 'delete',
-					label	=> 'Очистить фильтры',
-					href	=> "javaScript:document.form.action.value='drop_filters'; document.form.fireEvent('onsubmit'); document.form.submit()",
-					target	=> 'invisible',
-					keep_esc	=> 1,
-					off		=> $_REQUEST {__read_only},
-				},
-			],
-		}, 
-		$data, 
-		\@fields
-	);
 
 }
 

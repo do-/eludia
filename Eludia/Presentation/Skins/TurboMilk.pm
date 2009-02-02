@@ -2786,7 +2786,7 @@ EOH
 				onbeforeunload="document.body.style.cursor = 'wait'"
 			>
 			
-<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#555555" strokeweight="2px" filled="no" id="slider" />
+<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#888888" strokeweight="2px" filled="no" id="slider" />
 <v:rect style='position:absolute; left:200px; top:300px; height:6px; width:6px; z-index:0; visibility:hidden' strokecolor="#ffffff" strokeweight="1px" filled="yes" fillcolor="#555555" id="slider_" />
 				
 				<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
