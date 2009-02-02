@@ -742,8 +742,6 @@ EOH
 						
 						call_for_role ("recalculate_$$page{type}") if $action ne 'create';
 
-						flix_reindex_record ($_REQUEST {type}, $_REQUEST {id}) if $DB_MODEL -> {tables} -> {$_REQUEST {type}} && $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {flix_keys};
-
 						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_USER -> {id}) {
 							set_cookie (
 								-name    =>  'user_login',
@@ -1157,8 +1155,6 @@ sub pub_handler {
 			eval { $db -> {AutoCommit} = 0; };
 
 			call_for_role ("do_${action}_${type}");
-
-			flix_reindex_record ($_REQUEST {type}, $_REQUEST {id}) if $DB_MODEL -> {tables} -> {$_REQUEST {type}} && $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {flix_keys};
 
 			eval {
 				$db -> commit unless $_REQUEST {error};
