@@ -2886,6 +2886,7 @@ sub handler {
 	my $parms = ref $apr eq 'Apache2::Request' ? $apr -> param : $apr -> parms;
 	undef %_REQUEST;
 	our %_REQUEST = %{$parms};
+	our $_QUERY = undef;
 
 	$_REQUEST {__skin} = '';
 	our $_REQUEST_TO_INHERIT = undef;

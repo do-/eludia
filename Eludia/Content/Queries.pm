@@ -87,6 +87,10 @@ sub fix___query {
 
 sub check___query {
 
+	return if $_QUERY;
+
+	$_REQUEST {__allow_check___query} or return;
+
 	$conf -> {core_store_table_order} or return;	
 
 	$_REQUEST {__order_context} ||= '';
@@ -109,6 +113,28 @@ sub check___query {
 		return;
 		
 	}
+	
+	our $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => , $_REQUEST {id___query});
+	
+	if ($_QUERY -> {label}) {
+	
+		$_REQUEST {id___query} = sql_select_id (
+	
+			$conf -> {systables} -> {__queries} => {
+	
+				id_user		=> $_USER -> {id},
+				type		=> $_QUERY -> {type},
+				label		=> '',
+				order_context	=> $_REQUEST {__order_context},
+				-fake		=> 0,
+				-dump		=> $_QUERY -> {dump},
+				-parent		=> $_QUERY -> {id},
+	
+			}, ['id_user', 'type', 'label', 'order_context'],
+	
+		);
+	
+	}
 
 	our $_QUERY = sql_select_hash (<<EOS, $_REQUEST {id___query});
 		SELECT
@@ -129,63 +155,55 @@ EOS
 	
 	my $filters = $_QUERY -> {content} -> {filters};
 
-	if ($_QUERY -> {label}) {
-	
-		foreach my $key (keys %$filters) {
+	foreach my $key (keys %$filters) {
+
+		next if exists $_REQUEST {$key};
 		
-			$_REQUEST {$key} = $filters -> {$key};
+		if ($key =~ /^id_/) {
+		
+			$filters -> {$key} = $_USER -> {id} if $filters -> {$key} eq '$_USER -> {id}';
 		
 		}
-
-		$_REQUEST {id___query} = sql_select_id (		
-
-			$conf -> {systables} -> {__queries} => {
-
-				fake          => 0,
-				-parent       => $_QUERY -> {id},
-				id_user       => $_USER -> {id},
-				type          => $_REQUEST {type},
-				-dump         => $_QUERY -> {dump},
-				label         => '',
-				order_context => $_REQUEST {__order_context},
-
-			}, ['id_user', 'type', 'label', 'order_context'],
-
-		)
-
-	}
-	else {
-
-		foreach my $key (keys %$filters) {
-
-			exists $_REQUEST {$key} or $_REQUEST {$key} = $filters -> {$key};
- 
-		}
-
-		my $is_exists_any_column;
-				
-		foreach my $key (keys %{$_QUERY -> {content} -> {columns}}) {
+		elsif ($key =~ /^dt_/ && $filters -> {$key} =~ /[^\d\.]/) {
 		
-			if ($_QUERY -> {content} -> {columns} -> {$key} -> {ord}) {
-				$is_exists_any_column = 1;
-				last;
-			}
-
-		}
-		
-		unless ($is_exists_any_column) {
-
-			sql_do ("DELETE FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
-
-			delete $_REQUEST {id___query};
+			my ($y, $m, $d) = Date::Calc::Today;
 			
-			$_QUERY = undef;
-
-		}
+			my $q = sprintf ('%02d', $m - (($m - 1) % 3));
+			my $m = sprintf ('%02d', $m);
+			my $d = sprintf ('%02d', $d);
 		
-
+			$filters -> {$key} =~ s{דדדד}{$y};
+			$filters -> {$key} =~ s{לל}{$m};
+			$filters -> {$key} =~ s{ךג}{$q};
+			$filters -> {$key} =~ s{הה}{$d};
+		
+		}
+						
+		$_REQUEST {$key} = $filters -> {$key};
+ 
 	}
 
+	my $is_there_some_columns;
+				
+	foreach my $key (keys %{$_QUERY -> {content} -> {columns}}) {
+		
+		if ($_QUERY -> {content} -> {columns} -> {$key} -> {ord}) {
+			$is_there_some_columns = 1;
+			last;
+		}
+
+	}
+		
+	unless ($is_there_some_columns) {
+
+		sql_do ("DELETE FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
+
+		delete $_REQUEST {id___query};
+			
+		$_QUERY = undef;
+
+	}
+		
 }
 
 ################################################################################

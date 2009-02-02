@@ -1519,6 +1519,8 @@ sub sql {
 	
 	}
 	
+	check___query ();
+	
 	my $_args = $preconf -> {core_debug_sql} ? [(), @_] : undef;
 
 	my ($root_table, @other) = @_;

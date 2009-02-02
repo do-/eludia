@@ -4433,8 +4433,12 @@ sub draw_page {
 		
 		undef $page -> {content};		
 		
+		$_REQUEST {__allow_check___query} = 1;
+		
 		eval { $page -> {content} = call_for_role ($selector)} unless $_REQUEST {__only_menu};
 				
+		$_REQUEST {__allow_check___query} = 0;
+
 		if ($@) {
 			warn $@;
 			$_REQUEST {error} = $@;
@@ -4450,7 +4454,11 @@ sub draw_page {
 
 				setup_skin ();
 
+				$_REQUEST {__allow_check___query} = 1;
+
 				call_for_role ($renderrer, $page -> {content});
+
+				$_REQUEST {__allow_check___query} = 0;
 
 				$_REQUEST {__dump} = $is_dump;
 
