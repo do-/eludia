@@ -62,7 +62,6 @@ BEGIN {
 		require Eludia::Apache;
 		require Eludia::Content;
 		require Eludia::Validators;
-		require Eludia::InternalRequest;
 		require Eludia::Presentation;
 		require Eludia::SQL;
 		require Eludia::Tie::IdsList;
@@ -199,9 +198,15 @@ BEGIN {
 		require DBIx::ModelUpdate;
 	}
 
-	if ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} || $preconf -> {use_cgi}) {
+	if ($ENV {GATEWAY_INTERFACE} eq 'CGI/') {
 		eval 'require CGI';
-	} else {
+		eval 'require Eludia::InternalRequest';
+	}
+	elsif ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} || $preconf -> {use_cgi}) {
+		eval 'require CGI';
+	} 
+	else {
+	
 		eval "require ${Apache}::Request";
 
 		if ($@) {
@@ -210,6 +215,7 @@ BEGIN {
 			eval 'require CGI';
 			eval 'require Eludia::Request';
 		}
+		
 	}
 
 	eval 'require Eludia::Request' unless ($INC {"${Apache}/Request.pm"});
