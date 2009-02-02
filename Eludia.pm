@@ -70,9 +70,9 @@ BEGIN {
 		$preconf -> {core_path} = __FILE__;
 	}
 	
-	if ($preconf -> {peer_servers})           { require Eludia::Peering;       }
-	if ($preconf -> {mail})                   { require Eludia::Content::Mail; } else { eval 'sub send_mail {warn "Mail parameters are not set.\n" }'}
-	if ($conf    -> {core_store_table_order}) { require Eludia::Queries;       } else { eval 'sub fix___query {}; sub check___query {}'}
+	if ($preconf -> {peer_servers})           { require Eludia::Content::Peering; }
+	if ($preconf -> {mail})                   { require Eludia::Content::Mail;    } else { eval 'sub send_mail {warn "Mail parameters are not set.\n" }'}
+	if ($conf    -> {core_store_table_order}) { require Eludia::Content::Queries; } else { eval 'sub fix___query {}; sub check___query {}'}
 
 	$| = 1;
 
