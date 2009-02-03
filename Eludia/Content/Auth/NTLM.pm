@@ -20,9 +20,7 @@ sub _ntlm_check_auth {
 	return if  $preconf -> {ldap} -> {ntlm} ne 'samba';
 		
 	my $authorization = $r -> headers_in -> {'Authorization'} or return _ntlm_kick ('NTLM');
-		
-	require Authen::NTLM::Tools;
-	
+			
 	my $m = Authen::NTLM::Tools::parse_ntlm_message ($authorization);
 	
 	return _ntlm_kick () if $m -> {type} == 1;
@@ -104,10 +102,6 @@ warn Dumper ($_REQUEST {sid});
 
 package Authen::NTLM::Tools;
 
-use 5.008008;
-use strict;
-use warnings;
-
 use MIME::Base64;
 use Unicode::String;
 use Digest::MD5 qw (md5);
@@ -116,37 +110,7 @@ use Digest::MD4;
 use Crypt::DES;
 use Math::BigInt;
 
-no strict 'refs';
-
-require Exporter;
-use AutoLoader qw(AUTOLOAD);
-
-our @ISA = qw(Exporter);
-
-our %EXPORT_TAGS = ( 'all' => [ qw(
-	_bin_2_hex
-	_hex_2_bin
-	_ntlm_7_to_8
-	parse_ntlm_message
-	parse_ntlm_message_flags
-	parse_ntlm_message_buffers
-	parse_ntlm_message_1
-	parse_ntlm_message_2
-	parse_ntlm_message_3
-	_ntlm_hash
-	_ntlm_v2_hash
-	_ntlm_check_v2
-	_ntlm_check_session2
-	_ntlm_check
-) ] );
-
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
-
-our @EXPORT = qw ();
-
-our $VERSION = '0.01';
-
-no strict 'subs';
+no strict;
 
 ################################################################################
 
