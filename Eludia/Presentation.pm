@@ -130,7 +130,7 @@ sub trunc_string {
 	
 	$s = decode_entities ($s) if $has_ext_chars;
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-	$s = encode_entities ($s, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·¹»") if $has_ext_chars;
+	$s = encode_entities ($s, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars;
 	
 	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
 

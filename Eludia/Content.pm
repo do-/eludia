@@ -2945,7 +2945,7 @@ sub handler {
 			$_REQUEST {$key} =~ s{^\s+}{};
 			$_REQUEST {$key} =~ s{\s+$}{};
 			
-			my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·¹»");
+			my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
 			
 			if ($_REQUEST {$key} ne $encoded) {
 				$_REQUEST {$key} = $encoded;
