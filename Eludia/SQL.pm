@@ -1939,9 +1939,10 @@ sub en_unplural {
 
 	my ($s) = @_;
 
-	if ($s =~ /status$/)            { return $s }
-	if ($s =~ /goods$/)             { return $s }
-	if ($s =~ s{ives$}{ife})            { return $s }
+	if ($s =~ /status$/)                { return $s }
+	if ($s =~ /goods$/)                 { return $s }
+	if ($s =~ s{tives$}{tive})          { return $s }
+	if ($s =~ s{ives$}{ife})            { return $s } # life, wife, knife
 	if ($s =~ s{ves$}{f})               { return $s }
 	if ($s =~ s{ies$}{y})               { return $s }
 	if ($s =~ s{(\.)ice$}{$1ouse})      { return $s }
@@ -2112,8 +2113,6 @@ sub new {
 	$driver_name =~ s{\s}{}gsm;
 		
 	$package_name .= "::$driver_name";
-
-	eval "require $package_name";
 	
 	die $@ if $@;
 
@@ -2126,7 +2125,6 @@ sub new {
 	}, $package_name);
 	
 	if ($driver_name eq 'SQLite') {
-		require DBIx::MySQLite;
 		DBIx::MySQLite::add_all_functions ($db);
 	}
 
