@@ -444,3 +444,5 @@ sub draw_item_of___queries {
 	);
 
 }
+
+1;

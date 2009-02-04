@@ -524,7 +524,6 @@ Eludia/SQL/MySQL.pm
 Eludia/SQL/Oracle.pm
 Eludia/SQL/PostgreSQL.pm
 Eludia/SQL/SQLite.pm
-lib/Authen/NTLM/Tools.pm
 lib/DBIx/ModelUpdate.pm
 lib/DBIx/ModelUpdate/MicrosoftSQLServer.pm
 lib/DBIx/ModelUpdate/MySQL.pm

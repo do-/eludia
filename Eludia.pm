@@ -71,7 +71,6 @@ BEGIN {
 	
 	if ($preconf -> {peer_servers})           { require Eludia::Content::Peering;    }
 	if ($preconf -> {mail})                   { require Eludia::Content::Mail;       } else { eval 'sub send_mail {warn "Mail parameters are not set.\n" }'}
-	if ($conf    -> {core_store_table_order}) { require Eludia::Content::Queries;    } else { eval 'sub fix___query {}; sub check___query {}'}
 	if ($preconf -> {ldap} -> {ntlm})         { require Eludia::Content::Auth::NTLM; } else { eval 'sub check_auth {}'}
 
 	$| = 1;
@@ -248,6 +247,8 @@ BEGIN {
 	}
 	
 	require_config ();
+
+	if ($conf    -> {core_store_table_order}) { require Eludia::Content::Queries;    } else { eval 'sub fix___query {}; sub check___query {}'}
 
 	if ($preconf -> {core_load_modules}) {
 	
