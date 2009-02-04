@@ -1,9 +1,32 @@
 no strict;
 no warnings;
 
+
+################################################################################
+
+sub _sqlite_format_datetime {
+	$_[0] =~ s{\%i}{\%M};
+	return POSIX::strftime (@_);
+}
+
+################################################################################
+
+sub _sqlite_parse_datetime {
+	my ($s) = @_;	
+	$s =~ s{[^\d]}{}g;	
+	$s =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/;	
+	return ($6, $5, $4 , $3, $2 - 1, $1 - 1900);
+}
+
 ################################################################################
 
 sub sql_version {
+
+	$db -> func ('REPLACE', 3, sub { my ($s, $from, $to) = @_; $s =~ s{$from}{$to}g; return $s }, 'create_function');
+	$db -> func ('CONCAT',  2, sub { return $_[0] . $_[1] }, 'create_function');
+	$db -> func ('CONCAT',  3, sub { return $_[0] . $_[1] . $_[2] }, 'create_function');
+	$db -> func ('NOW',     0, sub { return POSIX::strftime ('%Y-%m-%d %H:%M:%S', localtime (time)) }, 'create_function');	
+	$db -> func ('DATE_FORMAT', 2, sub { return _sqlite_format_datetime ($_[1], _sqlite_parse_datetime ($_[0])) }, 'create_function');	
 
 	my $version = {	string => 'SQLite ' . sql_select_scalar ('SELECT sqlite_version(*)') };
 	
