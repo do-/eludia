@@ -186,10 +186,6 @@ BEGIN {
 
 	print STDERR " Loading $pkg_banner...";
 	
-	unless ($preconf -> {no_model_update}) {
-		require DBIx::ModelUpdate;
-	}
-
 	if ($ENV {GATEWAY_INTERFACE} eq 'CGI/') {
 		eval 'require CGI';
 		eval 'require Eludia::Content::HTTP::InternalRequest';
