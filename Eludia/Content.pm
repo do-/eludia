@@ -731,255 +731,6 @@ sub add_totals {
 	
 }
 
-################################################################################
-
-sub do_add_DEFAULT {
-	
-	sql_do_relink ($_REQUEST {type}, [get_ids ('clone')] => $_REQUEST {id});
-
-}
-
-################################################################################
-
-sub do_kill_DEFAULT {
-	
-	foreach my $id (get_ids ($_REQUEST {type})) {
-	
-		sql_do ("UPDATE $_REQUEST{type} SET fake = -1 WHERE id = ?", $id);
-		
-	}
-
-}
-
-################################################################################
-
-sub do_unkill_DEFAULT {
-	
-	my $extra = '';
-	$extra .= ', is_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {is_merged_to};
-	$extra .= ', id_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {id_merged_to};
-	
-	foreach my $id (get_ids ($_REQUEST {type})) {
-	
-		sql_do ("UPDATE $_REQUEST{type} SET fake = 0 $extra WHERE id = ?", $id);
-
-		sql_undo_relink ($_REQUEST{type}, $_REQUEST{id});
-		
-	}
-
-	$_REQUEST {fake} = 0;
-
-}
-
-################################################################################
-
-#sub validate_kill_DEFAULT {
-#	get_ids ($_REQUEST {type}) > 0 or return 'Вы не выделили ни одной строки';
-#	return undef;
-#}
-
-################################################################################
-
-#sub validate_unkill_DEFAULT {
-#	get_ids ($_REQUEST {type}) > 0 or return 'Вы не выделили ни одной строки';
-#	return undef;
-#}
-
-################################################################################
-
-sub do_create_DEFAULT {
-
-	my $default_values = {};
-	
-	my $def = $DB_MODEL -> {tables} -> {$_REQUEST {type}};
-	
-	my $parent;
-	
-	if ($def && $def -> {columns}) {
-	
-		my $columns = $def -> {columns};
-	
-		foreach my $key (keys %$columns) {
-		
-			my $column = $columns -> {$key};
-			
-			$column -> {parent} or next;
-			
-			$parent = {column => $key, columns => []};
-			
-			unless ($column -> {ref}) {
-			
-				foreach my $table ($db -> tables ('', $self -> {schema}, '%', "'TABLE'")) {
-					
-					$table = $model_update -> unquote_table_name ($table);
-				
-					$table =~ s{\W}{}g;
-														
-					$key eq 'id_' . en_unplural ($table) or next;
-					
-					$parent -> {table} = $table;
-					
-					last;
-					
-				}
-				
-				$parent -> {table} or die "Parent table not found for $key\n";
-				
-				my $parent_def = $DB_MODEL -> {tables} -> {$parent -> {table}} or die "Table definition not found for $parent->{table}\n";
-					
-				my $parent_columns = $parent_def -> {columns} or die "Columns definition not found for $parent->{table}\n";
-				
-				foreach my $key (%$parent_columns) {
-				
-					$key =~ /^id_/ or next;
-					
-					$columns -> {$key} or next;
-					
-					push @{$parent -> {columns}}, $key;
-				
-				}
-			
-			}
-			
-			last;
-		
-		}
-	
-	}
-
-	my $columns = $model_update -> get_columns ($_REQUEST {type});
-	
-	if ($parent && !$_REQUEST {"_$parent->{column}"}) {
-	
-		my $href = sql_select_scalar (
-			"SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?",
-			$_REQUEST {sid}, 
-			$_REQUEST {__last_last_query_string}
-		);
-		
-		if ($href =~ /\bid\=(\d+)/) {
-		
-			my $data = sql ($parent -> {table} => [[id => $1]]);
-
-			$_REQUEST {"_$parent->{column}"} ||= $data -> {id};
-			
-			foreach my $key (@{$parent -> {columns}}) {
-			
-				exists $_REQUEST {"_$key"} or $_REQUEST {"_$key"} = $data -> {$key};
-			
-			}
-
-		}
-	
-	}
-	
-	while (my ($k, $v) = each %_REQUEST) {
-	
-		if ($k =~ /^_/) {
-		
-			exists $columns -> {$'} or next;
-			$default_values -> {$'} = $v;
-		
-		}
-		else {
-		
-			next if $k =~ /^(s(id|alt|elect)|type|action|lang|error)$/;
-			exists $columns -> {$k} or next; 
-			$default_values -> {$k} = $v;
-		
-		}				
-	
-	}
-		
-	$_REQUEST {id} = sql_do_insert ($_REQUEST {type}, $default_values);
-
-}
-
-################################################################################
-
-sub do_update_DEFAULT {
-
-	my $type = $_[0] || $_REQUEST {type};
-
-	my $columns = $model_update -> get_columns ($type);
-
-	my $options = {
-		name => 'file',
-		dir => 'upload/images',
-		table => $type,
-		file_name_column => 'file_name',
-		size_column => 'file_size',
-		type_column => 'file_type',
-		path_column => 'file_path',
-	};
-	
-	$options -> {body_column} = 'file_body' if $columns -> {file_body};
-	
-	sql_upload_file ($options);
-			
-	sql_upload_files ({name => 'file'});
-
-	my @fields = ();
-	
-	foreach my $key (keys %_REQUEST) {	
-		$key =~ /^_/ or next;
-		$columns -> {$'} or next;
-		push @fields, $';
-	}
-	
-	@fields > 0 or return;
-
-	sql_do_update ($type, \@fields, {id => $_[1] || $_REQUEST {id}});
-
-}
-
-################################################################################
-
-sub do_download_DEFAULT {
-
-	my $name = $_REQUEST {_name} || 'file';
-	
-	my $options = {
-		name => $name,
-		dir => 'upload/images',
-		table => $_REQUEST{type},
-		file_name_column => $name . '_name',
-		size_column => $name . '_size',
-		type_column => $name . '_type',
-		path_column => $name . '_path',
-	};
-	
-	$options -> {body_column} = $name . '_body' if $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {$name . '_body'};
-
-	sql_download_file ($options);
-
-}
-
-################################################################################
-
-sub do_delete_DEFAULT {
-
-	sql_do ("UPDATE $_REQUEST{type} SET fake = -1 WHERE id = ?", $_REQUEST{id});
-
-}
-
-################################################################################
-
-sub do_undelete_DEFAULT {
-
-	my ($table_name, $id) = @_;
-	$table_name ||= $_REQUEST {type};
-	$id ||= $_REQUEST {id};
-
-	my $extra = '';
-	$extra .= ', is_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {is_merged_to};
-	$extra .= ', id_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {id_merged_to};
-
-	sql_do ("UPDATE $table_name SET fake = 0 $extra WHERE id = ?", $id);
-
-	sql_undo_relink ($table_name, $id);
-
-}
 
 ################################################################################
 
@@ -999,13 +750,13 @@ sub call_for_role {
 
 	my $default_sub_name = $sub_name;
 	$default_sub_name =~ s{_$_REQUEST{type}$}{_DEFAULT};
-	
+
 	my $name_to_call = 
-		exists $$_PACKAGE {$full_sub_name}    ? $full_sub_name : 
+		exists $$_PACKAGE {$full_sub_name}    ? $full_sub_name :
 		exists $$_PACKAGE {$sub_name}         ? $sub_name : 
 		exists $$_PACKAGE {$default_sub_name} ? $default_sub_name : 
 		undef;
-	
+
 	if ($name_to_call) {
 	
 		$_REQUEST {__benchmarks_selected} = 0;
@@ -1380,14 +1131,6 @@ sub delete_file {
 
 ################################################################################
 
-sub select__boot {
-
-	return {};
-
-}
-
-################################################################################
-
 sub download_file_header {
 
 	my ($options) = @_;	
@@ -1629,301 +1372,6 @@ sub set_cookie {
 		$r -> headers_out -> {'Set-Cookie'} = $cookie -> as_string;
 	}
 
-}
-
-################################################################################
-
-sub select__logout {
-	sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session = ?", $_REQUEST {sid}) if ($conf -> {core_auto_esc} == 2);
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id = ?", $_REQUEST {sid});
-	redirect ('/?type=logon', {kind => 'js', target => '_top', label => $i18n -> {session_terminated}});
-}
-
-################################################################################
-
-sub do_flush__benchmarks {
-
-	sql_do ("TRUNCATE TABLE $conf->{systables}->{__benchmarks}");
-	
-}
-
-################################################################################
-
-sub select__benchmarks {
-
-	my $q = '%' . $_REQUEST {q} . '%';
-
-	my $start = $_REQUEST {start} + 0;
-	
-	my $order = order ('mean DESC',
-		ms            => 'ms  DESC',
-		cnt           => 'cnt DESC',
-		selected      => 'selected  DESC',
-		mean_selected => 'mean_selected DESC',
-		label         => 'label',
-	);
-
-	my ($_benchmarks, $cnt)= sql_select_all_cnt (<<EOS, $q);
-		SELECT
-			*
-		FROM
-			$conf->{systables}->{__benchmarks}
-		WHERE
-			(label LIKE ?)
-		ORDER BY
-			$order
-		LIMIT
-			$start, $$conf{portion}
-EOS
-
-	return {
-		_benchmarks => $_benchmarks,
-		cnt => $cnt,
-		portion => $$conf{portion},
-	};
-	
-}
-
-################################################################################
-
-sub select__sql_benchmarks {
-
-	my $q = '%' . $_REQUEST {q} . '%';
-
-	my $start = $_REQUEST {start} + 0;
-	
-	my $order = order ('mean DESC',
-		ms            => 'ms  DESC',
-		cnt           => 'cnt DESC',
-		selected      => 'selected  DESC',
-		mean_selected => 'mean_selected DESC',
-		label         => 'label',
-	);
-
-	my ($_benchmarks, $cnt)= sql_select_all_cnt (<<EOS, $q);
-		SELECT
-			*
-		FROM
-			$conf->{systables}->{__sql_benchmarks}
-		WHERE
-			(label LIKE ?)
-		ORDER BY
-			$order
-		LIMIT
-			$start, $$conf{portion}
-EOS
-
-	return {
-		_benchmarks => $_benchmarks,
-		cnt => $cnt,
-		portion => $$conf{portion},
-	};
-	
-}
-################################################################################
-
-sub select__info {
-	
-	my $os_name = $^O;
-	if ($^O eq 'MSWin32') {		
-		eval {
-			require Win32;
-			my ($string, $major, $minor, $build, $id) = Win32::GetOSVersion ();
-			my $imm = $id . $major . $minor;
-			$os_name = 'MS Windows ' . (
-				$imm == 140 ? '95 ' :
-				$imm == 1410 ? '98 ' :
-				$imm == 1490 ? 'Me ' :
-				$imm == 2351 ? 'NT 3.51 ' :
-				$imm == 240 ? 'NT 4.0 ' :
-				$imm == 250 ? '2000 ' :
-				$imm == 251 ? 'XP ' :
-				$imm == 252 ? '2003 ' :
-				$imm == 260 ? 'Vista ' :
-				"Unknown ($id . $major . $minor)"
-			) . $string . " Build $build"
-		};	
-	} else {
-		eval {
-			require POSIX;
-			my ($sysname, $nodename, $release, $version, $machine) = POSIX::uname();
-			my $imm = $id . $major . $minor;
-			$os_name = "$sysname $release [$machine]";
-		};	
-	}
-		
-	my @z = grep {/\d/} split /(\d)/, $Eludia::VERSION;
-		
-	require Config;
-	
-	return [
-	
-		{
-			id    => 'OS',
-			label => $os_name,
-		},
-
-		{
-			
-			id    => 'WEB server',
-			label => $ENV {SERVER_SOFTWARE},
-		
-		},	
-
-		{
-			id    => 'Perl',
-			label => (sprintf "%vd", $^V),
-		},
-	
-		{
-			id    => 'DBMS',
-			label => $SQL_VERSION -> {string},
-		},
-
-		{
-			id    => 'DB interface',
-			label => 'DBI ' . $DBI::VERSION,
-			path  => $INC {'DBI.pm'},
-		},
-
-		{
-			id    => 'DB driver',
-			label => 'DBD::' . $db -> {Driver} -> {Name} . ' ' . ${'DBD::' . $db -> {Driver} -> {Name} . '::VERSION'},
-			path  => $INC {'DBD/' . $SQL_VERSION -> {driver} . '.pm'},
-		},
-		
-		{			
-			id    => 'Parameters module',
-			label => ref $apr,
-		},
-		
-		{			
-			id    => 'Engine',
-			label => "Eludia $Eludia_VERSION",
-			path  => $preconf -> {core_path},
-		},
-
-		{			
-			id    => 'Application package',
-			label => ($_PACKAGE =~ /(\w+)/),
-			path  => join ',', @$PACKAGE_ROOT,
-		},
-
-	]	
-
-}
-
-################################################################################
-
-sub select__sync {
-
-	$_REQUEST {last_host } ||= 'http://' . $preconf -> {master_server} -> {host};
-	$_REQUEST {last_login} ||= $_USER -> {login};
-
-	my @tables = ();
-	
-	foreach ($db -> tables) {
-
-		s{.*?(\w+)\W*$}{$1}gsm;
-		
-		push @tables, {
-			id    => $_,
-			label => $_,
-		},
-
-	}
-	
-	return {
-		
-		tables => \@tables,
-		table  => [],
-		
-	};
-
-}
-
-################################################################################
-
-sub do_update__sync {
-
-	$_REQUEST {_host} =~ /^http/ or $_REQUEST {_host} = 'http://' . $_REQUEST {_host};
-	
-	lrt_start ();
-	
-	foreach (keys %_REQUEST) {
-	
-		/^_table_/ or next;
-	
-		download_table_data ({
-			host     => $_REQUEST {_host},
-			login    => $_REQUEST {_login},
-			password => $_REQUEST {_password},
-			table    => $',
-		});
-	
-	}
-		
-	lrt_finish ('Done.', "/?type=_sync&sid=$_REQUEST{sid}&last_login=$_REQUEST{_login}&last_host=$_REQUEST{_host}");
-
-}
-
-################################################################################
-
-sub get_item_of__object_info {
-
-	$_REQUEST {__read_only} = 1;
-
-	my $item = sql_select_hash ($_REQUEST {object_type});
-	
-	my $log_alias = 'log_' . $$;
-	
-	sql_do ("HANDLER $conf->{systables}->{log} OPEN AS $log_alias");
-
-	$item -> {last_update} = sql_select_hash ("HANDLER $log_alias READ \`PRIMARY\` LAST WHERE type = '$_REQUEST{object_type}' AND action = 'update' AND id_object = '$_REQUEST{id}'");
-	$item -> {last_update} -> {dt} =~ s{(\d+)\-?(\d+)\-?(\d+)}{$3.$2.$1};
-	$item -> {last_update} -> {user} = sql_select_hash ($conf -> {systables} -> {users}, $item -> {last_update} -> {id_user});
-
-	$item -> {last_create} = sql_select_hash ("HANDLER $log_alias READ \`PRIMARY\` PREV WHERE type = '$_REQUEST{object_type}' AND action = 'create' AND id_object = '$_REQUEST{id}'");
-	$item -> {last_create} -> {dt} =~ s{(\d+)\-?(\d+)\-?(\d+)}{$3.$2.$1};
-	$item -> {last_create} -> {user} = sql_select_hash ($conf -> {systables} -> {users}, $item -> {last_create} -> {id_user});
-	
-	sql_do ("HANDLER $log_alias CLOSE");
-
-	my @references = ();
-	
-	foreach my $reference ( sort {$a -> {table_name} . ' ' . $a -> {name} cmp $b -> {table_name} . ' ' . $b -> {name}} @{$DB_MODEL -> {tables} -> {$_REQUEST {object_type}} -> {references}}) {
-
-		my $where = ' WHERE fake = 0 AND ' . $reference -> {name};
-
-		if ($reference -> {TYPE_NAME} =~ /int/) {
-			$where .= " = $_REQUEST{id}";
-		}
-		else {
-			$where .= " LIKE '\%,$_REQUEST{id},\%'";
-		}
-		
-		my $cnt = sql_select_scalar ("SELECT COUNT(*) FROM " . $reference -> {table_name} . $where) or next;
-
-		push @references, {
-			table_name => $reference -> {table_name},
-			name => $reference -> {name},
-			cnt => $cnt,
-		};
-		
-		if ($_REQUEST {table_name} eq $reference -> {table_name} && $_REQUEST {name} eq $reference -> {name}) {
-
-			my $start = $_REQUEST {start} + 0;
-
-			($item -> {records}, $item -> {cnt}) = sql_select_all_cnt ('SELECT * FROM ' . $reference -> {table_name} . $where . " ORDER BY id DESC LIMIT $start, 15");
-
-		}
-		
-	}
-	
-	$item -> {references} = \@references;
-		
-	return $item;
-	
 }
 
 ################################################################################
@@ -2363,46 +1811,11 @@ sub menu_subset {
 
 ################################################################################
 
-sub select__names_list {
+sub require_both ($) {
 
-	my %names = map {{$_ => 1}} @{$db -> tables};
-	
-	my $the_path = $PACKAGE_ROOT -> [0];
-		
-	opendir (DIR, "$the_path/Content") || die "can't opendir $the_path/Content: $!";
-	my @files = readdir (DIR);
-	foreach (@files) {
-		s{\.pm}{} or next;
-		$names {$_} = 1;
-	}	
-	closedir DIR;	
+	require_content      $_[0];
+	require_presentation $_[0];
 
-	opendir (DIR, "$the_path/Presentation") || die "can't opendir $the_path/Presentation: $!";
-	my @files = readdir (DIR);
-	foreach (@files) {
-		s{\.pm}{} or next;
-		$names {$_} = 1;
-	}	
-	closedir DIR;	
-	
-	sql_select_loop ("SELECT * FROM $conf->{systables}->{roles}", sub {$names {$i -> {name}} = 1});
-	
-	$r -> status (200);
-	$r -> headers_out -> {'Content-Disposition'} = "attachment;filename=$_PACKAGE.txt";
-	MP2 ? $r->content_type('text/plain') : $r -> send_http_header ('text/plain');
-	
-	foreach (sort keys %names) {
-		$r -> print ("\r\n");
-		$_ or next;
-		$r -> print ($_);
-	}
-
-	$_REQUEST {__response_sent} = 1;
-
-	return {
-		_names_list => [ map {{label => $_}} sort keys %names ],
-	};
-	
 }
 
 ################################################################################
@@ -3068,7 +2481,8 @@ EOH
 	}
 	else {
 
-		require_fresh ("${_PACKAGE}Content::subset");
+		require_content DEFAULT;
+		require_content 'subset';
 
 		our $_SUBSET = call_for_role ('select_subset');
 		if ($_SUBSET && $_SUBSET -> {items}) {
@@ -3100,8 +2514,7 @@ EOH
 
 		}
 
-
-		require_fresh ("${_PACKAGE}Content::menu");
+		require_content 'menu';
 
 		$_REQUEST {lang} ||= $_USER -> {lang} if $_USER;
 		$_REQUEST {lang} ||= $preconf -> {lang} || $conf -> {lang}; # According to NISO Z39.53
@@ -3200,10 +2613,7 @@ EOH
 			
 		};
 
-		unless ($page -> {type} =~ /^_/) {
-			require_fresh ("${_PACKAGE}Content::$$page{type}");
-			require_fresh ("${_PACKAGE}Presentation::$$page{type}");
-		};
+		require_both $page -> {type};
 
 		$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
 

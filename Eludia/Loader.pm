@@ -7,7 +7,7 @@ sub import {
 	my ($dummy, $root, $package, $preconf) = @_;
 	
 	ref $root eq ARRAY or $root = [$root];	
-	
+		
 	$root -> [0] =~ /[A-Z0-9_]+$/;
 	my $old_package = $&;
 	
@@ -21,6 +21,11 @@ sub import {
 	${$package . '::_PACKAGE'}     = $package . '::';
 	${$package . '::PACKAGE_ROOT'} = $root;
 	${$package . '::preconf'}      = $preconf;
+
+	my $path = __FILE__;	
+	$path =~ s{Loader.pm}{GenericApplication};
+
+	unshift @$root, $path;
 
 	eval "package $package; require Eludia;";
 

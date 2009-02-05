@@ -75,7 +75,7 @@ BEGIN {
 
 	$| = 1;
 
-	$SIG {__DIE__} = \&Carp::confess;
+#	$SIG {__DIE__} = \&Carp::confess;
 	
 	unless ($PACKAGE_ROOT) {
 		$PACKAGE_ROOT = $INC {__PACKAGE__ . '/Config.pm'} || '';
@@ -85,9 +85,9 @@ BEGIN {
 
 	my $_PACKAGE = $_NEW_PACKAGE ? $_NEW_PACKAGE : __PACKAGE__;
 
-	my $pkg_banner = '[' . (join ',', @$PACKAGE_ROOT) . '] => ' . $_PACKAGE;
+	my $pkg_banner = "{\n" . (join ",\n", map {"\t$_"} @$PACKAGE_ROOT) . "\n} => " . $_PACKAGE;
 		
-	my $docroot = $PACKAGE_ROOT -> [0];
+	my $docroot = $PACKAGE_ROOT -> [1];
 	$docroot =~ s{/lib(/.*)?}{/docroot/i/};
 	
 	if (open (IN, $0)) {
@@ -121,7 +121,7 @@ BEGIN {
 
 	if ($preconf -> {subset}) {
 
-		my $fn = $PACKAGE_ROOT -> [0] . '/Model/Subsets/' . $preconf -> {subset} . '.txt';
+		my $fn = $PACKAGE_ROOT -> [1] . '/Model/Subsets/' . $preconf -> {subset} . '.txt';
 		
 		open I, $fn or die "Can't open $fn:$!\n";
 		
@@ -184,7 +184,7 @@ BEGIN {
 
 	}
 
-	print STDERR " Loading $pkg_banner...";
+	print STDERR "\nLoading $pkg_banner...";
 	
 	if ($ENV {GATEWAY_INTERFACE} eq 'CGI/') {
 		eval 'require CGI';
@@ -287,7 +287,7 @@ BEGIN {
 		Apache -> push_handlers (PerlChildExitHandler => \&sql_disconnect);
 	}
 
-	print STDERR "\r Loading $pkg_banner ok.\n";
+	print STDERR " [OK]\n";
 
 }
 
