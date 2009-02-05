@@ -150,7 +150,7 @@ sub do_create_DEFAULT {
 		}
 		else {
 		
-			next if $k =~ /^(s(id|alt|elect)|type|action|lang|error)$/;
+			next if $k =~ /^(s(id|alt|elect)|type|action|lang|error|fake)$/;
 			exists $columns -> {$k} or next; 
 			$default_values -> {$k} = $v;
 		
