@@ -30,6 +30,8 @@ var clockID = 0;
 var clockSeparatorID = 0;
 var suggest_clicked = 0;
 var suggest_is_visible = 0;
+var lastClientHeight = 0;
+var lastClientWidth = 0;
 var typeAheadInfo = {last:0, 
 	accumString:"", 
 	delay:500,

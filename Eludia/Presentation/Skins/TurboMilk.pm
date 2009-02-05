@@ -2747,7 +2747,21 @@ EOH
 EOHELP
 
 	$_REQUEST {__on_resize} = <<EOH;
-		tableSlider.cell_on ();
+	
+		var d = document.body;
+
+		if (
+			lastClientHeight != d.clientHeight
+			|| lastClientWidth != d.clientWidth
+		) {
+
+			tableSlider.cell_on ();
+
+			lastClientHeight = d.clientHeight;
+			lastClientWidth  = d.clientWidth;
+		
+		}
+
 EOH
 
 	foreach (keys %_REQUEST) {
