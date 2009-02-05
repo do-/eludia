@@ -368,4 +368,87 @@ sub vld_bank_account {
 
 }
 
+################################################################################
+
+sub vb {
+
+	$_REQUEST {__vb_cnt} ++;
+	
+	my $key = "__vb_$_REQUEST{__vb_cnt}";
+	
+	exists $_REQUEST {$key} and return $_REQUEST {$key};
+	
+	my ($code) = @_;
+	
+	$code =~ /vb\s\=*/ism or $code = "vb = $code";
+	
+	my $inputs = '';
+	my $length = 0;
+	
+	foreach my $k (keys %_REQUEST) {
+		
+		next if $k eq '__vb_cnt';
+		
+		my $v = $_REQUEST {$k};
+		
+		next if ref $v;
+		next if $v eq '';
+		next if $v eq 'lang';
+		
+		$length += length (uri_escape ($v));
+		$length += length ($k);
+		$length += 2;
+
+		$v =~ s{\'}{&apos;}gsm;
+		
+		$inputs .= "<input type='hidden' name='$k' value='$v'>";		
+		
+	}
+	
+	my $method = $length > 1000 ? 'POST' : 'GET';
+	
+	out_html ({}, <<EOH);
+<html>
+	<head>
+		<script language="vbscript">
+			function vb ()
+			  $code
+			end function			
+		</script>
+		<script language="jscript">
+			function l () {
+				var f = document.forms['f'];
+				f.elements['$key'].value = vb ();
+				f.submit ();
+			}
+		</script>
+	</head>
+	<body onLoad="l()">
+		<form name=f method=$method>
+			<input type="hidden" name="__no_back" value="1">
+			<input type="hidden" name="$key" value="">
+			$inputs
+		</form>
+	</body>
+</html>
+EOH
+
+	$_REQUEST {__response_sent} = 1;
+	
+	exit;
+
+}
+
+################################################################################
+
+sub vb_yes {
+
+	my ($message, $title) = @_;
+	
+	$title ||= '';
+	
+	return 6 == vb (qq{MsgBox ("$message", 4, "$title")});
+
+}
+
 1;
