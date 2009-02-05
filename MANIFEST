@@ -2,6 +2,7 @@ CHANGES
 Eludia.pm
 Eludia/Content.pm
 Eludia/Content/Auth/NTLM.pm
+Eludia/Content/Handler.pm
 Eludia/Content/HTTP/FCGI/IIS.pm
 Eludia/Content/HTTP/FCGI/lighttpd.pm
 Eludia/Content/HTTP/InternalRequest.pm
@@ -9,7 +10,9 @@ Eludia/Content/HTTP/Request.pm
 Eludia/Content/HTTP/Request/Upload.pm
 Eludia/Content/HTTP/Server.pm
 Eludia/Content/Mail.pm
+Eludia/Content/ModuleTools.pm
 Eludia/Content/Peering.pm
+Eludia/Content/PublicHandler.pm
 Eludia/Content/Queries.pm
 Eludia/Content/Tie/FileDumpHash.pm
 Eludia/Content/Tie/IdsList.pm
