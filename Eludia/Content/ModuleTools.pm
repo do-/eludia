@@ -1,15 +1,6 @@
 
 ################################################################################
 
-sub require_both ($) {
-
-	require_content      $_[0];
-	require_presentation $_[0];
-
-}
-
-################################################################################
-
 sub require_content ($) {
 
 	require_fresh ("${_PACKAGE}Content::$_[0]");
@@ -21,6 +12,15 @@ sub require_content ($) {
 sub require_presentation ($) {
 
 	require_fresh ("${_PACKAGE}Presentation::$_[0]");
+
+}
+
+################################################################################
+
+sub require_both ($) {
+
+	require_content      $_[0];
+	require_presentation $_[0];
 
 }
 
