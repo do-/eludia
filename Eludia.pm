@@ -66,6 +66,7 @@ BEGIN {
 		require Eludia::Content::Tie::IdsList;
 		require Eludia::Content::Tie::FileDumpHash;
 		require Eludia::Content::Tie::Vocabulary;
+		require Eludia::Content::Tie::I18n;
 		$preconf -> {core_path} = __FILE__;
 	}
 	

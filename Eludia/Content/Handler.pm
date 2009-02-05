@@ -280,9 +280,7 @@ EOH
 
 		require_content 'menu';
 
-		$_REQUEST {lang} ||= $_USER -> {lang} if $_USER;
-		$_REQUEST {lang} ||= $preconf -> {lang} || $conf -> {lang}; # According to NISO Z39.53
-		our $i18n = $conf -> {i18n} -> {$_REQUEST {lang}};
+		our $i18n = i18n ();
 
 		my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
 		

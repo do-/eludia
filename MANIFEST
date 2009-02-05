@@ -15,6 +15,10 @@ Eludia/Content/Peering.pm
 Eludia/Content/PublicHandler.pm
 Eludia/Content/Queries.pm
 Eludia/Content/Tie/FileDumpHash.pm
+Eludia/Content/Tie/I18n.pm
+Eludia/Content/Tie/I18n/ENG.pm
+Eludia/Content/Tie/I18n/FRE.pm
+Eludia/Content/Tie/I18n/RUS.pm
 Eludia/Content/Tie/IdsList.pm
 Eludia/Content/Tie/Vocabulary.pm
 Eludia/Content/Validators.pm
