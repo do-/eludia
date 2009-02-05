@@ -831,6 +831,7 @@ sub draw_path {
 	return '' if $_REQUEST {lpt};
 	return '' unless $list;
 	return '' unless ref $list eq ARRAY;
+	$list = [grep {!$_ -> {off}} @$list];
 	return '' unless @$list > 0;
 
 	$options -> {id_param} ||= 'id';
