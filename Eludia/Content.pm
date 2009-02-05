@@ -1,7 +1,9 @@
 no warnings;
 
+use Eludia::Content::Auth;
 use Eludia::Content::ModuleTools;
 use Eludia::Content::Handler;
+use Eludia::Content::HTTP::FileTools;
 
 #############################################################################
 
@@ -233,18 +235,6 @@ sub is_off {
 
 ################################################################################
 
-sub async ($@) {
-
-	my ($sub, @args) = @_;
-
-	eval { &$sub (@args); };
-	
-	print STDERR $@ if $@;
-
-}
-
-################################################################################
-
 sub b64u_freeze {
 
 	b64u_encode (
@@ -451,198 +441,21 @@ sub select_subset { return {} }
 
 ################################################################################
 
-sub get_user {
-
-	return if $_REQUEST {type} eq '_static_files';
-
-	my $time = time;
-	
-	$_REQUEST {__suggest} or sql_do_refresh_sessions ();
-
-	$time = __log_profilinig ($time, ' <refresh_sessions>');
-
-	my $user = undef;
-
-	if ($_REQUEST {__login}) {
-		$user = sql_select_hash ("SELECT * FROM $conf->{systables}->{users} WHERE login = ? AND password = PASSWORD(?) AND fake <> -1", $_REQUEST {__login}, $_REQUEST {__password});
-		$user -> {id} or undef $user;
-	}
-	
-	my $peer_server = undef;
-
-	if ($r -> headers_in -> {'User-Agent'} =~ m{^Eludia/.*? \((.*?)\)}) {
-
-		$peer_server = $1;
-
-		my $local_sid = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE peer_id = ? AND peer_server = ?", $_REQUEST {sid}, $peer_server);
-
-		unless ($local_sid) {
-		
-			my $user = peer_query ($peer_server, {__whois => $_REQUEST {sid}});
-			
-			my $role = $conf -> {peer_roles} -> {$peer_server} -> {$user -> {role}} || $conf -> {peer_roles} -> {$peer_server} -> {''};
-			
-			$role or die ("Peer role $$user{role} is undefined for the server $peer_server\n");
-			
-			my $id_role = sql_select_scalar ("SELECT id FROM $conf->{systables}->{roles} WHERE name = ?", $role);
-
-			$id_role or die ("Role not found: $role\n");
-
-			my $id_user = 
-			
-				sql_select_scalar ("SELECT id FROM $conf->{systables}->{users} WHERE IFNULL(peer_id, 0) = ? AND peer_server = ?", 0 + $user -> {id}, $peer_server) ||
-				
-				sql_do_insert ($conf->{systables}->{users}, {
-					fake        => -128,
-					peer_id     => $user -> {id},
-					peer_server => $peer_server,
-				});
-				
-			sql_do ("UPDATE $conf->{systables}->{users} SET label = ?, id_role = ?, mail = ?  WHERE id = ?", $user -> {label}, $id_role, $user -> {mail}, $id_user);
-			
-			while (1) {
-				$local_sid = int (time * rand);
-				last if 0 == sql_select_scalar ("SELECT COUNT(*) FROM $conf->{systables}->{sessions} WHERE id = ?", $local_sid);
-			}
-
-			sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id_user = ?", $id_user);
-			
-			sql_do ("INSERT INTO $conf->{systables}->{sessions} (id, id_user, peer_id, peer_server) VALUES (?, ?, ?, ?)", $local_sid, $id_user, $_REQUEST {sid}, $peer_server);
-					
-		}
-		
-		$_REQUEST {sid} = $local_sid;
-		
-	}	
-
-	$user ||= sql_select_hash (<<EOS, $_REQUEST {sid}) if $_REQUEST {sid};
-		SELECT
-			$conf->{systables}->{users}.*
-			, $conf->{systables}->{roles}.name AS role
-			, $conf->{systables}->{roles}.label AS role_label
-			, $conf->{systables}->{sessions}.id_role AS session_role
-			, $conf->{systables}->{sessions}.ip
-			, $conf->{systables}->{sessions}.tz_offset
-			, $conf->{systables}->{sessions}.ip_fw
-			, $conf->{systables}->{sessions}.id_role AS session_id_role
-		FROM
-			$conf->{systables}->{sessions}
-			, $conf->{systables}->{users}
-			, $conf->{systables}->{roles}
-		WHERE
-			$conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id
-			AND $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id
-			AND $conf->{systables}->{sessions}.id = ?
-			AND $conf->{systables}->{users}.fake <> -1
-EOS
-
-	my $session = {
-		id      => $_REQUEST {sid},
-		ip      => $user -> {ip},
-		ip_fw   => $user -> {ip_fw},
-		id_role => $user -> {session_id_role},
-	};
-	
-	if ($session -> {ip}) {	
-		$session -> {ip}    eq $ENV {REMOTE_ADDR}          or return undef;
-		$session -> {ip_fw} eq $ENV {HTTP_X_FORWARDED_FOR} or return undef;	
-	}	
-	elsif ($user && $user -> {id}) {
-		sql_do (
-			"UPDATE $conf->{systables}->{sessions} SET ip = ?, ip_fw = ? WHERE id = ?",
-			$ENV {REMOTE_ADDR},
-			$ENV {HTTP_X_FORWARDED_FOR}, $_REQUEST {sid},
-		);
-	}
-	
-	if ($user && $user -> {id} && $session -> {id_role}) {
-		$user -> {session_role_name} = sql_select_scalar ("SELECT name FROM $conf->{systables}->{sessions}, $conf->{systables}->{roles} WHERE $conf->{systables}->{sessions}.id_role = $conf->{systables}->{roles}.id AND $conf->{systables}->{sessions}.id = ?", $_REQUEST {sid});
-	}
-
-	if ($user && $user -> {session_role}) {
-		$user -> {id_role} = $user -> {session_role};
-		$user -> {role} = $user -> {session_role_name};
-	}
-
-	if ($user && $_REQUEST {role} && ($conf -> {core_multiple_roles} || $preconf -> {core_multiple_roles})) {
-
-		my $id_role = sql_select_scalar (<<EOS, $user -> {id}, $_REQUEST {role});
-			SELECT
-				roles.id
-			FROM
-				roles,
-				map_roles_to_users
-			WHERE
-				map_roles_to_users.id_user = ?
-				AND roles.id=map_roles_to_users.id_role
-				AND roles.name = ?
-EOS
-		
-		$user -> {role} = $_REQUEST {role} if ($id_role);
-		
-		if ($id_role) {
-
-			my $id_session = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE id_user = ? AND id_role = ?", $user -> {id}, $id_role);
-
-			if ($id_session) {
-				$_REQUEST {sid} = $id_session;
-			} else {
-				while (1) {
-					$_REQUEST {sid} = int (time () * rand ());
-					last if 0 == sql_select_scalar ("SELECT COUNT(*) FROM $conf->{systables}->{sessions} WHERE id = ?", $_REQUEST {sid});
-				}
-				sql_do ("INSERT INTO $conf->{systables}->{sessions} (id, id_user, id_role) VALUES (?, ?, ?)", $_REQUEST {sid}, $user -> {id}, $id_role);
-				sql_do_refresh_sessions ();
-			}
-
-			delete $_REQUEST {role};
-
-			$user -> {redirect} = 1;
-		}
-	}
-
-	$user -> {label} ||= $user -> {name} if $user;
-	
-	$user -> {peer_server} = $peer_server;
-		
-	return $user -> {id} ? $user : undef;
-
-}
-
-################################################################################
-
-sub is_recyclable {
-
-	my ($table_name) = @_;
-	
-	return 0 if $table_name eq $conf -> {systables} -> {log};
-	return 0 if $table_name eq $conf -> {systables} -> {sessions};
-	
-	if (ref $conf -> {core_recycle_ids} eq ARRAY) {
-		$conf -> {core_recycle_ids} = {map {$_ => 1} @{$conf -> {core_recycle_ids}}}
-	}
-
-	return 1 if $conf -> {core_recycle_ids} == 1 || $conf -> {core_recycle_ids} -> {$table_name};
-	return 0;
-
-}
-
-################################################################################
-
 sub interpolate {
+
 	my $template = $_[0];
+
 	my $result = '';
+
 	my $code = "\$result = <<EOINTERPOLATION\n$template\nEOINTERPOLATION";
+
 	eval $code;
+
 	$result .= $@;
+
+	warn $@ if $@;
+
 	return $result;
-}
-
-################################################################################
-
-sub get_filehandle {
-
-	return ref $apr eq 'Apache2::Request' ? $apr -> upload ($_[0]) -> upload_fh : $apr -> upload ($_[0]) -> fh;	
 
 }
 
@@ -699,233 +512,10 @@ sub redirect {
 
 ################################################################################
 
-sub log_action_start {
-
-	our $__log_id = $_REQUEST {id};
-	our $__log_user = $_USER -> {id};
-	
-	$_REQUEST {error} = substr ($_REQUEST {error}, 0, 255);
-	
-	$_REQUEST {_id_log} = sql_do_insert ($conf -> {systables} -> {log}, {
-		id_user => $_USER -> {id}, 
-		type => $_REQUEST {type}, 
-		action => $_REQUEST {action}, 
-		ip => $ENV {REMOTE_ADDR}, 
-		error => $_REQUEST {error}, 
-		ip_fw => $ENV {HTTP_X_FORWARDED_FOR},
-		fake => 0,
-		mac => (!$preconf -> {core_no_log_mac}) ? get_mac () : '',
-	});
-		
-}
-
-################################################################################
-
-sub log_action_finish {
-	
-	$_REQUEST {_params} = $_REQUEST {params} = Data::Dumper -> Dump ([\%_OLD_REQUEST], ['_REQUEST']);
-	$_REQUEST {_params} =~ s/ {2,}/\t/g;
-		
-	$_REQUEST {error} = substr ($_REQUEST {error}, 0, 255);
-	$_REQUEST {_error}  = $_REQUEST {error};
-	$_REQUEST {_id_object} = $__log_id || $_REQUEST {id} || $_OLD_REQUEST {id};
-	$_REQUEST {_id_user} = $__log_user || $_USER -> {id};
-	
-	sql_do_update ($conf -> {systables} -> {log}, ['params', 'error', 'id_object', 'id_user'], {id => $_REQUEST {_id_log}, lobs => ['params']});
-	delete $_REQUEST {params};
-	delete $_REQUEST {_params};
-	
-}
-
-################################################################################
-
 sub delete_file {
 
 	unlink $r -> document_root . $_[0];
 
-}
-
-################################################################################
-
-sub download_file_header {
-
-	my ($options) = @_;	
-
-	$r -> status (200);
-
-	$options -> {file_name} =~ s{.*\\}{};
-		
-	my $type = 
-		$options -> {charset} ? $options -> {type} . '; charset=' . $options -> {charset} :
-		$options -> {type};
-
-	$type ||= 'application/octet-stream';
-
-	my $path = $r -> document_root . $options -> {path};
-	
-	my $start = 0;
-	
-	my $content_length = $options -> {size};
-	
-	if (!$content_length && $options -> {path}) {
-	
-		$content_length = -s $r -> document_root . $options -> {path};
-	
-	}
-		
-	my $range_header = $r -> headers_in -> {"Range"};
-
-	if ($range_header =~ /bytes=(\d+)/) {
-		$start = $1;
-		my $finish = $content_length - 1;
-		$r -> headers_out -> {'Content-Range'} = "bytes $start-$finish/$content_length";
-		$content_length -= $start;
-	}
-
-	$r -> content_type ($type);
-	$options -> {file_name} =~ s/\?/_/g unless ($ENV {HTTP_USER_AGENT} =~ /MSIE 7/);
-	$options -> {no_force_download} or $r -> headers_out -> {'Content-Disposition'} = "attachment;filename=" . $options -> {file_name}; 
-	
-	if ($content_length > 0) {
-		$r -> headers_out -> {'Content-Length'} = $content_length;
-		$r -> headers_out -> {'Accept-Ranges'} = 'bytes';
-	} 
-	
-	delete $r -> headers_out -> {'Content-Encoding'};
-	
-	$r -> send_http_header () unless (MP2);
-
-	$_REQUEST {__response_sent} = 1;
-	
-	return $start;
-
-}
-
-################################################################################
-
-sub download_file {
-
-	my ($options) = @_;	
-
-	my $path = $r -> document_root . $options -> {path};
-
-	$_REQUEST {__out_html_time} = time;
-
-	my $start = download_file_header (@_);
-	
-	if (MP2) {
-		$r -> sendfile ($path, $start);
-	} else {
-		open (F, $path) or die ("Can't open file $path: $!");
-		seek (F, $start, 0);
-		$r -> send_fd (F);
-		close F;
-	}
-	
-}
-
-################################################################################
-
-sub upload_files {
-
-	my ($options) = @_;
-		
-	my @nos = ();
-	
-	foreach my $k (keys %_REQUEST) {
-
-		$k =~ /^_$options->{name}_(\d+)$/ or next;
-		
-		$_REQUEST {$k} or next;
-		
-		push @nos, $1;
-
-	}
-
-	my @result = ();
-
-	my $name = $options -> {name};
-
-	foreach my $no (sort {$a <=> $b} @nos) {
-		
-		$options -> {name} = "${name}_${no}";
-	
-		push @result, upload_file ($options);
-	
-	}
-	
-	return \@result;
-
-}
-
-################################################################################
-
-sub upload_file {
-	
-	my ($options) = @_;
-	
-	my $upload = $apr -> upload ('_' . $options -> {name});
-	
-	my ($fh, $filename, $file_size, $file_type);
-
-	if (ref $apr eq 'Apache2::Request') {
-	
-		return undef unless ($upload and $upload -> upload_size > 0);
-		
-		$fh = $upload -> upload_fh;
-		$filename = $upload -> upload_filename;
-		$file_size = $upload -> upload_size;
-		$file_type = $upload -> upload_type;
-		  
-	} else {
-	
-		return undef unless ($upload and $upload -> size > 0);
-
-		$fh = $upload -> fh;
-		$filename = $upload -> filename;
-		$file_size = $upload -> size;
-		$file_type = $upload -> type;
-
-		
-	}
-
-	my ($y, $m, $d) = split /-/, sprintf ('%04d-%02d-%02d', Date::Calc::Today);
-
-	$options -> {dir} ||= 'upload/images';
-
-	my $dir = $r -> document_root . "/i/$$options{dir}";
-
-	foreach my $subdir ('', $y, $m, $d) {
-		$dir .= "/$subdir" if $subdir;
-		-d $dir or mkdir $dir;
-	}
-
-	$filename =~ /[A-Za-z0-9]+$/;
-	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . '-' . (++ $_REQUEST {__files_cnt}) . "-$$.$&";
-	
-	my $real_path = $r -> document_root . $path;
-	
-	open (OUT, ">$real_path") or die "Can't write to $real_path: $!";
-	binmode OUT;
-		
-	my $buffer = '';
-	my $file_length = 0;
-	while (my $bytesread = read ($fh, $buffer, 1024)) {
-		$file_length += $bytesread;
-		print OUT $buffer;
-	}
-	close (OUT);
-	
-	$filename =~ s{.*\\}{};
-	
-	return {
-		file_name => $filename,
-		size      => $file_size,
-		type      => $file_type,
-		path      => $path,
-		real_path => $real_path,
-	}
-	
 }
 
 ################################################################################

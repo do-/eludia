@@ -623,4 +623,45 @@ EOH
 
 }
 
+################################################################################
+
+sub log_action_start {
+
+	our $__log_id = $_REQUEST {id};
+	our $__log_user = $_USER -> {id};
+	
+	$_REQUEST {error} = substr ($_REQUEST {error}, 0, 255);
+	
+	$_REQUEST {_id_log} = sql_do_insert ($conf -> {systables} -> {log}, {
+		id_user => $_USER -> {id}, 
+		type => $_REQUEST {type}, 
+		action => $_REQUEST {action}, 
+		ip => $ENV {REMOTE_ADDR}, 
+		error => $_REQUEST {error}, 
+		ip_fw => $ENV {HTTP_X_FORWARDED_FOR},
+		fake => 0,
+		mac => (!$preconf -> {core_no_log_mac}) ? get_mac () : '',
+	});
+		
+}
+
+################################################################################
+
+sub log_action_finish {
+	
+	$_REQUEST {_params} = $_REQUEST {params} = Data::Dumper -> Dump ([\%_OLD_REQUEST], ['_REQUEST']);
+	$_REQUEST {_params} =~ s/ {2,}/\t/g;
+		
+	$_REQUEST {error} = substr ($_REQUEST {error}, 0, 255);
+	$_REQUEST {_error}  = $_REQUEST {error};
+	$_REQUEST {_id_object} = $__log_id || $_REQUEST {id} || $_OLD_REQUEST {id};
+	$_REQUEST {_id_user} = $__log_user || $_USER -> {id};
+	
+	sql_do_update ($conf -> {systables} -> {log}, ['params', 'error', 'id_object', 'id_user'], {id => $_REQUEST {_id_log}, lobs => ['params']});
+	
+	delete $_REQUEST {params};
+	delete $_REQUEST {_params};
+	
+}
+
 1;

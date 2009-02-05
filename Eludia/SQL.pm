@@ -1123,6 +1123,24 @@ sub assert_fake_key {
 
 ################################################################################
 
+sub is_recyclable {
+
+	my ($table_name) = @_;
+	
+	return 0 if $table_name eq $conf -> {systables} -> {log};
+	return 0 if $table_name eq $conf -> {systables} -> {sessions};
+	
+	if (ref $conf -> {core_recycle_ids} eq ARRAY) {
+		$conf -> {core_recycle_ids} = {map {$_ => 1} @{$conf -> {core_recycle_ids}}}
+	}
+
+	return 1 if $conf -> {core_recycle_ids} == 1 || $conf -> {core_recycle_ids} -> {$table_name};
+	return 0;
+
+}
+
+################################################################################
+
 sub delete_fakes {
 	
 	my ($table_name) = @_;
