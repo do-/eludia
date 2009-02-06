@@ -489,24 +489,21 @@ sub redirect {
 	$options -> {kind} ||= 'http';
 	$options -> {kind}   = 'http' if ($_REQUEST {__windows_ce} && $_REQUEST {select});
 
-	if ($options -> {kind} eq 'http' || $options -> {kind} eq 'internal') {
-
-		$r -> status ($options -> {status} || 302);
-		$r -> headers_out -> {'Location'} = $url;
-		$r -> send_http_header unless (MP2);
-		$_REQUEST {__response_sent} = 1;
-		return;
-		
-	}
-
 	if ($options -> {kind} eq 'js') {
 	
 		$options -> {url} = $url;	
 		out_html ({}, draw_redirect_page ($options));
-		$_REQUEST {__response_sent} = 1;
-		return;
 		
 	}
+	elsif ($options -> {kind} eq 'http' || $options -> {kind} eq 'internal') {
+
+		$r -> status ($options -> {status} || 302);
+		$r -> headers_out -> {'Location'} = $url;
+		$r -> send_http_header unless (MP2);
+		
+	}
+
+	$_REQUEST {__response_sent} = 1;
 	
 }
 
@@ -670,6 +667,8 @@ sub dt_dmy {
 ################################################################################
 
 sub fill_in {
+
+	our $number_format ||= Number::Format -> new (%{$conf -> {number_format}});
 
    	$conf -> {lang} ||= 'RUS';   	
 

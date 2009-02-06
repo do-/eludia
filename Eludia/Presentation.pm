@@ -4181,7 +4181,7 @@ sub out_html {
 
 	__log_profilinig ($time, ' <out_html: ' . (length $html) . ' bytes>');
 	
-	return '';
+	return MP2 ? 0 : 200;
 	
 }
 

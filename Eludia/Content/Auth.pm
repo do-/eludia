@@ -4,6 +4,16 @@ sub get_user {
 
 	return if $_REQUEST {type} eq '_static_files';
 
+	if ($preconf -> {core_auth_cookie}) {
+
+		my $c = $_COOKIES {sid};
+
+		$_REQUEST {sid} ||= $c -> value if $c;
+
+	}
+
+	check_auth ();
+
 	my $time = time;
 	
 	$_REQUEST {__suggest} or sql_do_refresh_sessions ();

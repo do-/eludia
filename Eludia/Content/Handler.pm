@@ -61,11 +61,15 @@ sub handler {
 	$_REQUEST {__sql_time} = 0;
 
 	my $parms = ref $apr eq 'Apache2::Request' ? $apr -> param : $apr -> parms;
+	
 	undef %_REQUEST;
+	
 	our %_REQUEST = %{$parms};
+	
 	our $_QUERY = undef;
 
 	$_REQUEST {__skin} = '';
+	
 	our $_REQUEST_TO_INHERIT = undef;
 
 	delete $_REQUEST {__x} if $preconf -> {core_no_xml};
@@ -107,6 +111,7 @@ sub handler {
 	$_REQUEST {__script_name} = $ENV {SERVER_SOFTWARE} =~ /IIS\/5/ ? $ENV {SCRIPT_NAME} : '';
 
 	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;
+	
 	if ($_REQUEST {fake}) {
     	    $_REQUEST {fake} =~ s/\%(25)*2c/,/ig;
 	}
@@ -174,73 +179,46 @@ sub handler {
 
 	}
 
-	if ($preconf -> {core_auth_cookie}) {
-		my $c = $_COOKIES {sid};
-		$_REQUEST {sid} ||= $c -> value if $c;
-	}
-
 	if ($_REQUEST {keepalive}) {
-		my $timeout = 60 * $conf -> {session_timeout} - 1;
+
 		$_REQUEST {virgin} or keep_alive ($_REQUEST {keepalive});
-		$r -> content_type ('text/html');
-		$r -> send_http_header unless (MP2);
-		print <<EOH;
-			<html><head>
-				<META HTTP-EQUIV=Refresh CONTENT="$timeout; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}">
-			</head></html>
-EOH
-		return $ok;
+
+		return out_html ({}, qq{<html><head><META HTTP-EQUIV=Refresh CONTENT="@{[ 60 * $conf -> {session_timeout} - 1 ]}; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}"></head></html>});
+
 	}
 
 	if ($_REQUEST {__whois}) {
+	
 		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
-		out_html ({}, Dumper ({data => $user}));
-		return $ok;
+		
+		return out_html ({}, Dumper ({data => $user}));
+
 	}
 
 	$time = __log_profilinig ($time, '<misc>');
 	
-	check_auth ();
+	our $_USER = get_user ();
 
 	return $ok if $_REQUEST {__response_sent};
 
-	our $_USER = get_user ();
-
 	$time = __log_profilinig ($time, '<got user>');
 
-	$number_format or our $number_format = Number::Format -> new (%{$conf -> {number_format}});
-
 	$conf -> {__filled_in} or fill_in ();
-
-   	$_REQUEST {__include_js} ||= [];
-   	push @{$_REQUEST {__include_js}}, @{$conf -> {include_js}} if $conf -> {include_js};
-
-   	$_REQUEST {__include_css} ||= [];
-   	push @{$_REQUEST {__include_css}}, @{$conf -> {include_css}} if $conf -> {include_css};
 
 	if ((!$_USER -> {id} and $_REQUEST {type} ne 'logon' and $_REQUEST {type} ne '_boot')) {
 
 		delete $_REQUEST {sid};
 		delete $_REQUEST {salt};
 		delete $_REQUEST {_salt};
-		delete $_REQUEST {__include_js};
-		delete $_REQUEST {__include_css};
 
 		my $type = ($preconf -> {core_skip_boot} || $conf -> {core_skip_boot}) || $_REQUEST {__windows_ce} ? 'logon' : '_boot';
 
 		redirect ("/?type=$type&redirect_params=" . b64u_freeze (\%_REQUEST), kind => 'js', target => '_top');
 
 	}
-
 	elsif (exists ($_USER -> {redirect})) {
 
 		redirect (create_url ());
-
-	}
-
-	elsif ($_REQUEST {keepalive}) {
-
-		redirect ("/\?type=logon&_frame=$_REQUEST{_frame}");
 
 	}
 	else {
@@ -249,15 +227,10 @@ EOH
 		require_content 'subset';
 
 		our $_SUBSET = call_for_role ('select_subset');
+		
 		if ($_SUBSET && $_SUBSET -> {items}) {
 
 			$_SUBSET -> {items} = [ grep {!$_ -> {off}} @{$_SUBSET -> {items}} ];
-
-			if ($preconf -> {subset}) {
-
-				$_SUBSET -> {items} = [ grep {$preconf -> {subset_names} -> {$_ -> {name}}} @{$_SUBSET -> {items}} ];
-
-			}
 
 			$_REQUEST {__subset} ||= $_USER -> {subset};
 			$_SUBSET -> {name}   ||= $_REQUEST {__subset};
@@ -284,99 +257,24 @@ EOH
 
 		my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
 		
-		if (!$_REQUEST {type} && ref $menu eq ARRAY && @$menu > 0) {
-		
-			$menu = [grep {!$_ -> {off}} @$menu];
-		
-			my $m = $menu -> [0];					
-			
-			if ($menu -> [0] -> {href}) {
-			
-				my $href = $menu -> [0] -> {href};
+		$_REQUEST {type} or adjust_request_type ($menu);
 				
-				if (ref $href) {
-				
-					foreach my $k (keys %$href) {
-					
-						$_REQUEST {$k} = $href -> {$k}
-					
-					}
-				
-				}
-				else {
-					
-					$href =~ s{^/?\?}{};
-				
-					foreach (split /&/, $href) {
-					
-						my ($k, $v) = split /=/;	
-					
-						$_REQUEST {$k} = $v;
-					
-					}
-				
-				}
-				
-			}
-			else {
-			
-				$_REQUEST {type} = $menu -> [0] -> {name};
-			
-			}
-			
-		}		
-		
 		my $page = {
 			menu => $menu,
 			type => $_REQUEST {type},
 		};
 
-		if ($conf -> {core_extensible_menu} && $_USER -> {systems}) {
-
-			foreach my $sys (sort grep {/\w/} split /\,/, $_USER -> {systems}) {
-				my @items = ();
-				eval {@items = &{"_${sys}_menu"}()};
-				push @{$page -> {menu}}, @items;
-			}
-
-		}
-
 		call_for_role ('get_page');
 
 		$page -> {subset} = $_SUBSET;
 
-		if (!$page -> {type}) {
-			
-			sub select_default_type {
-				my ($items) = @_;
-
-
-				foreach my $i (@$items) {
-
-					return
-						if ($_REQUEST {type});
-					
-
-					next if $i -> {off};
-					
-					if ($i -> {no_page} && @{$i -> {items}} > 0) {
-						select_default_type ($i -> {items});
-					}
-					
-					return
-						if ($_REQUEST {type});
-
-					$_REQUEST {type} = $page -> {type}  = $i -> {name};
-					
-				}
-
-			}
-			
-			select_default_type ($page -> {menu});
-			
-		};
-
 		require_both $page -> {type};
+
+		$_REQUEST {__include_js} ||= [];
+		push @{$_REQUEST {__include_js}}, @{$conf -> {include_js}} if $conf -> {include_js};
+
+		$_REQUEST {__include_css} ||= [];
+		push @{$_REQUEST {__include_css}}, @{$conf -> {include_css}} if $conf -> {include_css};
 
 		$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
 
@@ -478,8 +376,11 @@ EOH
 					$_REQUEST {error} = $@ if $@;
 
 				}
+								
 				if ($_REQUEST {error}) {
+				
 					out_html ({}, draw_page ($page));
+					
 				}
 				elsif (!$_REQUEST {__response_sent}) {
 
@@ -662,6 +563,70 @@ sub log_action_finish {
 	delete $_REQUEST {params};
 	delete $_REQUEST {_params};
 	
+}
+
+################################################################################
+
+sub adjust_request_type {
+
+	my ($items) = @_;
+	
+	ref $items eq ARRAY or return 0;
+	
+	foreach my $i (@$items) {
+	
+		next if $i -> {off};
+	
+		if ($i -> {href}) {
+		
+			my $href = $i -> {href};
+
+			if (ref $href eq HASH && $href -> {type}) {
+			
+				foreach my $k (keys %$href) {
+					
+					$_REQUEST {$k} = $href -> {$k}
+					
+				}
+							
+			} 
+			else {
+			
+				$href =~ s{^/?\?}{};
+				
+				foreach (split /&/, $href) {
+					
+					my ($k, $v) = split /=/;	
+					
+					$_REQUEST {$k} = $v;
+					
+				}
+			
+			}
+			
+			return 1;
+		
+		}
+		elsif (!$i -> {no_page} && $i -> {name}) {
+		
+			$_REQUEST {type} = $i -> {name};
+			
+			return 1;
+		
+		}
+	
+	}
+	
+	foreach my $i (@$items) {
+	
+		next if $i -> {off};
+
+		adjust_request_type ($i -> {items}) and return 1;
+
+	}
+	
+	return 0;
+
 }
 
 1;
