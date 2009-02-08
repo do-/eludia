@@ -1,5 +1,7 @@
 package Eludia::InternalRequest;
-require Eludia::Request::Upload;
+
+require Eludia::Content::HTTP::Request::Upload;
+
 use HTTP::Response;
 use HTTP::Headers;
 

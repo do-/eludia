@@ -2,6 +2,8 @@ package Eludia::Presentation::Skins::Classic;
 
 use Data::Dumper;
 
+no warnings;
+
 BEGIN {
 	require Eludia::Presentation::Skins::Generic;
 	delete $INC {"Eludia/Presentation/Skins/Generic.pm"};
