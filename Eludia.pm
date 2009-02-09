@@ -245,43 +245,7 @@ BEGIN {
 	
 	require_config ();
 
-	if ($conf    -> {core_store_table_order}) { require Eludia::Content::Queries;    } else { eval 'sub fix___query {}; sub check___query {}'}
-
-	if ($preconf -> {core_load_modules}) {
-	
-		my @files = ("Content/menu.pm", "Content/logon.pm", "Presentation/logon.pm");
-				
-		if ($conf -> {auto_load}) {
-			
-			foreach my $type (@{$conf -> {auto_load}}) {				
-				push @files, "${_PACKAGE}/Content/$type.pm";
-				push @files, "${_PACKAGE}/Presentation/$type.pm";
-			}
-						
-		}
-		else {
-		
-			foreach my $path (reverse (@$PACKAGE_ROOT)) {
-			
-				foreach my $dir ('Content', 'Presentation') {
-
-					opendir (DIR, "$path/$dir") || die "can't opendir $path/$dir: $!";
-					push @files, grep {/\.pm$/} map { "${_PACKAGE}/$dir/$_" } readdir (DIR);
-					closedir DIR;	
-
-				}
-
-			}
-						
-		}
-
-		foreach my $file (@files) {
-			$file =~ s{\.pm$}{};
-			$file =~ s{\/}{\:\:}g;
-			require_fresh ($file);
-		}
-				
-	}
+	if ($conf -> {core_store_table_order}) { require Eludia::Content::Queries;    } else { eval 'sub fix___query {}; sub check___query {}'}
 	
 	if ($Apache::VERSION) {
 		Apache -> push_handlers (PerlChildInitHandler => \&sql_reconnect );
