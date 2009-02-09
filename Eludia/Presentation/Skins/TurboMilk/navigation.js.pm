@@ -799,6 +799,8 @@ function span_on_click () {
 
 	$(window.event.srcElement).parents ('a').eq (0).each (function(){this.click ()});
 
+	return blockEvent ();
+
 }
 
 function TableSlider (initial_row) {
