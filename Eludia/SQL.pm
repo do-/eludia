@@ -965,7 +965,6 @@ sub sql_do_relink {
 				
 	if ($SQL_VERSION -> {driver} eq 'Oracle') {
 		$table__moved_links = "\U$conf->{systables}->{__moved_links}";
-		$table_name = "\U$table_name\E";		 
 	} else {
 		$table__moved_links = $conf->{systables}->{__moved_links};
 	}
@@ -1057,7 +1056,6 @@ sub sql_undo_relink {
 	
 	if ($SQL_VERSION -> {driver} eq 'Oracle') {
 		$table__moved_links = "\U$conf->{systables}->{__moved_links}";		
-		$table_name = "\U$table_name\E";		 
 	} else {
 		$table__moved_links = $conf->{systables}->{__moved_links};
 	}
