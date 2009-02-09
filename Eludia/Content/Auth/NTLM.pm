@@ -76,12 +76,8 @@ warn "NTLM \$sambaNTPassword = $sambaNTPassword\n";
 		$authorization,
 		Authen::NTLM::Tools::_hex_2_bin ($sambaNTPassword),
 	) or return _ntlm_kick ('NTLM');
-	
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id_user = ?", $id_user);
-	
-	start_session ();
-	
-	sql_do ("INSERT INTO $conf->{systables}->{sessions} (ts, id, id_user) VALUES (NOW(), ?, ?)", $_REQUEST {sid}, $id_user);
+
+	start_session ($id_user);
 		
 }
 

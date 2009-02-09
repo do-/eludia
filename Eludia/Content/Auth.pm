@@ -2,7 +2,19 @@
 
 sub start_session {
 
-	$_REQUEST {sid} = int (rand() * time ()) . int (rand() * time ());
+	my ($id_user) = @_;
+
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id_user = ?", $id_user);
+
+	while (1) {
+
+		$_REQUEST {sid} = int (rand () * time ()) . int (rand () * time ());
+		
+		sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE id = ?", $_REQUEST {sid}) or last;
+		
+	}
+
+	sql_do ("INSERT INTO $conf->{systables}->{sessions} (ts, id, id_user) VALUES (NOW(), ?, ?)", $_REQUEST {sid}, $id_user);
 	
 }
 
