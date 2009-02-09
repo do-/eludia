@@ -1,19 +1,6 @@
 #################################################################################
 
-sub _ntlm_kick {
-
-	$r -> status (401);
-	$r -> content_type ('text/html');
-	$r -> headers_out -> {'WWW-Authenticate'} = $_[0] || 'NTLM TlRMTVNTUAACAAAACAAIADgAAAAFgomiPB7NizwMPWsAAAAAAAAAACAAIABAAAAABQEoCgAAAA9MAEQAQQBQAAIACABMAEQAQQBQAAEABABEAE8AAwAEAGQAbwAAAAAA';
-	$r -> send_http_header unless (MP2);
-	print (' ' x 4096);
-	$_REQUEST {__response_sent} = 1;
-
-}
-
-#################################################################################
-
-sub _ntlm_check_auth {
+sub check_auth {
 	
 	return if $_REQUEST {sid};
 	return if !$preconf -> {ldap};
@@ -92,12 +79,23 @@ warn "NTLM \$sambaNTPassword = $sambaNTPassword\n";
 	
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id_user = ?", $id_user);
 	
-	$_REQUEST {sid} = int (rand() * time ()) . int (rand() * time ());
-
-warn Dumper ($_REQUEST {sid});
+	start_session ();
 	
 	sql_do ("INSERT INTO $conf->{systables}->{sessions} (ts, id, id_user) VALUES (NOW(), ?, ?)", $_REQUEST {sid}, $id_user);
 		
+}
+
+#################################################################################
+
+sub _ntlm_kick {
+
+	$r -> status (401);
+	$r -> content_type ('text/html');
+	$r -> headers_out -> {'WWW-Authenticate'} = $_[0] || 'NTLM TlRMTVNTUAACAAAACAAIADgAAAAFgomiPB7NizwMPWsAAAAAAAAAACAAIABAAAAABQEoCgAAAA9MAEQAQQBQAAIACABMAEQAQQBQAAEABABEAE8AAwAEAGQAbwAAAAAA';
+	$r -> send_http_header unless (MP2);
+	print (' ' x 4096);
+	$_REQUEST {__response_sent} = 1;
+
 }
 
 package Authen::NTLM::Tools;
@@ -453,3 +451,5 @@ sub _ntlm_check {
 	return $m3 -> {is_ntlm2_session_response} ? _ntlm_check_session2 ($challenge, $m3, $ntlm_hash) : _ntlm_check_v2 ($challenge, $m3, $ntlm_hash);
 
 } 
+
+1;
