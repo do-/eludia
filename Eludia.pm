@@ -194,7 +194,7 @@ sub check_application_directory {
 
 	print STDERR "$docroot...\n";
 
-	foreach my $subdir ('_skins', 'upload', 'upload/images') {
+	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images') {
 
 		print STDERR "  checking ${docroot}${subdir}...";
 
