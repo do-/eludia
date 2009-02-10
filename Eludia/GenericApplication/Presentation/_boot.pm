@@ -5,7 +5,7 @@ sub draw__boot {
 	$_REQUEST {__no_navigation} = 1;
 	
 	my $propose_gzip = 0;
-	if (($conf -> {core_gzip} or $preconf -> {core_gzip}) && ($r -> headers_in -> {'Accept-Encoding'} !~ /gzip/)) {
+	if ($preconf -> {core_gzip} && ($r -> headers_in -> {'Accept-Encoding'} !~ /gzip/)) {
 		$propose_gzip = 1;
 	}
 	

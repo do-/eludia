@@ -2,8 +2,9 @@ no warnings;
 
 ################################################################################
 
-sub js ($) {$_REQUEST {__script} .= ";\n$_[0];\n"}
-sub j  ($) {js "\$(document).ready (function () { $_[0] })"}
+sub js ($)    {$_REQUEST {__script} .= ";\n$_[0];\n"}
+
+sub j  ($)    {js "\$(document).ready (function () { $_[0] })"}
 
 ################################################################################
 
@@ -4131,7 +4132,7 @@ sub out_html {
 	$preconf -> {core_mtu} ||= 1500;
 	
 	if (
-		($conf -> {core_gzip} or $preconf -> {core_gzip}) &&
+		$preconf -> {core_gzip} &&
 		400 + length $html > $preconf -> {core_mtu} &&
 		($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/)
 	) {
@@ -4348,7 +4349,7 @@ sub check_static_files {
 
 	}
 		
- 	if ($conf -> {core_gzip} or $preconf -> {core_gzip}) {
+ 	if ($preconf -> {core_gzip}) {
 
 		foreach my $fn ('navigation.js', 'eludia.css', 'navigation_setup.js') {
 		

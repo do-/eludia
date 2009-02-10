@@ -16,6 +16,7 @@ Eludia/Content/ModuleTools.pm
 Eludia/Content/Peering.pm
 Eludia/Content/PublicHandler.pm
 Eludia/Content/Queries.pm
+Eludia/Content/Tie.pm
 Eludia/Content/Tie/FileDumpHash.pm
 Eludia/Content/Tie/I18n.pm
 Eludia/Content/Tie/I18n/ENG.pm

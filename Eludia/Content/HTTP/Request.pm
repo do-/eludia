@@ -1,7 +1,8 @@
 package Eludia::Request;
-require Eludia::Content::HTTP::Request::Upload;
 
 use Data::Dumper;
+
+use Eludia::Content::HTTP::Request::Upload;
 
 ################################################################################
 

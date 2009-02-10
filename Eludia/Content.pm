@@ -4,6 +4,8 @@ use Eludia::Content::Auth;
 use Eludia::Content::ModuleTools;
 use Eludia::Content::Handler;
 use Eludia::Content::HTTP::FileTools;
+use Eludia::Content::Validators;
+use Eludia::Content::Tie;
 
 #############################################################################
 
@@ -945,7 +947,7 @@ sub fill_in_template {
 		$r -> header_out ('Content-Disposition' => "attachment;filename=$file_name");
 
 		if (
-			($conf -> {core_gzip} or $preconf -> {core_gzip}) &&
+			$preconf -> {core_gzip} &&
 			400 + length $result > $preconf -> {core_mtu} &&
 			($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/)
 		) {

@@ -63,7 +63,7 @@ sub pub_handler {
 			return $ok;
 		}
 
-		my $use_gzip = ($conf -> {core_gzip} or $preconf -> {core_gzip}) && ($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/);
+		my $use_gzip = $preconf -> {core_gzip} && ($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/);
 
 #		my $field = $use_gzip ? 'gzipped' : 'html';
 #		my $html = sql_select_scalar ("SELECT $field FROM cache_html WHERE uri = ?", $cache_key);
@@ -167,8 +167,7 @@ sub pub_handler {
 
 		if ($conf -> {core_cache_html}) {
 
-			my $gzipped = (($conf -> {core_gzip} or $preconf -> {core_gzip})) ? Compress::Zlib::memGzip ($html) : '';
-#			sql_do ('REPLACE INTO cache_html (uri, html, gzipped) VALUES (?, ?, ?)', $cache_key, $html, $gzipped);
+			my $gzipped = $preconf -> {core_gzip} ? Compress::Zlib::memGzip ($html) : '';
 			sql_do ("REPLACE INTO $conf->{systables}->{cache_html} (uri) VALUES (?)", $cache_key);
 
 			open (F, ">$cache_fn") or die ("Can't write to $cache_fn: $!\n");
