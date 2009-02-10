@@ -221,7 +221,7 @@ sub send_mail {
 
 		##### sending main message
 		
-	my $to = join ",\t", @to;
+	$to = join ",\t", @to;
 
 	$smtp -> datasend (<<EOT);
 From: $from
