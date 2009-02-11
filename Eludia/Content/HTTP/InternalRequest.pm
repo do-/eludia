@@ -7,8 +7,6 @@ use HTTP::Headers;
 
 use File::Temp qw/:POSIX/;
 
-use Data::Dumper;
-
 ################################################################################
 
 sub new {
@@ -99,56 +97,75 @@ sub headers_out {
 ################################################################################
 
 sub internal_redirect {
+
 	my $self = shift;	
+
 	my $url = $_[0];
+
 	$url =~ s{^/}{};
+
 	$self -> {connection} -> send_redirect ('http://' . $ENV{HTTP_HOST} . '/' . $url);
-#	$self -> status ($options -> {status} || 302);
-#	$self -> header_out ('Location' => 'http://' . $ENV{HTTP_HOST} . $url);
-#	$self -> send_http_header;
-#	$_REQUEST {__response_sent} = 1;
+
 }
 
 ################################################################################
 
 sub args {
+
 	return $ENV {QUERY_STRING};
+	
 }
 
 ################################################################################
 
 sub header_in {
+
 	my $self = shift;
+	
 	return $self -> {Q} -> http ($_ [0]);
+	
 }
 
 ################################################################################
 
 sub content_type {
+
 	my $self = shift;
+	
 	return $self -> {headers} -> content_type (@_);
+	
 }
 
 ################################################################################
 
 sub content_encoding {
+
 	my $self = shift;
+	
 	return $self -> {headers} -> content_encoding (@_);
+	
 }
 
 ################################################################################
 
 sub status {
+
 	my $self = shift;
+	
 	$self -> {status} = $_[0] if $_[0];
+	
 	return $self -> {status};
+	
 }
 
 ################################################################################
 
 sub header_out {
+
 	my $self = shift;	
+	
 	return $self -> {headers} -> header (@_);
+	
 }
 
 ################################################################################
@@ -176,9 +193,11 @@ sub send_http_header {
 sub send_fd {
 
 	my $self = shift;
+	
 	my $q = $self -> {Q};
 
 	my $fh = CGI::to_filehandle($_ [0]);
+	
 	binmode($fh);
 
 	my $buf;
@@ -192,48 +211,69 @@ sub send_fd {
 ################################################################################
 
 sub filename {
+
 	my $self = shift;
+	
 	return $self -> {Filename};
+	
 }
 
 ################################################################################
 
 sub connection {
+
 	my $self = shift;
+	
 	return $self;
+	
 }
 
 ################################################################################
 
 sub remote_ip {
+
 	return $ENV {REMOTE_ADDR};
+	
 }
 
 ################################################################################
 
 sub document_root {
+
 	my $path = $ENV {'DOCUMENT_ROOT'};
+	
 	$path =~ y{\\}{/}; 
+	
 	return $path;
+	
 }
 
 ################################################################################
 
 sub parms {
+
 	my $self = shift;
+	
 	my %vars = ();
+	
 	my @names = $self -> {Q} -> param;
+	
 	foreach my $name (@names) {
 		$vars {$name} = $self -> {Q} -> param ($name);
 	}
+	
 	return \%vars;	
+	
 }
 
 ################################################################################
 
 sub param {
+
 	my $self = shift;
+	
 	return $self -> {Q} -> param ($_ [0]);
+	
 }
 
 ################################################################################
@@ -241,9 +281,11 @@ sub param {
 sub upload {
 
 	my $self = shift;
+	
 	my $q = $self -> {Q};
 
 	my $param = $_ [0];
+	
 	return $self -> {$param} if ($self -> {$param});
 
 	$self -> {$param} = Eludia::Request::Upload -> new ($q, $param);
@@ -255,23 +297,29 @@ sub upload {
 ################################################################################
 
 sub uri {
+
 	my $self = shift;
-#	return $self -> {Q} -> url (-path_info => 1);
+
 	return $ENV {'PATH_INFO'} . '/';
+
 }
 
 ################################################################################
 
 sub header_only {
-	my $self = shift;
-	return $self -> {Q} -> request_method () eq 'HEAD';
-}
 
+	my $self = shift;
+	
+	return $self -> {Q} -> request_method () eq 'HEAD';
+	
+}
 
 ################################################################################
 
 sub request_time {
+
 	return time;
+
 }
 
 ################################################################################
@@ -282,24 +330,6 @@ sub print {
 	
 	print STDOUT $html;
 	
-#	foreach my $key (keys $self -> {_headers}) {
-	
-#		$self -> {headers} -> header ($key, $self -> {_headers} -> {$key});
-		
-#	}
-
-#	my $response = new HTTP::Response ($self -> {status}, '', $self -> {headers}, $html);
-	
-#	$self -> {connection} -> send_response ($response);
-	
 }
-
-################################################################################
-
-#package Apache::Constants;
-
-#sub OK () {
-#	return 200;
-#} 
 
 1;

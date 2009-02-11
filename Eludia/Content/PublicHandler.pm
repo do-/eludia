@@ -2,6 +2,8 @@
 
 sub pub_handler {
 
+	my $ok = MP2 ? 0 : 200;
+
 	$_PACKAGE ||= __PACKAGE__ . '::';
 
 	get_request (@_);
@@ -9,7 +11,7 @@ sub pub_handler {
 	my $parms = $apr -> parms;
 	if ($parms -> {debug1} or $r -> uri =~ m{/(navigation\.js|0\.html|0\.gif|eludia\.css)}) {
 		handler (@_);
-		return OK;
+		return $ok;
 	};
 	our %_REQUEST = %{$parms};
 
@@ -192,6 +194,6 @@ sub pub_handler {
 
 #   	$db -> disconnect;
 
-	return OK;
+	return $ok;
 
 }
