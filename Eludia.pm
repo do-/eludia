@@ -302,7 +302,7 @@ sub check_external_module_uri_escape {
 	
 		print "URI::Escape::XS is, sadly, not installed...";
 
-		eval 'URI::Escape';
+		eval 'use URI::Escape qw(uri_escape uri_unescape)';
 		
 		die $@ if $@;
 		
