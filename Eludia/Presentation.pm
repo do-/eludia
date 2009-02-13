@@ -4306,7 +4306,7 @@ sub setup_skin {
 
 sub check_static_files {
 
-	return if $_SKIN -> {static_ok};
+	return if $_SKIN -> {static_ok} -> {$_NEW_PACKAGE};
 	return if $_SKIN -> {options} -> {no_presentation};
 	return if $_SKIN -> {options} -> {no_static};
 	$r or return;
@@ -4374,7 +4374,7 @@ sub check_static_files {
 		}
 	}
 
-	$_SKIN -> {static_ok} = 1;
+	$_SKIN -> {static_ok} -> {$_NEW_PACKAGE} = 1;
 
 }
 
