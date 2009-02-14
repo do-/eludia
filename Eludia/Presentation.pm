@@ -406,28 +406,8 @@ sub check_href {
 		$h {select} ||= $_REQUEST {select} if $_REQUEST {select};
 		$h {__no_navigation} ||= $_REQUEST {__no_navigation} if $_REQUEST {__no_navigation};
 		$h {__tree} ||= $_REQUEST {__tree} if $_REQUEST {__tree};
-
-		if ($conf -> {core_auto_esc} == 2) {
-			
-			$h {__last_query_string} ||= $_REQUEST {__last_query_string};
+		$h {__last_query_string} ||= $_REQUEST {__last_query_string};
 								
-		}
-		elsif ($conf -> {core_auto_esc} == 1) {
-
-			my $query_string = $ENV {QUERY_STRING};
-			$query_string =~ s{\&?__last_query_string\=[^\&]+}{}gsm;
-
-			$query_string =~ s{\&?__scrollable_table_row\=\d*}{}g;
-			$query_string .= "&__scrollable_table_row=$scrollable_row_id" unless ($_REQUEST {__windows_ce});
-
-			my $esc_query_string = MIME::Base64::encode ($query_string);
-			$esc_query_string =~ y{+/=}{-_.};
-			$esc_query_string =~ s{[\r\n]}{}gsm;
-
-			$h {__last_query_string} = $esc_query_string;
-
-		}			
-
 	}
 	
 	$_REQUEST {__salt}     ||= rand () * time ();
@@ -548,7 +528,7 @@ sub adjust_esc {
 			__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 		);
 	}	
-	elsif ($conf -> {core_auto_esc} > 0 && $_REQUEST {__last_query_string}) {
+	elsif ($_REQUEST {__last_query_string}) {
 		$options -> {esc} ||= esc_href ();
 	}
 
@@ -664,17 +644,13 @@ sub draw_form {
 			}
 		
 			check_href ($item);
-			
-			if ($conf -> {core_auto_esc} == 2) {
-			
-				$item -> {href} =~ s{\&?__last_query_string=\d*}{}gsm;
-				$item -> {href} .= "&__last_query_string=$_REQUEST{__last_last_query_string}";
+						
+			$item -> {href} =~ s{\&?__last_query_string=\d*}{}gsm;
+			$item -> {href} .= "&__last_query_string=$_REQUEST{__last_last_query_string}";
 
-				$item -> {href} =~ s{\&?__last_scrollable_table_row=\d*}{}gsm;
-				$item -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" unless ($_REQUEST {__windows_ce});
-			
-			}
-			
+			$item -> {href} =~ s{\&?__last_scrollable_table_row=\d*}{}gsm;
+			$item -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" unless ($_REQUEST {__windows_ce});
+						
 			if ($item -> {hotkey}) {
 				hotkey ({
 					%{$item -> {hotkey}},
@@ -2135,7 +2111,6 @@ sub draw_toolbar_button {
 	check_href ($options);
 
 	if (
-		$conf -> {core_auto_esc} == 2 && 
 		$options -> {href} !~ /^java/ &&
 		(	
 			$options -> {keep_esc} ||
@@ -2397,7 +2372,6 @@ sub draw_centered_toolbar_button {
 	check_href ($options);
 	
 	if (
-		$conf -> {core_auto_esc} == 2 && 
 		!(	
 			$options -> {keep_esc} ||
 			(!exists $options -> {keep_esc} && $options -> {icon} eq 'cancel')
@@ -3170,7 +3144,6 @@ sub draw_row_button {
 	}
 
 	if (
-		$conf -> {core_auto_esc} == 2 && 
 		! (	
 			$options -> {keep_esc} ||
 			(!exists $options -> {keep_esc} && $options -> {icon} eq 'delete' && !$_REQUEST {id})
@@ -3319,7 +3292,7 @@ sub draw_table_row {
 
 	foreach my $callback (@$tr_callback) {
 
-		$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . ($_REQUEST {__windows_ce} ? '' : '&__last_scrollable_table_row=' . $scrollable_row_id) if $conf -> {core_auto_esc} == 2;
+		$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . ($_REQUEST {__windows_ce} ? '' : '&__last_scrollable_table_row=' . $scrollable_row_id);
 
 		$_SKIN -> start_table_row if $_SKIN -> {options} -> {no_buffering};
 		my $tr = &$callback ();
@@ -3457,11 +3430,11 @@ sub draw_table {
 	if ($options -> {'..'} && !$_REQUEST{lpt}) {
 	
 		my $url = $_REQUEST {__path} -> [-1];
-		if ($conf -> {core_auto_esc} > 0 && $_REQUEST {__last_query_string}) {
+		if ($_REQUEST {__last_query_string}) {
 			$url = esc_href ();
 		}
 		
-		$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . ($_REQUEST {__windows_ce} ? '' : '&__last_scrollable_table_row=' . $scrollable_row_id) if $conf -> {core_auto_esc} == 2;
+		$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . ($_REQUEST {__windows_ce} ? '' : '&__last_scrollable_table_row=' . $scrollable_row_id);
 	
 		$options -> {dotdot} = draw_text_cell ({
 			a_id  => 'dotdot',
@@ -4174,7 +4147,7 @@ sub out_html {
 	}
 
 
-	$r -> send_http_header unless (MP2);
+	send_http_header ();
 
 	$r -> header_only && !MP2 or print $html;
 	
@@ -4182,15 +4155,7 @@ sub out_html {
 
 	__log_profilinig ($time, ' <out_html: ' . (length $html) . ' bytes>');
 	
-	return MP2 ? 0 : 200;
-	
-}
-
-#################################################################################
-
-sub setup_json {
-
-	our $_JSON = $INC {'JSON.pm'} ? JSON -> new -> latin1 (1) : JSON::XS -> new -> latin1 (1);
+	return ok ();
 
 }
 
@@ -4203,6 +4168,8 @@ sub setup_skin {
 	eval {$_REQUEST {__skin} ||= get_skin_name ()};
 
 	unless ($_REQUEST {__skin}) {
+
+		delete $_REQUEST {__x} if $preconf -> {core_no_xml};
 
 		if ($_REQUEST {xls}) {
 			$_REQUEST {__skin} = 'XL';
@@ -4295,6 +4262,8 @@ sub setup_skin {
 	$_REQUEST {__no_navigation} ||= $_SKIN -> {options} -> {no_navigation};
 	
 	check_static_files ();
+	
+	$_REQUEST {__static_site} ||= $r -> document_root () if $ENV {REMOTE_ADDR} eq '127.0.0.1';
 	
 	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
 

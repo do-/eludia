@@ -1316,9 +1316,8 @@ sub __log_request_profilinig {
 
 	my ($request_time) = @_;
 
-	return 
-		unless ($preconf -> {core_debug_profiling} > 2 && $model_update -> {core_ok});
-		
+	return unless ($preconf -> {core_debug_profiling} > 2 && $model_update -> {core_ok});
+
 	my $c = $r -> connection; 
 
 	$_REQUEST {_id_request_log} = sql_do_insert ($conf -> {systables} -> {__request_benchmarks}, {
@@ -1327,7 +1326,7 @@ sub __log_request_profilinig {
 		ip_fw	=> $ENV {HTTP_X_FORWARDED_FOR},
 		fake	=> 0,
 		type	=> $_REQUEST {type},
-		mac	=> (!$preconf -> {core_no_log_mac}) ? get_mac () : '',
+		mac	=> get_mac (),
 		request_time	=> int ($request_time),
 		connection_id	=> $c -> id (),
 		connection_no	=> $c -> keepalives (),
@@ -2140,10 +2139,6 @@ sub new {
 		@options
 	}, $package_name);
 	
-	if ($driver_name eq 'SQLite') {
-		DBIx::MySQLite::add_all_functions ($db);
-	}
-
 	if ($driver_name eq 'Oracle') {
   		$self -> {characterset} = $self -> sql_select_scalar ('SELECT VALUE FROM V$NLS_PARAMETERS WHERE PARAMETER = ?', 'NLS_CHARACTERSET');
   		$self -> {schema} ||= uc $db -> {Username};

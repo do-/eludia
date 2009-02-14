@@ -237,52 +237,6 @@ sub is_off {
 
 ################################################################################
 
-sub b64u_freeze {
-
-	b64u_encode (
-		$Storable::VERSION ? 
-			Storable::freeze ($_[0]) : 
-			Dumper ($_[0])
-	);
-	
-}
-
-################################################################################
-
-sub b64u_thaw {
-
-	my $serialized = b64u_decode ($_[0]);
-	
-	if ($Storable::VERSION) {
-		return Storable::thaw ($serialized);
-	}
-	else {
-		my $VAR1;
-		eval $serialized;
-		return $VAR1;
-	}
-	
-}
-
-################################################################################
-
-sub b64u_encode {
-	my $s = MIME::Base64::encode ($_[0]);
-	$s =~ y{+/=}{-_.};
-	$s =~ s{[\n\r]}{}gsm;
-	return $s;
-}
-
-################################################################################
-
-sub b64u_decode {
-	my $s = $_ [0];
-	$s =~ y{-_.}{+/=};
-	return MIME::Base64::decode ($s);
-}
-
-################################################################################
-
 sub add_totals {
 
 	my ($ar, $options) = @_;
@@ -501,7 +455,7 @@ sub redirect {
 
 		$r -> status ($options -> {status} || 302);
 		$r -> headers_out -> {'Location'} = $url;
-		$r -> send_http_header unless (MP2);
+		send_http_header ();
 		
 	}
 
@@ -557,52 +511,6 @@ sub add_vocabularies {
 	}
 	
 	return $item;
-
-}
-
-################################################################################
-
-sub set_cookie {
-
-	if (ref $apr eq "${Apache}::Request") {
-
-		eval "require ${Apache}::Cookie";
-		my $cookie = "${Apache}::Cookie" -> new ($r, @_);
-		$r->err_headers_out->add("Set-Cookie" => $cookie->as_string);		
-
-	}
-	else {
-		require CGI::Cookie;
-		my $cookie = CGI::Cookie -> new (@_);
-		$r -> headers_out -> {'Set-Cookie'} = $cookie -> as_string;
-	}
-
-}
-
-################################################################################
-
-sub get_mac {
-
-	my ($ip) = @_;	
-	$ip ||= $ENV {REMOTE_ADDR};
-
-	my $cmd = $^O eq 'MSWin32' ? 'arp -a' : 'arp -an';
-	my $arp = '';
-	
-	eval {$arp = lc `$cmd`};
-	$arp or return '';
-	
-	foreach my $line (split /\n/, $arp) {
-
-		$line =~ /\($ip\)/ or next;
-
-		if ($line =~ /[0-9a-f]{2}\:[0-9a-f]{2}\:[0-9a-f]{2}\:[0-9a-f]{2}\:[0-9a-f]{2}\:[0-9a-f]{2}/) {
-			return $&;
-		}
-		
-	}
-	
-	return '';
 
 }
 

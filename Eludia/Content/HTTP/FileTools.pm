@@ -54,7 +54,7 @@ sub download_file_header {
 	
 	delete $r -> headers_out -> {'Content-Encoding'};
 	
-	$r -> send_http_header () unless (MP2);
+	send_http_header ();
 
 	$_REQUEST {__response_sent} = 1;
 	

@@ -17,7 +17,6 @@ no warnings;
 
 $SIG {__DIE__} = \&Carp::confess;
 
-
 ################################################################################
 
 sub start {
@@ -101,8 +100,6 @@ EOS
 	}
 	
 	$sub_src .= "}\n";
-
-warn $sub_src;
 
 	eval $sub_src;
 	

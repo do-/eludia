@@ -84,7 +84,7 @@ sub select__info {
 		{			
 			id    => 'Application package',
 			label => ($_PACKAGE =~ /(\w+)/),
-			path  => join ',', @$PACKAGE_ROOT,
+			path  => join ', ', @$PACKAGE_ROOT,
 		},
 
 	]	

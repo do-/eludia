@@ -1,3 +1,5 @@
+no warnings;
+
 sub i18n {
 
 	$conf -> {lang}  ||= 'RUS';

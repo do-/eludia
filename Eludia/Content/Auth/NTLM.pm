@@ -88,7 +88,7 @@ sub _ntlm_kick {
 	$r -> status (401);
 	$r -> content_type ('text/html');
 	$r -> headers_out -> {'WWW-Authenticate'} = $_[0] || 'NTLM TlRMTVNTUAACAAAACAAIADgAAAAFgomiPB7NizwMPWsAAAAAAAAAACAAIABAAAAABQEoCgAAAA9MAEQAQQBQAAIACABMAEQAQQBQAAEABABEAE8AAwAEAGQAbwAAAAAA';
-	$r -> send_http_header unless (MP2);
+	send_http_header ();
 	print (' ' x 4096);
 	$_REQUEST {__response_sent} = 1;
 

@@ -2,7 +2,7 @@
 
 sub pub_handler {
 
-	my $ok = MP2 ? 0 : 200;
+	my $ok = ok ();
 
 	$_PACKAGE ||= __PACKAGE__ . '::';
 
@@ -47,7 +47,7 @@ sub pub_handler {
 
 		if ($ims && $time && (str2time ($ims) >= $time)) {
 			$r -> status (304);
-			$r -> send_http_header unless (MP2);
+			send_http_header ();
 			$_REQUEST {__response_sent} = 1;
 			return $ok;
 		}
@@ -59,7 +59,7 @@ sub pub_handler {
 
 		if ($r -> header_only && $time) {
 
-			$r -> send_http_header () unless (MP2);
+			send_http_header ();
 
 			$_REQUEST {__response_sent} = 1;
 			return $ok;
@@ -82,7 +82,7 @@ sub pub_handler {
 			$r -> headers_out -> {'Last-Modified'}  = time2str ($time);
 			$r -> headers_out -> {'Cache-Control'}  = 'max-age=0';
 			$r -> headers_out -> {'X-Powered-By'}   = 'Eludia/' . $Eludia::VERSION;
-			$r -> send_http_header () unless (MP2);
+			send_http_header ();
 
 			if (MP2) {
 				$r->sendfile($cache_fn_to_read);

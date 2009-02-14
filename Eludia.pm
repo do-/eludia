@@ -36,6 +36,8 @@ sub check_versions {
 
 	'$LastChangedDate$' =~ /(\d\d)(\d\d)\-(\d\d)\-(\d\d)/;
 	
+	my $year = "$1$2";
+	
 	$Eludia::VERSION  = "$2.$3.$4";
 
 	'$LastChangedRevision$' =~ /(\d+)/;
@@ -54,7 +56,7 @@ sub check_versions {
  ********       Version: $Eludia_VERSION
      * *
      **
- *****          Copyright (c) 2002-$1$2 by Eludia
+ *****          Copyright (c) 2002-$year by Eludia
  
  -------------------------------------------------------
 
@@ -66,61 +68,49 @@ EOT
 
 ################################################################################
 
+sub check_web_server_apache {
+
+	return if $preconf -> {use_cgi};
+	
+	$ENV {MOD_PERL} or $ENV {MOD_PERL_API_VERSION} or return;
+
+	my $module = 'Apache';
+
+	$module .= 2 if $ENV {MOD_PERL_API_VERSION} >= 2;
+		
+	$module .= '::Request';
+
+	print STDERR "\n  mod_perl detected, checking for $module... ";
+
+	if ($@) {
+
+		$preconf -> {use_cgi} = 1;		
+		print STDERR "not found; falling back to CGI :-(\n";		
+		return;
+
+	}
+
+	my $version = 
+		$ENV {MOD_PERL_API_VERSION} >= 2                 ? 2   :
+		$ENV {MOD_PERL}              =~ m{mod_perl/1.99} ? 199 :
+	                                                           1
+	;
+
+	eval "require Eludia::Content::HTTP::API::ModPerl$version";
+
+}
+
+################################################################################
+
 sub check_web_server {
 
 	print STDERR " check_web_server... ";
+	
+	$preconf -> {use_cgi} ||= 1 if $ENV {GATEWAY_INTERFACE} eq 'CGI/';
 
-	use constant MP2 => (exists $ENV{MOD_PERL_API_VERSION} and $ENV{MOD_PERL_API_VERSION} >= 2 or $ENV{MOD_PERL} =~ m{mod_perl/1.99});
+	check_web_server_apache ();
 
-	our $Apache = 'Apache';
-	
-	if ($ENV {MOD_PERL_API_VERSION} >= 2) {
-		require Apache2::compat;
-		$Apache = 'Apache2';
-		$ENV {PERL_JSON_BACKEND} = 'JSON::PP';		
-	}
-	elsif (MP2) {
-		require Apache::RequestRec;
-		require Apache::RequestUtil;
-		require Apache::RequestIO;
-		require Apache::Const;
-		require Apache::Upload;
-		$ENV {PERL_JSON_BACKEND} = 'JSON::PP';		
-	} 
-	else {
-		$ENV {PERL_JSON_BACKEND} = 'JSON::XS';		
-	}
-	
-	if ($ENV {GATEWAY_INTERFACE} eq 'CGI/') {
-	
-		eval 'require CGI; require Eludia::Content::HTTP::InternalRequest';
-		
-	}
-	elsif ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} || $preconf -> {use_cgi}) {
-	
-		eval 'require CGI; require Eludia::Content::HTTP::Request';
-		
-	} 
-	else {
-	
-		eval "require ${Apache}::Request";
-
-		if ($@) {
-		
-			warn "$@\n";
-
-			eval 'require CGI; require Eludia::Content::HTTP::Request';
-	
-		}
-		
-	}
-
-	if ($Apache::VERSION) {
-		Apache -> push_handlers (PerlChildInitHandler => \&sql_reconnect );
-		Apache -> push_handlers (PerlChildExitHandler => \&sql_disconnect);
-	}
-	
-	print STDERR "ok.\n";
+	eval "require Eludia::Content::HTTP::API::CGI" if $preconf -> {use_cgi};
 		
 }
 
@@ -300,7 +290,7 @@ sub check_external_module_uri_escape {
 
 	if ($@) {
 	
-		print "URI::Escape::XS is, sadly, not installed...";
+		print "URI::Escape::XS is, sadly, not installed... anyway, say ok.\n";
 
 		eval 'use URI::Escape qw(uri_escape uri_unescape)';
 		
@@ -320,34 +310,32 @@ sub check_external_module_uri_escape {
 sub check_external_module_json {
 	
 	print STDERR " check_external_module_json... ";
-
-	if (MP2) {
 	
-		eval "require JSON";
-		
-		if ($@) {
-			delete $INC {'JSON.pm'};
-			delete $INC {'JSON/PP.pm'};
-			delete $INC {'JSON/XS.pm'};
-			require JSON::XS;
-		}
-		
-	} 
-	else {
+	unless ($ENV {PERL_JSON_BACKEND}) {
 	
 		eval "require JSON::XS";
 		
 		if ($@) {
-	
-			$ENV {PERL_JSON_BACKEND} = 'JSON::PP';			
-			require JSON;
+			
+			print STDERR "JSON::XS in not installed :-( ";
+			
+			$ENV {PERL_JSON_BACKEND} = 'JSON::PP';
 			
 		}
-		
-	}
+		else {
 
-	print STDERR "ok ($ENV{PERL_JSON_BACKEND})\n";
+			$ENV {PERL_JSON_BACKEND} = 'JSON::XS';
+
+		}
 	
+	}
+	
+	eval "require Eludia::Presentation::$ENV{PERL_JSON_BACKEND}";
+	
+	die $@ if $@;
+			
+	print STDERR " $ENV{PERL_JSON_BACKEND} ok.\n";
+
 }
 
 ################################################################################
@@ -364,6 +352,32 @@ sub check_internal_modules {
 	check_internal_module_mail    ();
 	check_internal_module_ntlm    ();
 	check_internal_module_queries ();
+	check_internal_module_mac     ();
+
+}
+
+################################################################################
+
+sub check_internal_module_mac {
+
+	print STDERR " check_external_module_mac... ";
+
+	exists $preconf -> {core_no_log_mac} or $preconf -> {core_no_log_mac} = 1;
+	
+	if ($preconf -> {core_no_log_mac}) { 
+
+		eval 'sub get_mac {""}';
+		
+		print STDERR "no MAC logging, ok.\n";
+
+	} 
+	else { 
+
+		require Eludia::Content::Mac;
+
+		print STDERR "MAC logging enabled, ok.\n";		
+
+	}
 
 }
 

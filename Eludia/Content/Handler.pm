@@ -1,48 +1,8 @@
-#################################################################################
-
-sub get_request {
-
-	my $http_host = $ENV {HTTP_X_FORWARDED_HOST} || $self -> {preconf} -> {http_host};
-	
-	$ENV {HTTP_HOST} = $http_host if $http_host;
-
-	if ($connection) {
-		our $r   = new Eludia::InternalRequest ($connection, $request);
-		our $apr = $r;
-		return;
-	}
-	elsif ($ENV {SERVER_SOFTWARE} =~ /IIS/ || $ENV {SERVER_SOFTWARE} =~ /^lighttpd/) {
-	        our $r = new Eludia::Request ($preconf, $conf);
-		our $apr = $r;
-	}
-	else {
-
-		our $use_cgi = $ENV {SCRIPT_NAME} =~ m{index\.pl} || ($ENV {GATEWAY_INTERFACE} =~ m{^CGI/} && !$ENV{MOD_PERL}) || $preconf -> {use_cgi} || !$INC{"${Apache}/Request.pm"};
-		our $r   = $use_cgi ? new Eludia::Request ($preconf, $conf) : $_[0];
-		our $apr = $use_cgi ? $r : ("${Apache}::Request" -> new ($r));
-
-	}
-
-	if (ref $apr eq "${Apache}::Request") {
-		eval "require ${Apache}::Cookie";
-		our %_COOKIES = "${Apache}::Cookie" -> fetch; # ($r);
-	}
-	elsif ($ENV {SERVER_SOFTWARE} =~ /IIS/) {
-		our %_COOKIES = ();
-	}
-	else {
-		require CGI;
-		require CGI::Cookie;
-		our %_COOKIES = CGI::Cookie -> fetch;
-	}
-
-}
+no warnings;
 
 #################################################################################
 
 sub handler {
-
-	my $ok = MP2 ? 0 : 200;
 
 	my $handler_time = time ();
 
@@ -51,6 +11,10 @@ sub handler {
 	$_PACKAGE ||= __PACKAGE__ . '::';
 
 	get_request (@_);
+
+	my $http_host = $ENV {HTTP_X_FORWARDED_HOST} || $self -> {preconf} -> {http_host};
+	
+	$ENV {HTTP_HOST} = $http_host if $http_host;
 
 	my $time = $r -> request_time ();
 
@@ -71,8 +35,6 @@ sub handler {
 	$_REQUEST {__skin} = '';
 	
 	our $_REQUEST_TO_INHERIT = undef;
-
-	delete $_REQUEST {__x} if $preconf -> {core_no_xml};
 
 	$_REQUEST {__no_navigation} ||= $_REQUEST {select};
 	
@@ -175,7 +137,7 @@ sub handler {
 
 		$r -> internal_redirect ("/i/_skins/$_REQUEST{__skin}/$fn");
 
-		return $ok;
+		return ok ();
 
 	}
 
@@ -199,7 +161,7 @@ sub handler {
 	
 	our $_USER = get_user ();
 
-	return $ok if $_REQUEST {__response_sent};
+	return ok () if $_REQUEST {__response_sent};
 
 	$time = __log_profilinig ($time, '<got user>');
 
@@ -213,7 +175,15 @@ sub handler {
 
 		my $type = ($preconf -> {core_skip_boot} || $conf -> {core_skip_boot}) || $_REQUEST {__windows_ce} ? 'logon' : '_boot';
 
-		redirect ("/?type=$type&redirect_params=" . b64u_freeze (\%_REQUEST), kind => 'js', target => '_top');
+		delete $_REQUEST {__last_query_string};
+		delete $_REQUEST {__last_scrollable_table_row};
+
+		my $src = Dumper (\%_REQUEST);
+		my $value = MIME::Base64::encode ($src);
+
+		set_cookie (-name => 'redirect_params', -value => $value, -expires => '+1m', -path => '/');
+
+		redirect ("/?type=$type", kind => 'js', target => '_top');
 
 	}
 	elsif (exists ($_USER -> {redirect})) {
@@ -292,7 +262,7 @@ sub handler {
 				
 				out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
 				
-				return $ok;
+				return ok ();
 					
 				
 			}
@@ -339,11 +309,12 @@ sub handler {
 						call_for_role ("recalculate_$$page{type}") if $action ne 'create';
 
 						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_USER -> {id}) {
+
 							set_cookie (
-								-name    =>  'user_login',
-								-value   =>  sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
-								-expires =>  '+1M', # 'Sat, 31-Dec-2050 23:59:59 GMT',
-								-path    =>  '/',
+								-name    => 'user_login',
+								-value   => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
+								-expires => '+1M', # 'Sat, 31-Dec-2050 23:59:59 GMT',
+								-path    => '/',
 							);
 							
 							if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
@@ -351,21 +322,35 @@ sub handler {
 							}
 						}
 
-						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_REQUEST {redirect_params}) {
+						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_COOKIES {redirect_params}) {
+							
 							my $VAR1;
-							eval {
-								$VAR1 = b64u_thaw ($_REQUEST {redirect_params});
-							};
+							my $value = $_COOKIES {redirect_params} -> value;
+							my $src = MIME::Base64::decode ($value);
+							eval "\$VAR1 = $src";
 							
 							if ($@) {
-								warn "b64u_thaw error: $@\n";
-							} else {
+								warn "[$src] thaw error: $@\n";
+							} 
+							else {
+							
 								foreach my $key (keys %$VAR1) {
+									
 									$_REQUEST {$key} = $VAR1 -> {$key};
+
 								}
+
 							}
 							
-						} elsif ($conf -> {core_cache_html}) {
+							set_cookie (
+								-name    => 'redirect_params',
+								-value   => '',
+								-expires => '+1m',
+								-path    => '/',
+							);
+							
+						} 
+						elsif ($conf -> {core_cache_html}) {
 							sql_do ("DELETE FROM $conf->{systables}->{cache_html}");
 							my $cache_path = $r -> document_root . '/cache/*';
 							$^O eq 'MSWin32' or eval {`rm -rf $cache_path`};
@@ -392,7 +377,6 @@ sub handler {
 						redirect (
 							{
 								action => '',
-								redirect_params => '',
 								__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
 							},
 							{
@@ -520,7 +504,7 @@ sub handler {
 
 	__log_profilinig ($first_time, '<TOTAL>');
 
-	return $ok;
+	return ok ();
 
 }
 
@@ -541,7 +525,7 @@ sub log_action_start {
 		error => $_REQUEST {error}, 
 		ip_fw => $ENV {HTTP_X_FORWARDED_FOR},
 		fake => 0,
-		mac => (!$preconf -> {core_no_log_mac}) ? get_mac () : '',
+		mac => get_mac (),
 	});
 		
 }

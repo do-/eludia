@@ -9,10 +9,7 @@ sub draw__info {
 
 	push @$data, {			
 		id    => 'JSON module',
-		label => 
-			ref ($_JSON) eq 'JSON'     ? ('JSON' . ' ' . $JSON::VERSION . ' (backend: ' . JSON->backend . ')', path => $INC {'JSON.pm'}) :
-			ref ($_JSON) eq 'JSON::XS' ? ('JSON::XS' . ' ' . $JSON::XS::VERSION, path => $INC {'JSON/XS.pm'}) : 
-			'none',
+		label => $ENV {PERL_JSON_BACKEND} . ' ' . ${"$ENV{PERL_JSON_BACKEND}::VERSION"},
 	};
 
 	push @$data, {			
