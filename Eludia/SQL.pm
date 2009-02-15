@@ -614,7 +614,7 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
 
 	unless ($preconf -> {no_model_update}) {
 	
-		our $model_update = DBIx::ModelUpdate -> new (		
+		our $model_update = $_NEW_PACKAGE -> new (
 			$db, 
 			dump_to_stderr 		=> 1,
 			before_assert		=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
@@ -2070,7 +2070,7 @@ sub sql_upload_files {
 ################################################################################
 ################################################################################
 
-package DBIx::ModelUpdate;
+#package DBIx::ModelUpdate;
 
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
@@ -2127,7 +2127,7 @@ sub new {
 	
 	$driver_name =~ s{\s}{}gsm;
 		
-	$package_name .= "::$driver_name";
+#	$package_name .= "::$driver_name";
 	
 	die $@ if $@;
 

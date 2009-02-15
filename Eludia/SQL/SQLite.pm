@@ -534,13 +534,13 @@ sub get_sql_translator_ref { 0 }
 ################################################################################
 ################################################################################
 
-package DBIx::ModelUpdate::SQLite;
+#package DBIx::ModelUpdate::SQLite;
 
-no warnings;
+#no warnings;
 
-use Data::Dumper;
+#use Data::Dumper;
 
-our @ISA = qw (DBIx::ModelUpdate);
+#our @ISA = qw (DBIx::ModelUpdate);
 
 ################################################################################
 

@@ -793,13 +793,13 @@ sub get_sql_translator_ref { 0 }
 ################################################################################
 ################################################################################
 
-package DBIx::ModelUpdate::MicrosoftSQLServer;
+#package DBIx::ModelUpdate::MicrosoftSQLServer;
 
-no warnings;
+#no warnings;
 
-use Data::Dumper;
+#use Data::Dumper;
 
-our @ISA = qw (DBIx::ModelUpdate);
+#our @ISA = qw (DBIx::ModelUpdate);
 
 # Необходимо инициализировать переменную $CATALOG реальным именем базы данных
 $CATALOG = 'trunk1';

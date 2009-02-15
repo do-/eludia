@@ -1142,13 +1142,13 @@ sub get_sql_translator_ref {
 ################################################################################
 ################################################################################
 
-package DBIx::ModelUpdate::PostgreSQL;
+#package DBIx::ModelUpdate::PostgreSQL;
 
-use Data::Dumper;
+#use Data::Dumper;
 
-no warnings;
+#no warnings;
 
-our @ISA = qw (DBIx::ModelUpdate);
+#our @ISA = qw (DBIx::ModelUpdate);
 
 ################################################################################
 
