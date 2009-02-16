@@ -1,5 +1,54 @@
+no warnings;
+
 use LWP::UserAgent;
 use HTTP::Request::Common;
+
+################################################################################
+
+sub check_peer_server {
+
+	$r -> headers_in -> {'User-Agent'} =~ m{^Eludia/.*? \((.*?)\)} or return undef;
+
+	my $peer_server = $1;
+
+	my $local_sid = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE peer_id = ? AND peer_server = ?", $_REQUEST {sid}, $peer_server) or return undef;
+	
+	my $user = peer_query ($peer_server, {__whois => $_REQUEST {sid}});
+	
+	my $role = $conf -> {peer_roles} -> {$peer_server} -> {$user -> {role}} || $conf -> {peer_roles} -> {$peer_server} -> {''};
+	
+	$role or die ("Peer role $$user{role} is undefined for the server $peer_server\n");
+	
+	my $id_role = sql_select_scalar ("SELECT id FROM $conf->{systables}->{roles} WHERE name = ?", $role);
+
+	$id_role or die ("Role not found: $role\n");
+
+	my $id_user = 
+	
+		sql_select_scalar ("SELECT id FROM $conf->{systables}->{users} WHERE IFNULL(peer_id, 0) = ? AND peer_server = ?", 0 + $user -> {id}, $peer_server) ||
+		
+		sql_do_insert ($conf->{systables}->{users}, {
+			fake        => -128,
+			peer_id     => $user -> {id},
+			peer_server => $peer_server,
+		});
+		
+	sql_do ("UPDATE $conf->{systables}->{users} SET label = ?, id_role = ?, mail = ?  WHERE id = ?", $user -> {label}, $id_role, $user -> {mail}, $id_user);
+	
+	while (1) {
+		$local_sid = int (time * rand);
+		last if 0 == sql_select_scalar ("SELECT COUNT(*) FROM $conf->{systables}->{sessions} WHERE id = ?", $local_sid);
+	}
+
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id_user = ?", $id_user);
+	
+	sql_do ("INSERT INTO $conf->{systables}->{sessions} (id, id_user, peer_id, peer_server) VALUES (?, ?, ?, ?)", $local_sid, $id_user, $_REQUEST {sid}, $peer_server);
+	
+	$_REQUEST {sid} = $local_sid;
+	
+	return $peer_server;
+
+}
 
 ################################################################################
 
