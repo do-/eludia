@@ -13,6 +13,8 @@ sub sql_version {
 	
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
 	
+	$model_update -> {schema} = sql_select_scalar ('SELECT current_schema()');
+
 	return $version;
 	
 }
@@ -1502,23 +1504,6 @@ sub create_index {
 	$index_def =~ s{(\w+)\((\d+)\)}{SUBSTRING($1 FROM 1 FOR $2)};
 	
 	$self -> do ("CREATE INDEX $concurrently ix_${table_name}_${index_name} ON $table_name ($index_def)");
-
-}
-
-################################################################################
-
-sub sql_select_scalar {
-
-	my ($self, $sql, @params) = @_;
-
-	my $st = $self -> prepare ($sql);
-	
-	$st -> execute (@params);
-
-	my @result = $st -> fetchrow_array ();
-	$st -> finish;
-	
-	return $result [0];
 
 }
 

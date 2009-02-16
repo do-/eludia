@@ -389,16 +389,16 @@ sub check_internal_module_peering {
 
 	if ($preconf -> {peer_servers}) {
 	
-		eval 'sub check_peer_server {undef}';
+		require Eludia::Content::Peering;
 
-		print STDERR " no peering, ok\n";
+		print STDERR " '$preconf->{peer_name}', ok\n";
 	
 	}
 	else {
 
-		require Eludia::Content::Peering;
+		eval 'sub check_peer_server {undef}';
 
-		print STDERR " '$preconf->{peer_name}', ok\n";
+		print STDERR " no peering, ok\n";
 
 	}; 
 	

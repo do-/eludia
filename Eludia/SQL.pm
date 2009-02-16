@@ -605,10 +605,6 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver name selected');
 $time = __log_profilinig ($time, '  sql_reconnect: driver reloaded');
 
 	die $@ if $@;
-	
-	our $SQL_VERSION = sql_version ();
-
-	$SQL_VERSION -> {driver} = $driver_name;
 
 $time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
 
@@ -625,6 +621,10 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
 		);
 	
 	}
+
+	our $SQL_VERSION = sql_version ();
+
+	$SQL_VERSION -> {driver} = $driver_name;
 
 $time = __log_profilinig ($time, '  sql_reconnect: $model_update created');
 
@@ -2143,10 +2143,6 @@ sub new {
   		$self -> {characterset} = sql_select_scalar ('SELECT VALUE FROM V$NLS_PARAMETERS WHERE PARAMETER = ?', 'NLS_CHARACTERSET');
   		$self -> {schema} ||= uc $db -> {Username};
   		$self -> {__voc_replacements} = "$self->{quote}$self->{__voc_replacements}$self->{quote}" if $self -> {__voc_replacements} =~ /^_/;
-	}
-	
-	if ($driver_name eq 'PostgreSQL') {
-		$self -> {schema} = $self -> sql_select_scalar ('SELECT current_schema()');
 	}
 	
 	$self -> {schema} ||= '';
