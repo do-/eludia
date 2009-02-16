@@ -2,7 +2,7 @@
 
 sub pub_handler {
 
-	my $ok = ok ();
+	my $ok = _ok ();
 
 	$_PACKAGE ||= __PACKAGE__ . '::';
 

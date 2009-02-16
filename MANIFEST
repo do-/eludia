@@ -4,13 +4,15 @@ Eludia/Content.pm
 Eludia/Content/Auth.pm
 Eludia/Content/Auth/NTLM.pm
 Eludia/Content/Handler.pm
+Eludia/Content/HTTP/API/CGI.pm
+Eludia/Content/HTTP/API/ModPerl1.pm
+Eludia/Content/HTTP/API/ModPerl199.pm
+Eludia/Content/HTTP/API/ModPerl2.pm
 Eludia/Content/HTTP/FCGI/IIS.pm
 Eludia/Content/HTTP/FCGI/lighttpd.pm
 Eludia/Content/HTTP/FileTools.pm
-Eludia/Content/HTTP/InternalRequest.pm
-Eludia/Content/HTTP/Request.pm
-Eludia/Content/HTTP/Request/Upload.pm
 Eludia/Content/HTTP/Server.pm
+Eludia/Content/Mac.pm
 Eludia/Content/Mail.pm
 Eludia/Content/ModuleTools.pm
 Eludia/Content/Peering.pm
@@ -44,6 +46,8 @@ Eludia/GenericApplication/Presentation/_sync.pm
 Eludia/Loader.pm
 Eludia/Offline.pm
 Eludia/Presentation.pm
+Eludia/Presentation/JSON/PP.pm
+Eludia/Presentation/JSON/XS.pm
 Eludia/Presentation/Skins/Classic.pm
 Eludia/Presentation/Skins/Classic/0.gif.pm
 Eludia/Presentation/Skins/Classic/0.html.pm

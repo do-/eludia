@@ -24,3 +24,5 @@ sub get_mac {
 	return '';
 
 }
+
+1;

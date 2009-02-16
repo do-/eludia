@@ -4155,7 +4155,7 @@ sub out_html {
 
 	__log_profilinig ($time, ' <out_html: ' . (length $html) . ' bytes>');
 	
-	return ok ();
+	return _ok ();
 
 }
 
