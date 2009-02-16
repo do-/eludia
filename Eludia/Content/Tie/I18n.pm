@@ -9,6 +9,8 @@ sub i18n {
 	$_REQUEST {lang} ||= $preconf -> {lang} || $conf -> {lang}; # According to NISO Z39.53
 
 	$conf -> {i18n} -> {$_REQUEST {lang}} -> {_page_title} ||= $conf -> {page_title};
+	
+	our $_ACTIONS ||= {_actions => {}};
 
 	my %i18n = ();
 	
@@ -16,7 +18,7 @@ sub i18n {
 	
 		lang => $_REQUEST {lang},
 		
-		over => $conf -> {i18n} -> {$_REQUEST {lang}},
+		over => [$_ACTIONS, $conf -> {i18n} -> {$_REQUEST {lang}}],
 		
 	};
 	
@@ -44,10 +46,13 @@ sub FETCH {
 
 	my ($options, $key) = @_;
 	
-	return 
-		$options -> {over} -> {$key}
-		|| $options -> {under} -> {$key}
-		|| $key;
+	foreach my $over (@{$options -> {over}}) {
+	
+		return $over -> {$key} if $over -> {$key};
+	
+	}
+	
+	return $options -> {under} -> {$key} || $key;
 
 }
 

@@ -8,6 +8,16 @@ sub j  ($)    {js "\$(document).ready (function () { $_[0] })"}
 
 ################################################################################
 
+sub action_type_label (;$$) {
+	
+	my ($action, $type) = @_;
+	
+	$i18n -> {_actions} -> {$type || $_REQUEST {type}} -> {$action};
+
+}
+
+################################################################################
+
 sub __d {
 
 	my ($data, @fields) = @_;
@@ -3402,10 +3412,13 @@ sub draw_table {
 	if (ref $options -> {title} eq HASH) {
 				
 		unless ($_REQUEST {select}) {
+		
 			$options -> {title} -> {height} ||= 10;
+			$options -> {title} -> {label}  ||= '';		
 			$options -> {title} = 
 				draw_hr (%{$options -> {title}}) .
-				draw_window_title ($options -> {title}) if $options -> {title} -> {label};
+				draw_window_title ($options -> {title})
+			
 		}
 		else {
 			$options -> {title} = draw_window_title ($options -> {title}) 

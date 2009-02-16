@@ -1,6 +1,6 @@
 ################################################################################
 
-sub do_add_DEFAULT {
+sub do_add_DEFAULT { # Слияние дубликатов
 	
 	sql_do_relink ($_REQUEST {type}, [get_ids ('clone')] => $_REQUEST {id});
 
@@ -8,7 +8,7 @@ sub do_add_DEFAULT {
 
 ################################################################################
 
-sub do_kill_DEFAULT {
+sub do_kill_DEFAULT { # массовое удаление
 	
 	foreach my $id (get_ids ($_REQUEST {type})) {
 	
@@ -20,7 +20,7 @@ sub do_kill_DEFAULT {
 
 ################################################################################
 
-sub do_unkill_DEFAULT {
+sub do_unkill_DEFAULT { # массовое восстановление
 	
 	my $extra = '';
 	$extra .= ', is_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {is_merged_to};
@@ -54,7 +54,7 @@ sub do_unkill_DEFAULT {
 
 ################################################################################
 
-sub do_create_DEFAULT {
+sub do_create_DEFAULT { # создание
 
 	my $default_values = {};
 	
@@ -164,7 +164,7 @@ sub do_create_DEFAULT {
 
 ################################################################################
 
-sub do_update_DEFAULT {
+sub do_update_DEFAULT { # запись карточки
 
 	my $type = $_[0] || $_REQUEST {type};
 
@@ -202,7 +202,7 @@ sub do_update_DEFAULT {
 
 ################################################################################
 
-sub do_download_DEFAULT {
+sub do_download_DEFAULT { # загрузка файла
 
 	my $name = $_REQUEST {_name} || 'file';
 	
@@ -224,7 +224,7 @@ sub do_download_DEFAULT {
 
 ################################################################################
 
-sub do_delete_DEFAULT {
+sub do_delete_DEFAULT { # удаление
 
 	sql_do ("UPDATE $_REQUEST{type} SET fake = -1 WHERE id = ?", $_REQUEST{id});
 
@@ -232,7 +232,7 @@ sub do_delete_DEFAULT {
 
 ################################################################################
 
-sub do_undelete_DEFAULT {
+sub do_undelete_DEFAULT { # восстановление
 
 	my ($table_name, $id) = @_;
 	$table_name ||= $_REQUEST {type};

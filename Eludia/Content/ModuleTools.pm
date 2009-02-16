@@ -104,19 +104,49 @@ sub require_fresh {
 	}
 
 	if ($need_refresh) {
-
-		if ($_OLD_PACKAGE) {
-			open (S, $file_name);
-			my $src = join '', (<S>);
-			close (S);
-			$src =~ s{package\s+$_OLD_PACKAGE}{package $_NEW_PACKAGE}g;
-			$src =~ s{$_OLD_PACKAGE\:\:}{$_NEW_PACKAGE\:\:}g;
-			eval $src;
+	
+		my $src = '';
+			
+		my $type = '';
+			
+		if ($file_name =~ /(\w+)\.pm$/) {
+			
+			$type = $1;
+			
 		}
-		else {
-			do $file_name;
-		}
+			
+		open (S, $file_name);
+			
+		while (my $line = <S>) {
+		
+			if ($_OLD_PACKAGE) {
+				$line =~ s{package\s+$_OLD_PACKAGE}{package $_NEW_PACKAGE}g;
+				$line =~ s{$_OLD_PACKAGE\:\:}{$_NEW_PACKAGE\:\:}g;
+			}
+				
+			$src .= $line;
+			
+			$line =~ /^sub (\w+)_$type \{ # / or next;
 
+			my $sub   = $1;
+			my $label = $';
+			$label =~ s{[\r\n]+$}{}gsm;
+
+			my $action = 
+				$sub =~ /^do_/         ? $' : 
+				$sub =~ /^validate_/   ? $' : 
+				$sub eq 'get_item_of'  ? '' : 
+				$sub eq 'select'       ? '' :
+				undef;						
+					
+			$_ACTIONS -> {_actions} -> {$type} -> {$action} ||= $label;
+
+		}
+			
+		close (S);
+		
+		eval $src;
+			
 		die $@ if $@;
 
 		if ($is_config) {
