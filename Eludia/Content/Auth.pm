@@ -145,43 +145,6 @@ EOS
 		$user -> {role} = $user -> {session_role_name};
 	}
 
-	if ($user && $_REQUEST {role} && ($conf -> {core_multiple_roles} || $preconf -> {core_multiple_roles})) {
-
-		my $id_role = sql_select_scalar (<<EOS, $user -> {id}, $_REQUEST {role});
-			SELECT
-				roles.id
-			FROM
-				roles,
-				map_roles_to_users
-			WHERE
-				map_roles_to_users.id_user = ?
-				AND roles.id=map_roles_to_users.id_role
-				AND roles.name = ?
-EOS
-		
-		$user -> {role} = $_REQUEST {role} if ($id_role);
-		
-		if ($id_role) {
-
-			my $id_session = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE id_user = ? AND id_role = ?", $user -> {id}, $id_role);
-
-			if ($id_session) {
-				$_REQUEST {sid} = $id_session;
-			} else {
-				while (1) {
-					$_REQUEST {sid} = int (time () * rand ());
-					last if 0 == sql_select_scalar ("SELECT COUNT(*) FROM $conf->{systables}->{sessions} WHERE id = ?", $_REQUEST {sid});
-				}
-				sql_do ("INSERT INTO $conf->{systables}->{sessions} (id, id_user, id_role) VALUES (?, ?, ?)", $_REQUEST {sid}, $user -> {id}, $id_role);
-				sql_do_refresh_sessions ();
-			}
-
-			delete $_REQUEST {role};
-
-			$user -> {redirect} = 1;
-		}
-	}
-
 	$user -> {label} ||= $user -> {name} if $user;
 	
 	$user -> {peer_server} = $peer_server;

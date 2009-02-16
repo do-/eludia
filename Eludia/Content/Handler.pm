@@ -186,11 +186,6 @@ sub handler {
 		redirect ("/?type=$type", kind => 'js', target => '_top');
 
 	}
-	elsif (exists ($_USER -> {redirect})) {
-
-		redirect (create_url ());
-
-	}
 	else {
 
 		require_content DEFAULT;

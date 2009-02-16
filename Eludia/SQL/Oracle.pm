@@ -1415,7 +1415,7 @@ EOS
 
 			if ($id_name =~ s/^IDX_//i) {
 
-				$name = $self -> sql_select_scalar ("SELECT OBJECT_NAME FROM $core_name WHERE ID=$id_name AND OBJECT_TYPE=1");
+				$name = sql_select_scalar ("SELECT OBJECT_NAME FROM $core_name WHERE ID=$id_name AND OBJECT_TYPE=1");
 			}
 			else {
 
@@ -1656,7 +1656,7 @@ sub gen_column_definition {
 		if (length ($nn_constraint_name ) > 30) {
 				my ($i, $cn) = ($self -> {nn_constraint_num} || 0);
 				$nn_constraint_name = substr ($nn_constraint_name, 0, 25);
-				while ($self -> sql_select_scalar ('SELECT constraint_name FROM all_constraints WHERE owner = ? AND constraint_name = ?', $self->{schema}, $nn_constraint_name . "_$i")) {
+				while (sql_select_scalar ('SELECT constraint_name FROM all_constraints WHERE owner = ? AND constraint_name = ?', $self->{schema}, $nn_constraint_name . "_$i")) {
 					$i ++;
 				}
 				$nn_constraint_name .= "_$i";
@@ -1667,7 +1667,7 @@ sub gen_column_definition {
 		if (length ($pk_constraint_name ) > 30) {
 				my $i = 0;
 				$pk_constraint_name = substr ($pk_constraint_name, 0, 25);
-				while ($self -> sql_select_scalar ('SELECT constraint_name FROM all_constraints WHERE owner = ? AND constraint_name = ?', $self->{schema}, $pk_constraint_name . "_$i")) {
+				while (sql_select_scalar ('SELECT constraint_name FROM all_constraints WHERE owner = ? AND constraint_name = ?', $self->{schema}, $pk_constraint_name . "_$i")) {
 					$i ++;
 				}
 				$pk_constraint_name .= "_$i";			
@@ -1708,7 +1708,7 @@ sub create_table {
 				$sequence_name = "SEQ_"."$name";			
 			}
 	
-			unless ($self -> sql_select_scalar("SELECT COUNT(*) FROM USER_SEQUENCES WHERE SEQUENCE_NAME = '${sequence_name}' ")) {		
+			unless (sql_select_scalar("SELECT COUNT(*) FROM USER_SEQUENCES WHERE SEQUENCE_NAME = '${sequence_name}' ")) {		
 
 				$self -> do ("CREATE SEQUENCE $q${sequence_name}$q START WITH 1 INCREMENT BY 1 MINVALUE 1");
 
@@ -1721,7 +1721,7 @@ sub create_table {
 				$trigger_name = "TRG_"."$name";			
 			}
 
-			unless ($self -> sql_select_scalar("SELECT COUNT(*) FROM USER_TRIGGERS WHERE TRIGGER_NAME = '${trigger_name}'")) {		
+			unless (sql_select_scalar("SELECT COUNT(*) FROM USER_TRIGGERS WHERE TRIGGER_NAME = '${trigger_name}'")) {		
 				$self -> do (<<EOS);
 					CREATE TRIGGER $q${trigger_name}$q BEFORE INSERT ON $q${name}$q
 					FOR EACH ROW
@@ -1739,7 +1739,7 @@ EOS
 			if (length ($name) > 25) {
 				my $i = 0;
 				$sequence_name = substr ($sequence_name, 0, 22);
-				while ($self -> sql_select_scalar ('SELECT sequence_name FROM all_sequences WHERE sequence_owner = ? AND sequence_name = ?', $self->{schema}, $sequence_name . "_$i")) {
+				while (sql_select_scalar ('SELECT sequence_name FROM all_sequences WHERE sequence_owner = ? AND sequence_name = ?', $self->{schema}, $sequence_name . "_$i")) {
 					$i ++;
 				}
 				$sequence_name .= "_$i";			
@@ -1750,7 +1750,7 @@ EOS
 			if (length ($name) > 25) {
 				my $i = 0;
 				$trigger_name = substr ($trigger_name, 0, 21);
-				while ($self -> sql_select_scalar ('SELECT trigger_name FROM all_triggers WHERE owner = ? AND trigger_name = ?', $self->{schema}, $trigger_name . "_$i")) {
+				while (sql_select_scalar ('SELECT trigger_name FROM all_triggers WHERE owner = ? AND trigger_name = ?', $self->{schema}, $trigger_name . "_$i")) {
 					$i ++;
 				}
 				$trigger_name .= "_$i";			
@@ -2013,23 +2013,6 @@ sub create_index {
 
 ################################################################################
 
-sub sql_select_scalar {
-
-	my ($self, $sql, @params) = @_;
-
-	my $st = $self -> prepare ($sql);
-	
-	$st -> execute (@params);
-
-	my @result = $st -> fetchrow_array ();
-	$st -> finish;
-	
-	return $result [0];
-
-}
-
-################################################################################
-
 sub voc_replacements {
 	
 	my ($self, $table_name, $object_name, $object_type, $action) = @_;
@@ -2044,7 +2027,7 @@ sub voc_replacements {
 
 	if ($action eq 'DELETE') {
 
-		my $id = $self -> sql_select_scalar ("SELECT id FROM $core_name WHERE table_name= '${table_name}' AND object_name='${object_name}' AND object_type=$object_type");
+		my $id = sql_select_scalar ("SELECT id FROM $core_name WHERE table_name= '${table_name}' AND object_name='${object_name}' AND object_type=$object_type");
 		
 		$id or return;
 	
@@ -2056,13 +2039,13 @@ sub voc_replacements {
 	
 	if ($action eq 'CREATE') {	
 
-		unless ($self -> sql_select_scalar("SELECT COUNT(*) FROM $core_name WHERE table_name= '${table_name}' AND object_name='${object_name}' AND object_type=$object_type")) {
+		unless (sql_select_scalar("SELECT COUNT(*) FROM $core_name WHERE table_name= '${table_name}' AND object_name='${object_name}' AND object_type=$object_type")) {
 
 			$self -> {db} -> do ("INSERT INTO $core_name (table_name,object_name,object_type) VALUES ('${table_name}','${object_name}',$object_type)");
 
 		}
  
-		$replaced_name .= $self -> sql_select_scalar ("SELECT id FROM $core_name WHERE table_name= '${table_name}' AND object_name='${object_name}' AND object_type=$object_type");
+		$replaced_name .= sql_select_scalar ("SELECT id FROM $core_name WHERE table_name= '${table_name}' AND object_name='${object_name}' AND object_type=$object_type");
 	
 	}
 

@@ -31,16 +31,17 @@ sub _ok {0};
 ################################################################################
 
 BEGIN {
-
+	
+	require Apache2::Request;
 	require Apache2::compat;
 	require Apache2::Cookie;
-
-	Apache2 -> push_handlers (PerlChildInitHandler => \&sql_reconnect );
-	Apache2 -> push_handlers (PerlChildExitHandler => \&sql_disconnect);
 
 	$ENV {PERL_JSON_BACKEND} = 'JSON::PP';		
 
 	print STDERR "mod_perl 2.x, ok.\n";
+
+	Apache2 -> push_handlers (PerlChildInitHandler => \&sql_reconnect );
+	Apache2 -> push_handlers (PerlChildExitHandler => \&sql_disconnect);
 
 }
 
