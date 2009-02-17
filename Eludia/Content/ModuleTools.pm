@@ -93,7 +93,7 @@ sub require_fresh {
 
 	$found or return "File not found: $file_name\n";
 	
-	my $need_refresh = $preconf -> {core_spy_modules} || !$INC {$inc_key};
+	my $need_refresh = !$INC {$inc_key};
 	
 	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $last_modified, $ctime, $blksize, $blocks);
 	
