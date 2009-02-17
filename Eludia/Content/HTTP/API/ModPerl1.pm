@@ -7,6 +7,7 @@ sub get_request {
 	our $r        = $_[0];
 	our $apr      = Apache::Request -> new ($r);
 	our %_COOKIES = Apache::Cookie -> fetch;
+	our %_REQUEST = %{$apr -> parms};
 
 }
 

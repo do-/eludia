@@ -7,6 +7,7 @@ sub get_request {
 	our $r        = $_[0];
 	our $apr      = Apache2::Request -> new ($r);
 	our %_COOKIES = Apache2::Cookie  -> fetch;
+	our %_REQUEST = %{$apr -> param};
 
 }
 

@@ -10,11 +10,11 @@ sub handler {
 
 	$_PACKAGE ||= __PACKAGE__ . '::';
 
-	get_request (@_);
-
 	my $http_host = $ENV {HTTP_X_FORWARDED_HOST} || $self -> {preconf} -> {http_host};
 	
 	$ENV {HTTP_HOST} = $http_host if $http_host;
+
+	get_request (@_);	
 
 	my $time = $r -> request_time ();
 
@@ -23,12 +23,8 @@ sub handler {
 	my $first_time = $time;
 
 	$_REQUEST {__sql_time} = 0;
-
-	my $parms = ref $apr eq 'Apache2::Request' ? $apr -> param : $apr -> parms;
-	
-	undef %_REQUEST;
-	
-	our %_REQUEST = %{$parms};
+		
+	our %_REQUEST_VERBATIM = %_REQUEST;
 	
 	our $_QUERY = undef;
 
@@ -440,12 +436,12 @@ sub handler {
 						
 						$url .= '?';
 						
-						foreach my $k (keys %{$parms}) {
+						foreach my $k (keys %_REQUEST_VERBATIM) {
 						
-							next if $parms -> {$k} eq '';
+							next if $_REQUEST_VERBATIM {$k} eq '';
 								
 							$url .= "$k=";
-							$url .= uri_escape ($parms -> {$k});
+							$url .= uri_escape ($_REQUEST_VERBATIM {$k});
 							$url .= "&";
 								
 						}

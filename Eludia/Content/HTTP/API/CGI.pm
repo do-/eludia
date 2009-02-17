@@ -9,6 +9,7 @@ sub get_request {
 	our $r        = new Eludia::ApacheLikeRequest (@params);
 	our $apr      = $r;
 	our %_COOKIES = CGI::Cookie -> parse ($r -> {headers_in} -> {Cookie});
+	our %_REQUEST = %{$apr -> parms};
 
 }
 
