@@ -249,7 +249,7 @@ sub check_external_module_math_fixed_precision {
 	}
 	else {
 	
-		print STDERR "ok\n";
+		print STDERR "Math::FixedPrecision $Math::FixedPrecision::VERSION ok.\n";
 
 	}
 
@@ -259,22 +259,28 @@ sub check_external_module_math_fixed_precision {
 
 sub check_external_module_zlib {
 
-	$preconf -> {core_gzip} or return;
+	print STDERR " check_external_module_zlib................... ";
 
-	print STDERR " check_external_module_zlib... ";
+	if (!$preconf -> {core_gzip}) {
+
+		print STDERR "DISABLED, ok\n";
+
+		return;
+		
+	}
 
 	eval 'require Compress::Raw::Zlib';
 
 	if ($@) {
 	
-		print "Compress::Raw::Zlib is not installed, so gzip encoding will be unavailable.\n";
+		print "Compress::Raw::Zlib not installed, ok.\n";
 		
 		delete $preconf -> {core_gzip};
 		
 	}
 	else {
 	
-		print STDERR "ok\n";
+		print STDERR "Compress::Raw::Zlib $Compress::Raw::Zlib::VERSION ok.\n";
 
 	}
 
@@ -284,22 +290,22 @@ sub check_external_module_zlib {
 
 sub check_external_module_uri_escape {
 	
-	print STDERR " check_external_module_uri_escape... ";
+	print STDERR " check_external_module_uri_escape............. ";
 
 	eval 'use URI::Escape::XS qw(uri_escape uri_unescape)';
 
 	if ($@) {
 	
-		print "URI::Escape::XS is, sadly, not installed... anyway, say ok.\n";
-
 		eval 'use URI::Escape qw(uri_escape uri_unescape)';
 		
 		die $@ if $@;
+
+		print "URI::Escape $URI::Escape::VERSION ok. (URI::Escape::XS suggested)\n";
 		
 	}
 	else {
 	
-		print STDERR "ok\n";
+		print STDERR "URI::Escape::XS $URI::Escape::XS::VERSION ok.\n";
 
 	}
 	
@@ -309,7 +315,7 @@ sub check_external_module_uri_escape {
 
 sub check_external_module_json {
 	
-	print STDERR " check_external_module_json... ";
+	print STDERR " check_external_module_json................... ";
 	
 	unless ($ENV {PERL_JSON_BACKEND}) {
 	
@@ -334,7 +340,7 @@ sub check_external_module_json {
 	
 	die $@ if $@;
 			
-	print STDERR " $ENV{PERL_JSON_BACKEND} ok.\n";
+	print STDERR qq{$ENV{PERL_JSON_BACKEND} ${"$ENV{PERL_JSON_BACKEND}::VERSION"} ok.\n};
 
 }
 
@@ -350,9 +356,9 @@ sub check_internal_modules {
 
 	check_internal_module_peering ();
 	check_internal_module_mail    ();
-	check_internal_module_ntlm    ();
 	check_internal_module_queries ();
 	check_internal_module_mac     ();
+	check_internal_module_auth    ();
 
 }
 
@@ -360,7 +366,7 @@ sub check_internal_modules {
 
 sub check_internal_module_mac {
 
-	print STDERR " check_external_module_mac... ";
+	print STDERR " check_internal_module_mac.................... ";
 
 	exists $preconf -> {core_no_log_mac} or $preconf -> {core_no_log_mac} = 1;
 	
@@ -385,20 +391,20 @@ sub check_internal_module_mac {
 
 sub check_internal_module_peering {
 
-	print STDERR " check_internal_module_peering... ";
+	print STDERR " check_internal_module_peering................ ";
 
 	if ($preconf -> {peer_servers}) {
 	
 		require Eludia::Content::Peering;
 
-		print STDERR " '$preconf->{peer_name}', ok\n";
+		print STDERR "$preconf->{peer_name}, ok.\n";
 	
 	}
 	else {
 
 		eval 'sub check_peer_server {undef}';
 
-		print STDERR " no peering, ok\n";
+		print STDERR "no peering, ok.\n";
 
 	}; 
 	
@@ -408,14 +414,20 @@ sub check_internal_module_peering {
 
 sub check_internal_module_mail {
 
+	print STDERR " check_internal_module_mail................... ";
+
 	if ($preconf -> {mail}) { 
 		
 		require Eludia::Content::Mail;
+
+		print STDERR "$preconf->{mail}->{host}, ok.\n";
 		
 	} 
 	else { 
 		
 		eval 'sub send_mail {warn "Mail parameters are not set.\n" }';
+
+		print STDERR "no mail, ok.\n";
 		
 	}
 
@@ -423,16 +435,59 @@ sub check_internal_module_mail {
 
 ################################################################################
 
-sub check_internal_module_ntlm {
+sub check_internal_module_auth {
+
+	print STDERR " check_internal_module_auth:\n";
+	
+	$preconf -> {_} -> {pre_auth}  = [];
+	$preconf -> {_} -> {post_auth} = [];
+
+	check_internal_module_auth_cookie ();
+	check_internal_module_auth_ntlm ();
+	
+}
+
+################################################################################
+
+sub check_internal_module_auth_cookie {
+
+	print STDERR "  check_internal_module_auth_cookie........... ";
+
+	if ($preconf -> {core_auth_cookie}) { 
+		
+		require Eludia::Content::Auth::Cookie; 
+		
+		print STDERR "$preconf->{core_auth_cookie}, ok\n";
+
+	} 
+	else { 
+		
+		eval 'sub check_auth {}';
+
+		print STDERR "disabled, ok\n";
+		
+	}
+
+}
+
+################################################################################
+
+sub check_internal_module_auth_ntlm {
+
+	print STDERR "  check_internal_module_auth_ntlm............. ";
 
 	if ($preconf -> {ldap} -> {ntlm}) { 
 		
 		require Eludia::Content::Auth::NTLM; 
 		
+		print STDERR "$preconf->{ldap}->{ntlm}, ok\n";
+
 	} 
 	else { 
 		
 		eval 'sub check_auth {}';
+
+		print STDERR "no NTLM, ok\n";
 		
 	}
 
@@ -442,14 +497,21 @@ sub check_internal_module_ntlm {
 
 sub check_internal_module_queries {
 
+	print STDERR " check_internal_module_queries................ ";
+
 	if ($conf -> {core_store_table_order}) { 
 		
-		require Eludia::Content::Queries 
+		require Eludia::Content::Queries;
+
+		print STDERR "stored queries enabled, ok\n";
+
 	} 
 	else { 
 		
-		eval 'sub fix___query {}; sub check___query {}'
+		eval 'sub fix___query {}; sub check___query {}';
 	
+		print STDERR "no stored queries, ok\n";
+
 	}
 
 }

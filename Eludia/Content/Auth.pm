@@ -22,91 +22,94 @@ sub start_session {
 
 ################################################################################
 
-sub get_user {
+sub refresh_sessions {
 
-	return if $_REQUEST {type} eq '_static_files';
-
-	if ($preconf -> {core_auth_cookie}) {
-
-		my $c = $_COOKIES {sid};
-
-		$_REQUEST {sid} ||= $c -> value if $c;
-
-	}
-
-	check_auth ();
+	return if $_REQUEST {__suggest};
 
 	my $time = time;
-	
+
 	$_REQUEST {__suggest} or sql_do_refresh_sessions ();
 
-	$time = __log_profilinig ($time, ' <refresh_sessions>');
-
-	my $user = undef;
-
-	if ($_REQUEST {__login}) {
-		$user = sql_select_hash ("SELECT * FROM $conf->{systables}->{users} WHERE login = ? AND password = PASSWORD(?) AND fake <> -1", $_REQUEST {__login}, $_REQUEST {__password});
-		$user -> {id} or undef $user;
-	}
+	__log_profilinig ($time, ' <refresh_sessions>');
 	
-	my $peer_server = check_peer_server ();
+}
 
-	$user ||= sql_select_hash (<<EOS, $_REQUEST {sid}) if $_REQUEST {sid};
+################################################################################
+
+sub get_user_sql {
+
+	my ($users, $sessions, $roles) = map {$conf -> {systables} -> {$_}} qw (users sessions roles);
+
+	<<EOS;
 		SELECT
-			$conf->{systables}->{users}.*
-			, $conf->{systables}->{roles}.name AS role
-			, $conf->{systables}->{roles}.label AS role_label
-			, $conf->{systables}->{sessions}.id_role AS session_role
-			, $conf->{systables}->{sessions}.ip
-			, $conf->{systables}->{sessions}.tz_offset
-			, $conf->{systables}->{sessions}.ip_fw
-			, $conf->{systables}->{sessions}.id_role AS session_id_role
+			$users.*
+			, $roles.name AS role
+			, $roles.label AS role_label
+			, $sessions.ip
+			, $sessions.tz_offset
+			, $sessions.ip_fw
 		FROM
-			$conf->{systables}->{sessions}
-			, $conf->{systables}->{users}
-			, $conf->{systables}->{roles}
+			$sessions
+			LEFT JOIN $users ON (
+				$sessions.id_user = $users.id
+				AND $users.fake <> -1
+			)
+			LEFT JOIN $roles ON $users.id_role = $roles.id
 		WHERE
-			$conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id
-			AND $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id
-			AND $conf->{systables}->{sessions}.id = ?
-			AND $conf->{systables}->{users}.fake <> -1
+			$sessions.id = ?
 EOS
 
-	my $session = {
-		id      => $_REQUEST {sid},
-		ip      => $user -> {ip},
-		ip_fw   => $user -> {ip_fw},
-		id_role => $user -> {session_id_role},
-	};
+}
+
+################################################################################
+
+sub get_user_with_fixed_session {
+
+	my ($peer_server) = @_;
 	
-	if ($session -> {ip}) {	
-		$session -> {ip}    eq $ENV {REMOTE_ADDR}          or return undef;
-		$session -> {ip_fw} eq $ENV {HTTP_X_FORWARDED_FOR} or return undef;	
-	}	
-	elsif ($user && $user -> {id}) {
+	$_REQUEST {sid} or return undef;
+				
+	my $user = sql_select_hash ($preconf -> {_} -> {sql} -> {get_user} ||= get_user_sql (), $_REQUEST {sid});
 	
+	$user -> {id} or return undef;
+	
+	$user -> {peer_server} = $peer_server;
+
+	if ($user -> {ip}) {
+	
+		$user -> {ip}    eq $ENV {REMOTE_ADDR}          or return undef;
+		$user -> {ip_fw} eq $ENV {HTTP_X_FORWARDED_FOR} or return undef;
+		
+	}
+	else {
+
 		sql_do (
 			"UPDATE $conf->{systables}->{sessions} SET ip = ?, ip_fw = ? WHERE id = ?",
 			$ENV {REMOTE_ADDR},
 			$ENV {HTTP_X_FORWARDED_FOR}, $_REQUEST {sid},
 		);
-		
-	}
-	
-	if ($user && $user -> {id} && $session -> {id_role}) {
-		$user -> {session_role_name} = sql_select_scalar ("SELECT name FROM $conf->{systables}->{sessions}, $conf->{systables}->{roles} WHERE $conf->{systables}->{sessions}.id_role = $conf->{systables}->{roles}.id AND $conf->{systables}->{sessions}.id = ?", $_REQUEST {sid});
-	}
 
-	if ($user && $user -> {session_role}) {
-		$user -> {id_role} = $user -> {session_role};
-		$user -> {role} = $user -> {session_role_name};
 	}
-
-	$user -> {label} ||= $user -> {name} if $user;
-	
-	$user -> {peer_server} = $peer_server;
 		
-	return $user -> {id} ? $user : undef;
+	return $user;
+
+}
+
+################################################################################
+
+sub get_user {
+	
+	refresh_sessions ();
+
+	foreach (@{$preconf -> {_} -> {pre_auth}}) {&$_ ()};
+	
+	my $user = get_user_with_fixed_session (check_peer_server ());
+	
+	defined $user and $user -> {id} or delete $_REQUEST {sid};
+
+	foreach (@{$preconf -> {_} -> {post_auth}}) {&$_ ()};
+	
+	return $user;
 
 }
 

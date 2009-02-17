@@ -41,7 +41,7 @@ BEGIN {
 	Apache -> push_handlers (PerlChildInitHandler => \&sql_reconnect );
 	Apache -> push_handlers (PerlChildExitHandler => \&sql_disconnect);
 
-	print STDERR "mod_perl 2.x, ok.\n";
+	print STDERR "Apache2::Request $Apache2::Request::VERSION, ok.\n";
 
 }
 

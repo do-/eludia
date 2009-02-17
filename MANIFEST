@@ -2,6 +2,7 @@ CHANGES
 Eludia.pm
 Eludia/Content.pm
 Eludia/Content/Auth.pm
+Eludia/Content/Auth/Cookie.pm
 Eludia/Content/Auth/NTLM.pm
 Eludia/Content/Handler.pm
 Eludia/Content/HTTP/API/CGI.pm

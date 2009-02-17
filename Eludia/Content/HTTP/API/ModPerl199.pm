@@ -44,7 +44,7 @@ BEGIN {
 
 	$ENV {PERL_JSON_BACKEND} = 'JSON::PP';		
 
-	print STDERR "mod_perl 1.9x, ok.\n";
+	print STDERR "Apache::RequestRec $Apache::RequestRec::VERSION, ok.\n";
 
 }
 

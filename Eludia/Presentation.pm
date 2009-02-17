@@ -4148,18 +4148,6 @@ sub out_html {
 
 	$r -> headers_out -> {'Content-Length'} = length $html;
 
-	if ($preconf -> {core_auth_cookie}) {
-
-		set_cookie (
-			-name    =>  'sid',
-			-value   =>  $_REQUEST {sid} || 0,
-			-expires =>  $preconf -> {core_auth_cookie},
-			-path    =>  '/',
-		)
-
-	}
-
-
 	send_http_header ();
 
 	$r -> header_only && !MP2 or print $html;
