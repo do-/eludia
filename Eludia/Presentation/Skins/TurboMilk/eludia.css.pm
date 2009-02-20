@@ -745,6 +745,16 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 	border-bottom-width: 1px;
 
 }
+.form-deleted-deleted {
+	FONT-SIZE:  8pt; 
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	background-color: #dadae0;
+	padding-left: 5px;
+	padding-right: 10px;
+
+	border: 2px solid black; 
+
+}
 
 A.form-deleted-inputs, A.form-deleted-inputs:link, A.form-deleted-inputs:hover, A.form-deleted-inputs:visited {
 	FONT-WEIGHT: normal; 
@@ -763,6 +773,19 @@ A.form-deleted-inputs, A.form-deleted-inputs:link, A.form-deleted-inputs:hover, 
 	border-top-width: 0px;
 	border-right-width: 1px; 
 	border-bottom-width: 1px;
+
+}
+A.form-deleted-deleted, A.form-deleted-deleted:link, A.form-deleted-deleted:hover, A.form-deleted-deleted:visited {
+	FONT-WEIGHT: normal; 
+	FONT-SIZE:  8pt; 
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	background-color: #dadae0;
+	COLOR: #293869; 
+	TEXT-DECORATION: none;
+	padding-left: 0px;
+	padding-right: 0px;
+
+	border: 1px solid black;
 
 }
 
@@ -805,6 +828,15 @@ A.form-deleted-inputs, A.form-deleted-inputs:link, A.form-deleted-inputs:hover, 
 	border-right-width: 1px; 
 	border-bottom-width: 1px;
 }
+.form-active-deleted, .form-passive-deleted {
+	FONT-SIZE:  8pt; 
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	background-color: #f9f9ff;
+	padding-left: 5px;
+	padding-right: 10px;
+
+	border: 2px solid black;
+}
 
 A.form-active-inputs, A.form-active-inputs:link, A.form-active-inputs:hover, A.form-active-inputs:visited, A.form-passive-inputs, A.form-passive-inputs:link, A.form-passive-inputs:hover, A.form-passive-inputs:visited{
 	FONT-SIZE:  8pt; 
@@ -815,6 +847,16 @@ A.form-active-inputs, A.form-active-inputs:link, A.form-active-inputs:hover, A.f
 	padding-right: 0px;
 	TEXT-DECORATION: none;
 	border-style:none;
+}
+A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, A.form-active-deleted:visited, A.form-passive-deleted, A.form-passive-deleted:link, A.form-passive-deleted:hover, A.form-passive-deleted:visited{
+	FONT-SIZE:  8pt; 
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	COLOR: #293869; 
+	background-color: #f9f9ff;
+	padding-left: 0px;
+	padding-right: 0px;
+	TEXT-DECORATION: none;
+	border: 2px solid black;
 }
 
 INPUT {
@@ -851,13 +893,31 @@ input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs
 	padding-left: 3px;
 	padding-right: 3px;
 }
+input.form-active-deleted, select.form-active-deleted, textarea.form-active-deleted {
+	FONT-SIZE: 8pt; 
+	COLOR: #000000; 
+	background-color: #ffffff;
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';  
+	border: 1px #7f9db9 solid;
+	padding-left: 3px;
+	padding-right: 3px;
+}
 
 input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
 	FONT-SIZE: 8pt; 
 	COLOR: #000000; 
 	background-color: #f4ff00;
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';  
-	border: 1px #7f9db9 solid;
+	border: 2px solid black;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+input.form-mandatory-deleted, select.form-mandatory-deleted, textarea.form-mandatory-deleted {
+	FONT-SIZE: 8pt; 
+	COLOR: #000000; 
+	background-color: #f4ff00;
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';  
+	border: 2px solid black;
 	padding-left: 3px;
 	padding-right: 3px;
 }

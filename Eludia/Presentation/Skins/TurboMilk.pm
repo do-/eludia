@@ -605,9 +605,14 @@ sub draw_form_field {
 	$label_cell = qq {<td class='form-$$field{state}-label' nowrap $colspan_label align=right $label_width>\n$$field{label}</td>}
 		unless ($field -> {label_off});
 
+	my $inputs = 'inputs';
+	if ($field -> {fake} == -1) {
+	    $inputs = 'deleted';
+	}
+
 	return <<EOH;
 		$label_cell
-		<td class='form-$$field{state}-inputs' $colspan $cell_width>\n$$field{html}</td>
+		<td class='form-$$field{state}-$inputs' $colspan $cell_width>\n$$field{html}</td>
 EOH
 
 }

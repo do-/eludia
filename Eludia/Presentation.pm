@@ -1230,6 +1230,7 @@ sub draw_form_field_static {
 			value  => $_ -> {file_name},
 			href   => "/?type=$1&id=$_->{id}&action=download",
 			target => 'invisible',
+			fake   => $_ -> {fake},
 		}} @{sql_select_all ("SELECT * FROM $1 WHERE fake = 0 AND $2 = ? ORDER BY id", $data -> {id})}];
 		
 		$value = [map {$_ -> {id}} @{$options -> {values}}];
@@ -1297,7 +1298,11 @@ sub draw_form_field_static {
 					
 				if ($tied && !$tied -> {body}) {
 				
-					$static_value = $tied -> _select_label ($value) if ($value && $value != -1);
+					if ($value && $value != -1) {
+						my $record = $tied -> _select_hash ($value);
+						$static_value = $record -> {label};
+						$options -> {fake} = $record -> {fake};
+					}	
 				
 				}
 				else {
@@ -1309,6 +1314,7 @@ sub draw_form_field_static {
 							next if $_ -> {id} ne $value;
 							$item = $_;
 							$static_value = $item -> {label};
+							$options -> {fake} = $item -> {fake} if (defined $item -> {fake});
 							last;
 
 						}
@@ -1321,6 +1327,7 @@ sub draw_form_field_static {
 							next if $_ -> {id} != $value;
 							$item = $_;
 							$static_value = $item -> {label};
+							$options -> {fake} = $item -> {fake} if (defined $item -> {fake});
 							last;
 
 						}
@@ -1360,6 +1367,7 @@ sub draw_form_field_static {
 					$_REQUEST {id} = $value;
 					my $h = &{$options -> {values}} ();
 					$static_value = $h -> {label};
+					$options -> {fake} = $h -> {fake};
 					$_REQUEST {id} = $id;
 
 				}
@@ -1377,10 +1385,14 @@ sub draw_form_field_static {
 			elsif ($options -> {name}) {
 
 				$static_value = $data;
+				$options -> {fake} = $data if ($options -> {name} =~ /\W/);
 
 				foreach my $chunk (split /\W+/, $options -> {name}) {
 					$static_value = $static_value -> {$chunk};					
+					$options -> {fake} = $options -> {fake} -> {$chunk} if ($options -> {name} =~ /\W/ && defined $options -> {fake} -> {$chunk} && ref $options -> {fake} -> {$chunk} eq 'HASH');
 				}
+
+				$options -> {fake} = $options -> {fake} -> {fake} if ($options -> {name} =~ /\W/);
 
 			}
 

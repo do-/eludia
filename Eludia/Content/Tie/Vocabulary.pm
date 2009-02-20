@@ -12,7 +12,7 @@ sub TIEARRAY {
 
 ################################################################################
 
-sub _select_label {
+sub _select_hash {
 
 	my ($self, $id) = @_;
 	
@@ -22,7 +22,7 @@ sub _select_label {
 	
 	my $h = &{"$self->{package}::sql_select_hash"} ($sql, $id);
 	
-	return $h -> {label};
+	return $h;
 
 }
 

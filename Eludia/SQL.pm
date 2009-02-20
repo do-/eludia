@@ -802,7 +802,7 @@ sub sql_select_vocabulary {
 
 	tie @list, 'Eludia::Tie::Vocabulary', {
 	
-		sql      => "SELECT id, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit",
+		sql      => "SELECT id, fake, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit",
 		
 		params   => \@params,
 		
@@ -1613,7 +1613,7 @@ sub sql {
 	
 	unless ($have_id_filter) {
 		
-		$default_columns = 'id, label';
+		$default_columns = 'id, label, fake';
 
 		$where .= $_REQUEST {fake} =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
 
@@ -1786,7 +1786,7 @@ sub sql {
 		
 		if ($table -> {columns} eq '*' and $def) {
 		
-			@columns = ('id', keys %$def);
+			@columns = ('id', 'fake', keys %$def);
 		
 		}
 		else {
