@@ -544,12 +544,6 @@ sub get_sql_translator_ref { 0 }
 
 ################################################################################
 
-sub _db_model_checksums {
-	return '_db_model_checksums';
-}
-
-################################################################################
-
 sub unquote_table_name {
 	my ($self, $name) = @_;
 	$name =~ s{\W}{}g;

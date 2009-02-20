@@ -811,7 +811,7 @@ sub sql_select_loop {
 
 sub sql_lock {
 
-	sql_do ("LOCK TABLES $_[0] WRITE, _db_model_checksums WRITE, $conf->{systables}->{sessions} WRITE");
+	sql_do ("LOCK TABLES $_[0] WRITE, $conf->{systables}->{sessions} WRITE");
 
 }
 
@@ -841,12 +841,6 @@ sub get_sql_translator_ref { 0 }
 #use Data::Dumper;
 
 #our @ISA = qw (DBIx::ModelUpdate);
-
-################################################################################
-
-sub _db_model_checksums {
-	return '_db_model_checksums';
-}
 
 ################################################################################
 
