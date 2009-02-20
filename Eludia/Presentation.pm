@@ -2208,7 +2208,7 @@ sub draw_toolbar_input_select {
 	}
 
 	$options -> {onChange} ||= 'submit();';
-	$options -> {onChange} = '' if defined $options -> {other} || defined $options -> {detail};
+	$options -> {onChange} = '' if defined $options -> {other};
 
 	return $_SKIN -> draw_toolbar_input_select ($options);
 	
