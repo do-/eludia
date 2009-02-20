@@ -8,6 +8,36 @@ sub j  ($)    {js "\$(document).ready (function () { $_[0] })"}
 
 ################################################################################
 
+sub json_dump_to_function {
+
+	my ($name, $data) = @_;
+
+	return "\n function $name () {\n return " . $_JSON -> encode ($data) . "\n}\n";
+
+}
+
+#############################################################################
+
+sub is_off {
+	
+	my ($options, $value) = @_;
+	
+	return 0 unless $options -> {off};
+	
+	if ($options -> {off} eq 'if zero') {
+		return ($value == 0);
+	}
+	elsif ($options -> {off} eq 'if not') {
+		return !$value;
+	}
+	else {
+		return $options -> {off};
+	}
+
+}
+
+################################################################################
+
 sub action_type_label (;$$) {
 	
 	my ($action, $type) = @_;

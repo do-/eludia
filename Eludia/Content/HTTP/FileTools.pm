@@ -1,5 +1,13 @@
 ################################################################################
 
+sub delete_file {
+
+	unlink $r -> document_root . $_[0];
+
+}
+
+################################################################################
+
 sub get_filehandle {
 
 	return ref $apr eq 'Apache2::Request' ? $apr -> upload ($_[0]) -> upload_fh : $apr -> upload ($_[0]) -> fh;	

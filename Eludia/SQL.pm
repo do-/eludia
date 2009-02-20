@@ -2,6 +2,49 @@ no warnings;
 
 ################################################################################
 
+sub add_vocabularies {
+
+	my ($item, @items) = @_;
+
+	while (@items) {
+	
+		my $name = shift @items;
+		
+		my $options = {};
+		
+		if (@items > 0 && ref $items [0] eq HASH) {
+		
+			$options = shift @items;
+		
+		}
+		
+		$options -> {item} = $item;
+		
+		my $table_name = $options -> {name} || $name;
+		
+		$item -> {$name} = sql_select_vocabulary ($table_name, $options);
+		
+		if ($options -> {ids}) {
+			
+			ref $options -> {ids} eq HASH or $options -> {ids} = {table => $options -> {ids}};
+			
+			$options -> {ids} -> {from}  ||= 'id_' . en_unplural ($_REQUEST {type});
+			$options -> {ids} -> {to}    ||= 'id_' . en_unplural ($table_name);
+			
+			$options -> {ids} -> {name}  ||= $options -> {ids} -> {to};
+		
+			$item -> {$options -> {ids} -> {name}} = [sql_select_col ("SELECT $options->{ids}->{to} FROM $options->{ids}->{table} WHERE fake = 0 AND $options->{ids}->{from} = ?", $item -> {id})];
+		
+		}
+		
+	}
+	
+	return $item;
+
+}
+
+################################################################################
+
 sub sql_export_json {
 
 	my ($sql, $out, @params) = @_;
@@ -69,7 +112,7 @@ sub sql_import_json {
 				
 				default_columns => $DB_MODEL -> {default_columns},
 				
-				core_voc_replacement_use => $conf -> {core_voc_replacement_use}
+				prefix => 'sql_import_json#',
 				
 			);
 			
@@ -222,7 +265,9 @@ my $time = time;
 	if ($conf -> {core_voc_replacement_use}) {
 	
 		$model_update -> assert (
+		
 			tables => {
+			
 				$conf -> {systables} -> {__voc_replacements} => {
 					columns => {
 						id          => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
@@ -236,7 +281,9 @@ my $time = time;
 					},
 				}
 			},
-			core_voc_replacement_use => $conf -> {core_voc_replacement_use}
+						
+			prefix => 'sql_assert_core_tables#',			
+
 		);
 	
 	}
@@ -479,7 +526,13 @@ my $time = time;
 
 	};
 
-	$model_update -> assert (tables => \%defs, core_voc_replacement_use => $conf -> {core_voc_replacement_use});
+	$model_update -> assert (
+	
+		tables => \%defs, 
+				
+		prefix => 'sql_assert_core_tables#',
+		
+	);
 
 	$model_update -> {core_ok} = 1;
 		
@@ -615,7 +668,6 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
 			dump_to_stderr 		=> 1,
 			before_assert		=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
 			schema			=> $preconf -> {db_schema},
-			_db_model_checksums	=> $conf -> {systables} -> {_db_model_checksums}, 
 			__voc_replacements	=> $conf -> {systables} -> {__voc_replacements}, 
 			core_voc_replacement_use=> $conf -> {core_voc_replacement_use},
 		);
@@ -1109,13 +1161,19 @@ sub assert_fake_key {
 	
 	return if $DB_MODEL -> {tables} -> {$table_name} -> {keys} -> {fake};
 	
-	$model_update -> assert (tables => {
+	$model_update -> assert (
 	
-		$table_name => {
-			keys => {fake => 'fake'},
+		tables => {
+	
+			$table_name => {
+				keys => {fake => 'fake'},
+			},
+	
 		},
-	
-	},core_voc_replacement_use => $conf -> {core_voc_replacement_use});
+		
+		prefix => 'assert_fake_key#',
+
+	);
 
 }
 
@@ -1147,7 +1205,7 @@ sub delete_fakes {
 
 	return if is_recyclable ($table_name);
 	
-	assert_fake_key ($table_name,core_voc_replacement_use => $conf -> {core_voc_replacement_use});
+	assert_fake_key ($table_name);
 	
 	my $ids = sql_select_ids (<<EOS);
 		SELECT
@@ -2072,16 +2130,7 @@ sub sql_upload_files {
 
 #package DBIx::ModelUpdate;
 
-use Data::Dumper;
-$Data::Dumper::Sortkeys = 1;
 use DBI::Const::GetInfoType;
-
-use Storable    ('freeze', 'dclone');
-use Digest::MD5 'md5_base64';
-use Time::HiRes 'time';
-
-no strict;
-no warnings;
 
 ################################################################################
 
@@ -2092,16 +2141,6 @@ sub canonic_key_definition {
 	$s =~ s{\s+}{}g;
 	
 	return $s;
-
-}
-
-################################################################################
-
-sub __log_profilinig {
-
-	printf STDERR "Profiling [$$] %20.10f ms %s\n", 1000 * (time - $_[0]), $_[1];
-	
-	return time ();
 
 }
 
@@ -2133,7 +2172,6 @@ sub new {
 
 	my $self = bless ({
 		db => $db, 
-		checksums => 1, 
 		driver_name => $driver_name,
 		quote => $db -> get_info ($GetInfoType {SQL_IDENTIFIER_QUOTE_CHAR}),
 		@options
@@ -2153,55 +2191,44 @@ sub new {
 
 ################################################################################
 
-sub checksum {
-	return md5_base64 (freeze ($_[0]));	
+sub sql_assert_default_columns {
+
+	my ($needed_tables, $params) = @_;
+
+	my $default_columns = $params {default_columns} or return $needed_tables;
+
+	foreach my $name (keys %$needed_tables) {
+
+		next if $definition -> {sql};
+
+		foreach my $dc_name (keys %$default_columns) {
+
+			$definition -> {columns} -> {$dc_name} ||= Storable::dclone $default_columns -> {$dc_name};
+
+		}
+
+	}
+	
+	return $needed_tables;
+
 }
 
 ################################################################################
 
 sub assert {
 
-my $time = time;
+	my $time = time;
 
 	my ($self, %params) = @_;
-	
-	$Storable::canonical = 1;
-	
-	my $checksum = '';
-	my $_db_model_checksums = 
-		$self -> {_db_model_checksums}     ? $self -> {_db_model_checksums} : 
-		$self -> {driver_name} eq 'Oracle' ? '"_db_model_checksums"' 
-		: '_db_model_checksums';
 
-	unless ($params {no_checksums}) {
-
-		$checksum = checksum (\%params);
-
-		return if exists $self -> {checksums} -> {$checksum};
-				
-		eval {
-			my $st = $self -> {db} -> prepare ("SELECT COUNT(*) FROM $_db_model_checksums WHERE checksum = ?");
-			$st -> execute ($checksum);
-			($self -> {checksums} -> {$checksum}) = $st -> fetchrow_array;
-			$st -> finish;
-		};
+	&{$self -> {before_assert}} (@_) if ref $self -> {before_assert} eq CODE;
 		
-		return if $self -> {checksums} -> {$checksum};
+	my $needed_tables = sql_assert_default_columns (Storable::dclone $params {tables}, $params);
 		
-		if ($@) {
+	($needed_tables, my $new_checksums) = checksum_filter ('db_model', $params {prefix}, $needed_tables);
 		
-			my $index_name = $_db_model_checksums;
-			$index_name =~ s{(\w+)}{$1_pk};
+	%$needed_tables > 0 or warn "   DB model update: nothing to do\n" and return;
 		
-			$self -> do ("CREATE TABLE $_db_model_checksums (checksum CHAR(22))");
-			$self -> do ("CREATE INDEX $index_name ON $_db_model_checksums (checksum)");
-		
-my $time = __log_profilinig ($time, '   checksum table created');
-
-		}
-
-	}	
-
 	my $existing_tables = {};	
 	
 	foreach my $table ($self -> {db} -> tables ('', $self -> {schema}, '%', "'TABLE'")) {
@@ -2210,53 +2237,8 @@ my $time = __log_profilinig ($time, '   checksum table created');
 
 	}
 
-my $time = __log_profilinig ($time, '   got existing_tables ');
-
-	&{$self -> {before_assert}} (@_) if ref $self -> {before_assert} eq CODE;		
-	
-	my $needed_tables = $params {tables};
-		
-	my $checksums2names = {};
-	my $checksums = "''";
-
-	foreach my $name (keys %$needed_tables) {
-
-		my $definition = $needed_tables -> {$name};
-		
-		$definition -> {name} = $name;
-		
-		unless ($definition -> {sql}) {
-		
-			foreach my $dc_name (keys %{$params {default_columns}}) {
-
-				my $dc_definition = $params {default_columns} -> {$dc_name};
-			
-				$definition -> {columns} -> {$dc_name} ||= dclone ($dc_definition);
-
-			}
-		
-		}
-		
-		next if $params {no_checksums};
-
-		my $checksum = checksum ($definition);
-
-		$checksums .= ",'$checksum'";
-
-		$checksums2names -> {$checksum} = $name;
-
-		my $st = $self -> {db} -> prepare ("SELECT checksum FROM $_db_model_checksums WHERE checksum IN ($checksums)");
-		$st -> execute ();
-		while (my ($existing_checksum) = $st -> fetchrow_array) {
-			delete $needed_tables -> {$checksums2names -> {$existing_checksum}};
-		}
-		
-		$st -> finish;
-	
-	};
-
-my $time = __log_profilinig ($time, '   needed_tables filtered');
-		
+	$time = __log_profilinig ($time, '   got existing_tables');
+				
 	foreach my $name (keys %$needed_tables) {
 			
 		my $definition = $needed_tables -> {$name};
@@ -2273,19 +2255,19 @@ my $time = __log_profilinig ($time, '   needed_tables filtered');
 		
 		exists $existing_tables -> {$name} or next;
 
-		$existing_tables -> {$name} -> {columns} = $self -> get_columns ($name); 
+		$existing_tables -> {$name} -> {columns} = $self -> get_columns ($name);
 		
-		$existing_tables -> {$name} -> {keys}    = $self -> get_keys    ($name, $params {core_voc_replacement_use}); 
+		$existing_tables -> {$name} -> {keys}    = $self -> get_keys    ($name, $conf -> {core_voc_replacement_use}); 
 		
-	} 
+	}
 
-my $time = __log_profilinig ($time, '   got keys & columns');
+	$time = __log_profilinig ($time, '   got keys & columns');
+	
+	
 	
 	foreach my $name (keys %$needed_tables) {
 	
 		my $definition = $needed_tables -> {$name};
-	
-		my $checksum = checksum ($definition);
 
 		if ($existing_tables -> {$name}) {
 		
@@ -2301,9 +2283,9 @@ my $time = __log_profilinig ($time, '   got keys & columns');
 				
 					my $existing_column = $existing_columns -> {$c_name};										
 
-					my $flag = $self -> update_column ($name, $c_name, $existing_column, $c_definition,,$params {core_voc_replacement_use});
+					my $flag = $self -> update_column ($name, $c_name, $existing_column, $c_definition,,$conf -> {core_voc_replacement_use});
 
-my $time = __log_profilinig ($time, "    $name.$c_name " . ($flag ? 'updated' : 'checked'));
+					$time = __log_profilinig ($time, "    $name.$c_name " . ($flag ? 'updated' : 'checked'));
 
 				}
 				else {
@@ -2316,9 +2298,9 @@ my $time = __log_profilinig ($time, "    $name.$c_name " . ($flag ? 'updated' : 
 			
 			if (keys %$new_columns) {
 
-				$self -> add_columns ($name, $new_columns,,$params {core_voc_replacement_use});
+				$self -> add_columns ($name, $new_columns,,$conf -> {core_voc_replacement_use});
 
-my $time = __log_profilinig ($time, "    columns added");
+				$time = __log_profilinig ($time, "    columns added");
 
 			}
 
@@ -2334,25 +2316,24 @@ my $time = __log_profilinig ($time, "    columns added");
 										
 						next if $existing_definition eq $k_definition;
 
-						$self -> drop_index ($name, $k_name, $params {core_voc_replacement_use});
+						$self -> drop_index ($name, $k_name, $conf -> {core_voc_replacement_use});
 
-my $time = __log_profilinig ($time, "    key $name.$k_name dropped because '$existing_definition' ne '$k_definition'");
+						__log_profilinig ($time, "    key $name.$k_name dropped because '$existing_definition' ne '$k_definition'");
 
 					}
 				
 				}						
 				
-				$self -> create_index ($name, $k_name, $k_definition, $definition, $params {core_voc_replacement_use});
+				$self -> create_index ($name, $k_name, $k_definition, $definition, $conf -> {core_voc_replacement_use});
 
-my $time = __log_profilinig ($time, "    key $name.$k_name created");
+				__log_profilinig ($time, "    key $name.$k_name created");
 
 			};
 
 		}
 		else {
-		
 
-			$self -> create_table ($name, $definition, $params {core_voc_replacement_use});
+			$self -> create_table ($name, $definition, $conf -> {core_voc_replacement_use});
 		
 			foreach my $k_name (keys %{$definition -> {keys}}) {
 			
@@ -2360,27 +2341,26 @@ my $time = __log_profilinig ($time, "    key $name.$k_name created");
 				
 				$k_definition =~ s{\s+}{}g;
 				
-				$self -> create_index ($name, $k_name, $k_definition, $definition, $params {core_voc_replacement_use});
+				$self -> create_index ($name, $k_name, $k_definition, $definition, $conf -> {core_voc_replacement_use});
 
 			};
 
 		}
-
-		map { $self -> insert_or_update ($name, $_, $definition) } @{$definition -> {data}} if $definition -> {data};
 		
-		unless ($params {no_checksums}) {
-			$self -> do ("INSERT INTO $_db_model_checksums (checksum) VALUES ('$checksum')") unless $params {no_checksums};
+		if ($definition -> {data}) {
+		
+			foreach (@{$definition -> {data}}) {
+			
+				$self -> insert_or_update ($name, $_, $definition);
+			
+			}
+		
 		}
 
 	}
-
-	unless ($params {no_checksums}) {
-		$self -> do ("INSERT INTO $_db_model_checksums (checksum) VALUES ('$checksum')");
-		$self -> {checksums} -> {$checksum} = 1;	
-	}
+	
+	checksum_write ('db_model', $new_checksums);
 
 }
-
-################################################################################
 
 1;

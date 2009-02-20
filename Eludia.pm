@@ -183,8 +183,10 @@ sub check_application_directory {
 	$docroot .= '/';
 
 	print STDERR "$docroot...\n";
+	
+	$preconf -> {_} -> {docroot} = $docroot;
 
-	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images') {
+	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm') {
 
 		print STDERR "  checking ${docroot}${subdir}...";
 
@@ -215,7 +217,7 @@ sub check_external_modules {
 	use DBI;
 	use DBI::Const::GetInfoType;
 	use Digest::MD5;
-	use Fcntl ':flock';
+	use Fcntl qw(:DEFAULT :flock);
 	use File::Copy 'move';
 	use HTML::Entities;
 	use HTTP::Date;
@@ -352,13 +354,24 @@ sub check_internal_modules {
 	require Eludia::Presentation;
 	require Eludia::SQL;
 	
+	require Eludia::GenericApplication::Config;
+	
 	require_config ();
 
-	check_internal_module_peering ();
-	check_internal_module_mail    ();
-	check_internal_module_queries ();
-	check_internal_module_mac     ();
-	check_internal_module_auth    ();
+	check_internal_module_peering   ();
+	check_internal_module_mail      ();
+	check_internal_module_queries   ();
+	check_internal_module_mac       ();
+	check_internal_module_auth      ();
+	check_internal_module_checksums ();
+
+}
+
+################################################################################
+
+sub check_internal_module_checksums {
+
+	require Eludia::Content::Checksums;
 
 }
 
@@ -457,14 +470,14 @@ sub check_internal_module_auth_cookie {
 		
 		require Eludia::Content::Auth::Cookie; 
 		
-		print STDERR "$preconf->{core_auth_cookie}, ok\n";
+		print STDERR "$preconf->{core_auth_cookie}, ok.\n";
 
 	} 
 	else { 
 		
 		eval 'sub check_auth {}';
 
-		print STDERR "disabled, ok\n";
+		print STDERR "disabled, ok.\n";
 		
 	}
 
@@ -480,14 +493,14 @@ sub check_internal_module_auth_ntlm {
 		
 		require Eludia::Content::Auth::NTLM; 
 		
-		print STDERR "$preconf->{ldap}->{ntlm}, ok\n";
+		print STDERR "$preconf->{ldap}->{ntlm}, ok.\n";
 
 	} 
 	else { 
 		
 		eval 'sub check_auth {}';
 
-		print STDERR "no NTLM, ok\n";
+		print STDERR "no NTLM, ok.\n";
 		
 	}
 
@@ -503,14 +516,14 @@ sub check_internal_module_queries {
 		
 		require Eludia::Content::Queries;
 
-		print STDERR "stored queries enabled, ok\n";
+		print STDERR "stored queries enabled, ok.\n";
 
 	} 
 	else { 
 		
 		eval 'sub fix___query {}; sub check___query {}';
 	
-		print STDERR "no stored queries, ok\n";
+		print STDERR "no stored queries, ok.\n";
 
 	}
 

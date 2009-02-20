@@ -1289,7 +1289,7 @@ sub get_canonic_type {
 
 sub gen_column_definition {
 
-	my ($self, $name, $definition, $table_name, $core_voc_replacement_use) = @_;
+	my ($self, $name, $definition, $table_name) = @_;
 	
 	$definition -> {NULLABLE} = 1 unless defined $definition -> {NULLABLE};
 	
@@ -1327,7 +1327,7 @@ sub create_table {
 
 	$name = $self -> unquote_table_name ($name);
 
-	$self -> do ("CREATE TABLE $name (\n  " . (join "\n ,", map {$self -> gen_column_definition ($_, $definition -> {columns} -> {$_}, $name,,$core_voc_replacement_use)} keys %{$definition -> {columns}}) . "\n)\n");
+	$self -> do ("CREATE TABLE $name (\n  " . (join "\n ,", map {$self -> gen_column_definition ($_, $definition -> {columns} -> {$_}, $name)} keys %{$definition -> {columns}}) . "\n)\n");
 
 }
 

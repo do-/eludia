@@ -185,7 +185,14 @@ sub require_fresh {
 				flock (CONFIG, LOCK_EX);
 				
 				eval {
-					$model_update -> assert (%$DB_MODEL,core_voc_replacement_use => $conf -> {core_voc_replacement_use});
+					$model_update -> assert (
+					
+						%$DB_MODEL,
+												
+						prefix => 'application model#',
+
+					);
+					
 				};
 				
 				flock (CONFIG, LOCK_UN);
@@ -261,7 +268,14 @@ print STDERR "[$$]  $src\n";
 print STDERR "[$$] " . Dumper (\%db_model);
 
 						eval {
-							$model_update -> assert (%db_model,core_voc_replacement_use => $conf -> {core_voc_replacement_use});
+							$model_update -> assert (
+								
+								%db_model,
+								
+								prefix => 'application model#',
+								
+							);
+							
 						};                                         
 						
 print STDERR "[$$]  OK, now unlocking $name...\n";

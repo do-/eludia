@@ -448,6 +448,6 @@ warn "NTLM \$sambaNTPassword = $sambaNTPassword\n";
 
 	start_session ($id_user);
 
-}
+};
 
 1;

@@ -45,7 +45,6 @@ BEGIN {
 	eval "\$conf = \$${package}::conf";
 
   $conf -> {systables} ||= {
-      _db_model_checksums     => '_db_model_checksums',
       __voc_replacements      => '__voc_replacements',
       __access_log            => '__access_log',
       __benchmarks            => '__benchmarks',
