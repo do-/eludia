@@ -96,8 +96,10 @@ sub checksum_set {
 BEGIN {
 
 	print STDERR " checksums.....................................";
+
+	my @modules = MP2 ? ('DBM_Deep') : ('SDBM');
 	
-	foreach ('SDBM') {
+	foreach (@modules) {
 	
 		eval "require Eludia::Content::Checksums::$_";
 		

@@ -5,6 +5,7 @@ Eludia/Content/Auth.pm
 Eludia/Content/Auth/Cookie.pm
 Eludia/Content/Auth/NTLM.pm
 Eludia/Content/Checksums.pm
+Eludia/Content/Checksums/DBM_Deep.pm
 Eludia/Content/Checksums/SDBM.pm
 Eludia/Content/Defer.pm
 Eludia/Content/Handler.pm
