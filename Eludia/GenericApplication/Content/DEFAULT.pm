@@ -126,20 +126,24 @@ sub do_create_DEFAULT { # создание
 		
 		if ($href =~ /\bid\=(\d+)/) {
 		
-			my $data = sql ($parent -> {table} => [[id => $1]]);
-
-			$_REQUEST {"_$parent->{column}"} ||= $data -> {id};
+			$_REQUEST {"_$parent->{column}"} = $1;
 			
-			foreach my $key (@{$parent -> {columns}}) {
-			
-				exists $_REQUEST {"_$key"} or $_REQUEST {"_$key"} = $data -> {$key};
-			
-			}
-
 		}
 	
 	}
 	
+	if ($parent && $_REQUEST {"_$parent->{column}"}) {
+
+		my $data = sql ($parent -> {table} => $_REQUEST {"_$parent->{column}"});
+			
+		foreach my $key (@{$parent -> {columns}}) {
+			
+			exists $_REQUEST {"_$key"} or $_REQUEST {"_$key"} = $data -> {$key};
+			
+		}
+
+	}
+
 	while (my ($k, $v) = each %_REQUEST) {
 	
 		if ($k =~ /^_/) {
