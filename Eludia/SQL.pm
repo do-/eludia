@@ -2195,9 +2195,11 @@ sub sql_assert_default_columns {
 
 	my ($needed_tables, $params) = @_;
 
-	my $default_columns = $params {default_columns} or return $needed_tables;
+	my $default_columns = $params -> {default_columns} or return $needed_tables;
 
 	foreach my $name (keys %$needed_tables) {
+	
+		my $definition = $needed_tables -> {$name};
 
 		next if $definition -> {sql};
 
@@ -2223,7 +2225,7 @@ sub assert {
 
 	&{$self -> {before_assert}} (@_) if ref $self -> {before_assert} eq CODE;
 		
-	my $needed_tables = sql_assert_default_columns (Storable::dclone $params {tables}, $params);
+	my $needed_tables = sql_assert_default_columns (Storable::dclone $params {tables}, \%params);
 		
 	($needed_tables, my $new_checksums) = checksum_filter ('db_model', $params {prefix}, $needed_tables);
 		
