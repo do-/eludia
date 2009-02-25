@@ -854,7 +854,7 @@ sub sql_select_vocabulary {
 
 	tie @list, 'Eludia::Tie::Vocabulary', {
 	
-		sql      => "SELECT id, fake, $$options{label} FROM $table_name WHERE $filter ORDER BY $$options{order} $limit",
+		sql      => "SELECT id, $$options{label}, fake FROM $table_name WHERE $filter ORDER BY $$options{order} $limit",
 		
 		params   => \@params,
 		
