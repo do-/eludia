@@ -2349,19 +2349,184 @@ sub assert {
 
 		}
 		
-		if ($definition -> {data}) {
+		wish (table_data => $definition -> {data}, {table => $name});
 		
-			foreach (@{$definition -> {data}}) {
-			
-				$self -> insert_or_update ($name, $_, $definition);
-			
-			}
-		
-		}
-
 	}
 	
 	checksum_write ('db_model', $new_checksums);
+
+}
+
+#############################################################################
+
+sub wish {
+
+	my ($type, $items, $options) = @_;
+
+	&{"wish_to_adjust_options_for_$type"} ($options);
+		
+	foreach my $i (@$items) { &{"wish_to_clarify_demands_for_$type"} ($i, $options) }
+	
+	my $existing = &{"wish_to_explore_existing_$type"} ($options);
+	
+	my $todo = {};
+	
+	foreach my $i (@$items) { &{"wish_to_schedule_modifications_for_$type"} ($i, $existing, $todo, $options) }
+	
+	&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
+		
+	foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
+
+}
+
+#############################################################################
+
+sub wish_to_adjust_options_for_table_data {	
+
+	my ($options) = @_;
+		
+	$options -> {key} ||= 'id';
+	$options -> {key}   = [split /\W/, $options -> {key}];
+	
+	$options -> {ids}   = -1;
+
+}
+
+#############################################################################
+
+sub wish_to_clarify_demands_for_table_data {	
+
+	my ($i, $options) = @_;
+
+	foreach (keys (%{$options -> {root}})) { $i -> {$_} = $options -> {root} -> {$_} }
+
+	$options -> {ids} .= ",$i->{id}" if $i -> {id};
+
+}
+
+#############################################################################
+
+sub wish_to_explore_existing_table_data {	
+
+	my ($options) = @_;
+		
+	my $sql = "SELECT * FROM $options->{table} WHERE 1=1";
+	
+	my @params = ();
+	
+	foreach my $i (keys %{$options -> {root}}) {
+		
+		$sql .= " AND $i = ?";
+			
+		push @params, $options -> {root} -> {$i};
+
+	}
+	
+	$sql .= " AND id IN ($options->{ids})" if $options -> {ids} ne '-1';
+	
+	my $existing = {};
+
+	sql_select_loop ($sql, sub { $existing -> {@$i {@{$options -> {key}}}} = $i }, @params);
+	
+	return $existing;
+
+}
+
+#############################################################################
+
+sub wish_to_schedule_modifications_for_table_data {	
+
+	my ($new, $existing, $todo, $options) = @_;
+			
+	my $old = delete $existing -> {@$new {@{$options -> {key}}}} or return push @{$todo -> {create}}, $new;	
+	
+	foreach (keys %$old) {exists  $new -> {$_} or  $new -> {$_} = $old -> {id}};
+	
+	foreach (keys %$new) {defined $new -> {$_} and $new -> {$_} .= ''};
+
+	push @{$todo -> {update}}, $new if Dumper ($new) ne Dumper ($old);
+
+}
+
+#############################################################################
+
+sub wish_to_schedule_cleanup_for_table_data {	
+
+	my ($existing, $todo, $options) = @_;
+	
+	%{$options -> {root}} > 0 and %$existing > 0 or return;
+			
+	$todo -> {'delete'} = [ values %$existing ];
+
+}
+
+#############################################################################
+
+sub wish_to_actually_create_table_data {	
+
+	my ($items, $options) = @_;
+
+	@$items > 0 or return;
+
+	my @cols = ();
+	my @prms = ();
+	
+	foreach my $col (keys %{$items -> [0]}) {
+
+		push @cols, $col;
+		push @prms, [ map {$_ -> {$col}} @$items];
+	
+	}
+		
+	my $sth = $db -> prepare ("INSERT INTO $options->{table} (" . (join ', ', @cols) . ") VALUES (" . (join ', ', map {'?'} @cols) . ")");
+
+	$sth -> execute_array ({}, @prms);
+	
+	$sth -> finish;
+	
+}
+
+#############################################################################
+
+sub wish_to_actually_update_table_data {	
+
+	my ($items, $options) = @_;
+
+	@$items > 0 or return;
+
+	my @cols = ();
+	my @prms = ();
+	
+	foreach my $col (grep {$_ ne 'id'} keys %{$items -> [0]}) {
+		
+		push @cols, "$col = ?";
+		push @prms, [ map {$_ -> {$col}} @$items];
+	
+	}
+	
+	push @prms, [ map {$_ -> {id}} @$items];
+		
+	my $sth = $db -> prepare ("UPDATE $options->{table} SET " . (join ', ', @cols) . " WHERE id = ?");
+
+	$sth -> execute_array ({}, @prms);
+	
+	$sth -> finish;
+
+}
+
+#############################################################################
+
+sub wish_to_actually_delete_table_data {
+
+	my ($items, $options) = @_;
+	
+	@$items > 0 or return;
+	
+	my $sth = $db -> prepare ("DELETE FROM $options->{table} WHERE id = ?");
+	
+	$sth -> execute_array ({}, [map {$_ -> {id}} @$items]);
+	
+	$sth -> finish;
 
 }
 
