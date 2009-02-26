@@ -2359,6 +2359,37 @@ sub assert {
 
 #############################################################################
 
+sub sql_store_ids {
+
+	my $options;
+	
+	if (@_ == 2 && !ref $_[0] && !ref $_[1]) {
+	
+		$options = {
+			table => $_[0],
+			key   => $_[1],
+		}
+	
+	}
+	elsif (ref $_[0] eq HASH) {
+	
+		$options = $_[0];
+		
+	}
+	else {
+	
+		die "Wrong parameters for sql_store_ids: " . Dumper (\@_);
+	
+	}
+	
+	$options -> {root} ||= {'id_' . en_unplural ($_REQUEST {type}) => $_REQUEST {id}};
+	
+	wish (table_data =>	[map {{	fake => 0, $options -> {key} => $_ }} get_ids ($options -> {key})], $options);
+
+}
+
+#############################################################################
+
 sub wish {
 
 	my ($type, $items, $options) = @_;
