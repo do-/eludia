@@ -475,8 +475,6 @@ sub check_internal_module_auth_cookie {
 	} 
 	else { 
 		
-		eval 'sub check_auth {}';
-
 		print STDERR "disabled, ok.\n";
 		
 	}
@@ -497,8 +495,6 @@ sub check_internal_module_auth_ntlm {
 
 	} 
 	else { 
-		
-		eval 'sub check_auth {}';
 
 		print STDERR "no NTLM, ok.\n";
 		
