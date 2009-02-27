@@ -16,7 +16,7 @@ sub json_dump_to_function {
 
 }
 
-#############################################################################
+################################################################################
 
 sub is_off {
 	
@@ -727,6 +727,14 @@ sub draw_form {
 	push @keep_params, {name  => '__last_query_string',         value => $_REQUEST {__last_last_query_string}    };
 	push @keep_params, {name  => '__form_checkboxes',           value => $_REQUEST {__form_checkboxes}           } if $_REQUEST {__form_checkboxes};
 	push @keep_params, {name  => '__last_scrollable_table_row', value => $_REQUEST {__last_scrollable_table_row} } unless ($_REQUEST {__windows_ce});
+	
+	foreach my $key (keys %_REQUEST) {
+	
+		$key =~ /^__checkboxes_/ or next;			
+
+		push @keep_params, {name => $key, value => $_REQUEST {$key} };
+	
+	}
 
 	$options -> {keep_params} = \@keep_params;	
 		

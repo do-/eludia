@@ -32,6 +32,8 @@ sub add_vocabularies {
 			$options -> {ids} -> {to}    ||= 'id_' . en_unplural ($table_name);
 			
 			$options -> {ids} -> {name}  ||= $options -> {ids} -> {to};
+			
+			$_REQUEST {"__checkboxes_$options->{ids}->{to}"} = $options -> {ids} -> {table};
 		
 			$item -> {$options -> {ids} -> {name}} = [sql_select_col ("SELECT $options->{ids}->{to} FROM $options->{ids}->{table} WHERE fake = 0 AND $options->{ids}->{from} = ?", $item -> {id})];
 		
