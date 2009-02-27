@@ -12,9 +12,10 @@ sub checksum_filter {
 
 	my ($kind, $prefix, $name2def) = @_;
 	
-	my $hash = $preconf -> {_} -> {checksums} -> {$kind} or return [$name2def, {}];
+	my $hash = $preconf -> {_} -> {checksums} -> {$kind} or return ($name2def, {});
 
-	my @result = ({}, {});
+	my $needed_tables = {};
+	my $new_checksums = {};
 
 	checksum_lock ($kind);
 
@@ -26,14 +27,14 @@ sub checksum_filter {
 		
 		next if $hash -> {$name} eq $checksum;
 		
-		$result [0] -> {$key}  = Storable::dclone ($def);
-		$result [1] -> {$name} = $checksum;
+		$needed_tables -> {$key}  = Storable::dclone ($def);
+		$new_checksums -> {$name} = $checksum;
 	
 	}
 
 	checksum_unlock ($kind);
 	
-	return @result;
+	return ($needed_tables, $new_checksums);
 
 }
 
