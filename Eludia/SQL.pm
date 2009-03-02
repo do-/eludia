@@ -2404,7 +2404,17 @@ sub wish {
 	
 	my $todo = {};
 	
-	foreach my $i (@$items) { &{"wish_to_schedule_modifications_for_$type"} ($i, $existing, $todo, $options) }
+	foreach my $new (@$items) {
+
+		my $old = delete $existing -> {@$new {@{$options -> {key}}}} or (push @{$todo -> {create}}, $new) and next;
+
+		&{"wish_to_update_demands_for_$type"} ($old, $new, $options);
+
+		next if Dumper ($new) eq Dumper ($old);
+
+		&{"wish_to_schedule_modifications_for_$type"} ($old, $new, $todo, $options);		
+		
+	}
 	
 	&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
 		
@@ -2467,17 +2477,23 @@ sub wish_to_explore_existing_table_data {
 
 #############################################################################
 
-sub wish_to_schedule_modifications_for_table_data {	
+sub wish_to_update_demands_for_table_data {
 
-	my ($new, $existing, $todo, $options) = @_;
-			
-	my $old = delete $existing -> {@$new {@{$options -> {key}}}} or return push @{$todo -> {create}}, $new;	
-	
-	foreach (keys %$old) {exists  $new -> {$_} or  $new -> {$_} = $old -> {$_}};
-	
+	my ($old, $new, $options) = @_;
+
+	foreach (keys %$old) {exists  $new -> {$_} or $new -> {$_} = $old -> {$_}};
+
 	foreach (keys %$new) {defined $new -> {$_} and $new -> {$_} .= ''};
 
-	push @{$todo -> {update}}, $new if Dumper ($new) ne Dumper ($old);
+}
+
+#############################################################################
+
+sub wish_to_schedule_modifications_for_table_data {	
+
+	my ($old, $new, $todo, $options) = @_;
+
+	push @{$todo -> {update}}, $new;
 
 }
 
