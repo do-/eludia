@@ -909,6 +909,8 @@ function actual_table_height (table, min_height, height, id_toolbar) {
 		real_height += 14;
 //	}
 
+	if (!document) return real_height;
+
 	var max_screen_height = document.body.offsetHeight - absTop (table) - 23;
 	
 	if (id_toolbar != '') {
