@@ -2473,7 +2473,7 @@ sub wish_to_schedule_modifications_for_table_data {
 			
 	my $old = delete $existing -> {@$new {@{$options -> {key}}}} or return push @{$todo -> {create}}, $new;	
 	
-	foreach (keys %$old) {exists  $new -> {$_} or  $new -> {$_} = $old -> {id}};
+	foreach (keys %$old) {exists  $new -> {$_} or  $new -> {$_} = $old -> {$_}};
 	
 	foreach (keys %$new) {defined $new -> {$_} and $new -> {$_} .= ''};
 
