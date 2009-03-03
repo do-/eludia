@@ -4314,7 +4314,7 @@ sub setup_skin {
 	
 	check_static_files ();
 	
-	$_REQUEST {__static_site} ||= $r -> document_root () if $ENV {REMOTE_ADDR} eq '127.0.0.1';
+	$_REQUEST {__static_site} ||= $r -> document_root () if $ENV {REMOTE_ADDR} eq '127.0.0.1' and $^O eq 'MSWin32';
 	
 	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
 
