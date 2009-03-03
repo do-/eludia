@@ -287,6 +287,8 @@ sub new {
 
 	CGI::initialize_globals ();
 	
+	$CGI::USE_PARAM_SEMICOLONS = 0;
+	
 	if (@_) {	# HTTP::Server: no STDIN, but connection is available
 	
 		$self -> {connection} = shift;
@@ -344,7 +346,7 @@ sub the_request {
 
 	my $self = shift;
 
-	return 'NOPE ' . $self -> {Q} -> url (-query => 1);
+	return $self -> {request} -> method . ' ' . $self -> {Q} -> url (-query => 1);
 
 }
 
