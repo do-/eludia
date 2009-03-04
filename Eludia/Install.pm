@@ -2,32 +2,27 @@ package Eludia::Install;
 
 package main;
 
-use Term::ReadLine;
-use Term::ReadPassword;
-use File::Find;
+use Carp;
+use Cwd;
+use Data::Dumper;
 use DBI;
 use DBI::Const::GetInfoType;
-use Data::Dumper;
+use Term::ReadLine;
+use Term::ReadPassword;
 use Fcntl qw(:DEFAULT :flock);
+use File::Find;
 use File::Temp qw(tempfile);
 use Text::Iconv;
-use Carp;
-use POSIX ('setuid');
+use POSIX ('setuid');
 
 ################################################################################
 
 sub decode_entities {
 
-warn Dumper (\@ARGV);
-
-warn "1\n";
-
 	require HTML::Entities;
 	require File::Copy;
 	
 	my $encoding = $ARGV [1] || 'cp1251';
-
-warn "2\n";
 
 	open (I, $ARGV [0]) or die ("Can't open $ARGV[0]:$!\n");
 	open (O, '>/tmp/decode_entities') or die ("Can't write to /tmp/decode_entities:$!\n");
@@ -35,13 +30,9 @@ warn "2\n";
 	binmode (I, ":encoding($encoding)");
 	binmode (O, ":encoding($encoding)");
 
-warn "3\n";
-
 	my $s = '';
 
 	while (my $line = <I>) {
-
-warn "'$line'\n";
 
 	    if ($line =~ s{\=[\r\n]*$}{}) {
 		$s .= $line;
@@ -54,14 +45,10 @@ warn "'$line'\n";
 
 	}
 
-warn "4\n";
-
 	close (O);
 	close (I);
 
 	move ('/tmp/decode_entities', $ARGV [0]);
-
-warn "5\n";
 
 }
 
@@ -944,7 +931,7 @@ EOT
 	elsif ($driver_name eq 'PostgreSQL') {
 
 		`su postgres -c\"psql -c \\\"CREATE USER \\\\\\\"$user\\\\\\\" PASSWORD '$password'\\\" \"`;
-		`su postgres -c\"createdb -E WIN1251 -O $user $db\"`;
+		`su postgres -c\"createdb -E WIN1251 -O $user $db\"`; #"
 
 	} 
 	elsif ($driver_name eq 'Oracle') {
@@ -1039,8 +1026,6 @@ CustomLog $instpath/logs/access.log combined
 		db_user => '$user',
 		db_password => '$password',
 
-#		core_load_modules => 1,
-		core_spy_modules => 1,	
 		core_gzip => 1,	
 		core_skin => 'TurboMilk',
 		
@@ -1136,26 +1121,197 @@ sub random_password {
 	
 }
 
-package Eludia::Install;
+################################################################################
 
-$VERSION = '08.02.06';
+sub bin {
 
-BEGIN {
-    $SIG {__DIE__} = \&Carp::confess;
+	my $app_path = getcwd ();
+	
+	warn "Application path is '$app_path'...\n";
+
+	$app_path =~ /\w+$/;
+	
+	$app_name = $&;
+	
+	warn "Application name is '$app_name'...\n";
+	
+	mkdir "$app_path/bin";
+	mkdir "$app_path/conf/nginx";
+	
+	our $term = new Term::ReadLine 'Scripts installation';
+	
+	my $max_requests_per_child;
+
+	while (1) {
+
+		($max_requests_per_child = $term -> readline ("Max requests per child: ")) =~ /^\d{1,5}$/ and last;
+
+	}
+
+	foreach my $name ('sea', 'sky') { bin_name ($app_path, $app_name, $max_requests_per_child, $name) }
+	
+	`chmod a+x $app_path/bin/*.sh`;
+	
+	warn "\nDone.\n";
+
 }
 
-=head1 NAME
+################################################################################
 
-Eludia::Install - create/backup/mirror Eludia.pm based WEB applications.		
+sub bin_name {
 
-=head1 SEE ALSO
+	my ($app_path, $app_name, $max_requests_per_child, $name) = @_;
+	
+	my $min_port, $max_port;
+	
+	while (1) {
 
-Eludia
+		($min_port = $term -> readline ("Minimum port for '$name' configuration: ")) =~ /^\d{2,5}$/ and last;
 
-=head1 AUTHORS
+	}
+	
+	while (1) {
 
-Dmitry Ovsyanko, <'do_' -- like this, with a trailing underscore -- at 'pochta.ru'>
+		($max_port = $term -> readline ("Maximum port for '$name' configuration: ")) =~ /^\d{2,5}$/ and last;
 
-=cut
+	}
+
+	warn "\nMaking scripts for '$name' configuration...\n";
+	
+	open (F, ">$app_path/bin/ea_${app_name}_${name}_loop.sh");
+	print F <<EOT;
+#!/bin/bash
+
+cd $app_path
+
+while [ 1 ]; do 
+
+	perl -MEludia::Content::HTTP::Server -e"start (':\$1', \$2)" 2>>logs/error.log 
+	
+done
+EOT
+	close (F);
+
+	open (F, ">$app_path/bin/ea_${app_name}_${name}_start.sh");
+	print F <<EOT;
+#!/bin/bash
+
+for PORT in `seq $min_port $max_port`; do
+
+	${app_path}/bin/ea_${app_name}_${name}_loop.sh \$PORT $max_requests_per_child \&
+	
+	echo "ea_${app_name}_${name}_start: \$PORT is on"
+
+done
+EOT
+	close (F);
+
+	open (F, ">$app_path/bin/ea_${app_name}_${name}_stop.sh");
+	print F <<EOT;
+#!/bin/bash
+
+cd $app_path
+
+killall -9 ea_${app_name}_${name}_loop.sh
+
+echo "ea_${app_name}_${name}_stop: loops are broken"
+
+for PORT in `seq $min_port $max_port`; do
+
+	PIDFILE="logs/\$PORT.pid"
+
+	if [ -f \$PIDFILE ]; then 
+
+		echo "ea_${app_name}_${name}_stop: \$PIDFILE found"
+
+		PID=`cat \$PIDFILE`
+
+		echo "ea_${app_name}_${name}_stop: pid for \$PORT is \$PID"
+
+		kill \$PID;  
+
+		echo "ea_${app_name}_${name}_stop: \$PID (must be) killed"
+
+	else 
+
+		echo "ea_${app_name}_${name}_stop: \$PIDFILE not found"
+
+	fi
+
+done 
+EOT
+	close (F);
+
+	bin_name_nginx ($app_path, $app_name, $max_requests_per_child, $min_port, $max_port, $name);
+
+	warn "\nDone with '$name' configuration.\n";
+
+}
+
+################################################################################
+
+sub bin_name_nginx {
+
+	my ($app_path, $app_name, $max_requests_per_child, $min_port, $max_port, $name) = @_;
+
+	warn "\nMaking nginx config files for '$name' configuration...\n";
+
+	open (F, ">$app_path/conf/nginx/${app_name}_${name}_upstream.conf");
+
+	print F "upstream $app_name {\n";
+	
+	foreach $port ($min_port .. $max_port) {
+
+		print F "	server 127.0.0.1:$port max_fails=3 fail_timeout=30s; \n";
+
+	}
+
+	print F "}\n";
+
+	close (F);
+
+	open (F, ">$app_path/conf/nginx/${app_name}_${name}_server.conf");
+	print F <<EOT;
+	
+		root ${app_path}/docroot;
+
+		location /i/ {
+		    expires 30d;
+		}
+
+		location = / {
+		    proxy_pass       http://$app_name;
+		    proxy_set_header X_Forwarded_For \$remote_addr;
+		    proxy_buffering  off;
+		}
+
+		location / {
+		    return 403;
+		}
+		
+EOT
+	close (F);
+
+	open (F, ">$app_path/conf/nginx/${app_name}_${name}_README.txt");
+	print F <<EOT;
+	
+		include $app_path/conf/nginx/${app_name}_${name}_upstream.conf;
+		
+		server {
+		
+			# listen 80 ### or something
+			
+			# maybe some other directives
+			
+			include $app_path/conf/nginx/${app_name}_${name}_server.conf;
+		
+			# and all that lasts
+
+		}
+		
+EOT
+	close (F);
+
+}
 
 1;

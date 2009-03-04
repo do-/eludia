@@ -35,6 +35,8 @@ sub start {
 	open (I, "conf/httpd.conf");
 	while (my $line = <I>) {
 	
+		$line =~ s{[\n\r]}{}gsm;
+		
 		if ($line =~ /^\s*\<\/.*\>\s*$/) {
 			$current_section = '';
 			next;
@@ -105,37 +107,91 @@ EOS
 	
 	my ($host, $port) = split /:/, ($_[0] || $ARGV [0] || 'localhost:80');
 
-	my $daemon = new HTTP::Daemon (
-#		LocalAddr => $host, 
-		LocalPort => $port,
-		Listen    => 50,
-
-	) or die "Can't start HTTP daemon: $!\n";
-
+	my $daemon;
+	
+	while (1) {
+	
+		$daemon = new HTTP::Daemon (
+			LocalPort => $port,
+			Listen    => 50,
+			Reuse     => 1,
+		) and last;
+						
+		my $error = $@ || $!;
+		
+		if ($error =~ /already in use/) {
+		
+			warn "Port $port is in use, wait 1s...\n";
+		
+			sleep 1;
+			
+			next;
+		
+		}
+		elsif ($error) {
+		
+			die $error;
+		
+		}
+		else {
+		
+			$daemon or die "\$daemon is left undefined without any error: epic fail :-((\n";
+		
+		}
+		
+		last;
+	
+	}
+	
 	print STDERR "HTTP daemon is listening on ", $daemon -> url, "...\n";
 	
 	$ENV {'SERVER_SOFTWARE'} = $daemon -> product_tokens;
-	
-	if ($^O eq 'MSWin32') {
-	
-		my $pidfile = "$temp\\eludia.pid";
-		open (PIDFILE, ">$pidfile");
-		print PIDFILE $$;		
-		close (PIDFILE);
 		
-	}
+	my $pidfile = "logs/$port.pid";
 
+	open (PIDFILE, ">$pidfile");
+	print PIDFILE $$;		
+	close (PIDFILE);
+	
+	my $n = $_[1] || -1;
+
+	my $shut_down = sub {
+
+		warn "$$ is shutting down.\n";
+		
+		$daemon -> close;
+		
+		unlink $pidfile;
+
+		exit;
+
+	};
+	
+	$SIG {INT}  = $shut_down;
+	$SIG {TERM} = $shut_down;
+	
 	while (my $connection = $daemon -> accept) {
 
 		eval {
 			handle_connection ($connection);
 		};
+		
 		if ($@) {
 			$connection -> send_error (500, "<pre>$@</pre>");
 		}
 
+		$connection -> close;
+		
+		undef ($connection);
+		
+		$n -- if $n > 0;
+		
+		warn "$$: it lasts $n requests\n";
+		
+		$n or $daemon -> close and &$shut_down ();
+
 	}
-	
+		
 }
 
 ################################################################################
@@ -143,8 +199,10 @@ EOS
 sub handle_connection {
 
 	my $connection = $_[0];
-	
+		
 	my $request = $connection -> get_request;
+
+	$connection -> force_last_request;
 	
 	if ($request) {
 
@@ -155,10 +213,11 @@ sub handle_connection {
 		if ($uri =~ m{^/i/}) {
 		
 			my $path = $document_root . $uri;
+			
 			$path =~ s{\?.*}{};
 
 			$| = 1;
-			
+
 			$connection -> send_basic_header;
 			print $connection "Cache-Control: max-age=" . 24 * 60 * 60;
 			$connection -> send_crlf;
@@ -167,6 +226,8 @@ sub handle_connection {
 			
 		}
 		else {
+		
+			
 
 			$uri =~ s{^/+}{/};
 			$uri =~ s{/+$}{/};
@@ -205,8 +266,6 @@ sub handle_connection {
 	$connection -> close ();
 
 	undef ($connection);
-	
-print STDERR "\n";
 
 }
 
