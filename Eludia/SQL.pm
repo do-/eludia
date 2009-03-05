@@ -2260,12 +2260,10 @@ sub assert {
 		exists $existing_tables -> {$name} or next;
 
 		$existing_tables -> {$name} -> {columns} = $self -> get_columns ($name);
-		
-		$existing_tables -> {$name} -> {keys}    = $self -> get_keys    ($name, $conf -> {core_voc_replacement_use}); 
-		
+
 	}
 
-	$time = __log_profilinig ($time, '   got keys & columns');
+	$time = __log_profilinig ($time, '   got columns');
 	
 	
 	
@@ -2308,49 +2306,15 @@ sub assert {
 
 			}
 
-			foreach my $k_name (keys %{$definition -> {keys}}) {
-			
-				my $k_definition = $self -> canonic_key_definition ($definition -> {keys} -> {$k_name});
-						
-				if ($existing_tables -> {$name}) {
-					
-					my $existing_definition = $self -> canonic_key_definition ($existing_tables -> {$name} -> {keys} -> {$k_name});
-					
-					if ($existing_definition) {
-										
-						next if $existing_definition eq $k_definition;
-
-						$self -> drop_index ($name, $k_name, $conf -> {core_voc_replacement_use});
-
-						__log_profilinig ($time, "    key $name.$k_name dropped because '$existing_definition' ne '$k_definition'");
-
-					}
-				
-				}						
-				
-				$self -> create_index ($name, $k_name, $k_definition, $definition, $conf -> {core_voc_replacement_use});
-
-				__log_profilinig ($time, "    key $name.$k_name created");
-
-			};
-
 		}
 		else {
 
 			$self -> create_table ($name, $definition, $conf -> {core_voc_replacement_use});
 		
-			foreach my $k_name (keys %{$definition -> {keys}}) {
-			
-				my $k_definition = $definition -> {keys} -> {$k_name};
-				
-				$k_definition =~ s{\s+}{}g;
-				
-				$self -> create_index ($name, $k_name, $k_definition, $definition, $conf -> {core_voc_replacement_use});
-
-			};
-
 		}
 		
+		wish (table_keys => [map {{name => $_, parts => $definition -> {keys} -> {$_}}} (keys %{$definition -> {keys}})], {table => $name}) if exists $definition -> {keys};
+
 		wish (table_data => $definition -> {data}, {table => $name}) if exists $definition -> {data};
 		
 	}
@@ -2443,7 +2407,7 @@ sub wish_to_clarify_demands_for_table_data {
 
 	foreach (keys (%{$options -> {root}})) { $i -> {$_} = $options -> {root} -> {$_} }
 
-	$options -> {ids} .= ",$i->{id}" if $i -> {id};
+	$options -> {ids} .= ",$i->{id}" if defined $i -> {id};
 
 }
 
@@ -2576,6 +2540,65 @@ sub wish_to_actually_delete_table_data {
 	$sth -> execute_array ({}, [map {$_ -> {id}} @$items]);
 	
 	$sth -> finish;
+
+}
+
+#############################################################################
+
+sub wish_to_adjust_options_for_table_keys {
+
+	my ($options) = @_;
+	
+	$options -> {key} = ['global_name'];
+
+}
+
+#############################################################################
+
+sub wish_to_update_demands_for_table_keys {}
+
+#############################################################################
+
+sub wish_to_schedule_modifications_for_table_keys {
+
+	my ($old, $new, $todo, $options) = @_;
+
+	push @{$todo -> {alter}}, $new;
+	
+}
+
+#############################################################################
+
+sub wish_to_schedule_cleanup_for_table_keys {}
+
+#############################################################################
+
+sub wish_to_actually_create_table_keys {	
+
+	my ($items, $options) = @_;
+	
+	foreach my $i (@$items) {
+	
+		sql_do ("CREATE INDEX $i->{global_name} ON $options->{table} (@{[ join ', ', @{$i -> {parts}} ]})");
+	
+	}
+
+	
+}
+
+#############################################################################
+
+sub wish_to_actually_alter_table_keys {
+
+	my ($items, $options) = @_;
+
+	foreach my $i (@$items) {
+	
+		sql_do ("DROP INDEX $i->{global_name}");
+	
+	}
+	
+	wish_to_actually_create_table_keys (@_);
 
 }
 
