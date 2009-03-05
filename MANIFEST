@@ -51,6 +51,7 @@ Eludia/GenericApplication/Presentation/_info.pm
 Eludia/GenericApplication/Presentation/_object_info.pm
 Eludia/GenericApplication/Presentation/_sql_benchmarks.pm
 Eludia/GenericApplication/Presentation/_sync.pm
+Eludia/Install.pm
 Eludia/Loader.pm
 Eludia/Offline.pm
 Eludia/Presentation.pm

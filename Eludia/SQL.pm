@@ -2351,7 +2351,7 @@ sub assert {
 
 		}
 		
-		wish (table_data => $definition -> {data}, {table => $name});
+		wish (table_data => $definition -> {data}, {table => $name}) if exists $definition -> {data};
 		
 	}
 	
