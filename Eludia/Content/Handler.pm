@@ -111,19 +111,19 @@ sub handler {
 
 	my $request_time = 1000 * (time - $first_time);
 		
-	require_config ({no_db => 1});
+	require_config ();
 	
-	$time = __log_profilinig ($time, '<require_config no_db>');
+	check_systables ();
+	
+	$time = __log_profilinig ($time, '<require_config>');
 
    	sql_reconnect ();   	
-
+   	
 	$time = __log_profilinig ($time, '<sql_reconnect>');
 
-	require_config ();
+   	require_model ();
 
 	__log_request_profilinig ($request_time);
-
-	$time = __log_profilinig ($time, '<require_config>');
 	
 	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
 

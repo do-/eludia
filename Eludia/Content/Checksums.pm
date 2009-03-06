@@ -23,11 +23,19 @@ sub checksum_filter {
 	
 		my $name     = $prefix . $key;
 		my $def      = $name2def -> {$key};
-		my $checksum = checksum ($def);
+		my $checksum;
 		
-		next if $hash -> {$name} eq $checksum;
-		
-		$needed_tables -> {$key}  = Storable::dclone ($def);
+		if (ref $def) {
+			$checksum = checksum ($def);			
+			next if $hash -> {$name} eq $checksum;
+			$needed_tables -> {$key}  = Storable::dclone ($def);
+		}
+		else {
+			$checksum = $def;
+			next if $hash -> {$name} >= $checksum;
+			$needed_tables -> {$key}  = $def;
+		}
+
 		$new_checksums -> {$name} = $checksum;
 	
 	}
@@ -94,6 +102,56 @@ sub checksum_set {
 
 ################################################################################
 
+sub get_last_update {
+
+	my ($kind, $name) = ('last_update', '_');
+
+	checksum_lock ($kind);
+
+	my $value = checksum_get ($kind, $name);
+	
+	unless ($value) {
+	
+		$value = sql_select_scalar ("SELECT unix_ts FROM $conf->{systables}->{__last_update}");
+		
+		my $hash = $preconf -> {_} -> {checksums} -> {$kind};
+		
+		$hash -> {$name} = $value if $hash;
+	
+	}
+	
+	$value ||= -1;
+	
+	checksum_unlock ($kind);
+
+	return $value;
+
+}
+
+################################################################################
+
+sub set_last_update {
+
+	my ($value) = @_;
+
+	my ($kind, $name) = ('last_update', '_');
+	
+	checksum_lock ($kind);
+
+	my $hash = $preconf -> {_} -> {checksums} -> {$kind};
+
+	$hash -> {$name} = $value if $hash;
+	
+	sql_do ("DELETE FROM $conf->{systables}->{__last_update}");
+
+	sql_do ("INSERT INTO $conf->{systables}->{__last_update} (unix_ts, pid) VALUES (?, ?)", $value, $$);
+
+	checksum_unlock ($kind);
+
+}
+
+################################################################################
+
 BEGIN {
 
 	print STDERR " checksums.....................................";
@@ -112,7 +170,18 @@ BEGIN {
 
 		print STDERR "  checksum hashes...\n";
 
-		foreach my $kind ('db_model') {	checksum_init ($kind) }
+		foreach my $kind (qw( 
+		
+			db_model 
+			last_update 
+			model_scripts 
+			update_scripts
+			
+		)) { 
+		
+			checksum_init ($kind)
+			
+		}
 
 	}
 	else {
