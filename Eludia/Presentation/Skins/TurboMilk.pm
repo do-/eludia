@@ -721,6 +721,7 @@ EOH
 					_suggest_timer_$options->{name} = null;
 				}
 			"
+			onBlur="this.style.display='none'; $$options{after}"
 			onDblClick="set_suggest_result (this, '$id'); $$options{after}"
 			onKeyPress="set_suggest_result (this, '$id'); $$options{after}; suggest_clicked = 1"
 		>
