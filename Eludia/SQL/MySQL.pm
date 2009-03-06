@@ -1142,17 +1142,9 @@ sub wish_to_explore_existing_table_data {
 
 sub wish_to_schedule_modifications_for_table_data {	
 
-	my ($new, $existing, $todo, $options) = @_;
-	
-	$new -> {id} and return push @{$todo -> {replace}}, $new;
-			
-	my $old = delete $existing -> {@$new {@{$options -> {key}}}} or return push @{$todo -> {create}}, $new;	
-	
-	foreach (keys %$old) {exists  $new -> {$_} or  $new -> {$_} = $old -> {id}};
-	
-	foreach (keys %$new) {defined $new -> {$_} and $new -> {$_} .= ''};
+	my ($old, $new, $todo, $options) = @_;
 
-	push @{$todo -> {replace}}, $new if Dumper ($new) ne Dumper ($old);
+	push @{$todo -> {replace}}, $new;
 
 }
 
@@ -1167,6 +1159,8 @@ sub wish_to_actually_create_table_data {
 #############################################################################
 
 sub wish_to_actually_replace_table_data {	
+
+warn Dumper (\@_);
 
 	wish_to_actually_modify_table_data (@_, 'REPLACE');
 
@@ -1188,6 +1182,8 @@ sub wish_to_actually_modify_table_data {
 	
 	chop $sql;
 	
+warn Dumper ($sql);
+
 	sql_do ($sql);
 	
 }
