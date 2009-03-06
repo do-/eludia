@@ -175,7 +175,7 @@ BEGIN {
 			db_model 
 			last_update 
 			model_scripts 
-			update_scripts
+			updates_scripts
 			
 		)) { 
 		

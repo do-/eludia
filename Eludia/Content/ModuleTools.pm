@@ -187,7 +187,7 @@ sub require_scripts {
 
 	require_scripts_of_type 'model';
 
-	require_scripts_of_type 'update';
+	require_scripts_of_type 'updates';
 
 	flock (CONFIG, LOCK_UN);
 
