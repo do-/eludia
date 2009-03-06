@@ -1160,8 +1160,6 @@ sub wish_to_actually_create_table_data {
 
 sub wish_to_actually_replace_table_data {	
 
-warn Dumper (\@_);
-
 	wish_to_actually_modify_table_data (@_, 'REPLACE');
 
 }
@@ -1176,13 +1174,13 @@ sub wish_to_actually_modify_table_data {
 
 	my @cols = keys %{$items -> [0]};
 	
-	my $sql = "$statement DELAYED $options->{table} (" . (join ',', @cols) . ")VALUES";
+	$statement .= ' DELAYED' if %{$options -> {root}} > 0;
+	
+	my $sql = "$statement $options->{table} (" . (join ',', @cols) . ")VALUES";
 		
 	foreach my $i (@$items) { $sql .= '(' . (join ',', map {$db -> quote ($i -> {$_})} @cols) . '),' }
 	
 	chop $sql;
-	
-warn Dumper ($sql);
 
 	sql_do ($sql);
 	
