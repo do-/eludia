@@ -149,7 +149,7 @@ sub require_scripts_of_type ($) {
 									
 		}
 
-		@src = ("\$model_update -> assert (prefix => 'application model#', tables => {@{[ join ',', @src]}})") if $script_type eq 'model';
+		@src = ("\$model_update -> assert (prefix => 'application model#', default_columns => \$DB_MODEL -> {default_columns}, tables => {@{[ join ',', @src]}})") if $script_type eq 'model';
 			
 		foreach my $src (@src) { 
 			
