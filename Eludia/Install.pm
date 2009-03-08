@@ -8,11 +8,10 @@ use Data::Dumper;
 use DBI;
 use DBI::Const::GetInfoType;
 use Term::ReadLine;
-use Term::ReadPassword;
 use Fcntl qw(:DEFAULT :flock);
 use File::Find;
+use File::Copy;
 use File::Temp qw(tempfile);
-use Text::Iconv;
 use POSIX ('setuid');
 
 ################################################################################
@@ -821,6 +820,8 @@ sub create {
 
 		}
 		
+		eval { require Term::ReadPassword };		
+		
 		while (1) {
 
 			$dsn = $term -> readline ("DBI connection string for CREATE DATABASE or 'pg' for Postgres [DBI:mysql:mysql]: ") ||'DBI:mysql:mysql';
@@ -832,8 +833,18 @@ sub create {
 				$$ENV {USER};
 				
 			$admin_user = $term -> readline ("Database admin user (for CREATE DATABASE) [$admin_user]: ") || $admin_user;
-
-			$admin_password = read_password ("\nDatabase admin password (for CREATE DATABASE): ");			
+			
+			eval {
+			
+				$admin_password = Term::ReadPassword::read_password ("\nDatabase admin password (for CREATE DATABASE): ");
+			
+			};
+			
+			if ($@) {
+			
+				$admin_password = $term -> readline ("Database admin password (for CREATE DATABASE) [WARNING! Term::ReadPassword is not installed, so THE PASSWORD WILL BE DISPLAYED!!!]: ");
+			
+			}						
 			
 			if ($dsn =~ /^dbi\:Pg/ && $admin_user eq '') {
 			
@@ -1127,6 +1138,8 @@ sub bin {
 
 	my $app_path = getcwd ();
 	
+	$app_path =~ y{\\}{/};
+
 	warn "Application path is '$app_path'...\n";
 
 	$app_path =~ /\w+$/;
@@ -1136,7 +1149,8 @@ sub bin {
 	warn "Application name is '$app_name'...\n";
 	
 	mkdir "$app_path/bin";
-	mkdir "$app_path/conf/nginx";
+	mkdir "$app_path/conf/nginx" if $^O ne 'MSWin32';;
+	mkdir "$app_path/conf/apache22";
 	
 	our $term = new Term::ReadLine 'Scripts installation';
 	
@@ -1148,9 +1162,13 @@ sub bin {
 
 	}
 
-	foreach my $name ('sea', 'sky') { bin_name ($app_path, $app_name, $max_requests_per_child, $name) }
+	foreach my $name ('sea', 'sky') { 
+		my ($min_port, $max_port) = bin_name ($app_path, $app_name, $max_requests_per_child, $name);
+		bin_name_nginx    ($app_path, $app_name, $max_requests_per_child, $min_port, $max_port, $name) if $^O ne 'MSWin32';
+		bin_name_apache22 ($app_path, $app_name, $max_requests_per_child, $min_port, $max_port, $name);
+	}
 	
-	`chmod a+x $app_path/bin/*.sh`;
+	`chmod a+x $app_path/bin/*.sh` if $^O ne 'MSWin32';
 	
 	warn "\nDone.\n";
 
@@ -1175,9 +1193,32 @@ sub bin_name {
 		($max_port = $term -> readline ("Maximum port for '$name' configuration: ")) =~ /^\d{2,5}$/ and last;
 
 	}
-
-	warn "\nMaking scripts for '$name' configuration...\n";
 	
+	if ($^O ne 'MSWin32') {
+
+		bin_name_bash ($app_path, $app_name, $max_requests_per_child, $name, $min_port, $max_port);
+
+	}
+	else {
+
+		bin_name_perl ($app_path, $app_name, $max_requests_per_child, $name, $min_port, $max_port);
+
+	}	
+
+	warn "\nDone with '$name' configuration.\n";
+	
+	return ($min_port, $max_port);
+
+}
+
+################################################################################
+
+sub bin_name_bash {
+
+	my ($app_path, $app_name, $max_requests_per_child, $name, $min_port, $max_port) = @_;
+
+	warn "\nMaking bash scripts for '$name' configuration...\n";
+
 	open (F, ">$app_path/bin/ea_${app_name}_${name}_loop.sh");
 	print F <<EOT;
 #!/bin/bash
@@ -1240,11 +1281,60 @@ for PORT in `seq $min_port $max_port`; do
 
 done 
 EOT
+
 	close (F);
 
-	bin_name_nginx ($app_path, $app_name, $max_requests_per_child, $min_port, $max_port, $name);
+}
 
-	warn "\nDone with '$name' configuration.\n";
+################################################################################
+
+sub print_file ($$) {
+
+	open (F, ">$_[0]") or die "Can't write to $_[0]:$1\n";
+	print F $_[1];
+	close F;	
+
+}
+
+################################################################################
+
+sub bin_name_perl {
+
+	my ($app_path, $app_name, $max_requests_per_child, $name, $min_port, $max_port) = @_;
+
+	warn "\nMaking perl scripts for '$name' configuration...\n";
+	
+	my $perl_path = $^X;
+	$perl_path =~ s{\w+.exe$}{};
+	$perl_path =~ y{\\}{/};
+	
+	File::Copy::copy ("${perl_path}/wperl.exe", "${perl_path}/wperl_${name}.exe");
+	
+	my $path = __FILE__;
+	
+	$path =~ y{\\}{/};
+	$path =~ s{/Eludia/Install.pm}{};
+	
+	print_file "$app_path/bin/ea_${app_name}_run.pl", <<EOT;
+		use lib '$path';
+		use Eludia::Content::HTTP::Server;
+		chdir "$app_path";
+		open (STDERR, ">>logs/error.log") or die "Can't open logs/error.log:\$!\\n";
+		start (":\$ARGV[0]", $max_requests_per_child);
+EOT
+
+	print_file "$app_path/bin/ea_${app_name}_${name}_loop.pl", <<EOT;
+		while (1) {
+			`wperl_${name} "$app_path/bin/ea_${app_name}_run.pl" \$ARGV[0]`
+		}
+EOT
+
+	print_file "$app_path/bin/ea_${app_name}_${name}_start.cmd", join '', 
+		map {"start wperl_${name} \"$app_path/bin/ea_${app_name}_${name}_loop.pl\" $_\n"} ($min_port .. $max_port);
+
+	print_file "$app_path/bin/ea_${app_name}_${name}_stop.cmd", "taskkill /F /IM wperl_${name}.exe";
+
+	close (F);
 
 }
 
@@ -1309,6 +1399,56 @@ EOT
 
 		}
 		
+EOT
+	close (F);
+
+}
+
+################################################################################
+
+sub bin_name_apache22 {
+
+	my ($app_path, $app_name, $max_requests_per_child, $min_port, $max_port, $name) = @_;
+
+	warn "\nMaking Apache 2.2 config files for '$name' configuration...\n";
+
+	open (F, ">$app_path/conf/apache22/${app_name}_${name}.conf");
+
+	print F <<EOT;
+	
+DocumentRoot "${app_path}/docroot"
+
+ProxyPassMatch ^(/.*/.*) !
+ProxyPass / "balancer://$app_name/" maxattempts=3 timeout=2
+
+<Location /i>
+   SetHandler default
+   ExpiresActive on
+   ExpiresDefault "now plus 1 days"
+   AddDefaultCharset windows-1251
+</Location>
+
+<Proxy balancer://$app_name>
+EOT
+
+	
+	foreach $port ($min_port .. $max_port) {
+
+		print F "	BalancerMember http://127.0.0.1:$port\n";
+
+	}
+
+	print F "</Proxy>\n";
+
+	close (F);
+
+	open (F, ">$app_path/conf/apache22/${app_name}_${name}_README.txt");
+	print F <<EOT;
+
+<VirtualHost *:80>
+	Include "$app_path/conf/apache22/${app_name}_${name}.conf"
+</VirtualHost>
+
 EOT
 	close (F);
 
