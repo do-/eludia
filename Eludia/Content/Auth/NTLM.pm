@@ -69,14 +69,9 @@ warn "NTLM user is '$m->{user}->{data_oem}'\n";
 
 		$f =~ /[À-ß¨]/ or next;
 
-		$id_user ||= sql_select_id (users => {
-			-fake  => 0,
-			login => ($entry -> get_value ('uid') || ''),
-			-label => $label,
-		}, ['login']);
+		$id_user ||= sql_select_scalar ('SELECT users.id FROM nt_logins LEFT JOIN users ON nt_logins.id_user = users.id WHERE nt_logins.label = ?', $entry -> get_value ('uid'));
 
 	}
-
 	
 	$id_user or return _ntlm_kick ();
 
