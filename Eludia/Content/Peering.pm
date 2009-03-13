@@ -95,7 +95,7 @@ sub peer_reconnect {
 	unless ($UA) {
 	
 		our $UA = LWP::UserAgent -> new (
-			agent                 => "Eludia/$Eludia_VERSION (" . peer_name () . ")",
+			agent                 => "Eludia/$Eludia::VERSION (" . peer_name () . ")",
 			requests_redirectable => ['GET', 'HEAD', 'POST'],
 		);
 		

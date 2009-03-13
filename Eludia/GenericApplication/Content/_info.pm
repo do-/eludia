@@ -77,7 +77,7 @@ sub select__info {
 		
 		{			
 			id    => 'Engine',
-			label => "Eludia $Eludia_VERSION",
+			label => "Eludia $Eludia::VERSION",
 			path  => $preconf -> {core_path},
 		},
 

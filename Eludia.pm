@@ -30,35 +30,70 @@ sub check_constants {
 
 ################################################################################
 
-sub check_versions {
+sub check_version_by_git {
+
+	return undef if $^O eq 'MSWin32';
+
+	use Cwd;
+
+	my $dir = Cwd::abs_path (__FILE__);
+		
+	$dir =~ s{Eludia.pm}{};
+
+	`cd $dir; git show HEAD --abbrev-commit --pretty=tformat:"\%h \%ai"` =~ /^(\w+) (\d\d)(\d\d)\-(\d\d)\-(\d\d)/ or return undef;
+		
+	return "$3.$4.$5.$1";
+
+}
+
+################################################################################
+
+sub check_version {
 
 	return if $ENV {ELUDIA_BANNER_PRINTED};
 
-	'$LastChangedDate$' =~ /(\d\d)(\d\d)\-(\d\d)\-(\d\d)/;
+	require Date::Calc;
 	
-	my $year = "$1$2";
+	my ($year) = Date::Calc::Today ();
 	
-	$Eludia::VERSION  = "$2.$3.$4";
+	eval "require Eludia::Version";
+	
+#	$Eludia::VERSION ||= check_version_by_git ();
+	
+	$Eludia::VERSION ||= 'UNKNOWN (please write some Eludia::Version module)';
+	
+	my $year;
+	
+	if ($Eludia::VERSION =~ /^(\d\d)\.\d\d.\d\d/) {
+	
+		$year = '20' . $1;
+	
+	}
+	else {
 
-	'$LastChangedRevision$' =~ /(\d+)/;
-	
-	$Eludia::VERSION .= ".$1";
+		($year) = Date::Calc::Today ();
 
-	$Eludia_VERSION = $Eludia::VERSION;
+	}
+	
+	my $length = 23 + length $Eludia::VERSION;
+	
+	$length > 49 or $length = 49;
+	
+	my $bar = '-' x $length;
 
 	print STDERR <<EOT;
 
- -------------------------------------------------------
+ $bar
 
- *****     *    ELUDIA / Perl
+ *****     *    Eludia.pm
      *    *
      *   *
- ********       Version: $Eludia_VERSION
+ ********       Version $Eludia::VERSION
      * *
      **
  *****          Copyright (c) 2002-$year by Eludia
  
- -------------------------------------------------------
+ $bar
 
 EOT
 
@@ -213,7 +248,6 @@ sub check_application_directory {
 sub check_external_modules {
 
 	use Data::Dumper;
-	use Date::Calc;
 	use DBI;
 	use DBI::Const::GetInfoType;
 	use Digest::MD5;
@@ -530,7 +564,7 @@ sub check_internal_module_queries {
 BEGIN {
 
 	check_constants             ();
-	check_versions              ();
+	check_version               ();
 
 	start_loading_logging       ();
 
