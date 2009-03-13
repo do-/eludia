@@ -2313,7 +2313,7 @@ sub assert {
 		
 		}
 		
-		wish (table_keys => [map {{name => $_, parts => $definition -> {keys} -> {$_}}} (keys %{$definition -> {keys}})], {table => $name}) if exists $definition -> {keys};
+		wish (table_keys => [map {{name => $_, parts => $definition -> {keys} -> {$_}}} (keys %{$definition -> {keys}})], {table => $name, table_def => $definition}) if exists $definition -> {keys};
 
 		wish (table_data => $definition -> {data}, {table => $name}) if exists $definition -> {data};
 		
