@@ -58,7 +58,7 @@ sub check_version {
 	
 	eval "require Eludia::Version";
 	
-#	$Eludia::VERSION ||= check_version_by_git ();
+	$Eludia::VERSION ||= check_version_by_git ();
 	
 	$Eludia::VERSION ||= 'UNKNOWN (please write some Eludia::Version module)';
 	
