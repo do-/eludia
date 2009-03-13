@@ -1217,6 +1217,8 @@ sub bin_name_bash {
 
 	my ($app_path, $app_name, $max_requests_per_child, $name, $min_port, $max_port) = @_;
 
+	my $path = core_path ();
+
 	warn "\nMaking bash scripts for '$name' configuration...\n";
 
 	open (F, ">$app_path/bin/ea_${app_name}_${name}_loop.sh");
@@ -1227,7 +1229,7 @@ cd $app_path
 
 while [ 1 ]; do 
 
-	perl -MEludia::Content::HTTP::Server -e"start (':\$1', \$2)" 2>>logs/error.log 
+	perl -I$path -MEludia::Content::HTTP::Server -e"start (':\$1', \$2)" 2>>logs/error.log 
 	
 done
 EOT
@@ -1298,6 +1300,19 @@ sub print_file ($$) {
 
 ################################################################################
 
+sub core_path {
+
+	my $path = __FILE__;
+	
+	$path =~ y{\\}{/};
+	$path =~ s{/Eludia/Install.pm}{};
+	
+	return $path;
+
+}
+
+################################################################################
+
 sub bin_name_perl {
 
 	my ($app_path, $app_name, $max_requests_per_child, $name, $min_port, $max_port) = @_;
@@ -1310,11 +1325,8 @@ sub bin_name_perl {
 	
 	File::Copy::copy ("${perl_path}/wperl.exe", "${perl_path}/wperl_${name}.exe");
 	
-	my $path = __FILE__;
-	
-	$path =~ y{\\}{/};
-	$path =~ s{/Eludia/Install.pm}{};
-	
+	my $path = core_path ();
+		
 	print_file "$app_path/bin/ea_${app_name}_run.pl", <<EOT;
 		use lib '$path';
 		use Eludia::Content::HTTP::Server;

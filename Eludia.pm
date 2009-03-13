@@ -34,13 +34,7 @@ sub check_version_by_git {
 
 	return undef if $^O eq 'MSWin32';
 
-	use Cwd;
-
-	my $dir = Cwd::abs_path (__FILE__);
-		
-	$dir =~ s{Eludia.pm}{};
-
-	`cd $dir; git show HEAD --abbrev-commit --pretty=tformat:"\%h \%ai"` =~ /^(\w+) (\d\d)(\d\d)\-(\d\d)\-(\d\d)/ or return undef;
+	`cd $preconf->{core_path}; git show HEAD --abbrev-commit --pretty=tformat:"\%h \%ai"` =~ /^(\w+) (\d\d)(\d\d)\-(\d\d)\-(\d\d)/ or return undef;
 		
 	return "$3.$4.$5.$1";
 
@@ -51,6 +45,14 @@ sub check_version_by_git {
 sub check_version {
 
 	return if $ENV {ELUDIA_BANNER_PRINTED};
+	
+	use Cwd;
+
+	my $dir = Cwd::abs_path (__FILE__);
+		
+	$dir =~ s{Eludia.pm}{};
+	
+	$preconf -> {core_path} = $dir;
 
 	require Date::Calc;
 	

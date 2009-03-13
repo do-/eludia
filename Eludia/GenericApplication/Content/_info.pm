@@ -49,8 +49,9 @@ sub select__info {
 		},	
 
 		{
-			id    => 'Perl',
-			label => (sprintf "%vd", $^V),
+			id    => 'Interpreter',
+			label => (sprintf "Perl %vd", $^V),
+			path  => $^X,
 		},
 	
 		{
@@ -61,13 +62,11 @@ sub select__info {
 		{
 			id    => 'DB interface',
 			label => 'DBI ' . $DBI::VERSION,
-			path  => $INC {'DBI.pm'},
 		},
 
 		{
 			id    => 'DB driver',
 			label => 'DBD::' . $db -> {Driver} -> {Name} . ' ' . ${'DBD::' . $db -> {Driver} -> {Name} . '::VERSION'},
-			path  => $INC {'DBD/' . $SQL_VERSION -> {driver} . '.pm'},
 		},
 		
 		{			
