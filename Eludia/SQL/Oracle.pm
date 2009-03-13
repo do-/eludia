@@ -2147,6 +2147,12 @@ sub wish_to_actually_create_table_keys {
 
 	my ($items, $options) = @_;
 	
+	if ($options -> {table} =~ /^_/) {
+	
+		$options -> {table} = '"' . $options -> {table} . '"';
+	
+	}
+	
 	foreach my $i (@$items) {
 	
 		sql_do ("CREATE INDEX \"$i->{global_name}\" ON $options->{table} (@{[ join ', ', @{$i -> {parts}} ]})");
