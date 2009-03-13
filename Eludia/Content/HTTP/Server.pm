@@ -48,7 +48,7 @@ sub start {
 		}
 		
 		if ($current_section =~ /^perl\s*$/i) {
-			$perl_section .= $line;
+			$perl_section .= "$line\n";
 			next;
 		}
 
@@ -70,7 +70,7 @@ sub start {
 	$perl_section =~ s/\%TEMP\%/$temp/;
 
 	eval $perl_section;
-	print STDERR $@ if $@;	
+	print STDERR "$@\n\n$perl_section" if $@;	
 	
 	my $sub_src = "sub exec_handler {\n my (\$connection, \$request, \$uri) = \@_;\n";
 
@@ -104,7 +104,7 @@ EOS
 	$sub_src .= "}\n";
 
 	eval $sub_src;
-	
+		
 	my ($host, $port) = split /:/, ($_[0] || $ARGV [0] || 'localhost:80');
 
 	my $daemon;
