@@ -244,13 +244,13 @@ sub require_fresh {
 	if ($need_refresh) {
 		my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat ($file_name);
 		$last_modified = $mtime;
-		$need_refresh = $INC_FRESH {$module_name} < $last_modified;
+		$need_refresh = ($INC_FRESH {$module_name} < $last_modified);
 	}
 
 	unless ($need_refresh) {
 
-		$time = __log_profilinig ($time, "    $module_name is old");
-		$need_refresh or return;
+		$time = __log_profilinig ($time, "    $module_name is old ($INC_FRESH{$module_name} >= $last_modified)");
+		return;
 
 	}
 	
