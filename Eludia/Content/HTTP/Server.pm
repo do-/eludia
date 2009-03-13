@@ -263,10 +263,6 @@ sub handle_connection {
 
 	}
 
-	$connection -> close ();
-
-	undef ($connection);
-
 }
 
 1;
