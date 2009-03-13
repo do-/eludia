@@ -2090,7 +2090,7 @@ sub wish_to_clarify_demands_for_table_keys {
 			} 
 			else {
 
-				die Dumper ($table_def);
+				die Dumper ($options -> {table_def});
 
 			}
 			
