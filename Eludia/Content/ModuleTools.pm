@@ -178,8 +178,18 @@ sub require_scripts_of_type ($) {
 sub require_scripts {
 	
 	my $time = time;
-
-	my $file_name = $PACKAGE_ROOT -> [-1] . '/Config.pm';
+	
+	my $file_name;
+	
+	foreach my $dir (reverse @$PACKAGE_ROOT) {
+	
+		$file_name = "$dir/Config.pm";
+		
+		last if -f $file_name;
+	
+	}
+	
+	$file_name or die "Config.pm not found in @{[ join ',', @$PACKAGE_ROOT ]}\n";
 
 	open (CONFIG, $file_name) || die "can't open $file_name: $!";
 
