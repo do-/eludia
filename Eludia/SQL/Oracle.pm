@@ -2155,7 +2155,11 @@ sub wish_to_actually_create_table_keys {
 	
 	foreach my $i (@$items) {
 	
-		sql_do ("CREATE INDEX \"$i->{global_name}\" ON $options->{table} (@{[ join ', ', @{$i -> {parts}} ]})");
+		eval { sql_do ("CREATE INDEX \"$i->{global_name}\" ON $options->{table} (@{[ join ', ', @{$i -> {parts}} ]})") };
+		
+		next if $@ =~ /ORA-01408/;
+		
+		die $@ if $@;	
 	
 	}
 
