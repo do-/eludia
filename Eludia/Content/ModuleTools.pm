@@ -94,7 +94,7 @@ sub require_scripts_of_type ($) {
 		my @file_names = readdir (DIR);
 		closedir DIR;
 
-		return __log_profilinig ($time, "   require_scripts_of_type $script_type: nothing to do in $the_path") if @file_names == 0;
+		return __log_profilinig ($time, "   require_scripts_of_type $script_type: $dir is empty") if @file_names == 0;
 		
 		my @scripts = ();
 		my $name2def = {};
@@ -123,7 +123,7 @@ sub require_scripts_of_type ($) {
 
 		my ($needed_scripts, $new_checksums) = checksum_filter ($checksum_kind, '', $name2def);
 	
-		return __log_profilinig ($time, "   require_scripts_of_type $script_type: nothing to do in $the_path") if %$needed_scripts == 0;
+		return __log_profilinig ($time, "   require_scripts_of_type $script_type: nothing to do in $dir") if %$needed_scripts == 0;
 
 		@scripts = 
 			
