@@ -46,9 +46,9 @@ sub check_version {
 
 	return if $ENV {ELUDIA_BANNER_PRINTED};
 	
-	use Cwd;
+	use File::Spec;
 
-	my $dir = Cwd::abs_path (__FILE__);
+	my $dir = File::Spec -> rel2abs (__FILE__);
 		
 	$dir =~ s{Eludia.pm}{};
 	
