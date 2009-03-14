@@ -631,10 +631,6 @@ $time = __log_profilinig ($time, '  sql_reconnect: ping');
 		return if $ping;
 	}
 	
-	check_systables ();
-
-$time = __log_profilinig ($time, '  sql_reconnect: check_systables');
-
 	our $db = DBI -> connect ($preconf -> {'db_dsn'}, $preconf -> {'db_user'}, $preconf -> {'db_password'}, {
 		RaiseError  => 1, 
 		AutoCommit  => 1,

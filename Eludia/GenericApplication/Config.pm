@@ -58,6 +58,10 @@ sub del {
 
 sub fill_in {
 
+	return if $conf -> {__filled_in};
+	
+	check_systables ();
+
 	our $number_format ||= Number::Format -> new (%{$conf -> {number_format}});
 
    	$conf -> {lang} ||= 'RUS';   	

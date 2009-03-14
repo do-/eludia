@@ -30,6 +30,8 @@ sub require_both ($) {
 sub require_config {
 	
 	require_fresh ($_PACKAGE . 'Config');
+		
+	fill_in ();
 
 }
 
