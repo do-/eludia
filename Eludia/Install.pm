@@ -14,6 +14,8 @@ use File::Copy;
 use File::Temp qw(tempfile);
 use POSIX ('setuid');
 
+$SIG {__DIE__} = \&Carp::confess;
+
 ################################################################################
 
 sub decode_entities {
@@ -804,7 +806,7 @@ sub create {
 
 		$appname_uc = uc $appname;	
 
-		my $default_instpath = "/var/projects/$appname";
+		my $default_instpath = $^O ne 'MSWin32' ? "/var/projects/$appname" : "c:/projects/$appname";
 
 		while (1) {
 	
@@ -979,7 +981,7 @@ EOS
 
 	print "Creating application directory... ";
 
-	`mkdir $instpath`;
+	mkdir $instpath;
 
 	print "ok\n";
 
@@ -987,8 +989,8 @@ EOS
 	
 	`svn co $application_dst $instpath`;
 	
-	`mkdir $instpath/conf`;
-	`mkdir $instpath/logs`;
+	mkdir "$instpath/conf";
+	mkdir "$instpath/logs";
 
 	open (TMP, ">.svnignore") or die ("Can't write to .svnignore: $!\n");
 	print TMP "conf\nlogs\n";
@@ -997,11 +999,6 @@ EOS
 	`svn ps svn:ignore -F .svnignore $instpath`;
 	
 	unlink '.svnignore';
-
-	`mkdir $instpath/docroot/i/upload`;
-	`chmod a+rwx $instpath/docroot/i/upload`;
-	`mkdir $instpath/docroot/i/_skins`;
-	`chmod a+rwx $instpath/docroot/i/_skins`;
 
 	open (TMP, ">.svnignore") or die ("Can't write to .svnignore: $!\n");
 	print TMP "_skins\nupload\n";
