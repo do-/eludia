@@ -2042,4 +2042,14 @@ sub voc_replacements {
 
 }
 
+################################################################################
+
+sub uc_table_name {
+
+	my ($table) = @_;
+	
+	return $table =~ /^_/ ? $table : uc $table;
+
+}
+
 1;

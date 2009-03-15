@@ -63,9 +63,7 @@ sub wish_to_explore_existing_table_keys {
 
 	my $existing = {};
 
-	my $uc_table_name = $options -> {table} =~ /^_/ ? $options -> {table} : uc $options -> {table};
-
-	sql_select_loop (<<EOS, sub {$existing -> {$i -> {index_name}} -> [$i -> {column_position} - 1] = lc $i -> {column_name}}, $uc_table_name);
+	sql_select_loop (<<EOS, sub {$existing -> {$i -> {index_name}} -> [$i -> {column_position} - 1] = lc $i -> {column_name}}, uc_table_name ($options -> {table}));
 		SELECT 
 			user_indexes.index_name
 			, user_ind_columns.column_name
@@ -78,7 +76,7 @@ sub wish_to_explore_existing_table_keys {
 			AND user_indexes.table_name = ?
 EOS
 
-	sql_select_loop (<<EOS, sub {$existing -> {$i -> {index_name}} -> [$i -> {column_position} - 1] = lc $i -> {column_expression}}, $uc_table_name);
+	sql_select_loop (<<EOS, sub {$existing -> {$i -> {index_name}} -> [$i -> {column_position} - 1] = lc $i -> {column_expression}}, uc_table_name ($options -> {table}));
 		SELECT 
 			user_indexes.index_name
 			, user_ind_expressions.column_expression
