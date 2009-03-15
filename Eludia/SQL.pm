@@ -649,7 +649,7 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver name selected');
 
 	my $path = __FILE__;
 	
-	$path =~ s{(.)SQL\.pm$}{${1}SQL$1${driver_name}.pm};
+	$path =~ s{(.)SQL\.pm$}{${1}SQL$1Dialect$1${driver_name}.pm};
 
 	do $path;
 
