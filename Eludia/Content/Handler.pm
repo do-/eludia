@@ -112,9 +112,7 @@ sub handler {
 	my $request_time = 1000 * (time - $first_time);
 		
 	require_config ();
-	
-	check_systables ();
-	
+
 	$time = __log_profilinig ($time, '<require_config>');
 
    	sql_reconnect ();   	
@@ -160,8 +158,6 @@ sub handler {
 	return _ok () if $_REQUEST {__response_sent};
 
 	$time = __log_profilinig ($time, '<got user>');
-
-	$conf -> {__filled_in} or fill_in ();
 
 	if ((!$_USER -> {id} and $_REQUEST {type} ne 'logon' and $_REQUEST {type} ne '_boot')) {
 
