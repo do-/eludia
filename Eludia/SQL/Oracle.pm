@@ -2107,7 +2107,7 @@ sub wish_to_explore_existing_table_keys {
 
 	my $existing = {};
 
-	my $uc_table_name = $table_name =~ /^_/ ? $options -> {table} : uc $options -> {table};
+	my $uc_table_name = $options -> {table} =~ /^_/ ? $options -> {table} : uc $options -> {table};
 
 	sql_select_loop (<<EOS, sub {$existing -> {$i -> {index_name}} -> [$i -> {column_position} - 1] = lc $i -> {column_name}}, $uc_table_name);
 		SELECT 
