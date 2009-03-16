@@ -338,7 +338,7 @@ sub check_external_module_uri_escape {
 		
 		die $@ if $@;
 
-		print "URI::Escape $URI::Escape::VERSION ok. (URI::Escape::XS suggested)\n";
+		print STDERR "URI::Escape $URI::Escape::VERSION ok. (URI::Escape::XS suggested)\n";
 		
 	}
 	else {
