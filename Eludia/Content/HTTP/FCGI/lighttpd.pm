@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
 use FCGI;
-use CGI;
 use IO;
 use Time::HiRes 'time';
 
@@ -16,16 +15,9 @@ my $request = FCGI::Request (\*STDIN, \*STDOUT, $fake_stderr, \%ENV, 0, 0);
 my $handling_request = 0;
 my $exit_requested = 0;
 
-#sub sig_handler {
-#	$exit_requested = 1;
-#	exit (0) if !$handling_request;
-#}
-
-#$SIG{USR1} = \&sig_handler;
-#$SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = sub {warn "PIPE!\n"};
 
-my $requests = 10;
+my $requests = 200;
 
 while ($requests --) {
 
@@ -75,7 +67,9 @@ while ($requests --) {
 		}
 		close C;
 		
-		$cnf_src =~ m{\<perl\>(.*)\</perl\>}sm;
+		$cnf_src =~ m{\<perl\>(.*)\</perl\>}ism;
+		
+		delete $INC {'Eludia.pm'};
 				
 		eval $1;
 		
@@ -89,7 +83,8 @@ while ($requests --) {
 	
 	}
 	
-	eval &{"$configs->{$app}->{handler}::handler"} ();
+
+	eval "$configs->{$app}->{handler}::handler ()";
 	
 	if ($@) {
 	

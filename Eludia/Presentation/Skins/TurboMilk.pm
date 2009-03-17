@@ -888,8 +888,9 @@ sub draw_form_field_static {
 	my $html = '';
 
 	if ($options -> {href}) {
-		my $state = $data -> {fake} == -1 ? 'deleted' : $_REQUEST {__read_only} ? 'passive' : 'active';
+		my $state = $_REQUEST {__read_only} ? 'passive' : 'active';
 		$options -> {a_class} ||= "form-$state-inputs";
+		$options -> {a_class} =~ s{(passive|active)}{deleted} if ($data -> {fake} == -1);
 		$html = qq{<a href="$$options{href}" target="$$options{target}" class="$$options{a_class}">};
 	}
 	
@@ -1077,11 +1078,15 @@ EOH
 		$html .= qq {<option value="0" $selected>$$options{empty}</option>\n};
 	}
 		
+	if (defined $options -> {other} && $options -> {other} -> {on_top}) {
+		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
+	}
+
 	foreach my $value (@{$options -> {values}}) {
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n}; 
 	}
 	
-	if (defined $options -> {other}) {
+	if (defined $options -> {other} && !$options -> {other} -> {on_top}) {
 		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
 	}
 

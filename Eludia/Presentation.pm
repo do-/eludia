@@ -1607,7 +1607,9 @@ sub draw_form_field_select {
 
 	if (defined $options -> {other}) {
 
-		ref $options -> {other} or $options -> {other} = {href => $options -> {other}, label => $i18n -> {voc}};
+		ref $options -> {other} or $options -> {other} = {href => $options -> {other}};
+		
+		$options -> {other} -> {label} ||= $i18n -> {voc};
 
 		check_href ($options -> {other});
 

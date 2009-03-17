@@ -222,7 +222,7 @@ sub get_item_of___queries {
 
 sub do_drop_filters___queries {
 
-	my $QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id});
+	my $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id});
 
 	my $VAR1;
 	

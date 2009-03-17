@@ -320,6 +320,16 @@ sub new {
 	else {		# conventional CGI STDIN/STDOUT environment
 	
 		$self -> {Q} = new CGI;
+
+		foreach ($self -> {Q} -> http) {
+
+			my $key = $_;
+
+			s/^HTTP_//;
+			$_ = join '-', map {ucfirst ("\L$_")} split /_/;
+			$self -> {headers_in} -> {$_} = $ENV {$key};
+
+		}
 	
 	}
 		
@@ -346,7 +356,7 @@ sub the_request {
 
 	my $self = shift;
 
-	return $self -> {request} -> method . ' ' . $self -> {Q} -> url (-query => 1);
+	return ($self -> {request} ? $self -> {request} -> method : $ENV{REQUEST_METHOD}) . ' ' . $self -> {Q} -> url (-query => 1);
 
 }
 
@@ -415,6 +425,8 @@ sub new {
 	$self -> {Param} = $_ [1];
 	$self -> {FH} = $self -> {Q} -> upload ($self -> {Param});
 	$self -> {FN} = $self -> {Q} -> param ($self -> {Param});
+	
+	return bless ($self, $class) unless ($self -> {FH} && $self -> {FN});
 	
 	eval { $self -> {Type} = $self -> {Q} -> uploadInfo ($self -> {FN}) -> {'Content-Type'}; };
 	

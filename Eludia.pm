@@ -109,8 +109,6 @@ sub check_web_server_apache {
 
 	return if $preconf -> {use_cgi};
 	
-	$ENV {MOD_PERL} or $ENV {MOD_PERL_API_VERSION} or return;
-
 	my $module = 'Apache';
 
 	$module .= 2 if $ENV {MOD_PERL_API_VERSION} >= 2;
@@ -118,14 +116,6 @@ sub check_web_server_apache {
 	$module .= '::Request';
 
 	print STDERR "\n  mod_perl detected, checking for $module... ";
-
-	if ($@) {
-
-		$preconf -> {use_cgi} = 1;		
-		print STDERR "not found; falling back to CGI :-(\n";		
-		return;
-
-	}
 
 	my $version = 
 		$ENV {MOD_PERL_API_VERSION} >= 2                 ? 2   :
@@ -135,6 +125,14 @@ sub check_web_server_apache {
 
 	eval "require Eludia::Content::HTTP::API::ModPerl$version";
 
+	if ($@) {
+
+		$preconf -> {use_cgi} = 1;		
+		print STDERR "not found; falling back to CGI :-(\n";		
+		return;
+
+	}
+
 }
 
 ################################################################################
@@ -143,7 +141,7 @@ sub check_web_server {
 
 	print STDERR " check_web_server... ";
 	
-	$preconf -> {use_cgi} ||= 1 if $ENV {GATEWAY_INTERFACE} eq 'CGI/';
+	$ENV {MOD_PERL} or $ENV {MOD_PERL_API_VERSION} or $preconf -> {use_cgi} ||= 1;
 
 	check_web_server_apache ();
 
