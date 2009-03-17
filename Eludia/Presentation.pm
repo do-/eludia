@@ -52,7 +52,9 @@ sub __d {
 
 	my ($data, @fields) = @_;
 
-	foreach $_ (@fields) {
+	@fields = grep {/(_|\b)dt(_|\b)/} keys %$data;
+
+	foreach (@fields) {
 
 		if ($preconf -> {core_fix_tz} && $data -> {$_} !~ /^0000-00-00/ && $data -> {$_} =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/) {
 			$data -> {$_} = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', Date::Calc::Add_Delta_DHMS ($1, $2, $3, $4, $5, $6, 0, - $_USER -> {tz_offset} + 0 || 0, 0, 0));
@@ -62,6 +64,8 @@ sub __d {
 		$data -> {$_} =~ s{00\.00\.0000}{};
 						
 	}
+	
+	return $data;
 		
 }
 
