@@ -3035,15 +3035,36 @@ sub lrt_finish {
 
 	my $_SKIN = shift;
 
-	my ($banner, $href) = @_;
+	my ($banner, $href, $options) = @_;
 	
-	$_SKIN -> lrt_print (<<EOH);
-	<script>
-		alert ('$banner');
-		document.location = '$href';
-	</script>
-	</body></html>
+	if ($options -> {kind} eq 'download') {
+		
+		$r -> print ($options -> {toolbar});
+
+		my $js = q {
+
+			var download = document.getElementById ('download');
+			
+			download.scrollIntoView (true);
+
+		};
+		
+		$js .= user_agent () -> {nt} >= 6 ? '' : ' download.click ();';
+
+		$r -> print ("<script>$js</script></body></html>" . (' ' x 4096));
+
+	}
+	else {
+	
+		$_SKIN -> lrt_print (<<EOH);
+		<script>
+			alert ('$banner');
+			document.location = '$href';
+		</script>
+		</body></html>
 EOH
+
+	}
 
 }
 

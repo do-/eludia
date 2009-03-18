@@ -14,6 +14,7 @@
 	cancel                   => 'annuler', 
 	choose                   => 'choisir', 
 	delete                   => 'supprimer', 
+	download                 => 'télécharger', 
 	edit                     => 'rediger', 
 	'close'                  => 'fermer',
 	back                     => '&lt;&lt; pas précédent',
