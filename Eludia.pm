@@ -193,7 +193,7 @@ sub check_application_directory {
 	
 	if (!$docroot) {
 	
-		foreach (@$PACKAGE_ROOT) {
+		foreach (reverse @$PACKAGE_ROOT) {
 					
 			/[\/\\]lib$/ or next;
 			
