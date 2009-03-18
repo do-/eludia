@@ -4078,9 +4078,7 @@ sub lrt_start {
 
 sub lrt_finish {
 
-	my ($banner, $href) = @_;
-
-warn "\$href='$href'(1)\n";
+	my ($banner, $href, $options) = @_;
 
 	if ($_USER -> {peer_server}) {
 	
@@ -4090,9 +4088,27 @@ warn "\$href='$href'(1)\n";
 
 	$href = check_href ({href => $href});
 	
-warn "\$href='$href'(2)\n";
+	
+	if ($options -> {kind} eq 'download') {
+	
+		$options -> {toolbar} = draw_centered_toolbar ({}, [
+			{
+				icon   => 'print',
+				label  => $i18n -> {download},
+				href   => $href,
+				target => 'invisible',
+				id     => 'download',
+			},
+			{
+				icon   => 'cancel',
+				label  => $i18n -> {cancel},
+				href   => 'javaScript:history.go(-1)',
+			},
+		]);
 
-	$_SKIN -> lrt_finish ($banner, $href);
+	}
+		
+	$_SKIN -> lrt_finish ($banner, $href, $options);
 	
 }
 
@@ -4310,6 +4326,7 @@ sub setup_skin {
 			tree_sort
 			adjust_esc
 			out_html
+			user_agent
 		));
 
 	}
