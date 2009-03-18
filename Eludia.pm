@@ -173,9 +173,9 @@ sub check_application_directory {
 
 	print STDERR " check_application_directory... ";
 
-	my $docroot;
+	my $docroot = $ENV{DOCUMENT_ROOT};
 		
-	if (open (IN, $0)) {
+	if (!$docroot && open (IN, $0)) {
 	
 		my $httpd_conf = join ('', <IN>);
 		
