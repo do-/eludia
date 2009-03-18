@@ -5,6 +5,8 @@ package Eludia::Loader;
 sub import {
 
 	my ($dummy, $root, $package, $preconf) = @_;
+
+	$Eludia::last_loaded_package = $package;
 	
 	ref $root eq ARRAY or $root = [$root];	
 		
