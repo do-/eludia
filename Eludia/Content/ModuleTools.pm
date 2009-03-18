@@ -289,7 +289,7 @@ sub require_fresh {
 		
 	close (S);
 	
-	eval $src; die $@ if $@;
+	eval $src; die "$module_name: " . $@ if $@;
 		
 	$INC_FRESH {$module_name} = $last_modified;		
 

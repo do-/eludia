@@ -155,7 +155,7 @@ sub send_mail {
 	
 	my $is_child = 0;
 	
-	unless ($^O eq 'MSWin32') {
+	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'}) {
 
 		$SIG {'CHLD'} = "IGNORE";
 
@@ -283,7 +283,7 @@ EOT
 
 	$time = __log ($time, " $signature: done with sending mail");
 		
-	unless ($^O eq 'MSWin32') {
+	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'}) {
 		$db -> disconnect;
 		CORE::exit (0);
 	}
