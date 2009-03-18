@@ -14,6 +14,7 @@
 	cancel                   => 'cancel', 
 	choose                   => 'choose', 
 	delete                   => 'delete', 
+	download                 => 'download',
 	edit                     => 'edit', 
 	'close'                  => 'close',
 	back                     => '&lt;&lt; back',
