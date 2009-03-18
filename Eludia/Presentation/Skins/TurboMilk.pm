@@ -2977,7 +2977,7 @@ sub lrt_print {
 	my $_SKIN = shift;
 
 	my $id = int (time * rand);
-	$r -> print ("<span id='$id'>");
+	$r -> print ("<span id='$id'><font color=white>");
 	$r -> print (@_);
 	$r -> print ("</span>");
 	$r -> print ($lrt_bar);	
@@ -3022,7 +3022,7 @@ sub lrt_start {
 	$r -> send_http_header ();
 	
 	$_SKIN -> lrt_print (<<EOH);
-		<html><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
+		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
 			<iframe name=invisible src="$_REQUEST{__uri}0.html" width=0 height=0 application="yes">
 			</iframe>
 EOH
