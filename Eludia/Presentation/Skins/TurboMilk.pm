@@ -3054,6 +3054,12 @@ sub lrt_finish {
 		$r -> print ("<script>$js</script></body></html>" . (' ' x 4096));
 
 	}
+	elsif ($options -> {kind} eq 'link') {
+		$_SKIN -> lrt_print (<<EOH);
+		<br><a href="javascript: document.location = '$href'"><font color='yellow'>$banner</font></a>
+		</body></html>
+EOH
+	}
 	else {
 	
 		$_SKIN -> lrt_print (<<EOH);
