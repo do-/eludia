@@ -3055,6 +3055,7 @@ sub lrt_finish {
 
 	}
 	elsif ($options -> {kind} eq 'link') {
+
 		$_SKIN -> lrt_print (<<EOH);
 		<br><a href="javascript: document.location = '$href'"><font color='yellow'>$banner</font></a>
 		</body></html>
