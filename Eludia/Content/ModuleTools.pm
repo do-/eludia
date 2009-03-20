@@ -66,7 +66,7 @@ sub require_model {
 
 		my %tables = ();
 
-		tie %tables, Eludia::Tie::FileDumpHash, {path => [map {"$_/Model"} @$PACKAGE_ROOT]};
+		tie %tables, Eludia::Tie::FileDumpHash, {path => [grep {-d} map {"$_/Model"} @$PACKAGE_ROOT]};
 
 		$DB_MODEL -> {tables} = \%tables;
 
@@ -84,6 +84,8 @@ sub require_scripts_of_type ($) {
 	
 	my $__time = $__time = int (time ());
 	
+	my $is_updated;
+	
 	foreach my $the_path (reverse @$PACKAGE_ROOT) {
 
 		my $time = time;
@@ -96,7 +98,13 @@ sub require_scripts_of_type ($) {
 		my @file_names = readdir (DIR);
 		closedir DIR;
 
-		return __log_profilinig ($time, "   require_scripts_of_type $script_type: $dir is empty") if @file_names == 0;
+		if (@file_names == 0) {
+		
+			__log_profilinig ($time, "   require_scripts_of_type $script_type: $dir is empty") ;
+			
+			next;
+			
+		}
 		
 		my @scripts = ();
 		my $name2def = {};
@@ -125,7 +133,14 @@ sub require_scripts_of_type ($) {
 
 		my ($needed_scripts, $new_checksums) = checksum_filter ($checksum_kind, '', $name2def);
 	
-		return __log_profilinig ($time, "   require_scripts_of_type $script_type: nothing to do in $dir") if %$needed_scripts == 0;
+		if (%$needed_scripts == 0) {
+		
+			__log_profilinig ($time, "   require_scripts_of_type $script_type: nothing to do in $dir");
+			
+			next;
+			
+		}
+		
 
 		@scripts = 
 			
@@ -163,6 +178,8 @@ sub require_scripts_of_type ($) {
 			
 			die $@ if $@;
 			
+			$is_updated = 1;
+			
 		}
 				
 		checksum_write ($checksum_kind, $new_checksums);
@@ -171,7 +188,8 @@ sub require_scripts_of_type ($) {
 
 	}
 	
-	set_last_update ($__time);
+	set_last_update ($__time)
+		if $is_updated;
 
 }
 
@@ -289,7 +307,7 @@ sub require_fresh {
 		
 	close (S);
 	
-	eval $src; die $@ if $@;
+	eval $src; die "$module_name: " . $@ if $@;
 		
 	$INC_FRESH {$module_name} = $last_modified;		
 

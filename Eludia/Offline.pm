@@ -47,32 +47,56 @@ sub perl_section_from ($) {
 
 ################################################################################
 
+sub the_rest_of_the_script () {
+
+	my @code = ();
+
+	my $flag = 0;
+	
+	open (SCRIPT, $0);
+	
+	while (<SCRIPT>) {
+	
+		if    (/use\s+Eludia::Offline/) { $flag = 1 }
+
+		else                            { $code [$flag] .= $_ }
+	
+	}
+	
+	close (SCRIPT);
+
+	return $code [1] || $code [0];	
+
+}
+
+################################################################################
+
 BEGIN {
 
 	$| = 1;
 	
+	eval perl_section_from config_file;		
+	
 	my $package = __PACKAGE__;
-
-	my $code = (perl_section_from config_file) . qq {
+	
+	$package = $Eludia::last_loaded_package if $package eq 'main';
+		
+	my $code = qq {
 	
 		package $package;
 
 		\$_REQUEST {__skin} = 'STDERR';
 
 		sql_reconnect ();
-
-	};
+		
+		no warnings;
 	
-	eval $code;
+	} . the_rest_of_the_script;
 	
-	die $@ if $@;
+	eval $code; die $@ if $@;
+	
+	exit;
 
-}
-
-################################################################################
-
-END {
-	sql_disconnect ();
 }
 
 1;

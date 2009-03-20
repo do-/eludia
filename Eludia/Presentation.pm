@@ -52,7 +52,9 @@ sub __d {
 
 	my ($data, @fields) = @_;
 
-	foreach $_ (@fields) {
+	@fields = grep {/(_|\b)dt(_|\b)/} keys %$data;
+
+	foreach (@fields) {
 
 		if ($preconf -> {core_fix_tz} && $data -> {$_} !~ /^0000-00-00/ && $data -> {$_} =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/) {
 			$data -> {$_} = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', Date::Calc::Add_Delta_DHMS ($1, $2, $3, $4, $5, $6, 0, - $_USER -> {tz_offset} + 0 || 0, 0, 0));
@@ -62,6 +64,8 @@ sub __d {
 		$data -> {$_} =~ s{00\.00\.0000}{};
 						
 	}
+	
+	return $data;
 		
 }
 
@@ -1603,7 +1607,9 @@ sub draw_form_field_select {
 
 	if (defined $options -> {other}) {
 
-		ref $options -> {other} or $options -> {other} = {href => $options -> {other}, label => $i18n -> {voc}};
+		ref $options -> {other} or $options -> {other} = {href => $options -> {other}};
+		
+		$options -> {other} -> {label} ||= $i18n -> {voc};
 
 		check_href ($options -> {other});
 
@@ -4072,9 +4078,7 @@ sub lrt_start {
 
 sub lrt_finish {
 
-	my ($banner, $href) = @_;
-
-warn "\$href='$href'(1)\n";
+	my ($banner, $href, $options) = @_;
 
 	if ($_USER -> {peer_server}) {
 	
@@ -4084,9 +4088,27 @@ warn "\$href='$href'(1)\n";
 
 	$href = check_href ({href => $href});
 	
-warn "\$href='$href'(2)\n";
+	
+	if ($options -> {kind} eq 'download') {
+	
+		$options -> {toolbar} = draw_centered_toolbar ({}, [
+			{
+				icon   => 'print',
+				label  => $i18n -> {download},
+				href   => $href,
+				target => 'invisible',
+				id     => 'download',
+			},
+			{
+				icon   => 'cancel',
+				label  => $i18n -> {cancel},
+				href   => 'javaScript:history.go(-1)',
+			},
+		]);
 
-	$_SKIN -> lrt_finish ($banner, $href);
+	}
+		
+	$_SKIN -> lrt_finish ($banner, $href, $options);
 	
 }
 
@@ -4304,6 +4326,7 @@ sub setup_skin {
 			tree_sort
 			adjust_esc
 			out_html
+			user_agent
 		));
 
 	}

@@ -401,4 +401,28 @@ sub defaults {
 
 }
 
+################################################################################
+
+sub user_agent {
+
+	my $src = $r -> headers_in -> {'User-Agent'};
+	
+	my $result = {};
+	
+	if ($src =~ /MSIE (\d+\.\d+)/) {
+	
+		$result -> {msie} = $1;
+	
+	}
+
+	if ($src =~ /Windows NT (\d+\.\d+)/) {
+	
+		$result -> {nt} = $1;
+	
+	}
+
+	return $result;
+
+}
+
 1;

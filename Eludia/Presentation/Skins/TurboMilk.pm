@@ -888,8 +888,9 @@ sub draw_form_field_static {
 	my $html = '';
 
 	if ($options -> {href}) {
-		my $state = $data -> {fake} == -1 ? 'deleted' : $_REQUEST {__read_only} ? 'passive' : 'active';
+		my $state = $_REQUEST {__read_only} ? 'passive' : 'active';
 		$options -> {a_class} ||= "form-$state-inputs";
+		$options -> {a_class} =~ s{(passive|active)}{deleted} if ($data -> {fake} == -1);
 		$html = qq{<a href="$$options{href}" target="$$options{target}" class="$$options{a_class}">};
 	}
 	
@@ -1077,11 +1078,15 @@ EOH
 		$html .= qq {<option value="0" $selected>$$options{empty}</option>\n};
 	}
 		
+	if (defined $options -> {other} && $options -> {other} -> {on_top}) {
+		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
+	}
+
 	foreach my $value (@{$options -> {values}}) {
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n}; 
 	}
 	
-	if (defined $options -> {other}) {
+	if (defined $options -> {other} && !$options -> {other} -> {on_top}) {
 		$html .= qq {<option value=-1>${$$options{other}}{label}</option>};
 	}
 
@@ -2972,7 +2977,7 @@ sub lrt_print {
 	my $_SKIN = shift;
 
 	my $id = int (time * rand);
-	$r -> print ("<span id='$id'>");
+	$r -> print ("<span id='$id'><font color=white>");
 	$r -> print (@_);
 	$r -> print ("</span>");
 	$r -> print ($lrt_bar);	
@@ -3017,7 +3022,7 @@ sub lrt_start {
 	$r -> send_http_header ();
 	
 	$_SKIN -> lrt_print (<<EOH);
-		<html><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
+		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
 			<iframe name=invisible src="$_REQUEST{__uri}0.html" width=0 height=0 application="yes">
 			</iframe>
 EOH
@@ -3030,15 +3035,43 @@ sub lrt_finish {
 
 	my $_SKIN = shift;
 
-	my ($banner, $href) = @_;
+	my ($banner, $href, $options) = @_;
 	
-	$_SKIN -> lrt_print (<<EOH);
-	<script>
-		alert ('$banner');
-		document.location = '$href';
-	</script>
-	</body></html>
+	if ($options -> {kind} eq 'download') {
+		
+		$r -> print ($options -> {toolbar});
+
+		my $js = q {
+
+			var download = document.getElementById ('download');
+			
+			download.scrollIntoView (true);
+
+		};
+		
+		$js .= user_agent () -> {nt} >= 6 ? '' : ' download.click ();';
+
+		$r -> print ("<script>$js</script></body></html>" . (' ' x 4096));
+
+	}
+	elsif ($options -> {kind} eq 'link') {
+
+		$_SKIN -> lrt_print (<<EOH);
+		<br><a href="javascript: document.location = '$href'"><font color='yellow'>$banner</font></a>
+		</body></html>
 EOH
+	}
+	else {
+	
+		$_SKIN -> lrt_print (<<EOH);
+		<script>
+			alert ('$banner');
+			document.location = '$href';
+		</script>
+		</body></html>
+EOH
+
+	}
 
 }
 

@@ -268,7 +268,10 @@ sub handler {
 			eval {	$error_code = call_for_role ($sub_name); };
 			$error_code = $@ if $@;
 			
-			exit if $_REQUEST {__response_sent};
+			if ($_REQUEST {__response_sent}) {
+				action_finish();
+				exit;
+			}
 
 			if ($_USER -> {demo_level} > 0) {
 				($action =~ /^execute/ and $$page{type} eq 'logon') or $error_code ||= '»звините, вы работаете в демонстрационном режиме';
@@ -377,24 +380,7 @@ sub handler {
 
 			}
 
-			unless ($db -> {AutoCommit}) {
-
-				eval {
-				
-					if ($_REQUEST {error}) {
-						$db -> rollback
-					} 
-					else {
-						$db -> commit
-					} 
-					
-					$db -> {AutoCommit} = 1;
-					
-				};
-			
-			}
-
-			log_action_finish ();
+			action_finish ();
 
 		}
 		else {
@@ -534,6 +520,31 @@ sub log_action_finish {
 	delete $_REQUEST {params};
 	delete $_REQUEST {_params};
 	
+}
+
+################################################################################
+
+sub action_finish {
+
+	unless ($db -> {AutoCommit}) {
+
+		eval {
+
+			if ($_REQUEST {error}) {
+				$db -> rollback
+			} 
+			else {
+				$db -> commit
+			} 
+
+			$db -> {AutoCommit} = 1;
+
+		};
+
+	}
+
+	log_action_finish ();
+
 }
 
 ################################################################################

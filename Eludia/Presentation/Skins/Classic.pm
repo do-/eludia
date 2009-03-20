@@ -911,7 +911,7 @@ sub draw_form_field_checkboxes {
 	
 		my $n = 0;
 		
-		$html .= '<table border=0 cellpadding=0 cellspacing=0><tr>';
+		$html .= "<table border=0 cellpadding=0 cellspacing=0 id='input_$$options{name}'><tr>";
 	
 		foreach my $value (@{$options -> {values}}) {
 				
