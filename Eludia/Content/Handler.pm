@@ -268,10 +268,7 @@ sub handler {
 			eval {	$error_code = call_for_role ($sub_name); };
 			$error_code = $@ if $@;
 			
-			if ($_REQUEST {__response_sent}) {
-				action_finish();
-				exit;
-			}
+			return action_finish () if $_REQUEST {__response_sent};
 
 			if ($_USER -> {demo_level} > 0) {
 				($action =~ /^execute/ and $$page{type} eq 'logon') or $error_code ||= '»звините, вы работаете в демонстрационном режиме';
@@ -310,6 +307,9 @@ sub handler {
 							if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
 								sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
 							}
+							
+							session_access_logs_purge ();
+							
 						}
 
 						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_COOKIES {redirect_params}) {
@@ -385,73 +385,8 @@ sub handler {
 		}
 		else {
 		
-			if ($_REQUEST {sid} && !$_REQUEST {__top} && !$_REQUEST {__only_menu} && $_REQUEST {type} ne '__query') {
-						
-				my @qs = split /\?/, $r -> headers_in -> {Referer};
-				
-				my %p = ();
-				
-				foreach (split /\&/, $qs [-1]) {
-				
-					my ($k, $v) = split /\=/;
-					
-					$p {$k} = $v;
-				
-				}
-
-#				if ($_REQUEST {__this_query_string} && $_REQUEST {id}) {
-					
-#					$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
-#					$_REQUEST {__last_query_string}        = $_REQUEST {__this_query_string};
-					
-#				}
-				if (
-					$p {action} 
-					|| $_REQUEST {__next_query_string}
-					|| $p {__last_query_string} != $_REQUEST{__last_query_string}
-					|| $p {type} ne $_REQUEST {type}
-				) {
-
-					my ($method, $url) = split /\s+/, $r -> the_request;
-					
-					if ($url !~ /\bsid=\d/) {
-						
-						$url .= '?';
-						
-						foreach my $k (keys %_REQUEST_VERBATIM) {
-						
-							next if $_REQUEST_VERBATIM {$k} eq '';
-								
-							$url .= "$k=";
-							$url .= uri_escape ($_REQUEST_VERBATIM {$k});
-							$url .= "&";
-								
-						}
-						
-						chop $url;
-						
-					}
-
-					$url =~ s{\&?_?salt=[\d\.]+}{}gsm;
-					$url =~ s{\&?sid=\d+}{}gsm;
-					$url =~ s{\&?id___query=\d+}{}gsm;
-					$url =~ s{\&?__next_query_string=\d+}{}gsm;
-
-					my $no = sql_select_scalar ("SELECT no FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND href LIKE ?", $_REQUEST {sid}, $url);
-
-					unless ($no) {
-						$no = 1 + sql_select_scalar ("SELECT MAX(no) FROM $conf->{systables}->{__access_log} WHERE id_session = ?", $_REQUEST {sid});
-						sql_do ("INSERT INTO $conf->{systables}->{__access_log} (id_session, no, href) VALUES (?, ?, ?)", $_REQUEST {sid}, $no, $url);
-					}
-
-					$_REQUEST {__last_query_string} = $no;
-
-					$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
-				
-				}
-
-			}
-
+			adjust_last_query_string ();
+		
 			$r -> headers_out -> {'Expires'} = '-1';
 			
 			out_html ({}, draw_page ($page));
@@ -471,7 +406,7 @@ sub handler {
 	}) if $preconf -> {core_debug_profiling} > 2;
 	
 	if ($_REQUEST {__suicide}) {
-		$r -> print (' ' x 8096);
+		$r -> print (' ' x 8192);
 		CORE::exit (0);
 	}
 
@@ -544,6 +479,8 @@ sub action_finish {
 	}
 
 	log_action_finish ();
+	
+	return _ok ();
 
 }
 
@@ -562,30 +499,11 @@ sub adjust_request_type {
 		if ($i -> {href}) {
 		
 			my $href = $i -> {href};
-
-			if (ref $href eq HASH && $href -> {type}) {
 			
-				foreach my $k (keys %$href) {
-					
-					$_REQUEST {$k} = $href -> {$k}
-					
-				}
-							
-			} 
-			else {
+			ref $href or $href = parse_query_string_to_hashref ($href);
 			
-				$href =~ s{^/?\?}{};
-				
-				foreach (split /&/, $href) {
-					
-					my ($k, $v) = split /=/;	
-					
-					$_REQUEST {$k} = $v;
-					
-				}
-			
-			}
-			
+			while (my ($k, $v) = each %$href) { $_REQUEST {$k} = $v }
+										
 			return 1;
 		
 		}
@@ -609,6 +527,66 @@ sub adjust_request_type {
 	
 	return 0;
 
+}
+
+################################################################################
+
+sub parse_query_string_to_hashref {
+	
+	my $h = {};
+	
+	$_[0] =~ /\?/ or return $h;
+		
+	foreach (split /\&/, $') {
+
+		my ($k, $v) = split /\=/;
+
+		$h -> {$k} = $v;
+
+	}
+	
+	return $h;
+
+}
+
+################################################################################
+
+sub adjust_last_query_string {
+
+	$_REQUEST {sid} && !$_REQUEST {__top} && !$_REQUEST {__only_menu} && $_REQUEST {type} ne '__query' or return;
+					
+	my $_PREVIOUS_REQUEST = parse_query_string_to_hashref ($r -> headers_in -> {Referer});
+	
+	$_PREVIOUS_REQUEST -> {action} 
+		or $_REQUEST {__last_query_string} != $_PREVIOUS_REQUEST -> {__last_query_string} 
+		or $_REQUEST {type}                ne $_PREVIOUS_REQUEST -> {type} 
+		or $_REQUEST {__next_query_string} 
+		or return;
+
+	my ($method, $url) = split /\s+/, $r -> the_request;
+	
+	if ($url !~ /\bsid=\d/) {
+		
+		$url .= '?';
+		
+		foreach my $k (keys %_REQUEST_VERBATIM) {
+		
+			next if $_REQUEST_VERBATIM {$k} eq '';
+				
+			$url .= "$k=";
+			$url .= uri_escape ($_REQUEST_VERBATIM {$k});
+			$url .= "&";
+				
+		}
+		
+		chop $url;
+		
+	}
+	
+	$_REQUEST {__last_query_string} = session_access_log_set ($url);
+	
+	$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
+	
 }
 
 1;

@@ -188,12 +188,8 @@ sub trunc_string {
 sub esc_href {
 
 	my $href = 
-		
-		sql_select_scalar (
-			"SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?",
-			$_REQUEST {sid}, 
-			$_REQUEST {__last_last_query_string}
-		)
+				
+		session_access_log_get ($_REQUEST {__last_last_query_string})
 
 		|| "/?type=$_REQUEST{type}"
 		
@@ -876,8 +872,8 @@ sub draw_path {
 		
 		if ($_REQUEST {__next_query_string}) {
 		
-			$options -> {forward} = sql_select_scalar ("SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?", $_REQUEST {sid}, $_REQUEST {__next_query_string}) . '&sid=' . $_REQUEST {sid};
-		
+			$options -> {forward} = session_access_log_get ($_REQUEST {__next_query_string}) . "&sid=$_REQUEST {sid}";
+
 		}
 	
 	}

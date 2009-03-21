@@ -18,6 +18,8 @@ sub start_session {
 
 	sql_do ("INSERT INTO $conf->{systables}->{sessions} (ts, id, id_user) VALUES (NOW(), ?, ?)", $_REQUEST {sid}, $id_user);
 	
+	session_access_logs_purge ();
+
 }
 
 ################################################################################

@@ -41,9 +41,6 @@ sub sql_do_refresh_sessions {
 	
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN (SELECT id FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?)", $timeout / 1440);
 
-#	sql_do ("DELETE FROM \"$conf->{systables}->{__access_log}\" WHERE id_session IN (SELECT DISTINCT id_session FROM \"$conf->{systables}->{__access_log}\" MINUS SELECT id FROM $conf->{systables}->{sessions})");
-	sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session IN (SELECT DISTINCT id_session FROM $conf->{systables}->{__access_log} MINUS SELECT id FROM $conf->{systables}->{sessions})");
-
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?", $_REQUEST {sid});
 
 }

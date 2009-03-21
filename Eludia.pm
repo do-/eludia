@@ -215,7 +215,7 @@ sub check_application_directory {
 	
 	$preconf -> {_} -> {docroot} = $docroot;
 
-	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm') {
+	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs') {
 
 		print STDERR "  checking ${docroot}${subdir}...";
 
@@ -379,6 +379,7 @@ sub check_external_module_json {
 sub check_internal_modules {
 
 	require Eludia::Content;
+	require Eludia::Content::SessionAccessLogs;
 	require Eludia::Presentation;
 	require Eludia::SQL;
 	
