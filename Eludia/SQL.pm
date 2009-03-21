@@ -234,7 +234,6 @@ sub check_systables {
 		__queries
 		__defaults
 		__voc_replacements	
-		__access_log		
 		__benchmarks		
 		__request_benchmarks
 		__last_update		
@@ -304,23 +303,6 @@ my $time = time;
 			
 			keys => {
 				context => 'context,name',
-			},
-
-		},
-
-		$conf -> {systables} -> {__access_log} => {
-		
-			columns => {
-				id         => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-				id_session => {TYPE_NAME => 'bigint'},
-				ts         => {TYPE_NAME => 'timestamp'},
-				no         => {TYPE_NAME => 'int'},
-				href       => {TYPE_NAME => 'text'},
-			},
-			
-			keys => {
-				ix => 'id_session,no',
-				ix2 => 'id_session,href(255)',
 			},
 
 		},

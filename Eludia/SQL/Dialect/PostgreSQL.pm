@@ -37,11 +37,7 @@ sub sql_do_refresh_sessions {
 
 	if ($ids ne '-1') {
 
-		sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)") ;
-
-		$ids = sql_select_ids ("SELECT DISTINCT id_session FROM $conf->{systables}->{__access_log} EXCEPT SELECT id FROM $conf->{systables}->{sessions}");
-
-		sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session IN ($ids)") if $ids ne '-1';
+		sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
 
 	}
 
