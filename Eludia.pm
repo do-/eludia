@@ -205,13 +205,7 @@ sub check_application_directory {
 		
 	}
 	
-	if (!$docroot) {
-	
-		print STDERR "docroot NOT FOUND :-(\n";
-		
-		return;
-	
-	}
+	$docroot or die "docroot NOT FOUND :-(\n";
 	
 	$docroot =~ s{[\/\\]$}{};
 	
