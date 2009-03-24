@@ -118,11 +118,7 @@ sub do_create_DEFAULT { # создание
 	
 	if ($parent && !$_REQUEST {"_$parent->{column}"}) {
 	
-		my $href = sql_select_scalar (
-			"SELECT href FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND no = ?",
-			$_REQUEST {sid}, 
-			$_REQUEST {__last_last_query_string}
-		);
+		my $href = session_access_log_get ($_REQUEST {__last_last_query_string});
 		
 		if ($href =~ /\bid\=(\d+)/) {
 		

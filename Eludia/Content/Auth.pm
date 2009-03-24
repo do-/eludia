@@ -18,6 +18,8 @@ sub start_session {
 
 	sql_do ("INSERT INTO $conf->{systables}->{sessions} (ts, id, id_user) VALUES (NOW(), ?, ?)", $_REQUEST {sid}, $id_user);
 	
+	session_access_logs_purge ();
+
 }
 
 ################################################################################
@@ -28,7 +30,7 @@ sub refresh_sessions {
 
 	my $time = time;
 
-	$_REQUEST {__suggest} or sql_do_refresh_sessions ();
+	sql_do_refresh_sessions ();
 
 	__log_profilinig ($time, ' <refresh_sessions>');
 	

@@ -41,8 +41,6 @@ sub sql_do_refresh_sessions {
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
 
 	$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
-
-	sql_do ("DELETE FROM $conf->{systables}->{__access_log} WHERE id_session NOT IN ($ids)");
 	
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = GETDATE() WHERE id = ? ", 0+$_REQUEST {sid});
 	
@@ -681,7 +679,6 @@ sub keep_alive {
 sub select__table_data {
 
 	exit if $_REQUEST {table} eq $conf -> {systables} -> {sessions};
-	exit if $_REQUEST {table} eq $conf -> {systables} -> {__access_log};
 	
 	my $table = $DB_MODEL -> {tables} -> {$_REQUEST {table}} or exit;
 	
