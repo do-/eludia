@@ -842,7 +842,10 @@ TableSlider.prototype.set_row = function (row) {
 	
 	this.cnt      = this.rows.length;
 
-	if (row < this.cnt) this.row = row;
+	if (row < this.cnt) {
+		this.row = row;
+		this.rows [row].scrollIntoView(false);
+	}
 
 }
 
