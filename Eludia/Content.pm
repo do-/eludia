@@ -405,7 +405,7 @@ sub defaults {
 
 sub user_agent {
 
-	my $src = $r -> {headers_in} -> {'User-Agent'};
+	my $src = $r -> headers_in -> {'User-Agent'};
 	
 	my $result = {};
 	
