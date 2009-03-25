@@ -145,7 +145,12 @@ sub check_web_server {
 
 	check_web_server_apache ();
 
-	eval "require Eludia::Content::HTTP::API::CGI" if $preconf -> {use_cgi};
+	if ($preconf -> {use_cgi}) {
+		eval "require Eludia::Content::HTTP::API::CGI::Simple";
+		
+		eval "require Eludia::Content::HTTP::API::CGI"
+			if $@;
+	}
 		
 }
 
