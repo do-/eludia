@@ -146,10 +146,17 @@ sub check_web_server {
 	check_web_server_apache ();
 
 	if ($preconf -> {use_cgi}) {
-		eval "require Eludia::Content::HTTP::API::CGI::Simple";
+	
+		eval "require Eludia::Content::HTTP::API::CGISimple";
 		
-		eval "require Eludia::Content::HTTP::API::CGI"
-			if $@;
+		if ($@) {
+
+			print STDERR " CGI::Simple is not installed... ";
+
+			eval "require Eludia::Content::HTTP::API::CGI";
+
+		}		
+		
 	}
 		
 }
