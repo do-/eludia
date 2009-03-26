@@ -173,7 +173,7 @@ sub handler {
 		my $src = Dumper (\%_REQUEST);
 		my $value = MIME::Base64::encode ($src);
 
-		set_cookie (-name => 'redirect_params', -value => $value, -expires => '+1m', -path => '/');
+		set_cookie (-name => 'redirect_params', -value => $value, -expires => '+1h', -path => '/');
 
 		redirect ("/?type=$type", kind => 'js', target => '_top');
 
@@ -281,61 +281,13 @@ sub handle_request_of_type_action {
 			
 	return action_finish () if $_REQUEST {__peer_server};
 
-	delete $_REQUEST {__response_sent};
-
 	eval {
 
 		delete_fakes () if $action eq 'create';
 
 		call_for_role ("do_${action}_$$page{type}");
-		
+
 		call_for_role ("recalculate_$$page{type}") if $action ne 'create';
-
-		if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_USER -> {id}) {
-
-			set_cookie (
-				-name    => 'user_login',
-				-value   => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
-				-expires => '+1M', # 'Sat, 31-Dec-2050 23:59:59 GMT',
-				-path    => '/',
-			);
-			
-			if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
-				sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
-			}
-			
-			session_access_logs_purge ();
-			
-		}
-
-		if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_COOKIES {redirect_params}) {
-			
-			my $VAR1;
-			my $value = $_COOKIES {redirect_params} -> value;
-			my $src = MIME::Base64::decode ($value);
-			eval "\$VAR1 = $src";
-			
-			if ($@) {
-				warn "[$src] thaw error: $@\n";
-			} 
-			else {
-			
-				foreach my $key (keys %$VAR1) {
-					
-					$_REQUEST {$key} = $VAR1 -> {$key};
-
-				}
-
-			}
-			
-			set_cookie (
-				-name    => 'redirect_params',
-				-value   => '',
-				-expires => '+1m',
-				-path    => '/',
-			);
-			
-		} 
 
 	};
 
@@ -585,6 +537,54 @@ sub adjust_last_query_string {
 	
 	$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
 	
+}
+
+################################################################################
+
+sub recalculate_logon {
+
+	$_REQUEST {action} =~ /^execute/ or return;
+
+	if ($_USER -> {id}) {
+
+		set_cookie (
+			-name    => 'user_login',
+			-value   => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
+			-expires => '+1M',
+			-path    => '/',
+		);
+		
+		if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
+			sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
+		}
+		
+		session_access_logs_purge ();
+		
+	}
+
+	if ($_COOKIES {redirect_params}) {
+		
+		my $VAR1;
+		
+		my $value = $_COOKIES {redirect_params} -> value;
+		
+		my $src = MIME::Base64::decode ($value);
+	
+		eval "\$VAR1 = $src";
+		
+		$@ and warn "[$src] thaw error: $@\n" and return;
+
+		foreach my $key (keys %$VAR1) { $_REQUEST {$key} = $VAR1 -> {$key} }
+		
+		set_cookie (
+			-name    => 'redirect_params',
+			-value   => '',
+			-expires => '+1m',
+			-path    => '/',
+		);
+		
+	} 
+
 }
 
 1;
