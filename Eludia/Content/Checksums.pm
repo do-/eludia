@@ -112,7 +112,8 @@ sub get_last_update {
 	
 	unless ($value) {
 	
-		$value = sql_select_scalar ("SELECT unix_ts FROM $conf->{systables}->{__last_update}");
+		my $last_update_table = sql_table_name ($conf->{systables}->{__last_update});
+		$value = sql_select_scalar ("SELECT unix_ts FROM $last_update_table");
 		
 		my $hash = $preconf -> {_} -> {checksums} -> {$kind};
 		
@@ -142,9 +143,11 @@ sub set_last_update {
 
 	$hash -> {$name} = $value if $hash;
 	
-	sql_do ("DELETE FROM $conf->{systables}->{__last_update}");
+	my $last_update_table = sql_table_name ($conf->{systables}->{__last_update});
 
-	sql_do ("INSERT INTO $conf->{systables}->{__last_update} (unix_ts, pid) VALUES (?, ?)", $value, $$);
+	sql_do ("DELETE FROM $last_update_table");
+
+	sql_do ("INSERT INTO $last_update_table (unix_ts, pid) VALUES (?, ?)", $value, $$);
 
 	checksum_unlock ($kind);
 

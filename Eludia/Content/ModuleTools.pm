@@ -348,13 +348,12 @@ sub call_for_role {
 
 		if ($preconf -> {core_debug_profiling} > 1) {
 
-			my $id = sql_select_scalar ("SELECT id FROM $conf->{systables}->{__benchmarks} WHERE label = ?", $sub_name);
-			unless ($id) {
-				sql_do_insert ($conf->{systables}->{__benchmarks}, {fake => 0, label => $sub_name});
-			}
+			my $id = sql_select_id ($conf->{systables}->{__benchmarks} => {fake => 0, label => $sub_name});
+
+			my $benchmarks_table = sql_table_name ($conf->{systables}->{__benchmarks});
 
 			sql_do (
-				"UPDATE $conf->{systables}->{__benchmarks} SET cnt = cnt + 1, ms = ms + ?, selected = selected + ?  WHERE id = ?",
+				"UPDATE $benchmarks_table SET cnt = cnt + 1, ms = ms + ?, selected = selected + ?  WHERE id = ?",
 				int(1000 * (time - $time)),
 				$_REQUEST {__benchmarks_selected},
 				$id,
@@ -362,7 +361,7 @@ sub call_for_role {
 
 			
 			sql_do (
-				"UPDATE $conf->{systables}->{__benchmarks} SET  mean = ms / cnt, mean_selected = selected / cnt WHERE id = ?",
+				"UPDATE $benchmarks_table SET  mean = ms / cnt, mean_selected = selected / cnt WHERE id = ?",
 				$id,
 			);
 			

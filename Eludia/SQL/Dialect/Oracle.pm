@@ -21,8 +21,12 @@ sub sql_version {
 	sql_do ("ALTER SESSION SET nls_date_format      = '$conf->{db_date_format}'");
 	sql_do ("ALTER SESSION SET nls_timestamp_format = '$conf->{db_date_format}'");
 
+	sql_select_loop ("SELECT table_name FROM user_tables", sub {
+		$version -> {tables} -> {lc $i -> {table_name}} = $i -> {table_name};
+	});
+
 	return $version;
-	
+
 }
 
 ################################################################################
@@ -497,7 +501,9 @@ sub sql_select_hash {
 	
 		@params = ({}) if (@params == 0);
 		
-		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE $field = ?", $id);
+		my $sql_or_table_name_safe = sql_table_name ($sql_or_table_name);
+
+		return sql_select_hash ("SELECT * FROM $sql_or_table_name_safe WHERE $field = ?", $id);
 		
 	}	
 	
@@ -700,6 +706,7 @@ sub sql_do_insert {
 	my $fields = '';
 	my $args   = '';
 	my @params = ();
+	my $table_name_safe = sql_table_name ($table_name);
 
 	$pairs -> {fake} = $_REQUEST {sid} unless exists $pairs -> {fake};
 
@@ -711,21 +718,21 @@ sub sql_do_insert {
 
 		sql_do (<<EOS, $_REQUEST {sid});
 			UPDATE
-				$table_name
+				$table_name_safe
 			SET	
-				$table_name.fake = ?
+				$table_name_safe.fake = ?
 			WHERE
-				$table_name.fake > 0
+				$table_name_safe.fake > 0
 			AND
-				$table_name.fake NOT IN (SELECT id FROM $conf->{systables}->{sessions})
+				$table_name_safe.fake NOT IN (SELECT id FROM $conf->{systables}->{sessions})
 EOS
 
 		### get my least fake id (maybe ex-orphan, maybe not)
 
-		$__last_insert_id = sql_select_scalar ("SELECT id FROM $table_name WHERE fake = ? ORDER BY id LIMIT 1", $_REQUEST {sid});
+		$__last_insert_id = sql_select_scalar ("SELECT id FROM $table_name_safe WHERE fake = ? ORDER BY id LIMIT 1", $_REQUEST {sid});
 		
 		if ($__last_insert_id) {
-			sql_do ("DELETE FROM $table_name WHERE id = ?", $__last_insert_id);
+			sql_do ("DELETE FROM $table_name_safe WHERE id = ?", $__last_insert_id);
 			$pairs -> {id} = $__last_insert_id;
 		}
 
@@ -734,7 +741,8 @@ EOS
 	my $seq_name;
 	
 	if ($conf -> {core_voc_replacement_use}) {
-		my $id = sql_select_scalar ("SELECT id FROM $conf->{systables}->{__voc_replacements} WHERE table_name='$table_name' and object_type=2");
+		my $voc_replacements_table = sql_table_name ($conf->{systables}->{__voc_replacements});
+		my $id = sql_select_scalar ("SELECT id FROM $voc_replacements_table WHERE table_name='$table_name' and object_type=2");
 		$seq_name ='SEQ_' . $id if $id;
 	}
 	
@@ -762,7 +770,7 @@ EOS
 	
 	while (1) {
 	
-		my $max = sql_select_scalar ("SELECT MAX(id) FROM $table_name");
+		my $max = sql_select_scalar ("SELECT MAX(id) FROM $table_name_safe");
 		
 		last if $nextval > $max;
 		
@@ -807,7 +815,7 @@ EOS
 	
 	if ($pairs -> {id}) {
 	
-		my $sql = "INSERT INTO $table_name ($fields) VALUES ($args)";
+		my $sql = "INSERT INTO $table_name_safe ($fields) VALUES ($args)";
 
 		sql_do ($sql, @params);
 	
@@ -818,7 +826,7 @@ EOS
 	}
 	else {
 
-		my $sql = "INSERT INTO $table_name ($fields) VALUES ($args) RETURNING id INTO ?";
+		my $sql = "INSERT INTO $table_name_safe ($fields) VALUES ($args) RETURNING id INTO ?";
 
 		my $st = $db -> prepare ($sql);
 
@@ -859,7 +867,9 @@ sub sql_do_delete {
 		}
 	};
 	
-	sql_do ("DELETE FROM $table_name WHERE id = ?", $_REQUEST{id});
+	my $table_name_safe = sql_table_name ($table_name);
+
+	sql_do ("DELETE FROM $table_name_safe WHERE id = ?", $_REQUEST{id});
 	
 	delete $_REQUEST{id};
 	
@@ -1303,7 +1313,7 @@ return $sql;
 
 sub sql_lock {
 
-	my $name = $_[0] =~ /^_/ ? "\"$_[0]\"" : $_[0];
+	my $name = sql_table_name ($_[0]);
 
 	sql_do ("LOCK TABLE $name IN ROW EXCLUSIVE MODE");
 
@@ -2037,6 +2047,14 @@ sub voc_replacements {
 	}
 
 	return $replaced_name;
+
+}
+
+#############################################################################
+
+sub sql_table_name {
+
+	$_[0] =~ /^_/ ? qq{"$SQL_VERSION->{tables}->{lc $_[0]}"} : $_[0];
 
 }
 

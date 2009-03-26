@@ -14,7 +14,8 @@ sub wish_to_clarify_demands_for_table_keys {
 
 	my ($i, $options) = @_;
 
-	$i -> {global_name}   = sql_select_scalar ("SELECT ID FROM $conf->{systables}->{__voc_replacements} WHERE TABLE_NAME = ? AND OBJECT_NAME = ? AND OBJECT_TYPE = 1", $options -> {table}, $i -> {name}) if ($conf -> {core_voc_replacement_use});
+	my $voc_replacements_table = sql_table_name ($conf->{systables}->{__voc_replacements}); 
+	$i -> {global_name}   = sql_select_scalar ("SELECT ID FROM $voc_replacements_table WHERE TABLE_NAME = ? AND OBJECT_NAME = ? AND OBJECT_TYPE = 1", $options -> {table}, $i -> {name}) if ($conf -> {core_voc_replacement_use});
 
 	$i -> {global_name} ||= 'OOC_' . Digest::MD5::md5_base64 ($options -> {table} . '_' . $i -> {name});
 

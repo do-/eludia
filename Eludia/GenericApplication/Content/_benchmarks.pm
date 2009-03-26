@@ -2,7 +2,9 @@
 
 sub do_flush__benchmarks {
 
-	sql_do ("TRUNCATE TABLE $conf->{systables}->{__benchmarks}");
+	my $benchmarks_table = sql_table_name ($conf->{systables}->{__benchmarks});
+
+	sql_do ("TRUNCATE TABLE $benchmarks_table");
 	
 }
 
@@ -22,11 +24,13 @@ sub select__benchmarks {
 		label         => 'label',
 	);
 
+	my $benchmarks_table = sql_table_name ($conf->{systables}->{__benchmarks});
+
 	my ($_benchmarks, $cnt)= sql_select_all_cnt (<<EOS, $q);
 		SELECT
 			*
 		FROM
-			$conf->{systables}->{__benchmarks}
+			$benchmarks_table
 		WHERE
 			(label LIKE ?)
 		ORDER BY
@@ -37,8 +41,8 @@ EOS
 
 	return {
 		_benchmarks => $_benchmarks,
-		cnt => $cnt,
-		portion => $$conf{portion},
+		cnt         => $cnt,
+		portion     => $$conf{portion},
 	};
 	
 }
