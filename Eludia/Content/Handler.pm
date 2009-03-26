@@ -161,7 +161,6 @@ sub handler {
 	
 	$_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/ or return handle_request_of_type_kickout ();
 
-	require_content DEFAULT;
 	require_content 'subset';
 
 	our $_SUBSET = call_for_role ('select_subset');
@@ -251,6 +250,8 @@ sub handle_request_of_type_kickout {
 ################################################################################
 
 sub handle_request_of_type_action {
+
+	require_content DEFAULT;
 
 	my ($page) = @_;
 
