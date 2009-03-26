@@ -677,6 +677,7 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
 	our $SQL_VERSION = {
 		driver => $driver_name,
 	};
+	sql_version();
 
 $time = __log_profilinig ($time, '  sql_reconnect: $model_update created');
 
