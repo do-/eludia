@@ -455,15 +455,6 @@ my $time = time;
 		},
 
 	};
-		
-	$conf -> {core_cache_html} and $defs {$conf -> {systables} -> {cache_html}} = {
-
-		columns => {
-			uri     => {TYPE_NAME  => 'varchar', COLUMN_SIZE  => 255, _PK    => 1},
-			ts      => {TYPE_NAME  => 'timestamp'},
-		}
-
-	};
 	
 	$preconf -> {core_debug_profiling} > 1 and $defs {$conf->{systables}->{__benchmarks}} = {
 

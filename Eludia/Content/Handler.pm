@@ -335,16 +335,10 @@ sub handle_request_of_type_action {
 				);
 				
 			} 
-			elsif ($conf -> {core_cache_html}) {
-				sql_do ("DELETE FROM $conf->{systables}->{cache_html}");
-				my $cache_path = $r -> document_root . '/cache/*';
-				$^O eq 'MSWin32' or eval {`rm -rf $cache_path`};
-			}
 
 		};
 
 		$_REQUEST {error} = $@ if $@;
-
 						
 		if ($_REQUEST {error}) {
 		
