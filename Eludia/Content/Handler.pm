@@ -187,17 +187,9 @@ sub handler {
 		$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ("UPDATE $conf->{systables}->{users} SET subset = ? WHERE id = ?", $_SUBSET -> {name}, $_USER -> {id});
 
 	}
-
-	require_content 'menu';
-
-	our $i18n = i18n ();
-
-	my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
-	
-	$_REQUEST {type} or adjust_request_type ($menu);
 			
 	my $page = {
-		menu => $menu,
+		menu => setup_menu (),
 		type => $_REQUEST {type},
 	};
 
@@ -215,6 +207,22 @@ sub handler {
 	
 	return handle_request_of_type_action ($page);
 	
+}
+
+################################################################################
+
+sub setup_menu {
+
+	require_content 'menu';
+
+	our $i18n = i18n ();
+
+	my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
+	
+	$_REQUEST {type} or adjust_request_type ($menu);
+	
+	return $menu;
+
 }
 
 ################################################################################
