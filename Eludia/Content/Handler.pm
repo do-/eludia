@@ -394,14 +394,22 @@ sub handler {
 		}
 
 	}
+	
+	return handler_finish ();
+	
+}
+
+################################################################################
+
+sub handler_finish {
 
 	$r -> pool -> cleanup_register (\&__log_request_finish_profilinig, {
+	
 		id_request_log		=> $_REQUEST {_id_request_log}, 
-
 		out_html_time		=> $_REQUEST {__out_html_time},
 		application_time	=> 1000 * (time - $first_time) - $_REQUEST {__sql_time}, 
 		sql_time		=> $_REQUEST {__sql_time},
-		is_gzipped		=>  $_REQUEST {__is_gzipped},
+		is_gzipped		=> $_REQUEST {__is_gzipped},
 		
 	}) if $preconf -> {core_debug_profiling} > 2;
 	
