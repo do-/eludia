@@ -264,10 +264,6 @@ sub handle_request_of_type_action {
 	eval { $_REQUEST {error} = call_for_role ("validate_${action}_$$page{type}"); };
 	
 	return action_finish () if $_REQUEST {__response_sent};
-
-	if ($_USER -> {demo_level} > 0) {
-		($action =~ /^execute/ and $$page{type} eq 'logon') or $error_code ||= '»звините, вы работаете в демонстрационном режиме';
-	}
 	
 	if ($_REQUEST {error}) {
 	
