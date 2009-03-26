@@ -158,90 +158,69 @@ sub handler {
 	return _ok () if $_REQUEST {__response_sent};
 
 	$time = __log_profilinig ($time, '<got user>');
+	
+	$_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/ or return handle_request_of_type_kickout ();
 
-	if ((!$_USER -> {id} and $_REQUEST {type} ne 'logon' and $_REQUEST {type} ne '_boot')) {
+	require_content DEFAULT;
+	require_content 'subset';
 
-		delete $_REQUEST {sid};
-		delete $_REQUEST {salt};
-		delete $_REQUEST {_salt};
+	our $_SUBSET = call_for_role ('select_subset');
+	
+	if ($_SUBSET && $_SUBSET -> {items}) {
 
-		my $type = ($preconf -> {core_skip_boot} || $conf -> {core_skip_boot}) || $_REQUEST {__windows_ce} ? 'logon' : '_boot';
+		$_SUBSET -> {items} = [ grep {!$_ -> {off}} @{$_SUBSET -> {items}} ];
 
-		delete $_REQUEST {__last_query_string};
-		delete $_REQUEST {__last_scrollable_table_row};
+		$_REQUEST {__subset} ||= $_USER -> {subset};
+		$_SUBSET -> {name}   ||= $_REQUEST {__subset};
 
-		my $src = Dumper (\%_REQUEST);
-		my $value = MIME::Base64::encode ($src);
+		my $n = 0;
+		my $found = 0;
 
-		set_cookie (-name => 'redirect_params', -value => $value, -expires => '+1h', -path => '/');
-
-		redirect ("/?type=$type", kind => 'js', target => '_top');
-
-	}
-	else {
-
-		require_content DEFAULT;
-		require_content 'subset';
-
-		our $_SUBSET = call_for_role ('select_subset');
-		
-		if ($_SUBSET && $_SUBSET -> {items}) {
-
-			$_SUBSET -> {items} = [ grep {!$_ -> {off}} @{$_SUBSET -> {items}} ];
-
-			$_REQUEST {__subset} ||= $_USER -> {subset};
-			$_SUBSET -> {name}   ||= $_REQUEST {__subset};
-
-			my $n = 0;
-			my $found = 0;
-
-			foreach my $item (@{$_SUBSET -> {items}}) {
-				$n ++;
-	 			$found = 1 if $item -> {name} eq $_SUBSET -> {name};
-			}
-
-			$found or delete $_SUBSET -> {name};
-
-			$_SUBSET -> {name} ||= $_SUBSET -> {items} -> [0] -> {name} if $n > 0;
-
-			$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ("UPDATE $conf->{systables}->{users} SET subset = ? WHERE id = ?", $_SUBSET -> {name}, $_USER -> {id});
-
+		foreach my $item (@{$_SUBSET -> {items}}) {
+			$n ++;
+			$found = 1 if $item -> {name} eq $_SUBSET -> {name};
 		}
 
-		require_content 'menu';
+		$found or delete $_SUBSET -> {name};
 
-		our $i18n = i18n ();
+		$_SUBSET -> {name} ||= $_SUBSET -> {items} -> [0] -> {name} if $n > 0;
 
-		my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
-		
-		$_REQUEST {type} or adjust_request_type ($menu);
-				
-		my $page = {
-			menu => $menu,
-			type => $_REQUEST {type},
-		};
-
-		call_for_role ('get_page');
-
-		$page -> {subset} = $_SUBSET;
-
-		require_both $page -> {type};
-
-		$_REQUEST {__include_js} ||= [];
-		push @{$_REQUEST {__include_js}}, @{$conf -> {include_js}} if $conf -> {include_js};
-
-		$_REQUEST {__include_css} ||= [];
-		push @{$_REQUEST {__include_css}}, @{$conf -> {include_css}} if $conf -> {include_css};
-
-		$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
-		
-		$_REQUEST {__suggest} and return handle_request_of_type_suggest ($page);
-
-		$_REQUEST {action} or return handle_request_of_type_showing ($page);
-		
-		return handle_request_of_type_action ($page);
+		$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ("UPDATE $conf->{systables}->{users} SET subset = ? WHERE id = ?", $_SUBSET -> {name}, $_USER -> {id});
 
 	}
+
+	require_content 'menu';
+
+	our $i18n = i18n ();
+
+	my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
+	
+	$_REQUEST {type} or adjust_request_type ($menu);
+			
+	my $page = {
+		menu => $menu,
+		type => $_REQUEST {type},
+	};
+
+	call_for_role ('get_page');
+
+	$page -> {subset} = $_SUBSET;
+
+	require_both $page -> {type};
+
+	$_REQUEST {__include_js} ||= [];
+	push @{$_REQUEST {__include_js}}, @{$conf -> {include_js}} if $conf -> {include_js};
+
+	$_REQUEST {__include_css} ||= [];
+	push @{$_REQUEST {__include_css}}, @{$conf -> {include_css}} if $conf -> {include_css};
+
+	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
+	
+	$_REQUEST {__suggest} and return handle_request_of_type_suggest ($page);
+
+	$_REQUEST {action} or return handle_request_of_type_showing ($page);
+	
+	return handle_request_of_type_action ($page);
 	
 }
 
@@ -254,6 +233,24 @@ sub handle_error {
 	out_html ({}, draw_page ($page));
 	
 	return action_finish ();
+
+}
+
+################################################################################
+
+sub handle_request_of_type_kickout {
+
+	foreach (qw(sid salt _salt __last_query_string __last_scrollable_table_row)) {delete $_REQUEST {$_}}
+
+	set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode (Dumper (\%_REQUEST)), -expires => '+1h', -path => '/');
+
+	redirect (
+		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),
+		kind => 'js', 
+		target => '_top'
+	);
+
+	return handler_finish ();
 
 }
 
