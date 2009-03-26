@@ -160,6 +160,30 @@ sub handler {
 	$time = __log_profilinig ($time, '<got user>');
 	
 	$_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/ or return handle_request_of_type_kickout ();
+			
+	my $page = {
+		type   => $_REQUEST {type},
+		subset => setup_subset (),
+		menu   => setup_menu (),
+	};
+
+	call_for_role ('get_page');
+
+	require_both $page -> {type};
+
+	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
+	
+	$_REQUEST {__suggest} and return handle_request_of_type_suggest ($page);
+
+	$_REQUEST {action} or return handle_request_of_type_showing ($page);
+	
+	return handle_request_of_type_action ($page);
+	
+}
+
+################################################################################
+
+sub setup_subset {
 
 	require_content 'subset';
 
@@ -187,26 +211,9 @@ sub handler {
 		$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ("UPDATE $conf->{systables}->{users} SET subset = ? WHERE id = ?", $_SUBSET -> {name}, $_USER -> {id});
 
 	}
-			
-	my $page = {
-		menu => setup_menu (),
-		type => $_REQUEST {type},
-	};
-
-	call_for_role ('get_page');
-
-	$page -> {subset} = $_SUBSET;
-
-	require_both $page -> {type};
-
-	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
 	
-	$_REQUEST {__suggest} and return handle_request_of_type_suggest ($page);
+	return $_SUBSET;	
 
-	$_REQUEST {action} or return handle_request_of_type_showing ($page);
-	
-	return handle_request_of_type_action ($page);
-	
 }
 
 ################################################################################
