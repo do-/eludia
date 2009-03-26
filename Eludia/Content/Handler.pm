@@ -208,12 +208,6 @@ sub handler {
 
 	require_both $page -> {type};
 
-	$_REQUEST {__include_js} ||= [];
-	push @{$_REQUEST {__include_js}}, @{$conf -> {include_js}} if $conf -> {include_js};
-
-	$_REQUEST {__include_css} ||= [];
-	push @{$_REQUEST {__include_css}}, @{$conf -> {include_css}} if $conf -> {include_css};
-
 	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
 	
 	$_REQUEST {__suggest} and return handle_request_of_type_suggest ($page);
@@ -327,6 +321,8 @@ sub handle_request_of_type_suggest {
 sub handle_request_of_type_showing {
 
 	my ($page) = @_;
+	
+	foreach (qw (js css)) { push @{$_REQUEST {"__include_$_"}}, @{$conf -> {"include_$_"}}}
 
 	adjust_last_query_string ();
 	
