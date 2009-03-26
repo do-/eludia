@@ -261,22 +261,13 @@ sub handle_request_of_type_action {
 
 	eval { $db -> {AutoCommit} = 0; };
 
-	my $sub_name = "validate_${action}_$$page{type}";
-
-	my $error_code = undef;
-	eval {	$error_code = call_for_role ($sub_name); };
-	$error_code = $@ if $@;
+	eval { $_REQUEST {error} = call_for_role ("validate_${action}_$$page{type}"); };
 	
 	return action_finish () if $_REQUEST {__response_sent};
 
 	if ($_USER -> {demo_level} > 0) {
 		($action =~ /^execute/ and $$page{type} eq 'logon') or $error_code ||= '»звините, вы работаете в демонстрационном режиме';
 	}
-
-	if ($error_code) {
-		my $error_message_template = $error_messages -> {"${action}_$$page{type}_${error_code}"} || $error_code;
-		$_REQUEST {error} = interpolate ($error_message_template);
-	}	
 	
 	if ($_REQUEST {error}) {
 	
