@@ -161,15 +161,7 @@ sub handler {
 	
 	$_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/ or return handle_request_of_type_kickout ();
 			
-	my $page = {
-		type   => $_REQUEST {type},
-		subset => setup_subset (),
-		menu   => setup_menu (),
-	};
-
-	call_for_role ('get_page');
-
-	require_both $page -> {type};
+	my $page = setup_page ();
 
 	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
 	
@@ -179,6 +171,22 @@ sub handler {
 	
 	return handle_request_of_type_action ($page);
 	
+}
+
+################################################################################
+
+sub setup_page {
+
+	my $page = {
+		type   => $_REQUEST {type},
+		subset => setup_subset (),
+		menu   => setup_menu (),
+	};
+
+	call_for_role ('get_page');
+
+	require_both $page -> {type};	
+
 }
 
 ################################################################################
