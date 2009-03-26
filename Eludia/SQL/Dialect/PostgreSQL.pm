@@ -5,7 +5,9 @@ no warnings;
 
 sub sql_version {
 
-	my $version = {	strings => [ sql_select_col ('SELECT version()') ] };
+	my $version = $SQL_VERSION;
+	
+	$version -> {strings} = [ sql_select_col ('SELECT version()') ];
 	
 	$version -> {string} = $version -> {strings} -> [0];
 	

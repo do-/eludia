@@ -7,7 +7,9 @@ sub sql_version {
 
 	my $tmp = sql_select_scalar ('SELECT @@VERSION');
 
-	my $version = {	string => $tmp };
+	my $version = $SQL_VERSION;
+	
+	$version -> {string} => $tmp;
 	
 	($version -> {number}) = $tmp =~ /([\d\.]+)/;
 	

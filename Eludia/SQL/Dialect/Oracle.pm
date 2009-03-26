@@ -8,8 +8,10 @@ no warnings;
 
 sub sql_version {
 
-	my $version = {	strings => [ sql_select_col ('SELECT * FROM V$VERSION') ] };
-	
+	my $version = $SQL_VERSION;
+
+	$version -> {strings} = [ sql_select_col ('SELECT * FROM V$VERSION') ];
+
 	$version -> {string} = $version -> {strings} -> [0];
 	
 	($version -> {number}) = $version -> {string} =~ /([\d\.]+)/;
@@ -21,7 +23,14 @@ sub sql_version {
 	sql_do ("ALTER SESSION SET nls_date_format      = '$conf->{db_date_format}'");
 	sql_do ("ALTER SESSION SET nls_timestamp_format = '$conf->{db_date_format}'");
 
+	my $systables = {};
+	foreach my $key (keys %{$conf -> {systables}}) {
+	    my $table = $conf -> {systables} -> {$key};
+	    $table =~ s/[\"\']//g;
+	    $systables -> {lc $table} = 1;
+	}
 	sql_select_loop ("SELECT table_name FROM user_tables", sub {
+		next unless ($systables -> {lc $i -> {table_name}});
 		$version -> {tables} -> {lc $i -> {table_name}} = $i -> {table_name};
 	});
 

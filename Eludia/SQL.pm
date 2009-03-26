@@ -536,6 +536,8 @@ my $time = time;
 		
 	);
 
+	sql_version();
+
 	$model_update -> {core_ok} = 1;
 		
 __log_profilinig ($time, ' <sql_assert_core_tables>');
@@ -672,9 +674,9 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
 	
 	}
 
-	our $SQL_VERSION = sql_version ();
-
-	$SQL_VERSION -> {driver} = $driver_name;
+	our $SQL_VERSION = {
+		driver => $driver_name,
+	};
 
 $time = __log_profilinig ($time, '  sql_reconnect: $model_update created');
 
