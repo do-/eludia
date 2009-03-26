@@ -237,144 +237,158 @@ sub handler {
 		
 		$_REQUEST {__suggest} and return handle_request_of_type_suggest ($page);
 
-		my $action = $_REQUEST {action} or return handle_request_of_type_showing ($page);
+		$_REQUEST {action} or return handle_request_of_type_showing ($page);
+		
+		return handle_request_of_type_action ($page);
 
-		if ($action) {
+	}
+	
+}
 
-			undef $__last_insert_id;
+################################################################################
 
-			our %_OLD_REQUEST = %_REQUEST;
+sub handle_request_of_type_action {
 
-			log_action_start ();
+	my ($page) = @_;
 
-			eval { $db -> {AutoCommit} = 0; };
+	my $action = $_REQUEST {action};
 
-			my $sub_name = "validate_${action}_$$page{type}";
+	undef $__last_insert_id;
 
-			my $error_code = undef;
-			eval {	$error_code = call_for_role ($sub_name); };
-			$error_code = $@ if $@;
+	our %_OLD_REQUEST = %_REQUEST;
+
+	log_action_start ();
+
+	eval { $db -> {AutoCommit} = 0; };
+
+	my $sub_name = "validate_${action}_$$page{type}";
+
+	my $error_code = undef;
+	eval {	$error_code = call_for_role ($sub_name); };
+	$error_code = $@ if $@;
+	
+	return action_finish () if $_REQUEST {__response_sent};
+
+	if ($_USER -> {demo_level} > 0) {
+		($action =~ /^execute/ and $$page{type} eq 'logon') or $error_code ||= '»звините, вы работаете в демонстрационном режиме';
+	}
+
+	if ($error_code) {
+		my $error_message_template = $error_messages -> {"${action}_$$page{type}_${error_code}"} || $error_code;
+		$_REQUEST {error} = interpolate ($error_message_template);
+	}	
+	
+	if ($_REQUEST {error}) {
+	
+		out_html ({}, draw_page ($page));
+		
+		return action_finish ()
+		
+	}
+	
+	if ($_REQUEST {__peer_server}) {
+	
+		return action_finish ()
+	
+	}
+	else {
+
+		delete $_REQUEST {__response_sent};
+
+		eval {
+
+			delete_fakes () if $action eq 'create';
+
+			call_for_role ("do_${action}_$$page{type}");
 			
-			return action_finish () if $_REQUEST {__response_sent};
+			call_for_role ("recalculate_$$page{type}") if $action ne 'create';
 
-			if ($_USER -> {demo_level} > 0) {
-				($action =~ /^execute/ and $$page{type} eq 'logon') or $error_code ||= '»звините, вы работаете в демонстрационном режиме';
+			if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_USER -> {id}) {
+
+				set_cookie (
+					-name    => 'user_login',
+					-value   => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
+					-expires => '+1M', # 'Sat, 31-Dec-2050 23:59:59 GMT',
+					-path    => '/',
+				);
+				
+				if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
+					sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
+				}
+				
+				session_access_logs_purge ();
+				
 			}
 
-			if ($error_code) {
-				my $error_message_template = $error_messages -> {"${action}_$$page{type}_${error_code}"} || $error_code;
-				$_REQUEST {error} = interpolate ($error_message_template);
+			if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_COOKIES {redirect_params}) {
+				
+				my $VAR1;
+				my $value = $_COOKIES {redirect_params} -> value;
+				my $src = MIME::Base64::decode ($value);
+				eval "\$VAR1 = $src";
+				
+				if ($@) {
+					warn "[$src] thaw error: $@\n";
+				} 
+				else {
+				
+					foreach my $key (keys %$VAR1) {
+						
+						$_REQUEST {$key} = $VAR1 -> {$key};
+
+					}
+
+				}
+				
+				set_cookie (
+					-name    => 'redirect_params',
+					-value   => '',
+					-expires => '+1m',
+					-path    => '/',
+				);
+				
+			} 
+			elsif ($conf -> {core_cache_html}) {
+				sql_do ("DELETE FROM $conf->{systables}->{cache_html}");
+				my $cache_path = $r -> document_root . '/cache/*';
+				$^O eq 'MSWin32' or eval {`rm -rf $cache_path`};
 			}
-			if ($_REQUEST {error}) {
-				out_html ({}, draw_page ($page));
+
+		};
+
+		$_REQUEST {error} = $@ if $@;
+
+						
+		if ($_REQUEST {error}) {
+		
+			out_html ({}, draw_page ($page));
+			
+		}
+		elsif (!$_REQUEST {__response_sent}) {
+
+			if ($action eq 'delete') {
+				esc ({label => $_REQUEST {__redirect_alert}});
 			}
 			else {
 
-				unless ($_REQUEST {__peer_server}) {
-
-					delete $_REQUEST {__response_sent};
-
-					eval {
-
-						delete_fakes () if $action eq 'create';
-
-						call_for_role ("do_${action}_$$page{type}");
-						
-						call_for_role ("recalculate_$$page{type}") if $action ne 'create';
-
-						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_USER -> {id}) {
-
-							set_cookie (
-								-name    => 'user_login',
-								-value   => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
-								-expires => '+1M', # 'Sat, 31-Dec-2050 23:59:59 GMT',
-								-path    => '/',
-							);
-							
-							if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
-								sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
-							}
-							
-							session_access_logs_purge ();
-							
-						}
-
-						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_COOKIES {redirect_params}) {
-							
-							my $VAR1;
-							my $value = $_COOKIES {redirect_params} -> value;
-							my $src = MIME::Base64::decode ($value);
-							eval "\$VAR1 = $src";
-							
-							if ($@) {
-								warn "[$src] thaw error: $@\n";
-							} 
-							else {
-							
-								foreach my $key (keys %$VAR1) {
-									
-									$_REQUEST {$key} = $VAR1 -> {$key};
-
-								}
-
-							}
-							
-							set_cookie (
-								-name    => 'redirect_params',
-								-value   => '',
-								-expires => '+1m',
-								-path    => '/',
-							);
-							
-						} 
-						elsif ($conf -> {core_cache_html}) {
-							sql_do ("DELETE FROM $conf->{systables}->{cache_html}");
-							my $cache_path = $r -> document_root . '/cache/*';
-							$^O eq 'MSWin32' or eval {`rm -rf $cache_path`};
-						}
-
-					};
-
-					$_REQUEST {error} = $@ if $@;
-
-				}
-								
-				if ($_REQUEST {error}) {
-				
-					out_html ({}, draw_page ($page));
-					
-				}
-				elsif (!$_REQUEST {__response_sent}) {
-
-					if ($action eq 'delete') {
-						esc ({label => $_REQUEST {__redirect_alert}});
+				redirect (
+					{
+						action => '',
+						__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
+					},
+					{
+						kind => 'js',
+						label => $_REQUEST {__redirect_alert},
 					}
-					else {
-
-						redirect (
-							{
-								action => '',
-								__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
-							},
-							{
-								kind => 'js',
-								label => $_REQUEST {__redirect_alert},
-							}
-						);
-					}
-
-				}
-
+				);
 			}
-
-			action_finish ();
 
 		}
 
 	}
-	
-	return handler_finish ();
-	
+
+	return action_finish ();
+
 }
 
 ################################################################################
@@ -500,7 +514,7 @@ sub action_finish {
 
 	log_action_finish ();
 	
-	return _ok ();
+	return handler_finish ();
 
 }
 
