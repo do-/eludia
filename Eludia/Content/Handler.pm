@@ -235,7 +235,7 @@ sub handler {
 
 		$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
 
-		my $action = $_REQUEST {action};
+		my $action = $_REQUEST {action} or return handle_request_of_type_showing ($page);
 
 		if ($action) {
 		
@@ -383,20 +383,27 @@ sub handler {
 			action_finish ();
 
 		}
-		else {
-		
-			adjust_last_query_string ();
-		
-			$r -> headers_out -> {'Expires'} = '-1';
-			
-			out_html ({}, draw_page ($page));
-
-		}
 
 	}
 	
 	return handler_finish ();
 	
+}
+
+################################################################################
+
+sub handle_request_of_type_showing {
+
+	my ($page) = @_;
+
+	adjust_last_query_string ();
+	
+	$r -> headers_out -> {'Expires'} = '-1';
+			
+	out_html ({}, draw_page ($page));
+
+	return handler_finish ();
+
 }
 
 ################################################################################
