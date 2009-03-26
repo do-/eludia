@@ -20,7 +20,7 @@ sub handler {
 
 	$time = __log_profilinig ($handler_time, '<get_request>');
 
-	my $first_time = $time;
+	our $first_time = $time;
 
 	$_REQUEST {__sql_time} = 0;
 		
@@ -234,25 +234,12 @@ sub handler {
 		push @{$_REQUEST {__include_css}}, @{$conf -> {include_css}} if $conf -> {include_css};
 
 		$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
+		
+		$_REQUEST {__suggest} and return handle_request_of_type_suggest ($page);
 
 		my $action = $_REQUEST {action} or return handle_request_of_type_showing ($page);
 
 		if ($action) {
-		
-			if ($_REQUEST {__suggest}) {
-			
-				setup_skin ();
-
-				call_for_role ("draw_item_of_$$page{type}");
-				
-				delete $_REQUEST {id};
-				
-				out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
-				
-				return _ok ();
-					
-				
-			}
 
 			undef $__last_insert_id;
 
@@ -389,6 +376,24 @@ sub handler {
 	return handler_finish ();
 	
 }
+
+################################################################################
+
+sub handle_request_of_type_suggest {
+
+	my ($page) = @_;
+
+	setup_skin ();
+
+	call_for_role ("draw_item_of_$$page{type}");
+				
+	delete $_REQUEST {id};
+				
+	out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
+				
+	return handler_finish ();
+				
+}				
 
 ################################################################################
 
