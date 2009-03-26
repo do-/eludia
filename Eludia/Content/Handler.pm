@@ -247,6 +247,18 @@ sub handler {
 
 ################################################################################
 
+sub handle_error {
+
+	my ($page) = @_;
+	
+	out_html ({}, draw_page ($page));
+	
+	return action_finish ();
+
+}
+
+################################################################################
+
 sub handle_request_of_type_action {
 
 	my ($page) = @_;
@@ -265,108 +277,79 @@ sub handle_request_of_type_action {
 	
 	return action_finish () if $_REQUEST {__response_sent};
 	
-	if ($_REQUEST {error}) {
-	
-		out_html ({}, draw_page ($page));
-		
-		return action_finish ()
-		
-	}
-	
-	if ($_REQUEST {__peer_server}) {
-	
-		return action_finish ()
-	
-	}
-	else {
-
-		delete $_REQUEST {__response_sent};
-
-		eval {
-
-			delete_fakes () if $action eq 'create';
-
-			call_for_role ("do_${action}_$$page{type}");
+	return handle_error ($page) if $_REQUEST {error};
 			
-			call_for_role ("recalculate_$$page{type}") if $action ne 'create';
+	return action_finish () if $_REQUEST {__peer_server};
 
-			if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_USER -> {id}) {
+	delete $_REQUEST {__response_sent};
 
-				set_cookie (
-					-name    => 'user_login',
-					-value   => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
-					-expires => '+1M', # 'Sat, 31-Dec-2050 23:59:59 GMT',
-					-path    => '/',
-				);
-				
-				if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
-					sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
-				}
-				
-				session_access_logs_purge ();
-				
+	eval {
+
+		delete_fakes () if $action eq 'create';
+
+		call_for_role ("do_${action}_$$page{type}");
+		
+		call_for_role ("recalculate_$$page{type}") if $action ne 'create';
+
+		if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_USER -> {id}) {
+
+			set_cookie (
+				-name    => 'user_login',
+				-value   => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
+				-expires => '+1M', # 'Sat, 31-Dec-2050 23:59:59 GMT',
+				-path    => '/',
+			);
+			
+			if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
+				sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
 			}
+			
+			session_access_logs_purge ();
+			
+		}
 
-			if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_COOKIES {redirect_params}) {
-				
-				my $VAR1;
-				my $value = $_COOKIES {redirect_params} -> value;
-				my $src = MIME::Base64::decode ($value);
-				eval "\$VAR1 = $src";
-				
-				if ($@) {
-					warn "[$src] thaw error: $@\n";
-				} 
-				else {
-				
-					foreach my $key (keys %$VAR1) {
-						
-						$_REQUEST {$key} = $VAR1 -> {$key};
-
-					}
-
-				}
-				
-				set_cookie (
-					-name    => 'redirect_params',
-					-value   => '',
-					-expires => '+1m',
-					-path    => '/',
-				);
-				
+		if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_COOKIES {redirect_params}) {
+			
+			my $VAR1;
+			my $value = $_COOKIES {redirect_params} -> value;
+			my $src = MIME::Base64::decode ($value);
+			eval "\$VAR1 = $src";
+			
+			if ($@) {
+				warn "[$src] thaw error: $@\n";
 			} 
-
-		};
-
-		$_REQUEST {error} = $@ if $@;
-						
-		if ($_REQUEST {error}) {
-		
-			out_html ({}, draw_page ($page));
-			
-		}
-		elsif (!$_REQUEST {__response_sent}) {
-
-			if ($action eq 'delete') {
-				esc ({label => $_REQUEST {__redirect_alert}});
-			}
 			else {
+			
+				foreach my $key (keys %$VAR1) {
+					
+					$_REQUEST {$key} = $VAR1 -> {$key};
 
-				redirect (
-					{
-						action => '',
-						__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
-					},
-					{
-						kind => 'js',
-						label => $_REQUEST {__redirect_alert},
-					}
-				);
+				}
+
 			}
+			
+			set_cookie (
+				-name    => 'redirect_params',
+				-value   => '',
+				-expires => '+1m',
+				-path    => '/',
+			);
+			
+		} 
 
-		}
+	};
 
-	}
+	$_REQUEST {error} = $@ if $@;
+	
+	return handle_error ($page) if $_REQUEST {error};
+
+	$_REQUEST {__response_sent} or redirect (
+
+		$action eq 'delete' ? esc_href () : { action => '', __last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row}},
+
+		{ kind => 'js',	label => $_REQUEST {__redirect_alert} }
+
+	);
 
 	return action_finish ();
 
