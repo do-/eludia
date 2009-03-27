@@ -12,12 +12,7 @@ push @{$preconf -> {_} -> {post_auth}}, sub {
 
 	$_REQUEST {sid} or return;
 
-	set_cookie (
-		-name    =>  'sid',
-		-value   =>  $_REQUEST {sid} || 0,
-		-expires =>  $preconf -> {core_auth_cookie},
-		-path    =>  '/',
-	);
+	set_cookie_for_root (sid =>  $_REQUEST {sid} || 0);
 
 };
 

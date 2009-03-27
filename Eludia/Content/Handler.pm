@@ -291,8 +291,8 @@ sub handle_error {
 sub handle_request_of_type_kickout {
 
 	foreach (qw(sid salt _salt __last_query_string __last_scrollable_table_row)) {delete $_REQUEST {$_}}
-
-	set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode (Dumper (\%_REQUEST)), -expires => '+1h', -path => '/');
+	
+	set_cookie_for_root (redirect_params => MIME::Base64::encode (Dumper (\%_REQUEST)), '+1h');
 
 	redirect (
 		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),
@@ -597,14 +597,9 @@ sub recalculate_logon {
 	$_REQUEST {action} =~ /^execute/ or return;
 
 	if ($_USER -> {id}) {
+	
+		set_cookie_for_root (user_login => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}));
 
-		set_cookie (
-			-name    => 'user_login',
-			-value   => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
-			-expires => '+1M',
-			-path    => '/',
-		);
-		
 		if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
 			sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
 		}
@@ -627,12 +622,7 @@ sub recalculate_logon {
 
 		foreach my $key (keys %$VAR1) { $_REQUEST {$key} = $VAR1 -> {$key} }
 		
-		set_cookie (
-			-name    => 'redirect_params',
-			-value   => '',
-			-expires => '+1m',
-			-path    => '/',
-		);
+		set_cookie_for_root (redirect_params => '');
 		
 	} 
 
