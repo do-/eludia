@@ -94,7 +94,7 @@ sub setup_request_params {
 
 	get_request (@_);
 	
-	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value} keys %_COOKIES);
+	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 
 	my $time = $r -> request_time ();
 
