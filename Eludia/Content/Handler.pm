@@ -95,6 +95,8 @@ sub setup_request_params {
 	get_request (@_);
 	
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
+	
+	set_cookie_for_root (client_cookie => $_COOKIE {client_cookie} || Digest::MD5::md5_hex (rand ()));
 
 	my $time = $r -> request_time ();
 
