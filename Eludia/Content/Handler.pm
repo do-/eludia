@@ -92,7 +92,9 @@ sub setup_request_params {
 	
 	$ENV {HTTP_HOST} = $http_host if $http_host;
 
-	get_request (@_);	
+	get_request (@_);
+	
+	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value} keys %_COOKIES);
 
 	my $time = $r -> request_time ();
 
@@ -608,23 +610,17 @@ sub recalculate_logon {
 		
 	}
 
-	if ($_COOKIES {redirect_params}) {
+	if ($_COOKIE {redirect_params}) {
 		
-		my $VAR1;
-		
-		my $value = $_COOKIES {redirect_params} -> value;
-		
-		my $src = MIME::Base64::decode ($value);
-	
-		eval "\$VAR1 = $src";
-		
+		my $VAR1; eval '$VAR1 = ' . MIME::Base64::decode ($_COOKIE {redirect_params});
+
 		$@ and warn "[$src] thaw error: $@\n" and return;
 
 		foreach my $key (keys %$VAR1) { $_REQUEST {$key} = $VAR1 -> {$key} }
-		
+
 		set_cookie_for_root (redirect_params => '');
-		
-	} 
+
+	}
 
 }
 

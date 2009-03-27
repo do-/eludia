@@ -4308,6 +4308,7 @@ sub setup_skin {
 		attach_globals ($_PACKAGE => $package, qw(
 			_PACKAGE
 			_REQUEST
+			_COOKIE
 			_COOKIES
 			_USER
 			_QUERY
