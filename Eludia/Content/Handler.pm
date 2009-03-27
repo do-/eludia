@@ -4,6 +4,84 @@ no warnings;
 
 sub handler {
 
+	my $time = 
+
+	setup_request_params     (@_);				$time = __log_profilinig ($time, '<setup_request_params>');	my $request_time = 1000 * (time - $first_time);
+
+	require_config           (  );				$time = __log_profilinig ($time, '<require_config>');
+
+	sql_reconnect            (  );				$time = __log_profilinig ($time, '<sql_reconnect>');
+
+	require_model            (  );				$time = __log_profilinig ($time, '<require_model>');		__log_request_profilinig ($request_time);
+
+	authentication_is_needed (  ) or return _ok ();		$time = __log_profilinig ($time, '<authentication_is_needed>');
+
+	setup_user               (  ) or return _ok ();		$time = __log_profilinig ($time, '<setup_user>');
+
+	my $page = setup_page    (  );				$time = __log_profilinig ($time, '<setup_page>');
+
+	return &{"handle_request_of_type_$page->{request_type}"} ($page);
+
+}
+
+################################################################################
+
+sub setup_user {
+
+	our $_USER = get_user ();
+	
+	return 1 if $_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/;
+	
+	handle_request_of_type_kickout ();
+	
+	return 0;	
+
+}
+
+################################################################################
+
+sub authentication_is_needed {
+
+	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
+
+		my $fn = "$1.$2";
+
+		setup_skin ();
+
+		$r -> internal_redirect ("/i/_skins/$_REQUEST{__skin}/$fn");
+
+		return 0;
+
+	}
+
+	elsif ($_REQUEST {keepalive}) {
+
+		$_REQUEST {virgin} or keep_alive ($_REQUEST {keepalive});
+
+		out_html ({}, qq{<html><head><META HTTP-EQUIV=Refresh CONTENT="@{[ 60 * $conf -> {session_timeout} - 1 ]}; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}"></head></html>});
+		
+		return 0;
+
+	}
+
+	elsif ($_REQUEST {__whois}) {
+	
+		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
+		
+		out_html ({}, Dumper ({data => $user}));
+		
+		return 0;
+
+	}
+	
+	return 1;
+
+}
+
+################################################################################
+
+sub setup_request_params {
+
 	my $handler_time = time ();
 
 	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
@@ -74,108 +152,46 @@ sub handler {
     	    $_REQUEST {fake} =~ s/\%(25)*2c/,/ig;
 	}
 
-	if ($_REQUEST {action}) {
-	
-		my $precision = $^V ge v5.8.0 && $Math::FixedPrecision::VERSION ? $conf -> {precision} || 3 : undef;
-
-		foreach my $key (keys %_REQUEST) {
-
-			$key =~ /^_[^_]/ or next;
-
-			$_REQUEST {$key} =~ s{^\s+}{};
-			$_REQUEST {$key} =~ s{\s+$}{};
-			
-			my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
-			
-			if ($_REQUEST {$key} ne $encoded) {
-				$_REQUEST {$key} = $encoded;
-				next;
-			}
-			
-			next if $key =~ /^_dt/;
-			next if $key =~ /^_label/;
-			next if $key =~ /_ids$/;
-			
-			$_REQUEST {$key} =~ /^\-?[\d ]*\d([\,\.]\d+)?$/ or next;
-
-			$_REQUEST {$key} =~ s{ }{}g;
-			$_REQUEST {$key} =~ y{,}{.};
-			
-			defined $precision or next;
-
-			$_REQUEST {$field} = new Math::FixedPrecision ($_REQUEST {$field}, 0 + $precision);
-
-		}
-
-	}
-
-	my $request_time = 1000 * (time - $first_time);
-		
-	require_config ();
-
-	$time = __log_profilinig ($time, '<require_config>');
-
-   	sql_reconnect ();   	
-   	
-	$time = __log_profilinig ($time, '<sql_reconnect>');
-
-   	require_model ();
-
-	__log_request_profilinig ($request_time);
-	
-	return _ok () if it_is_a_special_request ();
-	
-	$time = __log_profilinig ($time, '<misc>');
-	
-	our $_USER = get_user ();
-
-	return _ok () if $_REQUEST {__response_sent};
-
-	$time = __log_profilinig ($time, '<got user>');
-	
-	$_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/ or return handle_request_of_type_kickout ();
-			
-	my $page = setup_page ();
-
 	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
-	
-	$_REQUEST {__suggest} and return handle_request_of_type_suggest ($page);
 
-	$_REQUEST {action} or return handle_request_of_type_showing ($page);
+	setup_request_params_for_action () if $_REQUEST {action};
 	
-	return handle_request_of_type_action ($page);
+	return $time;
 	
 }
 
 ################################################################################
 
-sub it_is_a_special_request {
+sub setup_request_params_for_action {
 
-	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
+	my $precision = $^V ge v5.8.0 && $Math::FixedPrecision::VERSION ? $conf -> {precision} || 3 : undef;
 
-		my $fn = "$1.$2";
+	foreach my $key (keys %_REQUEST) {
 
-		setup_skin ();
+		$key =~ /^_[^_]/ or next;
 
-		$r -> internal_redirect ("/i/_skins/$_REQUEST{__skin}/$fn");
-
-		return _ok ();
-
-	}
-
-	elsif ($_REQUEST {keepalive}) {
-
-		$_REQUEST {virgin} or keep_alive ($_REQUEST {keepalive});
-
-		return out_html ({}, qq{<html><head><META HTTP-EQUIV=Refresh CONTENT="@{[ 60 * $conf -> {session_timeout} - 1 ]}; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}"></head></html>});
-
-	}
-
-	elsif ($_REQUEST {__whois}) {
-	
-		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
+		$_REQUEST {$key} =~ s{^\s+}{};
+		$_REQUEST {$key} =~ s{\s+$}{};
 		
-		return out_html ({}, Dumper ({data => $user}));
+		my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
+		
+		if ($_REQUEST {$key} ne $encoded) {
+			$_REQUEST {$key} = $encoded;
+			next;
+		}
+		
+		next if $key =~ /^_dt/;
+		next if $key =~ /^_label/;
+		next if $key =~ /_ids$/;
+		
+		$_REQUEST {$key} =~ /^\-?[\d ]*\d([\,\.]\d+)?$/ or next;
+
+		$_REQUEST {$key} =~ s{ }{}g;
+		$_REQUEST {$key} =~ y{,}{.};
+		
+		defined $precision or next;
+
+		$_REQUEST {$field} = new Math::FixedPrecision ($_REQUEST {$field}, 0 + $precision);
 
 	}
 
@@ -195,6 +211,14 @@ sub setup_page {
 
 	require_both $page -> {type};	
 	
+	$page -> {request_type} = 
+
+		$_REQUEST {__suggest} ? 'suggest' :
+
+		$_REQUEST {action}    ? 'action'  :
+
+					'showing' ;		
+
 	return $page;
 
 }
