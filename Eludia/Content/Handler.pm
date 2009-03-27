@@ -123,34 +123,8 @@ sub handler {
 
 	__log_request_profilinig ($request_time);
 	
-	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
-
-		my $fn = "$1.$2";
-
-		setup_skin ();
-
-		$r -> internal_redirect ("/i/_skins/$_REQUEST{__skin}/$fn");
-
-		return _ok ();
-
-	}
-
-	if ($_REQUEST {keepalive}) {
-
-		$_REQUEST {virgin} or keep_alive ($_REQUEST {keepalive});
-
-		return out_html ({}, qq{<html><head><META HTTP-EQUIV=Refresh CONTENT="@{[ 60 * $conf -> {session_timeout} - 1 ]}; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}"></head></html>});
-
-	}
-
-	if ($_REQUEST {__whois}) {
+	return _ok () if it_is_a_special_request ();
 	
-		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
-		
-		return out_html ({}, Dumper ({data => $user}));
-
-	}
-
 	$time = __log_profilinig ($time, '<misc>');
 	
 	our $_USER = get_user ();
@@ -175,6 +149,40 @@ sub handler {
 
 ################################################################################
 
+sub it_is_a_special_request {
+
+	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
+
+		my $fn = "$1.$2";
+
+		setup_skin ();
+
+		$r -> internal_redirect ("/i/_skins/$_REQUEST{__skin}/$fn");
+
+		return _ok ();
+
+	}
+
+	elsif ($_REQUEST {keepalive}) {
+
+		$_REQUEST {virgin} or keep_alive ($_REQUEST {keepalive});
+
+		return out_html ({}, qq{<html><head><META HTTP-EQUIV=Refresh CONTENT="@{[ 60 * $conf -> {session_timeout} - 1 ]}; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}"></head></html>});
+
+	}
+
+	elsif ($_REQUEST {__whois}) {
+	
+		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
+		
+		return out_html ({}, Dumper ({data => $user}));
+
+	}
+
+}
+
+################################################################################
+
 sub setup_page {
 
 	my $page = {
@@ -186,6 +194,8 @@ sub setup_page {
 	call_for_role ('get_page');
 
 	require_both $page -> {type};	
+	
+	return $page;
 
 }
 
