@@ -9,7 +9,9 @@ sub sql_version {
 	
 	$db -> do ("SET names $preconf->{db_charset}");
 
-	my $version = {	string => 'MySQL ' . sql_select_scalar ('SELECT VERSION()') };
+	my $version = $SQL_VERSION;
+	
+	$version -> {string} = 'MySQL ' . sql_select_scalar ('SELECT VERSION()');
 	
 	($version -> {number}) = $version -> {string} =~ /([\d\.]+)/;
 	

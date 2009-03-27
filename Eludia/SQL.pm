@@ -156,7 +156,7 @@ sub sql_weave_model {
 
 	my @tables = ();
 	
-	foreach my $table_name ($db -> tables) {	
+	foreach my $table_name ($db -> tables) {
 		$table_name =~ s{.*?(\w+)\W*$}{$1}gsm;
 		next if $table_name eq $conf -> {systables} -> {log};
 		push @tables, lc $table_name;
@@ -231,6 +231,7 @@ sub sql_weave_model {
 sub check_systables {
 
 	foreach (qw(
+		__access_log
 		__queries
 		__defaults
 		__voc_replacements	
@@ -356,6 +357,8 @@ my $time = time;
 
 				ip =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				ip_fw =>  {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+
+				client_cookie =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 	
 				peer_server => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
 				peer_id => {TYPE_NAME    => 'bigint'},
@@ -419,6 +422,23 @@ my $time = time;
 	);
 	
 	
+	$conf -> {core_session_access_logs_dbtable} and $defs {$conf -> {systables} -> {__access_log}} = {
+
+		columns => {
+			id         => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
+			id_session => {TYPE_NAME => 'bigint'},
+			ts         => {TYPE_NAME => 'timestamp'},
+			no         => {TYPE_NAME => 'int'},
+			href       => {TYPE_NAME => 'text'},
+		},
+		
+		keys => {
+			ix => 'id_session,no',
+			ix2 => 'id_session,href(255)',
+		},
+
+	};
+
 	$conf -> {core_store_table_order} and $defs {$conf -> {systables} -> {__queries}} = {
 
 		columns => {
@@ -435,15 +455,6 @@ my $time = time;
 		keys => {
 			ix => 'id_user,type,label',
 		},
-
-	};
-		
-	$conf -> {core_cache_html} and $defs {$conf -> {systables} -> {cache_html}} = {
-
-		columns => {
-			uri     => {TYPE_NAME  => 'varchar', COLUMN_SIZE  => 255, _PK    => 1},
-			ts      => {TYPE_NAME  => 'timestamp'},
-		}
 
 	};
 	
@@ -517,6 +528,8 @@ my $time = time;
 		prefix => 'sql_assert_core_tables#',
 		
 	);
+
+	sql_version();
 
 	$model_update -> {core_ok} = 1;
 		
@@ -654,9 +667,10 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
 	
 	}
 
-	our $SQL_VERSION = sql_version ();
-
-	$SQL_VERSION -> {driver} = $driver_name;
+	our $SQL_VERSION = {
+		driver => $driver_name,
+	};
+	sql_version();
 
 $time = __log_profilinig ($time, '  sql_reconnect: $model_update created');
 
@@ -856,6 +870,8 @@ sub sql_select_id {
 
 	my ($table, $values, @lookup_field_sets) = @_;
 
+	my $table_safe = sql_table_name ($table);
+
 	my %values = ();
 	
 	my $forced = {};
@@ -889,7 +905,7 @@ sub sql_select_id {
 			return 0;		
 		}
 
-		my $sql = "SELECT * FROM $table WHERE fake <= 0";
+		my $sql = "SELECT * FROM $table_safe WHERE fake <= 0";
 		my @params = ();
 
 		foreach my $lookup_field (@$lookup_fields) {
@@ -944,7 +960,7 @@ sub sql_select_id {
 
 		if (@keys) {
 
-			sql_do ('UPDATE ' . $table . ' SET ' . (join ', ', map {"$_ = ?"} @keys) . ' WHERE id = ?', @values, $record -> {id});
+			sql_do ('UPDATE ' . $table_safe . ' SET ' . (join ', ', map {"$_ = ?"} @keys) . ' WHERE id = ?', @values, $record -> {id});
 
 		}
 	
@@ -993,14 +1009,8 @@ sub sql_do_relink {
 		push @empty_fields, $key;
 	}
 			
-	my $table__moved_links;		
+	my $moved_links_table = sql_table_name ($conf -> {systables} -> {__moved_links});
 				
-	if ($SQL_VERSION -> {driver} eq 'Oracle') {
-		$table__moved_links = "\U$conf->{systables}->{__moved_links}";
-	} else {
-		$table__moved_links = $conf->{systables}->{__moved_links};
-	}
-	
 	foreach my $old_id (@$old_ids) {
 	
 warn "relink $table_name: $old_id -> $new_id";
@@ -1018,7 +1028,7 @@ warn "relink $$column_def{table_name} ($$column_def{name}): $old_id -> $new_id";
 			if ($column_def -> {TYPE_NAME} =~ /int/) {
 			
 				sql_do (<<EOS, $old_id);
-					INSERT INTO $model_update->{quote}$table__moved_links$model_update->{quote}
+					INSERT INTO $moved_links_table
 						(table_name, column_name, id_from, id_to)
 					SELECT
 						'$$column_def{table_name}' AS table_name,
@@ -1040,7 +1050,7 @@ EOS
 				my $_new_id = ',' . $new_id . ',';
 			
 				sql_do (<<EOS, '%' . $old_id . '%');
-					INSERT INTO $model_update->{quote}$table__moved_links$model_update->{quote}}
+					INSERT INTO $moved_links_table
 						(table_name, column_name, id_from, id_to)
 					SELECT
 						'$$column_def{table_name}' AS table_name,
@@ -1084,14 +1094,8 @@ sub sql_undo_relink {
 
 	ref $old_ids eq ARRAY or $old_ids = [$old_ids];
 
-	my $table__moved_links; 
+	my $moved_links_table = sql_table_name ($conf -> {systables} -> {__moved_links});
 	
-	if ($SQL_VERSION -> {driver} eq 'Oracle') {
-		$table__moved_links = "\U$conf->{systables}->{__moved_links}";		
-	} else {
-		$table__moved_links = $conf->{systables}->{__moved_links};
-	}
-
 	foreach my $old_id (@$old_ids) {
 		
 		$old_id > 0 or next;
@@ -1104,7 +1108,7 @@ warn "undo relink $table_name: $old_id";
 
 			my $from = <<EOS;
 				FROM
-					$model_update->{quote}$table__moved_links$model_update->{quote}
+					$moved_links_table
 				WHERE
 					table_name = '$$column_def{table_name}'
 					AND column_name = '$$column_def{name}'
@@ -1370,7 +1374,9 @@ sub __log_request_profilinig {
 		connection_no	=> $c -> keepalives (),
 	});
 	
-	sql_do ("UPDATE $conf->{systables}->{__request_benchmarks} SET params = ? WHERE id = ?",
+	my $request_benchmarks_table = sql_table_name ($conf -> {systables} -> {__request_benchmarks});
+
+	sql_do ("UPDATE $request_benchmarks_table SET params = ? WHERE id = ?",
 		Data::Dumper -> Dump ([\%_REQUEST], ['_REQUEST']), $_REQUEST {_id_request_log}); 
 
 }
@@ -1386,7 +1392,9 @@ sub __log_request_finish_profilinig {
 
 	my $time = time;
 
-	sql_do ("UPDATE $conf->{systables}->{__request_benchmarks} SET application_time = ?, sql_time = ?, response_time = ?, bytes_sent = ?, is_gzipped = ? WHERE id = ?",
+	my $request_benchmarks_table = sql_table_name ($conf -> {systables} -> {__request_benchmarks});
+
+	sql_do ("UPDATE $request_benchmarks_table SET application_time = ?, sql_time = ?, response_time = ?, bytes_sent = ?, is_gzipped = ? WHERE id = ?",
 		int ($options -> {application_time}), 
 		int ($options -> {sql_time}), 
 		$options -> {out_html_time} ? int (1000 * (time - $options -> {out_html_time})) : 0, 
@@ -1394,6 +1402,7 @@ sub __log_request_finish_profilinig {
 		$options -> {is_gzipped},		 
 		$options -> {id_request_log},
 	);
+
 }
 
 ################################################################################
@@ -2366,5 +2375,9 @@ sub wish {
 	foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
 
 }
+
+#############################################################################
+
+sub sql_table_name {$_[0]}
 
 1;

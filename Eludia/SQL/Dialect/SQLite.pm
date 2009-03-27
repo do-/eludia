@@ -28,7 +28,9 @@ sub sql_version {
 	$db -> func ('NOW',     0, sub { return POSIX::strftime ('%Y-%m-%d %H:%M:%S', localtime (time)) }, 'create_function');	
 	$db -> func ('DATE_FORMAT', 2, sub { return _sqlite_format_datetime ($_[1], _sqlite_parse_datetime ($_[0])) }, 'create_function');	
 
-	my $version = {	string => 'SQLite ' . sql_select_scalar ('SELECT sqlite_version(*)') };
+	my $version = $SQL_VERSION;
+	
+	$version -> {string} = 'SQLite ' . sql_select_scalar ('SELECT sqlite_version(*)');
 	
 	($version -> {number}) = $version -> {string} =~ /([\d\.]+)/;
 	

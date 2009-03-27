@@ -145,7 +145,19 @@ sub check_web_server {
 
 	check_web_server_apache ();
 
-	eval "require Eludia::Content::HTTP::API::CGI" if $preconf -> {use_cgi};
+	if ($preconf -> {use_cgi}) {
+	
+		eval "require Eludia::Content::HTTP::API::CGISimple";
+		
+		if ($@) {
+
+			print STDERR " CGI::Simple is not installed... ";
+
+			eval "require Eludia::Content::HTTP::API::CGI";
+
+		}		
+		
+	}
 		
 }
 
@@ -379,7 +391,6 @@ sub check_external_module_json {
 sub check_internal_modules {
 
 	require Eludia::Content;
-	require Eludia::Content::SessionAccessLogs;
 	require Eludia::Presentation;
 	require Eludia::SQL;
 	
@@ -387,12 +398,13 @@ sub check_internal_modules {
 	
 	require_config ();
 
-	check_internal_module_peering   ();
-	check_internal_module_mail      ();
-	check_internal_module_queries   ();
-	check_internal_module_mac       ();
-	check_internal_module_auth      ();
-	check_internal_module_checksums ();
+	check_internal_module_peering             ();
+	check_internal_module_mail                ();
+	check_internal_module_queries             ();
+	check_internal_module_mac                 ();
+	check_internal_module_auth                ();
+	check_internal_module_checksums           ();
+	check_internal_module_session_access_logs ();
 
 }
 
@@ -427,6 +439,29 @@ sub check_internal_module_mac {
 
 	}
 
+}
+
+################################################################################
+
+sub check_internal_module_session_access_logs {
+
+	print STDERR " check_internal_module_session_access_logs.... ";
+
+	if ($conf -> {core_session_access_logs_dbtable}) {
+
+		require Eludia::Content::SessionAccessLogs::DBTable;
+		
+		print STDERR "DBTable, ok.\n";
+
+	} 
+	else {
+
+		require Eludia::Content::SessionAccessLogs::File4k;
+		
+		print STDERR "File4k, ok.\n";
+
+	}
+	
 }
 
 ################################################################################
