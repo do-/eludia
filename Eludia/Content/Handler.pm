@@ -284,7 +284,7 @@ sub handle_error {
 
 	my ($page) = @_;
 	
-	out_html ({}, draw_page ($page));
+	out_html ({}, draw_error_page ($page));
 	
 	return action_finish ();
 
@@ -328,11 +328,11 @@ sub handle_request_of_type_action {
 
 	eval { $_REQUEST {error} = call_for_role ("validate_${action}_$$page{type}"); };
 	
-	return action_finish () if $_REQUEST {__response_sent};
+	$_REQUEST {error} ||= $@ if $@;
 	
 	return handle_error ($page) if $_REQUEST {error};
-			
-	return action_finish () if $_REQUEST {__peer_server};
+
+	return action_finish () if $_REQUEST {__response_sent} || $_REQUEST {__peer_server};
 
 	eval {
 
