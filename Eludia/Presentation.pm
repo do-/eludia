@@ -3932,14 +3932,6 @@ sub draw_page {
 
 			setup_skin ();
 
-			$_REQUEST {__after_xls} .= <<EOXL if ($_REQUEST{xls} && !$_REQUEST {__no_default_after_xls});
-<table border=0>
-	<tr><td>&nbsp;</td></tr>
-	<tr><td>$_USER->{label}</td></tr>
-	<tr><td>@{[ sprintf ('%02d.%02d.%04d %02d:%02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4,5]) ]}</td></tr>
-</table>
-EOXL
-
 			$_REQUEST {__read_only} = 0 if ($_REQUEST {__only_field});
 
 			$page -> {content} -> {__read_only} = $_REQUEST {__read_only} if ref $page -> {content} eq HASH;
