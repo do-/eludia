@@ -158,6 +158,14 @@ sub setup_request_params {
 
 	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
 
+	$_REQUEST {lpt} ||= $_REQUEST {xls};
+
+	$_REQUEST {__read_only} = 1 if $_REQUEST {lpt};
+	
+	$_REQUEST {__read_only} = $_REQUEST {__pack} = $_REQUEST {__no_navigation} = 1 if $_REQUEST {__popup};
+
+	$_REQUEST {__page_title} ||= $conf -> {page_title};
+
 	setup_request_params_for_action () if $_REQUEST {action};
 	
 	return $time;
@@ -380,6 +388,20 @@ sub handle_request_of_type_suggest {
 
 ################################################################################
 
+sub setup_page_content {
+
+	my ($page) = @_;
+	
+	eval { $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
+
+	$@ and return $_REQUEST {error} = $@;
+	
+	$_REQUEST {__page_content} = $page -> {content};
+
+}
+
+################################################################################
+
 sub handle_request_of_type_showing {
 
 	my ($page) = @_;
@@ -388,8 +410,10 @@ sub handle_request_of_type_showing {
 
 	adjust_last_query_string ();
 	
-	$r -> headers_out -> {'Expires'} = '-1';
-			
+	setup_page_content ($page) unless $_REQUEST {__only_menu};
+	
+	return handler_finish () if $_REQUEST {__response_sent} && !$_REQUEST {error};
+
 	out_html ({}, draw_page ($page));
 
 	return handler_finish ();

@@ -3845,126 +3845,42 @@ sub draw_page {
 	my ($page) = @_;
 	
 	$_REQUEST {error} and return draw_error_page ($page);
-
-	$_REQUEST {lpt} ||= $_REQUEST {xls};
-
-	$_REQUEST {__read_only} = 1 if ($_REQUEST {lpt});
-		
-	delete $_REQUEST {__response_sent};
 	
-	$page -> {body} = '';
-
-	my ($selector, $renderrer);
-		
-	$_REQUEST {__on_load} .= "; if (!window.top.title_set) window.top.document.title = the_page_title;";
-
-	$_REQUEST {__invisibles} = ['invisible'];
-
-	if ($_REQUEST {id}) {
-		$selector  = 'get_item_of_' . $page -> {type};
-		$renderrer = 'draw_item_of_' . $page -> {type};
-	} 
-	else {
-		$selector  = 'select_' . $page -> {type};
-		$renderrer = 'draw_' . $page -> {type};
-	}
-	
-	undef $page -> {content};		
-	
-	$_REQUEST {__allow_check___query} = 1;
-	
-	eval { $page -> {content} = call_for_role ($selector)} unless $_REQUEST {__only_menu};
-
-	$@ and return draw_error_page ($page, $@);
-			
-	$_REQUEST {__allow_check___query} = 0;
-
-	$_REQUEST {__page_content} = $page -> {content};
-
-	if ($_REQUEST {__edit_query} && !$_REQUEST {__only_menu}) {
-
-		my $is_dump = $_REQUEST {__dump};
-		delete $_REQUEST {__dump}; 
-
-		setup_skin ();
-
-		$_REQUEST {__allow_check___query} = 1;
-
-		call_for_role ($renderrer, $page -> {content});
-
-		$_REQUEST {__allow_check___query} = 0;
-
-		$_REQUEST {__dump} = $is_dump;
-
-		$_REQUEST {id___query} ||= sql_select_id (
-
-			$conf -> {systables} -> {__queries} => {
-				id_user     => $_USER -> {id},
-				type        => $_REQUEST {type},
-				label       => '',
-				order_context		=> $_REQUEST {__order_context} || '',
-			}, ['id_user', 'type', 'label'],
-
-		);
-
-		require_both '__queries';
-
-		check___query ();
-
-		$_REQUEST {type} = $page -> {type} = '__queries';
-		$_REQUEST {id}   = $_REQUEST {id___query};
-
-		$selector  = 'get_item_of___queries';
-		$renderrer = 'draw_item_of___queries';
-	
-		$_REQUEST {__page_content}  = $page -> {content} = call_for_role ($selector, $page -> {content});
-
-		delete $_REQUEST {__skin};
-	}
-
 	setup_skin ();
 
-	$@ and return draw_error_page ($page, $@);
+	$_SKIN -> {options} -> {no_presentation} and return $_SKIN -> draw_page ($page);
 
-	$_REQUEST {__read_only} = 0 if ($_REQUEST {__only_field});
+	$_REQUEST {__read_only} = 0 if $_REQUEST {__only_field};
 
-	$page -> {content} -> {__read_only} = $_REQUEST {__read_only} if ref $page -> {content} eq HASH;
+	if (ref $page -> {content} eq HASH) {
 
-	return '' if $_REQUEST {__response_sent};
-
-	unless ($_SKIN -> {options} -> {no_presentation}) {
-
-		if ($conf -> {core_auto_edit} && $_REQUEST {id} && ref $page -> {content} eq HASH && $page -> {content} -> {fake} > 0) {
-			$_REQUEST {__edit} = 1;
-		}
-
-		if ($_REQUEST {__popup}) {
-			$_REQUEST {__read_only} = 1;
-			$_REQUEST {__pack} = 1;
-			$_REQUEST {__no_navigation} = 1;
-		}
-
-		our @scan2names = ();	
-		our $scrollable_row_id = 0;
-		our $lpt = 0;
-
-		eval {
-			$_SKIN -> {subset} = $_SUBSET;
-			$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
-			$page  -> {auth_toolbar} = draw_auth_toolbar ();
-			$page  -> {body} 	 = call_for_role ($renderrer, $page -> {content}) unless $_REQUEST {__only_menu}; 
-			$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
-			$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
-		};
-		
-		$@ and return draw_error_page ($page, $@);
-
-		$_REQUEST {__page_title} ||= $conf -> {page_title};
-		$_REQUEST {__script} .= ";  the_page_title = '$_REQUEST{__page_title}';";
-
-		$page -> {scan2names} = \@scan2names;
+		$page -> {content} -> {__read_only} = $_REQUEST {__read_only};
+	
+		$_REQUEST {__edit} = 1 if $conf -> {core_auto_edit} && $_REQUEST {id} && $page -> {content} -> {fake} > 0;	
 
 	}
+
+	our @scan2names            = ();	
+	$page -> {scan2names}      = \@scan2names;
+
+	our $scrollable_row_id     = 0;
+	our $lpt                   = 0;
+
+	$_REQUEST {__script}      .= "; the_page_title = '$_REQUEST{__page_title}';";
+	$_REQUEST {__on_load}     .= "; if (!window.top.title_set) window.top.document.title = the_page_title;";
+
+	$_REQUEST {__invisibles}   = ['invisible'];
+
+	eval {
+		$_SKIN -> {subset}       = $_SUBSET;
+		$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
+		$page  -> {auth_toolbar} = draw_auth_toolbar ();
+		$page  -> {body} 	 = call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content}) unless $_REQUEST {__only_menu}; 
+		$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
+		$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
+	};
+	
+	$@ and return draw_error_page ($page, $@);
 	
 	($_REQUEST {__only_field} ? $_JS_SKIN : $_SKIN) -> draw_page ($page);
 
