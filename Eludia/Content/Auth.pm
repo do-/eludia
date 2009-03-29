@@ -50,6 +50,7 @@ sub get_user_sql {
 			, $sessions.ip
 			, $sessions.tz_offset
 			, $sessions.ip_fw
+			, $sessions.client_cookie
 		FROM
 			$sessions
 			LEFT JOIN $users ON (
@@ -76,7 +77,24 @@ sub get_user_with_fixed_session {
 	$user -> {id} or return undef;
 	
 	$user -> {peer_server} = $peer_server;
+	
+	unless ($preconf -> {core_no_cookie_check}) {
+		
+		$_COOKIE {client_cookie} or return undef;
 
+		if ($user -> {client_cookie}) {
+
+			$user -> {client_cookie} eq $_COOKIE {client_cookie} or return undef;
+
+		}
+		else {
+
+			sql_do ("UPDATE $conf->{systables}->{sessions} SET client_cookie = ? WHERE id = ?", $_COOKIE {client_cookie}, $_REQUEST {sid});
+
+		}
+	
+	}
+	
 	if ($user -> {ip}) {
 	
 		$user -> {ip}    eq $ENV {REMOTE_ADDR}          or return undef;

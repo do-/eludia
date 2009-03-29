@@ -4,6 +4,84 @@ no warnings;
 
 sub handler {
 
+	my $time = 
+
+	setup_request_params     (@_);				$time = __log_profilinig ($time, '<setup_request_params>');	my $request_time = 1000 * (time - $first_time);
+
+	require_config           (  );				$time = __log_profilinig ($time, '<require_config>');
+
+	sql_reconnect            (  );				$time = __log_profilinig ($time, '<sql_reconnect>');
+
+	require_model            (  );				$time = __log_profilinig ($time, '<require_model>');		__log_request_profilinig ($request_time);
+
+	authentication_is_needed (  ) or return _ok ();		$time = __log_profilinig ($time, '<authentication_is_needed>');
+
+	setup_user               (  ) or return _ok ();		$time = __log_profilinig ($time, '<setup_user>');
+
+	my $page = setup_page    (  );				$time = __log_profilinig ($time, '<setup_page>');
+
+	return &{"handle_request_of_type_$page->{request_type}"} ($page);
+
+}
+
+################################################################################
+
+sub setup_user {
+
+	our $_USER = get_user ();
+	
+	return 1 if $_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/;
+	
+	handle_request_of_type_kickout ();
+	
+	return 0;	
+
+}
+
+################################################################################
+
+sub authentication_is_needed {
+
+	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
+
+		my $fn = "$1.$2";
+
+		setup_skin ();
+
+		$r -> internal_redirect ("/i/_skins/$_REQUEST{__skin}/$fn");
+
+		return 0;
+
+	}
+
+	elsif ($_REQUEST {keepalive}) {
+
+		$_REQUEST {virgin} or keep_alive ($_REQUEST {keepalive});
+
+		out_html ({}, qq{<html><head><META HTTP-EQUIV=Refresh CONTENT="@{[ 60 * $conf -> {session_timeout} - 1 ]}; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}"></head></html>});
+		
+		return 0;
+
+	}
+
+	elsif ($_REQUEST {__whois}) {
+	
+		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
+		
+		out_html ({}, Dumper ({data => $user}));
+		
+		return 0;
+
+	}
+	
+	return 1;
+
+}
+
+################################################################################
+
+sub setup_request_params {
+
 	my $handler_time = time ();
 
 	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
@@ -14,13 +92,17 @@ sub handler {
 	
 	$ENV {HTTP_HOST} = $http_host if $http_host;
 
-	get_request (@_);	
+	get_request (@_);
+	
+	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
+	
+	set_cookie_for_root (client_cookie => $_COOKIE {client_cookie} || Digest::MD5::md5_hex (rand ()));
 
 	my $time = $r -> request_time ();
 
 	$time = __log_profilinig ($handler_time, '<get_request>');
 
-	my $first_time = $time;
+	our $first_time = $time;
 
 	$_REQUEST {__sql_time} = 0;
 		
@@ -74,334 +156,257 @@ sub handler {
     	    $_REQUEST {fake} =~ s/\%(25)*2c/,/ig;
 	}
 
-	if ($_REQUEST {action}) {
+	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
+
+	setup_request_params_for_action () if $_REQUEST {action};
 	
-		my $precision = $^V ge v5.8.0 && $Math::FixedPrecision::VERSION ? $conf -> {precision} || 3 : undef;
+	return $time;
+	
+}
 
-		foreach my $key (keys %_REQUEST) {
+################################################################################
 
-			$key =~ /^_[^_]/ or next;
+sub setup_request_params_for_action {
 
-			$_REQUEST {$key} =~ s{^\s+}{};
-			$_REQUEST {$key} =~ s{\s+$}{};
-			
-			my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
-			
-			if ($_REQUEST {$key} ne $encoded) {
-				$_REQUEST {$key} = $encoded;
-				next;
-			}
-			
-			next if $key =~ /^_dt/;
-			next if $key =~ /^_label/;
-			next if $key =~ /_ids$/;
-			
-			$_REQUEST {$key} =~ /^\-?[\d ]*\d([\,\.]\d+)?$/ or next;
+	my $precision = $^V ge v5.8.0 && $Math::FixedPrecision::VERSION ? $conf -> {precision} || 3 : undef;
 
-			$_REQUEST {$key} =~ s{ }{}g;
-			$_REQUEST {$key} =~ y{,}{.};
-			
-			defined $precision or next;
+	foreach my $key (keys %_REQUEST) {
 
-			$_REQUEST {$field} = new Math::FixedPrecision ($_REQUEST {$field}, 0 + $precision);
+		$key =~ /^_[^_]/ or next;
 
+		$_REQUEST {$key} =~ s{^\s+}{};
+		$_REQUEST {$key} =~ s{\s+$}{};
+		
+		my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
+		
+		if ($_REQUEST {$key} ne $encoded) {
+			$_REQUEST {$key} = $encoded;
+			next;
+		}
+		
+		next if $key =~ /^_dt/;
+		next if $key =~ /^_label/;
+		next if $key =~ /_ids$/;
+		
+		$_REQUEST {$key} =~ /^\-?[\d ]*\d([\,\.]\d+)?$/ or next;
+
+		$_REQUEST {$key} =~ s{ }{}g;
+		$_REQUEST {$key} =~ y{,}{.};
+		
+		defined $precision or next;
+
+		$_REQUEST {$field} = new Math::FixedPrecision ($_REQUEST {$field}, 0 + $precision);
+
+	}
+
+}
+
+################################################################################
+
+sub setup_page {
+
+	my $page = {
+		type   => $_REQUEST {type},
+		subset => setup_subset (),
+		menu   => setup_menu (),
+	};
+
+	call_for_role ('get_page');
+
+	require_both $page -> {type};	
+	
+	$page -> {request_type} = 
+
+		$_REQUEST {__suggest} ? 'suggest' :
+
+		$_REQUEST {action}    ? 'action'  :
+
+					'showing' ;		
+
+	return $page;
+
+}
+
+################################################################################
+
+sub setup_subset {
+
+	require_content 'subset';
+
+	our $_SUBSET = call_for_role ('select_subset');
+	
+	if ($_SUBSET && $_SUBSET -> {items}) {
+
+		$_SUBSET -> {items} = [ grep {!$_ -> {off}} @{$_SUBSET -> {items}} ];
+
+		$_REQUEST {__subset} ||= $_USER -> {subset};
+		$_SUBSET -> {name}   ||= $_REQUEST {__subset};
+
+		my $n = 0;
+		my $found = 0;
+
+		foreach my $item (@{$_SUBSET -> {items}}) {
+			$n ++;
+			$found = 1 if $item -> {name} eq $_SUBSET -> {name};
 		}
 
+		$found or delete $_SUBSET -> {name};
+
+		$_SUBSET -> {name} ||= $_SUBSET -> {items} -> [0] -> {name} if $n > 0;
+
+		$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ("UPDATE $conf->{systables}->{users} SET subset = ? WHERE id = ?", $_SUBSET -> {name}, $_USER -> {id});
+
 	}
-
-	my $request_time = 1000 * (time - $first_time);
-		
-	require_config ();
-
-	$time = __log_profilinig ($time, '<require_config>');
-
-   	sql_reconnect ();   	
-   	
-	$time = __log_profilinig ($time, '<sql_reconnect>');
-
-   	require_model ();
-
-	__log_request_profilinig ($request_time);
 	
-	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
+	return $_SUBSET;	
 
-		my $fn = "$1.$2";
+}
 
-		setup_skin ();
+################################################################################
 
-		$r -> internal_redirect ("/i/_skins/$_REQUEST{__skin}/$fn");
+sub setup_menu {
 
-		return _ok ();
+	require_content 'menu';
 
-	}
+	our $i18n = i18n ();
 
-	if ($_REQUEST {keepalive}) {
-
-		$_REQUEST {virgin} or keep_alive ($_REQUEST {keepalive});
-
-		return out_html ({}, qq{<html><head><META HTTP-EQUIV=Refresh CONTENT="@{[ 60 * $conf -> {session_timeout} - 1 ]}; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}"></head></html>});
-
-	}
-
-	if ($_REQUEST {__whois}) {
+	my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
 	
-		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
-		
-		return out_html ({}, Dumper ({data => $user}));
-
-	}
-
-	$time = __log_profilinig ($time, '<misc>');
+	$_REQUEST {type} or adjust_request_type ($menu);
 	
-	our $_USER = get_user ();
+	return $menu;
 
-	return _ok () if $_REQUEST {__response_sent};
+}
 
-	$time = __log_profilinig ($time, '<got user>');
+################################################################################
 
-	if ((!$_USER -> {id} and $_REQUEST {type} ne 'logon' and $_REQUEST {type} ne '_boot')) {
+sub handle_error {
 
-		delete $_REQUEST {sid};
-		delete $_REQUEST {salt};
-		delete $_REQUEST {_salt};
+	my ($page) = @_;
+	
+	out_html ({}, draw_page ($page));
+	
+	return action_finish ();
 
-		my $type = ($preconf -> {core_skip_boot} || $conf -> {core_skip_boot}) || $_REQUEST {__windows_ce} ? 'logon' : '_boot';
+}
 
-		delete $_REQUEST {__last_query_string};
-		delete $_REQUEST {__last_scrollable_table_row};
+################################################################################
 
-		my $src = Dumper (\%_REQUEST);
-		my $value = MIME::Base64::encode ($src);
+sub handle_request_of_type_kickout {
 
-		set_cookie (-name => 'redirect_params', -value => $value, -expires => '+1m', -path => '/');
+	foreach (qw(sid salt _salt __last_query_string __last_scrollable_table_row)) {delete $_REQUEST {$_}}
+	
+	set_cookie_for_root (redirect_params => MIME::Base64::encode (Dumper (\%_REQUEST)), '+1h');
 
-		redirect ("/?type=$type", kind => 'js', target => '_top');
+	redirect (
+		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),
+		kind => 'js', 
+		target => '_top'
+	);
 
-	}
-	else {
+	return handler_finish ();
 
-		require_content DEFAULT;
-		require_content 'subset';
+}
 
-		our $_SUBSET = call_for_role ('select_subset');
-		
-		if ($_SUBSET && $_SUBSET -> {items}) {
+################################################################################
 
-			$_SUBSET -> {items} = [ grep {!$_ -> {off}} @{$_SUBSET -> {items}} ];
+sub handle_request_of_type_action {
 
-			$_REQUEST {__subset} ||= $_USER -> {subset};
-			$_SUBSET -> {name}   ||= $_REQUEST {__subset};
+	require_content DEFAULT;
 
-			my $n = 0;
-			my $found = 0;
+	my ($page) = @_;
 
-			foreach my $item (@{$_SUBSET -> {items}}) {
-				$n ++;
-	 			$found = 1 if $item -> {name} eq $_SUBSET -> {name};
-			}
+	my $action = $_REQUEST {action};
 
-			$found or delete $_SUBSET -> {name};
+	undef $__last_insert_id;
 
-			$_SUBSET -> {name} ||= $_SUBSET -> {items} -> [0] -> {name} if $n > 0;
+	our %_OLD_REQUEST = %_REQUEST;
 
-			$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ("UPDATE $conf->{systables}->{users} SET subset = ? WHERE id = ?", $_SUBSET -> {name}, $_USER -> {id});
+	log_action_start ();
 
-		}
+	eval { $db -> {AutoCommit} = 0; };
 
-		require_content 'menu';
-
-		our $i18n = i18n ();
-
-		my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
-		
-		$_REQUEST {type} or adjust_request_type ($menu);
-				
-		my $page = {
-			menu => $menu,
-			type => $_REQUEST {type},
-		};
-
-		call_for_role ('get_page');
-
-		$page -> {subset} = $_SUBSET;
-
-		require_both $page -> {type};
-
-		$_REQUEST {__include_js} ||= [];
-		push @{$_REQUEST {__include_js}}, @{$conf -> {include_js}} if $conf -> {include_js};
-
-		$_REQUEST {__include_css} ||= [];
-		push @{$_REQUEST {__include_css}}, @{$conf -> {include_css}} if $conf -> {include_css};
-
-		$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
-
-		my $action = $_REQUEST {action};
-
-		if ($action) {
-		
-			if ($_REQUEST {__suggest}) {
+	eval { $_REQUEST {error} = call_for_role ("validate_${action}_$$page{type}"); };
+	
+	return action_finish () if $_REQUEST {__response_sent};
+	
+	return handle_error ($page) if $_REQUEST {error};
 			
-				setup_skin ();
+	return action_finish () if $_REQUEST {__peer_server};
 
-				call_for_role ("draw_item_of_$$page{type}");
+	eval {
+
+		delete_fakes () if $action eq 'create';
+
+		call_for_role ("do_${action}_$$page{type}");
+
+		call_for_role ("recalculate_$$page{type}") if $action ne 'create';
+
+	};
+
+	$_REQUEST {error} = $@ if $@;
+	
+	return handle_error ($page) if $_REQUEST {error};
+
+	$_REQUEST {__response_sent} or redirect (
+
+		$action eq 'delete' ? esc_href () : { action => '', __last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row}},
+
+		{ kind => 'js',	label => $_REQUEST {__redirect_alert} }
+
+	);
+
+	return action_finish ();
+
+}
+
+################################################################################
+
+sub handle_request_of_type_suggest {
+
+	my ($page) = @_;
+
+	setup_skin ();
+
+	call_for_role ("draw_item_of_$$page{type}");
 				
-				delete $_REQUEST {id};
+	delete $_REQUEST {id};
 				
-				out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
+	out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
 				
-				return _ok ();
-					
+	return handler_finish ();
 				
-			}
+}				
 
-			undef $__last_insert_id;
+################################################################################
 
-			our %_OLD_REQUEST = %_REQUEST;
+sub handle_request_of_type_showing {
 
-			log_action_start ();
+	my ($page) = @_;
+	
+	foreach (qw (js css)) { push @{$_REQUEST {"__include_$_"}}, @{$conf -> {"include_$_"}}}
 
-			eval { $db -> {AutoCommit} = 0; };
-
-			my $sub_name = "validate_${action}_$$page{type}";
-
-			my $error_code = undef;
-			eval {	$error_code = call_for_role ($sub_name); };
-			$error_code = $@ if $@;
+	adjust_last_query_string ();
+	
+	$r -> headers_out -> {'Expires'} = '-1';
 			
-			return action_finish () if $_REQUEST {__response_sent};
+	out_html ({}, draw_page ($page));
 
-			if ($_USER -> {demo_level} > 0) {
-				($action =~ /^execute/ and $$page{type} eq 'logon') or $error_code ||= 'Èçâèíèòå, âû ðàáîòàåòå â äåìîíñòðàöèîííîì ðåæèìå';
-			}
+	return handler_finish ();
 
-			if ($error_code) {
-				my $error_message_template = $error_messages -> {"${action}_$$page{type}_${error_code}"} || $error_code;
-				$_REQUEST {error} = interpolate ($error_message_template);
-			}
-			if ($_REQUEST {error}) {
-				out_html ({}, draw_page ($page));
-			}
-			else {
+}
 
-				unless ($_REQUEST {__peer_server}) {
+################################################################################
 
-					delete $_REQUEST {__response_sent};
-
-					eval {
-
-						delete_fakes () if $action eq 'create';
-
-						call_for_role ("do_${action}_$$page{type}");
-						
-						call_for_role ("recalculate_$$page{type}") if $action ne 'create';
-
-						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_USER -> {id}) {
-
-							set_cookie (
-								-name    => 'user_login',
-								-value   => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}),
-								-expires => '+1M', # 'Sat, 31-Dec-2050 23:59:59 GMT',
-								-path    => '/',
-							);
-							
-							if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
-								sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
-							}
-							
-							session_access_logs_purge ();
-							
-						}
-
-						if (($action =~ /^execute/) and ($$page{type} eq 'logon') and $_COOKIES {redirect_params}) {
-							
-							my $VAR1;
-							my $value = $_COOKIES {redirect_params} -> value;
-							my $src = MIME::Base64::decode ($value);
-							eval "\$VAR1 = $src";
-							
-							if ($@) {
-								warn "[$src] thaw error: $@\n";
-							} 
-							else {
-							
-								foreach my $key (keys %$VAR1) {
-									
-									$_REQUEST {$key} = $VAR1 -> {$key};
-
-								}
-
-							}
-							
-							set_cookie (
-								-name    => 'redirect_params',
-								-value   => '',
-								-expires => '+1m',
-								-path    => '/',
-							);
-							
-						} 
-						elsif ($conf -> {core_cache_html}) {
-							sql_do ("DELETE FROM $conf->{systables}->{cache_html}");
-							my $cache_path = $r -> document_root . '/cache/*';
-							$^O eq 'MSWin32' or eval {`rm -rf $cache_path`};
-						}
-
-					};
-
-					$_REQUEST {error} = $@ if $@;
-
-				}
-								
-				if ($_REQUEST {error}) {
-				
-					out_html ({}, draw_page ($page));
-					
-				}
-				elsif (!$_REQUEST {__response_sent}) {
-
-					if ($action eq 'delete') {
-						esc ({label => $_REQUEST {__redirect_alert}});
-					}
-					else {
-
-						redirect (
-							{
-								action => '',
-								__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
-							},
-							{
-								kind => 'js',
-								label => $_REQUEST {__redirect_alert},
-							}
-						);
-					}
-
-				}
-
-			}
-
-			action_finish ();
-
-		}
-		else {
-		
-			adjust_last_query_string ();
-		
-			$r -> headers_out -> {'Expires'} = '-1';
-			
-			out_html ({}, draw_page ($page));
-
-		}
-
-	}
+sub handler_finish {
 
 	$r -> pool -> cleanup_register (\&__log_request_finish_profilinig, {
+	
 		id_request_log		=> $_REQUEST {_id_request_log}, 
-
 		out_html_time		=> $_REQUEST {__out_html_time},
 		application_time	=> 1000 * (time - $first_time) - $_REQUEST {__sql_time}, 
 		sql_time		=> $_REQUEST {__sql_time},
-		is_gzipped		=>  $_REQUEST {__is_gzipped},
+		is_gzipped		=> $_REQUEST {__is_gzipped},
 		
 	}) if $preconf -> {core_debug_profiling} > 2;
 	
@@ -480,7 +485,7 @@ sub action_finish {
 
 	log_action_finish ();
 	
-	return _ok ();
+	return handler_finish ();
 
 }
 
@@ -587,6 +592,38 @@ sub adjust_last_query_string {
 	
 	$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
 	
+}
+
+################################################################################
+
+sub recalculate_logon {
+
+	$_REQUEST {action} =~ /^execute/ or return;
+
+	if ($_USER -> {id}) {
+	
+		set_cookie_for_root (user_login => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}));
+
+		if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
+			sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
+		}
+		
+		session_access_logs_purge ();
+		
+	}
+
+	if ($_COOKIE {redirect_params}) {
+		
+		my $VAR1; eval '$VAR1 = ' . MIME::Base64::decode ($_COOKIE {redirect_params});
+
+		$@ and warn "[$src] thaw error: $@\n" and return;
+
+		foreach my $key (keys %$VAR1) { $_REQUEST {$key} = $VAR1 -> {$key} }
+
+		set_cookie_for_root (redirect_params => '');
+
+	}
+
 }
 
 1;

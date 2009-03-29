@@ -3111,12 +3111,9 @@ EOH
 
 
 
+	my $focused_field = $_COOKIE {user_login} ? 'password' : 'login';
 
-
-	$_REQUEST {__on_load} .= $_COOKIES{user_login} && $_COOKIES{user_login}->value ? 
-		'document.forms[0].elements["password"].focus (); '
-		:
-		'document.forms[0].elements["login"].focus (); ';
+	$_REQUEST {__on_load} .= qq {document.forms[0].elements["$focused_field"].focus ();};
 	
 	if ($preconf -> {core_fix_tz}) {
 		my $tz = (Date::Calc::Timezone ()) [3] || 0;
@@ -3165,7 +3162,7 @@ EOH
 							<input type=hidden name=tz_offset value="">
 							<tr class="logon">
 								<td><b>Логин:</b></td>
-								<td><input type="text" name="login" value="${\( $_COOKIES{user_login} && $_COOKIES{user_login}->value )}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
+								<td><input type="text" name="login" value="$_COOKIE{user_login}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
 							</tr>
 							<tr class="logon">
 								<td><b>Пароль:</b></td>
@@ -3261,8 +3258,7 @@ sub draw_tree {
 
 		&{$_PACKAGE . 'set_cookie'} (
 			-name	=> "co_$_REQUEST{type}",
-			-value	=> ($_COOKIES {"co_$_REQUEST{type}"} ? 
-				$_COOKIES {"co_$_REQUEST{type}"} -> value . '.' : '' ) . $_REQUEST {__parent},
+			-value	=> ($_COOKIE {"co_$_REQUEST{type}"} ? $_COOKIE {"co_$_REQUEST{type}"} . '.' : '' ) . $_REQUEST {__parent},
 		);
 
 		return out_html ({}, <<EOH);
@@ -3321,14 +3317,9 @@ EOH
 	
 	$options -> {active} += 0;
 	
-	if ($_COOKIES {"co_$_REQUEST{type}"}) {
+	if ($_COOKIE {"co_$_REQUEST{type}"}) {
 
-#		my $cookie_value = join '.', grep {$idx {$_} -> {_hac}} split /\./, $_COOKIES {"co_$_REQUEST{type}"} -> value;
-
-		&{$_PACKAGE . 'set_cookie'} (
-			-name	=> "co_$_REQUEST{type}",
-			-value	=> $_COOKIES {"co_$_REQUEST{type}"} -> value,
-		);
+		&{$_PACKAGE . 'set_cookie_for_root'} ("co_$_REQUEST{type}" => $_COOKIE {"co_$_REQUEST{type}"});
 		
 	}
 

@@ -2,6 +2,18 @@ use Eludia::Content::HTTP::FileTools;
 
 ################################################################################
 
+sub set_cookie_for_root {
+
+	my ($name, $value, $expires) = @_;
+	
+	$expires ||= '+1M';
+	
+	set_cookie (-name => $name, -value => $value, -expires => $expires, -path => '/');
+
+}
+
+################################################################################
+
 sub esc {
 
 	my ($options) = @_;

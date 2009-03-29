@@ -357,6 +357,8 @@ my $time = time;
 
 				ip =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				ip_fw =>  {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+
+				client_cookie =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 	
 				peer_server => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
 				peer_id => {TYPE_NAME    => 'bigint'},
@@ -453,15 +455,6 @@ my $time = time;
 		keys => {
 			ix => 'id_user,type,label',
 		},
-
-	};
-		
-	$conf -> {core_cache_html} and $defs {$conf -> {systables} -> {cache_html}} = {
-
-		columns => {
-			uri     => {TYPE_NAME  => 'varchar', COLUMN_SIZE  => 255, _PK    => 1},
-			ts      => {TYPE_NAME  => 'timestamp'},
-		}
 
 	};
 	
