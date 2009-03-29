@@ -1599,7 +1599,7 @@ sub draw_form_field_select {
 
 	}
 
-	$options -> {onChange} = '' if defined $options -> {other} || defined $options -> {detail};
+#	$options -> {onChange} = '' if defined $options -> {other} || defined $options -> {detail};
 
 	if (defined $options -> {other}) {
 
