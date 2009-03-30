@@ -11,8 +11,8 @@ sub setup_page_content {
 	$_REQUEST {__allow_check___query} = 0;
 
 	$@ and return $_REQUEST {error} = $@;	
-	
-	!$_REQUEST {__edit_query} or $_REQUEST {__only_menu} or return;
+
+	$_USER -> {id} and !$_REQUEST {__only_menu} and $_REQUEST {__edit_query} or return;
 
 	my $is_dump = delete $_REQUEST {__dump};
 
