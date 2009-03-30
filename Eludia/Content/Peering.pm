@@ -42,7 +42,8 @@ sub check_peer_server {
 
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id_user = ?", $id_user);
 	
-	sql_do ("INSERT INTO $conf->{systables}->{sessions} (id, id_user, peer_id, peer_server) VALUES (?, ?, ?, ?)", $local_sid, $id_user, $_REQUEST {sid}, $peer_server);
+	sql_do ("INSERT INTO $conf->{systables}->{sessions} (id, id_user, peer_id, peer_server, ip, ip_fw) VALUES (?, ?, ?, ?)",
+		$local_sid, $id_user, $_REQUEST {sid}, $peer_server, $ENV {REMOTE_ADDR}, $ENV {HTTP_X_FORWARDED_FOR});
 	
 	$_REQUEST {sid} = $local_sid;
 	
