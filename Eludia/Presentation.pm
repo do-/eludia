@@ -4351,6 +4351,8 @@ sub check_static_files {
 	return if $_SKIN -> {options} -> {no_static};
 	$r or return;
 	
+	my $time = time();
+	
 	my $skin_root = $r -> document_root () . $_REQUEST {__static_url};
 		
 	-d $skin_root or mkdir $skin_root or die "Can't create $skin_root: $!";
@@ -4415,6 +4417,8 @@ sub check_static_files {
 	}
 
 	$_SKIN -> {static_ok} -> {$_NEW_PACKAGE} = 1;
+
+	__log_profilinig ($time, ' check_static_files');
 
 }
 
