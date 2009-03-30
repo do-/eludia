@@ -3486,13 +3486,17 @@ sub draw_suggest_page {
 			function r () {
 			
 				var a = $a;
-				
+								
 				var s = parent.document.getElementById ('_$_REQUEST{__suggest}__suggest');
 				
 				var t = s.form.elements ['_$_REQUEST{__suggest}'];
 				
-				s.style.top    = t.offsetTop + t.offsetParent.offsetTop + t.offsetParent.offsetParent.offsetTop + 18; 
-				s.style.width  = t.offsetWidth; 
+				var o = parent.\$(t).offset (parent.\$(parent.document.body));
+				
+				parent.\$(s).css ({
+					top   : o.top + 18,
+					width : t.offsetWidth
+				});
 				
 				s.options.length = 0;
 				for (var i = 0; i < a.length; i++) {
