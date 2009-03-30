@@ -162,7 +162,9 @@ sub draw_auth_toolbar {
 
 		if (@{$_SKIN -> {subset} -> {items}} > 1) {				
 		
-			my $href = create_url (type => '', id => '');
+#			my $href = create_url (type => '', id => '');
+			$_REQUEST {__uri_root} || create_url ();
+			my $href = $_REQUEST {__uri_root};
 		
 			$subset_div = <<EOH;
 				<div id="Menu">

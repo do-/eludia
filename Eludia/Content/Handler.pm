@@ -628,10 +628,23 @@ sub recalculate_logon {
 	
 		set_cookie_for_root (user_login => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}));
 
+		my ($fieds, @params);
+
+		$fields = 'ip = ?, ip_fw = ?';
+		push (@params, $ENV {REMOTE_ADDR}, $ENV {HTTP_X_FORWARDED_FOR});
+
 		if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
-			sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
+			$fields .= ", tz_offset = ?";
+			push (@params, $_REQUEST {tz_offset});
 		}
-		
+
+		unless ($preconf -> {core_no_cookie_check}) {
+			$fields .= ", client_cookie = ?";
+			push (@params, $_COOKIE {client_cookie});
+		}
+
+		sql_do ("UPDATE sessions SET $fields WHERE id = ?", @params, $_REQUEST {sid});
+
 		session_access_logs_purge ();
 		
 	}
