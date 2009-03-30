@@ -1070,7 +1070,7 @@ EOJS
 			$attributes
 			onKeyDown="tabOnEnter()"
 			onChange="is_dirty=true; $$options{onChange}" 
-			onKeyPress="typeAhead()" 
+			onKeyPress="typeAhead(0)" 
 		>
 EOH
 		
@@ -1646,11 +1646,17 @@ EOJS
 	}
 
 	$options -> {attributes} ||= {};
+	
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
+	
+	$options -> {attributes} -> {onChange} = $options -> {onChange};
+	
+	$options -> {attributes} -> {onKeyPress} = 'typeAhead(1)';
+
 	my $attributes = dump_attributes ($options -> {attributes});
 	
 	$html .= <<EOH;
-		<select name="$name" id="${name}_select" $read_only onChange="$$options{onChange}" onkeypress="typeAhead()" $attributes>
+		<select name="$name" id="${name}_select" $read_only $attributes>
 EOH
 
 	foreach my $value (@{$options -> {values}}) {

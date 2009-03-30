@@ -351,53 +351,81 @@ function KillClock() {
 	clockID  = 0;
 }
 
-
-function typeAhead() { // borrowed from http://www.oreillynet.com/javascript/2003/09/03/examples/jsdhtmlcb_bonus2_example.html
+function typeAhead (noChange) { // borrowed from http://www.oreillynet.com/javascript/2003/09/03/examples/jsdhtmlcb_bonus2_example.html
    
-   if (window.event && window.event.keyCode == 8) {
-   	typeAheadInfo.accumString = "";
-   	return;
-   }
+	var event = window.event;
+	
+	if (!event || event.ctrlKey || event.altKey) return;
+	
+	var keyCode = event.keyCode;
 
-   if (window.event && window.event.keyCode == 13 && !window.event.ctrlKey && !window.event.altKey) {
-   	window.event.keyCode = 9;
-   	return;
-   }
+	if (keyCode == 8) return typeAheadInfo.accumString = "";
 
-   if (window.event && !window.event.ctrlKey) {
-      var now = new Date();
-      if (typeAheadInfo.accumString == "" || now - typeAheadInfo.last < typeAheadInfo.delay) {
-	 var evt = window.event;
-	 var selectElem = evt.srcElement;
-	 var charCode = evt.keyCode;
-	 var newChar =  String.fromCharCode(charCode).toUpperCase();
-	 typeAheadInfo.accumString += newChar;
-	 var selectOptions = selectElem.options;
-	 var txt, nearest;
-	 for (var i = 0; i < selectOptions.length; i++) {
-	    txt = selectOptions[i].text.toUpperCase();
-	    nearest = (typeAheadInfo.accumString > txt.substr(0, typeAheadInfo.accumString.length)) ? i : nearest;
-	    if (txt.indexOf(typeAheadInfo.accumString) == 0) {
-	       clearTimeout(typeAheadInfo.timeout);
-	       typeAheadInfo.last = now;
-	       typeAheadInfo.timeout = setTimeout("typeAheadInfo.reset()", typeAheadInfo.delay);
-	       selectElem.selectedIndex = i;
-	       selectElem.onchange ();
-	       evt.cancelBubble = true;
-	       evt.returnValue = false;
-	       return false;   
-	    }            
-	 }
-	 if (nearest != null) {
-	    selectElem.selectedIndex = nearest;
-	 }
-      } else {
-	 clearTimeout(typeAheadInfo.timeout);
-      }
-      typeAheadInfo.reset();
-   }
-   return true;
-}					
+	if (keyCode == 13) return window.event.keyCode = 9;
+
+	var now = new Date ();
+	
+	if (typeAheadInfo.accumString == "" || now - typeAheadInfo.last < typeAheadInfo.delay) {
+		
+		var selectElem = event.srcElement;
+
+	 	var newChar = String.fromCharCode (keyCode).toUpperCase ();
+	 	
+		typeAheadInfo.accumString += newChar;
+		
+		var selectOptions = selectElem.options;
+		
+		var txt;
+		
+		var len = typeAheadInfo.accumString.length;
+		
+		for (var i = 0; i < selectOptions.length; i++) {
+
+			txt = selectOptions [i].text.toUpperCase ();
+
+			if (typeAheadInfo.accumString > txt.substr (0, len)) continue;
+			
+			if (selectElem.selectedIndex == i) break;
+			
+			selectElem.selectedIndex = i;
+									
+			if (txt.indexOf (typeAheadInfo.accumString) != 0) break;
+	
+			if (noChange) {
+
+				selectElem.onclick = selectElem.onblur = function () {this.form.submit ()}
+
+			}
+			else {
+
+				selectElem.onchange ();
+
+			}
+
+			clearTimeout (typeAheadInfo.timeout);
+				
+			typeAheadInfo.last = now;
+				
+			typeAheadInfo.timeout = setTimeout ("typeAheadInfo.reset()", typeAheadInfo.delay);
+				
+			return blockEvent ();
+				    
+		}
+	 	 
+	} 
+	else {
+	
+		clearTimeout (typeAheadInfo.timeout);
+		
+	}
+      
+	typeAheadInfo.reset ();
+         
+	blockEvent ();
+   
+	return true;
+   
+}
 
 function activate_link (href, target, no_block_event) {
 
