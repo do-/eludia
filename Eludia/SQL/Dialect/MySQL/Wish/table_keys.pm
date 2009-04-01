@@ -32,10 +32,18 @@ sub wish_to_explore_existing_table_keys {
 		
 		$part .= '(' . $i -> {Sub_part} . ')' if $i -> {Sub_part};
 		
-		push @{$existing -> {lc $i -> {Key_name}}}, $part;
+		my $name = lc $i -> {Key_name};
+		
+		my $definition = ($existing -> {$name} ||= {
+			name        => $name, 
+			global_name => $name,
+			parts       => [],
+		});	
+		
+		push @{$definition -> {parts}}, $part;
 
 	});
-	
+
 	return $existing;
 
 }
