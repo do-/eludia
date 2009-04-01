@@ -973,10 +973,18 @@ sub get_column_def {
 	my ($self, $column) = @_;
 	
 	return 'CURRENT_TIMESTAMP' if $column -> {TYPE_NAME} =~ /timestamp/i;
-
-	return $column -> {COLUMN_DEF} if defined $column -> {COLUMN_DEF};
 	
-	return 0 if $column -> {TYPE_NAME} =~ /bit|int|float|numeric|decimal/;
+	if (defined $column -> {COLUMN_DEF}) {
+	
+		my $def = $column -> {COLUMN_DEF};
+		
+		$def += 0 if $column -> {TYPE_NAME} =~ /numeric|decimal/i;
+		
+		return $def;
+	
+	}
+	
+	return 0 if $column -> {TYPE_NAME} =~ /bit|int|float|numeric|decimal/i;
 	
 	return '';
 
@@ -1019,7 +1027,7 @@ sub update_column {
 		and $existing_column -> {DECIMAL_DIGITS} >= $c_definition -> {DECIMAL_DIGITS}
 		and $defs_are_equal
 	;
-	
+
 	$c_definition -> {_PK} = 0 if ($existing_column -> {_PK} == 1);
 
 	my $sql = "ALTER TABLE $name CHANGE $c_name " . $self -> gen_column_definition ($c_name, $c_definition);
