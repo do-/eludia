@@ -972,6 +972,8 @@ sub get_column_def {
 
 	my ($self, $column) = @_;
 	
+	return 'CURRENT_TIMESTAMP' if $column -> {TYPE_NAME} =~ /timestamp/i;
+
 	return $column -> {COLUMN_DEF} if defined $column -> {COLUMN_DEF};
 	
 	return 0 if $column -> {TYPE_NAME} =~ /bit|int|float|numeric|decimal/;
@@ -1010,7 +1012,7 @@ sub update_column {
 		$defs_are_equal = 1 if abs ($existing_def - $column_def) < $precision;
 
 	}
-	
+
 	return if 
 		$types_are_equal
 		and $existing_column -> {COLUMN_SIZE}    >= $c_definition -> {COLUMN_SIZE}
