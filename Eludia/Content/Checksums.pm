@@ -159,8 +159,8 @@ BEGIN {
 
 	print STDERR " checksums.....................................";
 
-	my @modules = MP2 ? ('DBM_Deep') : ('SDBM');
-	
+	my @modules = MP2 ? ('Txt') : ('SDBM');
+
 	foreach (@modules) {
 	
 		eval "require Eludia::Content::Checksums::$_";
