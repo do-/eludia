@@ -285,7 +285,7 @@ function subset_on_change (subset_name, href) {
 	subset_label_div.replaceChild(subset_label_a, subset_label_div.firstChild);
 
 	var fname = document.getElementById('_body_iframe');
-	fname.src = href;
+	fname.src = href + '&_salt' + Math.random ();
 
 	subsets_are_visible = 1 - subsets_are_visible;
 
