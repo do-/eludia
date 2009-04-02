@@ -89,6 +89,8 @@ BEGIN {
 
 		sql_reconnect ();
 		
+		require_model ();
+		
 		no warnings;
 	
 	} . the_rest_of_the_script;
