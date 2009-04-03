@@ -304,8 +304,8 @@ sub handle_request_of_type_kickout {
 
 	foreach (qw(sid salt _salt __last_query_string __last_scrollable_table_row)) {delete $_REQUEST {$_}}
 	
-	set_cookie_for_root (redirect_params => MIME::Base64::encode (Dumper (\%_REQUEST)), '+1h');
-
+	set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode (Dumper (\%_REQUEST)), -path => '/');
+	
 	redirect (
 		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),
 		kind => 'js', 
