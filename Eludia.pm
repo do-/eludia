@@ -536,6 +536,28 @@ sub check_internal_module_schedule {
 	
 		foreach (@scripts) { next TOP if $line =~ /$_/ }
 		
+		if ($line !~ /^\#/) {
+		
+			foreach my $dir (@$PACKAGE_ROOT) {
+
+				foreach my $subdir ('offline', 'Offline') {
+				
+					$line =~ m{$dir/$subdir/\w+\.pl} or next;
+					
+					next if -f $&;
+					
+					print STDERR "    $& not found, will be commented out";
+					
+					push @new_lines, '# ' . $line;
+					
+					last TOP;
+
+				}
+
+			}
+
+		}		
+
 		push @new_lines, $line;
 	
 	}	
