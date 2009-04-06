@@ -1440,8 +1440,8 @@ sub sql_filters {
 			ref $limit or $limit = [$limit];
 			next;
 		}
-
-		ref $values eq ARRAY or $values = [$values];
+		
+		my $was_array = ref $values eq ARRAY or $values = [$values];
 
 		my $first_value = $values -> [0];
 
@@ -1457,6 +1457,12 @@ sub sql_filters {
 
 			next if $first_value eq '' or $first_value eq '0000-00-00';
 
+		}
+		
+		if (($tied or $was_array) && $field =~ /^([a-z][a-z0-9_]*)$/) {
+		
+			$field .= ' IN';
+		
 		}
 
 		$cnt_filters ++;
