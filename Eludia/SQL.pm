@@ -1419,10 +1419,14 @@ sub sql_filters {
 	my @params = ();
 
 	foreach my $filter (@$filters) {
+	
+		if (ref $filter eq ARRAY and @$filter == 1 and $filter -> [0] == 1) {
+		
+			$filter = [LIMIT => [1]];
+			
+		}
 
 		ref $filter or $filter = [$filter, $_REQUEST {$filter}];
-
-											# 'id_org'       --> ['id_org' => $_REQUEST {id_org}]
 
 		my ($field, $values) = @$filter;
 
