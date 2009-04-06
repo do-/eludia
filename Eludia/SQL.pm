@@ -1864,8 +1864,6 @@ sub sql {
 	
 	!$is_ids or $cnt_filters or return undef;
 	
-	$sql =~ s{^SELECT}{SELECT DISTINCT} if $is_ids;
-
 	if (!$have_id_filter && !$is_ids) {
 	
 		$order = order ($order)  if $order !~ /\W/;
@@ -1885,6 +1883,8 @@ sub sql {
 	}
 	
 	if ($have_id_filter || ($limit && @$limit == 1 && $limit -> [0] == 1)) {
+	
+		return sql_select_scalar ($sql, @params) if $is_ids;
 
 		@result = (sql_select_hash ($sql, @params));
 
@@ -1925,6 +1925,8 @@ sub sql {
 
 			if ($is_ids) {
 							
+				$sql =~ s{^SELECT}{SELECT DISTINCT};
+
 				my $ids;
 				
 				my $tied = tie $ids, 'Eludia::Tie::IdsList', {
