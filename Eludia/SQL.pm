@@ -1419,10 +1419,14 @@ sub sql_filters {
 	my @params = ();
 
 	foreach my $filter (@$filters) {
+	
+		if (ref $filter eq ARRAY and @$filter == 1 and $filter -> [0] =~ /^-?1\s/) {
+		
+			$filter = [LIMIT => [$filter -> [0]]];
+			
+		}
 
 		ref $filter or $filter = [$filter, $_REQUEST {$filter}];
-
-											# 'id_org'       --> ['id_org' => $_REQUEST {id_org}]
 
 		my ($field, $values) = @$filter;
 
@@ -1436,8 +1440,8 @@ sub sql_filters {
 			ref $limit or $limit = [$limit];
 			next;
 		}
-
-		ref $values eq ARRAY or $values = [$values];
+		
+		my $was_array = ref $values eq ARRAY or $values = [$values];
 
 		my $first_value = $values -> [0];
 
@@ -1453,6 +1457,12 @@ sub sql_filters {
 
 			next if $first_value eq '' or $first_value eq '0000-00-00';
 
+		}
+		
+		if (($tied or $was_array) && $field =~ /^([a-z][a-z0-9_]*)$/) {
+		
+			$field .= ' IN';
+		
 		}
 
 		$cnt_filters ++;
@@ -1539,6 +1549,36 @@ sub sql_filters {
 
 		}
 
+
+	}
+	
+	if (ref $limit eq ARRAY) {
+	
+		if (@$limit == 1 && $limit -> [0] =~ /^(.+?)\s*\,\s*(.+)$/) {
+		
+			$limit = [$1, $2];
+		
+		}
+		
+		if ($limit -> [0] =~ /^[a-z]\w*$/) {
+		
+			$limit -> [0] = 0 + $_REQUEST {$limit -> [0]};
+		
+		}
+	
+		if ($limit -> [-1] =~ s{\s+BY\s+(.*)}{}) {
+		
+			$order = $1;
+		
+		}
+		
+		if ($limit -> [-1] < 0) {
+		
+			$limit -> [-1] *= -1;
+			
+			$order .= ' DESC';
+		
+		}
 
 	}
 	
@@ -1862,11 +1902,11 @@ sub sql {
 
 	my $is_ids = (@root_columns == 1 && $root_columns [0] ne '*') ? 1 : 0;
 	
-	!$is_ids or $cnt_filters or return undef;
+	my $is_first = $limit && @$limit == 1 && $limit -> [0] == 1;
 	
-	$sql =~ s{^SELECT}{SELECT DISTINCT} if $is_ids;
-
-	if (!$have_id_filter && !$is_ids) {
+	!$is_ids or $cnt_filters or $is_first or return undef;
+	
+	if ((!$have_id_filter && !$is_ids) || $is_first) {
 	
 		$order = order ($order)  if $order !~ /\W/;
 		$order = order (@$order) if ref $order eq ARRAY;
@@ -1884,7 +1924,9 @@ sub sql {
 	
 	}
 	
-	if ($have_id_filter || ($limit && @$limit == 1 && $limit -> [0] == 1)) {
+	if ($have_id_filter || $is_first) {
+	
+		return sql_select_scalar ($sql, @params) if $is_ids;
 
 		@result = (sql_select_hash ($sql, @params));
 
@@ -1925,6 +1967,8 @@ sub sql {
 
 			if ($is_ids) {
 							
+				$sql =~ s{^SELECT}{SELECT DISTINCT};
+
 				my $ids;
 				
 				my $tied = tie $ids, 'Eludia::Tie::IdsList', {

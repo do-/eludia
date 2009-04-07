@@ -18,6 +18,32 @@ $SIG {__DIE__} = \&Carp::confess;
 
 ################################################################################
 
+sub cpan {
+
+	eval 'require CPAN';
+	
+	die $@ if $@;
+	
+	foreach my $module (
+		'CGI::Simple',
+		'Data::Dumper',
+		'DBI',
+		'Digest::MD5',
+		'HTML::Parser',
+		'JSON',
+		'LWP',
+		'MIME::Base64',		
+		'Net::SMTP',
+		'Number::Format',
+		'Time::HiRes',
+		'Storable',
+		'XML::Simple',
+	) {CPAN::upgrade ($module)};
+
+}
+
+################################################################################
+
 sub decode_entities {
 
 	require HTML::Entities;
