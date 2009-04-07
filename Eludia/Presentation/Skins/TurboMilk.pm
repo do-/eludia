@@ -2095,9 +2095,14 @@ sub draw_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 	
+	if (defined $data -> {level}) {
+	
+		$data -> {attributes} -> {style} = 'padding-left:' . ($data -> {level} * 15 + 3);
+	
+	}
+	
 	my $html = "\n\t<td ";
 	$html .= dump_attributes ($data -> {attributes}) if $data -> {attributes};
-	$html .= ' style="padding-left:' . ($data -> {level} * 15 + 3) . '"' if (defined $data -> {level});
 	$html .= '>';
 	
 	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
