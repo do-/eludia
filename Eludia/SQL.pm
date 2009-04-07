@@ -1420,9 +1420,9 @@ sub sql_filters {
 
 	foreach my $filter (@$filters) {
 	
-		if (ref $filter eq ARRAY and @$filter == 1 and $filter -> [0] == 1) {
+		if (ref $filter eq ARRAY and @$filter == 1 and $filter -> [0] =~ /^1\s/) {
 		
-			$filter = [LIMIT => [1]];
+			$filter = [LIMIT => [$filter -> [0]]];
 			
 		}
 
@@ -1560,7 +1560,7 @@ sub sql_filters {
 		
 		}
 		
-		if ($limit -> [0] =~ /^\w+$/) {
+		if ($limit -> [0] =~ /^[a-z]\w*$/) {
 		
 			$limit -> [0] = 0 + $_REQUEST {$limit -> [0]};
 		
@@ -1894,9 +1894,11 @@ sub sql {
 
 	my $is_ids = (@root_columns == 1 && $root_columns [0] ne '*') ? 1 : 0;
 	
-	!$is_ids or $cnt_filters or return undef;
+	my $is_first = $limit && @$limit == 1 && $limit -> [0] == 1;
 	
-	if (!$have_id_filter && !$is_ids) {
+	!$is_ids or $cnt_filters or $is_first or return undef;
+	
+	if ((!$have_id_filter && !$is_ids) || $is_first) {
 	
 		$order = order ($order)  if $order !~ /\W/;
 		$order = order (@$order) if ref $order eq ARRAY;
@@ -1914,7 +1916,7 @@ sub sql {
 	
 	}
 	
-	if ($have_id_filter || ($limit && @$limit == 1 && $limit -> [0] == 1)) {
+	if ($have_id_filter || $is_first) {
 	
 		return sql_select_scalar ($sql, @params) if $is_ids;
 
