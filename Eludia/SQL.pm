@@ -1420,7 +1420,7 @@ sub sql_filters {
 
 	foreach my $filter (@$filters) {
 	
-		if (ref $filter eq ARRAY and @$filter == 1 and $filter -> [0] =~ /^1\s/) {
+		if (ref $filter eq ARRAY and @$filter == 1 and $filter -> [0] =~ /^-?1\s/) {
 		
 			$filter = [LIMIT => [$filter -> [0]]];
 			
@@ -1569,6 +1569,14 @@ sub sql_filters {
 		if ($limit -> [-1] =~ s{\s+BY\s+(.*)}{}) {
 		
 			$order = $1;
+		
+		}
+		
+		if ($limit -> [-1] < 0) {
+		
+			$limit -> [-1] *= -1;
+			
+			$order .= ' DESC';
 		
 		}
 
