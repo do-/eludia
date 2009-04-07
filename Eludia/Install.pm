@@ -29,6 +29,7 @@ sub cpan {
 		'Data::Dumper',
 		'DBI',
 		'Digest::MD5',
+		'HTML::GenerateUtil',
 		'HTML::Parser',
 		'JSON',
 		'LWP',
