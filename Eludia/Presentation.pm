@@ -4203,6 +4203,7 @@ sub setup_skin {
 			r
 			i18n
 			create_url
+			dump_attributes
 			_SUBSET
 			_JSON
 			tree_sort
