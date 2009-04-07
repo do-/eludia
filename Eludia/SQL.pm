@@ -1566,6 +1566,12 @@ sub sql_filters {
 		
 		}
 	
+		if ($limit -> [-1] =~ s{\s+BY\s+(.*)}{}) {
+		
+			$order = $1;
+		
+		}
+
 	}
 	
 	return {
