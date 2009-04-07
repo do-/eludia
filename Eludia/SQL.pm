@@ -1552,6 +1552,16 @@ sub sql_filters {
 
 	}
 	
+	if (ref $limit eq ARRAY) {
+	
+		if (@$limit == 1 && $limit -> [0] =~ /^(.+?)\s*\,\s*(.+)$/) {
+		
+			$limit = [$1, $2];
+		
+		}
+	
+	}
+	
 	return {
 		have_id_filter => $have_id_filter,
 		cnt_filters    => $cnt_filters,
