@@ -2104,15 +2104,17 @@ sub draw_text_cell {
 	
 	unless ($data -> {off}) {
 	
-		$data -> {label} =~ s{^\s+}{}gsm;
-		$data -> {label} =~ s{\s+$}{}gsm;
+		if ($data -> {label} =~ /^\s*(.*?)\s*$/sm) {
+
+			$data -> {label} = $1;
+
+		}
+	
 		$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
 		$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
 		$html .= '<nobr>' unless $data -> {no_nobr};
-
-#		$html .= '&nbsp; ';		
 
 		$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 		$html .= '<i>'      if $data -> {italic} || $options -> {italic};
