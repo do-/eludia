@@ -1559,6 +1559,12 @@ sub sql_filters {
 			$limit = [$1, $2];
 		
 		}
+		
+		if ($limit -> [0] =~ /^\w+$/) {
+		
+			$limit -> [0] = 0 + $_REQUEST {$limit -> [0]};
+		
+		}
 	
 	}
 	
