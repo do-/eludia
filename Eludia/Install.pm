@@ -38,7 +38,10 @@ sub cpan {
 		'Time::HiRes',
 		'Storable',
 		'XML::Simple',
-	) {CPAN::upgrade ($module)};
+	) {
+		CPAN::install ($module);
+		CPAN::upgrade ($module);
+	};
 
 }
 
