@@ -27,6 +27,7 @@ sub cpan {
 	foreach my $module (
 		'CGI::Simple',
 		'Data::Dumper',
+		'DBI',
 		'Digest::MD5',
 		'HTML::Parser',
 		'JSON',
