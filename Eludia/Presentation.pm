@@ -468,9 +468,7 @@ sub check_href {
 				
 	foreach my $k (keys %h) {
 
-		$k or next;
-		
-		defined (my $v = $h {$k}) or next;
+		defined (my $v = $h {$k || next}) or next;
 
 		next if !$v and $_NON_VOID_PARAMETER_NAMES -> {$k};
 		
