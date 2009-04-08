@@ -441,7 +441,7 @@ sub check_href {
 	else {
 	
 		my $href = $options -> {href};
-
+		
 		$href = uri_escape ($href, "\x7f-\xff") if MP2 && $href =~ /[\x7f-\xff]/;
 		
 		if ($href =~ /\?/) {$href = $'};
@@ -456,7 +456,9 @@ sub check_href {
 		
 		foreach my $name (@_OVERRIDING_PARAMETER_NAMES) {
 			
-			$h {$name} ||= $_REQUEST {$name} if $_REQUEST {$name};
+			$_REQUEST {$name} or next;
+
+			$h {$name} ||= $_REQUEST {$name};
 			
 		}
 								
