@@ -407,6 +407,9 @@ sub check_href {
 	
 	my %h = ();
 	
+	$_REQUEST {__salt}     ||= rand () * time ();
+	$_REQUEST {__uri_root} ||= "$_REQUEST{__uri}$_REQUEST{__script_name}?salt=$_REQUEST{__salt}&sid=$_REQUEST{sid}";
+
 	if (ref $options -> {href} eq HASH) {
 		
 		if ($_REQUEST_TO_INHERIT) {
@@ -436,24 +439,30 @@ sub check_href {
 		
 	}
 	else {
-	    
-		$options -> {href} = (MP2 && $options -> {href} =~ /[\x7f-\xff]+/) ? uri_escape($options -> {href}, "\x7f-\xff") : $options -> {href};
 	
-		foreach my $token (split /[\?\&]+/, $options -> {href}) {
+		my $href = $options -> {href};
+		
+		return $href if $href =~ /^$_REQUEST{__uri_root}/;
+
+		$href = uri_escape ($href, "\x7f-\xff") if MP2 && $href =~ /[\x7f-\xff]/;
+		
+		if ($href =~ /\?/) {$href = $'};
+
+		foreach my $token (split /\&/, $href) {
+		
 			$token =~ /\=/ or next;
-			return $options -> {href} if $` eq 'salt' && $' eq $_REQUEST {__salt};
-			$h {$`} = $';
-		}
 			
-		$h {select} ||= $_REQUEST {select} if $_REQUEST {select};
-		$h {__no_navigation} ||= $_REQUEST {__no_navigation} if $_REQUEST {__no_navigation};
-		$h {__tree} ||= $_REQUEST {__tree} if $_REQUEST {__tree};
-		$h {__last_query_string} ||= $_REQUEST {__last_query_string};
+			$h {$`} = $';
+			
+		}
+		
+		foreach my $name (@_OVERRIDING_PARAMETER_NAMES) {
+			
+			$h {$name} ||= $_REQUEST {$name} if $_REQUEST {$name};
+			
+		}
 								
 	}
-	
-	$_REQUEST {__salt}     ||= rand () * time ();
-	$_REQUEST {__uri_root} ||= $_REQUEST {__uri} . $_REQUEST {__script_name} . '?sid=' . $_REQUEST {sid} . '&salt=' . $_REQUEST {__salt};
 	
 	my $url = $_REQUEST {__uri_root};
 				
