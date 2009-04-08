@@ -406,6 +406,7 @@ sub check_internal_modules {
 	check_internal_module_checksums           ();
 	check_internal_module_session_access_logs ();
 	check_internal_module_schedule            ();
+	check_internal_module_presentation_tools  ();
 
 }
 
@@ -610,6 +611,16 @@ sub check_internal_module_schedule {
 sub check_internal_module_checksums {
 
 	require Eludia::Content::Checksums;
+
+}
+
+################################################################################
+
+sub check_internal_module_presentation_tools {
+
+	print STDERR " check_internal_module_presentation_tools......";
+
+	require Eludia::Presentation::Tools;
 
 }
 

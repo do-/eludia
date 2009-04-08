@@ -29,16 +29,22 @@ sub cpan {
 		'Data::Dumper',
 		'DBI',
 		'Digest::MD5',
+		'HTML::GenerateUtil',
 		'HTML::Parser',
 		'JSON',
 		'LWP',
-		'MIME::Base64',		
+		'Math::FixedPrecision',
+		'MIME::Base64',
 		'Net::SMTP',
 		'Number::Format',
 		'Time::HiRes',
 		'Storable',
+		'URI::Escape::XS',
 		'XML::Simple',
-	) {CPAN::upgrade ($module)};
+	) {
+		CPAN::install ($module);
+		CPAN::upgrade ($module);
+	};
 
 }
 
