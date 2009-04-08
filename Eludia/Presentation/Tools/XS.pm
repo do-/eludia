@@ -10,7 +10,7 @@ sub dump_attributes {
 
 sub dump_tag {
 
-	return HTML::GenerateUtil::generate_tag ($_[0], $_[1], $_[2] || '', 0);
+	return HTML::GenerateUtil::generate_tag ($_[0], $_[1], $_[2] || undef, 0);
 
 }
 

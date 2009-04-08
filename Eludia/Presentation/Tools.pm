@@ -3,7 +3,7 @@
 BEGIN {
 
 	foreach (
-#		'XS', 
+		'XS', 
 		'PP'
 	) {
 	
