@@ -33,11 +33,13 @@ sub cpan {
 		'HTML::Parser',
 		'JSON',
 		'LWP',
-		'MIME::Base64',		
+		'Math::FixedPrecision',
+		'MIME::Base64',
 		'Net::SMTP',
 		'Number::Format',
 		'Time::HiRes',
 		'Storable',
+		'URI::Escape::XS',
 		'XML::Simple',
 	) {
 		CPAN::install ($module);
