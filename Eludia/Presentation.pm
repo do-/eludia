@@ -441,8 +441,6 @@ sub check_href {
 	else {
 	
 		my $href = $options -> {href};
-		
-		return $href if $href =~ /^$_REQUEST{__uri_root}/;
 
 		$href = uri_escape ($href, "\x7f-\xff") if MP2 && $href =~ /[\x7f-\xff]/;
 		
