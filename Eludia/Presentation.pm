@@ -77,6 +77,8 @@ sub format_picture {
 	
 	return '' if $txt eq '';
 	
+	return $txt if ($_REQUEST {xls});
+	
 	my $result = $number_format -> format_picture ($txt, $picture);
 	
 	if ($_USER -> {demo_level} > 1) {
@@ -755,6 +757,7 @@ sub draw_form_field {
 	 	 &&  $field -> {type} ne 'article'
 	 	 &&  $field -> {type} ne 'iframe'
 	 	 &&  $field -> {type} ne 'color'
+	 	 &&  $field -> {type} ne 'multi_select'
 	 	 &&  $field -> {type} ne 'dir'
 		 && ($field -> {type} ne 'text' || !$conf -> {core_keep_textarea})
 	)

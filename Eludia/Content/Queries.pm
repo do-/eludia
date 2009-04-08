@@ -490,6 +490,7 @@ sub draw_item_of___queries {
 					off		=> $_REQUEST {__read_only},
 				},
 			],
+			no_edit => $_REQUEST {'__page_content'} -> {no_del},
 		}, 
 		
 		$data, 
