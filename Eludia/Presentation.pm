@@ -475,11 +475,8 @@ sub check_href {
 		defined $v or next;
 
 		next if !$v and $_NON_VOID_PARAMETER_NAMES -> {$k};
-				
-		$url .= '&';
-		$url .= $k;
-		$url .= '=';
-		$url .= $v;
+		
+		$url .= "&$k=$v";
 		
 	}
 
