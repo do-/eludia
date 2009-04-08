@@ -470,9 +470,7 @@ sub check_href {
 
 		$k or next;
 		
-		my $v = $h {$k};
-		
-		defined $v or next;
+		defined (my $v = $h {$k}) or next;
 
 		next if !$v and $_NON_VOID_PARAMETER_NAMES -> {$k};
 		
