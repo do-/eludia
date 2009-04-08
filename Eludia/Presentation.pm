@@ -77,6 +77,8 @@ sub format_picture {
 	
 	return '' if $txt eq '';
 	
+	return $txt if ($_REQUEST {xls});
+	
 	my $result = $number_format -> format_picture ($txt, $picture);
 	
 	if ($_USER -> {demo_level} > 1) {
