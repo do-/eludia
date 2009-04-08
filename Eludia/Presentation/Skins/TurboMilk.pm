@@ -2101,10 +2101,8 @@ sub draw_text_cell {
 	
 	}
 	
-	my $html = "\n\t<td ";
-	$html .= dump_attributes ($data -> {attributes}) if $data -> {attributes};
-	$html .= '>';
-	
+	my $html = dump_tag ('td', $data -> {attributes});
+		
 	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
 	
 	unless ($data -> {off}) {
