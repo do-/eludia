@@ -404,14 +404,9 @@ sub check_href {
 	my ($options) = @_;
 	
 	my $href = $options -> {href};
-
-	return $href if !ref $href && ($href =~ /\#$/ || $href =~ /^(java|mailto|file|\/i\/)/);
 	
 	my %h = ();
 	
-	$_REQUEST {__salt}     ||= rand () * time ();
-	$_REQUEST {__uri_root} ||= "$_REQUEST{__uri}$_REQUEST{__script_name}?salt=$_REQUEST{__salt}&sid=$_REQUEST{sid}";
-
 	if (ref $href eq HASH) {
 		
 		if ($_REQUEST_TO_INHERIT) {
@@ -442,6 +437,8 @@ sub check_href {
 	}
 	else {
 			
+		return $href if ($href =~ /\#$/ || $href =~ /^(java|mailto|file|\/i\/)/);
+
 		$href = uri_escape ($href, "\x7f-\xff") if MP2 && $href =~ /[\x7f-\xff]/;
 		
 		if ($href =~ /\?/) {$href = $'};
@@ -464,6 +461,9 @@ sub check_href {
 								
 	}
 	
+	$_REQUEST {__salt}     ||= rand () * time ();
+	$_REQUEST {__uri_root} ||= "$_REQUEST{__uri}$_REQUEST{__script_name}?salt=$_REQUEST{__salt}&sid=$_REQUEST{sid}";
+
 	my $url = $_REQUEST {__uri_root};
 				
 	foreach my $k (keys %h) {
