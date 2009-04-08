@@ -2105,51 +2105,45 @@ sub draw_text_cell {
 		
 	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
 	
-	unless ($data -> {off}) {
+	if ($data -> {label} =~ /^\s*(.+?)\s*$/sm) {
+
+		$data -> {label} = $1;
+
+	}
+	else {
 	
-		if ($data -> {label} =~ /^\s*(.*?)\s*$/sm) {
-
-			$data -> {label} = $1;
-
-		}
+		return $html . '&nbsp;</td>';
 	
-		$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
-
-		$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
-
-		$html .= '<nobr>' unless $data -> {no_nobr};
-
-		$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
-		$html .= '<i>'      if $data -> {italic} || $options -> {italic};
-		$html .= '<strike>' if $data -> {strike} || $options -> {strike};
-
-		if ($data -> {href}) {
-		
-			$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
-		
-		}
-
-
-		$html .= $data -> {label};
-		
-		if ($data -> {href}) {
-
-			$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
-		
-		}
-
-#		$html .= '</a>' if $data -> {href} && $data -> {href} ne $options -> {href};
-
-#		$html .= '&nbsp;';		
-		
-		$html .= '</nobr>' unless $data -> {no_nobr};
-		
-		$html .= qq {<input type=hidden name="$$data{hidden_name}" value="$$data{hidden_value}">} if ($data -> {add_hidden});
-		
-	} else {
-		$html .= '&nbsp;';
 	}
 	
+	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
+
+	$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
+
+	$html .= '<nobr>' unless $data -> {no_nobr};
+
+	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
+	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
+
+	if ($data -> {href}) {
+		
+		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
+		
+	}
+
+	$html .= $data -> {label};
+
+	if ($data -> {href}) {
+
+		$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
+		
+	}
+		
+	$html .= '</nobr>' unless $data -> {no_nobr};
+		
+	$html .= qq {<input type=hidden name="$$data{hidden_name}" value="$$data{hidden_value}">} if ($data -> {add_hidden});
+			
 	$html .= '</td>';
 
 	return $html;
