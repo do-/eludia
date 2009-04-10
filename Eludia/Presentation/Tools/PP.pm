@@ -5,14 +5,26 @@ sub dump_attributes {
 	my $html = ' ';
 	
 	foreach my $k (keys %{$_[0]}) { 
+	
 		$v = $_[0] -> {$k};
+		
 		next if $v eq '';
-		$html .= ' ';
-		$html .= $k;
-		$html .= "='";
-		$v =~ s{\'}{&#39;}g; #'
-		$html .= $v;
-		$html .= "'";
+		
+		$html .= " $k=\"";
+		
+		if (ref $v eq SCALAR) {
+		
+			$v = $$v;
+		
+		}
+		else {
+		
+			$v =~ s{\"}{&quot;}g;
+			
+		}
+		
+		$html .= "$v\"";
+
 	}
 	
 	return $html;

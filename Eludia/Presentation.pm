@@ -964,8 +964,13 @@ sub draw_form_field_string {
 		$options -> {value} =~ s/^\s+//g;
 	}
 	
-	$options -> {value} =~ s/\"/\&quot\;/gsm; #";
-	$options -> {attributes} -> {value} = $options -> {value};
+	if ($options -> {value} =~ y/"/"/) {
+	
+		$options -> {value} =~ s{\"}{\&quot;}gsm;
+	
+	}
+	
+	$options -> {attributes} -> {value} = \$options -> {value};
 	
 	$options -> {attributes} -> {name}  = '_' . $options -> {name};
 			
