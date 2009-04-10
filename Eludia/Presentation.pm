@@ -946,35 +946,38 @@ sub draw_form_field_button {
 sub draw_form_field_string {
 
 	my ($options, $data) = @_;
-
-	$options -> {max_len} ||= $options -> {size};
-	$options -> {max_len} ||= 255;
-	$options -> {attributes} -> {maxlength} = $options -> {max_len};
-	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
 	
-	exists $options -> {attributes} -> {autocomplete} or $options -> {attributes} -> {autocomplete} = 'off';
-
-	$options -> {size}    ||= 120;
-	$options -> {attributes} -> {size}      = $options -> {size};
-	
-	$options -> {value}   ||= $data -> {$options -> {name}};
+	my $value = ($options -> {value} ||= $data -> {$options -> {name}});
 		
 	if ($options -> {picture}) {
-		$options -> {value} = format_picture ($options -> {value}, $options -> {picture});
-		$options -> {value} =~ s/^\s+//g;
+	
+		$value = format_picture ($value, $options -> {picture});
+		
+		$value =~ s/^\s+//g;
+		
 	}
 	
-	if ($options -> {value} =~ y/"/"/) {
+	if ($value =~ y/"/"/) {
 	
-		$options -> {value} =~ s{\"}{\&quot;}gsm;
+		$value =~ s{\"}{\&quot;}gsm;
 	
 	}
 	
-	$options -> {attributes} -> {value} = \$options -> {value};
+	my $attributes = ($options -> {attributes} ||= {});
+
+	$attributes -> {value}        = \$value;
 	
-	$options -> {attributes} -> {name}  = '_' . $options -> {name};
+	$attributes -> {name}         = '_' . $options -> {name};
 			
-	$options -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
+	$attributes -> {size}         = ($options -> {size} ||= 120);
+
+	$attributes -> {maxlength}    = $options -> {max_len} || $options -> {size} || 255;
+
+	$attributes -> {class}      ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';
+	
+	$attributes -> {autocomplete} = 'off' unless exists $attributes -> {autocomplete};
+
+	$attributes -> {tabindex}     = ++ $_REQUEST {__tabindex};
 
 	return $_SKIN -> draw_form_field_string (@_);
 	
