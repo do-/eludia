@@ -33,6 +33,7 @@ sub cpan {
 		'HTML::Parser',
 		'JSON',
 		'LWP',
+		'LockFile::Simple',
 		'Math::FixedPrecision',
 		'MIME::Base64',
 		'Net::SMTP',
