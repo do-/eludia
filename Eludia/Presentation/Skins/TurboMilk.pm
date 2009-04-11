@@ -155,10 +155,13 @@ sub draw_auth_toolbar {
 	
 	if ($_USER -> {id}) {
 	
-		$$options {user_label} =~ s/$$i18n{User}: ${\($$_USER{label} || $$i18n{not_logged_in})}//;
-		$$options {user_label} = '<nobr><b>' . $_USER -> {f} . ' ' . substr ($_USER -> {i}, 0, 1) . '. ' . substr ($_USER -> {o}, 0, 1) . '.</b></nobr><br>' . $options -> {user_label}
-			if ($_USER -> {f} || $_USER -> {i}) ;
+		if ($_USER -> {f} && $_USER -> {i}) {
+	
+			$$options {user_label} =~ s/$$i18n{User}: ${\($$_USER{label} || $$i18n{not_logged_in})}//;
 		
+			$$options {user_label} = '<nobr><b>' . $_USER -> {f} . ' ' . substr ($_USER -> {i}, 0, 1) . '. ' . substr ($_USER -> {o}, 0, 1) . '.</b></nobr><br>' . $options -> {user_label}
+			
+		}
 
 		if (@{$_SKIN -> {subset} -> {items}} > 1) {				
 		
