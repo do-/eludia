@@ -3157,7 +3157,7 @@ EOH
 		<td align=center valign=middle>
 
 			<table border="0" cellpadding="4" cellspacing="1" width="470" height="225" bgcolor="#EAEAF0" class="logon">
-				<tr><td class="login-head">Авторизация</td></tr>
+				<tr><td class="login-head">$i18n->{authorization}</td></tr>
 				<tr>
 					<td bgcolor="#F9F9FF" align="center" style="border-bottom:solid 1px #9AA0A3; height:150px;">
 						
@@ -3169,11 +3169,11 @@ EOH
 							<input type=hidden name=redirect_params value="$_REQUEST{redirect_params}">
 							<input type=hidden name=tz_offset value="">
 							<tr class="logon">
-								<td><b>Логин:</b></td>
+								<td><b>$i18n->{login}:</b></td>
 								<td><input type="text" name="login" value="$_COOKIE{user_login}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
 							</tr>
 							<tr class="logon">
-								<td><b>Пароль:</b></td>
+								<td><b>$i18n->{password}:</b></td>
 								<td><input type="password" name="password" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.submit ()"></td>
 							</tr>
 							
@@ -3185,7 +3185,7 @@ EOH
 				<tr>
 					<td class="submit-area">						
 						<div class="grey-submit">
-							<div style="float:left;margin-top:5px;"><a href="#"><img src="$_REQUEST{__static_url}/i_logon.gif?$_REQUEST{__static_salt}" border="0" align="left" hspace="5"></a><a href="javascript:document.forms['form'].submit()">Войти в систему</a></div>
+							<div style="float:left;margin-top:5px;"><a href="#"><img src="$_REQUEST{__static_url}/i_logon.gif?$_REQUEST{__static_salt}" border="0" align="left" hspace="5"></a><a href="javascript:document.forms['form'].submit()">$i18n->{execute_logon}</a></div>
 							<div style="float:right;"><img src="$_REQUEST{__static_url}/grey_ear_right.gif?$_REQUEST{__static_salt}" border="0"></div>
 						</div>
 					</td>
