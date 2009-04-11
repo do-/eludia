@@ -346,9 +346,9 @@ EOH
 
 sub _draw_input_datetime {
 
+	return '' if $_REQUEST {__only_field};
+
 	my ($_SKIN, $options) = @_;
-		
-#	$r -> header_in ('User-Agent') =~ /MSIE 5\.0/ or return draw_form_field_string (@_);
 		
 	$options -> {id} ||= '' . $options;
 	
@@ -357,13 +357,7 @@ sub _draw_input_datetime {
 	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
 	
 	my $attributes = dump_attributes ($options -> {attributes});
-	
-	if ($_REQUEST {__only_field}) {
-
-		return '';
-
-	}
-		
+			
 	my $shows_time = $options -> {no_time} ? 'false' : 'true';
 		
 	my $html = <<EOH;
@@ -371,7 +365,6 @@ sub _draw_input_datetime {
 		<input 
 			type="text" 
 			name="$$options{name}" 
-			$size 
 			$attributes 
 			autocomplete="off" 
 			onFocus="scrollable_table_is_blocked = true; q_is_focused = true; this.select()" 
@@ -380,88 +373,10 @@ sub _draw_input_datetime {
 			onKeyDown="$$options{onKeyDown}"
 		>
 		<img id="calendar_trigger_$$options{id}" src="$_REQUEST{__static_url}/i_calendar.gif" align=absmiddle>
-EOH
-			
-	$html .= <<EOH;
 		</nobr>		
 		<script type="text/javascript">
-EOH
-
-	if ($i18n -> {_calendar_lang} eq 'en') {
-		$html .= <<EOJS;
-			Calendar._DN = new Array ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
-			Calendar._SDN = new Array ("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
-			Calendar._MN = new Array ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
-			Calendar._SMN = new Array ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
-			Calendar._TT = {};
-			Calendar._TT["INFO"] = "About the calendar";
-			Calendar._TT["PREV_YEAR"] = "Prev. year (hold for menu)";
-			Calendar._TT["PREV_MONTH"] = "Prev. month (hold for menu)";
-			Calendar._TT["GO_TODAY"] = "Go Today";
-			Calendar._TT["NEXT_MONTH"] = "Next month (hold for menu)";
-			Calendar._TT["NEXT_YEAR"] = "Next year (hold for menu)";
-			Calendar._TT["SEL_DATE"] = "Select date";
-			Calendar._TT["DRAG_TO_MOVE"] = "Drag to move";
-			Calendar._TT["PART_TODAY"] = " (today)";
-			Calendar._TT["MON_FIRST"] = "Display Monday first";
-			Calendar._TT["SUN_FIRST"] = "Display Sunday first";
-			Calendar._TT["CLOSE"] = "Close";
-			Calendar._TT["TODAY"] = "Today";
-			Calendar._TT["TIME_PART"] = "(Shift-)Click or drag to change value";
-			Calendar._TT["DEF_DATE_FORMAT"] = "%Y-%m-%d";
-			Calendar._TT["TT_DATE_FORMAT"] = "%a, %b %e";
-			Calendar._TT["WK"] = "wk";
-EOJS
-	}	
-	elsif ($i18n -> {_calendar_lang} eq 'fr') {
-		$html .= <<EOJS;
-			Calendar._DN = new Array ("Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche");
-			Calendar._MN = new Array ("Janvier", "Fйvrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "Aoыt", "Septembre", "Octobre", "Novembre", "Dйcembre");
-			Calendar._TT = {};
-			Calendar._TT["TOGGLE"] = "Changer le premier jour de la semaine";
-			Calendar._TT["PREV_YEAR"] = "Annйe prйc. (maintenir pour menu)";
-			Calendar._TT["PREV_MONTH"] = "Mois prйc. (maintenir pour menu)";
-			Calendar._TT["GO_TODAY"] = "Atteindre date du jour";
-			Calendar._TT["NEXT_MONTH"] = "Mois suiv. (maintenir pour menu)";
-			Calendar._TT["NEXT_YEAR"] = "Annйe suiv. (maintenir pour menu)";
-			Calendar._TT["SEL_DATE"] = "Choisir une date";
-			Calendar._TT["DRAG_TO_MOVE"] = "Dйplacer";
-			Calendar._TT["PART_TODAY"] = " (Aujourd'hui)";
-			Calendar._TT["MON_FIRST"] = "Commencer par lundi";
-			Calendar._TT["SUN_FIRST"] = "Commencer par dimanche";
-			Calendar._TT["CLOSE"] = "Fermer";
-			Calendar._TT["TODAY"] = "Aujourd'hui";
-			Calendar._TT["DEF_DATE_FORMAT"] = "y-mm-dd";
-			Calendar._TT["TT_DATE_FORMAT"] = "D, M d";
-			Calendar._TT["WK"] = "wk";
-EOJS
-	}	
-	else {
-		$html .= <<EOJS;
-			Calendar._DN = new Array ("Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье");
-			Calendar._MN = new Array ("Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь");
-			Calendar._TT = {};
-			Calendar._TT["TOGGLE"] = "Сменить день начала недели (ПН/ВС)";
-			Calendar._TT["PREV_YEAR"] = "Пред. год (удерживать для меню)";
-			Calendar._TT["PREV_MONTH"] = "Пред. месяц (удерживать для меню)";
-			Calendar._TT["GO_TODAY"] = "На сегодня";
-			Calendar._TT["NEXT_MONTH"] = "След. месяц (удерживать для меню)";
-			Calendar._TT["NEXT_YEAR"] = "След. год (удерживать для меню)";
-			Calendar._TT["SEL_DATE"] = "Выбрать дату";
-			Calendar._TT["DRAG_TO_MOVE"] = "Перетащить";
-			Calendar._TT["PART_TODAY"] = " (сегодня)";
-			Calendar._TT["MON_FIRST"] = "Показать понедельник первым";
-			Calendar._TT["SUN_FIRST"] = "Показать воскресенье первым";
-			Calendar._TT["CLOSE"] = "Закрыть";
-			Calendar._TT["TODAY"] = "Сегодня";
-			Calendar._TT["DEF_DATE_FORMAT"] = "y-mm-dd";
-			Calendar._TT["TT_DATE_FORMAT"] = "D, M d";
-			Calendar._TT["WK"] = "нед"; 
-EOJS
-	}	
-
-	$html .= <<EOH;
-			Calendar.setup(
+			
+			Calendar.setup (
 				{
 					inputField : "input$$options{name}",
 					ifFormat   : "$$options{format}",
@@ -470,6 +385,7 @@ EOJS
 					onClose    : $$options{onClose}
 				}
 			);
+			
 		</script>
 
 EOH
@@ -2497,6 +2413,8 @@ sub draw_page {
 	<head>
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
 		</script>
+		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
+		</script>
 		<script for=window event=onload>
 
 			var wm = ancestor_window_with_child ('main_menu');
@@ -2542,6 +2460,8 @@ EOH
 			</script>
 			<script src="$_REQUEST{__static_url}/navigation_setup.js?$_REQUEST{__static_salt}">
 			</script>
+			<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
+			</script>
 EOH
 		
 	}
@@ -2560,7 +2480,7 @@ EOH
 
 		my $href = create_url (%h);
 
-		$_REQUEST {__on_load} .= "check_top_window ();";
+		$_REQUEST {__on_load} .= "check_top_window (); i18n_calendar (Calendar);";
 
 		$preconf -> {core_show_dump} and $_REQUEST {__on_mousedown} .= <<EODUMP;
 
@@ -2755,6 +2675,8 @@ EOH
 
 	$_REQUEST {__head_links} .= <<EOH unless ($_REQUEST {type} eq 'logon' or $_REQUEST {type} eq '_boot');
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
+		</script>
+		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
 		</script>
 EOH
 
