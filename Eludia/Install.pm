@@ -18,32 +18,49 @@ $SIG {__DIE__} = \&Carp::confess;
 
 ################################################################################
 
+sub valuable_modules () {(
+	'CGI::Simple',
+	'Data::Dumper',
+	'DBI',
+	'Digest::MD5',
+	'HTML::GenerateUtil',
+	'HTML::Parser',
+	'JSON',
+	'JSON::XS',
+	'LWP',
+	'LockFile::Simple',
+	'Math::FixedPrecision',
+	'MIME::Base64',
+	'Net::SMTP',
+	'Number::Format',
+	'Time::HiRes',
+	'Storable',
+	'URI::Escape::XS',
+	'XML::Simple',
+)}
+
+################################################################################
+
+sub ppm {
+	
+	foreach my $module (valuable_modules) {
+		print "$module...\n";
+		$module =~ s{::}{-}g;
+		print `ppm install $module`;
+		print `ppm upgrade -install -precious $module`;
+	};
+
+}
+
+################################################################################
+
 sub cpan {
 
 	eval 'require CPAN';
 	
 	die $@ if $@;
 	
-	foreach my $module (
-		'CGI::Simple',
-		'Data::Dumper',
-		'DBI',
-		'Digest::MD5',
-		'HTML::GenerateUtil',
-		'HTML::Parser',
-		'JSON:PP',
-		'JSON:XS',
-		'LWP',
-		'LockFile::Simple',
-		'Math::FixedPrecision',
-		'MIME::Base64',
-		'Net::SMTP',
-		'Number::Format',
-		'Time::HiRes',
-		'Storable',
-		'URI::Escape::XS',
-		'XML::Simple',
-	) {
+	foreach my $module (valuable_modules) {
 		CPAN::install ($module);
 		CPAN::upgrade ($module);
 	};
