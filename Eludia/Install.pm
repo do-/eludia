@@ -50,6 +50,7 @@ sub valuable_modules () {
 	'Digest::MD5',
 	'HTML::GenerateUtil',
 	'HTML::Parser',
+	'IO::Compress::Gzip',
 	'JSON',
 	'JSON::XS',
 	'LWP',
