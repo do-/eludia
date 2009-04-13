@@ -600,7 +600,7 @@ sub check_internal_module_schedule {
 
 		print STDERR "  reloading schedule...";
 		
-		`$command`;
+		print STDERR `$command 2>&1`;
 		
 		print STDERR " ok.\n";
 
