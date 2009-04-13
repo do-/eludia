@@ -496,7 +496,7 @@ sub check_internal_module_schedule {
 
 					/^\#\@crontab\s+/ or next;
 
-					$the_string = eval "q{$'}";
+					$the_string = eval "qq{$'}";
 					
 					$the_string =~ s{[\n\r]}{}gsm;					
 
