@@ -18,9 +18,34 @@ $SIG {__DIE__} = \&Carp::confess;
 
 ################################################################################
 
-sub valuable_modules () {(
+sub valuable_modules () {
+
+	my $conf = File::Spec -> rel2abs ('conf/httpd.conf');
+	
+	my @dbd = ();
+
+	if (-f $conf) {
+	
+		open (F, $conf) or return "Can't open $conf: $!\n";
+		
+		while (my $line = <F>) {
+		
+			next if $line =~ /^\s*\#/;
+			
+			$line =~ /\bDBI\:(\w+)/ or next;
+			
+			push @dbd, "DBD::$1";
+		
+		}
+		
+		close (F);
+	
+	}
+
+	return (
 	'CGI::Simple',
 	'Data::Dumper',
+	@dbd,
 	'DBI',
 	'Digest::MD5',
 	'HTML::GenerateUtil',
@@ -37,7 +62,8 @@ sub valuable_modules () {(
 	'Storable',
 	'URI::Escape::XS',
 	'XML::Simple',
-)}
+	)
+}
 
 ################################################################################
 
