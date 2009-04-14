@@ -376,6 +376,8 @@ sub _draw_input_datetime {
 		</nobr>		
 		<script type="text/javascript">
 			
+			i18n_calendar (Calendar);
+			
 			Calendar.setup (
 				{
 					inputField : "input$$options{name}",
@@ -2480,7 +2482,7 @@ EOH
 
 		my $href = create_url (%h);
 
-		$_REQUEST {__on_load} .= "check_top_window (); i18n_calendar (Calendar);";
+		$_REQUEST {__on_load} .= "check_top_window ();";
 
 		$preconf -> {core_show_dump} and $_REQUEST {__on_mousedown} .= <<EODUMP;
 
