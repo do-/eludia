@@ -1,5 +1,7 @@
 no warnings;
 
+use Eludia::SQL::Transfer;
+
 ################################################################################
 
 sub add_vocabularies {
@@ -42,109 +44,6 @@ sub add_vocabularies {
 	}
 	
 	return $item;
-
-}
-
-################################################################################
-
-sub sql_export_json {
-
-	my ($sql, $out, @params) = @_;
-	
-	my $cb = ref $out eq CODE ? $out : sub {print $out $_[0]};
-
-	$_JSON or setup_json ();
-	
-	my $table;
-
-	if ($sql =~ /^\s*DESC(?:RIBE)?\s+(\w+)\s*$/gism) {
-	
-		$table = $1;
-		
-		my $def = {
-			name    => $table,
-			columns => $model_update -> get_columns ($table),
-		};
-	
-		my $keys = $model_update -> get_keys ($table, $conf -> {core_voc_replacement_use});
-		
-		foreach my $k (keys %$keys) {
-			next if $k =~ /^pk/;
-			$def -> {keys} -> {$k} = $keys -> {$k};
-		}
-				
-		&$cb ($_JSON -> encode ($def) . "\n");
-		
-		return;
-				
-	}	
-	
-	if ($sql =~ /\bSELECT\s+(\w+)\.*/gism) {
-		$table = $1;
-	}
-	elsif ($sql =~ /\bFROM\s+(\w+)/gism) {
-		$table = $1;
-	}
-	
-	$table or die "Invalid SQL (no table): $sql";
-	
-	sql_select_loop ($sql, sub {&$cb ($_JSON -> encode ([$table => $i]) . "\n")}, @params);
-
-}
-
-################################################################################
-
-sub sql_import_json {
-
-	my ($in, $cb) = @_;
-	
-	$_JSON or setup_json ();
-	
-	my $defs = {};
-		
-	while (my $line = <$in>) {
-	
-		my $r = $_JSON -> decode ($line);
-		
-		if (ref $r eq HASH) {
-		
-			$model_update -> assert (
-				
-				tables => {$r -> {name} => $r}, 
-				
-				default_columns => $DB_MODEL -> {default_columns},
-				
-				prefix => 'sql_import_json#',
-				
-			);
-			
-			next;
-		
-		}
-	
-		my %h = ();
-		
-		my $columns = ($defs -> {$r -> [0]} ||= $model_update -> get_columns ($r -> [0]));
-				
-		while (my ($k, $v) = each %{$r -> [1]}) {
-		
-			$columns -> {$k} or next;
-		
-			$k eq 'id' or $k = '-' . $k;
-			
-			foreach (split //, $v) {
-			
-				$h {$k} .= chr (ord ($_));
-
-			}
-
-		}
-		
-		sql_select_id ($r -> [0] => \%h, ['id']);
-		
-		&$cb ($r, \%h) if $cb;
-	
-	}
 
 }
 
@@ -2258,7 +2157,7 @@ sub assert {
 
 	&{$self -> {before_assert}} (@_) if ref $self -> {before_assert} eq CODE;
 		
-	my $needed_tables = sql_assert_default_columns (Storable::dclone $params {tables}, \%params);
+	my $needed_tables = sql_assert_default_columns (Storable::dclone ($params {tables}), \%params);
 		
 	($needed_tables, my $new_checksums) = checksum_filter ('db_model', $params {prefix}, $needed_tables);
 		

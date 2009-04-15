@@ -19,6 +19,8 @@ sub wish_to_explore_existing_table_data {
 		push @params, $options -> {root} -> {$i};
 
 	}
+
+	$sql .= " AND id IN ($options->{ids})" if $options -> {ids} ne '-1';
 		
 	sql_select_loop ($sql, sub { $existing -> {@$i {@{$options -> {key}}}} = $i }, @params);
 	

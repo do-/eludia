@@ -936,7 +936,7 @@ sub gen_column_definition {
 	$sql .= ' ' . $definition -> {_EXTRA} if $definition -> {_EXTRA};
 	$sql .= ' NOT NULL' unless $definition -> {NULLABLE};
 	$sql .= ' PRIMARY KEY' if $definition -> {_PK};
-	$sql .= ' DEFAULT ' . $self -> {db} -> quote ($definition -> {COLUMN_DEF}) if defined $definition -> {COLUMN_DEF};
+	$sql .= ' DEFAULT ' . $self -> {db} -> quote ($definition -> {COLUMN_DEF}) if defined $definition -> {COLUMN_DEF} && $definition -> {TYPE_NAME} ne 'timestamp';
 
 	return $sql;
 
