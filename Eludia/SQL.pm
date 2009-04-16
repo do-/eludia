@@ -1617,14 +1617,25 @@ sub sql {
 			$filters = $table -> [1] || [];
 			$table   = $table -> [0];
 		}
+		
+		my $on = '';
+
+		if ($table =~ /\s+ON\s+/) {
+
+			$table = $`;
+			$on    = $';
+
+		}
 
 		my $alias = '';
 		
 		if ($table =~ /\s+AS\s+(\w+)\s*$/) {
+
 			$table = $`;
 			$alias = $1;
-		}
 
+		}
+		
 		$table =~ s{\s}{}gsm;
 
 		$table =~ /(\-?)(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
@@ -1633,6 +1644,12 @@ sub sql {
 
 		$alias ||= $name;
 		
+		if ($on && $on !~ /\s/) {
+		
+			$on = "$on = $alias.id";
+		
+		}
+
 		$table = {
 		
 			src     => $table,
@@ -1640,6 +1657,7 @@ sub sql {
 			columns => $columns,
 			single  => en_unplural ($alias),
 			alias   => $alias,
+			on      => $on,
 			filters => $filters,
 			join    => $minus ? 'INNER JOIN' : 'LEFT JOIN',
 			
@@ -1656,7 +1674,17 @@ sub sql {
 
 		my $found = 0;
 		
-		if ($table -> {filters}) {
+		if ($table -> {on}) {
+		
+			$from .= "\n $table->{join} $table->{name}";
+			$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+			$from .= " ON ($table->{on})";
+				
+			$found = 1;
+		
+		}
+		
+		if (!$found && $table -> {filters}) {
 		
 			my $definition = $DB_MODEL -> {tables} -> {$table -> {name}};
 
