@@ -17,6 +17,8 @@ sub check_constants {
 	our $_INHERITABLE_PARAMETER_NAMES    = {map {$_ => 1} qw (__this_query_string __last_query_string __last_scrollable_table_row __no_navigation __tree __infty __popup __no_infty)};
 
 	our $_NONINHERITABLE_PARAMETER_NAMES = {map {$_ => 1} qw (lang salt sid password error id___query)};
+	
+	our @_OVERRIDING_PARAMETER_NAMES     = qw (select __no_navigation __tree __last_query_string);
 
 	our %INC_FRESH = ();	
 	
@@ -494,7 +496,7 @@ sub check_internal_module_schedule {
 
 					/^\#\@crontab\s+/ or next;
 
-					$the_string = eval "q{$'}";
+					$the_string = eval "qq{$'}";
 					
 					$the_string =~ s{[\n\r]}{}gsm;					
 
@@ -598,7 +600,7 @@ sub check_internal_module_schedule {
 
 		print STDERR "  reloading schedule...";
 		
-		`$command`;
+		print STDERR `$command 2>&1`;
 		
 		print STDERR " ok.\n";
 

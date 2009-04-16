@@ -18,21 +18,20 @@ $SIG {__DIE__} = \&Carp::confess;
 
 ################################################################################
 
-sub cpan {
+sub valuable_modules () {
 
-	eval 'require CPAN';
-	
-	die $@ if $@;
-	
-	foreach my $module (
+	my %modules = map {$_ => 1} (
 		'CGI::Simple',
 		'Data::Dumper',
 		'DBI',
 		'Digest::MD5',
 		'HTML::GenerateUtil',
 		'HTML::Parser',
+		'IO::Compress::Gzip',
 		'JSON',
+		'JSON::XS',
 		'LWP',
+		'LockFile::Simple',
 		'Math::FixedPrecision',
 		'MIME::Base64',
 		'Net::SMTP',
@@ -41,7 +40,72 @@ sub cpan {
 		'Storable',
 		'URI::Escape::XS',
 		'XML::Simple',
-	) {
+	);
+
+	my $conf = File::Spec -> rel2abs ('conf/httpd.conf');
+	
+	if (-f $conf) {
+	
+		open (F, $conf) or return "Can't open $conf: $!\n";
+		
+		while (my $line = <F>) {
+		
+			next if $line =~ /^\s*\#/;
+			
+			$line =~ /\bDBI\:(\w+)/ or next;
+			
+			$modules {"DBD::$1"} = 1;
+		
+		}
+		
+		close (F);
+	
+	}
+	
+	my $config = File::Spec -> rel2abs ('lib/Config.pm');	
+
+	if (-f $config) {
+	
+		open (F, $config) or return "Can't open $config: $!\n";
+		
+		while (my $line = <F>) {
+					
+			$line =~ /^\s*use\s+([\w\:]+)/ or next;
+			
+			$modules {$1} = 1;
+		
+		}
+		
+		close (F);
+	
+	}
+
+	return sort keys %modules;
+	
+}
+
+################################################################################
+
+sub ppm {
+	
+	foreach my $module (valuable_modules) {
+		print "$module...\n";
+		$module =~ s{::}{-}g;
+		print `ppm install $module`;
+		print `ppm upgrade -install -precious $module`;
+	};
+
+}
+
+################################################################################
+
+sub cpan {
+
+	eval 'require CPAN';
+	
+	die $@ if $@;
+	
+	foreach my $module (valuable_modules) {
 		CPAN::install ($module);
 		CPAN::upgrade ($module);
 	};

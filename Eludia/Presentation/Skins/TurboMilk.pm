@@ -155,10 +155,13 @@ sub draw_auth_toolbar {
 	
 	if ($_USER -> {id}) {
 	
-		$$options {user_label} =~ s/$$i18n{User}: ${\($$_USER{label} || $$i18n{not_logged_in})}//;
-		$$options {user_label} = '<nobr><b>' . $_USER -> {f} . ' ' . substr ($_USER -> {i}, 0, 1) . '. ' . substr ($_USER -> {o}, 0, 1) . '.</b></nobr><br>' . $options -> {user_label}
-			if ($_USER -> {f} || $_USER -> {i}) ;
+		if ($_USER -> {f} && $_USER -> {i}) {
+	
+			$$options {user_label} =~ s/$$i18n{User}: ${\($$_USER{label} || $$i18n{not_logged_in})}//;
 		
+			$$options {user_label} = '<nobr><b>' . $_USER -> {f} . ' ' . substr ($_USER -> {i}, 0, 1) . '. ' . substr ($_USER -> {o}, 0, 1) . '.</b></nobr><br>' . $options -> {user_label}
+			
+		}
 
 		if (@{$_SKIN -> {subset} -> {items}} > 1) {				
 		
@@ -343,9 +346,9 @@ EOH
 
 sub _draw_input_datetime {
 
+	return '' if $_REQUEST {__only_field};
+
 	my ($_SKIN, $options) = @_;
-		
-#	$r -> header_in ('User-Agent') =~ /MSIE 5\.0/ or return draw_form_field_string (@_);
 		
 	$options -> {id} ||= '' . $options;
 	
@@ -354,13 +357,7 @@ sub _draw_input_datetime {
 	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
 	
 	my $attributes = dump_attributes ($options -> {attributes});
-	
-	if ($_REQUEST {__only_field}) {
-
-		return '';
-
-	}
-		
+			
 	my $shows_time = $options -> {no_time} ? 'false' : 'true';
 		
 	my $html = <<EOH;
@@ -368,7 +365,6 @@ sub _draw_input_datetime {
 		<input 
 			type="text" 
 			name="$$options{name}" 
-			$size 
 			$attributes 
 			autocomplete="off" 
 			onFocus="scrollable_table_is_blocked = true; q_is_focused = true; this.select()" 
@@ -377,88 +373,12 @@ sub _draw_input_datetime {
 			onKeyDown="$$options{onKeyDown}"
 		>
 		<img id="calendar_trigger_$$options{id}" src="$_REQUEST{__static_url}/i_calendar.gif" align=absmiddle>
-EOH
-			
-	$html .= <<EOH;
 		</nobr>		
 		<script type="text/javascript">
-EOH
-
-	if ($i18n -> {_calendar_lang} eq 'en') {
-		$html .= <<EOJS;
-			Calendar._DN = new Array ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
-			Calendar._SDN = new Array ("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
-			Calendar._MN = new Array ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
-			Calendar._SMN = new Array ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
-			Calendar._TT = {};
-			Calendar._TT["INFO"] = "About the calendar";
-			Calendar._TT["PREV_YEAR"] = "Prev. year (hold for menu)";
-			Calendar._TT["PREV_MONTH"] = "Prev. month (hold for menu)";
-			Calendar._TT["GO_TODAY"] = "Go Today";
-			Calendar._TT["NEXT_MONTH"] = "Next month (hold for menu)";
-			Calendar._TT["NEXT_YEAR"] = "Next year (hold for menu)";
-			Calendar._TT["SEL_DATE"] = "Select date";
-			Calendar._TT["DRAG_TO_MOVE"] = "Drag to move";
-			Calendar._TT["PART_TODAY"] = " (today)";
-			Calendar._TT["MON_FIRST"] = "Display Monday first";
-			Calendar._TT["SUN_FIRST"] = "Display Sunday first";
-			Calendar._TT["CLOSE"] = "Close";
-			Calendar._TT["TODAY"] = "Today";
-			Calendar._TT["TIME_PART"] = "(Shift-)Click or drag to change value";
-			Calendar._TT["DEF_DATE_FORMAT"] = "%Y-%m-%d";
-			Calendar._TT["TT_DATE_FORMAT"] = "%a, %b %e";
-			Calendar._TT["WK"] = "wk";
-EOJS
-	}	
-	elsif ($i18n -> {_calendar_lang} eq 'fr') {
-		$html .= <<EOJS;
-			Calendar._DN = new Array ("Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche");
-			Calendar._MN = new Array ("Janvier", "Fйvrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "Aoыt", "Septembre", "Octobre", "Novembre", "Dйcembre");
-			Calendar._TT = {};
-			Calendar._TT["TOGGLE"] = "Changer le premier jour de la semaine";
-			Calendar._TT["PREV_YEAR"] = "Annйe prйc. (maintenir pour menu)";
-			Calendar._TT["PREV_MONTH"] = "Mois prйc. (maintenir pour menu)";
-			Calendar._TT["GO_TODAY"] = "Atteindre date du jour";
-			Calendar._TT["NEXT_MONTH"] = "Mois suiv. (maintenir pour menu)";
-			Calendar._TT["NEXT_YEAR"] = "Annйe suiv. (maintenir pour menu)";
-			Calendar._TT["SEL_DATE"] = "Choisir une date";
-			Calendar._TT["DRAG_TO_MOVE"] = "Dйplacer";
-			Calendar._TT["PART_TODAY"] = " (Aujourd'hui)";
-			Calendar._TT["MON_FIRST"] = "Commencer par lundi";
-			Calendar._TT["SUN_FIRST"] = "Commencer par dimanche";
-			Calendar._TT["CLOSE"] = "Fermer";
-			Calendar._TT["TODAY"] = "Aujourd'hui";
-			Calendar._TT["DEF_DATE_FORMAT"] = "y-mm-dd";
-			Calendar._TT["TT_DATE_FORMAT"] = "D, M d";
-			Calendar._TT["WK"] = "wk";
-EOJS
-	}	
-	else {
-		$html .= <<EOJS;
-			Calendar._DN = new Array ("Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье");
-			Calendar._MN = new Array ("Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь");
-			Calendar._TT = {};
-			Calendar._TT["TOGGLE"] = "Сменить день начала недели (ПН/ВС)";
-			Calendar._TT["PREV_YEAR"] = "Пред. год (удерживать для меню)";
-			Calendar._TT["PREV_MONTH"] = "Пред. месяц (удерживать для меню)";
-			Calendar._TT["GO_TODAY"] = "На сегодня";
-			Calendar._TT["NEXT_MONTH"] = "След. месяц (удерживать для меню)";
-			Calendar._TT["NEXT_YEAR"] = "След. год (удерживать для меню)";
-			Calendar._TT["SEL_DATE"] = "Выбрать дату";
-			Calendar._TT["DRAG_TO_MOVE"] = "Перетащить";
-			Calendar._TT["PART_TODAY"] = " (сегодня)";
-			Calendar._TT["MON_FIRST"] = "Показать понедельник первым";
-			Calendar._TT["SUN_FIRST"] = "Показать воскресенье первым";
-			Calendar._TT["CLOSE"] = "Закрыть";
-			Calendar._TT["TODAY"] = "Сегодня";
-			Calendar._TT["DEF_DATE_FORMAT"] = "y-mm-dd";
-			Calendar._TT["TT_DATE_FORMAT"] = "D, M d";
-			Calendar._TT["WK"] = "нед"; 
-EOJS
-	}	
-
-	$html .= <<EOH;
-			Calendar.setup(
+			
+			i18n_calendar (Calendar);
+			
+			Calendar.setup (
 				{
 					inputField : "input$$options{name}",
 					ifFormat   : "$$options{format}",
@@ -467,6 +387,7 @@ EOJS
 					onClose    : $$options{onClose}
 				}
 			);
+			
 		</script>
 
 EOH
@@ -638,14 +559,17 @@ sub draw_form_field_button {
 
 sub draw_form_field_string {
 
-	my ($_SKIN, $options, $data) = @_;
+	my ($_SKIN, $options) = @_;
 	
-	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
-	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
-	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
-	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
+	my $attributes = $options -> {attributes};
+	
+	$attributes -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
+	$attributes -> {onKeyDown}  .= ';tabOnEnter();';
+	$attributes -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
+	$attributes -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
+	$attributes -> {type}        = 'text';
 
-	return '<input type="text"' . dump_attributes ($options -> {attributes}) . ' >';
+	return dump_tag ('input', $attributes);
 
 }
 
@@ -2106,51 +2030,45 @@ sub draw_text_cell {
 		
 	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
 	
-	unless ($data -> {off}) {
+	if ($data -> {label} =~ /^\s*(.+?)\s*$/sm) {
+
+		$data -> {label} = $1;
+
+	}
+	else {
 	
-		if ($data -> {label} =~ /^\s*(.*?)\s*$/sm) {
-
-			$data -> {label} = $1;
-
-		}
+		return $html . '&nbsp;</td>';
 	
-		$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
-
-		$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
-
-		$html .= '<nobr>' unless $data -> {no_nobr};
-
-		$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
-		$html .= '<i>'      if $data -> {italic} || $options -> {italic};
-		$html .= '<strike>' if $data -> {strike} || $options -> {strike};
-
-		if ($data -> {href}) {
-		
-			$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
-		
-		}
-
-
-		$html .= $data -> {label};
-		
-		if ($data -> {href}) {
-
-			$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
-		
-		}
-
-#		$html .= '</a>' if $data -> {href} && $data -> {href} ne $options -> {href};
-
-#		$html .= '&nbsp;';		
-		
-		$html .= '</nobr>' unless $data -> {no_nobr};
-		
-		$html .= qq {<input type=hidden name="$$data{hidden_name}" value="$$data{hidden_value}">} if ($data -> {add_hidden});
-		
-	} else {
-		$html .= '&nbsp;';
 	}
 	
+	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
+
+	$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
+
+	$html .= '<nobr>' unless $data -> {no_nobr};
+
+	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
+	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
+
+	if ($data -> {href}) {
+		
+		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
+		
+	}
+
+	$html .= $data -> {label};
+
+	if ($data -> {href}) {
+
+		$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
+		
+	}
+		
+	$html .= '</nobr>' unless $data -> {no_nobr};
+		
+	$html .= qq {<input type=hidden name="$$data{hidden_name}" value="$$data{hidden_value}">} if ($data -> {add_hidden});
+			
 	$html .= '</td>';
 
 	return $html;
@@ -2498,6 +2416,8 @@ sub draw_page {
 	<head>
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
 		</script>
+		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
+		</script>
 		<script for=window event=onload>
 
 			var wm = ancestor_window_with_child ('main_menu');
@@ -2542,6 +2462,8 @@ EOH
 			<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
 			</script>
 			<script src="$_REQUEST{__static_url}/navigation_setup.js?$_REQUEST{__static_salt}">
+			</script>
+			<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
 			</script>
 EOH
 		
@@ -2756,6 +2678,8 @@ EOH
 
 	$_REQUEST {__head_links} .= <<EOH unless ($_REQUEST {type} eq 'logon' or $_REQUEST {type} eq '_boot');
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
+		</script>
+		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
 		</script>
 EOH
 
@@ -3161,7 +3085,7 @@ EOH
 		<td align=center valign=middle>
 
 			<table border="0" cellpadding="4" cellspacing="1" width="470" height="225" bgcolor="#EAEAF0" class="logon">
-				<tr><td class="login-head">Авторизация</td></tr>
+				<tr><td class="login-head">$i18n->{authorization}</td></tr>
 				<tr>
 					<td bgcolor="#F9F9FF" align="center" style="border-bottom:solid 1px #9AA0A3; height:150px;">
 						
@@ -3173,11 +3097,11 @@ EOH
 							<input type=hidden name=redirect_params value="$_REQUEST{redirect_params}">
 							<input type=hidden name=tz_offset value="">
 							<tr class="logon">
-								<td><b>Логин:</b></td>
+								<td><b>$i18n->{login}:</b></td>
 								<td><input type="text" name="login" value="$_COOKIE{user_login}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
 							</tr>
 							<tr class="logon">
-								<td><b>Пароль:</b></td>
+								<td><b>$i18n->{password}:</b></td>
 								<td><input type="password" name="password" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.submit ()"></td>
 							</tr>
 							
@@ -3189,7 +3113,7 @@ EOH
 				<tr>
 					<td class="submit-area">						
 						<div class="grey-submit">
-							<div style="float:left;margin-top:5px;"><a href="#"><img src="$_REQUEST{__static_url}/i_logon.gif?$_REQUEST{__static_salt}" border="0" align="left" hspace="5"></a><a href="javascript:document.forms['form'].submit()">Войти в систему</a></div>
+							<div style="float:left;margin-top:5px;"><a href="#"><img src="$_REQUEST{__static_url}/i_logon.gif?$_REQUEST{__static_salt}" border="0" align="left" hspace="5"></a><a href="javascript:document.forms['form'].submit()">$i18n->{execute_logon}</a></div>
 							<div style="float:right;"><img src="$_REQUEST{__static_url}/grey_ear_right.gif?$_REQUEST{__static_salt}" border="0"></div>
 						</div>
 					</td>

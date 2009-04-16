@@ -403,11 +403,11 @@ sub check_href {
 
 	my ($options) = @_;
 	
-	return $options -> {href} if !ref $options -> {href} && ($options -> {href} =~ /\#$/ || $options -> {href} =~ /^(java|mailto|file|\/i\/)/);
+	my $href = $options -> {href};
 	
 	my %h = ();
 	
-	if (ref $options -> {href} eq HASH) {
+	if (ref $href eq HASH) {
 		
 		if ($_REQUEST_TO_INHERIT) {
 		
@@ -428,49 +428,51 @@ sub check_href {
 
 		}		
 		
-		foreach my $k (keys %{$options -> {href}}) {
+		foreach my $k (keys %$href) {
 		
-			$h {$k} = $options -> {href} -> {$k};
+			$h {$k} = $href -> {$k};
 			
 		}
 		
 	}
 	else {
-	    
-		$options -> {href} = (MP2 && $options -> {href} =~ /[\x7f-\xff]+/) ? uri_escape($options -> {href}, "\x7f-\xff") : $options -> {href};
-	
-		foreach my $token (split /[\?\&]+/, $options -> {href}) {
-			$token =~ /\=/ or next;
-			return $options -> {href} if $` eq 'salt' && $' eq $_REQUEST {__salt};
-			$h {$`} = $';
-		}
 			
-		$h {select} ||= $_REQUEST {select} if $_REQUEST {select};
-		$h {__no_navigation} ||= $_REQUEST {__no_navigation} if $_REQUEST {__no_navigation};
-		$h {__tree} ||= $_REQUEST {__tree} if $_REQUEST {__tree};
-		$h {__last_query_string} ||= $_REQUEST {__last_query_string};
+		return $href if ($href =~ /\#$/ || $href =~ /^(java|mailto|file|\/i\/)/);
+
+		$href = uri_escape ($href, "\x7f-\xff") if MP2 && $href =~ /[\x7f-\xff]/;
+		
+		if ($href =~ /\?/) {$href = $'};
+
+		foreach my $token (split /\&/, $href) {
+		
+			$token =~ /\=/ or next;
+			
+			$h {$`} = $';
+			
+		}
+		
+		foreach my $name (@_OVERRIDING_PARAMETER_NAMES) {
+			
+			$_REQUEST {$name} or next;
+
+			$h {$name} ||= $_REQUEST {$name};
+			
+		}
 								
 	}
 	
 	$_REQUEST {__salt}     ||= rand () * time ();
-	$_REQUEST {__uri_root} ||= $_REQUEST {__uri} . $_REQUEST {__script_name} . '?sid=' . $_REQUEST {sid} . '&salt=' . $_REQUEST {__salt};
-	
+	$_REQUEST {__uri_root} ||= "$_REQUEST{__uri}$_REQUEST{__script_name}?salt=$_REQUEST{__salt}&sid=$_REQUEST{sid}";
+
 	my $url = $_REQUEST {__uri_root};
 				
 	foreach my $k (keys %h) {
 
-		$k or next;
-		
-		my $v = $h {$k};
-		
-		defined $v or next;
+		defined (my $v = $h {$k || next}) or next;
 
 		next if !$v and $_NON_VOID_PARAMETER_NAMES -> {$k};
-				
-		$url .= '&';
-		$url .= $k;
-		$url .= '=';
-		$url .= $v;
+		
+		$url .= "&$k=$v";
 		
 	}
 
@@ -944,30 +946,38 @@ sub draw_form_field_button {
 sub draw_form_field_string {
 
 	my ($options, $data) = @_;
-
-	$options -> {max_len} ||= $options -> {size};
-	$options -> {max_len} ||= 255;
-	$options -> {attributes} -> {maxlength} = $options -> {max_len};
-	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
 	
-	exists $options -> {attributes} -> {autocomplete} or $options -> {attributes} -> {autocomplete} = 'off';
-
-	$options -> {size}    ||= 120;
-	$options -> {attributes} -> {size}      = $options -> {size};
-	
-	$options -> {value}   ||= $data -> {$options -> {name}};
+	my $value = ($options -> {value} ||= $data -> {$options -> {name}});
 		
 	if ($options -> {picture}) {
-		$options -> {value} = format_picture ($options -> {value}, $options -> {picture});
-		$options -> {value} =~ s/^\s+//g;
+	
+		$value = format_picture ($value, $options -> {picture});
+		
+		$value =~ s/^\s+//g;
+		
 	}
 	
-	$options -> {value} =~ s/\"/\&quot\;/gsm; #";
-	$options -> {attributes} -> {value} = $options -> {value};
+	if ($value =~ y/"/"/) {
 	
-	$options -> {attributes} -> {name}  = '_' . $options -> {name};
+		$value =~ s{\"}{\&quot;}gsm;
+	
+	}
+	
+	my $attributes = ($options -> {attributes} ||= {});
+
+	$attributes -> {value}        = \$value;
+	
+	$attributes -> {name}         = '_' . $options -> {name};
 			
-	$options -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
+	$attributes -> {size}         = ($options -> {size} ||= 120);
+
+	$attributes -> {maxlength}    = $options -> {max_len} || $options -> {size} || 255;
+
+	$attributes -> {class}      ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';
+	
+	$attributes -> {autocomplete} = 'off' unless exists $attributes -> {autocomplete};
+
+	$attributes -> {tabindex}     = ++ $_REQUEST {__tabindex};
 
 	return $_SKIN -> draw_form_field_string (@_);
 	
