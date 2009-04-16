@@ -121,7 +121,7 @@ sub sql_export_table_to_json_by_timestamp {
 		
 	my $id = sql_select_scalar ("SELECT MAX(id) FROM $table");
 
-	sql_export_json  ("SELECT * FROM $table WHERE $ts >= ? AND id <= ? ORDER BY $ts", $out, $from, $id);
+	sql_export_json  ("SELECT * FROM $table WHERE $ts > ? AND $ts < ? AND id <= ? ORDER BY $ts", $out, $from, sprintf ('%04d-%02d-%02d %02d:%02d:%02d', Date::Calc::Today_and_Now), $id);
 	
 	my $cb = ref $out eq CODE ? $out : sub {print $out $_[0]};
 
