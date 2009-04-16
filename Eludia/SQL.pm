@@ -2193,7 +2193,7 @@ sub assert {
 		
 	($needed_tables, my $new_checksums) = checksum_filter ('db_model', $params {prefix}, $needed_tables);
 		
-	%$needed_tables > 0 or warn "   DB model update: nothing to do\n" and return;
+	%$needed_tables > 0 or return;
 		
 	my $existing_tables = {};	
 	
