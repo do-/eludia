@@ -898,6 +898,8 @@ sub sql_select_id {
 	
 	sql_lock ($table);
 
+	eval {
+
 	foreach my $lookup_fields (@lookup_field_sets) {
 	
 		if (ref $lookup_fields eq CODE) {		
@@ -968,6 +970,8 @@ sub sql_select_id {
 
 	$record -> {id} ||= sql_do_insert ($table, $values);
 	
+	};
+
 	sql_unlock ($table);
 	
 	if ($auto_commit) {
