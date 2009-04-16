@@ -602,9 +602,10 @@ sub draw_form_field {
 	my $colspan_label = $field -> {colspan_label} ? 'colspan=' . $field -> {colspan_label} : '';
 	my $label_width   = $field -> {label_width}   ? 'width='   . $field -> {label_width}   : '';	
 	my $cell_width    = $field -> {cell_width}    ? 'width='   . $field -> {cell_width}    : '';
+	my $label_title   = $field -> {label_title}   ? 'title="'  . $field -> {label_title} . '"' : '';
 	
 	my $label_cell;
-	$label_cell = qq {<td class='form-$$field{state}-label' nowrap $colspan_label align=right $label_width>\n$$field{label}</td>}
+	$label_cell = qq {<td class='form-$$field{state}-label' nowrap $colspan_label align=right $label_width $label_title>\n$$field{label}</td>}
 		unless ($field -> {label_off});
 
 	my $inputs = 'inputs';
