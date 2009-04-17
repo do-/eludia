@@ -280,6 +280,8 @@ sub setup_menu {
 
 	my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
 	
+	ref $menu or $menu = [];
+	
 	$_REQUEST {type} or adjust_request_type ($menu);
 	
 	return $menu;
