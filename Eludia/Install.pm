@@ -18,6 +18,92 @@ $SIG {__DIE__} = \&Carp::confess;
 
 ################################################################################
 
+sub db_require_configuration {
+
+	$ENV {DOCUMENT_ROOT} = File::Spec -> rel2abs ('docroot');
+
+	my $conf = File::Spec -> rel2abs ('conf/httpd.conf');
+	
+	-f $conf or die "$conf not found";
+	
+	open (F, $conf) or return "Can't open $conf: $!\n";	
+	
+	my $code = 'our $preconf = {';
+		
+	while (my $line = <F>) {
+		
+		$line =~ /^\s*db_(dsn|user|password)/ or next;
+		
+		$code .= $line;
+		
+	}
+
+	$code .= '}';
+		
+	close (F);
+	
+	eval $code; $@ and die $@;
+	
+	require Eludia;	
+	require Eludia::Content;
+	require Eludia::SQL;
+	
+	our $_NEW_PACKAGE = 'main';
+
+	sql_reconnect ();
+
+}
+
+################################################################################
+
+sub db_load {
+
+	db_require_configuration ();
+	
+	sql_import_json (STDIN);
+
+}
+
+################################################################################
+
+sub db_dump {
+
+	db_require_configuration ();
+	
+	my %needed = ();
+	
+	my %banned = ();
+	
+	foreach (@ARGV) {
+	
+		if (/^\//) { $banned {$'} = 1 } else { $needed {$_} = 1 }
+	
+	}
+	
+	if (%needed == 0) {
+	
+		foreach my $table ($model_update -> {db} -> tables ('', $model_update -> {schema}, '%', "'TABLE'")) {
+
+			$needed {$model_update -> unquote_table_name ($table)} = 1;
+
+		}
+	
+	}
+	
+	foreach (keys %banned) { delete $needed {$_} }
+		
+	foreach my $table (sort keys %needed) { 
+	
+		sql_export_json ("DESCRIBE $table",      STDOUT);
+
+		sql_export_json ("SELECT * FROM $table", STDOUT);
+	
+	}
+
+}
+
+################################################################################
+
 sub valuable_modules () {
 
 	my %modules = map {$_ => 1} (
