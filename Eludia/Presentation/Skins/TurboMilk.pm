@@ -2028,9 +2028,9 @@ sub draw_text_cell {
 	
 	my $html = dump_tag ('td', $data -> {attributes});
 		
-	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
+#	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
 	
-	if ($data -> {label} =~ /^\s*(.+?)\s*$/sm) {
+	if ($data -> {off} || $data -> {label} =~ /^\s*(.+?)\s*$/sm) {
 
 		$data -> {label} = $1;
 
