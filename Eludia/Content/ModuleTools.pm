@@ -380,8 +380,6 @@ sub call_for_role {
 		or warn "call_for_role: callback procedure not found: \$sub_name = $sub_name, \$role = $role \n";
 	}
 
-	return $name_to_call ? &$name_to_call (@_) : undef;
-		
 }
 
 ################################################################################
