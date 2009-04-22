@@ -3914,7 +3914,7 @@ sub draw_error_page {
 	
 	$_REQUEST {error} ||= $_[1];
 	
-	warn $_REQUEST {error};
+	Carp::cluck $_REQUEST {error};
 	
 	if ($_REQUEST {error} =~ s{^\#(\w+)\#\:}{}) {
 	

@@ -229,6 +229,16 @@ sub require_scripts {
 
 ################################################################################
 
+sub localtime_to_iso {
+
+	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($_[0]);
+	
+	return sprintf ('%04d-%02d-%02d %02d:%02d:%02d', 1900 + $year, 1 + $mon, $mday, $hour, $min, $sec);
+	
+}
+
+################################################################################
+
 sub require_fresh {
 
 	my $time = time;
@@ -268,8 +278,21 @@ sub require_fresh {
 	}
 
 	unless ($need_refresh) {
+	
+		if ($preconf -> {core_debug_profiling}) {
+	
+			my $last_modified_iso = localtime_to_iso ($last_modified);
+	
+			my $condition = 
 
-		$time = __log_profilinig ($time, "    $module_name is old ($INC_FRESH{$module_name} >= $last_modified)");
+				$INC_FRESH {$module_name} == $last_modified ? "not changed since $last_modified_iso" :
+
+					'is old (' . localtime_to_iso ($INC_FRESH {$module_name}) . " > $last_modified_iso)";
+
+			$time = __log_profilinig ($time, "    $module_name is $condition");
+
+		}				
+		
 		return;
 
 	}
@@ -374,14 +397,15 @@ sub call_for_role {
 		
 	}
 	else {
-		$sub_name    =~ /^(valid|recalcul)ate_/
-		or $sub_name eq 'get_menu'
-		or $sub_name eq 'select_menu'
-		or warn "call_for_role: callback procedure not found: \$sub_name = $sub_name, \$role = $role \n";
+		
+		$sub_name    =~ /^(valid|recalcul)ate_/	or $sub_name =~ /^(get|select)_menu$/
+		
+			or warn "call_for_role: callback procedure not found: \$sub_name = $sub_name, \$role = $role \n";
+		
+		return undef;
+		
 	}
 
-	return $name_to_call ? &$name_to_call (@_) : undef;
-		
 }
 
 ################################################################################
