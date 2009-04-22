@@ -52,7 +52,9 @@ sub __d {
 
 	my ($data, @fields) = @_;
 
-	@fields = grep {/(_|\b)dt(_|\b)/} keys %$data;
+	unless (@fields + 0) {
+		@fields = grep {/(_|\b)dt(_|\b)/} keys %$data;
+	}
 
 	foreach (@fields) {
 
@@ -1167,14 +1169,14 @@ sub draw_form_field_multi_select {
 	my ($options, $data) = @_;
 
 	check_href ($options);
-	
+
 	my $url = dialog_open ({
-		href	=> $options -> {href} . '&multi_select=1&ids=-1',
+		href	=> $options -> {href} . '&multi_select=1',
 		title	=> $options -> {label},
 	}, {
-		dialogHeight	=> 600,
-		dialogWidth	=> 800,
-	}) . "if (result.result == 'ok') {document.getElementById ('$options').innerHTML=result.label; document.form._$options->{name}.value=result.ids;} void (0)";
+		dialogHeight	=> 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)',
+		dialogWidth	=> 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)',
+	}) . "if (result.result == 'ok') {document.getElementById ('ms_$options').innerHTML=result.label; document.form._$options->{name}.value=result.ids;} void (0)";
 	$url =~ s/^javascript://i;
 	
 	my $url_dialog_id = $_REQUEST {__dialog_cnt};
@@ -1186,7 +1188,7 @@ sub draw_form_field_multi_select {
 			items	=> [
 				{
 					type	=> 'static',
-					value	=> qq[<span id="$options">] . join ('<br>', map {$_ -> {label}} @{$options -> {values}}) . '</span>',
+					value	=> qq[<span id="ms_$options">] . join ('<br>', map {$_ -> {label}} @{$options -> {values}}) . '</span>',
 				},
 				{
 					type	=> 'hidden',
@@ -1197,13 +1199,13 @@ sub draw_form_field_multi_select {
 				{
 					type	=> 'button',
 					value	=> 'Изменить',
-					onclick	=> "re = /&ids=.*\$/i; dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, ''); dialog_open_$url_dialog_id.href += '&ids=' + document.form._$options->{name}.value; " . $url,
+					onclick	=> "re = /&ids=[\\d,-]*\$/i; dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, ''); dialog_open_$url_dialog_id.href += '&ids=' + document.getElementsByName ('_$options->{name}') [0].value; " . $url,
 					off	=> $_REQUEST {__read_only},
 				},
 				{
 					type	=> 'button',
 					value	=> 'Очистить',
-					onclick => "document.getElementById ('$options').innerHTML=''; document.form._$options->{name}.value=''",
+					onclick => "document.getElementById ('ms_$options').innerHTML=''; document.form._$options->{name}.value=''",
 					off	=> $_REQUEST {__read_only},
 				},
 			],
@@ -1262,7 +1264,7 @@ sub draw_form_field_static {
 		$options -> {hidden_value} =~ s/\"/\&quot\;/gsm; #";
 	}	
 
-	if ($options -> {href} && !$_REQUEST {__edit} && !$_REQUEST {xls}) {	
+	if ($options -> {href} && !$_REQUEST {__edit} && !$_REQUEST {xls}) {
 		check_href ($options);
 	}
 	else {
@@ -1309,10 +1311,10 @@ sub draw_form_field_static {
 				$static_value .= ' ';
 
 				$item -> {read_only} = 1;
-			
-				$static_value .= $item -> {type} eq 'hgroup' ? 
-					draw_form_field_hgroup ($item, $data):
-					draw_form_field_static ($item, $data);
+
+				$static_value .= $item -> {type} eq 'hgroup' ? draw_form_field_hgroup ($item, $data)
+					: $item -> {type} eq 'multi_select' ? draw_form_field_multi_select ($item, $data)
+					: draw_form_field_static ($item, $data);
 			
 			}
 			else {
@@ -1393,6 +1395,11 @@ sub draw_form_field_static {
 				$item -> {read_only} = 1;
 				$static_value .= ' ';
 				$static_value .= draw_form_field_hgroup ($item, $data);
+			}
+			elsif ($item -> {type} eq 'multi_select') {
+				$item -> {read_only} = 1;
+				$static_value .= ' ';
+				$static_value .= draw_form_field_multi_select ($item, $data);
 			}
 			elsif ($item -> {type} || $item -> {name}) {
 				$static_value .= ' ';
@@ -4030,15 +4037,22 @@ sub dialog_open {
 	
 	$options -> {id} = ++ $_REQUEST {__dialog_cnt};
 	
-	$options -> {dialogHeight} ||= $options -> {height} . 'px' if $options -> {height};
-	$options -> {dialogWidth}  ||= $options -> {width}  . 'px' if $options -> {width};
+	$options -> {dialogHeight} ||= $options -> {height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)' if $options -> {height};
+	$options -> {dialogWidth}  ||= $options -> {width}  || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)' if $options -> {width};
 
 	$arg ||= {};
 	
 	check_href ($arg);
 
-	$_REQUEST {__script} .= "var dialog_open_$options->{id} = " . $_JSON -> encode ($arg) . ";\n";
-
+	$_REQUEST {__script} .= <<EOJS;
+		var dialog_open_$options->{id} = @{[ $_JSON -> encode ($arg) ]};
+		var dialog_open_$options->{id}_width = $options->{dialogWidth};
+		var dialog_open_$options->{id}_height = $options->{dialogHeight};
+EOJS
+		
+	$options -> {dialogHeight} .= 'px';
+	$options -> {dialogWidth} .= 'px';
+	
 	return $_SKIN -> dialog_open ($arg, $options);
 
 }
