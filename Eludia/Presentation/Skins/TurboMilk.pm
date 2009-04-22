@@ -2030,7 +2030,7 @@ sub draw_text_cell {
 		
 #	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
 	
-	if ($data -> {off} || $data -> {label} =~ /^\s*(.+?)\s*$/sm) {
+	if (!$data -> {off} && $data -> {label} =~ /^\s*(.+?)\s*$/sm) {
 
 		$data -> {label} = $1;
 
