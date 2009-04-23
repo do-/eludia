@@ -82,7 +82,7 @@ sub require_scripts_of_type ($) {
 
 	my $__last_update = get_last_update ();
 	
-	my $__time = $__time = int (time ());
+	my $__time = 0;
 	
 	my $is_updated;
 	
@@ -129,18 +129,25 @@ sub require_scripts_of_type ($) {
 
 		}
 		
+		if (@scripts == 0) {
+		
+			__log_profilinig ($time, "   require_scripts_of_type $script_type: all scripts in $dir are older than " . localtime_to_iso ($__last_update));
+			
+			next;
+			
+		}
+
 		my $checksum_kind = $script_type . '_scripts';
 
 		my ($needed_scripts, $new_checksums) = checksum_filter ($checksum_kind, '', $name2def);
 	
 		if (%$needed_scripts == 0) {
 		
-			__log_profilinig ($time, "   require_scripts_of_type $script_type: nothing to do in $dir");
+			__log_profilinig ($time, "   require_scripts_of_type $script_type: all scripts in $dir are filtered by 'checksums' (which are, in fact, timestamps).");
 			
 			next;
 			
 		}
-		
 
 		@scripts = 
 			
@@ -188,8 +195,7 @@ sub require_scripts_of_type ($) {
 
 	}
 	
-	set_last_update ($__time)
-		if $is_updated;
+	return $__time;
 
 }
 
@@ -214,10 +220,20 @@ sub require_scripts {
 	open (CONFIG, $file_name) || die "can't open $file_name: $!";
 
 	flock (CONFIG, LOCK_EX);
+	
+	my $__last_update = get_last_update ();
 
-	require_scripts_of_type 'model';
+	my $__time = 0;
+	
+	foreach my $kind ('model', 'updates') {
+	
+		my $time = require_scripts_of_type $kind;
+		
+		$__time > $time or $__time = $time;
+	
+	}
 
-	require_scripts_of_type 'updates';
+	set_last_update ($__time) if $__time > $__last_update;
 
 	flock (CONFIG, LOCK_UN);
 
