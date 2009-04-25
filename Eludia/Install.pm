@@ -111,6 +111,7 @@ sub valuable_modules () {
 		'Data::Dumper',
 		'DBI',
 		'Digest::MD5',
+		'FCGI',
 		'HTML::GenerateUtil',
 		'HTML::Parser',
 		'IO::Compress::Gzip',
