@@ -1586,6 +1586,7 @@ EOJS
 			
 		my $renderrer = "draw_form_field_$$value{type}";
 		
+		local $value -> {attributes};
 		$value -> {html} = &$renderrer ($value, $data);
 		delete $value -> {attributes} -> {class};
 						
