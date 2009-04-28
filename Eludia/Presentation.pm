@@ -464,7 +464,20 @@ sub check_href {
 	}
 	
 	$_REQUEST {__salt}     ||= rand () * time ();
-	$_REQUEST {__uri_root} ||= "$_REQUEST{__uri}$_REQUEST{__script_name}?salt=$_REQUEST{__salt}&sid=$_REQUEST{sid}";
+	
+	unless ($_REQUEST {__uri_root}) {
+	
+		$_REQUEST {__uri_root} = $_REQUEST{__uri};
+		
+		if ($_REQUEST {__script_name} && $ENV {GATEWAY_INTERFACE} !~ /^CGI-PerlEx/) {
+		
+			$_REQUEST {__uri_root} .= $_REQUEST{__script_name};
+		
+		}
+		
+		$_REQUEST {__uri_root} .= "?salt=$_REQUEST{__salt}&sid=$_REQUEST{sid}";
+
+	}	
 
 	my $url = $_REQUEST {__uri_root};
 				

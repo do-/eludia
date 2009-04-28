@@ -347,9 +347,11 @@ sub new {
 		}
 
 	}
-	else {		# conventional CGI STDIN/STDOUT environment
+	else {								# conventional CGI STDIN/STDOUT environment
 	
 		$self -> {Q} = new CGI::Simple;
+		
+		$ENV {HTTP_COOKIE}  =~ /\w/;				# PerlEx specific
 
 		foreach ($self -> {Q} -> http) {
 

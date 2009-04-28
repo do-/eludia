@@ -86,6 +86,8 @@ sub setup_request_params {
 
 	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
 
+	$ENV {DOCUMENT_ROOT} ||= $preconf -> {_} -> {docroot};
+
 	$_PACKAGE ||= __PACKAGE__ . '::';
 
 	my $http_host = $ENV {HTTP_X_FORWARDED_HOST} || $self -> {preconf} -> {http_host};
@@ -93,7 +95,7 @@ sub setup_request_params {
 	$ENV {HTTP_HOST} = $http_host if $http_host;
 
 	get_request (@_);
-	
+
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 	
 	set_cookie_for_root (client_cookie => $_COOKIE {client_cookie} || Digest::MD5::md5_hex (rand ()));
@@ -143,11 +145,12 @@ sub setup_request_params {
 	$_REQUEST {type} =~ s/_for_.*//;
 	$_REQUEST {__uri} = $r -> uri;
 	$_REQUEST {__uri} =~ s{/cgi-bin/.*}{/};
-	$_REQUEST {__uri} =~ s{\/\w+\.\w+$}{};
+	$_REQUEST {__uri} =~ s{/\w+\.\w+$}{};
 	$_REQUEST {__uri} =~ s{\?.*}{};
 	$_REQUEST {__uri} =~ s{^/+}{/};
 	$_REQUEST {__uri} =~ s{\&salt\=[\d\.]+}{}gsm;
-	
+	$_REQUEST {__uri} =~ s{(\.\w+)/$}{$1};
+
 	$_REQUEST {__script_name} = $ENV {SERVER_SOFTWARE} =~ /IIS\/5/ ? $ENV {SCRIPT_NAME} : '';
 
 	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;
