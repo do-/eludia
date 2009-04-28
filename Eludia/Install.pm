@@ -200,12 +200,14 @@ sub valuable_modules () {
 ################################################################################
 
 sub ppm {
+
+	my $install = $] >= 5.01 ? '--install' : '-install -precious';
 	
 	foreach my $module (valuable_modules) {
 		print "$module...\n";
 		$module =~ s{::}{-}g;
 		print `ppm install $module`;
-		print `ppm upgrade -install -precious $module`;
+		print `ppm upgrade $install $module`;
 	};
 
 }
