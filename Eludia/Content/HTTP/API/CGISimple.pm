@@ -352,6 +352,7 @@ sub new {
 		$self -> {Q} = new CGI::Simple;
 		
 		$ENV {HTTP_COOKIE}  =~ /\w/;				# PerlEx specific
+		$ENV {HTTP_ACCEPT_ENCODING} =~ /\w/;			# PerlEx specific
 
 		foreach ($self -> {Q} -> http) {
 
