@@ -2248,7 +2248,10 @@ sub draw_toolbar_input_select {
 
 	if (defined $options -> {other}) {
 
-		ref $options -> {other} or $options -> {other} = {href => $options -> {other}, label => $i18n -> {voc}};
+		ref $options -> {other} or $options -> {other} = {href => $options -> {other}};
+		
+		$options -> {other} -> {label} ||= $i18n -> {voc};
+
 		check_href ($options -> {other});
 		$options -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
 		if ($options -> {other} -> {top}) {
