@@ -50,7 +50,7 @@ sub _check {
 		
 	}
 	
-	&{"$self->{package}::__log_profilinig"} ($time, '   ' . $self -> {sql});
+	&{"$self->{package}::__log_profilinig"} ($time, '   ' . $self -> {sql}) if ${"$self->{package}::preconf"} -> {core_debug_voc};
 	
 	$self -> {body} = $list;
 
