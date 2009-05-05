@@ -1212,7 +1212,18 @@ sub draw_form_field_multi_select {
 				{
 					type	=> 'button',
 					value	=> 'Изменить',
-					onclick	=> "re = /&ids=[\\d,-]*\$/i; dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, ''); dialog_open_$url_dialog_id.href += '&ids=' + document.getElementsByName ('_$options->{name}') [0].value; " . $url,
+					onclick	=> <<EOJS,
+						re = /&salt=[\\d\\.]*/;
+						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
+						dialog_open_$url_dialog_id.href += '&salt=' + Math.random ();
+						
+						re = /&ids=[^&]*/i; 
+						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
+						dialog_open_$url_dialog_id.href += '&ids=' + document.getElementsByName ('_$options->{name}') [0].value; 
+
+						$url
+EOJS
+
 					off	=> $_REQUEST {__read_only},
 				},
 				{
