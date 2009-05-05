@@ -220,7 +220,7 @@ sub cpan {
 	
 	die $@ if $@;
 	
-	foreach my $module (valuable_modules) {
+	foreach my $module ('CPAN', valuable_modules) {
 		CPAN::install ($module);
 		CPAN::upgrade ($module);
 	};
