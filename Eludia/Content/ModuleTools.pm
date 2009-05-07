@@ -360,7 +360,7 @@ sub require_fresh {
 			
 		$message =~ s{\w+::(\w)\w*::(\w+)$}{$2 ($1)};
 	
-		$time = __log_profilinig ($time, '   ' . $message . ' reloaded');
+		$time = __log_profilinig ($time, "   $message -> " . localtime_to_iso ($last_modified));
 
 	}
         	
