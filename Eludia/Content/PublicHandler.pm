@@ -166,6 +166,12 @@ sub pub_handler {
 		print STDERR $@ if $@;
 
 		my $html = draw_pub_page ();
+		
+		if ($preconf -> {static_site}) {
+
+			$html =~ s{(src|href)(=[\"\'])(/i/)}{$1$2$preconf->{static_site}/$3}g;
+
+		}
 
 		if ($conf -> {core_cache_html}) {
 
@@ -197,3 +203,5 @@ sub pub_handler {
 	return $ok;
 
 }
+
+1;
