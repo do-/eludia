@@ -1207,6 +1207,8 @@ CustomLog $instpath/logs/access.log combined
 
 <perl> 
 
+	use lib '@{[ core_path () ]}';
+	
 	use Eludia::Loader
 
 	'$instpath/lib' => '$appname_uc' 
