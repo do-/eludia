@@ -287,7 +287,7 @@ sub sql_import_json {
 	}
 	continue {
 	
-		if (@data > 99 or $last_table ne $table) {
+		if (@data > 99 or ($last_table and ($last_table ne $table))) {
 		
 			wish (table_data => \@data, {table => $last_table});
 		
