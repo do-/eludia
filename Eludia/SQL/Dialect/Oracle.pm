@@ -1505,7 +1505,7 @@ EOS
 		if ($r -> {DATA_DEFAULT}) {
 			$rr -> {COLUMN_DEF} = $r -> {DATA_DEFAULT};
 			$rr -> {COLUMN_DEF} =~ s{^\'}{};
-			$rr -> {COLUMN_DEF} =~ s{\'$}{};
+			$rr -> {COLUMN_DEF} =~ s{\'\s*$}{}sm;
 		}
 		
 		if ($name eq $pk_column) {
