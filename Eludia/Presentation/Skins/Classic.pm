@@ -1908,8 +1908,8 @@ sub draw_row_button {
 		my $label = $options -> {label};
 		my $img_path = _icon_path ($options -> {icon});
 
-		$options -> {label} = qq|<img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=0 align=absmiddle>|;
-		$options -> {label} .= "&nbsp;$label" if $options -> {force_label} || $conf -> {core_hide_row_buttons} > -1;
+		$options -> {label} = qq|&nbsp;<img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=0 align=absmiddle>|;
+		$options -> {label} .= "&nbsp;$label&nbsp;" if $options -> {force_label} || $conf -> {core_hide_row_buttons} > -1;
 
 	}
 	else {
