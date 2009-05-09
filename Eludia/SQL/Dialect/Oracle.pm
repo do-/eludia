@@ -1550,7 +1550,7 @@ sub get_canonic_type {
 
 	my $utf = $self -> {characterset} =~ /UTF/i;
 
-	my $N = $utf ? 'N' : '';
+	my $N = $utf ? '' : '';
 	
 	if ($type_name eq 'text') {
 	
