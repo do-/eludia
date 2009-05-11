@@ -5,6 +5,15 @@ sub pub_handler {
 	my $ok = _ok ();
 
 	$_PACKAGE ||= __PACKAGE__ . '::';
+		
+	my $uri = '';
+
+	if ($ENV {QUERY_STRING} =~ /^404;/) {
+	
+		$uri ||= $';
+		$ENV {QUERY_STRING} =~ s{^404;.*?\?}{};
+		
+	}
 
 	get_request (@_);
 
@@ -14,11 +23,13 @@ sub pub_handler {
 		return $ok;
 	};
 	our %_REQUEST = %{$parms};
-
-	$_REQUEST {__uri} = $r -> uri;
+	
+	$_REQUEST {__uri} = $uri || $r -> uri;
 
 	$_REQUEST {__uri} =~ s{^http://[^/]+}{};
 	$_REQUEST {__uri} =~ s{\/\w+\.\w+$}{};
+	$_REQUEST {__uri} =~ s{default.plex/?}{};
+	$_REQUEST {__uri} =~ s{\?.*}{};
 
 	$_REQUEST {__uri_chomped} = $_REQUEST {__uri};
 	$_REQUEST {__uri_chomped} =~ s{/+$}{};
