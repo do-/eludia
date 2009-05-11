@@ -1212,7 +1212,18 @@ sub draw_form_field_multi_select {
 				{
 					type	=> 'button',
 					value	=> 'Изменить',
-					onclick	=> "re = /&ids=[\\d,-]*\$/i; dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, ''); dialog_open_$url_dialog_id.href += '&ids=' + document.getElementsByName ('_$options->{name}') [0].value; " . $url,
+					onclick	=> <<EOJS,
+						re = /&salt=[\\d\\.]*/;
+						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
+						dialog_open_$url_dialog_id.href += '&salt=' + Math.random ();
+						
+						re = /&ids=[^&]*/i; 
+						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
+						dialog_open_$url_dialog_id.href += '&ids=' + document.getElementsByName ('_$options->{name}') [0].value; 
+
+						$url
+EOJS
+
 					off	=> $_REQUEST {__read_only},
 				},
 				{
@@ -1599,6 +1610,7 @@ EOJS
 			
 		my $renderrer = "draw_form_field_$$value{type}";
 		
+		local $value -> {attributes};
 		$value -> {html} = &$renderrer ($value, $data);
 		delete $value -> {attributes} -> {class};
 						
@@ -2260,7 +2272,10 @@ sub draw_toolbar_input_select {
 
 	if (defined $options -> {other}) {
 
-		ref $options -> {other} or $options -> {other} = {href => $options -> {other}, label => $i18n -> {voc}};
+		ref $options -> {other} or $options -> {other} = {href => $options -> {other}};
+		
+		$options -> {other} -> {label} ||= $i18n -> {voc};
+
 		check_href ($options -> {other});
 		$options -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
 		if ($options -> {other} -> {top}) {

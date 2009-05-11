@@ -1048,7 +1048,7 @@ sub sql_select_loop {
 	our $i;
 	
 	while ($i = $st -> fetchrow_hashref) {
-		lc_hashref ($i) if exists $$_PACKAGE {lc_hashref};
+		lc_hashref ($i);
 		&$coderef ();
 	}
 	
@@ -1505,7 +1505,7 @@ EOS
 		if ($r -> {DATA_DEFAULT}) {
 			$rr -> {COLUMN_DEF} = $r -> {DATA_DEFAULT};
 			$rr -> {COLUMN_DEF} =~ s{^\'}{};
-			$rr -> {COLUMN_DEF} =~ s{\'$}{};
+			$rr -> {COLUMN_DEF} =~ s{\'?\s*$}{}sm;
 		}
 		
 		if ($name eq $pk_column) {
@@ -1550,7 +1550,7 @@ sub get_canonic_type {
 
 	my $utf = $self -> {characterset} =~ /UTF/i;
 
-	my $N = $utf ? 'N' : '';
+	my $N = $utf ? '' : '';
 	
 	if ($type_name eq 'text') {
 	

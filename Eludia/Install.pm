@@ -220,7 +220,7 @@ sub cpan {
 	
 	die $@ if $@;
 	
-	foreach my $module (valuable_modules) {
+	foreach my $module ('CPAN', valuable_modules) {
 		CPAN::install ($module);
 		CPAN::upgrade ($module);
 	};
@@ -1108,34 +1108,18 @@ sub create {
 			$conf_dsn = "DBI:mysql:database=$db;mysql_read_default_file=/etc/mysql/my.cnf";
 
 		}
-
-		SVN: while (1) {
-
-			$application_dst = $term -> readline ("Application SVN URL: ");
-					
-			my $ls = `svn ls $application_dst`;
-					
-			my %dirs = ();
 		
-			foreach (split /\s+/sm, $ls) {$dirs {$_} = 1};
-		
-			foreach my $dir (qw (docroot lib)) {
-				next if $dirs {$dir . '/'};
-				warn "$dir not found\n";
-				next SVN;
-			}
-			
-			last;
-			
-		}
+		my $default_application_dst = 'git://github.com/do-/default-eludia.pm-application.git';
+
+		$application_dst = $term -> readline ("git URL to clone [$application_dst]: ") || $default_application_dst;
 				
 		$password = random_password ();
 
 		print <<EOT;
- Application name:   $appname
- Database name:      $db
- Database user:      $user
- SVN repository URL: $application_dst
+ Application name: $appname
+ Database name   : $db
+ Database user   : $user
+ git URL to clone: $application_dst
 EOT
 			
 		my $ok = $term -> readline ("Is everything in its right place? (yes / NO): ");
@@ -1195,29 +1179,17 @@ EOS
 	mkdir $instpath;
 
 	print "ok\n";
+	
+	my $cmd = "git clone $application_dst $instpath 2>1";
 
-	print "Checking out application directory... ";
+	print "Copying standard files ($cmd)... \n";
 	
-	`svn co $application_dst $instpath`;
+	print `$cmd`;
 	
+	print "ok\n Creating local subdirectories... ";
+
 	mkdir "$instpath/conf";
 	mkdir "$instpath/logs";
-
-	open (TMP, ">.svnignore") or die ("Can't write to .svnignore: $!\n");
-	print TMP "conf\nlogs\n";
-	close (TMP);
-	
-	`svn ps svn:ignore -F .svnignore $instpath`;
-	
-	unlink '.svnignore';
-
-	open (TMP, ">.svnignore") or die ("Can't write to .svnignore: $!\n");
-	print TMP "_skins\nupload\n";
-	close (TMP);
-
-	`svn ps svn:ignore -F .svnignore $instpath/docroot`;
-	
-	unlink '.svnignore';
 
 	print "ok\n";
 
@@ -1235,6 +1207,8 @@ CustomLog $instpath/logs/access.log combined
 
 <perl> 
 
+	use lib '@{[ core_path () ]}';
+	
 	use Eludia::Loader
 
 	'$instpath/lib' => '$appname_uc' 

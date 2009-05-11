@@ -6,9 +6,15 @@ sub set_cookie_for_root {
 
 	my ($name, $value, $expires) = @_;
 	
-	$expires ||= '+1M';
-	
-	set_cookie (-name => $name, -value => $value, -expires => $expires, -path => '/');
+	if ($value) {
+
+		$expires ||= '+1M';
+
+		set_cookie (-name => $name, -value => $value, -expires => $expires, -path => '/');
+
+	} else {
+		set_cookie (-name => $name, -value => '1', -expires => '-1M', -path => '/');
+	}
 
 }
 

@@ -298,14 +298,18 @@ sub require_fresh {
 		if ($preconf -> {core_debug_profiling}) {
 	
 			my $last_modified_iso = localtime_to_iso ($last_modified);
+			
+			my $message = $module_name;
+			
+			$message =~ s{\w+::(\w)\w*::(\w+)$}{$2 ($1)};
 	
-			my $condition = 
+			$message .=
 
-				$INC_FRESH {$module_name} == $last_modified ? "not changed since $last_modified_iso" :
+				$INC_FRESH {$module_name} == $last_modified ? " == $last_modified_iso" :
 
-					'is old (' . localtime_to_iso ($INC_FRESH {$module_name}) . " > $last_modified_iso)";
+					' : ' . localtime_to_iso ($INC_FRESH {$module_name}) . " > $last_modified_iso)";
 
-			$time = __log_profilinig ($time, "    $module_name is $condition");
+			$time = __log_profilinig ($time, '   ' . $message);
 
 		}				
 		
@@ -350,7 +354,15 @@ sub require_fresh {
 		
 	$INC_FRESH {$module_name} = $last_modified;		
 
-	__log_profilinig ($time, "    $module_name reloaded");
+	if ($preconf -> {core_debug_profiling}) {
+				
+		my $message = $module_name;
+			
+		$message =~ s{\w+::(\w)\w*::(\w+)$}{$2 ($1)};
+	
+		$time = __log_profilinig ($time, "   $message -> " . localtime_to_iso ($last_modified));
+
+	}
         	
 }
 
