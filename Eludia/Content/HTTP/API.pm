@@ -4,7 +4,7 @@ sub check_configuration_for_application {
 
 	my ($app) = @_;
 	
-	return if $configs -> {$app};
+	return if $main::configs -> {$app};
 	
 	my $httpd_conf = $app . "/conf/httpd.conf";
 
@@ -12,16 +12,30 @@ sub check_configuration_for_application {
 	
 	open C, $httpd_conf or die "Can't read $httpd_conf: $!\n";
 	
+	my $last_location = '';
+	
 	while (my $s = <C>) {
 	
 		next if $s =~ /\s*\#/;
 	
 		$cnf_src .= $s;
 		
-		if ($s =~ /PerlHandler\s+(\w+)/) {
+		if ($s =~ /Location\s+(.*)\>/) {
 		
-			$configs -> {$app} -> {handler} = $1;
+			$last_location = $1;
+			
+			$last_location =~ s{^[\"\']}{};
+			$last_location =~ s{[\"\']\s*&}{};
 		
+		}
+
+		if ($s =~ /PerlHandler\s+([\w\:]+)/) {
+		
+			my $handler = $1;
+			$handler    =~ /\:\:/ or $handler .= '::handler';
+		
+			$main::configs -> {$app} -> {handler_src}  .= "\n \$ENV{SCRIPT_NAME} =~ m{^$last_location} ? $handler (\@_) : ";
+
 		}
 
 		if ($s =~ /SetEnv\s+(\w+)\s+(.*)/) {
@@ -31,12 +45,20 @@ sub check_configuration_for_application {
 			$v =~ s{$\s*\"?}{};
 			$v =~ s{\"?\s*$}{};
 		
-			$configs -> {$app} -> {env} -> {$k} = $v;
+			$main::configs -> {$app} -> {env} -> {$k} = $v;
 		
 		}	
 		
 	}
 	
+	foreach my $app (keys %$main::configs) {
+	
+		my $src = "\$main::configs -> {'$app'} -> {handler} = sub {$main::configs->{$app}->{handler_src} 0}";
+
+		eval $src;
+
+	}
+
 	close C;
 	
 	$cnf_src =~ m{\<perl\>(.*)\</perl\>}ism;
@@ -55,7 +77,7 @@ sub handle_request_for_application {
 
 	my ($app) = @_;
 	
-	my $config = $configs -> {$app} or die "Configuration is not defined for '$app'\n";
+	my $config = $main::configs -> {$app} or die "Configuration is not defined for '$app'\n";
 	
 	foreach my $k (keys %{$config -> {env}}) {
 	
@@ -65,9 +87,7 @@ sub handle_request_for_application {
 	
 	my $handler = $config -> {handler};
 
-	*$handler {CODE} or $handler = ($config -> {handler} .= '::handler');
-
-	*$handler {CODE} or die "handler '$handler' not defined for '$app'\n";
+	ref $handler eq CODE or die "handler '$handler' not defined for '$app' ($ENV{SCRIPT_NAME})\n";
 
 	eval { &$handler () }; $@ or return;
 
