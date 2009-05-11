@@ -1,71 +1,109 @@
 ################################################################################
 
+sub check_configuration_for_application {
+
+	my ($app) = @_;
+	
+	return if $main::configs -> {$app};
+	
+	my $httpd_conf = $app . "/conf/httpd.conf";
+
+	my $cnf_src = '';
+	
+	open C, $httpd_conf or die "Can't read $httpd_conf: $!\n";
+	
+	my $last_location = '';
+	
+	while (my $s = <C>) {
+	
+		next if $s =~ /\s*\#/;
+	
+		$cnf_src .= $s;
+		
+		if ($s =~ /Location\s+(.*)\>/) {
+		
+			$last_location = $1;
+			
+			$last_location =~ s{^[\"\']}{};
+			$last_location =~ s{[\"\']\s*&}{};
+		
+		}
+
+		if ($s =~ /PerlHandler\s+([\w\:]+)/) {
+		
+			my $handler = $1;
+			$handler    =~ /\:\:/ or $handler .= '::handler';
+		
+			$main::configs -> {$app} -> {handler_src}  .= "\n \$ENV{SCRIPT_NAME} =~ m{^$last_location} ? $handler (\@_) : ";
+
+		}
+
+		if ($s =~ /SetEnv\s+(\w+)\s+(.*)/) {
+		
+			my ($k, $v) = ($1, $2);
+			
+			$v =~ s{$\s*\"?}{};
+			$v =~ s{\"?\s*$}{};
+		
+			$main::configs -> {$app} -> {env} -> {$k} = $v;
+		
+		}	
+		
+	}
+	
+	foreach my $app (keys %$main::configs) {
+	
+		my $src = "\$main::configs -> {'$app'} -> {handler} = sub {$main::configs->{$app}->{handler_src} 0}";
+
+		eval $src;
+
+	}
+
+	close C;
+	
+	$cnf_src =~ m{\<perl\>(.*)\</perl\>}ism;
+	
+	delete $INC {'Eludia.pm'};
+			
+	eval $1;
+	
+	die "Application initialization error: $@" if $@;
+	
+}
+
+################################################################################
+
+sub handle_request_for_application {
+
+	my ($app) = @_;
+	
+	my $config = $main::configs -> {$app} or die "Configuration is not defined for '$app'\n";
+	
+	foreach my $k (keys %{$config -> {env}}) {
+	
+		$ENV {$k} = $config -> {env} -> {$k};
+	
+	}
+	
+	my $handler = $config -> {handler};
+
+	ref $handler eq CODE or die "handler '$handler' not defined for '$app' ($ENV{SCRIPT_NAME})\n";
+
+	eval { &$handler () }; $@ or return;
+
+	warn $@; print "Status: 500 Internal Error\r\nContent-type: text/html\r\n\r\n<pre>$@</pre>";
+
+}
+
+################################################################################
+
 sub check_configuration_and_handle_request_for_application {
 
 	my ($app) = @_;
 	
-	unless ($configs -> {$app}) {
+	check_configuration_for_application ($app);
 	
-		my $httpd_conf = $app . "/conf/httpd.conf";
-
-		my $cnf_src = '';
-		
-		open C, $httpd_conf or die "Can't read $httpd_conf: $!\n";
-		
-		while (my $s = <C>) {
-		
-			next if $s =~ /\s*\#/;
-		
-			$cnf_src .= $s;
-			
-			if ($s =~ /PerlHandler\s+(\w+)/) {
-			
-				$configs -> {$app} -> {handler} = $1;
-			
-			}
-
-			if ($s =~ /SetEnv\s+(\w+)\s+(.*)/) {
-			
-				my ($k, $v) = ($1, $2);
-				
-				$v =~ s{$\s*\"?}{};
-				$v =~ s{\"?\s*$}{};
-			
-				$configs -> {$app} -> {env} -> {$k} = $v;
-			
-			}	
-			
-		}
-		
-		close C;
-		
-		$cnf_src =~ m{\<perl\>(.*)\</perl\>}ism;
-		
-		delete $INC {'Eludia.pm'};
-				
-		eval $1;
-		
-		die "Application initialization error: $@" if $@;
-	
-	}
-	
-	foreach my $k (keys %{$configs -> {$app} -> {env}}) {
-	
-		$ENV {$k} = $configs -> {$app} -> {env} -> {$k};
-	
-	}	
-
-	eval "$configs->{$app}->{handler}::handler ()";
-	
-	if ($@) {
-	
-		warn $@ if $@;
-
-		print "Status: 500 Internal Auth Error\r\n";
-		print "Content-type: text/html\r\n\r\n";
-		print "<pre>$@</pre>";
-		
-	}		
+	handle_request_for_application ($app);
 
 }
 
