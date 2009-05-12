@@ -131,7 +131,7 @@ sub require_scripts_of_type ($) {
 		
 		if (@scripts == 0) {
 		
-			__log_profilinig ($time, "   require_scripts_of_type $script_type: all scripts in $dir are older than " . localtime_to_iso ($__last_update));
+			__log_profilinig ($time, "   $dir/.* <= " . localtime_to_iso ($__last_update));
 			
 			next;
 			
