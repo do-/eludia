@@ -803,6 +803,8 @@ sub check_internal_module_queries {
 
 BEGIN {
 
+	foreach (grep {/^Eludia/} keys %INC) { delete $INC {$_} }
+	
 	check_constants             ();
 	check_version               ();
 
