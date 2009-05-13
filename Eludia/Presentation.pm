@@ -2445,6 +2445,12 @@ sub draw_toolbar_pager {
 
 	}
 	
+	if ($options -> {start} + $$options{cnt} * 2 < $$options{total}) {
+	
+		$options -> {last_url} = create_url (start => $options -> {total} - $options -> {portion}, %keep_params);
+
+	}
+
 	$options -> {infty_url}   = create_url (__last_query_string => $last_query_string, __infty => 1 - $_REQUEST {__infty}, __no_infty => 1 - $_REQUEST {__no_infty}, @keep_params);
 	
 	$options -> {infty_label} = $options -> {total} > 0 ? $options -> {total} : $i18n -> {infty};
@@ -4065,8 +4071,8 @@ sub dialog_open {
 	
 	$options -> {id} = ++ $_REQUEST {__dialog_cnt};
 	
-	$options -> {dialogHeight} ||= $options -> {height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)' if $options -> {height};
-	$options -> {dialogWidth}  ||= $options -> {width}  || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)' if $options -> {width};
+	$options -> {dialogHeight} ||= $options -> {height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+	$options -> {dialogWidth}  ||= $options -> {width}  || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
 
 	$arg ||= {};
 	

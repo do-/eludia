@@ -872,7 +872,9 @@ TableSlider.prototype.set_row = function (row) {
 
 	if (row < this.cnt) {
 		this.row = row;
-		this.rows [row].scrollIntoView(false);
+		if ($('form').size() < 3) {
+			this.rows [row].scrollIntoView(false);
+		}
 	}
 
 }

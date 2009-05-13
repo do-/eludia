@@ -783,7 +783,45 @@ sub draw_form_field_hgroup {
 sub draw_form_field_text {
 
 	my ($_SKIN, $options, $data) = @_;
+
 	my $attributes = dump_attributes ($options -> {attributes});
+	
+	my $static_url = $_REQUEST{__static_url};
+	$static_url =~ s[^/i/][];	
+
+	unless (grep {$_ eq "$static_url/jquery.textarearesizer.compressed"} @{$_REQUEST{__include_js}}) {
+
+		push @{$_REQUEST{__include_js}}, "$static_url/jquery.textarearesizer.compressed";
+		
+		$_REQUEST {__head_links} .= <<EOH;
+		<style>
+			div.grippie {
+				background:#EEEEEE url($_REQUEST{__static_url}/grippie.png) no-repeat scroll center 2px;
+				border-color:#DDDDDD;
+				border-style:solid;
+				border-width:0pt 1px 1px;
+				cursor:s-resize;
+				height:9px;
+				overflow:hidden;
+			}
+			.resizable-textarea textarea {
+				display:block;
+				margin-bottom:0pt;
+				width:95%;
+				height: 20%;
+			}
+		</style>
+EOH
+
+		$_REQUEST {__on_load} .= <<'EOJS';
+			$(document).ready(function() {
+				$('textarea:not(.processed)').TextAreaResizer();
+			});
+EOJS
+		
+	
+	}
+
 	return <<EOH;
 		<textarea 
 			$attributes 
@@ -1745,8 +1783,13 @@ sub draw_toolbar_pager {
 		$html .= ($options -> {start} + $options -> {cnt});
 		$html .= qq |$$i18n{toolbar_pager_of}<a TABINDEX=-1 class=lnk0 href="$$options{infty_url}">$$options{infty_label}</a>|;
 		$html .= '&nbsp;</td>';
+
 		if ($options -> {next_url}) {
 			$html .= qq {<td  nowrap valign="middle"><a TABINDEX=-1 href="$$options{next_url}" class=lnk0 id="_pager_next" onFocus="blur()"><img src="$_REQUEST{__static_url}/pager_n.gif?$_REQUEST{__static_salt}" width="16" height="17" border="0"></a></td>};
+		}
+
+		if ($options -> {last_url}) {
+			$html .= qq {<td nowrap valign="middle"><a TABINDEX=-1 href="$$options{last_url}" class=lnk0 onFocus="blur()"><img src="$_REQUEST{__static_url}/pager_l.gif?$_REQUEST{__static_salt}" width="16" height="17" border="0"></a></td>};
 		}
 
 	}

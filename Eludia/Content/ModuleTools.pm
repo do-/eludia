@@ -167,7 +167,7 @@ sub require_scripts_of_type ($) {
 			while (<SCRIPT>) { $src .= $_; };
 			close (SCRIPT);
 			
-			$src = "\n$script->{name} => {$src}" if $script_type eq 'model';
+			$src = "\n$script->{name} => {$src, _src => q{$src}}" if $script_type eq 'model';
 			
 			push @src, $src;
 									
