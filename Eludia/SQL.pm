@@ -1571,7 +1571,7 @@ sub sql {
 
 	my $from   = "\nFROM\n $root";
 	my $where  = "\nWHERE 1=1 \n";
-	my $order  = [$root . '.label'];
+	my $order  = [$root . ($DB_MODEL -> {tables} -> {$root} -> {columns} -> {label} ? '.label' : '.id')];
 	my $limit;
 	my @join_params = ();
 	my @params = ();
