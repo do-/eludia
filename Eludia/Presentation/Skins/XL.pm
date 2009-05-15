@@ -439,6 +439,7 @@ sub draw_text_cell {
 	if ($data -> {picture}) {
 		my $picture = $_SKIN -> _picture ($data -> {picture});
 		$data -> {attributes} -> {style} .= "mso-number-format:$picture;";
+		$data -> {attributes} -> {'x:num'} = delete $data -> {attributes} -> {title};
 	}
 	elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
 		$data -> {attributes} -> {style} .= "mso-number-format:'Short date';";
