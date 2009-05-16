@@ -907,6 +907,8 @@ sub draw_form_field_checkboxes {
 	
 	my $v = $data -> {$options -> {name}};
 	
+	my $disabled = ($options -> {disabled} > 0 ? 'disabled' : '');
+	
 	if (ref $v eq ARRAY) {
 	
 		my $n = 0;
@@ -939,8 +941,8 @@ sub draw_form_field_checkboxes {
 					my $subchecked = 0 + (grep {$_ eq $subvalue -> {id}} @$v) ? 'checked' : '';
 					
 					$tabindex++;
-					
-					$subhtml .= $subvalue -> {no_checkbox} ? qq{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$$subvalue{label} <br>} : qq {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="_$$options{name}_$$subvalue{id}" value="1" $subchecked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;$$subvalue{label} <br>};
+										
+					$subhtml .= $subvalue -> {no_checkbox} ? qq{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$$subvalue{label} <br>} : qq {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="_$$options{name}_$$subvalue{id}" value="1" $subchecked onChange="is_dirty=true" $disabled tabindex=$tabindex>&nbsp;$$subvalue{label} <br>};
 				
 				}
 
@@ -957,8 +959,8 @@ EOH
 		
 			$tabindex ++;
 			$n ++;
-
-			$html .= qq {<td><input $subattr type="checkbox" name="_$$options{name}_$$value{id}" value="1" $checked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;$$value{label} $subhtml</td>};
+			
+			$html .= qq {<td><input $subattr type="checkbox" name="_$$options{name}_$$value{id}" value="1" $checked onChange="is_dirty=true"  $disabled tabindex=$tabindex>&nbsp;$$value{label} $subhtml</td>};
 			$html .= '</tr><tr>' unless $n % $options -> {cols};
 			
 		}
@@ -971,8 +973,8 @@ EOH
 	
 		foreach my $value (@{$options -> {values}}) {
 			my $checked = $v eq $value -> {id} ? 'checked' : '';
-			$tabindex++;
-			$html .= qq {<input type="checkbox" name="_$$options{name}" value="$$value{id}" $checked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;$$value{label} <br>};
+			$tabindex++;			
+			$html .= qq {<input type="checkbox" name="_$$options{name}" value="$$value{id}" $checked onChange="is_dirty=true" $disabled tabindex=$tabindex>&nbsp;$$value{label} <br>};
 		}
 		
 	}
@@ -1906,8 +1908,8 @@ sub draw_row_button {
 		my $label = $options -> {label};
 		my $img_path = _icon_path ($options -> {icon});
 
-		$options -> {label} = qq|<img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=0 align=absmiddle>|;
-		$options -> {label} .= "&nbsp;$label" if $options -> {force_label} || $conf -> {core_hide_row_buttons} > -1;
+		$options -> {label} = qq|&nbsp;<img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=0 align=absmiddle>|;
+		$options -> {label} .= "&nbsp;$label&nbsp;" if $options -> {force_label} || $conf -> {core_hide_row_buttons} > -1;
 
 	}
 	else {

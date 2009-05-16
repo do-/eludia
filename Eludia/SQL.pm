@@ -1,5 +1,7 @@
 no warnings;
 
+use Eludia::SQL::Transfer;
+
 ################################################################################
 
 sub add_vocabularies {
@@ -42,109 +44,6 @@ sub add_vocabularies {
 	}
 	
 	return $item;
-
-}
-
-################################################################################
-
-sub sql_export_json {
-
-	my ($sql, $out, @params) = @_;
-	
-	my $cb = ref $out eq CODE ? $out : sub {print $out $_[0]};
-
-	$_JSON or setup_json ();
-	
-	my $table;
-
-	if ($sql =~ /^\s*DESC(?:RIBE)?\s+(\w+)\s*$/gism) {
-	
-		$table = $1;
-		
-		my $def = {
-			name    => $table,
-			columns => $model_update -> get_columns ($table),
-		};
-	
-		my $keys = $model_update -> get_keys ($table, $conf -> {core_voc_replacement_use});
-		
-		foreach my $k (keys %$keys) {
-			next if $k =~ /^pk/;
-			$def -> {keys} -> {$k} = $keys -> {$k};
-		}
-				
-		&$cb ($_JSON -> encode ($def) . "\n");
-		
-		return;
-				
-	}	
-	
-	if ($sql =~ /\bSELECT\s+(\w+)\.*/gism) {
-		$table = $1;
-	}
-	elsif ($sql =~ /\bFROM\s+(\w+)/gism) {
-		$table = $1;
-	}
-	
-	$table or die "Invalid SQL (no table): $sql";
-	
-	sql_select_loop ($sql, sub {&$cb ($_JSON -> encode ([$table => $i]) . "\n")}, @params);
-
-}
-
-################################################################################
-
-sub sql_import_json {
-
-	my ($in, $cb) = @_;
-	
-	$_JSON or setup_json ();
-	
-	my $defs = {};
-		
-	while (my $line = <$in>) {
-	
-		my $r = $_JSON -> decode ($line);
-		
-		if (ref $r eq HASH) {
-		
-			$model_update -> assert (
-				
-				tables => {$r -> {name} => $r}, 
-				
-				default_columns => $DB_MODEL -> {default_columns},
-				
-				prefix => 'sql_import_json#',
-				
-			);
-			
-			next;
-		
-		}
-	
-		my %h = ();
-		
-		my $columns = ($defs -> {$r -> [0]} ||= $model_update -> get_columns ($r -> [0]));
-				
-		while (my ($k, $v) = each %{$r -> [1]}) {
-		
-			$columns -> {$k} or next;
-		
-			$k eq 'id' or $k = '-' . $k;
-			
-			foreach (split //, $v) {
-			
-				$h {$k} .= chr (ord ($_));
-
-			}
-
-		}
-		
-		sql_select_id ($r -> [0] => \%h, ['id']);
-		
-		&$cb ($r, \%h) if $cb;
-	
-	}
 
 }
 
@@ -898,6 +797,8 @@ sub sql_select_id {
 	
 	sql_lock ($table);
 
+	eval {
+
 	foreach my $lookup_fields (@lookup_field_sets) {
 	
 		if (ref $lookup_fields eq CODE) {		
@@ -968,6 +869,8 @@ sub sql_select_id {
 
 	$record -> {id} ||= sql_do_insert ($table, $values);
 	
+	};
+
 	sql_unlock ($table);
 	
 	if ($auto_commit) {
@@ -1419,10 +1322,14 @@ sub sql_filters {
 	my @params = ();
 
 	foreach my $filter (@$filters) {
+	
+		if (ref $filter eq ARRAY and @$filter == 1 and $filter -> [0] =~ /^-?1\s/) {
+		
+			$filter = [LIMIT => [$filter -> [0]]];
+			
+		}
 
 		ref $filter or $filter = [$filter, $_REQUEST {$filter}];
-
-											# 'id_org'       --> ['id_org' => $_REQUEST {id_org}]
 
 		my ($field, $values) = @$filter;
 
@@ -1436,8 +1343,8 @@ sub sql_filters {
 			ref $limit or $limit = [$limit];
 			next;
 		}
-
-		ref $values eq ARRAY or $values = [$values];
+		
+		my $was_array = ref $values eq ARRAY or $values = [$values];
 
 		my $first_value = $values -> [0];
 
@@ -1453,6 +1360,12 @@ sub sql_filters {
 
 			next if $first_value eq '' or $first_value eq '0000-00-00';
 
+		}
+		
+		if (($tied or $was_array) && $field =~ /^([a-z][a-z0-9_]*)$/) {
+		
+			$field .= ' IN';
+		
 		}
 
 		$cnt_filters ++;
@@ -1539,6 +1452,36 @@ sub sql_filters {
 
 		}
 
+
+	}
+	
+	if (ref $limit eq ARRAY) {
+	
+		if (@$limit == 1 && $limit -> [0] =~ /^(.+?)\s*\,\s*(.+)$/) {
+		
+			$limit = [$1, $2];
+		
+		}
+		
+		if ($limit -> [0] =~ /^[a-z]\w*$/) {
+		
+			$limit -> [0] = 0 + $_REQUEST {$limit -> [0]};
+		
+		}
+	
+		if ($limit -> [-1] =~ s{\s+BY\s+(.*)}{}) {
+		
+			$order = $1;
+		
+		}
+		
+		if ($limit -> [-1] < 0) {
+		
+			$limit -> [-1] *= -1;
+			
+			$order .= ' DESC';
+		
+		}
 
 	}
 	
@@ -1674,14 +1617,25 @@ sub sql {
 			$filters = $table -> [1] || [];
 			$table   = $table -> [0];
 		}
+		
+		my $on = '';
+
+		if ($table =~ /\s+ON\s+/) {
+
+			$table = $`;
+			$on    = $';
+
+		}
 
 		my $alias = '';
 		
 		if ($table =~ /\s+AS\s+(\w+)\s*$/) {
+
 			$table = $`;
 			$alias = $1;
-		}
 
+		}
+		
 		$table =~ s{\s}{}gsm;
 
 		$table =~ /(\-?)(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
@@ -1690,6 +1644,12 @@ sub sql {
 
 		$alias ||= $name;
 		
+		if ($on && $on !~ /\s/) {
+		
+			$on = "$on = $alias.id";
+		
+		}
+
 		$table = {
 		
 			src     => $table,
@@ -1697,6 +1657,7 @@ sub sql {
 			columns => $columns,
 			single  => en_unplural ($alias),
 			alias   => $alias,
+			on      => $on,
 			filters => $filters,
 			join    => $minus ? 'INNER JOIN' : 'LEFT JOIN',
 			
@@ -1713,7 +1674,17 @@ sub sql {
 
 		my $found = 0;
 		
-		if ($table -> {filters}) {
+		if ($table -> {on}) {
+		
+			$from .= "\n $table->{join} $table->{name}";
+			$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+			$from .= " ON ($table->{on})";
+				
+			$found = 1;
+		
+		}
+		
+		if (!$found && $table -> {filters}) {
 		
 			my $definition = $DB_MODEL -> {tables} -> {$table -> {name}};
 
@@ -1862,11 +1833,11 @@ sub sql {
 
 	my $is_ids = (@root_columns == 1 && $root_columns [0] ne '*') ? 1 : 0;
 	
-	!$is_ids or $cnt_filters or return undef;
+	my $is_first = $limit && @$limit == 1 && $limit -> [0] == 1;
 	
-	$sql =~ s{^SELECT}{SELECT DISTINCT} if $is_ids;
-
-	if (!$have_id_filter && !$is_ids) {
+	!$is_ids or $cnt_filters or $is_first or return undef;
+	
+	if ((!$have_id_filter && !$is_ids) || $is_first) {
 	
 		$order = order ($order)  if $order !~ /\W/;
 		$order = order (@$order) if ref $order eq ARRAY;
@@ -1884,7 +1855,9 @@ sub sql {
 	
 	}
 	
-	if ($have_id_filter || ($limit && @$limit == 1 && $limit -> [0] == 1)) {
+	if ($have_id_filter || $is_first) {
+	
+		return sql_select_scalar ($sql, @params) if $is_ids;
 
 		@result = (sql_select_hash ($sql, @params));
 
@@ -1925,6 +1898,8 @@ sub sql {
 
 			if ($is_ids) {
 							
+				$sql =~ s{^SELECT}{SELECT DISTINCT};
+
 				my $ids;
 				
 				my $tied = tie $ids, 'Eludia::Tie::IdsList', {
@@ -2214,11 +2189,11 @@ sub assert {
 
 	&{$self -> {before_assert}} (@_) if ref $self -> {before_assert} eq CODE;
 		
-	my $needed_tables = sql_assert_default_columns (Storable::dclone $params {tables}, \%params);
+	my $needed_tables = sql_assert_default_columns (Storable::dclone ($params {tables}), \%params);
 		
 	($needed_tables, my $new_checksums) = checksum_filter ('db_model', $params {prefix}, $needed_tables);
 		
-	%$needed_tables > 0 or warn "   DB model update: nothing to do\n" and return;
+	%$needed_tables > 0 or return;
 		
 	my $existing_tables = {};	
 	

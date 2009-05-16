@@ -86,6 +86,8 @@ sub setup_request_params {
 
 	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
 
+	$ENV {DOCUMENT_ROOT} ||= $preconf -> {_} -> {docroot};
+
 	$_PACKAGE ||= __PACKAGE__ . '::';
 
 	my $http_host = $ENV {HTTP_X_FORWARDED_HOST} || $self -> {preconf} -> {http_host};
@@ -93,7 +95,7 @@ sub setup_request_params {
 	$ENV {HTTP_HOST} = $http_host if $http_host;
 
 	get_request (@_);
-	
+
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 	
 	set_cookie_for_root (client_cookie => $_COOKIE {client_cookie} || Digest::MD5::md5_hex (rand ()));
@@ -143,11 +145,12 @@ sub setup_request_params {
 	$_REQUEST {type} =~ s/_for_.*//;
 	$_REQUEST {__uri} = $r -> uri;
 	$_REQUEST {__uri} =~ s{/cgi-bin/.*}{/};
-	$_REQUEST {__uri} =~ s{\/\w+\.\w+$}{};
+	$_REQUEST {__uri} =~ s{/\w+\.\w+$}{};
 	$_REQUEST {__uri} =~ s{\?.*}{};
 	$_REQUEST {__uri} =~ s{^/+}{/};
 	$_REQUEST {__uri} =~ s{\&salt\=[\d\.]+}{}gsm;
-	
+	$_REQUEST {__uri} =~ s{(\.\w+)/$}{$1};
+
 	$_REQUEST {__script_name} = $ENV {SERVER_SOFTWARE} =~ /IIS\/5/ ? $ENV {SCRIPT_NAME} : '';
 
 	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;
@@ -157,6 +160,14 @@ sub setup_request_params {
 	}
 
 	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
+
+	$_REQUEST {lpt} ||= $_REQUEST {xls};
+
+	$_REQUEST {__read_only} = 1 if $_REQUEST {lpt};
+	
+	$_REQUEST {__read_only} = $_REQUEST {__pack} = $_REQUEST {__no_navigation} = 1 if $_REQUEST {__popup};
+
+	$_REQUEST {__page_title} ||= $conf -> {page_title};
 
 	setup_request_params_for_action () if $_REQUEST {action};
 	
@@ -272,6 +283,8 @@ sub setup_menu {
 
 	my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
 	
+	ref $menu or $menu = [];
+	
 	$_REQUEST {type} or adjust_request_type ($menu);
 	
 	return $menu;
@@ -284,7 +297,7 @@ sub handle_error {
 
 	my ($page) = @_;
 	
-	out_html ({}, draw_page ($page));
+	out_html ({}, draw_error_page ($page));
 	
 	return action_finish ();
 
@@ -296,8 +309,8 @@ sub handle_request_of_type_kickout {
 
 	foreach (qw(sid salt _salt __last_query_string __last_scrollable_table_row)) {delete $_REQUEST {$_}}
 	
-	set_cookie_for_root (redirect_params => MIME::Base64::encode (Dumper (\%_REQUEST)), '+1h');
-
+	set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode (Dumper (\%_REQUEST)), -path => '/');
+	
 	redirect (
 		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),
 		kind => 'js', 
@@ -328,11 +341,11 @@ sub handle_request_of_type_action {
 
 	eval { $_REQUEST {error} = call_for_role ("validate_${action}_$$page{type}"); };
 	
-	return action_finish () if $_REQUEST {__response_sent};
+	$_REQUEST {error} ||= $@ if $@;
 	
 	return handle_error ($page) if $_REQUEST {error};
-			
-	return action_finish () if $_REQUEST {__peer_server};
+
+	return action_finish () if $_REQUEST {__response_sent} || $_REQUEST {__peer_server};
 
 	eval {
 
@@ -380,6 +393,20 @@ sub handle_request_of_type_suggest {
 
 ################################################################################
 
+sub setup_page_content {
+
+	my ($page) = @_;
+	
+	eval { $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
+
+	$@ and return $_REQUEST {error} = $@;
+	
+	$_REQUEST {__page_content} = $page -> {content};
+
+}
+
+################################################################################
+
 sub handle_request_of_type_showing {
 
 	my ($page) = @_;
@@ -388,8 +415,10 @@ sub handle_request_of_type_showing {
 
 	adjust_last_query_string ();
 	
-	$r -> headers_out -> {'Expires'} = '-1';
-			
+	setup_page_content ($page) unless $_REQUEST {__only_menu};
+	
+	return handler_finish () if $_REQUEST {__response_sent} && !$_REQUEST {error};
+
 	out_html ({}, draw_page ($page));
 
 	return handler_finish ();
@@ -604,10 +633,23 @@ sub recalculate_logon {
 	
 		set_cookie_for_root (user_login => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}));
 
+		my ($fieds, @params);
+
+		$fields = 'ip = ?, ip_fw = ?';
+		push (@params, $ENV {REMOTE_ADDR}, $ENV {HTTP_X_FORWARDED_FOR});
+
 		if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
-			sql_do ('UPDATE sessions SET tz_offset = ? WHERE id = ?', $_REQUEST {tz_offset}, $_REQUEST {sid});
+			$fields .= ", tz_offset = ?";
+			push (@params, $_REQUEST {tz_offset});
 		}
-		
+
+		unless ($preconf -> {core_no_cookie_check}) {
+			$fields .= ", client_cookie = ?";
+			push (@params, $_COOKIE {client_cookie});
+		}
+
+		sql_do ("UPDATE sessions SET $fields WHERE id = ?", @params, $_REQUEST {sid});
+
 		session_access_logs_purge ();
 		
 	}

@@ -82,7 +82,7 @@ sub require_scripts_of_type ($) {
 
 	my $__last_update = get_last_update ();
 	
-	my $__time = $__time = int (time ());
+	my $__time = 0;
 	
 	my $is_updated;
 	
@@ -129,18 +129,25 @@ sub require_scripts_of_type ($) {
 
 		}
 		
+		if (@scripts == 0) {
+		
+			__log_profilinig ($time, "   require_scripts_of_type $script_type: all scripts in $dir are older than " . localtime_to_iso ($__last_update));
+			
+			next;
+			
+		}
+
 		my $checksum_kind = $script_type . '_scripts';
 
 		my ($needed_scripts, $new_checksums) = checksum_filter ($checksum_kind, '', $name2def);
 	
 		if (%$needed_scripts == 0) {
 		
-			__log_profilinig ($time, "   require_scripts_of_type $script_type: nothing to do in $dir");
+			__log_profilinig ($time, "   require_scripts_of_type $script_type: all scripts in $dir are filtered by 'checksums' (which are, in fact, timestamps).");
 			
 			next;
 			
 		}
-		
 
 		@scripts = 
 			
@@ -188,8 +195,7 @@ sub require_scripts_of_type ($) {
 
 	}
 	
-	set_last_update ($__time)
-		if $is_updated;
+	return $__time;
 
 }
 
@@ -214,10 +220,20 @@ sub require_scripts {
 	open (CONFIG, $file_name) || die "can't open $file_name: $!";
 
 	flock (CONFIG, LOCK_EX);
+	
+	my $__last_update = get_last_update ();
 
-	require_scripts_of_type 'model';
+	my $__time = 0;
+	
+	foreach my $kind ('model', 'updates') {
+	
+		my $time = require_scripts_of_type $kind;
+		
+		$__time > $time or $__time = $time;
+	
+	}
 
-	require_scripts_of_type 'updates';
+	set_last_update ($__time) if $__time > $__last_update;
 
 	flock (CONFIG, LOCK_UN);
 
@@ -225,6 +241,16 @@ sub require_scripts {
 
 	__log_profilinig ($time, "  require_scripts done");
 
+}
+
+################################################################################
+
+sub localtime_to_iso {
+
+	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($_[0]);
+	
+	return sprintf ('%04d-%02d-%02d %02d:%02d:%02d', 1900 + $year, 1 + $mon, $mday, $hour, $min, $sec);
+	
 }
 
 ################################################################################
@@ -268,8 +294,25 @@ sub require_fresh {
 	}
 
 	unless ($need_refresh) {
+	
+		if ($preconf -> {core_debug_profiling}) {
+	
+			my $last_modified_iso = localtime_to_iso ($last_modified);
+			
+			my $message = $module_name;
+			
+			$message =~ s{\w+::(\w)\w*::(\w+)$}{$2 ($1)};
+	
+			$message .=
 
-		$time = __log_profilinig ($time, "    $module_name is old ($INC_FRESH{$module_name} >= $last_modified)");
+				$INC_FRESH {$module_name} == $last_modified ? " == $last_modified_iso" :
+
+					' : ' . localtime_to_iso ($INC_FRESH {$module_name}) . " > $last_modified_iso)";
+
+			$time = __log_profilinig ($time, '   ' . $message);
+
+		}				
+		
 		return;
 
 	}
@@ -311,7 +354,15 @@ sub require_fresh {
 		
 	$INC_FRESH {$module_name} = $last_modified;		
 
-	__log_profilinig ($time, "    $module_name reloaded");
+	if ($preconf -> {core_debug_profiling}) {
+				
+		my $message = $module_name;
+			
+		$message =~ s{\w+::(\w)\w*::(\w+)$}{$2 ($1)};
+	
+		$time = __log_profilinig ($time, "   $message -> " . localtime_to_iso ($last_modified));
+
+	}
         	
 }
 
@@ -374,14 +425,15 @@ sub call_for_role {
 		
 	}
 	else {
-		$sub_name    =~ /^(valid|recalcul)ate_/
-		or $sub_name eq 'get_menu'
-		or $sub_name eq 'select_menu'
-		or warn "call_for_role: callback procedure not found: \$sub_name = $sub_name, \$role = $role \n";
+		
+		$sub_name    =~ /^(valid|recalcul)ate_/	or $sub_name =~ /^(get|select)_menu$/
+		
+			or warn "call_for_role: callback procedure not found: \$sub_name = $sub_name, \$role = $role \n";
+		
+		return undef;
+		
 	}
 
-	return $name_to_call ? &$name_to_call (@_) : undef;
-		
 }
 
 ################################################################################

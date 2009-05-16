@@ -52,7 +52,9 @@ sub __d {
 
 	my ($data, @fields) = @_;
 
-	@fields = grep {/(_|\b)dt(_|\b)/} keys %$data;
+	unless (@fields + 0) {
+		@fields = grep {/(_|\b)dt(_|\b)/} keys %$data;
+	}
 
 	foreach (@fields) {
 
@@ -76,6 +78,8 @@ sub format_picture {
 	my ($txt, $picture) = @_;
 	
 	return '' if $txt eq '';
+	
+	return $txt if ($_REQUEST {xls});
 	
 	my $result = $number_format -> format_picture ($txt, $picture);
 	
@@ -401,11 +405,11 @@ sub check_href {
 
 	my ($options) = @_;
 	
-	return $options -> {href} if !ref $options -> {href} && ($options -> {href} =~ /\#$/ || $options -> {href} =~ /^(java|mailto|file|\/i\/)/);
+	my $href = $options -> {href};
 	
 	my %h = ();
 	
-	if (ref $options -> {href} eq HASH) {
+	if (ref $href eq HASH) {
 		
 		if ($_REQUEST_TO_INHERIT) {
 		
@@ -426,49 +430,64 @@ sub check_href {
 
 		}		
 		
-		foreach my $k (keys %{$options -> {href}}) {
+		foreach my $k (keys %$href) {
 		
-			$h {$k} = $options -> {href} -> {$k};
+			$h {$k} = $href -> {$k};
 			
 		}
 		
 	}
 	else {
-	    
-		$options -> {href} = (MP2 && $options -> {href} =~ /[\x7f-\xff]+/) ? uri_escape($options -> {href}, "\x7f-\xff") : $options -> {href};
-	
-		foreach my $token (split /[\?\&]+/, $options -> {href}) {
-			$token =~ /\=/ or next;
-			return $options -> {href} if $` eq 'salt' && $' eq $_REQUEST {__salt};
-			$h {$`} = $';
-		}
 			
-		$h {select} ||= $_REQUEST {select} if $_REQUEST {select};
-		$h {__no_navigation} ||= $_REQUEST {__no_navigation} if $_REQUEST {__no_navigation};
-		$h {__tree} ||= $_REQUEST {__tree} if $_REQUEST {__tree};
-		$h {__last_query_string} ||= $_REQUEST {__last_query_string};
+		return $href if ($href =~ /\#$/ || $href =~ /^(java|mailto|file|\/i\/)/);
+
+		$href = uri_escape ($href, "\x7f-\xff") if MP2 && $href =~ /[\x7f-\xff]/;
+		
+		if ($href =~ /\?/) {$href = $'};
+
+		foreach my $token (split /\&/, $href) {
+		
+			$token =~ /\=/ or next;
+			
+			$h {$`} = $';
+			
+		}
+		
+		foreach my $name (@_OVERRIDING_PARAMETER_NAMES) {
+			
+			$_REQUEST {$name} or next;
+
+			$h {$name} ||= $_REQUEST {$name};
+			
+		}
 								
 	}
 	
 	$_REQUEST {__salt}     ||= rand () * time ();
-	$_REQUEST {__uri_root} ||= $_REQUEST {__uri} . $_REQUEST {__script_name} . '?sid=' . $_REQUEST {sid} . '&salt=' . $_REQUEST {__salt};
 	
+	unless ($_REQUEST {__uri_root}) {
+	
+		$_REQUEST {__uri_root} = $_REQUEST{__uri};
+		
+		if ($_REQUEST {__script_name} && $ENV {GATEWAY_INTERFACE} !~ /^CGI-PerlEx/) {
+		
+			$_REQUEST {__uri_root} .= $_REQUEST{__script_name};
+		
+		}
+		
+		$_REQUEST {__uri_root} .= "?salt=$_REQUEST{__salt}&sid=$_REQUEST{sid}";
+
+	}	
+
 	my $url = $_REQUEST {__uri_root};
 				
 	foreach my $k (keys %h) {
 
-		$k or next;
-		
-		my $v = $h {$k};
-		
-		defined $v or next;
+		defined (my $v = $h {$k || next}) or next;
 
 		next if !$v and $_NON_VOID_PARAMETER_NAMES -> {$k};
-				
-		$url .= '&';
-		$url .= $k;
-		$url .= '=';
-		$url .= $v;
+		
+		$url .= "&$k=$v";
 		
 	}
 
@@ -755,6 +774,7 @@ sub draw_form_field {
 	 	 &&  $field -> {type} ne 'article'
 	 	 &&  $field -> {type} ne 'iframe'
 	 	 &&  $field -> {type} ne 'color'
+	 	 &&  $field -> {type} ne 'multi_select'
 	 	 &&  $field -> {type} ne 'dir'
 		 && ($field -> {type} ne 'text' || !$conf -> {core_keep_textarea})
 	)
@@ -941,30 +961,38 @@ sub draw_form_field_button {
 sub draw_form_field_string {
 
 	my ($options, $data) = @_;
-
-	$options -> {max_len} ||= $options -> {size};
-	$options -> {max_len} ||= 255;
-	$options -> {attributes} -> {maxlength} = $options -> {max_len};
-	$options -> {attributes} -> {class} ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';	
 	
-	exists $options -> {attributes} -> {autocomplete} or $options -> {attributes} -> {autocomplete} = 'off';
-
-	$options -> {size}    ||= 120;
-	$options -> {attributes} -> {size}      = $options -> {size};
-	
-	$options -> {value}   ||= $data -> {$options -> {name}};
+	my $value = ($options -> {value} ||= $data -> {$options -> {name}});
 		
 	if ($options -> {picture}) {
-		$options -> {value} = format_picture ($options -> {value}, $options -> {picture});
-		$options -> {value} =~ s/^\s+//g;
+	
+		$value = format_picture ($value, $options -> {picture});
+		
+		$value =~ s/^\s+//g;
+		
 	}
 	
-	$options -> {value} =~ s/\"/\&quot\;/gsm; #";
-	$options -> {attributes} -> {value} = $options -> {value};
+	if ($value =~ y/"/"/) {
 	
-	$options -> {attributes} -> {name}  = '_' . $options -> {name};
+		$value =~ s{\"}{\&quot;}gsm;
+	
+	}
+	
+	my $attributes = ($options -> {attributes} ||= {});
+
+	$attributes -> {value}        = \$value;
+	
+	$attributes -> {name}         = '_' . $options -> {name};
 			
-	$options -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
+	$attributes -> {size}         = ($options -> {size} ||= 120);
+
+	$attributes -> {maxlength}    = $options -> {max_len} || $options -> {size} || 255;
+
+	$attributes -> {class}      ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';
+	
+	$attributes -> {autocomplete} = 'off' unless exists $attributes -> {autocomplete};
+
+	$attributes -> {tabindex}     = ++ $_REQUEST {__tabindex};
 
 	return $_SKIN -> draw_form_field_string (@_);
 	
@@ -1154,14 +1182,14 @@ sub draw_form_field_multi_select {
 	my ($options, $data) = @_;
 
 	check_href ($options);
-	
+
 	my $url = dialog_open ({
-		href	=> $options -> {href} . '&multi_select=1&ids=-1',
+		href	=> $options -> {href} . '&multi_select=1',
 		title	=> $options -> {label},
 	}, {
-		dialogHeight	=> 600,
-		dialogWidth	=> 800,
-	}) . "if (result.result == 'ok') {document.getElementById ('$options').innerHTML=result.label; document.form._$options->{name}.value=result.ids;} void (0)";
+		dialogHeight	=> 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)',
+		dialogWidth	=> 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)',
+	}) . "if (result.result == 'ok') {document.getElementById ('ms_$options').innerHTML=result.label; document.form._$options->{name}.value=result.ids;} void (0)";
 	$url =~ s/^javascript://i;
 	
 	my $url_dialog_id = $_REQUEST {__dialog_cnt};
@@ -1173,7 +1201,7 @@ sub draw_form_field_multi_select {
 			items	=> [
 				{
 					type	=> 'static',
-					value	=> qq[<span id="$options">] . join ('<br>', map {$_ -> {label}} @{$options -> {values}}) . '</span>',
+					value	=> qq[<span id="ms_$options">] . join ('<br>', map {$_ -> {label}} @{$options -> {values}}) . '</span>',
 				},
 				{
 					type	=> 'hidden',
@@ -1184,13 +1212,24 @@ sub draw_form_field_multi_select {
 				{
 					type	=> 'button',
 					value	=> 'Изменить',
-					onclick	=> "re = /&ids=.*\$/i; dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, ''); dialog_open_$url_dialog_id.href += '&ids=' + document.form._$options->{name}.value; " . $url,
+					onclick	=> <<EOJS,
+						re = /&salt=[\\d\\.]*/;
+						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
+						dialog_open_$url_dialog_id.href += '&salt=' + Math.random ();
+						
+						re = /&ids=[^&]*/i; 
+						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
+						dialog_open_$url_dialog_id.href += '&ids=' + document.getElementsByName ('_$options->{name}') [0].value; 
+
+						$url
+EOJS
+
 					off	=> $_REQUEST {__read_only},
 				},
 				{
 					type	=> 'button',
 					value	=> 'Очистить',
-					onclick => "document.getElementById ('$options').innerHTML=''; document.form._$options->{name}.value=''",
+					onclick => "document.getElementById ('ms_$options').innerHTML=''; document.form._$options->{name}.value=''",
 					off	=> $_REQUEST {__read_only},
 				},
 			],
@@ -1249,7 +1288,7 @@ sub draw_form_field_static {
 		$options -> {hidden_value} =~ s/\"/\&quot\;/gsm; #";
 	}	
 
-	if ($options -> {href} && !$_REQUEST {__edit} && !$_REQUEST {xls}) {	
+	if ($options -> {href} && !$_REQUEST {__edit} && !$_REQUEST {xls}) {
 		check_href ($options);
 	}
 	else {
@@ -1296,10 +1335,10 @@ sub draw_form_field_static {
 				$static_value .= ' ';
 
 				$item -> {read_only} = 1;
-			
-				$static_value .= $item -> {type} eq 'hgroup' ? 
-					draw_form_field_hgroup ($item, $data):
-					draw_form_field_static ($item, $data);
+
+				$static_value .= $item -> {type} eq 'hgroup' ? draw_form_field_hgroup ($item, $data)
+					: $item -> {type} eq 'multi_select' ? draw_form_field_multi_select ($item, $data)
+					: draw_form_field_static ($item, $data);
 			
 			}
 			else {
@@ -1380,6 +1419,11 @@ sub draw_form_field_static {
 				$item -> {read_only} = 1;
 				$static_value .= ' ';
 				$static_value .= draw_form_field_hgroup ($item, $data);
+			}
+			elsif ($item -> {type} eq 'multi_select') {
+				$item -> {read_only} = 1;
+				$static_value .= ' ';
+				$static_value .= draw_form_field_multi_select ($item, $data);
 			}
 			elsif ($item -> {type} || $item -> {name}) {
 				$static_value .= ' ';
@@ -1566,6 +1610,7 @@ EOJS
 			
 		my $renderrer = "draw_form_field_$$value{type}";
 		
+		local $value -> {attributes};
 		$value -> {html} = &$renderrer ($value, $data);
 		delete $value -> {attributes} -> {class};
 						
@@ -1599,7 +1644,7 @@ sub draw_form_field_select {
 
 	}
 
-	$options -> {onChange} = '' if defined $options -> {other} || defined $options -> {detail};
+#	$options -> {onChange} = '' if defined $options -> {other} || defined $options -> {detail};
 
 	if (defined $options -> {other}) {
 
@@ -2227,7 +2272,10 @@ sub draw_toolbar_input_select {
 
 	if (defined $options -> {other}) {
 
-		ref $options -> {other} or $options -> {other} = {href => $options -> {other}, label => $i18n -> {voc}};
+		ref $options -> {other} or $options -> {other} = {href => $options -> {other}};
+		
+		$options -> {other} -> {label} ||= $i18n -> {voc};
+
 		check_href ($options -> {other});
 		$options -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
 		if ($options -> {other} -> {top}) {
@@ -3843,187 +3891,72 @@ sub draw_suggest_page {
 sub draw_page {
 
 	my ($page) = @_;
-
-	$_REQUEST {lpt} ||= $_REQUEST {xls};
-
-	$_REQUEST {__read_only} = 1 if ($_REQUEST {lpt});
-		
-	delete $_REQUEST {__response_sent};
 	
-	$page -> {body} = '';
-
-	my ($selector, $renderrer);
-		
-	$_REQUEST {__on_load} .= "; if (!window.top.title_set) window.top.document.title = the_page_title;";
-
-	$_REQUEST {__invisibles} = ['invisible'];
-
-	my $validate_error = 1;
-
-	unless ($_REQUEST {error}) {
-
-		$validate_error = 0;
-
-		if ($_REQUEST {id}) {
-			$selector  = 'get_item_of_' . $page -> {type};
-			$renderrer = 'draw_item_of_' . $page -> {type};
-		} 
-		else {
-			$selector  = 'select_' . $page -> {type};
-			$renderrer = 'draw_' . $page -> {type};
-		}
-		
-		undef $page -> {content};		
-		
-		$_REQUEST {__allow_check___query} = 1;
-		
-		eval { $page -> {content} = call_for_role ($selector)} unless $_REQUEST {__only_menu};
-				
-		$_REQUEST {__allow_check___query} = 0;
-
-		if ($@) {
-			warn $@;
-			$_REQUEST {error} = $@;
-		}
-		else {
-
-			$_REQUEST {__page_content} = $page -> {content};
-
-			if ($_REQUEST {__edit_query} && !$_REQUEST {__only_menu}) {
-
-				my $is_dump = $_REQUEST {__dump};
-				delete $_REQUEST {__dump}; 
-
-				setup_skin ();
-
-				$_REQUEST {__allow_check___query} = 1;
-
-				call_for_role ($renderrer, $page -> {content});
-
-				$_REQUEST {__allow_check___query} = 0;
-
-				$_REQUEST {__dump} = $is_dump;
-
-				$_REQUEST {id___query} ||= sql_select_id (
-
-					$conf -> {systables} -> {__queries} => {
-						id_user     => $_USER -> {id},
-						type        => $_REQUEST {type},
-						label       => '',
-						order_context		=> $_REQUEST {__order_context} || '',
-					}, ['id_user', 'type', 'label'],
-
-				);
-
-				require_both '__queries';
-
-				check___query ();
-
-				$_REQUEST {type} = $page -> {type} = '__queries';
-				$_REQUEST {id}   = $_REQUEST {id___query};
-
-				$selector  = 'get_item_of___queries';
-				$renderrer = 'draw_item_of___queries';
+	$_REQUEST {error} and return draw_error_page ($page);
 	
-				$_REQUEST {__page_content}  = $page -> {content} = call_for_role ($selector, $page -> {content});
+	setup_skin ();
 
-				delete $_REQUEST {__skin};
-			}
+	$_SKIN -> {options} -> {no_presentation} and return $_SKIN -> draw_page ($page);
 
-			setup_skin ();
+	$_REQUEST {__read_only} = 0 if $_REQUEST {__only_field};
 
-			$_REQUEST {__after_xls} .= <<EOXL if ($_REQUEST{xls} && !$_REQUEST {__no_default_after_xls});
-<table border=0>
-	<tr><td>&nbsp;</td></tr>
-	<tr><td>$_USER->{label}</td></tr>
-	<tr><td>@{[ sprintf ('%02d.%02d.%04d %02d:%02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4,5]) ]}</td></tr>
-</table>
-EOXL
+	if (ref $page -> {content} eq HASH) {
 
-			$_REQUEST {__read_only} = 0 if ($_REQUEST {__only_field});
-
-			$page -> {content} -> {__read_only} = $_REQUEST {__read_only} if ref $page -> {content} eq HASH;
-
-			if ($@) {
-				warn $@;
-				$_REQUEST {error} = $@;
-			}
-
-			return '' if $_REQUEST {__response_sent};
-
-			unless ($_SKIN -> {options} -> {no_presentation}) {
-
-				if ($conf -> {core_auto_edit} && $_REQUEST {id} && ref $page -> {content} eq HASH && $page -> {content} -> {fake} > 0) {
-					$_REQUEST {__edit} = 1;
-				}
-
-				if ($_REQUEST {__popup}) {
-					$_REQUEST {__read_only} = 1;
-					$_REQUEST {__pack} = 1;
-					$_REQUEST {__no_navigation} = 1;
-				}
-
-				our @scan2names = ();	
-				our $scrollable_row_id = 0;
-				our $lpt = 0;
-
-				eval {
-					$_SKIN -> {subset} = $_SUBSET;
-					$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
-					$page  -> {auth_toolbar} = draw_auth_toolbar ();
-					$page  -> {body} 	 = call_for_role ($renderrer, $page -> {content}) unless $_REQUEST {__only_menu}; 
-					$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
-					$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
-				};
-
-				$_REQUEST {__page_title} ||= $conf -> {page_title};
-				$_REQUEST {__script} .= ";  the_page_title = '$_REQUEST{__page_title}';";
-
-				$page -> {scan2names} = \@scan2names;
-
-				if ($@) {
-					warn $@;
-					$_REQUEST {error} = $@;
-				}
-
-			}
-			
-		}
+		$page -> {content} -> {__read_only} = $_REQUEST {__read_only};
+	
+		$_REQUEST {__edit} = 1 if $conf -> {core_auto_edit} && $_REQUEST {id} && $page -> {content} -> {fake} > 0;	
 
 	}
 
-	my $html;
+	our @scan2names            = ();	
+	$page -> {scan2names}      = \@scan2names;
 
-	if ($_REQUEST {error}) {
+	our $scrollable_row_id     = 0;
+	our $lpt                   = 0;
 
-		if ($_REQUEST {error} =~ s{^\#(\w+)\#\:}{}) {
-			$page -> {error_field} = $1;
-			($_REQUEST {error}) = split / at/sm, $_REQUEST {error}; 
-		}
+	$_REQUEST {__script}      .= "; the_page_title = '$_REQUEST{__page_title}';";
+	$_REQUEST {__on_load}     .= "; if (!window.top.title_set) window.top.document.title = the_page_title;";
 
-		setup_skin ();
-		
-		if ($_REQUEST {__response_started}) {
-			$html = $_REQUEST {error};
-			$html =~ s{\n}{<br>}gsm;
-		}
-		else {
-			$html = $_SKIN -> draw_error_page ($page);
-		}
-		
+	$_REQUEST {__invisibles}   = ['invisible'];
+
+	eval {
+		$_SKIN -> {subset}       = $_SUBSET;
+		$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
+		$page  -> {auth_toolbar} = draw_auth_toolbar ();
+		$page  -> {body} 	 = call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content}) unless $_REQUEST {__only_menu}; 
+		$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
+		$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
+	};
+	
+	$@ and return draw_error_page ($page, $@);
+	
+	($_REQUEST {__only_field} ? $_JS_SKIN : $_SKIN) -> draw_page ($page);
+
+}
+
+################################################################################
+
+sub draw_error_page {
+
+	my $page = $_[0];
+	
+	$_REQUEST {error} ||= $_[1];
+	
+	Carp::cluck $_REQUEST {error};
+	
+	if ($_REQUEST {error} =~ s{^\#(\w+)\#\:}{}) {
+	
+		$page -> {error_field} = $1;
+	
+		($_REQUEST {error}) = split / at/sm, $_REQUEST {error}; 
+	
 	}
-	
-	if ($_REQUEST {__only_field}) {
 
-		$html ||= $_JS_SKIN -> draw_page ($page);
+	setup_skin ();
 		
-	} else {
-	
-		$html ||= $_SKIN -> draw_page ($page);
-	
-	}
+	$_REQUEST {__response_started} and $_REQUEST {error} =~ s{\n}{<br>}gsm and return $_REQUEST {error};
 
-	return $html;
+	return $_SKIN -> draw_error_page ($page);
 
 }
 
@@ -4132,15 +4065,22 @@ sub dialog_open {
 	
 	$options -> {id} = ++ $_REQUEST {__dialog_cnt};
 	
-	$options -> {dialogHeight} ||= $options -> {height} . 'px' if $options -> {height};
-	$options -> {dialogWidth}  ||= $options -> {width}  . 'px' if $options -> {width};
+	$options -> {dialogHeight} ||= $options -> {height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)' if $options -> {height};
+	$options -> {dialogWidth}  ||= $options -> {width}  || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)' if $options -> {width};
 
 	$arg ||= {};
 	
 	check_href ($arg);
 
-	$_REQUEST {__script} .= "var dialog_open_$options->{id} = " . $_JSON -> encode ($arg) . ";\n";
-
+	$_REQUEST {__script} .= <<EOJS;
+		var dialog_open_$options->{id} = @{[ $_JSON -> encode ($arg) ]};
+		var dialog_open_$options->{id}_width = $options->{dialogWidth};
+		var dialog_open_$options->{id}_height = $options->{dialogHeight};
+EOJS
+		
+	$options -> {dialogHeight} .= 'px';
+	$options -> {dialogWidth} .= 'px';
+	
 	return $_SKIN -> dialog_open ($arg, $options);
 
 }
@@ -4318,6 +4258,8 @@ sub setup_skin {
 			r
 			i18n
 			create_url
+			dump_attributes
+			dump_tag
 			_SUBSET
 			_JSON
 			tree_sort
@@ -4350,6 +4292,8 @@ sub check_static_files {
 	return if $_SKIN -> {options} -> {no_presentation};
 	return if $_SKIN -> {options} -> {no_static};
 	$r or return;
+	
+	my $time = time();
 	
 	my $skin_root = $r -> document_root () . $_REQUEST {__static_url};
 		
@@ -4415,6 +4359,8 @@ sub check_static_files {
 	}
 
 	$_SKIN -> {static_ok} -> {$_NEW_PACKAGE} = 1;
+
+	__log_profilinig ($time, ' check_static_files');
 
 }
 

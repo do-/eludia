@@ -18,6 +18,217 @@ $SIG {__DIE__} = \&Carp::confess;
 
 ################################################################################
 
+sub unindent ($) {
+
+	$_[0] =~ s{^(\s*\n)+}{}sm;
+
+	$_[0] =~ /^(\s+)/ or return $_[0];
+	
+	$_[0] =~ s{^$1}{}gm;
+	
+	return $_[0];
+
+}
+
+################################################################################
+
+sub print_file ($$) {
+
+	open (F, ">$_[0]") or die "Can't write to $_[0]:$1\n";
+	print F unindent $_[1];
+	close F;
+	
+	return $_[0];
+
+}
+
+################################################################################
+
+sub db_require_configuration {
+
+	$ENV {DOCUMENT_ROOT} = File::Spec -> rel2abs ('docroot');
+
+	my $conf = File::Spec -> rel2abs ('conf/httpd.conf');
+	
+	-f $conf or die "$conf not found";
+	
+	open (F, $conf) or return "Can't open $conf: $!\n";	
+	
+	my $code = 'our $preconf = {';
+		
+	while (my $line = <F>) {
+		
+		$line =~ /^\s*db_(dsn|user|password)/ or next;
+		
+		$code .= $line;
+		
+	}
+
+	$code .= '}';
+		
+	close (F);
+	
+	eval $code; $@ and die $@;
+	
+	require Eludia;	
+	require Eludia::Content;
+	require Eludia::SQL;
+	
+	our $_NEW_PACKAGE = 'main';
+
+	sql_reconnect ();
+
+}
+
+################################################################################
+
+sub db_load {
+
+	db_require_configuration ();
+	
+	sql_import_json (STDIN);
+
+}
+
+################################################################################
+
+sub db_dump {
+
+	db_require_configuration ();
+	
+	my %needed = ();
+	
+	my %banned = ();
+	
+	foreach (@ARGV) {
+	
+		if (/^\//) { $banned {$'} = 1 } else { $needed {$_} = 1 }
+	
+	}
+	
+	if (%needed == 0) {
+	
+		foreach my $table ($model_update -> {db} -> tables ('', $model_update -> {schema}, '%', "'TABLE'")) {
+
+			$needed {$model_update -> unquote_table_name ($table)} = 1;
+
+		}
+	
+	}
+	
+	foreach (keys %banned) { delete $needed {$_} }
+		
+	foreach my $table (sort keys %needed) { 
+	
+		sql_export_json ("DESCRIBE $table",      STDOUT);
+
+		sql_export_json ("SELECT * FROM $table", STDOUT);
+	
+	}
+
+}
+
+################################################################################
+
+sub valuable_modules () {
+
+	my %modules = map {$_ => 1} (
+		'CGI::Simple',
+		'Data::Dumper',
+		'DBI',
+		'Digest::MD5',
+		'FCGI',
+		'HTML::GenerateUtil',
+		'HTML::Parser',
+		'IO::Compress::Gzip',
+		'JSON',
+		'JSON::XS',
+		'LWP',
+		'LockFile::Simple',
+		'Math::FixedPrecision',
+		'MIME::Base64',
+		'Net::SMTP',
+		'Number::Format',
+		'Time::HiRes',
+		'Storable',
+		'URI::Escape::XS',
+		'XML::Simple',
+	);
+
+	my $conf = File::Spec -> rel2abs ('conf/httpd.conf');
+	
+	if (-f $conf) {
+	
+		open (F, $conf) or return "Can't open $conf: $!\n";
+		
+		while (my $line = <F>) {
+		
+			next if $line =~ /^\s*\#/;
+			
+			$line =~ /\bDBI\:(\w+)/ or next;
+			
+			$modules {"DBD::$1"} = 1;
+		
+		}
+		
+		close (F);
+	
+	}
+	
+	my $config = File::Spec -> rel2abs ('lib/Config.pm');	
+
+	if (-f $config) {
+	
+		open (F, $config) or return "Can't open $config: $!\n";
+		
+		while (my $line = <F>) {
+					
+			$line =~ /^\s*use\s+([\w\:]+)/ or next;
+			
+			$modules {$1} = 1;
+		
+		}
+		
+		close (F);
+	
+	}
+
+	return sort keys %modules;
+	
+}
+
+################################################################################
+
+sub ppm {
+
+	my $install = $] >= 5.01 ? '--install' : '-install -precious';
+	
+	foreach my $module (valuable_modules) {
+		print "$module...\n";
+		$module =~ s{::}{-}g;
+		print `ppm install $module`;
+		print `ppm upgrade $install $module`;
+	};
+
+}
+
+################################################################################
+
+sub cpan {
+
+	eval 'require CPAN';
+	
+	die $@ if $@;
+	
+	foreach my $module ('CPAN', valuable_modules) {
+		CPAN::install ($module);
+		CPAN::upgrade ($module);
+	};
+
+}
+
+################################################################################
+
 sub decode_entities {
 
 	require HTML::Entities;
@@ -897,34 +1108,18 @@ sub create {
 			$conf_dsn = "DBI:mysql:database=$db;mysql_read_default_file=/etc/mysql/my.cnf";
 
 		}
-
-		SVN: while (1) {
-
-			$application_dst = $term -> readline ("Application SVN URL: ");
-					
-			my $ls = `svn ls $application_dst`;
-					
-			my %dirs = ();
 		
-			foreach (split /\s+/sm, $ls) {$dirs {$_} = 1};
-		
-			foreach my $dir (qw (docroot lib)) {
-				next if $dirs {$dir . '/'};
-				warn "$dir not found\n";
-				next SVN;
-			}
-			
-			last;
-			
-		}
+		my $default_application_dst = 'git://github.com/do-/default-eludia.pm-application.git';
+
+		$application_dst = $term -> readline ("git URL to clone [$application_dst]: ") || $default_application_dst;
 				
 		$password = random_password ();
 
 		print <<EOT;
- Application name:   $appname
- Database name:      $db
- Database user:      $user
- SVN repository URL: $application_dst
+ Application name: $appname
+ Database name   : $db
+ Database user   : $user
+ git URL to clone: $application_dst
 EOT
 			
 		my $ok = $term -> readline ("Is everything in its right place? (yes / NO): ");
@@ -984,29 +1179,17 @@ EOS
 	mkdir $instpath;
 
 	print "ok\n";
+	
+	my $cmd = "git clone $application_dst $instpath 2>1";
 
-	print "Checking out application directory... ";
+	print "Copying standard files ($cmd)... \n";
 	
-	`svn co $application_dst $instpath`;
+	print `$cmd`;
 	
+	print "ok\n Creating local subdirectories... ";
+
 	mkdir "$instpath/conf";
 	mkdir "$instpath/logs";
-
-	open (TMP, ">.svnignore") or die ("Can't write to .svnignore: $!\n");
-	print TMP "conf\nlogs\n";
-	close (TMP);
-	
-	`svn ps svn:ignore -F .svnignore $instpath`;
-	
-	unlink '.svnignore';
-
-	open (TMP, ">.svnignore") or die ("Can't write to .svnignore: $!\n");
-	print TMP "_skins\nupload\n";
-	close (TMP);
-
-	`svn ps svn:ignore -F .svnignore $instpath/docroot`;
-	
-	unlink '.svnignore';
 
 	print "ok\n";
 
@@ -1024,6 +1207,8 @@ CustomLog $instpath/logs/access.log combined
 
 <perl> 
 
+	use lib '@{[ core_path () ]}';
+	
 	use Eludia::Loader
 
 	'$instpath/lib' => '$appname_uc' 
@@ -1282,16 +1467,6 @@ done
 EOT
 
 	close (F);
-
-}
-
-################################################################################
-
-sub print_file ($$) {
-
-	open (F, ">$_[0]") or die "Can't write to $_[0]:$1\n";
-	print F $_[1];
-	close F;	
 
 }
 

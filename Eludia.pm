@@ -17,6 +17,8 @@ sub check_constants {
 	our $_INHERITABLE_PARAMETER_NAMES    = {map {$_ => 1} qw (__this_query_string __last_query_string __last_scrollable_table_row __no_navigation __tree __infty __popup __no_infty)};
 
 	our $_NONINHERITABLE_PARAMETER_NAMES = {map {$_ => 1} qw (lang salt sid password error id___query)};
+	
+	our @_OVERRIDING_PARAMETER_NAMES     = qw (select __no_navigation __tree __last_query_string);
 
 	our %INC_FRESH = ();	
 	
@@ -193,7 +195,7 @@ sub check_application_directory {
 		
 		close (IN);
 		
-		if ($httpd_conf =~ /^\s*DocumentRoot\s+([\"\'\\\/\w\.\:]+)/gism) {
+		if ($httpd_conf =~ /^\s*DocumentRoot\s+([\"\'\\\/\w\.\:\- ]+)/gism) {
 		
 			$docroot = $1;
 			
@@ -405,6 +407,204 @@ sub check_internal_modules {
 	check_internal_module_auth                ();
 	check_internal_module_checksums           ();
 	check_internal_module_session_access_logs ();
+	check_internal_module_schedule            ();
+	check_internal_module_presentation_tools  ();
+
+}
+
+################################################################################
+
+sub check_internal_module_schedule {
+
+	print STDERR " check_internal_module_schedule............... ";
+	
+	my $crontab = $preconf -> {schedule} -> {crontab};
+
+	unless ($crontab) {
+
+		print STDERR "no crontab, ok.\n";
+		
+		return;
+
+	}
+	
+	print STDERR "$crontab... ";
+	
+	if (-f $crontab) {
+	
+		print STDERR "exists, ok.\n";
+	
+	}
+	else {
+	
+		open  (F, ">$crontab") or die "Can't write to $crontab:$!\n";
+		print  F '';
+		close (F);
+		chmod 0600 , $crontab;
+
+		print STDERR "created, ok.\n";
+
+	}
+
+	open  (F, $crontab) or die "Can't open $crontab:$!\n";	
+	my @old_lines = (<F>);
+	close (F);
+
+	my @paths = ();
+
+	my %script2line = ();
+
+	foreach my $dir (@$PACKAGE_ROOT) {
+
+		print STDERR "  checking $dir for offline script directories...\n";
+
+		my $logdir  = $dir;		
+		   $logdir  =~ s{[\\/]+lib[\\/]*$}{};		   		   
+		   $logdir .= '/logs';
+
+		-d $logdir or mkdir $logdir;
+
+		foreach my $subdir ('offline', 'Offline') {
+		
+			my $path = "$dir/$subdir";
+			
+			-d $path or next;
+
+			print STDERR "   checking $path for scheduled scripts...\n";
+
+			opendir (DIR, $path) or die "can't opendir $path: $!";
+
+			my @file_names = readdir (DIR);
+
+			closedir DIR;
+
+			foreach my $file_name (@file_names) {
+
+				$file_name =~ /\.pl$/ or next;
+
+				print STDERR "    checking $file_name" . ('.' x (43 - length $file_name));
+
+				my $file_path = "$path/$file_name";
+
+				my $the_string = '';
+
+				open  (F, $file_path) or die "Can't open $file_path:$!\n";	
+
+				while (<F>) {
+
+					chomp;
+
+					/^\#\@crontab\s+/ or next;
+
+					$the_string = eval "qq{$'}";
+					
+					$the_string =~ s{[\n\r]}{}gsm;					
+
+				}
+
+				close (F);
+
+				if ($the_string) {
+					
+					print STDERR " scheduled at '$the_string', ok\n";
+
+					$the_string .= (' ' x (16 - length $the_string));
+
+					my $inc = File::Spec -> rel2abs (__FILE__);
+
+					$inc =~ s{[\\/]+Eludia.pm}{};
+
+					$script2line {$file_name} = "$the_string perl -I$inc -MEludia::Offline $file_path >> $logdir/$file_name.log 2>\&1\n";
+
+				}
+				else {
+
+					print STDERR " not scheduled, ok\n";
+
+				}
+
+			}
+
+		}			
+		
+		print STDERR "  done with $dir.\n";
+
+	}
+
+	my @new_lines = ();
+	
+	my @scripts = keys %script2line;
+	
+	TOP: foreach my $line (@old_lines) {
+	
+		foreach (@scripts) { next TOP if $line =~ /$_/ }
+		
+		if ($line !~ /^\#/) {
+		
+			foreach my $dir (@$PACKAGE_ROOT) {
+
+				foreach my $subdir ('offline', 'Offline') {
+				
+					$line =~ m{$dir/$subdir/\w+\.pl} or next;
+					
+					next if -f $&;
+					
+					print STDERR "    $& not found, will be commented out";
+					
+					push @new_lines, '# ' . $line;
+					
+					last TOP;
+
+				}
+
+			}
+
+		}		
+
+		push @new_lines, $line;
+	
+	}	
+	
+	my @lines = sort values %script2line;
+	
+	if (@new_lines == @old_lines and @lines == 0) {
+	
+		print STDERR "  nothing to do with crontab, ok\n";
+		
+		return;
+	
+	}
+	
+	push @new_lines, @lines;
+	
+	my $old = join '', @old_lines;
+	my $new = join '', @new_lines;
+
+	if ($old eq $new) {
+	
+		print STDERR "  crontab is not changed, ok\n";
+		
+		return;
+	
+	}
+	
+	open  (F, ">$crontab") or die "Can't write to $crontab:$!\n";
+	syswrite (F, $new);
+	close (F);
+
+	print STDERR "  crontab is overwritten, ok\n";
+	
+	my $command = $preconf -> {schedule} -> {command};
+	
+	if ($command) {
+
+		print STDERR "  reloading schedule...";
+		
+		print STDERR `$command 2>&1`;
+		
+		print STDERR " ok.\n";
+
+	}	
 
 }
 
@@ -413,6 +613,16 @@ sub check_internal_modules {
 sub check_internal_module_checksums {
 
 	require Eludia::Content::Checksums;
+
+}
+
+################################################################################
+
+sub check_internal_module_presentation_tools {
+
+	print STDERR " check_internal_module_presentation_tools......";
+
+	require Eludia::Presentation::Tools;
 
 }
 

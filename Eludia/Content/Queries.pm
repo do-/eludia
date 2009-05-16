@@ -1,5 +1,60 @@
 ################################################################################
 
+sub setup_page_content {
+
+	my ($page) = @_;
+	
+	$_REQUEST {__allow_check___query} = 1;
+
+	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
+
+	$_REQUEST {__allow_check___query} = 0;
+
+	$@ and return $_REQUEST {error} = $@;	
+
+	$_USER -> {id} and !$_REQUEST {__only_menu} and $_REQUEST {__edit_query} or return;
+
+	my $is_dump = delete $_REQUEST {__dump};
+
+	setup_skin ();
+
+	$_REQUEST {__allow_check___query} = 1;
+
+	call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content});
+
+	$_REQUEST {__allow_check___query} = 0;
+
+	$_REQUEST {__dump} = $is_dump;
+
+	$_REQUEST {id___query} ||= sql_select_id (
+
+		$conf -> {systables} -> {__queries} => {
+			id_user     => $_USER -> {id},
+			type        => $_REQUEST {type},
+			label       => '',
+			order_context		=> $_REQUEST {__order_context} || '',
+		}, ['id_user', 'type', 'label'],
+
+	);
+
+	require_both '__queries';
+
+	check___query ();
+
+	$_REQUEST {type} = $page -> {type} = '__queries';
+	
+	$_REQUEST {id}   = $_REQUEST {id___query};
+		
+	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role ('get_item_of___queries', $page -> {content}) };
+
+	$@ and return $_REQUEST {error} = $@;	
+
+	delete $_REQUEST {__skin};	
+
+}
+
+################################################################################
+
 sub fix___query {
 
 	$conf -> {core_store_table_order} or return;	
@@ -435,6 +490,7 @@ sub draw_item_of___queries {
 					off		=> $_REQUEST {__read_only},
 				},
 			],
+			no_edit => $_REQUEST {'__page_content'} -> {no_del},
 		}, 
 		
 		$data, 

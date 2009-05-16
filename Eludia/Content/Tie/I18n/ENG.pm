@@ -41,6 +41,9 @@
 	wrong_hour               => 'Invalid hours',
 	wrong_min                => 'Invalid minutes',
 	wrong_sec                => 'Invalid seconds',
+	authorization		 => 'Authorization',
+	login			 => 'login',
+	execute_logon		 => 'enter',	
 	months			 => [qw(
 		january
 		february

@@ -936,7 +936,7 @@ sub gen_column_definition {
 	$sql .= ' ' . $definition -> {_EXTRA} if $definition -> {_EXTRA};
 	$sql .= ' NOT NULL' unless $definition -> {NULLABLE};
 	$sql .= ' PRIMARY KEY' if $definition -> {_PK};
-	$sql .= ' DEFAULT ' . $self -> {db} -> quote ($definition -> {COLUMN_DEF}) if defined $definition -> {COLUMN_DEF};
+	$sql .= ' DEFAULT ' . $self -> {db} -> quote ($definition -> {COLUMN_DEF}) if defined $definition -> {COLUMN_DEF} && $definition -> {TYPE_NAME} ne 'timestamp';
 
 	return $sql;
 
@@ -972,9 +972,19 @@ sub get_column_def {
 
 	my ($self, $column) = @_;
 	
-	return $column -> {COLUMN_DEF} if defined $column -> {COLUMN_DEF};
+	return 'CURRENT_TIMESTAMP' if $column -> {TYPE_NAME} =~ /timestamp/i;
 	
-	return 0 if $column -> {TYPE_NAME} =~ /bit|int|float|numeric|decimal/;
+	if (defined $column -> {COLUMN_DEF}) {
+	
+		my $def = $column -> {COLUMN_DEF};
+		
+		$def += 0 if $column -> {TYPE_NAME} =~ /numeric|decimal/i;
+		
+		return $def;
+	
+	}
+	
+	return 0 if $column -> {TYPE_NAME} =~ /bit|int|float|numeric|decimal/i;
 	
 	return '';
 
@@ -1010,14 +1020,14 @@ sub update_column {
 		$defs_are_equal = 1 if abs ($existing_def - $column_def) < $precision;
 
 	}
-	
+
 	return if 
 		$types_are_equal
 		and $existing_column -> {COLUMN_SIZE}    >= $c_definition -> {COLUMN_SIZE}
 		and $existing_column -> {DECIMAL_DIGITS} >= $c_definition -> {DECIMAL_DIGITS}
 		and $defs_are_equal
 	;
-	
+
 	$c_definition -> {_PK} = 0 if ($existing_column -> {_PK} == 1);
 
 	my $sql = "ALTER TABLE $name CHANGE $c_name " . $self -> gen_column_definition ($c_name, $c_definition);

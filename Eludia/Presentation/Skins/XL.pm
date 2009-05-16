@@ -659,6 +659,14 @@ sub dialog_open {
 
 sub start_page {
 
+	$_REQUEST {__no_default_after_xls} or $_REQUEST {__after_xls} .= qq {
+		<table border=0>
+			<tr><td>&nbsp;</td></tr>
+			<tr><td>$_USER->{label}</td></tr>
+			<tr><td>@{[ sprintf ('%02d.%02d.%04d %02d:%02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4,5]) ]}</td></tr>
+		</table>
+	};
+
 	$r -> content_type ('application/octet-stream');
 	my $page_title = $conf -> {page_title};
 	$page_title =~ s/[\"\?]/_/g;
