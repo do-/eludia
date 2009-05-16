@@ -5,8 +5,6 @@ sub wish_to_adjust_options_for_table_columns {
 	my ($options) = @_;
 	
 	$options -> {key} = ['global_name'];
-	
-	$options -> {N} = $model_update -> {characterset} =~ /UTF/i ? 'N' : '';
 
 }
 
@@ -76,13 +74,7 @@ sub wish_to_clarify_demands_for_table_columns {
 	}
 
 	$i -> {TYPE_NAME} =~ s{^(LONG|MEDIUM)TEXT$}{CLOB};
-	
-	if ($i -> {TYPE_NAME} eq 'CLOB' && $options -> {N}) {
-	
-		$i -> {TYPE_NAME} = 'NCLOB';
-
-	}
-	
+		
 	$i -> {TYPE_NAME} =~ s{^.*BLOB$}{BLOB};
 	
 	if ($i -> {TYPE_NAME} =~ /LOB$/) {
@@ -111,14 +103,6 @@ sub wish_to_clarify_demands_for_table_columns {
 		$i -> {COLUMN_SIZE} ||= 255;
 
 	}
-
-	if ($i -> {TYPE_NAME} eq 'VARCHAR2' && $options -> {N}) {
-	
-		$i -> {TYPE_NAME} = 'NVARCHAR2';
-
-		$i -> {COLUMN_SIZE} <= 2000 or $i -> {COLUMN_SIZE} = 2000;
-
-	}	
 
 }
 
