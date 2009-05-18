@@ -64,7 +64,7 @@ sub wish_to_actually_modify_table_data {
 
 	my @cols = keys %{$items -> [0]};
 	
-	$statement .= ' DELAYED' if %{$options -> {root}} > 0;
+	$statement .= ' DELAYED' if $options -> {delayed};
 	
 	my $sql = "$statement $options->{table} (" . (join ',', @cols) . ")VALUES";
 		
