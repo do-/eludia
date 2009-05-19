@@ -2333,9 +2333,11 @@ sub wish {
 	
 	my $todo = {};
 	
+	my @key = @{$options -> {key}};
+
 	foreach my $new (@$items) {
 
-		my $old = delete $existing -> {@$new {@{$options -> {key}}}} or (push @{$todo -> {create}}, $new) and next;
+		my $old = delete $existing -> {join '_', @$new {@key}} or (push @{$todo -> {create}}, $new) and next;
 
 		&{"wish_to_update_demands_for_$type"} ($old, $new, $options);
 
