@@ -813,11 +813,24 @@ sub draw_form_field_text {
 		</style>
 EOH
 
-		$_REQUEST {__on_load} .= <<'EOJS';
-			$(document).ready(function() {
-				$('textarea:not(.processed)').TextAreaResizer();
-			});
+		if ($_REQUEST {__only_form}) {
+
+			$_REQUEST {__on_load} .= <<EOJS;
+					parent.setTimeout ('reset_textarearesizer(\\'_$$options{name}\\')', 10);
 EOJS
+		} else {
+		
+			$_REQUEST {__script} .= <<'EOJS';
+				function reset_textarearesizer (name) {
+					$("textarea[name='" + name + "']").parent().parent().after($("textarea[name='" + name + "']")).remove().siblings('.grippie').remove(); 
+					$("textarea:not(.processed)").TextAreaResizer();
+				}
+EOJS
+
+			$_REQUEST {__on_load} .= <<'EOJS';
+				$('textarea:not(.processed)').TextAreaResizer();
+EOJS
+		}
 		
 	
 	}
