@@ -832,7 +832,6 @@ EOJS
 EOJS
 		}
 		
-	
 	}
 
 	return <<EOH;
@@ -2095,13 +2094,8 @@ sub draw_text_cell {
 		
 #	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
 	
-	if (!$data -> {off} && $data -> {label} =~ /^\s*(.+?)\s*$/sm) {
+	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
 
-		$data -> {label} = $1;
-
-	}
-	else {
-	
 		return $html . '&nbsp;</td>';
 	
 	}
