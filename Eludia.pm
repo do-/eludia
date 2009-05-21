@@ -36,9 +36,13 @@ sub check_version_by_git {
 
 	return undef if $^O eq 'MSWin32';
 
-	`cd $preconf->{core_path}; git show HEAD --abbrev-commit --pretty=tformat:"\%h \%ai"` =~ /^(\w+) (\d\d)(\d\d)\-(\d\d)\-(\d\d)/ or return undef;
-		
-	return "$3.$4.$5.$1";
+        if (`git version` =~ /git version 1.5/) {
+		`cd $preconf->{core_path}; git show HEAD --abbrev-commit --pretty=tformat:"\%h \%ai"` =~ /^(\w+) (\d\d)(\d\d)\-(\d\d)\-(\d\d)/ or return undef;
+                return "$3.$4.$5.$1";
+        } else {
+                `cd $preconf->{core_path}; git show HEAD --abbrev-commit --pretty=medium` =~ /^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/gsm or return undef;
+                return "$4.$2.$3.$1";
+        }
 
 }
 
