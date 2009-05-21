@@ -926,6 +926,9 @@ warn "relink $table_name: $old_id -> $new_id";
 
 		foreach my $column_def (@{$DB_MODEL -> {aliases} -> {$table_name} -> {references}}) {
 
+			next
+				if $DB_MODEL -> {tables} -> {$column_def -> {table_name}} -> {sql};
+			
 warn "relink $$column_def{table_name} ($$column_def{name}): $old_id -> $new_id";
 
 			if ($column_def -> {TYPE_NAME} =~ /int/) {
