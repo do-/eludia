@@ -1103,7 +1103,7 @@ sub assert_view {
 	
 	my $columns = '';
 
-	foreach my $line (split /\n/, $definition -> {src}) {
+	foreach my $line (split /\n/, $definition -> {_src}) {
 
 		last if $line =~ /^[\#\s]*(keys|data|sql)\s*=\>/;
 		next if $line =~ /^\s*columns\s*=\>/;

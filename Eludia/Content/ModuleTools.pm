@@ -131,7 +131,7 @@ sub require_scripts_of_type ($) {
 		
 		if (@scripts == 0) {
 		
-			__log_profilinig ($time, "   require_scripts_of_type $script_type: all scripts in $dir are older than " . localtime_to_iso ($__last_update));
+			__log_profilinig ($time, "   $dir/.* <= " . localtime_to_iso ($__last_update));
 			
 			next;
 			
@@ -167,7 +167,7 @@ sub require_scripts_of_type ($) {
 			while (<SCRIPT>) { $src .= $_; };
 			close (SCRIPT);
 			
-			$src = "\n$script->{name} => {$src}" if $script_type eq 'model';
+			$src = "\n$script->{name} => {$src, _src => q{$src}}" if $script_type eq 'model';
 			
 			push @src, $src;
 									

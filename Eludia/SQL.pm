@@ -926,6 +926,9 @@ warn "relink $table_name: $old_id -> $new_id";
 
 		foreach my $column_def (@{$DB_MODEL -> {aliases} -> {$table_name} -> {references}}) {
 
+			next
+				if $DB_MODEL -> {tables} -> {$column_def -> {table_name}} -> {sql};
+			
 warn "relink $$column_def{table_name} ($$column_def{name}): $old_id -> $new_id";
 
 			if ($column_def -> {TYPE_NAME} =~ /int/) {
@@ -1571,7 +1574,7 @@ sub sql {
 
 	my $from   = "\nFROM\n $root";
 	my $where  = "\nWHERE 1=1 \n";
-	my $order  = [$root . '.label'];
+	my $order  = [$root . ($DB_MODEL -> {tables} -> {$root} -> {columns} -> {label} ? '.label' : '.id')];
 	my $limit;
 	my @join_params = ();
 	my @params = ();
@@ -2333,9 +2336,11 @@ sub wish {
 	
 	my $todo = {};
 	
+	my @key = @{$options -> {key}};
+
 	foreach my $new (@$items) {
 
-		my $old = delete $existing -> {@$new {@{$options -> {key}}}} or (push @{$todo -> {create}}, $new) and next;
+		my $old = delete $existing -> {join '_', @$new {@key}} or (push @{$todo -> {create}}, $new) and next;
 
 		&{"wish_to_update_demands_for_$type"} ($old, $new, $options);
 

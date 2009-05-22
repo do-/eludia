@@ -5,7 +5,7 @@ sub wish_to_adjust_options_for_table_data {
 	my ($options) = @_;
 		
 	$options -> {key} ||= 'id';
-	$options -> {key}   = [split /\W/, $options -> {key}];
+	$options -> {key}   = [grep {$_} split /\W/, $options -> {key}];
 	
 	$options -> {ids}   = -1;
 
@@ -45,7 +45,9 @@ sub wish_to_explore_existing_table_data {
 	
 	my $existing = {};
 
-	sql_select_loop ($sql, sub { $existing -> {@$i {@{$options -> {key}}}} = $i }, @params);
+	my @key = @{$options -> {key}};
+		
+	sql_select_loop ($sql, sub { $existing -> {join '_', @$i {@key}} = $i }, @params);
 	
 	return $existing;
 

@@ -185,7 +185,7 @@ sub __log_profilinig {
 	$year += 1900;
 	$mon ++; 
 
-	printf STDERR "Profiling [%04d-%02d-%02d %02d:%02d:%02d:%03d $$] %20.10f ms %s\n", 
+	printf STDERR "[%04d-%02d-%02d %02d:%02d:%02d:%03d $$] %7.2f ms %s\n", 
 		$year,
 		$mon,
 		$mday,

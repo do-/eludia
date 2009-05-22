@@ -1,35 +1,5 @@
 #############################################################################
 
-sub wish_to_explore_existing_table_data {	
-
-	my ($options) = @_;
-	
-	$options -> {root} or return {};
-	
-	my $existing = {};
-	
-	my $sql = "SELECT * FROM $options->{table} WHERE 1=1";
-	
-	my @params = ();
-	
-	foreach my $i (keys %{$options -> {root}}) {
-		
-		$sql .= " AND $i = ?";
-			
-		push @params, $options -> {root} -> {$i};
-
-	}
-
-	$sql .= " AND id IN ($options->{ids})" if $options -> {ids} ne '-1';
-		
-	sql_select_loop ($sql, sub { $existing -> {@$i {@{$options -> {key}}}} = $i }, @params);
-	
-	return $existing;
-
-}
-
-#############################################################################
-
 sub wish_to_schedule_modifications_for_table_data {	
 
 	my ($old, $new, $todo, $options) = @_;
@@ -64,7 +34,7 @@ sub wish_to_actually_modify_table_data {
 
 	my @cols = keys %{$items -> [0]};
 	
-	$statement .= ' DELAYED' if %{$options -> {root}} > 0;
+	$statement .= ' DELAYED' if $options -> {delayed};
 	
 	my $sql = "$statement $options->{table} (" . (join ',', @cols) . ")VALUES";
 		
