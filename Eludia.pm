@@ -34,13 +34,15 @@ sub check_constants {
 
 sub check_version_by_git {
 
+	my $cwd = getcwd ();
+
 	chdir $preconf -> {core_path};
 	
-	`git show HEAD --abbrev-commit --pretty=medium` =~ 
+	my $head = `git show HEAD --abbrev-commit --pretty=medium`;
 	
-		/^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/sm
-		
-			or return undef;
+	chdir $cwd;
+	
+	$head =~ /^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/sm or return undef;
 	
         return sprintf ("%02d.%02d.%02d.%s", 
         	$4 - 2000,
@@ -264,6 +266,7 @@ sub check_application_directory {
 
 sub check_external_modules {
 
+	use Cwd;
 	use Data::Dumper;
 	use DBI;
 	use DBI::Const::GetInfoType;
