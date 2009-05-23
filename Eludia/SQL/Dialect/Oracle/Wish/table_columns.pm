@@ -165,8 +165,8 @@ sub wish_to_update_demands_for_table_columns {
 	if ($old -> {_PK}) {
 			
 		foreach (keys %$new) {$old -> {$_} = $new -> {$_}}
-
-		$new -> {_PK} = 1;
+		
+		foreach (keys %$old) {$new -> {$_} = $old -> {$_}}
 		
 		return;
 	
