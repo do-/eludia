@@ -24,7 +24,7 @@ sub lock_file_name () {
 
 	$fn =~ y{\\/.}{___};
 	
-	return "/var/run/$fn.lock";
+	return $^O eq 'MSWin32' ? "C:/$fn.lock" : "/var/run/$fn.lock";
 
 }
 
