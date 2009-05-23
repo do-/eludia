@@ -34,15 +34,20 @@ sub check_constants {
 
 sub check_version_by_git {
 
-	return undef if $^O eq 'MSWin32';
-
-        if (`git version` =~ /git version 1.5/) {
-		`cd $preconf->{core_path}; git show HEAD --abbrev-commit --pretty=tformat:"\%h \%ai"` =~ /^(\w+) (\d\d)(\d\d)\-(\d\d)\-(\d\d)/ or return undef;
-                return "$3.$4.$5.$1";
-        } else {
-                `cd $preconf->{core_path}; git show HEAD --abbrev-commit --pretty=medium` =~ /^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/gsm or return undef;
-                return "$4.$2.$3.$1";
-        }
+	chdir $preconf -> {core_path};
+	
+	`git show HEAD --abbrev-commit --pretty=medium` =~ 
+	
+		/^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/sm
+		
+			or return undef;
+	
+        return sprintf ("%02d.%02d.%02d.%s", 
+        	$4 - 2000,
+        	1 + (index ('JanFebMarAprMayJunJulAugSepOctNovDec', $2) / 3),
+        	$3,
+        	$1,
+        );
 
 }
 
@@ -64,7 +69,7 @@ sub check_version {
 	
 	my ($year) = Date::Calc::Today ();
 	
-	eval "require Eludia::Version";
+	eval {require Eludia::Version};
 	
 	$Eludia::VERSION ||= check_version_by_git ();
 	
