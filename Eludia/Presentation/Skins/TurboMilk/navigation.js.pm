@@ -603,6 +603,18 @@ function restoreSelectVisibility (name, rewind) {
 	}
 };
 
+function setFormCheckboxes (form, checked) {
+
+	$('input:checkbox:visible', $(document.forms [form])).each (
+	
+		function () {this.checked = checked}
+	
+	);
+
+	return setCursor ();
+
+}
+
 function setCursor (w, c) {
 
 	if (!w) w = window;
