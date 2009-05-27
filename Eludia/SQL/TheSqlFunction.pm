@@ -94,6 +94,8 @@ sub _sql_list_fields {
 			
 			$buffer =~ s{^\s+}{}sm;
 			
+			$alias ||= join '_', map {lc} ($buffer =~ /\w+/g);
+			
 			push @fields, {
 				src      => $buffer,
 				alias    => $alias,
@@ -231,7 +233,7 @@ sub _sql_filters {
 		}
 		else {
 
-			$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';		# 'id_org'           --> 'id_org = '
+			$field =~ /^\s*[a-z]\w*(\.[a-z]\w*)\s*$/ and $field .= ' = ';		# 'id_org'           --> 'id_org = '
 			$field =~ /\?/  or $field .= ' ? '; 				# 'id_org LIKE '     --> 'id_org LIKE ?'
 
 			if ($field =~ s{\<\+}{\<}) {					# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
@@ -417,12 +419,10 @@ sub sql {
 	$tail =~ /^\s*\((.*?)\)\s*$/ or die "Invalid table definition: '$root_table'\n";	
 	
 	my @columns = _sql_list_fields ($1, $root);
-
-	my $is_ids = @columns == 1 ? 1 : 0;
 	
 	my $from   = "\nFROM\n $root";
-	my $where  = "\nWHERE  1=1 \n";
-	my $having = "\nHAVING 1=1 \n";
+	my $where  = "\nWHERE  1=1";
+	my $having = "\nHAVING 1=1";
 	my $order;
 	my $limit;
 	my @join_params   = ();
@@ -693,6 +693,12 @@ sub sql {
 
 	my $is_first = $limit && @$limit == 1 && $limit -> [0] == 1;
 	
+	my $is_ids = @{$columns_by_grouping -> [0]} == 1 && @{$columns_by_grouping -> [1]} == 0 ? 1 : 0;
+	
+	my $is_only_grouping = @{$columns_by_grouping -> [0]} == 0 ? 1 : 0;
+
+	my $is_only_grouping_1 = $is_only_grouping && @{$columns_by_grouping -> [1]} == 1 ? 1 : 0;
+
 	!$is_ids or $cnt_filters or $is_first or return undef;
 
 	my @params = (@join_params, @where_params, @having_params);
@@ -713,13 +719,13 @@ sub sql {
 		
 	;
 	
-	if (@{$columns_by_grouping -> [1]} > 0) {
+	if (@{$columns_by_grouping -> [1]} > 0 && @{$columns_by_grouping -> [0]} > 0) {
 	
-		my $grouping_fields = join "\n ,", @{$columns_by_grouping -> [1]};
+		my $grouping_fields = join "\n ,", map {"$_->{src}"} @{$columns_by_grouping -> [0]};
 		
 		$order ||= $grouping_fields;
 		
-		$sql .= "GROUP BY\n $grouping_fields";
+		$sql .= "\nGROUP BY\n $grouping_fields";
 	
 	}
 
@@ -729,7 +735,7 @@ sub sql {
 	
 	}
 
-	if ((!$have_id_filter && !$is_ids) || $is_first) {
+	if ((!$have_id_filter && !$is_ids && !$is_only_grouping) || $is_first) {
 		
 		$order ||= [$root . ($DB_MODEL -> {tables} -> {$root} -> {columns} -> {label} ? '.label' : '.id')];
 			
@@ -752,9 +758,9 @@ sub sql {
 	
 	}
 	
-	if ($have_id_filter || $is_first) {
+	if ($have_id_filter || $is_first || $is_only_grouping_1) {
 	
-		return sql_select_scalar ($sql, @params) if $is_ids;
+		return sql_select_scalar ($sql, @params) if $is_ids || $is_only_grouping_1;
 
 		@result = (sql_select_hash ($sql, @params));
 
