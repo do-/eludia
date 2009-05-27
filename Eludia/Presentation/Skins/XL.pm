@@ -123,10 +123,12 @@ sub draw_form_field {
 	}
 				
 	my $colspan     = $field -> {colspan}     ? 'colspan=' . $field -> {colspan}     : '';
-	
+		
+	my $style = $field -> {picture} ? 'style="mso-number-format:' . $_SKIN -> _picture ($field -> {picture}) . '"' : '';
+
 	return (<<EOH);
 		<td nowrap align=right><b>$$field{label}</b></td>
-		<td $colspan>\n$$field{html}</td>
+		<td $colspan $style>\n$$field{html}</td>
 EOH
 
 }
@@ -454,6 +456,9 @@ sub draw_text_cell {
 	if ($data -> {bgcolor}) {
 		$data -> {attributes} -> {style} .= "background:$data->{bgcolor};";
 	}
+
+	delete $data -> {attributes} -> {bgcolor};
+
 	if ($data -> {level}) {
 		$data -> {attributes} -> {style} .= "padding-left:" . ($data -> {level} * 12) . "px;";
 	}
