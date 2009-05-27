@@ -35,6 +35,7 @@ sub _sql_list_fields {
 	my $buffer   = '';
 	my $level    = 0;
 	my $is_group = 0;
+	my $has_placeholder = 0;
 		
 	foreach my $token ("$src," =~ m((
 	
@@ -101,10 +102,12 @@ sub _sql_list_fields {
 				alias    => $alias,
 				is_group => $is_group,
 				table    => $table,
+				has_placeholder => $has_placeholder,
 			};
 			
 			$buffer   = '';
 			$is_group = 0;
+			$has_placeholder = 0;
 			
 			next;
 		
@@ -112,7 +115,8 @@ sub _sql_list_fields {
 
 		if (1) {
 
-			$is_group ||= 1 if $token =~ /^(AVG|COUNT|GROUP_CONCAT|MAX|MIN|STDEV|SUM)$/;
+			$is_group         ||= 1 if $token =~ /^(AVG|COUNT|GROUP_CONCAT|MAX|MIN|STDEV|SUM)$/;
+			$has_placeholder ||= 1 if $token eq '?';
 			$buffer    .= $token;            next;
 
 		}
@@ -195,6 +199,8 @@ sub _sql_filters {
 		
 		$field     = $fields [0] -> {src};
 		
+		my $has_placeholder = $fields [0] -> {has_placeholder};
+		
 		my ($buffer, $params) = $fields [0] -> {is_group} ? 
 			(\$having, \@having_params) : 
 			(\$where,  \@where_params ) ;
@@ -232,10 +238,15 @@ sub _sql_filters {
 
 		}
 		else {
+		
+			unless ($has_placeholder) {
 
-			$field =~ /^\s*[a-z]\w*(\.[a-z]\w*)\s*$/ and $field .= ' = ';		# 'id_org'           --> 'id_org = '
-			$field =~ /\?/  or $field .= ' ? '; 				# 'id_org LIKE '     --> 'id_org LIKE ?'
+				$field  =~ /(=|\<|\>|LIKE)\s*$/ or $field .= ' = ';	# 'id_org'           --> 'id_org = '
 
+				$field .= ' ? '; 					# 'id_org LIKE '     --> 'id_org LIKE ?'
+
+			} 
+			
 			if ($field =~ s{\<\+}{\<}) {					# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
 				my @ymd = split /\-/, $first_value;				
 				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
