@@ -456,6 +456,9 @@ sub draw_text_cell {
 	if ($data -> {bgcolor}) {
 		$data -> {attributes} -> {style} .= "background:$data->{bgcolor};";
 	}
+
+	delete $data -> {attributes} -> {bgcolor};
+
 	if ($data -> {level}) {
 		$data -> {attributes} -> {style} .= "padding-left:" . ($data -> {level} * 12) . "px;";
 	}
