@@ -20,6 +20,9 @@ sub add_vocabularies {
 		
 		}
 		
+		next
+			if $options -> {off};
+		
 		$options -> {item} = $item;
 		
 		my $table_name = $options -> {name} || $name;
