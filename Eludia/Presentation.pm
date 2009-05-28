@@ -81,7 +81,7 @@ sub format_picture {
 	
 	return $txt if ($_REQUEST {xls});
 	
-	my $result = $number_format -> format_picture ($txt, $picture);
+	my $result = $number_format -> format_picture ('' . $txt, $picture);
 	
 	if ($_USER -> {demo_level} > 1) {
 		$result =~ s{\d}{\*}g;
@@ -390,7 +390,7 @@ sub check_title {
 
 	return if exists $options -> {title} && $options -> {title} eq '';
 
-	$options -> {title} ||= $options -> {label};
+	$options -> {title} ||= '' . $options -> {label};
 	$options -> {title} =~ s{\<.*?\>}{}g;	
 	$options -> {title} =~ s{^(\&nbsp\;)+}{};	
 	$options -> {title} =~ s{\"}{\&quot\;}g;	
