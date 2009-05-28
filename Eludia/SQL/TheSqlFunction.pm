@@ -545,9 +545,13 @@ sub sql {
 		
 		if ($table -> {on}) {
 		
+			my $sql_filters = _sql_filters ($table -> {alias}, $table -> {filters});
+
 			$from .= "\n $table->{join} $table->{name}";
 			$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
-			$from .= " ON ($table->{on})";
+			$from .= " ON ($table->{on} $sql_filters->{where})";
+
+			push @join_params, @{$sql_filters -> {params}};
 				
 			$found = 1;
 		
