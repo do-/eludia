@@ -3013,6 +3013,7 @@ function dTree (objName) {
 	this.selectedNode = null;
 	this.selectedFound = false;
 	this.completed = false;
+	this.checkbox_name_prefix = '_';
 	
 	this.checkedNodes = [];
 };
@@ -3171,7 +3172,7 @@ dTree.prototype.node = function(node, nodeId) {
 	}
 	
 	if (node.is_checkbox) {
-		str += '<input class=cbx type=checkbox name="_' + this.obj + '_' + node.id + '"' + (node.is_checkbox > 1 ? 'checked' : '') + ' value=1 tabindex=-1 onChange="is_dirty=true" />';
+		str += '<input class=cbx type=checkbox name="' + this.checkbox_name_prefix + this.obj + '_' + node.id + '"' + (node.is_checkbox > 1 ? 'checked' : '') + ' value=1 tabindex=-1 onChange="is_dirty=true" />';
 		if (node.is_checkbox > 1)
 			this.checkedNodes[this.checkedNodes.length] = nodeId;
 	}
