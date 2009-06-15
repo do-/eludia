@@ -43,13 +43,13 @@ sub _sql_list_fields {
 
 		| \s+
 
-		| [\(\,\)]
+		| [\(\,\)\?]
 
 		| [a-z][a-z_\d]*\.[a-z][a-z_\d]*
 
 		| [a-z][a-z_\d]*
 		
-		| [^\s\(\,\)]+
+		| [^\s\(\,\)\?]+
 		
 	))gsmx) {
 
@@ -315,7 +315,7 @@ sub _sql_filters {
 		}
 
 	}
-	
+
 	return {
 		have_id_filter => $have_id_filter,
 		cnt_filters    => $cnt_filters,
