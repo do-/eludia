@@ -688,6 +688,7 @@ sub draw_form_field_file {
 			onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
 			onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
 			onChange="is_dirty=true; $$options{onChange}"
+			onKeyDown="if (event.keyCode != 9) return false;"
 			tabindex=-1
 		>
 EOH
