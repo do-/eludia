@@ -1539,6 +1539,174 @@ EOH
 
 ################################################################################
 
+sub draw_toolbar_input_tree {
+
+	my ($_SKIN, $options) = @_;
+	
+	my $id = "toolbar_input_tree_$options->{name}";
+	
+	my @nodes = ();
+	
+	our %idx = ();
+	our %lch = ();
+	
+	foreach my $value (@{$options -> {values}}) {
+	
+		my $node = $value -> {__node};
+		push @nodes, $node;
+		
+		$idx {$node -> {id}} = $node;
+		$lch {$node -> {pid}} = $node if $node -> {pid};
+	}
+	
+	while (my ($k, $v) = each %lch) {
+		$idx {$k} -> {_hc} = 1;
+		$v -> {_ls} = 1;
+	}
+	
+	my $name = $options -> {name};
+	
+	$options -> {height} ||= 400;
+	$options -> {width}  ||= 600;
+	
+	my $nodes = $_JSON -> encode (\@nodes);
+
+	return qq {
+		
+		<td class="toolbar" nowrap>
+
+		<div
+			id="${id}_div"
+			style="
+				background-color:white;
+				position:absolute;
+				display:none;
+				z-index:100;
+				width:$options->{width}px;
+				height:$options->{height}px;
+				left:500;
+				border:solid black 1px;
+				overflow-y:scroll;
+			"
+		>
+			<table width=100% height=100% celspacing=0 cellpadding=0 border=0 class='dtree'>	
+				<tr>
+					<td valign=top class='form-active-inputs'>
+						<script>
+							var $name = new dTree ('$name');
+							$name._url_base = '';
+							var c = $name.config;
+							c.iconPath = '$_REQUEST{__static_url}/tree_';
+							c.useStatusText = false;
+							c.useSelection = false;
+							$name.icon.node = 'folderopen.gif';
+							$name.aNodes = $nodes;
+							$name.checkbox_name_prefix = '';
+							document.write ($name);
+							for (var n = 0; n < $name.checkedNodes.length; n++) {
+								$name.openTo ($name.checkedNodes [n], true, true);
+							}							
+						</script>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		
+				<select id="${id}_select_1"
+				
+					onDblClick="
+						
+						var select_1 = \$('#${id}_select_1');
+						var select_2 = \$('#${id}_select_2');
+
+						select_1.hide ();
+						select_2.show ();
+						blockEvent ();
+						
+					"
+														
+					onMouseDown="
+
+						var select_1 = \$('#${id}_select_1');
+						var select_2 = \$('#${id}_select_2');
+						var div      = \$('#${id}_div');
+						
+						if (div.is (':hidden')) {
+						
+							var css      = select_1.offset (\$(document.body));
+							css.top     += 20;
+			
+							div.css  (css);
+							div.show ();
+													
+							select_1.hide ();
+							select_2.show ();
+
+						}
+						else {
+						
+							select_1.get (0).form.submit ()
+						
+						}
+
+					"
+
+				>
+					<option>$options->{label}</option>
+				</select>
+				<select id="${id}_select_2" style="display:none"
+																				
+					onDblClick="
+						
+						var select_1 = \$('#${id}_select_1');
+						var select_2 = \$('#${id}_select_2');
+
+						select_2.hide ();
+						select_1.show ();
+						blockEvent ();
+						
+					"
+
+					onMouseDown="
+
+						var select_1 = \$('#${id}_select_1');
+						var select_2 = \$('#${id}_select_2');
+						var div      = \$('#${id}_div');
+						
+						var css      = select_2.offset (\$(document.body));
+						css.top     += 20;
+		
+						if (div.is (':hidden')) {
+
+							div.css (css);
+							div.toggle();
+													
+							select_2.hide ();
+							select_1.show ();
+							
+						}
+						else {
+						
+							select_2.get (0).form.submit ()
+						
+						}
+																	
+					"
+
+				>
+					<option>$options->{label}</option>
+				</select>
+							
+		</td>
+		<td class="toolbar">&nbsp;&nbsp;&nbsp;</td>
+	
+	};
+
+}
+
+################################################################################
+
 sub draw_toolbar_input_select {
 
 	my ($_SKIN, $options) = @_;
@@ -2614,6 +2782,21 @@ EOJS
 			window.parent.subsets_are_visible = 0;
 			subsets_are_visible = 0;
 EOS
+
+		if ($_REQUEST {__im_delay}) {
+		
+			$_REQUEST {__script} .= qq {
+			
+				var __im_delay = $_REQUEST{__im_delay};
+				var __im_idx   = '/i/_mbox/$_USER->{id}.txt';
+				var __im_url   = '/?sid=$_REQUEST{sid}&type=_mbox&action=read';
+				var __im_timer = 0;
+			
+			};
+
+			$_REQUEST {__on_load} .= '; try {__im_check ()} catch (e) {} ;';
+		
+		}
 
 	}
 	else {

@@ -1,17 +1,149 @@
 ################################################################################
 
+sub _sql_list_fields {
+
+	my ($src, $table, $table_alias) = @_;
+	
+	$table_alias ||= $table; 
+	
+	my @fields = ();
+
+	$src = '*' if $src eq '';
+	
+	if ($src eq '*') {
+	
+		my $def = $DB_MODEL -> {tables} -> {$table};
+		
+		$def and $def -> {columns} or return ();
+				
+		my %h = ();
+		
+		$h {$_} ||= 1 foreach keys %{$DB_MODEL -> {default_columns}};
+
+		my $c = $def -> {columns};
+
+		$h {$_} ||= 1 foreach grep {$c -> {$_} -> {TYPE_NAME} ne 'blob'} keys %$c;
+					
+		return map {{
+			src   => "$table_alias.$_", 
+			alias => $_,
+			table => $table,
+		}} keys %h;
+		
+	}	
+	
+	my $buffer   = '';
+	my $level    = 0;
+	my $is_group = 0;
+	my $has_placeholder = 0;
+		
+	foreach my $token ("$src," =~ m((
+	
+		'.*?(?:(?:''){1,}'|(?<!['\\])'(?!')|\\'{2})
+
+		| \s+
+
+		| [\(\,\)\?]
+
+		| [a-z][a-z_\d]*\.[a-z][a-z_\d]*
+
+		| [a-z][a-z_\d]*
+		
+		| [^\s\(\,\)\?]+
+		
+	))gsmx) {
+
+		if ($token =~ /^[\'\s]/) {
+
+			$buffer .= $token;            next;
+		
+		}
+
+		if ($token eq '(') {
+
+			$buffer .= $token; $level ++; next;
+		
+		}
+
+		if ($token eq ')') {
+
+			$buffer .= $token; $level --; next;
+		
+		}
+		
+		if ($token =~ /^[a-z][a-z_\d]*$/) {
+
+			$buffer .= "$table_alias.$token";   next;
+
+		}
+
+		if ($token eq ',' && !$level) {
+		
+			my $alias = '';
+			
+			if ($buffer =~ /^\s*\w+\.(\w+)\s*$/sm) {
+			
+				$alias  = $1;
+			
+			}
+			elsif ($buffer =~ /\s+AS\s+\w+\.(\w+)\s*$/sm) {
+			
+				$alias  = $1;
+				$buffer = $`;
+			
+			}
+			
+			$buffer =~ s{^\s+}{}sm;
+			
+			$alias ||= join '_', map {lc} ($buffer =~ /\w+/g);
+			
+			push @fields, {
+				src      => $buffer,
+				alias    => $alias,
+				is_group => $is_group,
+				table    => $table,
+				has_placeholder => $has_placeholder,
+			};
+			
+			$buffer   = '';
+			$is_group = 0;
+			$has_placeholder = 0;
+			
+			next;
+		
+		}
+
+		if (1) {
+
+			$is_group         ||= 1 if $token =~ /^(AVG|COUNT|GROUP_CONCAT|MAX|MIN|STDEV|SUM)$/;
+			$has_placeholder ||= 1 if $token eq '?';
+			$buffer    .= $token;            next;
+
+		}
+
+	}
+
+	return @fields;
+
+}
+
+################################################################################
+
 sub _sql_filters {
 
 	my ($root, $filters) = @_;
+
 	my $have_id_filter = 0;
 	my $cnt_filters    = 0;
 	my $where          = '';
+	my $having         = '';
 	my $order;
 	my $limit;
-	my @params = ();
+	my @where_params   = ();
+	my @having_params  = ();
 
 	foreach my $filter (@$filters) {
-	
+
 		if (ref $filter eq ARRAY and @$filter == 1 and $filter -> [0] =~ /^-?1\s/) {
 		
 			$filter = [LIMIT => [$filter -> [0]]];
@@ -60,8 +192,18 @@ sub _sql_filters {
 		$cnt_filters ++;
 
 		$have_id_filter = 1 if $field eq 'id';
-
-		$field =~ s{([a-z][a-z0-9_]*)}{$root.$1}gsm;
+		
+		my @fields = _sql_list_fields ($field, $root);
+		
+		@fields == 1 or die "Incorrect filtering expression for $root: '$field'\n";
+		
+		$field     = $fields [0] -> {src};
+		
+		my $has_placeholder = $fields [0] -> {has_placeholder};
+		
+		my ($buffer, $params) = $fields [0] -> {is_group} ? 
+			(\$having, \@having_params) : 
+			(\$where,  \@where_params ) ;
 
 		if ($field =~ /\s+IN\s*$/sm) {
 
@@ -72,61 +214,64 @@ sub _sql_filters {
 
 				if (_sql_ok_subselects ()) {
 
-					$where .= "\n  AND ($field ($tied->{sql}))";
+					$$buffer .= "\n  AND ($field ($tied->{sql}))";
 
-					push @params, @{$tied -> {params}};
+					push @$params, @{$tied -> {params}};
 
 				}
 				else {
 
-					$where .= "\n  AND ($field ($$first_value))";
+					$$buffer .= "\n  AND ($field ($$first_value))";
 
 				}
 
 			}
 			else {								# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
 
-				$where .= "\n  AND ($field (-1";
+				$$buffer .= "\n  AND ($field (-1";
 
 				foreach (grep {/\d/} @$values) { $where .= ", $_"}
 
-				$where .= "))";
+				$$buffer .= "))";
 
 			}
 
 		}
 		else {
+		
+			unless ($has_placeholder) {
 
-			$field =~ /\w / or $field =~ /\=/ or $field .= ' = ';		# 'id_org'           --> 'id_org = '
-			$field =~ /\?/  or $field .= ' ? '; 				# 'id_org LIKE '     --> 'id_org LIKE ?'
-#			$field =~ s{LIKE\s+\%\?\%}{LIKE CONCAT('%', ?, '%')}gsm;
-#			$field =~ s{LIKE\s+\?\%}{LIKE CONCAT(?, '%')}gsm;		# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
+				$field  =~ /(=|\<|\>|LIKE)\s*$/ or $field .= ' = ';	# 'id_org'           --> 'id_org = '
 
-			if ($field =~ s{\<\+}{\<}) {			
+				$field .= ' ? '; 					# 'id_org LIKE '     --> 'id_org LIKE ?'
+
+			} 
+			
+			if ($field =~ s{\<\+}{\<}) {					# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
 				my @ymd = split /\-/, $first_value;				
 				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
 			}
 			
 			my @tokens = split /(LIKE\s+\%?\?\%)/, $field;
 			
-			$where .= "\n AND (";
+			$$buffer .= "\n AND (";
 			
 			foreach my $token (@tokens) {
 			
 				if ($token =~ /LIKE\s+(\%?)\?(\%)/) {
 
-					$where .= ' LIKE ?';
+					$$buffer .= ' LIKE ?';
 					my $v = shift @$values;
-					push @params, "$1$v$2";
+					push @$params, "$1$v$2";
 
 				}
 				else {
 				
-					$where .= $token;
+					$$buffer .= $token;
 					
 					foreach (1 .. $token =~ y/?/?/) {
 					
-						push @params, shift @$values;
+						push @$params, shift @$values;
 					
 					}
 				
@@ -134,10 +279,7 @@ sub _sql_filters {
 			
 			}			
 
-			$where .= ")";
-
-#			$where .= "\n AND ($field)";
-#			push @params, @$values;
+			$$buffer .= ")";
 
 		}
 
@@ -173,14 +315,16 @@ sub _sql_filters {
 		}
 
 	}
-	
+
 	return {
 		have_id_filter => $have_id_filter,
 		cnt_filters    => $cnt_filters,
 		order          => $order,
 		limit          => $limit,
 		where          => $where,
-		params         => \@params,
+		having         => $having,
+		where_params   => \@where_params,
+		having_params  => \@having_params,
 	};
 
 }
@@ -277,43 +421,24 @@ sub sql {
 	
 	}
 	
-	$root_table =~ /(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
+	$root_table =~ /^\w+/ or die "Invalid table definition: '$root_table'\n";
 
-	my ($root, $root_columns) = ($1, $2);
+	my $root = $&;
 	
-	$root_columns ||= '*';
+	my $tail = $' || "(*)";
 		
-	my @root_columns = split /\s*\,\s*/, $root_columns;
-
-	if ($root_columns [0] eq '*') {
+	$tail =~ /^\s*\((.*?)\)\s*$/ or die "Invalid table definition: '$root_table'\n";	
 	
-		my $def = $DB_MODEL -> {tables} -> {$root};
-		
-		if ($def && $def -> {columns}) {
-
-			@root_columns = keys %{$DB_MODEL -> {default_columns}};
-			
-			foreach my $k (keys %{$def -> {columns}}) {
-			
-				next if $def -> {columns} -> {$k} -> {TYPE_NAME} eq 'blob';
-				
-				push @root_columns, $k;
-			
-			}
-		
-		}
-
-	}
-
-	my $select  = "SELECT\n ";
-	$select .= join ', ', map {"$root.$_\n "} @root_columns;
-
+	my @columns = _sql_list_fields ($1, $root);
+	
 	my $from   = "\nFROM\n $root";
-	my $where  = "\nWHERE 1=1 \n";
-	my $order  = [$root . ($DB_MODEL -> {tables} -> {$root} -> {columns} -> {label} ? '.label' : '.id')];
+	my $where  = "\nWHERE  1=1";
+	my $having = "\nHAVING 1=1";
+	my $order;
 	my $limit;
-	my @join_params = ();
-	my @params = ();
+	my @join_params   = ();
+	my @where_params  = ();
+	my @having_params = ();
 
 	if (@other == 0) {								# sql ('users')   --> sql ('users' => ['id'])
 	
@@ -331,10 +456,15 @@ sub sql {
 	
 	my $sql_filters = _sql_filters ($root, $filters);
 	
-	$where .= $sql_filters -> {where};
-	@params = @{$sql_filters -> {params}};
+	$where        .= $sql_filters -> {where};
+	@where_params  = @{$sql_filters -> {where_params}};
+	
+	$having       .= $sql_filters -> {having};
+	@having_params = @{$sql_filters -> {having_params}};
+	
 	$limit  = $sql_filters -> {limit};
 	$order  = $sql_filters -> {order} if $sql_filters -> {order};
+	
 	my $have_id_filter = $sql_filters -> {have_id_filter};
 	my $cnt_filters    = $sql_filters -> {cnt_filters};
 
@@ -474,7 +604,14 @@ sub sql {
 				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
 				$from .= " ON ($table->{alias}.$referring_field_name = $t->{name}.id $sql_filters->{where})";
 				
-				push @join_params, @{$sql_filters -> {params}};
+				push @join_params, @{$sql_filters -> {where_params}};
+				
+				if ($sql_filters -> {having_params}) {
+					
+					$having .= $sql_filters -> {having};
+					push @having_params, @{$sql_filters -> {having_params}};
+				
+				}
 
 				$found = 1;
 
@@ -523,7 +660,15 @@ sub sql {
 				if ($table -> {filters}) {
 					my $sql_filters = _sql_filters ($table -> {alias}, $table -> {filters});
 					$from .= " ON ($t->{alias}.$referring_field_name = $table->{alias}.id $sql_filters->{where})";
-					push @join_params, @{$sql_filters -> {params}};
+					push @join_params, @{$sql_filters -> {where_params}};
+					
+					if ($sql_filters -> {having_params}) {
+
+						$having .= $sql_filters -> {having};
+						push @having_params, @{$sql_filters -> {having_params}};
+
+					}
+					
 				}
 				else {
 					$from .= " ON $t->{alias}.$referring_field_name = $table->{alias}.id";
@@ -538,57 +683,87 @@ sub sql {
 		}		
 
 		$found or die "Referrer for $table->{alias} not found\n";
+				
+		foreach my $column (_sql_list_fields (($table -> {columns} || $default_columns), $table -> {name}, $table -> {alias})) {
 
-		$table -> {columns} ||= $default_columns;
-		
-		my @columns = ();
-		
-		my $def = $DB_MODEL -> {tables} -> {$table -> {name}} -> {columns};
-		
-		if ($table -> {columns} eq '*' and $def) {
-		
-			@columns = ('id', 'fake', keys %$def);
-		
-		}
-		else {
-		
-			@columns = split /\s*\,\s*/, $table -> {columns};
-		
-		}
-		
-		foreach my $column (@columns) {
-		
-			next if $def -> {$column} -> {TYPE_NAME} eq 'blob';
-		
-			$cols [$cols_cnt] = [en_unplural ($table -> {alias}), $column];
-		
-			$select .= "\n, $table->{alias}.$column AS gfcrelf$cols_cnt",
+			$cols [$cols_cnt] = [en_unplural ($table -> {alias}), $column -> {alias}];
+
+			$column -> {alias} = "gfcrelf$cols_cnt";
+
+			push @columns, $column;
 
 			$cols_cnt ++;
-		
+
 		}
 			
 	}
 	
-	my $sql = $select . $from . $where;
-	
-	@params = (@join_params, @params);
+	my $columns_by_grouping = [[], []];
 
-	my $is_ids = (@root_columns == 1 && $root_columns [0] ne '*') ? 1 : 0;
+	foreach my $column (@columns) {
+
+		push @{$columns_by_grouping -> [$column -> {is_group}]}, $column;
 	
+	}
+
 	my $is_first = $limit && @$limit == 1 && $limit -> [0] == 1;
 	
+	my $is_ids = @{$columns_by_grouping -> [0]} == 1 && @{$columns_by_grouping -> [1]} == 0 ? 1 : 0;
+	
+	my $is_only_grouping = @{$columns_by_grouping -> [0]} == 0 ? 1 : 0;
+
+	my $is_only_grouping_1 = $is_only_grouping && @{$columns_by_grouping -> [1]} == 1 ? 1 : 0;
+
 	!$is_ids or $cnt_filters or $is_first or return undef;
+
+	my @params = (@join_params, @where_params, @having_params);
+
+	my $sql = "SELECT\n "
 	
-	if ((!$have_id_filter && !$is_ids) || $is_first) {
+		. (join "\n, ", 
+		
+			map {"$_->{src} AS $_->{alias}"} (
+				@{$columns_by_grouping -> [0]}, 
+				@{$columns_by_grouping -> [1]},
+			)
+		)
+		
+		. $from
+		
+		. $where
+		
+	;
 	
-		$order = order ($order)  if $order !~ /\W/;
+	if (@{$columns_by_grouping -> [1]} > 0 && @{$columns_by_grouping -> [0]} > 0) {
+	
+		my $grouping_fields = join "\n ,", map {"$_->{src}"} @{$columns_by_grouping -> [0]};
+		
+		$order ||= $grouping_fields;
+		
+		$sql .= "\nGROUP BY\n $grouping_fields";
+	
+	}
+
+	if (@having_params > 0) {
+			
+		$sql .= $having;
+	
+	}
+
+	if ((!$have_id_filter && !$is_ids && !$is_only_grouping) || $is_first) {
+		
+		$order ||= [$root . ($DB_MODEL -> {tables} -> {$root} -> {columns} -> {label} ? '.label' : '.id')];
+			
 		$order = order (@$order) if ref $order eq ARRAY;
+
+		$order = order ($order)  if $order !~ /\W/;
+		
 		$order =~ s{(?<!\.)\b([a-z][a-z0-9_]*)\b(?!\.)}{${root}.$1}gsm;
+		
 		$sql .= "\nORDER BY\n $order";
 
 	}
-
+	
 	my @result;
 	my $records;
 	
@@ -598,9 +773,9 @@ sub sql {
 	
 	}
 	
-	if ($have_id_filter || $is_first) {
+	if ($have_id_filter || $is_first || $is_only_grouping_1) {
 	
-		return sql_select_scalar ($sql, @params) if $is_ids;
+		return sql_select_scalar ($sql, @params) if $is_ids || $is_only_grouping_1;
 
 		@result = (sql_select_hash ($sql, @params));
 

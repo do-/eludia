@@ -351,6 +351,41 @@ function KillClock() {
 	clockID  = 0;
 }
 
+function __im_schedule (delay) {
+
+	if (__im_timer) {
+		clearTimeout (__im_timer);
+		__im_timer = 0;
+	}
+
+	__im_timer = setTimeout ("__im_check ()", delay);
+
+}
+
+function __im_check () {
+
+	if (!__im_delay) return;
+		
+	__im_schedule (__im_delay);
+
+	$.get (__im_idx + '?salt=' + Math.random (), function (data) {
+	
+		if (data.length != 32) return;
+
+		$.getJSON (__im_url + '&id=' + data + '&salt=' + Math.random (), function (data) {
+			
+			if (!data || !data.code) return;
+			
+			try { eval (data.code)} catch (e) {};
+
+			__im_schedule (0);
+
+		});
+		
+	});	
+	
+}
+
 function typeAhead (noChange) { // borrowed from http://www.oreillynet.com/javascript/2003/09/03/examples/jsdhtmlcb_bonus2_example.html
    
 	var event = window.event;
@@ -3013,6 +3048,7 @@ function dTree (objName) {
 	this.selectedNode = null;
 	this.selectedFound = false;
 	this.completed = false;
+	this.checkbox_name_prefix = '_';
 	
 	this.checkedNodes = [];
 };
@@ -3171,7 +3207,7 @@ dTree.prototype.node = function(node, nodeId) {
 	}
 	
 	if (node.is_checkbox) {
-		str += '<input class=cbx type=checkbox name="_' + this.obj + '_' + node.id + '"' + (node.is_checkbox > 1 ? 'checked' : '') + ' value=1 tabindex=-1 onChange="is_dirty=true" />';
+		str += '<input class=cbx type=checkbox name="' + this.checkbox_name_prefix + this.obj + '_' + node.id + '"' + (node.is_checkbox > 1 ? 'checked' : '') + ' value=1 tabindex=-1 onChange="is_dirty=true" />';
 		if (node.is_checkbox > 1)
 			this.checkedNodes[this.checkedNodes.length] = nodeId;
 	}
