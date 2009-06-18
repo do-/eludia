@@ -24,7 +24,7 @@ sub FETCH {
 	
 	my $VAR1 = {};
 
-	foreach my $dir (@{$options -> {path}}) {
+	foreach my $dir (reverse @{$options -> {path}}) {
 
 		my $path = "${dir}/${key}.pm";
 
