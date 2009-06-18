@@ -2780,6 +2780,21 @@ EOJS
 			subsets_are_visible = 0;
 EOS
 
+		if ($_REQUEST {__im_delay}) {
+		
+			$_REQUEST {__script} .= qq {
+			
+				var __im_delay = $_REQUEST{__im_delay};
+				var __im_idx   = '/i/_mbox/$_USER->{id}.txt';
+				var __im_url   = '/?sid=$_REQUEST{sid}&type=_mbox&action=read';
+				var __im_timer = 0;
+			
+			};
+
+			$_REQUEST {__on_load} .= '; try {__im_check ()} catch (e) {} ;';
+		
+		}
+
 	}
 	else {
 	

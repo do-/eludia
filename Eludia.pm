@@ -240,7 +240,7 @@ sub check_application_directory {
 	
 	$preconf -> {_} -> {docroot} = $docroot;
 
-	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs') {
+	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs', 'i/_mbox', 'i/_mbox/by_user') {
 
 		print STDERR "  checking ${docroot}${subdir}...";
 

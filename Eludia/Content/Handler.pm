@@ -652,6 +652,8 @@ sub recalculate_logon {
 
 		session_access_logs_purge ();
 		
+		mbox_refresh ();
+		
 	}
 
 	if ($_COOKIE {redirect_params}) {
