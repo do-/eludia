@@ -2471,8 +2471,9 @@ sub draw_centered_toolbar_button {
 		$options -> {icon}       ||= $preset -> {icon};
 		$options -> {label}      ||= $i18n -> {$preset -> {label}};
 		$options -> {label}      ||= $preset -> {label};
-		$options -> {confirm}    ||= $i18n -> {$preset -> {confirm}};
-		$options -> {confirm}    ||= $preset -> {confirm};
+		$options -> {confirm}    = exists $options -> {confirm} ? $options -> {confirm} :
+			$i18n -> {$preset -> {confirm}} ? $i18n -> {$preset -> {confirm}} :
+			$preset -> {confirm};
 		$options -> {preconfirm} ||= $preset -> {preconfirm};
 	}	
 
@@ -2591,6 +2592,7 @@ sub draw_ok_esc_toolbar {
 			label => $options -> {label_ok}, 
 			href => $_REQUEST {__windows_ce} || $_SKIN =~ /Universal/ || $_SKIN =~ /Gecko/ ? "javaScript:document.$name.submit()" : "javaScript:document.$name.fireEvent('onsubmit'); document.$name.submit()", 
 			off  => $_REQUEST {__read_only} || $options -> {no_ok},
+			(exists $options -> {confirm_ok} ? (confirm => $options -> {confirm_ok}) : ()),
 		},
 		{
 			preset => 'edit',
