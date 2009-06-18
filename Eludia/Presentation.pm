@@ -4315,6 +4315,7 @@ sub check_static_files {
 
 	foreach my $src (@files) {
 		$src =~ /\.pm$/ or next;
+		unlink $skin_root . '/' . $`;
 		File::Copy::copy ($static_path . $src, $skin_root . '/' . $`) or die "can't copy ${static_path}${src} to ${skin_root}/${`}: $!";
 	}
 	
