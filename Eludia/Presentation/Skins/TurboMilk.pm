@@ -2543,7 +2543,8 @@ EOH
 
 		my $href = create_url (%h);
 
-		$_REQUEST {__on_load} .= "check_top_window ();";
+		$_REQUEST {__on_load} .= "check_top_window ();"
+			unless ($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 
 		$preconf -> {core_show_dump} and $_REQUEST {__on_mousedown} .= <<EODUMP;
 
@@ -2597,9 +2598,11 @@ EOJS
 			$_REQUEST {__on_load} .= "start_keepalive ($timeout);";
 		}
 
-		my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
-
-		$_REQUEST {__on_load} .= "check_menu_md5 ('$menu_md5');";
+		unless ($_REQUEST {__no_navigation} or $_REQUEST {__tree}) {
+			my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
+			$_REQUEST {__on_load} .= "check_menu_md5 ('$menu_md5');";
+		}
+		
 		$_REQUEST {__on_load} .= "tableSlider.set_row ($_REQUEST{__scrollable_table_row});";
 		$_REQUEST {__on_load} .= "tableSlider.cell_on ();" if $_REQUEST {__scrollable_table_row};
 		$_REQUEST {__on_load} .= 'window.focus ();'                             if !$_REQUEST {__no_focus};
@@ -3276,7 +3279,12 @@ sub draw_tree {
 				var old_nodes = d.aNodes;
 				var n = -1;
 
-				for (i = 0; i < old_nodes.length; i ++) {			
+// prevent reload content frame
+				d.selectedFound = true;
+				var selected_node = d.selectedNode;
+				old_nodes [selected_node]._is = false;
+
+				for (i = 0; i < old_nodes.length; i ++) {
 					var cn = old_nodes [i];
 					if (cn.id != $_REQUEST{__parent}) continue;	
 					n = i;
@@ -3293,11 +3301,15 @@ sub draw_tree {
 				for (i = n + 1; i < old_nodes.length; i ++) nodes [k++] = old_nodes [i];
 
 				d.aNodes = nodes;
-
+				
 				f.contentWindow.document.getElementById ('dtree_td').innerHTML = d.toString ();
 				f.contentWindow.document.getElementById ('dtree_menus').innerHTML += m [0];				
 				f.contentWindow.document.body.style.cursor = 'default';
-				
+				d.selectedNode = selected_node <= n ? selected_node : selected_node + new_nodes.length;
+				d.aNodes [d.selectedNode]._is = true;
+
+				var eNew = f.contentWindow.document.getElementById("sd" + d.selectedNode);
+				eNew.className = "nodeSel";
 			}
 			
 		</script>
@@ -3458,7 +3470,7 @@ sub dialog_open {
 	my $url = $ENV{SCRIPT_URI} . '/i/_skins/TurboMilk/dialog.html?';
 	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
 	
-	return "javaScript:var result=window.showModalDialog('$url' + Math.random (), dialog_open_$options->{id}, '$o' + ';dialogWidth=' + dialog_open_$options->{id}_width + 'px;dialogHeight=' + dialog_open_$options->{id}_height + 'px');document.body.style.cursor='default';void(0);";
+	return "javaScript:dialog_open_$options->{id}.href = dialog_open_$options->{id}.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, ''); dialog_open_$options->{id}.href += '&_salt=' + Math.random (); var result=window.showModalDialog('$url' + Math.random (), dialog_open_$options->{id}, '$o' + ';dialogWidth=' + dialog_open_$options->{id}_width + 'px;dialogHeight=' + dialog_open_$options->{id}_height + 'px');document.body.style.cursor='default';void(0);";
 
 }
 
