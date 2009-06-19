@@ -551,7 +551,7 @@ sub sql {
 			$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
 			$from .= " ON ($table->{on} $sql_filters->{where})";
 
-			push @join_params, @{$sql_filters -> {params}};
+			push @join_params, @{$sql_filters -> {where_params}};
 				
 			$found = 1;
 		
