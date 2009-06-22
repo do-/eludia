@@ -2963,22 +2963,24 @@ EOH
 	
 		/^__on_(\w+)$/ or next;
 		
-		my $what = $1 eq 'load' ? 'window' : 
-			   $1 eq 'resize' ? 'window' : 
-		'body';
-	
-		$_REQUEST {__head_links} .= <<EOH;
-			<script for="$what" event="on$1">
-				$_REQUEST{$&};
-			</script>
-EOH
+		my $attributes = {};
+		my $code       = $_REQUEST {$&};
+		
+		if ($1 eq 'load') {
+			
+			$code  = "\n\$(document).ready (function () {\n${code}\n})\n";
+			
+		}
+		else {
+		
+			$attributes -> {event} = "on$1";
+			$attributes -> {for}   = $1 eq 'resize' ? 'window' : 'document';
+				
+		}
+		
+		$_REQUEST {__head_links} .= dump_tag (script => $attributes, $code) . "\n";
 
 	}
-	
-
-
-
-#	$body_scroll = 'no' if $_REQUEST {__tree};
 
 	$body =~ /\<frameset/ or $body = <<EOH;
 			<body 
