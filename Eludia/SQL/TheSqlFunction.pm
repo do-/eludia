@@ -239,6 +239,11 @@ sub _sql_filters {
 		}
 		else {
 		
+			if ($field =~ s{\<\+}{\<}) {					# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
+				my @ymd = split /\-/, $first_value;				
+				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
+			}
+			
 			unless ($has_placeholder) {
 
 				$field  =~ /(=|\<|\>|LIKE)\s*$/ or $field .= ' = ';	# 'id_org'           --> 'id_org = '
@@ -246,11 +251,6 @@ sub _sql_filters {
 				$field .= ' ? '; 					# 'id_org LIKE '     --> 'id_org LIKE ?'
 
 			} 
-			
-			if ($field =~ s{\<\+}{\<}) {					# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
-				my @ymd = split /\-/, $first_value;				
-				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
-			}
 			
 			my @tokens = split /(LIKE\s+\%?\?\%)/, $field;
 			
