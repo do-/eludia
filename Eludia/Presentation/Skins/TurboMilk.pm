@@ -2941,23 +2941,7 @@ EOH
 		blockEvent ();
 EOHELP
 
-	$_REQUEST {__on_resize} = <<EOH;
-	
-		var d = document.body;
-
-		if (
-			lastClientHeight != d.clientHeight
-			|| lastClientWidth != d.clientWidth
-		) {
-
-			tableSlider.cell_on ();
-
-			lastClientHeight = d.clientHeight;
-			lastClientWidth  = d.clientWidth;
-		
-		}
-
-EOH
+	$_REQUEST {__on_resize} .= "refresh_table_slider_on_resize ();";
 
 	foreach (keys %_REQUEST) {
 	

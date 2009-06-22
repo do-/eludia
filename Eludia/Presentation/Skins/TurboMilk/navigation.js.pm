@@ -890,6 +890,19 @@ function span_on_click () {
 
 }
 
+function refresh_table_slider_on_resize () {
+
+	var d = document.body;
+
+	if (lastClientHeight == d.clientHeight && lastClientWidth == d.clientWidth) return;
+
+	tableSlider.cell_on ();
+
+	lastClientHeight = d.clientHeight;
+	lastClientWidth  = d.clientWidth;
+
+}
+
 function TableSlider (initial_row) {
 
 	this.rows = [];		
