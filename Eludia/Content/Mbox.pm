@@ -88,6 +88,8 @@ sub mbox_refresh {
 
 	my ($id_user, $options) = @_;
 	
+	$id_user ||= $_USER -> {id};
+	
 	my $mbox_path = mbox_path ($id_user);
 	
 	-d $mbox_path or mkdir $mbox_path;
