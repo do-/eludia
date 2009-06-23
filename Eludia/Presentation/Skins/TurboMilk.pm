@@ -787,12 +787,11 @@ sub draw_form_field_text {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 	
-	my $static_url = $_REQUEST{__static_url};
-	$static_url =~ s[^/i/][];	
+	my $url = '_skins/TurboMilk/jquery.textarearesizer.compressed';
 
-	unless (grep {$_ eq "$static_url/jquery.textarearesizer.compressed"} @{$_REQUEST{__include_js}}) {
+	unless (grep {$_ eq $url} @{$_REQUEST {__include_js}}) {
 
-		push @{$_REQUEST{__include_js}}, "$static_url/jquery.textarearesizer.compressed";
+		push @{$_REQUEST{__include_js}}, $url;
 		
 		$_REQUEST {__head_links} .= <<EOH;
 		<style>
