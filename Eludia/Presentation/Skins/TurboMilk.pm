@@ -2317,6 +2317,20 @@ sub draw_radio_cell {
 
 ################################################################################
 
+sub draw_datetime_cell {
+
+	my ($_SKIN, $data, $options) = @_;
+		
+	my $attributes = dump_attributes ($data -> {attributes});
+
+	local $options -> {name} = $data -> {name};
+
+	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($options) . "</td>";
+	
+}
+
+################################################################################
+
 sub draw_checkbox_cell {
 
 	my ($_SKIN, $data, $options) = @_;
