@@ -787,12 +787,11 @@ sub draw_form_field_text {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 	
-	my $static_url = $_REQUEST{__static_url};
-	$static_url =~ s[^/i/][];	
+	my $url = '_skins/TurboMilk/jquery.textarearesizer.compressed';
 
-	unless (grep {$_ eq "$static_url/jquery.textarearesizer.compressed"} @{$_REQUEST{__include_js}}) {
+	unless (grep {$_ eq $url} @{$_REQUEST {__include_js}}) {
 
-		push @{$_REQUEST{__include_js}}, "$static_url/jquery.textarearesizer.compressed";
+		push @{$_REQUEST{__include_js}}, $url;
 		
 		$_REQUEST {__head_links} .= <<EOH;
 		<style>
@@ -2955,44 +2954,30 @@ EOH
 		blockEvent ();
 EOHELP
 
-	$_REQUEST {__on_resize} = <<EOH;
-	
-		var d = document.body;
-
-		if (
-			lastClientHeight != d.clientHeight
-			|| lastClientWidth != d.clientWidth
-		) {
-
-			tableSlider.cell_on ();
-
-			lastClientHeight = d.clientHeight;
-			lastClientWidth  = d.clientWidth;
-		
-		}
-
-EOH
+	$_REQUEST {__on_resize} .= "refresh_table_slider_on_resize ();";
 
 	foreach (keys %_REQUEST) {
 	
 		/^__on_(\w+)$/ or next;
 		
-		my $what = $1 eq 'load' ? 'window' : 
-			   $1 eq 'resize' ? 'window' : 
-		'body';
-	
-		$_REQUEST {__head_links} .= <<EOH;
-			<script for="$what" event="on$1">
-				$_REQUEST{$&};
-			</script>
-EOH
+		my $attributes = {};
+		my $code       = $_REQUEST {$&};
+		
+		if ($1 eq 'load') {
+			
+			$code  = "\n\$(document).ready (function () {\n${code}\n})\n";
+			
+		}
+		else {
+		
+			$attributes -> {event} = "on$1";
+			$attributes -> {for}   = $1 eq 'resize' ? 'window' : 'document';
+				
+		}
+		
+		$_REQUEST {__head_links} .= dump_tag (script => $attributes, $code) . "\n";
 
 	}
-	
-
-
-
-#	$body_scroll = 'no' if $_REQUEST {__tree};
 
 	$body =~ /\<frameset/ or $body = <<EOH;
 			<body 
