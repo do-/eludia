@@ -497,13 +497,20 @@ sub check_href {
     
 	if ($options -> {dialog}) {
 	
-		$url = dialog_open ({
+		$url =
+			dialog_open ({
 				
-			title => $options -> {dialog} -> {title},
+				title => $options -> {dialog} -> {title},
 				
-			href => $url . '#',
+				href => $url . '#',
 					
-		}, $options -> {dialog} -> {options}) . $options -> {dialog} -> {after} . ';void (0)',
+			}, $options -> {dialog} -> {options}) .
+			$options -> {dialog} -> {after} .
+			';void (0)';
+
+		if ($options -> {dialog} -> {before}) {
+			$url =~ s/^javascript:/javascript: $options->{dialog}->{before};/i;
+		}
 
 	}
 
