@@ -497,14 +497,21 @@ sub check_href {
     
 	if ($options -> {dialog}) {
 	
-		$url = dialog_open ({
+		$url =
+			dialog_open ({
 				
-			title => $options -> {dialog} -> {title},
+				title => $options -> {dialog} -> {title},
 				
-			href => $url . '#',
+				href => $url . '#',
 					
-		}, $options -> {dialog} -> {options}) . $options -> {dialog} -> {after} . ';void (0)',
-		
+			}, $options -> {dialog} -> {options}) .
+			$options -> {dialog} -> {after} .
+			';void (0)';
+
+		if ($options -> {dialog} -> {before}) {
+			$url =~ s/^javascript:/javascript: $options->{dialog}->{before};/i;
+		}
+
 	}
 
 	$options -> {href} = $url;
@@ -2156,7 +2163,7 @@ sub draw_toolbar {
 	foreach my $button (@buttons) {
 
 		if (ref $button eq HASH) {
-		
+
 			next if $button -> {off};
 			
 			if ($button -> {hidden} && !$_REQUEST {__edit_query}) {
@@ -2970,6 +2977,8 @@ sub draw_cells {
 		$result .= 
 			!ref ($cell) || ($cell -> {type} ne 'button' && !$cell -> {icon} && $cell -> {off}) || $cell -> {read_only} ? draw_text_cell ($cell, $options) :
 			$cell  -> {type} eq 'radio'    ? draw_radio_cell  ($cell, $options) :
+			$cell  -> {type} eq 'date'     ? draw_date_cell  ($cell, $options) :
+			$cell  -> {type} eq 'datetime' ? draw_datetime_cell  ($cell, $options) :
 			($cell -> {type} eq 'checkbox' || exists $cell -> {checked}) ? draw_checkbox_cell ($cell, $options) :
 			($cell -> {type} eq 'button'   || $cell -> {icon}) ? draw_row_button ($cell, $options) :		
 			$cell  -> {type} eq 'input'    ? draw_input_cell  ($cell, $options) :
@@ -3140,6 +3149,60 @@ sub draw_radio_cell {
 	check_title ($data);
 	
 	return $_SKIN -> draw_radio_cell ($data, $options);
+
+}
+
+################################################################################
+
+sub draw_date_cell {
+
+	my ($data, $options) = @_;	
+
+	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit}) || $data -> {read_only} || $data -> {off};
+	
+	$options -> {no_time} = 1;	
+
+	return draw_datetime_cell ($data, $options);
+
+}
+
+################################################################################
+
+sub draw_datetime_cell {
+
+	my ($data, $options) = @_;
+
+	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit}) || $data -> {read_only} || $data -> {off};
+	
+	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/) {
+		$options -> {size} ||= $options -> {no_time} ? 11 : 16;
+		return draw_input_cell ($options, $data);
+	}	
+
+	unless ($options -> {format}) {
+	
+		if ($options -> {no_time}) {
+			$options -> {format}  ||= $i18n -> {_format_d} || '%d.%m.%Y';
+			$options -> {attributes} -> {size}    ||= 11;
+		}
+		else {
+			$options -> {format}  ||= $i18n -> {_format_dt} || '%d.%m.%Y %k:%M';
+			$options -> {attributes} -> {size}    ||= 16;
+		}
+	
+	}
+		
+	$options -> {attributes} -> {id} = 'input' . $data -> {name};
+
+	$options -> {attributes} -> {class} ||= $data -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';
+
+	$options -> {attributes} -> {value}   ||= $data -> {label};
+	
+	_adjust_row_cell_style ($data, $options);
+
+	check_title ($data);
+
+	return $_SKIN -> draw_datetime_cell (@_);
 
 }
 
