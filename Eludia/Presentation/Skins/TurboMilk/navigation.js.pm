@@ -126,7 +126,7 @@ function ancestor_window_with_child (id) {
 
 }
 
-function _dumper_href () {
+function _dumper_href (tail, target) {
 
 	var wf = ancestor_window_with_child ('_body_iframe');
 
@@ -137,7 +137,7 @@ function _dumper_href () {
 
 	var href = content_iframe ? content_iframe.contentWindow.location.href : body_iframe.location.href;
 
-	nope (href + '&__dump=1', '_blank', 'statusbar,scrollbars');
+	nope (href + tail, target, 'statusbar,scrollbars');
 
 	document.body.style.cursor = 'default';
 

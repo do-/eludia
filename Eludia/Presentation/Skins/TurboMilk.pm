@@ -2077,7 +2077,7 @@ sub draw_dump_button {
 	return {
 		label  => 'Dump',
 		name   => '_dump',
-		href   => "javascript:_dumper_href();",
+		href   => "javascript:_dumper_href('&__dump=1', '_blank');",
 		side   => 'right_items',
 		no_off => 1,
 
@@ -2114,6 +2114,12 @@ EOH
 
 		next if ($type -> {name} eq '_logout');
 		
+		if ($type -> {name} eq '_xls') {
+		
+			$type -> {href}   = "javaScript:_dumper_href ('&xls=1', 'invisible')";
+		
+		}
+
 		$_REQUEST {__menu_links} .= "<a id='main_menu_$$type{name}' target='$$type{target}' href='$$type{href}' onclick='return !check_edit_mode (this);'>-</a>";
 		
 		$type -> {target} = '_body_iframe' if $type -> {target} eq '_self';
