@@ -81,21 +81,6 @@ sub draw_hr {
 EOH
 	
 }
-################################################################################
-
-sub draw_calendar {
-
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime (time);
-	
-	$year += 1900;
-	
-	$_REQUEST {__clock_separator} ||= ':';
-	
-	return <<EOH;
-		$mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></span>
-EOH
-	
-}
 
 ################################################################################
 
@@ -206,7 +191,7 @@ EOH
 		
 		}
 
-		my $calendar = draw_calendar ();
+		my ($year, $mon, $mday) = Date::Calc::Today; $mon --;
 		$header_height = 48;
 		$header_prefix = 'in';
 
@@ -217,7 +202,7 @@ EOH
 			<td>&nbsp;</td>
 
 			<td width="1" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2" height="28" hspace=10></td>
-			<td align="left" class="txt1" nowrap>$calendar</td>
+			<td align="left" class="txt1" nowrap>$mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id="clock"></span></td>
 
 			<td width="1" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2" height="28" hspace=10></td>
 			<td align="left" class="txt1">$$options{user_label}</td>
@@ -2792,7 +2777,7 @@ EOS
 				
 		$_REQUEST {__on_load} = <<EOS;
 			window.focus ();
-			StartClock ();
+			UpdateClock ();
 			nope ('$href', '_body_iframe');
 EOS
 		
@@ -2990,7 +2975,6 @@ EOH
 				<style> v\\:* { behavior: url(#default#VML); }</style>
 
 				<script>
-					var clockSeparators = ['$_REQUEST{__clock_separator}', ' '];
 					var keepalive_url = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
 					$_REQUEST{__script}
 				</script>				

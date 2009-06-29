@@ -28,6 +28,7 @@ var last_vert_menu = [];
 var subsets_are_visible = 0;
 var clockID = 0;
 var clockSeparatorID = 0;
+var clockSeparators = [':', ' '];
 var suggest_clicked = 0;
 var suggest_is_visible = 0;
 var lastClientHeight = 0;
@@ -332,48 +333,24 @@ function subset_on_change (subset_name, href) {
 
 
 
-function UpdateClock() {
+function UpdateClock () {
 
-   if (clockID) {
-      clearTimeout (clockID);
-      clockID = 0;
-   }
-
-   var tDate = new Date ();
-
-   try {
-	   document.getElementById ('clock_hours').innerText = twoDigits (tDate.getHours ());
-	   document.getElementById ('clock_minutes').innerText = twoDigits (tDate.getMinutes ());
-	   document.getElementById ('clock_separator').innerText = clockSeparators [tDate.getSeconds () % 2];
-	   
-	   
-   } catch (e) {}
-
-	if (tDate.getSeconds () % 2) {
-
-	   for (var i in every_second) { 
-	   	document.frames ['_every_second_' + i].location.replace (every_second [i] + '&salt=' + Math.random ()); 
-	   }
-	   
+	if (clockID) {
+		clearTimeout (clockID);
+		clockID = 0;
 	}
 
-   clockID = setTimeout ("UpdateClock ()", 500);
+	var tDate = new Date ();
+
+	$('#clock').text (twoDigits (tDate.getHours ()) + clockSeparators [tDate.getSeconds () % 2] + twoDigits (tDate.getMinutes ()));
+
+	clockID = setTimeout ("UpdateClock ()", 500);
 
 }
 
 function twoDigits (n) {
    if (n > 9) return n;
    return '0' + n;
-}
-
-function StartClock() {
-   clockID = setTimeout("UpdateClock ()", 0);
-}
-
-function KillClock() {
-	if (!clockID) return;
-	clearTimeout(clockID);
-	clockID  = 0;
 }
 
 function __im_schedule (delay) {
