@@ -453,11 +453,11 @@ sub draw_text_cell {
 		$data -> {attributes} -> {style} .= "mso-number-format:\\\@;";
 	}
 
-	if ($data -> {bgcolor}) {
+	if ($data -> {bgcolor} ||= $data -> {attributes} -> {bgcolor}) {
 		$data -> {attributes} -> {style} .= "background:$data->{bgcolor};";
 	}
 
-	delete $data -> {attributes} -> {bgcolor};
+	delete $data -> {attributes} -> {bgcolor} if $data -> {picture};
 
 	if ($data -> {level}) {
 		$data -> {attributes} -> {style} .= "padding-left:" . ($data -> {level} * 12) . "px;";
