@@ -765,6 +765,16 @@ function absTop (element) {
 
 function handle_basic_navigation_keys () {
 
+	if (code_alt_ctrl (116, 0, 0)) {
+
+		if (is_dirty && !confirm (i18n.F5)) return blockEvent ();
+		
+		window.location.reload ();
+				
+		return blockEvent ();
+
+	}
+
 	var e = window.event;
 	var keyCode = e.keyCode;
 	var i = 0;

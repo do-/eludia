@@ -2741,30 +2741,7 @@ EOH
 		    
 EODUMP
 
-		$_REQUEST {__on_keydown} = <<EOJS;
-		
-//			if (code_alt_ctrl (88, 1, 0)) {
-//				nope ('$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}', '_top', '');
-//				blockEvent ();
-//			}
-			
-			if (code_alt_ctrl (116, 0, 0)) {
-			
-				if (is_dirty) {
-				
-					if (!confirm ('Внимание! Вы изменили содержимое некоторых полей ввода. Перезагрузка страницы приведёт к утере этой информации. Продолжить?')) return blockEvent ();
-				
-				}
-			
-				window.location.href = encode1251 ('$href');
-				
-				return blockEvent ();
-			
-			}
-			
-			handle_basic_navigation_keys ();
-			
-EOJS
+		$_REQUEST {__on_keydown} .= " handle_basic_navigation_keys ();";
 
 		foreach my $r (@{$page -> {scan2names}}) {
 			next if $r -> {off};
