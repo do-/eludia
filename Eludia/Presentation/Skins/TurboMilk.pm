@@ -127,6 +127,16 @@ EOH
 
 ################################################################################
 
+sub draw_calendar {
+
+	my ($year, $mon, $mday) = Date::Calc::Today; $mon --;
+	
+	"$mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s' style='width:5px'></span><span id='clock_m'></span>";
+
+}
+
+################################################################################
+
 sub draw_auth_toolbar {
 
 	my ($_SKIN, $options) = @_;
@@ -191,9 +201,10 @@ EOH
 		
 		}
 
-		my ($year, $mon, $mday) = Date::Calc::Today; $mon --;
 		$header_height = 48;
 		$header_prefix = 'in';
+		
+		my $calendar = draw_calendar ();
 
 		$header = <<EOU;
 
@@ -202,7 +213,7 @@ EOH
 			<td>&nbsp;</td>
 
 			<td width="1" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2" height="28" hspace=10></td>
-			<td align="left" class="txt1" nowrap>$mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id="clock"></span></td>
+			<td align="left" class="txt1" nowrap>$calendar</td>
 
 			<td width="1" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2" height="28" hspace=10></td>
 			<td align="left" class="txt1">$$options{user_label}</td>

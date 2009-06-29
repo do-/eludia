@@ -342,7 +342,9 @@ function UpdateClock () {
 
 	var tDate = new Date ();
 
-	$('#clock').text (twoDigits (tDate.getHours ()) + clockSeparators [tDate.getSeconds () % 2] + twoDigits (tDate.getMinutes ()));
+	$('#clock_h').text (twoDigits (tDate.getHours ()));
+	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
+	$('#clock_m').text (twoDigits (tDate.getMinutes ()));
 
 	clockID = setTimeout ("UpdateClock ()", 500);
 
