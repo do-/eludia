@@ -2919,6 +2919,8 @@ EOH
 EOHELP
 
 	$_REQUEST {__on_resize} .= "refresh_table_slider_on_resize ();";
+	
+	$_REQUEST {__on_beforeunload} .= " setCursor(0, 'wait');";
 
 	foreach (keys %_REQUEST) {
 	
@@ -2935,7 +2937,7 @@ EOHELP
 		else {
 		
 			$attributes -> {event} = "on$1";
-			$attributes -> {for}   = $1 eq 'resize' ? 'window' : 'document';
+			$attributes -> {for}   = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
 				
 		}
 		
@@ -2955,7 +2957,6 @@ EOHELP
 				scroll=$body_scroll
 				name="body" 
 				id="body"
-				onbeforeunload="document.body.style.cursor = 'wait'"
 			>
 			
 <v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#888888" strokeweight="2px" filled="no" id="slider" />
