@@ -2994,13 +2994,6 @@ EOH
 					$_REQUEST{__script}
 				</script>				
 
-				@{[ $_REQUEST{__help_url} ? <<EOHELP : '' ]}
-					<script for="body" event="onhelp">
-						nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes');
-						event.returnValue = false;
-					</script>						
-EOHELP
-
 			</head>
 			$body
 		</html>
