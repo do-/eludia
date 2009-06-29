@@ -2821,15 +2821,6 @@ EOS
 			>
 			</iframe>
 EOIFRAME
-
-	
-		if (ref $_REQUEST {__every_second} eq ARRAY) {
-		
-			for (my $i = 0; $i < @{$_REQUEST{__every_second}}; $i++) {$body .= "<iframe name='_every_second_$i' src='$_REQUEST{__static_url}/0.html' style='display:none'></iframe>"}
-			
-			$_REQUEST {__script} .= ' every_second = ' . $_JSON -> encode ($_REQUEST {__every_second}) . ';';
-		
-		}
 	
 	}
 	
@@ -3008,7 +2999,6 @@ EOH
 				<style> v\\:* { behavior: url(#default#VML); }</style>
 
 				<script>
-					var every_second = [];
 					var clockSeparators = ['$_REQUEST{__clock_separator}', ' '];
 					var keepalive_url = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
 					$_REQUEST{__script}
