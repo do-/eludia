@@ -42,6 +42,33 @@ var kb_hooks = [{}, {}, {}, {}];
 
 var max_len = 50;
 
+function select_visibility () {
+	if (top.last_vert_menu && top.last_vert_menu [0]) return 'hidden';
+	if (last_vert_menu [0]) return 'hidden';
+	if (subsets_are_visible) return 'hidden';
+	return '';
+}
+
+function cell_select_visibility (select, fixed_cols) {
+
+	var td    = select.offsetParent;
+	var tr    = td.parentElement;
+	var cells = tr.cells;
+	var last_fixed_cell_offset_right = 0;
+
+	for (i = 0; i < fixed_cols; i ++) {
+		last_fixed_cell_offset_right += cells [i].offsetWidth;
+	}
+
+	var table = td.offsetParent;
+	var div   = table.offsetParent;
+	var select_left = select.offsetLeft + td.offsetLeft - div.scrollLeft;
+	var result = select_left < last_fixed_cell_offset_right ? 'hidden' : '';
+
+	return result;
+
+}
+
 function set_suggest_result (sel, id) {
 	var o = sel.options [sel.selectedIndex];
 	document.getElementById (id + '__id').value    = o.value;

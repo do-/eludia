@@ -2994,51 +2994,6 @@ EOI
 
 			</body>
 EOH
-
-	
-	unless ($r -> headers_in -> {'User-Agent'} =~ /MSIE 7/ || $_REQUEST {__only_tree_frameset}) {
-		
-		$_REQUEST {__script} .= <<EOS;
-
-			function select_visibility () {
-				if (top.last_vert_menu && top.last_vert_menu [0]) return 'hidden';
-				if (last_vert_menu [0]) return 'hidden';
-				if (subsets_are_visible) return 'hidden';
-				return '';
-			}
-
-			function cell_select_visibility (select, fixed_cols) {
-
-				var td    = select.offsetParent;
-				var tr    = td.parentElement;
-				var cells = tr.cells;
-				var last_fixed_cell_offset_right = 0;
-
-				for (i = 0; i < fixed_cols; i ++) {
-					last_fixed_cell_offset_right += cells [i].offsetWidth;
-				}
-
-				var table = td.offsetParent;
-				var div   = table.offsetParent;
-				var select_left = select.offsetLeft + td.offsetLeft - div.scrollLeft;
-				var result = select_left < last_fixed_cell_offset_right ? 'hidden' : '';
-
-				return result;
-
-			}
-
-EOS
-	
-	}
-	
-
-		$_REQUEST {__script} .= <<EOS;
-				
-
-EOS
-
-
-
 	
 	return <<EOH;
 <html xmlns:v="urn:schemas-microsoft-com:vml">
