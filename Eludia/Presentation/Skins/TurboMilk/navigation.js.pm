@@ -174,15 +174,13 @@ function check_menu_md5 (menu_md5) {
 
 	window.parent.subsets_are_visible = 0;
 
-	if (!window.parent.location) return;
+	if (
+		window.parent.menu_md5 == menu_md5
+		|| !window.parent.location
+		|| window.parent.location.href.indexOf ('dialog.html') > 0
+	) return;
 
-	var url = window.parent.location.href;
-
-	if (window.parent.menu_md5 == menu_md5 || url.indexOf ('dialog.html') > 0) return;	
-
-	var href = window.location.href + '&__only_menu=1';
-	
-	nope (href, 'invisible', '');	
+	$.getScript (window.location.href + '&__only_menu=1');
 
 }
 

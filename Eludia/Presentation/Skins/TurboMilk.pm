@@ -2649,41 +2649,31 @@ sub start_page {
 
 ################################################################################
 
+sub draw_page_just_to_reload_menu {
+
+	my ($_SKIN, $page) = @_;
+	
+	my $a = $_JSON -> encode ([$page -> {menu}]);
+
+	my $md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
+	
+	qq {
+		var wm = ancestor_window_with_child ('main_menu');
+		var a = $a;
+		wm.child.outerHTML = $a [0];
+		wm.window.menu_md5 = '$md5';
+	}; 
+
+}
+
+################################################################################
+
 sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 
-	if ($_REQUEST {__only_menu}) {
+	$_REQUEST {__only_menu} and return $_SKIN -> draw_page_just_to_reload_menu ($page);
 
-		my $a = $_JSON -> encode ([$page -> {menu}]);
-		my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
-
-		return <<EOH;
-<html>
-	<head>
-		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-		</script>
-		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
-		</script>
-		<script for=window event=onload>
-
-			var wm = ancestor_window_with_child ('main_menu');
-
-			if (wm) {
-				var a = $a;
-				wm.child.outerHTML = a [0];
-				wm.window.menu_md5 = '$menu_md5';
-			}
-
-		</script>
-	<head>
-	<body>
-	</body>
-</html>
-EOH
-	}
-
-	
 	$_REQUEST {__scrollable_table_row} ||= 0;
 		
 	$_REQUEST {__head_links} .= <<EOH if $_REQUEST {__meta_refresh};
