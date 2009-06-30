@@ -377,26 +377,26 @@ function twoDigits (n) {
 
 function __im_schedule (delay) {
 
-	if (__im_timer) {
-		clearTimeout (__im_timer);
-		__im_timer = 0;
+	if (__im.timer) {
+		clearTimeout (__im.timer);
+		__im.timer = 0;
 	}
 
-	__im_timer = setTimeout ("__im_check ()", delay);
+	__im.timer = setTimeout ("__im_check ()", delay);
 
 }
 
 function __im_check () {
 
-	if (!__im_delay) return;
+	if (!__im.delay) return;
 		
-	__im_schedule (__im_delay);
+	__im_schedule (__im.delay);
 
-	$.get (__im_idx + '?salt=' + Math.random (), function (data) {
+	$.get (__im.idx + '?salt=' + Math.random (), function (data) {
 	
 		if (data.length != 32) return;
 
-		$.getJSON (__im_url + '&id=' + data + '&salt=' + Math.random (), function (data) {
+		$.getJSON (__im.url + '&id=' + data + '&salt=' + Math.random (), function (data) {
 			
 			if (!data || !data.code) return;
 			
