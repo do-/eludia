@@ -2691,14 +2691,6 @@ EOH
 		$body = $page -> {body};
 		$body_scroll = 'no';
 		$$page{auth_toolbar} = '';
-		$_REQUEST {__head_links} .= <<EOH;
-			<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-			</script>
-			<script src="$_REQUEST{__static_url}/navigation_setup.js?$_REQUEST{__static_salt}">
-			</script>
-			<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
-			</script>
-EOH
 		
 	}
 	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
@@ -2873,34 +2865,12 @@ EOH
 	if ($$page{auth_toolbar}) {
 		$$page{auth_toolbar} = "<tr height=48><td height=48>$$page{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>";
 	}
-		
-	$_REQUEST {__head_links} .= <<EOH unless ($_REQUEST {type} eq '_boot');
-		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
-		<style>
-			.calendar .nav {  background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
-			td.main-menu {padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
-			td.vert-menu {background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
-			#admin {width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
-			@{[$_REQUEST {type} eq 'logon' ? <<EOS : '' ]}
-			td.login-head {background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
-			td.submit-area {text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
-			div.grey-submit {background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
-EOS
-		</style>
-EOH
 
 	foreach (@{$_REQUEST {__include_css}}) {
 		$_REQUEST {__head_links} .= <<EOH;
 			<LINK href="$_REQUEST{__static_site}/i/$_.css" type=text/css rel=STYLESHEET>
 EOH
 	}
-
-	$_REQUEST {__head_links} .= <<EOH unless ($_REQUEST {type} eq 'logon' or $_REQUEST {type} eq '_boot');
-		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-		</script>
-		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
-		</script>
-EOH
 
 	foreach (@{$_REQUEST {__include_js}}) {
 		$_REQUEST {__head_links} .= <<EOH;
@@ -2909,12 +2879,9 @@ EOH
 EOH
 	}
 	
-	$_REQUEST {__on_help} = <<EOHELP if $_REQUEST {__help_url};
-		nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes');
-		blockEvent ();
-EOHELP
-
-	$_REQUEST {__on_resize} .= "refresh_table_slider_on_resize ();";
+	$_REQUEST {__on_help}          = " nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes'); blockEvent ();" if $_REQUEST {__help_url};
+		
+	$_REQUEST {__on_resize}       .= " refresh_table_slider_on_resize ();";
 	
 	$_REQUEST {__on_beforeunload} .= " setCursor(0, 'wait');";
 
@@ -2955,8 +2922,8 @@ EOHELP
 				id="body"
 			>
 			
-<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#888888" strokeweight="2px" filled="no" id="slider" />
-<v:rect style='position:absolute; left:200px; top:300px; height:6px; width:6px; z-index:0; visibility:hidden' strokecolor="#ffffff" strokeweight="1px" filled="yes" fillcolor="#555555" id="slider_" />
+				<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#888888" strokeweight="2px" filled="no" id="slider" />
+				<v:rect style='position:absolute; left:200px; top:300px; height:6px; width:6px; z-index:0; visibility:hidden' strokecolor="#ffffff" strokeweight="1px" filled="yes" fillcolor="#555555" id="slider_" />
 				
 				<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
 					$$page{auth_toolbar}
@@ -2973,17 +2940,31 @@ EOI
 			</body>
 EOH
 	
-	return <<EOH;
-<html xmlns:v="urn:schemas-microsoft-com:vml">
+	return qq {<html xmlns:v="urn:schemas-microsoft-com:vml">
 			<head>
 				<title>$$i18n{_page_title}</title>
 								
 				<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with $request_package; gateway_interface is $ENV{GATEWAY_INTERFACE}; $mod_perl is in use">
 				<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
 								
+				<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
+				<style>
+					v\\:*           { behavior: url(#default#VML); }
+					#admin          { width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
+					.calendar .nav  { background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
+					td.main-menu    { padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
+					td.vert-menu    { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
+					td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
+					td.submit-area  { text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
+					div.grey-submit { background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
+				</style>
+
+				<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
+				</script>
+				<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
+				</script>
+
 				$_REQUEST{__head_links}
-				
-				<style> v\\:* { behavior: url(#default#VML); }</style>
 
 				<script>
 					var keepalive_url = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
@@ -2994,7 +2975,7 @@ EOH
 			$body
 		</html>
 		
-EOH
+	}
 
 }
 
