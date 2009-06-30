@@ -2802,57 +2802,16 @@ EOIFRAME
 	
 	}
 	
-	$_REQUEST {__js_var} -> {edit_mode}                = undef;
 	$_REQUEST {__js_var} -> {menu_md5}                 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
 	$_REQUEST {__js_var} -> {__read_only}              = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
 	$_REQUEST {__js_var} -> {__last_last_query_string} = 0 + $_REQUEST{__last_query_string};
 
-	if ($preconf -> {core_unblock_navigation}) {
-	
-		$_REQUEST {__script} .= <<EOH;
-
-			function check_edit_mode (a, fallback_href) {
-
-				if (edit_mode) {
-
-					var arg   = Array ();
-					arg.href  = a.href ? a.href : fallback_href;
-					arg.title = a.innerText;
-
-					window.showModelessDialog('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?$_REQUEST{__static_salt}', arg, 'resizable:yes;unadorned:yes;status:yes');
-					document.body.style.cursor = 'default'; 
-					blockEvent ();
-					return true;
-
-				}
-
-				return false;
-
-			}
-EOH
-			
-	
-	}
-	elsif (!$_REQUEST {__only_tree_frameset}) {
-	
-		$_REQUEST {__script} .= <<EOH;
-
-			function check_edit_mode (a, fallback_href) {
-
-				if (edit_mode) {
-
-					alert('$$i18n{save_or_cancel}'); 
-					document.body.style.cursor = 'default'; 
-					return true;
-
-				}
-
-				return false;
-
-			}
-EOH
-	
-	}
+	$_REQUEST {__js_var} -> {edit_mode}                = undef;
+	$_REQUEST {__js_var} -> {edit_mode_args}           = 
+		$preconf -> {core_unblock_navigation} ? {dialog_url => "$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?$_REQUEST{__static_salt}"} : 
+		!$_REQUEST {__only_tree_frameset}     ? {label      => $i18n -> {save_or_cancel}} :
+		undef;
+	;
 
 	if ($$page{auth_toolbar}) {
 		$$page{auth_toolbar} = "<tr height=48><td height=48>$$page{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>";

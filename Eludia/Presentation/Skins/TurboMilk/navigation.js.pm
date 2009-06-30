@@ -319,19 +319,39 @@ function subset_on_change (subset_name, href) {
 
 }
 
+function check_edit_mode (a, fallback_href) {
 
-
-
-
-
-
-
-
-
-
-
-
-
+	if (!edit_mode) return false;
+	
+	if (edit_mode_args.dialog_url) {
+	
+		window.showModelessDialog (
+		
+			edit_mode_args.dialog_url, 
+			
+			{
+			
+				href  : a.href ? a.href : fallback_href,
+				
+				title : a.innerText
+			
+			}, 
+			
+			'resizable:yes;unadorned:yes;status:yes'
+			
+		);
+				
+		blockEvent ();
+	
+	}
+	
+	if (edit_mode_args.label) alert (edit_mode_args.label); 
+	
+	setCursor ();
+	
+	return true;
+	
+}
 
 function UpdateClock () {
 
