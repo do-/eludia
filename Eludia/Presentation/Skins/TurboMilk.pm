@@ -2802,18 +2802,10 @@ EOIFRAME
 	
 	}
 	
-	my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
-	
-	my $__read_only = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
-	
-	$_REQUEST {__script} .= <<EOH;
-
-		var edit_mode = null;
-		var menu_md5 = '$menu_md5';
-		var __read_only = $__read_only;
-		var __last_last_query_string = '$_REQUEST{__last_query_string}';
-
-EOH
+	$_REQUEST {__js_var} -> {edit_mode}                = undef;
+	$_REQUEST {__js_var} -> {menu_md5}                 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
+	$_REQUEST {__js_var} -> {__read_only}              = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
+	$_REQUEST {__js_var} -> {__last_last_query_string} = 0 + $_REQUEST{__last_query_string};
 
 	if ($preconf -> {core_unblock_navigation}) {
 	
@@ -2884,6 +2876,16 @@ EOH
 	$_REQUEST {__on_resize}       .= " refresh_table_slider_on_resize ();";
 	
 	$_REQUEST {__on_beforeunload} .= " setCursor(0, 'wait');";
+	
+	$_REQUEST {__js_var} -> {keepalive_url} = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
+	
+	my $js_var = $_REQUEST {__js_var};
+	
+	foreach (keys %$js_var) {
+		
+		$_REQUEST {__script} .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n";
+	
+	}
 
 	foreach (keys %_REQUEST) {
 	
@@ -2907,6 +2909,8 @@ EOH
 		$_REQUEST {__head_links} .= dump_tag (script => $attributes, $code) . "\n";
 
 	}
+	
+	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";
 
 	$body =~ /\<frameset/ or $body = <<EOH;
 			<body 
@@ -2965,11 +2969,6 @@ EOH
 				</script>
 
 				$_REQUEST{__head_links}
-
-				<script>
-					var keepalive_url = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
-					$_REQUEST{__script}
-				</script>				
 
 			</head>
 			$body
