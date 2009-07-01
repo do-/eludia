@@ -2773,6 +2773,8 @@ sub draw_page {
 		
 		delete $_REQUEST {__invisibles};
 		
+		$_REQUEST {__on_load} = "window.focus (); UpdateClock (); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
+
 		unless ($preconf -> {no_keepalive}) {
 
 			$_REQUEST {__js_var} -> {keepalive_url} = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
@@ -2780,8 +2782,6 @@ sub draw_page {
 			$_REQUEST {__on_load} .= 'start_keepalive (' . 1000 * (60 * $conf -> {session_timeout} - 1) . ');';
 
 		}
-
-		$_REQUEST {__on_load} .= "window.focus (); UpdateClock (); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
 		
 		$body = qq {
 		
