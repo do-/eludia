@@ -2750,7 +2750,7 @@ sub draw_page {
 
 		$_REQUEST {__on_resize}       .= " refresh_table_slider_on_resize ();";
 
-		$_REQUEST {__on_beforeunload} .= " setCursor(0, 'wait');";
+		$_REQUEST {__on_beforeunload} .= " setCursor (window, 'wait')";
 
 		$_REQUEST {__head_links}      .= "<META HTTP-EQUIV=Refresh CONTENT='$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1'>" if $_REQUEST {__meta_refresh};
 

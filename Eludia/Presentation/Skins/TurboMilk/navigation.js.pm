@@ -694,8 +694,14 @@ function setCursor (w, c) {
 
 	if (!w) w = window;
 	if (!c) c = 'default';
+	
+	var b = w.document.body;
+	
+	$(        b).css ("cursor", c); 
+	$('a',    b).css ("cursor", c); 
+	$('span', b).css ("cursor", c);
 
-	return void (w.document.body.style.cursor = c);
+	return void (0);
 	
 }
 
