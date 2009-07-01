@@ -220,8 +220,12 @@ function activate_link_by_id (id) {
 }
 
 function start_keepalive (timeout) {
-	var callback = "open(keepalive_url, 'invisible'); clearTimeout (keepaliveID)";
-	keepaliveID = setTimeout (callback, timeout);
+
+	keepaliveID = setTimeout ("	      \
+		$.get        (keepalive_url); \
+		clearTimeout (keepaliveID)    \
+	", timeout);
+	
 }
 
 function focus_on_input (__focused_input) {
@@ -982,6 +986,8 @@ TableSlider.prototype.set_row = function (row) {
 			this.rows [row].scrollIntoView(false);
 		}
 	}
+	
+	if (row) this.cell_on ();
 
 }
 

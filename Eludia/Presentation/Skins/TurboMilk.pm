@@ -2669,93 +2669,51 @@ sub draw_page {
 	my ($_SKIN, $page) = @_;
 
 	$_REQUEST {__only_menu} and return $_SKIN -> draw_page_just_to_reload_menu ($page);
-
-	$_REQUEST {__scrollable_table_row} ||= 0;
-		
-	$_REQUEST {__head_links} .= <<EOH if $_REQUEST {__meta_refresh};
-		<META HTTP-EQUIV=Refresh CONTENT="$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1">
-EOH
-
-	my $request_package = ref $apr;
-	my $mod_perl = $ENV {MOD_PERL};
-	$mod_perl ||= 'NO mod_perl AT ALL';
 								
 	my $parameters = ref ${$_PACKAGE . 'apr'} eq 'Apache2::Request' ? ${$_PACKAGE . 'apr'} -> param : ${$_PACKAGE . 'apr'} -> parms;
 
-	my $body = '';
-#	my $onKeyDown = '';	
-	my $body_scroll = 'yes';
-
+	my $body = $page -> {body};
+	
+	my $body_options = {
+		bgcolor      => 'white',
+		leftMargin   => 0,
+		topMargin    => 0,
+		bottomMargin => 0,
+		rightMargin  => 0,
+		marginwidth  => 0,
+		marginheight => 0,
+		scroll       => 'yes',
+		name         => 'body', 
+		id           => 'body',
+	};
+	
 	if (!$_USER -> {id}) {
-		
-		$body = $page -> {body};
-		$body_scroll = 'no';
-		$$page{auth_toolbar} = '';
-		
-	}
+	
+		$body_options -> {scroll} = 'no';
+
+	} 
 	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
-	
-		$$page{auth_toolbar} = '';
+
+		$body .= qq {
+
+			<div style='display:none'>$_REQUEST{__menu_links}</div>
+
+			<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#888888" strokeweight="2px" filled="no" id="slider" />
+			<v:rect style='position:absolute; left:200px; top:300px; height:6px; width:6px; z-index:0; visibility:hidden' strokecolor="#ffffff" strokeweight="1px" filled="yes" fillcolor="#555555" id="slider_" />
+
+		};
 		
-#		$body = $page -> {menu} . $page -> {body};
-		$body = $page -> {body} . "<div style='display:none'>$_REQUEST{__menu_links}</div>";
+		$_REQUEST {__script}  .= '; check_top_window (); ';
+
+		$_REQUEST {__on_load} .= "tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
 		
-		my %h = %$parameters;
-		delete $h {salt};
-		delete $h {_salt};
+		$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 		
-		my $url_dump = create_url (__dump => 1);
+		$_REQUEST {__on_load} .= 'window.focus ();'                                                                 if ! $_REQUEST {__no_focus};
 
-		my $href = create_url (%h);
+		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');"                                   if   $_REQUEST {__focused_input};
 
-		$_REQUEST {__on_load} .= "check_top_window ();"
-			unless ($_REQUEST {__no_navigation} or $_REQUEST {__tree});
-
-		$preconf -> {core_show_dump} and $_REQUEST {__on_mousedown} .= <<EODUMP;
-
-		    if (window.event.button == 2 && window.event.ctrlKey) {
-    			nope ('$url_dump', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');
-		    }
-		    
-EODUMP
-
-		$_REQUEST {__on_keydown} .= " handle_basic_navigation_keys ();";
-
-		foreach my $r (@{$page -> {scan2names}}) {
-			next if $r -> {off};
-			$r -> {alt}  += 0;
-			$r -> {ctrl} += 0;
-			$r -> {data} .= '';
-			my $i = 2 * $r -> {alt} + $r -> {ctrl};
-			$_REQUEST {__on_load} .= "\nkb_hooks [$i] [$r->{code}] = [handle_hotkey_$r->{type}, ";
-			foreach (qw(ctrl alt off type code)) {delete $r -> {$_}}
-			$_REQUEST {__on_load} .=  $_JSON -> encode ($r);
-			$_REQUEST {__on_load} .= '];';
-		}
-
-		$_REQUEST {__on_keydown} .= "if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
-
-		if ($_REQUEST {sid} && !$preconf -> {no_keepalive}) {
-			my $timeout = 1000 * (60 * $conf -> {session_timeout} - 1);
-			$_REQUEST {__on_load} .= "start_keepalive ($timeout);";
-		}
-
-		unless ($_REQUEST {__no_navigation} or $_REQUEST {__tree}) {
-			my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
-			$_REQUEST {__on_load} .= "check_menu_md5 ('$menu_md5');";
-		}
-		
-		$_REQUEST {__on_load} .= "tableSlider.set_row ($_REQUEST{__scrollable_table_row});";
-		$_REQUEST {__on_load} .= "tableSlider.cell_on ();" if $_REQUEST {__scrollable_table_row};
-		$_REQUEST {__on_load} .= 'window.focus ();'                             if !$_REQUEST {__no_focus};
-		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');" if  $_REQUEST {__focused_input};
-		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " top.edit_mode = 1;" : " top.edit_mode = 0;"
-			unless ($_REQUEST {select});
-	
-		$_REQUEST {__on_mouseover} .= <<EOS;
-			window.parent.subsets_are_visible = 0;
-			subsets_are_visible = 0;
-EOS
+		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " top.edit_mode = 1;" : " top.edit_mode = 0;"                 if ! $_REQUEST {select};
 
 		if ($_REQUEST {__im_delay}) {
 		
@@ -2770,79 +2728,96 @@ EOS
 		
 		}
 
+		$_REQUEST {__on_mouseover}    .= "window.parent.subsets_are_visible = 0; subsets_are_visible = 0;";
+
+		$_REQUEST {__on_mousedown}    .= "if (window.event.button == 2 && window.event.ctrlKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
+
+		$_REQUEST {__on_keydown}      .= " handle_basic_navigation_keys ();";
+
+		foreach my $r (@{$page -> {scan2names}}) {
+			next if $r -> {off};
+			$r -> {data} .= '';
+			my $i = 2 * $r -> {alt} + $r -> {ctrl};
+			$_REQUEST {__on_load} .= "\nkb_hooks [$i] [$r->{code}] = [handle_hotkey_$r->{type}, ";
+			foreach (qw (ctrl alt off type code)) {delete $r -> {$_}}
+			$_REQUEST {__on_load} .=  $_JSON -> encode ($r);
+			$_REQUEST {__on_load} .= '];';
+		}
+
+		$_REQUEST {__on_keydown}      .= " if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
+
+		$_REQUEST {__on_help}          = " nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes'); blockEvent ();" if $_REQUEST {__help_url};
+
+		$_REQUEST {__on_resize}       .= " refresh_table_slider_on_resize ();";
+
+		$_REQUEST {__on_beforeunload} .= " setCursor(0, 'wait');";
+
+		$_REQUEST {__head_links}      .= "<META HTTP-EQUIV=Refresh CONTENT='$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1'>" if $_REQUEST {__meta_refresh};
+
+		$_REQUEST {__js_var} -> {__read_only}              = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
+
+		$_REQUEST {__js_var} -> {__last_last_query_string} = 0 + $_REQUEST{__last_query_string};
+
+		$body =~ /^\s*\<frameset/ism or $body = qq {
+		
+			<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
+				<tr><td valign=top height=100%>$body</td></tr>
+			</table>
+
+		};
+
 	}
 	else {
-	
-		my $href = create_url (__subset => $_SUBSET -> {name});
-		$body_scroll = 'no';
-				
-		$_REQUEST {__on_load} = <<EOS;
-			window.focus ();
-			UpdateClock ();
-			nope ('$href', '_body_iframe');
-EOS
+
+		$body_options -> {scroll} = 'no';
 		
-		$body = <<EOIFRAME;
-			<iframe 
-				name='_body_iframe' 
-				id='_body_iframe' 
-				src="$_REQUEST{__static_url}/0.html"
-				width=100% 
-				height=100% 
-				border=0 
-				frameborder=0 
-				marginheight=0 
-				marginwidth=0
-				application=yes
-			>
-			</iframe>
-EOIFRAME
-	
+		delete $_REQUEST {__invisibles};
+		
+		unless ($preconf -> {no_keepalive}) {
+
+			$_REQUEST {__js_var} -> {keepalive_url} = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
+
+			$_REQUEST {__on_load} .= 'start_keepalive (' . 1000 * (60 * $conf -> {session_timeout} - 1) . ');';
+
+		}
+
+		$_REQUEST {__on_load} .= "window.focus (); UpdateClock (); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
+		
+		$body = qq {
+		
+			<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
+				<tr height=48><td height=48>$page->{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>
+				<tr><td valign=top height=100%>
+					<iframe name='_body_iframe' id='_body_iframe' src="$_REQUEST{__static_url}/0.html" width=100% height=100% border=0 frameborder=0 marginheight=0 marginwidth=0 application=yes>
+					</iframe>
+				</td></tr>
+			</table>
+
+		};
+			
 	}
 	
 	$_REQUEST {__js_var} -> {menu_md5}                 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
-	$_REQUEST {__js_var} -> {__read_only}              = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
-	$_REQUEST {__js_var} -> {__last_last_query_string} = 0 + $_REQUEST{__last_query_string};
 
 	$_REQUEST {__js_var} -> {edit_mode}                = undef;
+	
 	$_REQUEST {__js_var} -> {edit_mode_args}           = 
+
 		$preconf -> {core_unblock_navigation} ? {dialog_url => "$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?$_REQUEST{__static_salt}"} : 
+
 		!$_REQUEST {__only_tree_frameset}     ? {label      => $i18n -> {save_or_cancel}} :
+
 		undef;
+
 	;
 
-	if ($$page{auth_toolbar}) {
-		$$page{auth_toolbar} = "<tr height=48><td height=48>$$page{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>";
-	}
-
-	foreach (@{$_REQUEST {__include_css}}) {
-		$_REQUEST {__head_links} .= <<EOH;
-			<LINK href="$_REQUEST{__static_site}/i/$_.css" type=text/css rel=STYLESHEET>
-EOH
-	}
-
-	foreach (@{$_REQUEST {__include_js}}) {
-		$_REQUEST {__head_links} .= <<EOH;
-			<script type="text/javascript" src="$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}">
-			</script>
-EOH
-	}
-	
-	$_REQUEST {__on_help}          = " nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes'); blockEvent ();" if $_REQUEST {__help_url};
-		
-	$_REQUEST {__on_resize}       .= " refresh_table_slider_on_resize ();";
-	
-	$_REQUEST {__on_beforeunload} .= " setCursor(0, 'wait');";
-	
-	$_REQUEST {__js_var} -> {keepalive_url} = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
-	
 	my $js_var = $_REQUEST {__js_var};
+			
+	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 	
-	foreach (keys %$js_var) {
-		
-		$_REQUEST {__script} .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n";
-	
-	}
+	$_REQUEST {__head_links} .= "<link  href='$_REQUEST{__static_site}/i/$_.css' type=text/css rel=stylesheet>"         foreach (@{$_REQUEST {__include_css}});
+
+	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}'>\n</script>" foreach (@{$_REQUEST {__include_js}});
 
 	foreach (keys %_REQUEST) {
 	
@@ -2867,71 +2842,43 @@ EOH
 
 	}
 	
-	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";
-
-	$body =~ /\<frameset/ or $body = <<EOH;
-			<body 
-				bgcolor=white 
-				leftMargin=0 
-				topMargin=0
-				bottomMargin=0
-				rightMargin=0
-				marginwidth=0 
-				marginheight=0 
-				scroll=$body_scroll
-				name="body" 
-				id="body"
-			>
-			
-				<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#888888" strokeweight="2px" filled="no" id="slider" />
-				<v:rect style='position:absolute; left:200px; top:300px; height:6px; width:6px; z-index:0; visibility:hidden' strokecolor="#ffffff" strokeweight="1px" filled="yes" fillcolor="#555555" id="slider_" />
-				
-				<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
-					$$page{auth_toolbar}
-					<tr><td valign=top height=100%>
-						$body
-					</td></tr>
-				</table>
-
-@{[ map {<<EOI} @{$_REQUEST{__invisibles}} ]}
-					<iframe name='$_' src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes" style="display:none">
-					</iframe>
-EOI
-
-			</body>
-EOH
+	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";	
 	
-	return qq {<html xmlns:v="urn:schemas-microsoft-com:vml">
-			<head>
-				<title>$$i18n{_page_title}</title>
-								
-				<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with $request_package; gateway_interface is $ENV{GATEWAY_INTERFACE}; $mod_perl is in use">
-				<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
-								
-				<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
-				<style>
-					v\\:*           { behavior: url(#default#VML); }
-					#admin          { width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
-					.calendar .nav  { background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
-					td.main-menu    { padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
-					td.vert-menu    { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
-					td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
-					td.submit-area  { text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
-					div.grey-submit { background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
-				</style>
+	$_REQUEST {__head_links}  = qq {
 
-				<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-				</script>
-				<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
-				</script>
+		<title>$$i18n{_page_title}</title>
+						
+		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
+		<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
+						
+		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
+		<style>
+			v\\:*           { behavior: url(#default#VML); }
+			#admin          { width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
+			.calendar .nav  { background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
+			td.main-menu    { padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
+			td.vert-menu    { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
+			td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
+			td.submit-area  { text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
+			div.grey-submit { background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
+		</style>
 
-				$_REQUEST{__head_links}
+		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
+		</script>
+		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
+		</script>
 
-			</head>
-			$body
-		</html>
+	} . $_REQUEST {__head_links};
+	
+	if ($body !~ /^\s*\<frameset/ism) {
+
+		$body .= "<iframe name='$_' src='$_REQUEST{__static_url}/0.html' width=0 height=0 application='yes' style='display:none'>\n</iframe>" foreach (@{$_REQUEST{__invisibles}});
 		
+		$body  = dump_tag (body => $body_options, $body);
+
 	}
+
+	return qq {<html xmlns:v="urn:schemas-microsoft-com:vml"><head>$_REQUEST{__head_links}</head>$body</html>};
 
 }
 
@@ -3397,14 +3344,12 @@ EOH
 EOO
 EOH
 
-	return <<EOH;
-		<frameset cols="$options->{width},*">
-			<frame src="$ENV{SCRIPT_URI}/i/_skins/TurboMilk/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
-			</frame>
-			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
-			</frame>
-		</frameset>
-EOH
+	return qq {<frameset cols="$options->{width},*">
+		<frame src="$ENV{SCRIPT_URI}/i/_skins/TurboMilk/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
+		</frame>
+		<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
+		</frame>
+	</frameset>};
 
 }
 
