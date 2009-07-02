@@ -2705,7 +2705,7 @@ sub draw_page {
 		
 		$_REQUEST {__script}  .= '; check_top_window (); ';
 
-		$_REQUEST {__on_load} .= "tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
+		$_REQUEST {__on_load} .= "setCursor (top); tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
 		
 		$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 		
@@ -2750,7 +2750,7 @@ sub draw_page {
 
 		$_REQUEST {__on_resize}       .= " refresh_table_slider_on_resize ();";
 
-		$_REQUEST {__on_beforeunload} .= " setCursor (window, 'wait')";
+		$_REQUEST {__on_beforeunload} .= " setCursor (window, 'wait'); setCursor (top, 'wait');";
 
 		$_REQUEST {__head_links}      .= "<META HTTP-EQUIV=Refresh CONTENT='$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1'>" if $_REQUEST {__meta_refresh};
 

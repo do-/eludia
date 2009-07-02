@@ -699,6 +699,7 @@ function setCursor (w, c) {
 	
 	$(        b).css ("cursor", c); 
 	$('a',    b).css ("cursor", c); 
+	$('div',  b).css ("cursor", c);
 	$('span', b).css ("cursor", c);
 
 	return void (0);
