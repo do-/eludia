@@ -43,6 +43,28 @@ var kb_hooks = [{}, {}, {}, {}];
 
 var max_len = 50;
 
+window.__original_alert   = window.alert;
+window.alert = function (s) {
+
+	window.__original_alert (s);
+	
+	window.setCursor (top);
+	window.setCursor (window);
+
+};
+
+window.__original_confirm = window.confirm;
+window.confirm = function (s) {
+
+	var r = window.__original_confirm (s);
+	
+	window.setCursor (top);
+	window.setCursor (window);
+	
+	return r;
+
+};
+
 function select_visibility () {
 	if (top.last_vert_menu && top.last_vert_menu [0]) return 'hidden';
 	if (last_vert_menu [0]) return 'hidden';
