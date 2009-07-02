@@ -4236,6 +4236,7 @@ sub out_html {
 
 	$r -> content_type ($_REQUEST {__content_type});
 	$r -> headers_out -> {'X-Powered-By'} = 'Eludia/' . $Eludia::VERSION;
+	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
 
 	$preconf -> {core_mtu} ||= 1500;
 	
