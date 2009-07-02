@@ -709,13 +709,31 @@ function setCursor (w, c) {
 
 	if (!w) w = window;
 	if (!c) c = 'default';
+
+	if (event) {
 	
+		var e = window.document.elementFromPoint (event.clientX, event.clientY);
+
+		while (e) {
+
+			try { if (e.tagName == 'A' || e.tagName == 'SPAN') e.style.cursor = c } catch (err) {};
+
+			e = e.parentElement;
+
+		}
+
+	}
+
 	var b = w.document.body;
 	
-	$(        b).css ("cursor", c); 
-	$('a',    b).css ("cursor", c); 
-	$('div',  b).css ("cursor", c);
-	$('span', b).css ("cursor", c);
+	$(b).css ("cursor", c); 
+	
+	setTimeout (function () { 
+
+		$('a',    b).css ("cursor", c); 
+		$('span', b).css ("cursor", c);
+	
+	}, 0)
 
 	return void (0);
 	
