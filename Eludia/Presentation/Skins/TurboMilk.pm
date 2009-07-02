@@ -2773,7 +2773,7 @@ sub draw_page {
 		
 		delete $_REQUEST {__invisibles};
 		
-		$_REQUEST {__on_load} = "window.focus (); UpdateClock (); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
+		$_REQUEST {__on_load} = "window.focus (); setInterval (UpdateClock, 500); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
 
 		unless ($preconf -> {no_keepalive}) {
 

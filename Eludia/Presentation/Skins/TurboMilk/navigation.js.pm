@@ -381,18 +381,11 @@ function check_edit_mode (a, fallback_href) {
 
 function UpdateClock () {
 
-	if (clockID) {
-		clearTimeout (clockID);
-		clockID = 0;
-	}
-
 	var tDate = new Date ();
 
 	$('#clock_h').text (twoDigits (tDate.getHours ()));
 	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
 	$('#clock_m').text (twoDigits (tDate.getMinutes ()));
-
-	clockID = setTimeout ("UpdateClock ()", 500);
 
 }
 
