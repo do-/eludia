@@ -241,15 +241,6 @@ function activate_link_by_id (id) {
 
 }
 
-function start_keepalive (timeout) {
-
-	keepaliveID = setTimeout ("	      \
-		$.get        (keepalive_url); \
-		clearTimeout (keepaliveID)    \
-	", timeout);
-	
-}
-
 function focus_on_input (__focused_input) {
 
 	var focused_inputs = document.getElementsByName (__focused_input);

@@ -2792,16 +2792,10 @@ sub draw_page {
 		
 		delete $_REQUEST {__invisibles};
 		
-		$_REQUEST {__on_load} = "window.focus (); setInterval (UpdateClock, 500); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
-
-		unless ($preconf -> {no_keepalive}) {
-
-			$_REQUEST {__js_var} -> {keepalive_url} = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
-
-			$_REQUEST {__on_load} .= 'start_keepalive (' . 1000 * (60 * $conf -> {session_timeout} - 1) . ');';
-
-		}
+		$_REQUEST {__on_load}  = "window.focus (); setInterval (UpdateClock, 500); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
 		
+		$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive};
+
 		$body = qq {
 		
 			<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
