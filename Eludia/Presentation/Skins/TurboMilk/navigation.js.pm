@@ -730,7 +730,7 @@ function setCursor (w, c) {
 	
 	setTimeout (function () { 
 
-		$('a',    b).css ("cursor", c); 
+		$('a',    b).css ("cursor", c == 'default' ? 'pointer' : c); 
 		$('span', b).css ("cursor", c);
 	
 	}, 0)

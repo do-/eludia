@@ -2724,7 +2724,7 @@ sub draw_page {
 		
 		$_REQUEST {__script}  .= '; check_top_window (); ';
 
-		$_REQUEST {__on_load} .= "top.setCursor (); tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
+		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
 		
 		$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 		
@@ -2732,7 +2732,7 @@ sub draw_page {
 
 		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');"                                   if   $_REQUEST {__focused_input};
 
-		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " top.edit_mode = 1;" : " top.edit_mode = 0;"                 if ! $_REQUEST {select};
+		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " try {top.edit_mode = 1} catch (e) {};" : " try {top.edit_mode = 0} catch (e) {};"                 if ! $_REQUEST {select};
 
 		if ($_REQUEST {__im_delay}) {
 		
@@ -2769,7 +2769,7 @@ sub draw_page {
 
 		$_REQUEST {__on_resize}       .= " refresh_table_slider_on_resize ();";
 
-		$_REQUEST {__on_beforeunload} .= " setCursor (window, 'wait'); top.setCursor (top, 'wait');";
+		$_REQUEST {__on_beforeunload} .= " setCursor (window, 'wait'); try {top.setCursor (top, 'wait')} catch (e) {};";
 
 		$_REQUEST {__head_links}      .= "<META HTTP-EQUIV=Refresh CONTENT='$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1'>" if $_REQUEST {__meta_refresh};
 

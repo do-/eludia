@@ -506,7 +506,7 @@ sub check_href {
 					
 			}, $options -> {dialog} -> {options}) .
 			$options -> {dialog} -> {after} .
-			';void (0)';
+			';setCursor (); try {top.setCursor (top)} catch (e) {}; void (0)';
 
 		if ($options -> {dialog} -> {before}) {
 			$url =~ s/^javascript:/javascript: $options->{dialog}->{before};/i;
