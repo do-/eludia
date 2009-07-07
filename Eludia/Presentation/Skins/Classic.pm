@@ -2304,14 +2304,8 @@ EOCSS
 					var scrollable_rows = new Array();		
 					var td2sr = new Array ();
 					var td2sc = new Array ();
-					var last_vert_menu = new Array ();
-					last_vert_menu [0] = null;
-					last_vert_menu [1] = null;
-					last_vert_menu [2] = null;
-					last_vert_menu [3] = null;
-					last_vert_menu [4] = null;
+					var last_vert_menu = [null, null, null, null, null];
 					var last_main_menu = null;
-					var ms_word = null;
 					var keepaliveID = null;
 					var edit_mode = null;
 
@@ -2340,7 +2334,7 @@ EOCSS
 
 					function check_edit_mode () {
 						if (edit_mode) {
-							alert('$$i18n{save_or_cancel}'); 
+							alert("$$i18n{save_or_cancel}"); 
 							document.body.style.cursor = 'default'; 
 							return true;
 						}
