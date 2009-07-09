@@ -1037,7 +1037,7 @@ sub draw_form_field_suggest {
 
 			$_REQUEST {id} = $options -> {value};
 			my $h = &{$options -> {values}} ();
-			$options -> {value} = $h -> {label};
+			$options -> {value} = $h -> {label} if ref $h eq HASH;
 			$_REQUEST {id} = $id;
 
 		}
