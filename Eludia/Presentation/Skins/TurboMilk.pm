@@ -2140,7 +2140,7 @@ EOH
 		else {
 
 			$a_options -> {href}     = $type -> {href};
-			$a_options -> {onClick} .= "setCursor (window, 'wait');";
+			$a_options -> {onClick} .= "setCursor (window, 'wait');" if $type -> {href} !~ /^javaScript/i && $type -> {target} eq '_body_iframe';
 
 		}
 		
