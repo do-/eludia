@@ -285,7 +285,31 @@ sub check_external_modules {
 	check_external_module_zlib                 ();
 	check_external_module_uri_escape           ();
 	check_external_module_json                 ();
+	check_external_module_want                 ();
 	
+}
+
+################################################################################
+
+sub check_external_module_want {
+
+	print STDERR " check_external_module_want................... ";
+
+	eval 'use Want';
+	
+	if ($@) {
+
+		print STDERR "Please consider installing Want\n";
+		
+		eval 'sub want {0}';
+
+	}
+	else {
+	
+		print STDERR "Want $Want::VERSION ok.\n";
+
+	}
+
 }
 
 ################################################################################
