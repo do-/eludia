@@ -373,8 +373,8 @@ sub sql_do_insert {
 	
 	sql_do ("INSERT INTO $table_name ($fields) VALUES ($args)", @params);	
 	
-	return sql_last_insert_id ();
-	
+	return want ('VOID') ? undef : sql_last_insert_id ();
+
 }
 
 ################################################################################

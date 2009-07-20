@@ -2140,7 +2140,7 @@ EOH
 		else {
 
 			$a_options -> {href}     = $type -> {href};
-			$a_options -> {onClick} .= "setCursor (window, 'wait');";
+			$a_options -> {onClick} .= "setCursor (window, 'wait');" if $type -> {href} !~ /^javaScript/i && $type -> {target} eq '_body_iframe';
 
 		}
 		
@@ -2279,9 +2279,9 @@ sub draw_text_cell {
 	
 	}
 	
+	$data -> {attributes} -> {title} = HTML::Entities::decode_entities ($data -> {attributes} -> {title}) if $data -> {attributes} -> {title} =~ /\&/;
+	
 	my $html = dump_tag ('td', $data -> {attributes});
-		
-#	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
 	
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
 

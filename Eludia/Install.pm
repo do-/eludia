@@ -152,6 +152,7 @@ sub valuable_modules () {
 		'Time::HiRes',
 		'Storable',
 		'URI::Escape::XS',
+		'Want',
 		'XML::Simple',
 	);
 
