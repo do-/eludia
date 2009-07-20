@@ -702,8 +702,8 @@ sub sql {
 
 	foreach my $column (@columns) {
 
-		push @{$columns_by_grouping -> [$column -> {is_group}]}, $column;
-	
+		push @{$columns_by_grouping -> [$column -> {is_group} ||= 0]}, $column;
+
 	}
 
 	my $is_first = $limit && @$limit == 1 && $limit -> [0] == 1;
