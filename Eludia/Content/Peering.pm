@@ -98,6 +98,7 @@ sub peer_reconnect {
 		our $UA = LWP::UserAgent -> new (
 			agent                 => "Eludia/$Eludia::VERSION (" . peer_name () . ")",
 			requests_redirectable => ['GET', 'HEAD', 'POST'],
+			timeout               => $preconf -> {peer_timeout} || 180,
 		);
 		
 #		$HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
