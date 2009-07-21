@@ -3511,7 +3511,7 @@ sub draw_table_row {
 
 	my $tr_id = {href => 'id=' . $i -> {id}};
 	check_href ($tr_id);
-	$tr_id -> {href} =~ s{\&salt=[\d\.]+}{};
+	$tr_id -> {href} =~ s{[\&\?]salt=[\d\.]+}{};
 	$i -> {__tr_id} = $tr_id -> {href};
 
 	foreach my $callback (@$tr_callback) {
@@ -3619,7 +3619,7 @@ sub draw_table {
 	return '' if $options -> {off};		
 
 	$_REQUEST {__salt} ||= rand () * time ();
-	$_REQUEST {__uri_root_common} ||=  $_REQUEST {__uri} . '?sid=' . $_REQUEST {sid} . '&salt=' . $_REQUEST {__salt};
+	$_REQUEST {__uri_root_common} ||=  $_REQUEST {__uri} . '?salt=' . $_REQUEST {__salt} . '&sid=' . $_REQUEST {sid};
 
 	ref $tr_callback eq ARRAY or $tr_callback = [$tr_callback];
 		
