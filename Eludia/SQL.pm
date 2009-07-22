@@ -267,7 +267,13 @@ my $time = time;
 				peer_id => {TYPE_NAME    => 'bigint'},
 				
 				tz_offset	=> {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
-			}
+			},
+			
+			keys => {
+			
+				ts => 'ts',
+			
+			},
 
 		},
 
