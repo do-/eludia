@@ -130,18 +130,6 @@ sub setup_request_params {
 	
 	}
 
-	if ($_REQUEST {__form_checkboxes}) {
-	
-		foreach my $key (split /\,/, $_REQUEST {__form_checkboxes}) {
-		
-			$key or next;
-			
-			exists $_REQUEST {$key} or $_REQUEST {$key} += 0;
-		
-		}
-	
-	}
-
 	$_REQUEST {type} =~ s/_for_.*//;
 	$_REQUEST {__uri} = $r -> uri;
 	$_REQUEST {__uri} =~ s{/cgi-bin/.*}{/};
@@ -181,7 +169,49 @@ sub setup_request_params_for_action {
 
 	my $precision = $^V ge v5.8.0 && $Math::FixedPrecision::VERSION ? $conf -> {precision} || 3 : undef;
 
-	foreach my $key (keys %_REQUEST) {
+	if ($_REQUEST {__form_checkboxes}) {
+	
+		foreach my $key (split /\,/, $_REQUEST {__form_checkboxes}) {
+		
+			$key or next;
+			
+			exists $_REQUEST {$key} or $_REQUEST {$key} += 0;
+		
+		}
+	
+	}
+	
+	my @names = keys %_REQUEST;
+
+	my @get_ids = ();
+
+	foreach (@names) {
+	
+		/^__get_ids_/ or next;
+	
+		push @get_ids, '_' . $';
+	
+	}
+	
+	foreach my $key (@get_ids) {
+	
+		my @ids = ();
+		
+		foreach my $name (@names) {
+		
+			$name =~ /^${key}_/ or next;
+			
+			push @ids, $';
+		
+		}
+		
+		$_REQUEST {$key} = \@ids;
+	
+		$_REQUEST {$key . ',-1'} = join ',', (@ids, -1);
+
+	}
+
+	foreach my $key (@names) {
 
 		$key =~ /^_[^_]/ or next;
 

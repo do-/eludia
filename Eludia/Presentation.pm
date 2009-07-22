@@ -681,7 +681,7 @@ sub draw_form {
 	foreach my $row (@rows) {
 		$row -> [-1] -> {colspan} += ($max_colspan - $row -> [-1] -> {sum_colspan});
 		$_SKIN -> start_form_row () if $_SKIN -> {options} -> {no_buffering};
-		foreach (@$row) { $_ -> {html} = draw_form_field ($_, $data) };
+		foreach (@$row) { $_ -> {html} = draw_form_field ($_, $data, $options) };
 		$_SKIN -> draw_form_row ($row) if $_SKIN -> {options} -> {no_buffering};
 	}
 	
@@ -772,7 +772,7 @@ sub draw_form {
 
 sub draw_form_field {
 
-	my ($field, $data) = @_;
+	my ($field, $data, $form_options) = @_;
 
 	if (
 		($_REQUEST {__read_only} or $field -> {read_only})
@@ -855,7 +855,7 @@ sub draw_form_field {
 
 	$field -> {tr_id}  = 'tr_' . $field -> {name};
 
-	$field -> {html} = &{"draw_form_field_$$field{type}"} ($field, $data);
+	$field -> {html} = &{"draw_form_field_$$field{type}"} ($field, $data, $form_options);
 
 	$conf -> {kb_options_focus} ||= $conf -> {kb_options_buttons};
 	$conf -> {kb_options_focus} ||= {ctrl => 1, alt => 1};
@@ -1922,9 +1922,16 @@ sub draw_form_field_tree {
 	
 	return '' if $options -> {off} && $data -> {id};
 	
+	my $key = '__get_ids_' . $options -> {name};
+	
+	$_REQUEST {$key} = 1;
+	
+	push @{$form_options -> {keep_params}}, $key;
+
 	my $v = $options -> {value} || $data -> {$options -> {name}};
 
 	foreach my $value (@{$options -> {values}}) {
+	
 		my $checked = 0 + (grep {$_ eq $value -> {id}} @$v);
 		
 		if ($value -> {href}) {
@@ -1949,8 +1956,6 @@ sub draw_form_field_tree {
 
 	}
 
-
-
 	return $_SKIN -> draw_form_field_tree ($options, $data);
 	
 }
@@ -1959,7 +1964,7 @@ sub draw_form_field_tree {
 
 sub draw_form_field_checkboxes {
 
-	my ($options, $data) = @_;
+	my ($options, $data, $form_options) = @_;
 
 	$options -> {cols} ||= 1;
 
@@ -1968,6 +1973,12 @@ sub draw_form_field_checkboxes {
 		$data -> {$options -> {name}} = [grep {$_} split /\,/, $data -> {$options -> {name}}];
 		
 	}
+	
+	my $key = '__get_ids_' . $options -> {name};
+	
+	$_REQUEST {$key} = 1;
+	
+	push @{$form_options -> {keep_params}}, $key;
 	
 	foreach my $value (@{$options -> {values}}) {
 
@@ -3213,6 +3224,12 @@ sub draw_checkbox_cell {
 	my ($data, $options) = @_;
 	
 	return draw_text_cell (@_) if $data -> {read_only} || $data -> {off};
+	
+	if ($data -> {name} =~ /^_(\w+)_\d+$/) {
+
+		$_REQUEST {__get_ids} -> {$1} ||= 1;
+	
+	}	
 
 	$data -> {value} ||= 1;	
 	$data -> {checked} = $data -> {checked} ? 'checked' : '';
@@ -3681,6 +3698,8 @@ sub draw_table {
 
 	$options -> {header}   = draw_table_header ($headers) if @$headers > 0 && $_REQUEST {xls};
 	
+	$_REQUEST {__get_ids} = {};
+	
 	$_SKIN -> start_table ($options) if $_SKIN -> {options} -> {no_buffering};
 
 	my $n = 0;
@@ -3795,6 +3814,14 @@ sub draw_table {
 	}
 	
 	$options -> {header}   = draw_table_header ($headers) if @$headers > 0 && !$_REQUEST {xls};
+	
+	foreach (keys %{$_REQUEST {__get_ids}}) {
+	
+		$_REQUEST {"__get_ids_$_"} = 1;
+	
+	}
+	
+	delete $_REQUEST {__get_ids};
 	
 	my $html = $_SKIN -> draw_table ($tr_callback, $list, $options);
 	

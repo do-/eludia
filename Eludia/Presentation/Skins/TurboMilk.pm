@@ -2564,9 +2564,31 @@ sub draw_table {
 
 	my $html = '';
 	
-	foreach my $key (keys %_REQUEST) {
-		next if $key =~ /^_/ or $key =~/^(type|action|sid|__last_query_string)$/;
-		$html .= qq {<input type=hidden name=$key value="$_REQUEST{$key}">\n};
+	my %hidden = ();
+	
+	$hidden {$_} = $_REQUEST {$_} foreach (
+		'__tree', 
+		'__last_scrollable_table_row',
+		grep {/^[^_]/ or /^__get_ids_/} keys %_REQUEST
+	);
+	
+	$hidden {$_} = $options -> {$_} foreach (
+		'type', 
+		'action',
+	);
+
+	$hidden {__last_query_string} = $_REQUEST{__last_last_query_string};
+	
+	while (my ($k, $v) = each %hidden) {
+	
+		$html .= "\n" . dump_tag (input => {
+			
+			type  => 'hidden',
+			name  => $k,
+			value => $v,
+			
+		}) if defined $v;
+	
 	}
 
 	$html .= qq {<td class=bgr8>};
@@ -2631,12 +2653,6 @@ EOH
 		<table cellspacing=0 cellpadding=0 width="100%">
 			<tr>
 				<form name=$$options{name} action=$_REQUEST{__uri} method=post target=invisible $enctype>
-					<input type=hidden name=type value=$$options{type}>
-					<input type=hidden name=action value=$$options{action}>
-					<input type=hidden name=sid value=$_REQUEST{sid}>
-					<input type=hidden name=__tree value=$_REQUEST{__tree}>
-					<input type=hidden name=__last_query_string value="$_REQUEST{__last_last_query_string}">
-					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
 EOH
 
 }
