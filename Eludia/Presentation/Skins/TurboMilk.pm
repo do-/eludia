@@ -917,7 +917,7 @@ sub draw_form_field_radio {
 
 	my ($_SKIN, $options, $data) = @_;
 				
-	my $html = '<table border=0 cellspacing=2 cellpadding=0 width=100%>';
+	my $html = "<table border=0 cellspacing=2 cellpadding=0 width=100% id='input_$$options{name}'>";
 	
 	my $n = 0;
 	
