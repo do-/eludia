@@ -212,7 +212,7 @@ sub _sql_filters {
 
 		}
 		
-		my $is_null = $field =~ /\sIS\s+NULL\s*$/sm;
+		my $is_null = $field =~ /\sIS\s+(NOT\s+)?NULL\s*$/sm;
 
 		unless ($tied || $is_null) {
 
