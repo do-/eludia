@@ -1646,6 +1646,22 @@ sub sql_store_ids {
 
 #############################################################################
 
+sub sql_clone {
+
+	my ($table, $data, %fields) = @_;
+
+	my $clone = {%$data, %fields};
+
+	delete $clone -> {id};
+
+	$clone -> {id} = sql_do_insert ($table => $clone);
+
+	return $clone;
+
+}
+
+#############################################################################
+
 sub wish {
 
 	my ($type, $items, $options) = @_;
