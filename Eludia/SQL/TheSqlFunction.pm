@@ -141,8 +141,37 @@ sub _sql_filters {
 	my $limit;
 	my @where_params   = ();
 	my @having_params  = ();
+	
+	my @filters = ();
+	
+	foreach my $filter (@$filters) {	# ['dt_start .. dt_finish...' => [$from, $to]] --> ['dt_start <= ' => $to], ['dt_finish... >= ' => $from]
 
-	foreach my $filter (@$filters) {
+		if (
+			
+			ref $filter eq ARRAY &&
+			
+			$filter -> [0] =~ /^\s*(\w+)\s*\.\.\s*(\w)/sm
+		
+		) {
+		
+			my $values = $filter -> [1];
+			
+			ref $values eq ARRAY or $values = [$values, $values];
+			
+			@$values == 2 or $values -> [1] = $values -> [0];
+			
+			push @filters, ["$1 <= ", $values -> [1]];
+			push @filters, ["$2$' >= ", $values -> [0]];
+			
+			next;
+		
+		}
+		
+		push @filters, $filter;
+	
+	}
+
+	foreach my $filter (@filters) {
 
 		if (ref $filter eq ARRAY and @$filter == 1 and $filter -> [0] =~ /^-?1\s/) {
 		
@@ -176,8 +205,10 @@ sub _sql_filters {
 			$tied = tied $$first_value;
 
 		}
+		
+		my $is_null = $field =~ /\sIS\s+NULL\s*$/sm;
 
-		unless ($tied) {
+		unless ($tied || $is_null) {
 
 			next if $first_value eq '' or $first_value eq '0000-00-00';
 
@@ -244,13 +275,19 @@ sub _sql_filters {
 				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
 			}
 			
-			unless ($has_placeholder) {
+			unless ($has_placeholder || $is_null) {
 
 				$field  =~ /(=|\<|\>|LIKE)\s*$/ or $field .= ' = ';	# 'id_org'           --> 'id_org = '
 
 				$field .= ' ? '; 					# 'id_org LIKE '     --> 'id_org LIKE ?'
 
-			} 
+			}
+
+			if ($field =~ s{(\w+)\.\.\.}{$1}) {				# 'dt_finish... >= ' --> '((dt_finish >= ?) OR (dt_finish IS NULL))'
+			
+				$field = "(($field) OR ($1 IS NULL))";
+			
+			}
 			
 			my @tokens = split /(LIKE\s+\%?\?\%)/, $field;
 			
