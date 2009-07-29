@@ -139,6 +139,7 @@ sub _sql_filters {
 	my $having         = '';
 	my $order;
 	my $limit;
+	my $delete;
 	my @where_params   = ();
 	my @having_params  = ();
 	
@@ -182,6 +183,11 @@ sub _sql_filters {
 		ref $filter or $filter = [$filter, $_REQUEST {$filter}];
 
 		my ($field, $values) = @$filter;
+
+		if ($field eq 'DELETE') {
+			$delete = 1;
+			next;
+		}
 
 		if ($field eq 'ORDER') {
 			$order = $values;
@@ -356,6 +362,7 @@ sub _sql_filters {
 	return {
 		have_id_filter => $have_id_filter,
 		cnt_filters    => $cnt_filters,
+		delete         => $delete,
 		order          => $order,
 		limit          => $limit,
 		where          => $where,
@@ -760,6 +767,20 @@ sub sql {
 	!$is_ids or $cnt_filters or $is_first or return undef;
 
 	my @params = (@join_params, @where_params, @having_params);
+	
+	if ($sql_filters -> {delete}) {
+	
+		my $sql = "DELETE\n$from\n$where";
+		
+		if ($preconf -> {core_debug_sql}) {
+
+			warn Dumper ({args => $_args, sql => $sql, params => \@params});
+
+		}
+		
+		return sql_do ($sql, @params);
+	
+	}
 
 	my $sql = "SELECT\n "
 	
