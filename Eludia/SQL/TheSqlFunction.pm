@@ -482,6 +482,12 @@ sub sql {
 		@other = (['id']);
 	
 	}
+	
+	if (ref $other [0] eq HASH) {
+	
+		return @other > 1 ? sql_select_id (@_) : sql_do_insert (@_);
+	
+	}
 
 	if (!ref $other [0]) {
 	
