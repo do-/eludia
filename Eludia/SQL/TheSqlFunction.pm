@@ -499,8 +499,14 @@ sub sql {
 	
 	if (ref $other [0] eq HASH) {
 	
-		return @other > 1 ? sql_select_id (@_) : sql_do_insert (@_);
-	
+		return 
+
+			@other == 0    ? sql_do_insert (@_) :
+
+			ref $other [1] ? sql_select_id (@_) :
+
+			                 sql_clone     (@_)
+
 	}
 
 	if (!ref $other [0]) {
