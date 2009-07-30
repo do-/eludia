@@ -501,7 +501,7 @@ sub sql {
 	
 		return 
 
-			@other == 0    ? sql_do_insert (@_) :
+			@other == 1    ? sql_do_insert (@_) :
 
 			ref $other [1] ? sql_select_id (@_) :
 
