@@ -140,6 +140,7 @@ sub _sql_filters {
 	my $order;
 	my $limit;
 	my $delete;
+	my $update;
 	my @where_params   = ();
 	my @having_params  = ();
 	
@@ -188,6 +189,11 @@ sub _sql_filters {
 			$delete = 1;
 			next;
 		}
+
+		if ($field eq 'UPDATE') {
+			$update = $values;
+			next;
+		}		
 
 		if ($field eq 'ORDER') {
 			$order = $values;
@@ -363,6 +369,7 @@ sub _sql_filters {
 		have_id_filter => $have_id_filter,
 		cnt_filters    => $cnt_filters,
 		delete         => $delete,
+		update         => $update,
 		order          => $order,
 		limit          => $limit,
 		where          => $where,
@@ -765,9 +772,55 @@ sub sql {
 	my $is_only_grouping_1 = $is_only_grouping && @{$columns_by_grouping -> [1]} == 1 ? 1 : 0;
 
 	!$is_ids or $cnt_filters or $is_first or return undef;
+	
+	if ($sql_filters -> {update}) {
+
+		$from =~ s{FROM}{};
+	
+		my $sql = "UPDATE\n$from\nSET";
+		
+		my $isnt_virgin = 0;
+		
+		my @update_params = ();
+		
+		foreach my $field (@{$sql_filters -> {update}}) {
+
+			$sql .= "\n ";
+			
+			$sql .= ', ' if $isnt_virgin;
+		
+			$sql .= $field -> [0];
+		
+			if (@$field > 1) {
+			
+				$sql .= ' = ?';
+			
+				push @update_params, $field -> [1];
+							
+			}
+			
+			push @fields, "$field->[0] = ?";
+			
+			$isnt_virgin ||= 1;			
+
+		}
+		
+		$sql .= $where;		
+		
+		my @params = (@join_params, @update_params, @where_params, @having_params);
+
+		if ($preconf -> {core_debug_sql}) {
+
+			warn Dumper ({args => $_args, sql => $sql, params => \@params});
+
+		}
+		
+		return sql_do ($sql, @params);
+	
+	}
 
 	my @params = (@join_params, @where_params, @having_params);
-	
+
 	if ($sql_filters -> {delete}) {
 	
 		my $sql = "DELETE\n$from\n$where";
