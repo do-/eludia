@@ -1572,6 +1572,7 @@ sub draw_toolbar_input_tree {
 
 		<div
 			id="${id}_div"
+			onClick="if (event.srcElement.tagName != 'INPUT') \$('#${id}_select_1').get(0).form.submit()"
 			style="
 				background-color:white;
 				position:absolute;
