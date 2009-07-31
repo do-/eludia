@@ -243,6 +243,32 @@ sub dt_dmy {
 
 ################################################################################
 
+sub dt_add {
+
+	my ($dt, $delta) = @_;
+	
+	my $was_iso = $dt =~ /^\d\d\d\d\-\d\d\-\d\d/;
+	
+	my @delta = split /\s+/, $delta;
+	
+	my $what = 'Days';
+	
+	@delta [-1] =~ /^[A-Za-z]+$/ and $what = pop @delta;
+
+	require Date::Calc;
+
+	my @dt = &{"Date::Calc::Add_Delta_$what"} (dt_y_m_d ($dt), @delta);
+		
+	wantarray ? @dt          :
+		
+	$was_iso  ? dt_iso (@dt) :
+		
+	            dt_dmy (@dt)
+
+}
+
+################################################################################
+
 sub get_ids {
 
 	my ($name) = @_;
