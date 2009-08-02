@@ -65,7 +65,7 @@ sub wish_to_clarify_demands_for_table_columns {
 
 	$i -> {TYPE_NAME} =~ s{^(LONG|MEDIUM)TEXT$}{CLOB};
 		
-	$i -> {TYPE_NAME} =~ s{^.*BLOB$}{BLOB};
+	$i -> {TYPE_NAME} =~ s{BLOB$}{BLOB};
 	
 	if ($i -> {TYPE_NAME} =~ /LOB$/) {
 
