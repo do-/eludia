@@ -1,15 +1,5 @@
 #############################################################################
 
-sub wish_to_adjust_options_for_table_columns {
-
-	my ($options) = @_;
-	
-	$options -> {key} = ['global_name'];
-
-}
-
-#############################################################################
-
 sub wish_to_clarify_demands_for_table_columns {	
 
 	my ($i, $options) = @_;
