@@ -28,6 +28,7 @@ var last_vert_menu = [];
 var subsets_are_visible = 0;
 var clockID = 0;
 var clockSeparatorID = 0;
+var clockSeparators = [':', ' '];
 var suggest_clicked = 0;
 var suggest_is_visible = 0;
 var lastClientHeight = 0;
@@ -41,6 +42,55 @@ var typeAheadInfo = {last:0,
 var kb_hooks = [{}, {}, {}, {}];
 
 var max_len = 50;
+
+window.__original_alert   = window.alert;
+window.alert = function (s) {
+
+	window.__original_alert (s);
+	
+	window.setCursor (top);
+	window.setCursor (window);
+
+};
+
+window.__original_confirm = window.confirm;
+window.confirm = function (s) {
+
+	var r = window.__original_confirm (s);
+	
+	window.setCursor (top);
+	window.setCursor (window);
+	
+	return r;
+
+};
+
+function select_visibility () {
+	if (top.last_vert_menu && top.last_vert_menu [0]) return 'hidden';
+	if (last_vert_menu [0]) return 'hidden';
+	if (subsets_are_visible) return 'hidden';
+	return '';
+}
+
+function cell_select_visibility (select, fixed_cols) {
+
+	var td    = select.offsetParent;
+	var tr    = td.parentElement;
+	var cells = tr.cells;
+	var last_fixed_cell_offset_right = 0;
+
+	for (i = 0; i < fixed_cols; i ++) {
+		last_fixed_cell_offset_right += cells [i].offsetWidth;
+	}
+
+	var table = td.offsetParent;
+	var div   = table.offsetParent;
+	var select_left = select.offsetLeft + td.offsetLeft - div.scrollLeft;
+	var result = select_left < last_fixed_cell_offset_right ? 'hidden' : '';
+
+	return result;
+
+}
 
 function set_suggest_result (sel, id) {
 	var o = sel.options [sel.selectedIndex];
@@ -126,20 +176,19 @@ function ancestor_window_with_child (id) {
 
 }
 
-function _dumper_href () {
+function _dumper_href (tail, target) {
 
 	var wf = ancestor_window_with_child ('_body_iframe');
 
 	if (!wf) return alert ('_body_iframe not found :-((');
 
 	var body_iframe    = wf.child.contentWindow; 
+
 	var content_iframe = body_iframe.document.getElementById ('_content_iframe');
 
 	var href = content_iframe ? content_iframe.contentWindow.location.href : body_iframe.location.href;
 
-	nope (href + '&__dump=1', '_blank', 'statusbar,scrollbars');
-
-	document.body.style.cursor = 'default';
+	nope (href + tail, target, 'statusbar,scrollbars');
 
 }
 
@@ -147,15 +196,13 @@ function check_menu_md5 (menu_md5) {
 
 	window.parent.subsets_are_visible = 0;
 
-	if (!window.parent.location) return;
+	if (
+		window.parent.menu_md5 == menu_md5
+		|| !window.parent.location
+		|| window.parent.location.href.indexOf ('dialog.html') > 0
+	) return;
 
-	var url = window.parent.location.href;
-
-	if (window.parent.menu_md5 == menu_md5 || url.indexOf ('dialog.html') > 0) return;	
-
-	var href = window.location.href + '&__only_menu=1';
-	
-	nope (href, 'invisible', '');	
+	$.getScript (window.location.href + '&__only_menu=1');
 
 }
 
@@ -191,11 +238,6 @@ function activate_link_by_id (id) {
 		a.click ();
 	}
 
-}
-
-function start_keepalive (timeout) {
-	var callback = "open(keepalive_url, 'invisible'); clearTimeout (keepaliveID)";
-	keepaliveID = setTimeout (callback, timeout);
 }
 
 function focus_on_input (__focused_input) {
@@ -293,46 +335,47 @@ function subset_on_change (subset_name, href) {
 
 }
 
+function check_edit_mode (a, fallback_href) {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-function UpdateClock() {
-
-   if (clockID) {
-      clearTimeout (clockID);
-      clockID = 0;
-   }
-
-   var tDate = new Date ();
-
-   try {
-	   document.getElementById ('clock_hours').innerText = twoDigits (tDate.getHours ());
-	   document.getElementById ('clock_minutes').innerText = twoDigits (tDate.getMinutes ());
-	   document.getElementById ('clock_separator').innerText = clockSeparators [tDate.getSeconds () % 2];
-	   
-	   
-   } catch (e) {}
-
-	if (tDate.getSeconds () % 2) {
-
-	   for (var i in every_second) { 
-	   	document.frames ['_every_second_' + i].location.replace (every_second [i] + '&salt=' + Math.random ()); 
-	   }
-	   
+	if (!edit_mode) return false;
+	
+	if (edit_mode_args.dialog_url) {
+	
+		window.showModelessDialog (
+		
+			edit_mode_args.dialog_url, 
+			
+			{
+			
+				href  : a.href ? a.href : fallback_href,
+				
+				title : a.innerText
+			
+			}, 
+			
+			'resizable:yes;unadorned:yes;status:yes'
+			
+		);
+				
+		blockEvent ();
+	
 	}
+	
+	if (edit_mode_args.label) alert (edit_mode_args.label); 
+	
+	setCursor ();
+	
+	return true;
+	
+}
 
-   clockID = setTimeout ("UpdateClock ()", 500);
+function UpdateClock () {
+
+	var tDate = new Date ();
+
+	$('#clock_h').text (twoDigits (tDate.getHours ()));
+	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
+	$('#clock_m').text (twoDigits (tDate.getMinutes ()));
 
 }
 
@@ -341,14 +384,39 @@ function twoDigits (n) {
    return '0' + n;
 }
 
-function StartClock() {
-   clockID = setTimeout("UpdateClock ()", 0);
+function __im_schedule (delay) {
+
+	if (__im.timer) {
+		clearTimeout (__im.timer);
+		__im.timer = 0;
+	}
+
+	__im.timer = setTimeout ("__im_check ()", delay);
+
 }
 
-function KillClock() {
-	if (!clockID) return;
-	clearTimeout(clockID);
-	clockID  = 0;
+function __im_check () {
+
+	if (!__im.delay) return;
+		
+	__im_schedule (__im.delay);
+
+	$.get (__im.idx + '?salt=' + Math.random (), function (data) {
+	
+		if (data.length != 32) return;
+
+		$.getJSON (__im.url + '&id=' + data + '&salt=' + Math.random (), function (data) {
+			
+			if (!data || !data.code) return;
+			
+			try { eval (data.code)} catch (e) {};
+
+			__im_schedule (0);
+
+		});
+		
+	});	
+	
 }
 
 function typeAhead (noChange) { // borrowed from http://www.oreillynet.com/javascript/2003/09/03/examples/jsdhtmlcb_bonus2_example.html
@@ -603,12 +671,61 @@ function restoreSelectVisibility (name, rewind) {
 	}
 };
 
+function setAndSubmit (name, values) {
+
+	var form = document.forms [name];
+	
+	var e = form.elements;
+	
+	for (var i in values) e [i].value = values [i];
+	
+	form.submit ();
+	
+}
+
+function setFormCheckboxes (form, checked) {
+
+	$('input:checkbox:visible', $(document.forms [form])).each (
+	
+		function () {this.checked = checked}
+	
+	);
+
+	return setCursor ();
+
+}
+
 function setCursor (w, c) {
 
 	if (!w) w = window;
 	if (!c) c = 'default';
 
-	return void (w.document.body.style.cursor = c);
+	if (event) {
+	
+		var e = window.document.elementFromPoint (event.clientX, event.clientY);
+
+		while (e) {
+
+			try { if (e.tagName == 'A' || e.tagName == 'SPAN') e.style.cursor = c } catch (err) {};
+
+			e = e.parentElement;
+
+		}
+
+	}
+
+	var b = w.document.body;
+	
+	$(b).css ("cursor", c); 
+	
+	setTimeout (function () { 
+
+		$('a',    b).css ("cursor", c == 'default' ? 'pointer' : c); 
+		$('span', b).css ("cursor", c);
+	
+	}, 0)
+
+	return void (0);
 	
 }
 
@@ -705,6 +822,16 @@ function absTop (element) {
 }
 
 function handle_basic_navigation_keys () {
+
+	if (code_alt_ctrl (116, 0, 0)) {
+
+		if (is_dirty && !confirm (i18n.F5)) return blockEvent ();
+		
+		window.location.reload ();
+				
+		return blockEvent ();
+
+	}
 
 	var e = window.event;
 	var keyCode = e.keyCode;
@@ -831,6 +958,19 @@ function span_on_click () {
 
 }
 
+function refresh_table_slider_on_resize () {
+
+	var d = document.body;
+
+	if (lastClientHeight == d.clientHeight && lastClientWidth == d.clientWidth) return;
+
+	tableSlider.cell_on ();
+
+	lastClientHeight = d.clientHeight;
+	lastClientWidth  = d.clientWidth;
+
+}
+
 function TableSlider (initial_row) {
 
 	this.rows = [];		
@@ -876,6 +1016,8 @@ TableSlider.prototype.set_row = function (row) {
 			this.rows [row].scrollIntoView(false);
 		}
 	}
+	
+	if (row) this.cell_on ();
 
 }
 
@@ -2989,6 +3131,7 @@ function dTree (objName) {
 	this.selectedNode = null;
 	this.selectedFound = false;
 	this.completed = false;
+	this.checkbox_name_prefix = '_';
 	
 	this.checkedNodes = [];
 };
@@ -3147,7 +3290,7 @@ dTree.prototype.node = function(node, nodeId) {
 	}
 	
 	if (node.is_checkbox) {
-		str += '<input class=cbx type=checkbox name="_' + this.obj + '_' + node.id + '"' + (node.is_checkbox > 1 ? 'checked' : '') + ' value=1 tabindex=-1 onChange="is_dirty=true" />';
+		str += '<input class=cbx type=checkbox name="' + this.checkbox_name_prefix + this.obj + '_' + node.id + '"' + (node.is_checkbox > 1 ? 'checked' : '') + ' value=1 tabindex=-1 onChange="is_dirty=true" />';
 		if (node.is_checkbox > 1)
 			this.checkedNodes[this.checkedNodes.length] = nodeId;
 	}

@@ -1,3 +1,6 @@
+var i18n = {
+	F5: "Attention! Vous avez changé le contenu de certains champs d'entrée. Rechargant la page, vous perdrez cette information. Continuer l'opération?"
+};
 
 function i18n_calendar (Calendar) {
 

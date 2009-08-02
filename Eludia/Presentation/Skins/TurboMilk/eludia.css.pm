@@ -87,7 +87,7 @@ div.checkboxes {
   font-size: 11px;
   color: #000;
   cursor: default;
-  background: #d4d0c8;
+  background: #D7DFE6;
   font-family: tahoma,verdana,sans-serif;
 }
 
@@ -99,7 +99,7 @@ div.checkboxes {
   font-size: 11px;
   color: #000;
   cursor: default;
-  background: #d4d0c8;
+  background: #D7DFE6;
   font-family: tahoma,verdana,sans-serif;
 }
 
@@ -118,7 +118,7 @@ div.checkboxes {
   font-weight: bold;
   padding: 1px;
   border: 1px solid #000;
-  background: #848078;
+  background: #595F95;
   color: #fff;
   text-align: center;
 }
@@ -133,7 +133,7 @@ div.checkboxes {
   border-bottom: 1px solid #000;
   padding: 2px;
   text-align: center;
-  background: #f4f0e8;
+  background: #F9F9FF;
 }
 
 .calendar thead .weekend { /* How a weekend day name shows in header */
@@ -146,7 +146,7 @@ div.checkboxes {
   border-bottom: 2px solid #000;
   border-left: 2px solid #fff;
   padding: 0px;
-  background-color: #e4e0d8;
+  background-color: #e8e5f0;
 }
 
 .calendar thead .active { /* Active (pressed) buttons in header */
@@ -155,7 +155,7 @@ div.checkboxes {
   border-right: 1px solid #fff;
   border-bottom: 1px solid #fff;
   border-left: 1px solid #000;
-  background-color: #c4c0b8;
+  background-color: #95A3B9;
 }
 
 /* The body part -- contains all the days in month. */
@@ -169,15 +169,15 @@ div.checkboxes {
 .calendar table .wn {
   padding: 2px 3px 2px 2px;
   border-right: 1px solid #000;
-  background: #f4f0e8;
+  background: #F9F9FF;
 }
 
 .calendar tbody .rowhilite td {
-  background: #e4e0d8;
+  background: #e8e5f0;
 }
 
 .calendar tbody .rowhilite td.wn {
-  background: #d4d0c8;
+  background: #D7DFE6;
 }
 
 .calendar tbody td.hilite { /* Hovered cells <TD> */
@@ -203,7 +203,7 @@ div.checkboxes {
   border-bottom: 1px solid #fff;
   border-left: 1px solid #000;
   padding: 2px 2px 0px 2px;
-  background: #e4e0d8;
+  background: #e8e5f0;
 }
 
 .calendar tbody td.weekend { /* Cells showing weekend days */
@@ -231,10 +231,9 @@ div.checkboxes {
 }
 
 .calendar tfoot .ttip { /* Tooltip (status bar) cell <TD> */
-  background: #f4f0e8;
   padding: 1px;
   border: 1px solid #000;
-  background: #848078;
+  background: #595F95;
   color: #fff;
   text-align: center;
 }
@@ -245,7 +244,7 @@ div.checkboxes {
   border-bottom: 1px solid #000;
   border-left: 1px solid #fff;
   padding: 1px;
-  background: #e4e0d8;
+  background: #e8e5f0;
 }
 
 .calendar tfoot .active { /* Active (pressed) style for buttons in footer */
@@ -269,7 +268,7 @@ div.checkboxes {
   border-right: 1px solid #000;
   border-bottom: 1px solid #000;
   border-left: 1px solid #fff;
-  background: #e4e0d8;
+  background: #e8e5f0;
   font-size: smaller;
   padding: 1px;
 }
@@ -285,7 +284,7 @@ div.checkboxes {
 }
 
 .combo .active {
-  background: #c4c0b8;
+  background: #95A3B9;
   padding: 0px;
   border-top: 1px solid #000;
   border-right: 1px solid #fff;
@@ -302,7 +301,7 @@ div.checkboxes {
   border-top: 1px solid #000;
   padding: 1px 0px;
   text-align: center;
-  background-color: #f4f0e8;
+  background-color: #F9F9FF;
 }
 
 .calendar td.time .hour,

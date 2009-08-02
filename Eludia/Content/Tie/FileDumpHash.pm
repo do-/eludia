@@ -24,20 +24,35 @@ sub FETCH {
 	
 	my $VAR1 = {};
 
-	foreach my $dir (@{$options -> {path}}) {
+	foreach my $dir (reverse @{$options -> {path}}) {
 
 		my $path = "${dir}/${key}.pm";
 
 		-f $path or next;
 
+		my $VAR;
 		open (I, $path) or die "Can't open '$path': $!\n";
 		my $src = join '', (<I>);
-		eval "\$VAR1 = {$src}"; die $@ if $@;
+		eval "\$VAR = {$src}"; die $@ if $@;
 		close I;
 		
-		$VAR1 -> {_src} = $src;
+		foreach my $object (keys (%$VAR)) {
 
-		last;
+			if (ref $VAR -> {$object} eq HASH) {
+
+				foreach my $key (keys %{$VAR -> {$object}}) {
+					$VAR1 -> {$object} -> {$key} ||= $VAR -> {$object} -> {$key};
+				}
+
+			} elsif (ref $VAR -> {$object} eq ARRAY) {
+
+				$VAR1 -> {$object} ||= [];
+				push @{$VAR1 -> {$object}}, @{$VAR -> {$object}};
+
+			}
+		}
+
+		$VAR1 -> {_src} ||= $src;
 
 	}
 	

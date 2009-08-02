@@ -443,11 +443,13 @@ EOH
 
 sub vb_yes {
 
-	my ($message, $title) = @_;
+	my ($message, $title, $default_button) = @_;
 	
 	$title ||= '';
-	
-	return 6 == vb (qq{MsgBox ("$message", 4, "$title")});
+
+	$default_button = 0 unless ($default_button == 1);
+
+	return 6 == vb (qq{MsgBox ("$message", 4 + $default_button * 256, "$title")});
 
 }
 

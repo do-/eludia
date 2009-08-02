@@ -34,15 +34,22 @@ sub check_constants {
 
 sub check_version_by_git {
 
-	return undef if $^O eq 'MSWin32';
+	my $cwd = getcwd ();
 
-        if (`git version` =~ /git version 1.5/) {
-		`cd $preconf->{core_path}; git show HEAD --abbrev-commit --pretty=tformat:"\%h \%ai"` =~ /^(\w+) (\d\d)(\d\d)\-(\d\d)\-(\d\d)/ or return undef;
-                return "$3.$4.$5.$1";
-        } else {
-                `cd $preconf->{core_path}; git show HEAD --abbrev-commit --pretty=medium` =~ /^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/gsm or return undef;
-                return "$4.$2.$3.$1";
-        }
+	chdir $preconf -> {core_path};
+	
+	my $head = `git show HEAD --abbrev-commit --pretty=medium`;
+	
+	chdir $cwd;
+	
+	$head =~ /^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/sm or return undef;
+	
+        return sprintf ("%02d.%02d.%02d.%s", 
+        	$4 - 2000,
+        	1 + (index ('JanFebMarAprMayJunJulAugSepOctNovDec', $2) / 3),
+        	$3,
+        	$1,
+        );
 
 }
 
@@ -64,7 +71,7 @@ sub check_version {
 	
 	my ($year) = Date::Calc::Today ();
 	
-	eval "require Eludia::Version";
+	eval {require Eludia::Version};
 	
 	$Eludia::VERSION ||= check_version_by_git ();
 	
@@ -233,7 +240,7 @@ sub check_application_directory {
 	
 	$preconf -> {_} -> {docroot} = $docroot;
 
-	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs') {
+	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs', 'i/_mbox', 'i/_mbox/by_user') {
 
 		print STDERR "  checking ${docroot}${subdir}...";
 
@@ -259,6 +266,7 @@ sub check_application_directory {
 
 sub check_external_modules {
 
+	use Cwd;
 	use Data::Dumper;
 	use DBI;
 	use DBI::Const::GetInfoType;
@@ -277,7 +285,31 @@ sub check_external_modules {
 	check_external_module_zlib                 ();
 	check_external_module_uri_escape           ();
 	check_external_module_json                 ();
+	check_external_module_want                 ();
 	
+}
+
+################################################################################
+
+sub check_external_module_want {
+
+	print STDERR " check_external_module_want................... ";
+
+	eval 'use Want';
+	
+	if ($@) {
+
+		print STDERR "Please consider installing Want\n";
+		
+		eval 'sub want {0}';
+
+	}
+	else {
+	
+		print STDERR "Want $Want::VERSION ok.\n";
+
+	}
+
 }
 
 ################################################################################

@@ -326,14 +326,14 @@ sub require_fresh {
 	my $src = '';
 				
 	open (S, $file_name);
-		
+
 	while (my $line = <S>) {
-	
+
 		if ($_OLD_PACKAGE) {
 			$line =~ s{package\s+$_OLD_PACKAGE}{package $_NEW_PACKAGE}g;
 			$line =~ s{$_OLD_PACKAGE\:\:}{$_NEW_PACKAGE\:\:}g;
 		}
-			
+					
 		$src .= $line;
 		
 		$line =~ /^sub (\w+)_$type \{ # / or next;
@@ -350,7 +350,9 @@ sub require_fresh {
 		
 	close (S);
 	
-	eval $src; die "$module_name: " . $@ if $@;
+	eval qq{# line 1 "$file_name"\n $src \n; 1;\n};
+		
+	die "$module_name: " . $@ if $@;
 		
 	$INC_FRESH {$module_name} = $last_modified;		
 

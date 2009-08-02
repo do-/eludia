@@ -48,6 +48,7 @@ EOJ
 	$_REQUEST {__script} .= <<EOJ;
 			var data = $data;
 			alert (data [0]);
+			try {window.top.setCursor ()} catch (e) {}
 			window.parent.document.body.style.cursor = 'default';
 		}
 EOJ
@@ -78,7 +79,7 @@ sub draw_redirect_page {
 	<script for=window event=onload>
 		$$options{before}
 		var w = window; 
-		w.open ('$options->{url}&salt=' + Math.random (), $target);
+		w.open ('$options->{url}&salt=' + Math.random (), $target, '$options->{window_options}');
 	</script>
 	<body>
 	</body>
@@ -143,9 +144,21 @@ EOJS
 	function load_$field->{name} () {
 		var a = $a;				
 		var doc = window.parent.document;
+EOJS
+
+		if ($field -> {type} eq 'radio') {
+			$_REQUEST {__script} .= <<EOJS;
+		var element = doc.getElementById ('input_$field->{name}');
+EOJS
+		} else {
+			$_REQUEST {__script} .= <<EOJS;
 		var element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
 		if (!element) element = doc.getElementById ('input_$field_name');
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
+EOJS
+		}
+
+		$_REQUEST {__script} .= <<EOJS;
 		if (!element) return;					
 
 		element.outerHTML = a [0];

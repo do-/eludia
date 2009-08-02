@@ -169,7 +169,7 @@ sub sql_select_all_cnt {
 	}
 
 	if ($_REQUEST {xls} && $conf -> {core_unlimit_xls} && !$_REQUEST {__limit_xls}) {
-		$sql =~ s{LIMIT.*}{}ism;
+		$sql =~ s{\bLIMIT\b.*}{}ism;
 		my $result = sql_select_all ($sql, @params, $options);
 		my $cnt = ref $result eq ARRAY ? 0 + @$result : -1;
 		return ($result, $cnt);
@@ -571,7 +571,7 @@ EOS
 
 	sql_do ("$statement INTO $table_name ($fields) VALUES ($args)", @params);
 
-	return sql_last_insert_id ($table_name);
+	return want ('VOID') ? undef : sql_last_insert_id ();
 	
 }
 

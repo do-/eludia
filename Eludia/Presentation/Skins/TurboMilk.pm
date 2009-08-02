@@ -81,21 +81,6 @@ sub draw_hr {
 EOH
 	
 }
-################################################################################
-
-sub draw_calendar {
-
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime (time);
-	
-	$year += 1900;
-	
-	$_REQUEST {__clock_separator} ||= ':';
-	
-	return <<EOH;
-		$mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id="clock_hours"></span><span id="clock_separator" style="width:5px"></span><span id="clock_minutes"></span>
-EOH
-	
-}
 
 ################################################################################
 
@@ -137,6 +122,16 @@ EOH
 	}
 	
 	return $html;
+
+}
+
+################################################################################
+
+sub draw_calendar {
+
+	my ($year, $mon, $mday) = Date::Calc::Today; $mon --;
+	
+	"$mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s' style='width:5px'></span><span id='clock_m'></span>";
 
 }
 
@@ -206,9 +201,10 @@ EOH
 		
 		}
 
-		my $calendar = draw_calendar ();
 		$header_height = 48;
 		$header_prefix = 'in';
+		
+		my $calendar = draw_calendar ();
 
 		$header = <<EOU;
 
@@ -688,6 +684,7 @@ sub draw_form_field_file {
 			onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
 			onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
 			onChange="is_dirty=true; $$options{onChange}"
+			onKeyDown="if (event.keyCode != 9) return false;"
 			tabindex=-1
 		>
 EOH
@@ -786,12 +783,11 @@ sub draw_form_field_text {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 	
-	my $static_url = $_REQUEST{__static_url};
-	$static_url =~ s[^/i/][];	
+	my $url = '_skins/TurboMilk/jquery.textarearesizer.compressed';
 
-	unless (grep {$_ eq "$static_url/jquery.textarearesizer.compressed"} @{$_REQUEST{__include_js}}) {
+	unless (grep {$_ eq $url} @{$_REQUEST {__include_js}}) {
 
-		push @{$_REQUEST{__include_js}}, "$static_url/jquery.textarearesizer.compressed";
+		push @{$_REQUEST{__include_js}}, $url;
 		
 		$_REQUEST {__head_links} .= <<EOH;
 		<style>
@@ -921,7 +917,7 @@ sub draw_form_field_radio {
 
 	my ($_SKIN, $options, $data) = @_;
 				
-	my $html = '<table border=0 cellspacing=2 cellpadding=0 width=100%>';
+	my $html = "<table border=0 cellspacing=2 cellpadding=0 width=100% id='input_$$options{name}'>";
 	
 	my $n = 0;
 	
@@ -1538,6 +1534,175 @@ EOH
 
 ################################################################################
 
+sub draw_toolbar_input_tree {
+
+	my ($_SKIN, $options) = @_;
+	
+	my $id = "toolbar_input_tree_$options->{name}";
+	
+	my @nodes = ();
+	
+	our %idx = ();
+	our %lch = ();
+	
+	foreach my $value (@{$options -> {values}}) {
+	
+		my $node = $value -> {__node};
+		push @nodes, $node;
+		
+		$idx {$node -> {id}} = $node;
+		$lch {$node -> {pid}} = $node if $node -> {pid};
+	}
+	
+	while (my ($k, $v) = each %lch) {
+		$idx {$k} -> {_hc} = 1;
+		$v -> {_ls} = 1;
+	}
+	
+	my $name = $options -> {name};
+	
+	$options -> {height} ||= 400;
+	$options -> {width}  ||= 600;
+	
+	my $nodes = $_JSON -> encode (\@nodes);
+
+	return qq {
+		
+		<td class="toolbar" nowrap>
+
+		<div
+			id="${id}_div"
+			onClick="if (event.srcElement.tagName != 'INPUT') \$('#${id}_select_1').get(0).form.submit()"
+			style="
+				background-color:white;
+				position:absolute;
+				display:none;
+				z-index:100;
+				width:$options->{width}px;
+				height:$options->{height}px;
+				left:500;
+				border:solid black 1px;
+				overflow-y:scroll;
+			"
+		>
+			<table width=100% height=100% celspacing=0 cellpadding=0 border=0 class='dtree'>	
+				<tr>
+					<td valign=top class='form-active-inputs'>
+						<script>
+							var $name = new dTree ('$name');
+							$name._url_base = '';
+							var c = $name.config;
+							c.iconPath = '$_REQUEST{__static_url}/tree_';
+							c.useStatusText = false;
+							c.useSelection = false;
+							$name.icon.node = 'folderopen.gif';
+							$name.aNodes = $nodes;
+							$name.checkbox_name_prefix = '';
+							document.write ($name);
+							for (var n = 0; n < $name.checkedNodes.length; n++) {
+								$name.openTo ($name.checkedNodes [n], true, true);
+							}							
+						</script>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		
+				<select id="${id}_select_1"
+				
+					onDblClick="
+						
+						var select_1 = \$('#${id}_select_1');
+						var select_2 = \$('#${id}_select_2');
+
+						select_1.hide ();
+						select_2.show ();
+						blockEvent ();
+						
+					"
+														
+					onMouseDown="
+
+						var select_1 = \$('#${id}_select_1');
+						var select_2 = \$('#${id}_select_2');
+						var div      = \$('#${id}_div');
+						
+						if (div.is (':hidden')) {
+						
+							var css      = select_1.offset (\$(document.body));
+							css.top     += 20;
+			
+							div.css  (css);
+							div.show ();
+													
+							select_1.hide ();
+							select_2.show ();
+
+						}
+						else {
+						
+							select_1.get (0).form.submit ()
+						
+						}
+
+					"
+
+				>
+					<option>$options->{label}</option>
+				</select>
+				<select id="${id}_select_2" style="display:none"
+																				
+					onDblClick="
+						
+						var select_1 = \$('#${id}_select_1');
+						var select_2 = \$('#${id}_select_2');
+
+						select_2.hide ();
+						select_1.show ();
+						blockEvent ();
+						
+					"
+
+					onMouseDown="
+
+						var select_1 = \$('#${id}_select_1');
+						var select_2 = \$('#${id}_select_2');
+						var div      = \$('#${id}_div');
+						
+						var css      = select_2.offset (\$(document.body));
+						css.top     += 20;
+		
+						if (div.is (':hidden')) {
+
+							div.css (css);
+							div.toggle();
+													
+							select_2.hide ();
+							select_1.show ();
+							
+						}
+						else {
+						
+							select_2.get (0).form.submit ()
+						
+						}
+																	
+					"
+
+				>
+					<option>$options->{label}</option>
+				</select>
+							
+		</td>
+		<td class="toolbar">&nbsp;&nbsp;&nbsp;</td>
+	
+	};
+
+}
+
+################################################################################
+
 sub draw_toolbar_input_select {
 
 	my ($_SKIN, $options) = @_;
@@ -1909,7 +2074,7 @@ sub draw_dump_button {
 	return {
 		label  => 'Dump',
 		name   => '_dump',
-		href   => "javascript:_dumper_href();",
+		href   => "javascript:_dumper_href('&__dump=1', '_blank');",
 		side   => 'right_items',
 		no_off => 1,
 
@@ -1946,6 +2111,12 @@ EOH
 
 		next if ($type -> {name} eq '_logout');
 		
+		if ($type -> {name} eq '_xls') {
+		
+			$type -> {href}   = "javaScript:_dumper_href ('&xls=1', 'invisible')";
+		
+		}
+
 		$_REQUEST {__menu_links} .= "<a id='main_menu_$$type{name}' target='$$type{target}' href='$$type{href}' onclick='return !check_edit_mode (this);'>-</a>";
 		
 		$type -> {target} = '_body_iframe' if $type -> {target} eq '_self';
@@ -1955,11 +2126,30 @@ EOH
 			next;
 		}
 		
-		$html .= <<EOH;
-			<td onmouseover="if (!edit_mode || $core_unblock_navigation) {$$type{onhover}; subsets_are_visible = 0; document.getElementById ('_body_iframe').contentWindow.subsets_are_visible = 0}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;
-				<a class="main-menu" id="main_menu_$$type{name}" target="$$type{target}" href="$$type{href}" tabindex=-1 @{[ $type -> {name} eq '_dump' ? '' : 'onclick="return !check_edit_mode (this);"' ]}>&nbsp;$$type{label}&nbsp;</a>&nbsp;
-			</td>
-EOH
+		my $a_options = {		
+			class    => "main-menu",
+			id       => "main_menu_$$type{name}",
+			target   => $type -> {target},
+			tabindex => -1,						
+		};
+		
+		if ($type -> {no_page}) {
+		
+			$a_options -> {name}     = '' . $type;
+			
+		}
+		else {
+
+			$a_options -> {href}     = $type -> {href};
+			$a_options -> {onClick} .= "setCursor (window, 'wait');" if $type -> {href} !~ /^javaScript/i && $type -> {target} eq '_body_iframe';
+
+		}
+		
+		$a_options -> {onClick} .= " return !check_edit_mode (this);" if $type -> {name} ne '_dump';
+		
+		my $label = dump_tag (a => $a_options, "&nbsp;$type->{label}&nbsp;");
+		
+		$html .= qq {<td onmouseover="if (!edit_mode || $core_unblock_navigation) {$$type{onhover}; subsets_are_visible = 0; document.getElementById ('_body_iframe').contentWindow.subsets_are_visible = 0}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;$label</td>};
 			
 	}
 
@@ -2090,9 +2280,9 @@ sub draw_text_cell {
 	
 	}
 	
+	$data -> {attributes} -> {title} = HTML::Entities::decode_entities ($data -> {attributes} -> {title}) if $data -> {attributes} -> {title} =~ /\&/;
+	
 	my $html = dump_tag ('td', $data -> {attributes});
-		
-#	$data -> {off} = 1 unless $data -> {label} =~ /\S/;
 	
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
 
@@ -2144,6 +2334,20 @@ sub draw_radio_cell {
 
 	return qq {<td $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'></td>};
 
+}
+
+################################################################################
+
+sub draw_datetime_cell {
+
+	my ($_SKIN, $data, $options) = @_;
+		
+	my $attributes = dump_attributes ($data -> {attributes});
+
+	local $options -> {name} = $data -> {name};
+
+	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($options) . "</td>";
+	
 }
 
 ################################################################################
@@ -2361,9 +2565,31 @@ sub draw_table {
 
 	my $html = '';
 	
-	foreach my $key (keys %_REQUEST) {
-		next if $key =~ /^_/ or $key =~/^(type|action|sid|__last_query_string)$/;
-		$html .= qq {<input type=hidden name=$key value="$_REQUEST{$key}">\n};
+	my %hidden = ();
+	
+	$hidden {$_} = $_REQUEST {$_} foreach (
+		'__tree', 
+		'__last_scrollable_table_row',
+		grep {/^[^_]/ or /^__get_ids_/} keys %_REQUEST
+	);
+	
+	$hidden {$_} = $options -> {$_} foreach (
+		'type', 
+		'action',
+	);
+
+	$hidden {__last_query_string} = $_REQUEST{__last_last_query_string};
+	
+	while (my ($k, $v) = each %hidden) {
+	
+		$html .= "\n" . dump_tag (input => {
+			
+			type  => 'hidden',
+			name  => $k,
+			value => $v,
+			
+		}) if defined $v;
+	
 	}
 
 	$html .= qq {<td class=bgr8>};
@@ -2428,12 +2654,6 @@ EOH
 		<table cellspacing=0 cellpadding=0 width="100%">
 			<tr>
 				<form name=$$options{name} action=$_REQUEST{__uri} method=post target=invisible $enctype>
-					<input type=hidden name=type value=$$options{type}>
-					<input type=hidden name=action value=$$options{action}>
-					<input type=hidden name=sid value=$_REQUEST{sid}>
-					<input type=hidden name=__tree value=$_REQUEST{__tree}>
-					<input type=hidden name=__last_query_string value="$_REQUEST{__last_last_query_string}">
-					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
 EOH
 
 }
@@ -2461,447 +2681,234 @@ sub start_page {
 
 ################################################################################
 
+sub draw_page_just_to_reload_menu {
+
+	my ($_SKIN, $page) = @_;
+	
+	my $a = $_JSON -> encode ([$page -> {menu}]);
+
+	my $md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
+	
+	qq {
+		var wm = ancestor_window_with_child ('main_menu');
+		var a = $a;
+		wm.child.outerHTML = $a [0];
+		wm.window.menu_md5 = '$md5';
+	}; 
+
+}
+
+################################################################################
+
 sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 
-	if ($_REQUEST {__only_menu}) {
-
-		my $a = $_JSON -> encode ([$page -> {menu}]);
-		my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
-
-		return <<EOH;
-<html>
-	<head>
-		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-		</script>
-		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
-		</script>
-		<script for=window event=onload>
-
-			var wm = ancestor_window_with_child ('main_menu');
-
-			if (wm) {
-				var a = $a;
-				wm.child.outerHTML = a [0];
-				wm.window.menu_md5 = '$menu_md5';
-			}
-
-		</script>
-	<head>
-	<body>
-	</body>
-</html>
-EOH
-	}
-
-	
-	$_REQUEST {__scrollable_table_row} ||= 0;
-		
-	$_REQUEST {__head_links} .= <<EOH if $_REQUEST {__meta_refresh};
-		<META HTTP-EQUIV=Refresh CONTENT="$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1">
-EOH
-
-	my $request_package = ref $apr;
-	my $mod_perl = $ENV {MOD_PERL};
-	$mod_perl ||= 'NO mod_perl AT ALL';
+	$_REQUEST {__only_menu} and return $_SKIN -> draw_page_just_to_reload_menu ($page);
 								
 	my $parameters = ref ${$_PACKAGE . 'apr'} eq 'Apache2::Request' ? ${$_PACKAGE . 'apr'} -> param : ${$_PACKAGE . 'apr'} -> parms;
 
-	my $body = '';
-#	my $onKeyDown = '';	
-	my $body_scroll = 'yes';
-
-	if (!$_USER -> {id}) {
-		
-		$body = $page -> {body};
-		$body_scroll = 'no';
-		$$page{auth_toolbar} = '';
-		$_REQUEST {__head_links} .= <<EOH;
-			<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-			</script>
-			<script src="$_REQUEST{__static_url}/navigation_setup.js?$_REQUEST{__static_salt}">
-			</script>
-			<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
-			</script>
-EOH
-		
-	}
-	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
+	my $body = $page -> {body};
 	
-		$$page{auth_toolbar} = '';
+	my $body_options = {
+		bgcolor      => 'white',
+		leftMargin   => 0,
+		topMargin    => 0,
+		bottomMargin => 0,
+		rightMargin  => 0,
+		marginwidth  => 0,
+		marginheight => 0,
+		scroll       => 'yes',
+		name         => 'body', 
+		id           => 'body',
+	};
+	
+	if (!$_USER -> {id}) {
+	
+		$body_options -> {scroll} = 'no';
+
+	} 
+	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
+
+		$body .= qq {
+
+			<div style='display:none'>$_REQUEST{__menu_links}</div>
+
+			<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#888888" strokeweight="2px" filled="no" id="slider" />
+			<v:rect style='position:absolute; left:200px; top:300px; height:6px; width:6px; z-index:0; visibility:hidden' strokecolor="#ffffff" strokeweight="1px" filled="yes" fillcolor="#555555" id="slider_" />
+
+		};
 		
-#		$body = $page -> {menu} . $page -> {body};
-		$body = $page -> {body} . "<div style='display:none'>$_REQUEST{__menu_links}</div>";
+		$_REQUEST {__script}  .= '; check_top_window (); ';
+
+		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
 		
-		my %h = %$parameters;
-		delete $h {salt};
-		delete $h {_salt};
+		$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 		
-		my $url_dump = create_url (__dump => 1);
+		$_REQUEST {__on_load} .= 'window.focus ();'                                                                 if ! $_REQUEST {__no_focus};
 
-		my $href = create_url (%h);
+		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');"                                   if   $_REQUEST {__focused_input};
 
-		$_REQUEST {__on_load} .= "check_top_window ();";
+		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " try {top.edit_mode = 1} catch (e) {};" : " try {top.edit_mode = 0} catch (e) {};"                 if ! $_REQUEST {select};
 
-		$preconf -> {core_show_dump} and $_REQUEST {__on_mousedown} .= <<EODUMP;
-
-		    if (window.event.button == 2 && window.event.ctrlKey) {
-    			nope ('$url_dump', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');
-		    }
-		    
-EODUMP
-
-		$_REQUEST {__on_keydown} = <<EOJS;
+		if ($_REQUEST {__im_delay}) {
 		
-//			if (code_alt_ctrl (88, 1, 0)) {
-//				nope ('$_REQUEST{__uri}?type=_logout&sid=$_REQUEST{sid}&salt=@{[rand]}', '_top', '');
-//				blockEvent ();
-//			}
-			
-			if (code_alt_ctrl (116, 0, 0)) {
-			
-				if (is_dirty) {
-				
-					if (!confirm ('Внимание! Вы изменили содержимое некоторых полей ввода. Перезагрузка страницы приведёт к утере этой информации. Продолжить?')) return blockEvent ();
-				
-				}
-			
-				window.location.href = encode1251 ('$href');
-				
-				return blockEvent ();
-			
-			}
-			
-			handle_basic_navigation_keys ();
-			
-EOJS
+			$_REQUEST {__js_var} -> {__im} = {
+				delay =>  $_REQUEST {__im_delay},
+				idx   =>  "/i/_mbox/$_USER->{id}.txt",
+				url   =>  "/?sid=$_REQUEST{sid}&type=_mbox&action=read",
+				timer =>  0,
+			};
+		
+			$_REQUEST {__on_load} .= '; try {__im_check ()} catch (e) {} ;';
+		
+		}
+
+		$_REQUEST {__on_mouseover}    .= "window.parent.subsets_are_visible = 0; subsets_are_visible = 0;";
+
+		$_REQUEST {__on_mousedown}    .= "if (window.event.button == 2 && window.event.ctrlKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
+
+		$_REQUEST {__on_keydown}      .= " handle_basic_navigation_keys ();";
 
 		foreach my $r (@{$page -> {scan2names}}) {
 			next if $r -> {off};
-			$r -> {alt}  += 0;
-			$r -> {ctrl} += 0;
 			$r -> {data} .= '';
 			my $i = 2 * $r -> {alt} + $r -> {ctrl};
 			$_REQUEST {__on_load} .= "\nkb_hooks [$i] [$r->{code}] = [handle_hotkey_$r->{type}, ";
-			foreach (qw(ctrl alt off type code)) {delete $r -> {$_}}
+			foreach (qw (ctrl alt off type code)) {delete $r -> {$_}}
 			$_REQUEST {__on_load} .=  $_JSON -> encode ($r);
 			$_REQUEST {__on_load} .= '];';
 		}
 
-		$_REQUEST {__on_keydown} .= "if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
+		$_REQUEST {__on_keydown}      .= " if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
 
-		if ($_REQUEST {sid} && !$preconf -> {no_keepalive}) {
-			my $timeout = 1000 * (60 * $conf -> {session_timeout} - 1);
-			$_REQUEST {__on_load} .= "start_keepalive ($timeout);";
-		}
+		$_REQUEST {__on_help}          = " nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes'); blockEvent ();" if $_REQUEST {__help_url};
 
-		my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
+		$_REQUEST {__on_resize}       .= " refresh_table_slider_on_resize ();";
 
-		$_REQUEST {__on_load} .= "check_menu_md5 ('$menu_md5');";
-		$_REQUEST {__on_load} .= "tableSlider.set_row ($_REQUEST{__scrollable_table_row});";
-		$_REQUEST {__on_load} .= "tableSlider.cell_on ();" if $_REQUEST {__scrollable_table_row};
-		$_REQUEST {__on_load} .= 'window.focus ();'                             if !$_REQUEST {__no_focus};
-		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');" if  $_REQUEST {__focused_input};
-		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " top.edit_mode = 1;" : " top.edit_mode = 0;"
-			unless ($_REQUEST {select});
-	
-		$_REQUEST {__on_mouseover} .= <<EOS;
-			window.parent.subsets_are_visible = 0;
-			subsets_are_visible = 0;
-EOS
+		$_REQUEST {__on_beforeunload} .= " setCursor (window, 'wait'); try {top.setCursor (top, 'wait')} catch (e) {};";
+
+		$_REQUEST {__head_links}      .= "<META HTTP-EQUIV=Refresh CONTENT='$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1'>" if $_REQUEST {__meta_refresh};
+
+		$_REQUEST {__js_var} -> {__read_only}              = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
+
+		$_REQUEST {__js_var} -> {__last_last_query_string} = 0 + $_REQUEST{__last_query_string};
+
+		$body =~ /^\s*\<frameset/ism or $body = qq {
+		
+			<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
+				<tr><td valign=top height=100%>$body</td></tr>
+			</table>
+
+		};
 
 	}
 	else {
-	
-		my $href = create_url (__subset => $_SUBSET -> {name});
-		$body_scroll = 'no';
-				
-		$_REQUEST {__on_load} = <<EOS;
-			window.focus ();
-			StartClock ();
-			nope ('$href', '_body_iframe');
-EOS
-		
-		$body = <<EOIFRAME;
-			<iframe 
-				name='_body_iframe' 
-				id='_body_iframe' 
-				src="$_REQUEST{__static_url}/0.html"
-				width=100% 
-				height=100% 
-				border=0 
-				frameborder=0 
-				marginheight=0 
-				marginwidth=0
-				application=yes
-			>
-			</iframe>
-EOIFRAME
 
-	
-		if (ref $_REQUEST {__every_second} eq ARRAY) {
+		$body_options -> {scroll} = 'no';
 		
-			for (my $i = 0; $i < @{$_REQUEST{__every_second}}; $i++) {$body .= "<iframe name='_every_second_$i' src='$_REQUEST{__static_url}/0.html' style='display:none'></iframe>"}
+		delete $_REQUEST {__invisibles};
+		
+		$_REQUEST {__on_load}  = "window.focus (); setInterval (UpdateClock, 500); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
+		
+		$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive};
+
+		$body = qq {
+		
+			<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
+				<tr height=48><td height=48>$page->{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>
+				<tr><td valign=top height=100%>
+					<iframe name='_body_iframe' id='_body_iframe' src="$_REQUEST{__static_url}/0.html" width=100% height=100% border=0 frameborder=0 marginheight=0 marginwidth=0 application=yes>
+					</iframe>
+				</td></tr>
+			</table>
+
+		};
 			
-			$_REQUEST {__script} .= ' every_second = ' . $_JSON -> encode ($_REQUEST {__every_second}) . ';';
-		
-		}
-	
 	}
 	
-	my $menu_md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
+	$_REQUEST {__js_var} -> {menu_md5}                 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
+
+	$_REQUEST {__js_var} -> {edit_mode}                = undef;
 	
-	my $__read_only = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
-	
-	$_REQUEST {__script} .= <<EOH;
+	$_REQUEST {__js_var} -> {edit_mode_args}           = 
 
-		var edit_mode = null;
-		var menu_md5 = '$menu_md5';
-		var __read_only = $__read_only;
-		var __last_last_query_string = '$_REQUEST{__last_query_string}';
+		$preconf -> {core_unblock_navigation} ? {dialog_url => "$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?$_REQUEST{__static_salt}"} : 
 
-EOH
+		!$_REQUEST {__only_tree_frameset}     ? {label      => $i18n -> {save_or_cancel}} :
 
-	if ($preconf -> {core_unblock_navigation}) {
-	
-		$_REQUEST {__script} .= <<EOH;
+		undef;
 
-			function check_edit_mode (a, fallback_href) {
+	;
 
-				if (edit_mode) {
-
-					var arg   = Array ();
-					arg.href  = a.href ? a.href : fallback_href;
-					arg.title = a.innerText;
-
-					window.showModelessDialog('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?$_REQUEST{__static_salt}', arg, 'resizable:yes;unadorned:yes;status:yes');
-					document.body.style.cursor = 'default'; 
-					blockEvent ();
-					return true;
-
-				}
-
-				return false;
-
-			}
-EOH
+	my $js_var = $_REQUEST {__js_var};
 			
+	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 	
-	}
-	elsif (!$_REQUEST {__only_tree_frameset}) {
-	
-		$_REQUEST {__script} .= <<EOH;
+	$_REQUEST {__head_links} .= "<link  href='$_REQUEST{__static_site}/i/$_.css' type=text/css rel=stylesheet>"         foreach (@{$_REQUEST {__include_css}});
 
-			function check_edit_mode (a, fallback_href) {
-
-				if (edit_mode) {
-
-					alert('$$i18n{save_or_cancel}'); 
-					document.body.style.cursor = 'default'; 
-					return true;
-
-				}
-
-				return false;
-
-			}
-EOH
-	
-	}
-
-	if ($$page{auth_toolbar}) {
-		$$page{auth_toolbar} = "<tr height=48><td height=48>$$page{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>";
-	}
-		
-	$_REQUEST {__head_links} .= <<EOH unless ($_REQUEST {type} eq '_boot');
-		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
-		<style>
-			.calendar .nav {  background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
-			td.main-menu {padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
-			td.vert-menu {background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
-			#admin {width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
-			@{[$_REQUEST {type} eq 'logon' ? <<EOS : '' ]}
-			td.login-head {background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
-			td.submit-area {text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
-			div.grey-submit {background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
-EOS
-		</style>
-EOH
-
-	foreach (@{$_REQUEST {__include_css}}) {
-		$_REQUEST {__head_links} .= <<EOH;
-			<LINK href="$_REQUEST{__static_site}/i/$_.css" type=text/css rel=STYLESHEET>
-EOH
-	}
-
-	$_REQUEST {__head_links} .= <<EOH unless ($_REQUEST {type} eq 'logon' or $_REQUEST {type} eq '_boot');
-		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-		</script>
-		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
-		</script>
-EOH
-
-	foreach (@{$_REQUEST {__include_js}}) {
-		$_REQUEST {__head_links} .= <<EOH;
-			<script type="text/javascript" src="$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}">
-			</script>
-EOH
-	}
-	
-	$_REQUEST {__on_help} = <<EOHELP if $_REQUEST {__help_url};
-		nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes');
-		blockEvent ();
-EOHELP
-
-	$_REQUEST {__on_resize} = <<EOH;
-	
-		var d = document.body;
-
-		if (
-			lastClientHeight != d.clientHeight
-			|| lastClientWidth != d.clientWidth
-		) {
-
-			tableSlider.cell_on ();
-
-			lastClientHeight = d.clientHeight;
-			lastClientWidth  = d.clientWidth;
-		
-		}
-
-EOH
+	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}'>\n</script>" foreach (@{$_REQUEST {__include_js}});
 
 	foreach (keys %_REQUEST) {
 	
 		/^__on_(\w+)$/ or next;
 		
-		my $what = $1 eq 'load' ? 'window' : 
-			   $1 eq 'resize' ? 'window' : 
-		'body';
-	
-		$_REQUEST {__head_links} .= <<EOH;
-			<script for="$what" event="on$1">
-				$_REQUEST{$&};
-			</script>
-EOH
-
-	}
-	
-
-
-
-#	$body_scroll = 'no' if $_REQUEST {__tree};
-
-	$body =~ /\<frameset/ or $body = <<EOH;
-			<body 
-				bgcolor=white 
-				leftMargin=0 
-				topMargin=0
-				bottomMargin=0
-				rightMargin=0
-				marginwidth=0 
-				marginheight=0 
-				scroll=$body_scroll
-				name="body" 
-				id="body"
-				onbeforeunload="document.body.style.cursor = 'wait'"
-			>
+		my $attributes = {};
+		my $code       = $_REQUEST {$&};
+		
+		if ($1 eq 'load') {
 			
-<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#888888" strokeweight="2px" filled="no" id="slider" />
-<v:rect style='position:absolute; left:200px; top:300px; height:6px; width:6px; z-index:0; visibility:hidden' strokecolor="#ffffff" strokeweight="1px" filled="yes" fillcolor="#555555" id="slider_" />
-				
-				<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
-					$$page{auth_toolbar}
-					<tr><td valign=top height=100%>
-						$body
-					</td></tr>
-				</table>
-
-@{[ map {<<EOI} @{$_REQUEST{__invisibles}} ]}
-					<iframe name='$_' src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes" style="display:none">
-					</iframe>
-EOI
-
-			</body>
-EOH
-
-	
-	unless ($r -> headers_in -> {'User-Agent'} =~ /MSIE 7/ || $_REQUEST {__only_tree_frameset}) {
+			$code  = "\n\$(document).ready (function () {\n${code}\n})\n";
+			
+		}
+		else {
 		
-		$_REQUEST {__script} .= <<EOS;
+			$attributes -> {event} = "on$1";
+			$attributes -> {for}   = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
+				
+		}
+		
+		$_REQUEST {__head_links} .= dump_tag (script => $attributes, $code) . "\n";
 
-			function select_visibility () {
-				if (top.last_vert_menu && top.last_vert_menu [0]) return 'hidden';
-				if (last_vert_menu [0]) return 'hidden';
-				if (subsets_are_visible) return 'hidden';
-				return '';
-			}
-
-			function cell_select_visibility (select, fixed_cols) {
-
-				var td    = select.offsetParent;
-				var tr    = td.parentElement;
-				var cells = tr.cells;
-				var last_fixed_cell_offset_right = 0;
-
-				for (i = 0; i < fixed_cols; i ++) {
-					last_fixed_cell_offset_right += cells [i].offsetWidth;
-				}
-
-				var table = td.offsetParent;
-				var div   = table.offsetParent;
-				var select_left = select.offsetLeft + td.offsetLeft - div.scrollLeft;
-				var result = select_left < last_fixed_cell_offset_right ? 'hidden' : '';
-
-				return result;
-
-			}
-
-EOS
-	
 	}
 	
-
-		$_REQUEST {__script} .= <<EOS;
-				
-
-EOS
-
-
-
+	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";	
 	
-	return <<EOH;
-<html xmlns:v="urn:schemas-microsoft-com:vml">
-			<head>
-				<title>$$i18n{_page_title}</title>
-								
-				<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with $request_package; gateway_interface is $ENV{GATEWAY_INTERFACE}; $mod_perl is in use">
-				<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
-								
-				$_REQUEST{__head_links}
-				
-				<style> v\\:* { behavior: url(#default#VML); }</style>
+	$_REQUEST {__head_links}  = qq {
 
-				<script>
-					var every_second = [];
-					var clockSeparators = ['$_REQUEST{__clock_separator}', ' '];
-					var keepalive_url = "$_REQUEST{__uri}?keepalive=$_REQUEST{sid}";
-					$_REQUEST{__script}
-				</script>				
+		<title>$$i18n{_page_title}</title>
+						
+		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
+		<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
+						
+		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
+		<style>
+			v\\:*           { behavior: url(#default#VML); }
+			#admin          { width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
+			.calendar .nav  { background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
+			td.main-menu    { padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
+			td.vert-menu    { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
+			td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
+			td.submit-area  { text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
+			div.grey-submit { background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
+		</style>
 
-				@{[ $_REQUEST{__help_url} ? <<EOHELP : '' ]}
-					<script for="body" event="onhelp">
-						nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes');
-						event.returnValue = false;
-					</script>						
-EOHELP
+		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
+		</script>
+		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
+		</script>
 
-			</head>
-			$body
-		</html>
+	} . $_REQUEST {__head_links};
+	
+	if ($body !~ /^\s*\<frameset/ism) {
+
+		$body .= "<iframe name='$_' src='$_REQUEST{__static_url}/0.html' width=0 height=0 application='yes' style='display:none'>\n</iframe>" foreach (@{$_REQUEST{__invisibles}});
 		
-EOH
+		$body  = dump_tag (body => $body_options, $body);
+
+	}
+
+	return qq {<html xmlns:v="urn:schemas-microsoft-com:vml"><head>$_REQUEST{__head_links}</head>$body</html>};
 
 }
 
@@ -3275,7 +3282,12 @@ sub draw_tree {
 				var old_nodes = d.aNodes;
 				var n = -1;
 
-				for (i = 0; i < old_nodes.length; i ++) {			
+// prevent reload content frame
+				d.selectedFound = true;
+				var selected_node = d.selectedNode;
+				old_nodes [selected_node]._is = false;
+
+				for (i = 0; i < old_nodes.length; i ++) {
 					var cn = old_nodes [i];
 					if (cn.id != $_REQUEST{__parent}) continue;	
 					n = i;
@@ -3292,11 +3304,15 @@ sub draw_tree {
 				for (i = n + 1; i < old_nodes.length; i ++) nodes [k++] = old_nodes [i];
 
 				d.aNodes = nodes;
-
+				
 				f.contentWindow.document.getElementById ('dtree_td').innerHTML = d.toString ();
 				f.contentWindow.document.getElementById ('dtree_menus').innerHTML += m [0];				
 				f.contentWindow.document.body.style.cursor = 'default';
-				
+				d.selectedNode = selected_node <= n ? selected_node : selected_node + new_nodes.length;
+				d.aNodes [d.selectedNode]._is = true;
+
+				var eNew = f.contentWindow.document.getElementById("sd" + d.selectedNode);
+				eNew.className = "nodeSel";
 			}
 			
 		</script>
@@ -3358,14 +3374,12 @@ EOH
 EOO
 EOH
 
-	return <<EOH;
-		<frameset cols="$options->{width},*">
-			<frame src="$ENV{SCRIPT_URI}/i/_skins/TurboMilk/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
-			</frame>
-			<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
-			</frame>
-		</frameset>
-EOH
+	return qq {<frameset cols="$options->{width},*">
+		<frame src="$ENV{SCRIPT_URI}/i/_skins/TurboMilk/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
+		</frame>
+		<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
+		</frame>
+	</frameset>};
 
 }
 
@@ -3457,7 +3471,7 @@ sub dialog_open {
 	my $url = $ENV{SCRIPT_URI} . '/i/_skins/TurboMilk/dialog.html?';
 	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
 	
-	return "javaScript:var result=window.showModalDialog('$url' + Math.random (), dialog_open_$options->{id}, '$o' + ';dialogWidth=' + dialog_open_$options->{id}_width + 'px;dialogHeight=' + dialog_open_$options->{id}_height + 'px');document.body.style.cursor='default';void(0);";
+	return "javaScript:dialog_open_$options->{id}.href = dialog_open_$options->{id}.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, ''); dialog_open_$options->{id}.href += '&_salt=' + Math.random (); var result=window.showModalDialog('$url' + Math.random (), dialog_open_$options->{id}, '$o' + ';dialogWidth=' + dialog_open_$options->{id}_width + 'px;dialogHeight=' + dialog_open_$options->{id}_height + 'px');document.body.style.cursor='default';void(0);";
 
 }
 

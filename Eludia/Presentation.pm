@@ -2,7 +2,7 @@ no warnings;
 
 ################################################################################
 
-sub js ($)    {$_REQUEST {__script} .= ";\n$_[0];\n"}
+sub js ($)    {$_REQUEST {__script} .= ";\n$_[0];\n"; return ''}
 
 sub j  ($)    {js "\$(document).ready (function () { $_[0] })"}
 
@@ -81,7 +81,7 @@ sub format_picture {
 	
 	return $txt if ($_REQUEST {xls});
 	
-	my $result = $number_format -> format_picture ($txt, $picture);
+	my $result = $number_format -> format_picture ('' . $txt, $picture);
 	
 	if ($_USER -> {demo_level} > 1) {
 		$result =~ s{\d}{\*}g;
@@ -390,7 +390,7 @@ sub check_title {
 
 	return if exists $options -> {title} && $options -> {title} eq '';
 
-	$options -> {title} ||= $options -> {label};
+	$options -> {title} ||= '' . $options -> {label};
 	$options -> {title} =~ s{\<.*?\>}{}g;	
 	$options -> {title} =~ s{^(\&nbsp\;)+}{};	
 	$options -> {title} =~ s{\"}{\&quot\;}g;	
@@ -497,14 +497,21 @@ sub check_href {
     
 	if ($options -> {dialog}) {
 	
-		$url = dialog_open ({
+		$url =
+			dialog_open ({
 				
-			title => $options -> {dialog} -> {title},
+				title => $options -> {dialog} -> {title},
 				
-			href => $url . '#',
+				href => $url . '#',
 					
-		}, $options -> {dialog} -> {options}) . $options -> {dialog} -> {after} . ';void (0)',
-		
+			}, $options -> {dialog} -> {options}) .
+			$options -> {dialog} -> {after} .
+			';setCursor (); try {top.setCursor (top)} catch (e) {}; void (0)';
+
+		if ($options -> {dialog} -> {before}) {
+			$url =~ s/^javascript:/javascript: $options->{dialog}->{before};/i;
+		}
+
 	}
 
 	$options -> {href} = $url;
@@ -674,7 +681,7 @@ sub draw_form {
 	foreach my $row (@rows) {
 		$row -> [-1] -> {colspan} += ($max_colspan - $row -> [-1] -> {sum_colspan});
 		$_SKIN -> start_form_row () if $_SKIN -> {options} -> {no_buffering};
-		foreach (@$row) { $_ -> {html} = draw_form_field ($_, $data) };
+		foreach (@$row) { $_ -> {html} = draw_form_field ($_, $data, $options) };
 		$_SKIN -> draw_form_row ($row) if $_SKIN -> {options} -> {no_buffering};
 	}
 	
@@ -765,7 +772,7 @@ sub draw_form {
 
 sub draw_form_field {
 
-	my ($field, $data) = @_;
+	my ($field, $data, $form_options) = @_;
 
 	if (
 		($_REQUEST {__read_only} or $field -> {read_only})
@@ -848,7 +855,7 @@ sub draw_form_field {
 
 	$field -> {tr_id}  = 'tr_' . $field -> {name};
 
-	$field -> {html} = &{"draw_form_field_$$field{type}"} ($field, $data);
+	$field -> {html} = &{"draw_form_field_$$field{type}"} ($field, $data, $form_options);
 
 	$conf -> {kb_options_focus} ||= $conf -> {kb_options_buttons};
 	$conf -> {kb_options_focus} ||= {ctrl => 1, alt => 1};
@@ -1030,7 +1037,7 @@ sub draw_form_field_suggest {
 
 			$_REQUEST {id} = $options -> {value};
 			my $h = &{$options -> {values}} ();
-			$options -> {value} = $h -> {label};
+			$options -> {value} = $h -> {label} if ref $h eq HASH;
 			$_REQUEST {id} = $id;
 
 		}
@@ -1915,9 +1922,16 @@ sub draw_form_field_tree {
 	
 	return '' if $options -> {off} && $data -> {id};
 	
+	my $key = '__get_ids_' . $options -> {name};
+	
+	$_REQUEST {$key} = 1;
+	
+	push @{$form_options -> {keep_params}}, $key;
+
 	my $v = $options -> {value} || $data -> {$options -> {name}};
 
 	foreach my $value (@{$options -> {values}}) {
+	
 		my $checked = 0 + (grep {$_ eq $value -> {id}} @$v);
 		
 		if ($value -> {href}) {
@@ -1942,8 +1956,6 @@ sub draw_form_field_tree {
 
 	}
 
-
-
 	return $_SKIN -> draw_form_field_tree ($options, $data);
 	
 }
@@ -1952,7 +1964,7 @@ sub draw_form_field_tree {
 
 sub draw_form_field_checkboxes {
 
-	my ($options, $data) = @_;
+	my ($options, $data, $form_options) = @_;
 
 	$options -> {cols} ||= 1;
 
@@ -1961,6 +1973,12 @@ sub draw_form_field_checkboxes {
 		$data -> {$options -> {name}} = [grep {$_} split /\,/, $data -> {$options -> {name}}];
 		
 	}
+	
+	my $key = '__get_ids_' . $options -> {name};
+	
+	$_REQUEST {$key} = 1;
+	
+	push @{$form_options -> {keep_params}}, $key;
 	
 	foreach my $value (@{$options -> {values}}) {
 
@@ -2156,7 +2174,7 @@ sub draw_toolbar {
 	foreach my $button (@buttons) {
 
 		if (ref $button eq HASH) {
-		
+
 			next if $button -> {off};
 			
 			if ($button -> {hidden} && !$_REQUEST {__edit_query}) {
@@ -2259,6 +2277,49 @@ sub draw_toolbar_button {
 	$options -> {id} ||= '' . $options;
 	
 	return $_SKIN -> draw_toolbar_button ($options);
+
+}
+
+################################################################################
+
+sub draw_toolbar_input_tree {
+
+	my ($options) = @_;
+
+	my $label = '';
+
+	foreach my $value (@{$options -> {values}}) {
+	
+		my $is_checked = $_REQUEST {"$options->{name}_$value->{id}"};
+
+		$value -> {__node} = draw_node ({
+			label	=> $value -> {label},
+			id	=> $value -> {id},
+			parent	=> $value -> {parent},
+			is_checkbox	=> $value -> {is_checkbox} + $is_checked,
+			icon    	=> $value -> {icon},
+			iconOpen    	=> $value -> {iconOpen},
+			href  		=> $value -> {href},
+		});
+		
+		if ($is_checked) {
+		
+			$label .= ', ' if $label;
+			$label .= $value -> {label};
+
+		}
+
+	}
+	
+	if ($label) {
+	
+		$options -> {max_len} ||= ($conf -> {max_len} || 20);
+		
+		$options -> {label} = trunc_string ($label, $options -> {max_len});
+	
+	}
+
+	return $_SKIN -> draw_toolbar_input_tree ($options);
 
 }
 
@@ -2471,8 +2532,9 @@ sub draw_centered_toolbar_button {
 		$options -> {icon}       ||= $preset -> {icon};
 		$options -> {label}      ||= $i18n -> {$preset -> {label}};
 		$options -> {label}      ||= $preset -> {label};
-		$options -> {confirm}    ||= $i18n -> {$preset -> {confirm}};
-		$options -> {confirm}    ||= $preset -> {confirm};
+		$options -> {confirm}    = exists $options -> {confirm} ? $options -> {confirm} :
+			$i18n -> {$preset -> {confirm}} ? $i18n -> {$preset -> {confirm}} :
+			$preset -> {confirm};
 		$options -> {preconfirm} ||= $preset -> {preconfirm};
 	}	
 
@@ -2591,6 +2653,7 @@ sub draw_ok_esc_toolbar {
 			label => $options -> {label_ok}, 
 			href => $_REQUEST {__windows_ce} || $_SKIN =~ /Universal/ || $_SKIN =~ /Gecko/ ? "javaScript:document.$name.submit()" : "javaScript:document.$name.fireEvent('onsubmit'); document.$name.submit()", 
 			off  => $_REQUEST {__read_only} || $options -> {no_ok},
+			(exists $options -> {confirm_ok} ? (confirm => $options -> {confirm_ok}) : ()),
 		},
 		{
 			preset => 'edit',
@@ -2925,6 +2988,8 @@ sub draw_cells {
 		$result .= 
 			!ref ($cell) || ($cell -> {type} ne 'button' && !$cell -> {icon} && $cell -> {off}) || $cell -> {read_only} ? draw_text_cell ($cell, $options) :
 			$cell  -> {type} eq 'radio'    ? draw_radio_cell  ($cell, $options) :
+			$cell  -> {type} eq 'date'     ? draw_date_cell  ($cell, $options) :
+			$cell  -> {type} eq 'datetime' ? draw_datetime_cell  ($cell, $options) :
 			($cell -> {type} eq 'checkbox' || exists $cell -> {checked}) ? draw_checkbox_cell ($cell, $options) :
 			($cell -> {type} eq 'button'   || $cell -> {icon}) ? draw_row_button ($cell, $options) :		
 			$cell  -> {type} eq 'input'    ? draw_input_cell  ($cell, $options) :
@@ -3100,11 +3165,71 @@ sub draw_radio_cell {
 
 ################################################################################
 
+sub draw_date_cell {
+
+	my ($data, $options) = @_;	
+
+	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit}) || $data -> {read_only} || $data -> {off};
+	
+	$options -> {no_time} = 1;	
+
+	return draw_datetime_cell ($data, $options);
+
+}
+
+################################################################################
+
+sub draw_datetime_cell {
+
+	my ($data, $options) = @_;
+
+	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit}) || $data -> {read_only} || $data -> {off};
+	
+	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/) {
+		$options -> {size} ||= $options -> {no_time} ? 11 : 16;
+		return draw_input_cell ($options, $data);
+	}	
+
+	unless ($options -> {format}) {
+	
+		if ($options -> {no_time}) {
+			$options -> {format}  ||= $i18n -> {_format_d} || '%d.%m.%Y';
+			$options -> {attributes} -> {size}    ||= 11;
+		}
+		else {
+			$options -> {format}  ||= $i18n -> {_format_dt} || '%d.%m.%Y %k:%M';
+			$options -> {attributes} -> {size}    ||= 16;
+		}
+	
+	}
+		
+	$options -> {attributes} -> {id} = 'input' . $data -> {name};
+
+	$options -> {attributes} -> {class} ||= $data -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';
+
+	$options -> {attributes} -> {value}   ||= $data -> {label};
+	
+	_adjust_row_cell_style ($data, $options);
+
+	check_title ($data);
+
+	return $_SKIN -> draw_datetime_cell (@_);
+
+}
+
+################################################################################
+
 sub draw_checkbox_cell {
 
 	my ($data, $options) = @_;
 	
 	return draw_text_cell (@_) if $data -> {read_only} || $data -> {off};
+	
+	if ($data -> {name} =~ /^_(\w+)_\d+$/) {
+
+		$_REQUEST {__get_ids} -> {$1} ||= 1;
+	
+	}	
 
 	$data -> {value} ||= 1;	
 	$data -> {checked} = $data -> {checked} ? 'checked' : '';
@@ -3403,7 +3528,7 @@ sub draw_table_row {
 
 	my $tr_id = {href => 'id=' . $i -> {id}};
 	check_href ($tr_id);
-	$tr_id -> {href} =~ s{\&salt=[\d\.]+}{};
+	$tr_id -> {href} =~ s{[\&\?]salt=[\d\.]+}{};
 	$i -> {__tr_id} = $tr_id -> {href};
 
 	foreach my $callback (@$tr_callback) {
@@ -3511,7 +3636,7 @@ sub draw_table {
 	return '' if $options -> {off};		
 
 	$_REQUEST {__salt} ||= rand () * time ();
-	$_REQUEST {__uri_root_common} ||=  $_REQUEST {__uri} . '?sid=' . $_REQUEST {sid} . '&salt=' . $_REQUEST {__salt};
+	$_REQUEST {__uri_root_common} ||=  $_REQUEST {__uri} . '?salt=' . $_REQUEST {__salt} . '&sid=' . $_REQUEST {sid};
 
 	ref $tr_callback eq ARRAY or $tr_callback = [$tr_callback];
 		
@@ -3572,6 +3697,8 @@ sub draw_table {
 	}
 
 	$options -> {header}   = draw_table_header ($headers) if @$headers > 0 && $_REQUEST {xls};
+	
+	$_REQUEST {__get_ids} = {};
 	
 	$_SKIN -> start_table ($options) if $_SKIN -> {options} -> {no_buffering};
 
@@ -3687,6 +3814,14 @@ sub draw_table {
 	}
 	
 	$options -> {header}   = draw_table_header ($headers) if @$headers > 0 && !$_REQUEST {xls};
+	
+	foreach (keys %{$_REQUEST {__get_ids}}) {
+	
+		$_REQUEST {"__get_ids_$_"} = 1;
+	
+	}
+	
+	delete $_REQUEST {__get_ids};
 	
 	my $html = $_SKIN -> draw_table ($tr_callback, $list, $options);
 	
@@ -4128,6 +4263,7 @@ sub out_html {
 
 	$r -> content_type ($_REQUEST {__content_type});
 	$r -> headers_out -> {'X-Powered-By'} = 'Eludia/' . $Eludia::VERSION;
+	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
 
 	$preconf -> {core_mtu} ||= 1500;
 	
@@ -4313,6 +4449,7 @@ sub check_static_files {
 
 	foreach my $src (@files) {
 		$src =~ /\.pm$/ or next;
+		unlink $skin_root . '/' . $`;
 		File::Copy::copy ($static_path . $src, $skin_root . '/' . $`) or die "can't copy ${static_path}${src} to ${skin_root}/${`}: $!";
 	}
 	

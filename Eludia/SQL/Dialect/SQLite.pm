@@ -124,7 +124,7 @@ sub sql_select_all_cnt {
 
 	$sql =~ s{SELECT.*?FROM}{SELECT COUNT(*) FROM}ism;
 	
-	if ($sql =~ s{LIMIT.*}{}ism) {
+	if ($sql =~ s{\bLIMIT\b.*}{}ism) {
 #		pop @params;
 	}
 	
@@ -373,8 +373,8 @@ sub sql_do_insert {
 	
 	sql_do ("INSERT INTO $table_name ($fields) VALUES ($args)", @params);	
 	
-	return sql_last_insert_id ();
-	
+	return want ('VOID') ? undef : sql_last_insert_id ();
+
 }
 
 ################################################################################

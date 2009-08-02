@@ -177,7 +177,7 @@ sub sql_select_all_cnt {
 	$sql = sql_adjust_fake_filter ($sql, $options);
 	
 	if ($_REQUEST {xls} && $conf -> {core_unlimit_xls} && !$_REQUEST {__limit_xls}) {
-		$sql =~ s{LIMIT.*}{}ism;
+		$sql =~ s{\bLIMIT\b.*}{}ism;
 		my $result = sql_select_all ($sql, @params, $options);
 		my $cnt = ref $result eq ARRAY ? 0 + @$result : -1;
 		return ($result, $cnt);

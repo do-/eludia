@@ -98,6 +98,7 @@ sub peer_reconnect {
 		our $UA = LWP::UserAgent -> new (
 			agent                 => "Eludia/$Eludia::VERSION (" . peer_name () . ")",
 			requests_redirectable => ['GET', 'HEAD', 'POST'],
+			timeout               => $preconf -> {peer_timeout} || 180,
 		);
 		
 #		$HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
@@ -164,13 +165,15 @@ sub peer_query {
 	my $url = $preconf -> {peer_servers} -> {$peer_server} or die "Peer server '$peer_server' not defined\n";
 	
 	peer_reconnect ();
-	
-	foreach my $k (keys %_REQUEST) {
-		next if $k =~ /^__/ && $k ne '__edit';
-		next if exists $params -> {$k};
-		$params -> {$k} = ref $_REQUEST {$k} eq 'Math::FixedPrecision' ? $_REQUEST {$k} -> bstr () : $_REQUEST {$k};
+
+	unless ($_REQUEST {__only_params}) {
+		foreach my $k (keys %_REQUEST) {
+			next if $k =~ /^__/ && $k ne '__edit';
+			next if exists $params -> {$k};
+			$params -> {$k} = ref $_REQUEST {$k} eq 'Math::FixedPrecision' ? $_REQUEST {$k} -> bstr () : $_REQUEST {$k};
+		}
 	}
-	
+
 	$params -> {__d} = 1;
 	delete $params -> {select};
 	delete $params -> {xls};
@@ -179,12 +182,16 @@ sub peer_query {
 
 	$options -> {files} = [$options -> {file}] if $options -> {file};
 	if (ref $options -> {files} eq ARRAY) {
-		
-		foreach my $name (@{$options -> {files}}) {
-			my $file = upload_file ({ name => $name, dir => 'upload/images'});
-			$params -> {'_' . $name} = [$file -> {real_path}, $params -> {'_' . $name}];
+
+		unless ($_REQUEST {no_upload_file}) {	
+
+			foreach my $name (@{$options -> {files}}) {
+				my $file = upload_file ({ name => $name, dir => 'upload/images'});
+				$params -> {'_' . $name} = [$file -> {real_path}, $params -> {'_' . $name}];
+			}
+
 		}
-		
+
 		push @headers, (Content_Type => 'form-data');
 		
 	}
@@ -195,15 +202,17 @@ sub peer_query {
 	);	
 
 	my $request = POST (@args);
-			
+
 	my $response = $UA -> request ($request);
 
-	foreach my $k (keys %$params) {
-		my $v = $params -> {$k};
-		ref $v eq ARRAY or next;
-		unlink $v -> [0];
-	}		
-	
+	unless ($_REQUEST {no_upload_file}) {
+		foreach my $k (keys %$params) {
+			my $v = $params -> {$k};
+			ref $v eq ARRAY or next;
+			unlink $v -> [0];
+		}		
+	}
+
 	while (1) {
 		
 		$response -> is_success or die ("Invalid response from $peer_server: " . $response -> status_line . "\n");

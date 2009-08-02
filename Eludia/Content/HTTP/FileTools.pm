@@ -77,6 +77,10 @@ sub download_file {
 	my ($options) = @_;	
 
 	my $path = $r -> document_root . $options -> {path};
+	
+	-f $path or $path = $options -> {path};
+
+	-f $path or die "File not found: $path\n";
 
 	$_REQUEST {__out_html_time} = time;
 
@@ -90,6 +94,8 @@ sub download_file {
 		$r -> send_fd (F);
 		close F;
 	}
+	
+	unlink $path if $options -> {'delete'};
 	
 }
 

@@ -123,10 +123,12 @@ sub draw_form_field {
 	}
 				
 	my $colspan     = $field -> {colspan}     ? 'colspan=' . $field -> {colspan}     : '';
-	
+		
+	my $style = $field -> {picture} ? 'style="mso-number-format:' . $_SKIN -> _picture ($field -> {picture}) . '"' : '';
+
 	return (<<EOH);
 		<td nowrap align=right><b>$$field{label}</b></td>
-		<td $colspan>\n$$field{html}</td>
+		<td $colspan $style>\n$$field{html}</td>
 EOH
 
 }
@@ -451,9 +453,12 @@ sub draw_text_cell {
 		$data -> {attributes} -> {style} .= "mso-number-format:\\\@;";
 	}
 
-	if ($data -> {bgcolor}) {
+	if ($data -> {bgcolor} ||= $data -> {attributes} -> {bgcolor}) {
 		$data -> {attributes} -> {style} .= "background:$data->{bgcolor};";
 	}
+
+	delete $data -> {attributes} -> {bgcolor} if $data -> {picture};
+
 	if ($data -> {level}) {
 		$data -> {attributes} -> {style} .= "padding-left:" . ($data -> {level} * 12) . "px;";
 	}
@@ -671,6 +676,7 @@ sub start_page {
 	$r -> content_type ('application/octet-stream');
 	my $page_title = $conf -> {page_title};
 	$page_title =~ s/[\"\?]/_/g;
+	$r -> header_out ('P3P' => 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
 	$r -> header_out ('Content-Disposition' => "attachment;filename=$page_title.xls"); 	
 	$r -> send_http_header ();
 

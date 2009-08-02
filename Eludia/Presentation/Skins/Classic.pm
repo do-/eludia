@@ -2241,6 +2241,7 @@ sub draw_page {
 	$_REQUEST {__blur_all}    += 0;
 	$_REQUEST {__no_focus}    += 0;
 	$_REQUEST {__pack}        += 0;
+	$_REQUEST {__im_delay}    += 0;
 	$_REQUEST {__scrollable_table_row} += 0;
 	$_REQUEST {__on_load}     .= $_REQUEST {__doc_on_load};
 	
@@ -2303,14 +2304,8 @@ EOCSS
 					var scrollable_rows = new Array();		
 					var td2sr = new Array ();
 					var td2sc = new Array ();
-					var last_vert_menu = new Array ();
-					last_vert_menu [0] = null;
-					last_vert_menu [1] = null;
-					last_vert_menu [2] = null;
-					last_vert_menu [3] = null;
-					last_vert_menu [4] = null;
+					var last_vert_menu = [null, null, null, null, null];
 					var last_main_menu = null;
-					var ms_word = null;
 					var keepaliveID = null;
 					var edit_mode = null;
 
@@ -2318,17 +2313,28 @@ EOCSS
 					var clockSeparators = new Array (' ', '$_REQUEST{__clock_separator}');
 					var clockSeparatorID = 0;
 										
+					var __im_delay = $_REQUEST{__im_delay};
+					var __im_idx   = '/i/_mbox/$_USER->{id}.txt';
+					var __im_url   = '/?sid=$_REQUEST{sid}&type=_mbox&action=read';
+					var __im_timer = 0;
+
 					function body_on_load () {
+
+						if (window.parent) window.parent.document.body.style.cursor = 'default';
 
 						initialize_controls ($_REQUEST{__no_focus}, $_REQUEST{__pack}, '$_REQUEST{__focused_input}', $_REQUEST{__blur_all}, $_REQUEST{__scrollable_table_row});
 						
 						$_REQUEST{__on_load};
+						
+						try {StartClock ()} catch (e) {}
+						
+						try {__im_check ()} catch (e) {}						
 					
 					}
 
 					function check_edit_mode () {
 						if (edit_mode) {
-							alert('$$i18n{save_or_cancel}'); 
+							alert("$$i18n{save_or_cancel}"); 
 							document.body.style.cursor = 'default'; 
 							return true;
 						}
@@ -2349,7 +2355,7 @@ EOCSS
 				name="body" 
 				id="body"
 				scroll="auto"
-				onload= "window.parent ? window.parent.document.body.style.cursor = 'default' : ''; body_on_load (); try {StartClock ()} catch (e) {}"
+				onload= "body_on_load ()"
 				onbeforeunload="document.body.style.cursor = 'wait'"
 				onunload=" try {KillClock ()} catch (e) {}"
 				onkeydown="
