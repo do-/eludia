@@ -10,10 +10,6 @@ sub wish_to_adjust_options_for_table_columns {
 
 #############################################################################
 
-sub wish_to_update_demands_for_table_columns {}
-
-#############################################################################
-
 sub wish_to_schedule_modifications_for_table_columns {
 
 	my ($old, $new, $todo, $options) = @_;

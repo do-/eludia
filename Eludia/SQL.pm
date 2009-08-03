@@ -167,32 +167,6 @@ sub sql_assert_core_tables {
 
 my $time = time;
 	
-	if ($conf -> {core_voc_replacement_use}) {
-	
-		$model_update -> assert (
-		
-			tables => {
-			
-				$conf -> {systables} -> {__voc_replacements} => {
-					columns => {
-						id          => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-						table_name  => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-						object_name => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-						object_type => {TYPE_NAME => 'int', COLUMN_SIZE => 1},
-					},
-					keys => {
-						ix => 'table_name',
-						ix2 => 'object_name',
-					},
-				}
-			},
-						
-			prefix => 'sql_assert_core_tables#',			
-
-		);
-	
-	}
-
 	my %defs = (
 	
 		$conf -> {systables} -> {__defaults} => {
@@ -227,22 +201,10 @@ my $time = time;
 
 		},
 		
-		$conf -> {systables} -> {__required_files} => {
-		
-			columns => {
-				unix_ts   => {TYPE_NAME => 'bigint'},
-				file_name => {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
-			},
-			
-			keys => {
-				ix => 'file_name',
-			},
-
-		},
-
 		$conf -> {systables} -> {__last_update} => {
 		
 			columns => {
+				id        => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
 				pid 	  => {TYPE_NAME => 'int'},
 				unix_ts   => {TYPE_NAME => 'bigint'},
 			},

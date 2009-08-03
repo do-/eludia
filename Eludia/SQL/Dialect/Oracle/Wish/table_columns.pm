@@ -1,9 +1,25 @@
 #############################################################################
 
+sub wish_to_adjust_options_for_table_columns {
+
+	my ($options) = @_;
+	
+	$options -> {key} = ['name'];
+	
+	$options -> {table} = $options -> {table} =~ /^_/ ? qq {"$options->{table}"} : uc $options -> {table};
+
+}
+
+#############################################################################
+
 sub wish_to_clarify_demands_for_table_columns {	
 
 	my ($i, $options) = @_;
 	
+	$i -> {REMARKS} ||= delete $i -> {label};
+
+	exists $i -> {NULLABLE} or $i -> {NULLABLE} = 1;
+
 	$i -> {COLUMN_DEF} ||= undef;
 
 	$i -> {TYPE_NAME} = uc $i -> {TYPE_NAME};
@@ -102,23 +118,37 @@ sub wish_to_explore_existing_table_columns {
 
 	my ($options) = @_;
 
-	my $existing = {id => {_PK => 1}};
+	my $existing = {};
 
 	sql_select_loop (
 		
-		'SELECT * FROM user_tab_columns WHERE table_name = ?', 
+		q {
+			SELECT 
+				user_tab_columns.*
+				, user_tab_columns.coomments
+			FROM 
+				user_tab_columns 
+				LEFT JOIN user_col_comments ON (
+					user_tab_columns.table_name = user_col_comments.table_name
+					AND user_tab_columns.column_name = user_col_comments.column_name
+				)
+			WHERE
+				user_tab_columns.table_name = ?
+		}, 
 		
 		sub {
 		
 			my $name = lc $i -> {column_name};
-			
-			return if $name eq 'id';
 
-			my $def = {
+			$existing -> {$name} = my $def = {
 			
 				TYPE_NAME  => $i -> {data_type},
-				
+
 				COLUMN_DEF => $i -> {data_default},
+
+				REMARKS    => $i -> {comments},
+
+				NULLABLE   => $i -> {NULLABLE} eq 'N' ? 0 : 1,
 				
 			};
 			
@@ -128,18 +158,16 @@ sub wish_to_explore_existing_table_columns {
 				$def -> {DECIMAL_DIGITS} = $i -> {data_scale};
 			
 			}
-			elsif ($i -> {data_type} =~ /VARCHAR/) {
+			elsif ($i -> {data_type} eq /VARCHAR2$/) {
 			
 				$def -> {COLUMN_SIZE}    = $i -> {char_length};
 			
 			}
-									
-			$existing -> {$name} = $def;
 		
 		},
-		
-		uc_table_name ($options -> {table})
-		
+
+		$options -> {table}
+
 	);
 
 	return $existing;
@@ -151,26 +179,85 @@ sub wish_to_explore_existing_table_columns {
 sub wish_to_update_demands_for_table_columns {
 
 	my ($old, $new, $options) = @_;
+	
+	if ($old -> {TYPE_NAME} eq $new -> {TYPE_NAME}) {
+	
+		$new -> {$_} >= $old -> {$_} or $new -> {$_} = $old -> {$_} foreach 
+		
+			$old -> {TYPE_NAME} eq 'NUMBER' ? qw (COLUMN_SIZE DECIMAL_DIGITS) :
 
-	if ($old -> {_PK}) {
+			$old -> {TYPE_NAME} eq 'VARCHAR2' ? qw (COLUMN_SIZE) :
 			
-		foreach (keys %$new) {$old -> {$_} = $new -> {$_}}
-		
-		foreach (keys %$old) {$new -> {$_} = $old -> {$_}}
-		
-		return;
+			()
+
 	
 	}
 	
-	if ($old -> {TYPE_NAME} eq 'NUMBER' && $new -> {TYPE_NAME} eq 'NUMBER') {
+	foreach my $i ($old, $new) {
 	
-		foreach my $field ('COLUMN_SIZE', 'DECIMAL_DIGITS') {
+		$i -> {SQL} = $i -> {TYPE_NAME} .
+						
+			$i -> {TYPE_NAME} eq 'NUMBER'   ? " ($i->{COLUMN_SIZE}, $i->{DECIMAL_DIGITS})" :
 
-			$new -> {$field} >= $old -> {$field} or $new -> {$field} = $old -> {$field};
+			$i -> {TYPE_NAME} eq 'VARCHAR2' ? " ($i->{COLUMN_SIZE})" :
 
-		}
+			'';
+
+		if ($i -> {COLUMN_DEF}) {
 		
-	}	
+			if ($i -> {COLUMN_DEF} ne 'SYSDATE' && $i -> {COLUMN_DEF} !~ /\)/) {
+
+				$i -> {COLUMN_DEF} =~ s{'}{''}g; #';
+				
+				$i -> {COLUMN_DEF} = "'$i->{COLUMN_DEF}'";
+
+			}
+		
+			$i -> {SQL} .= " DEFAULT $i->{COLUMN_DEF}";
+		
+		}
+
+		$i -> {SQL} .= $i -> {NULLABLE} ? ' NULL' : ' NOT NULL';
+		
+		%$i = map {$_ => $i -> {$_}} qw (SQL REMARKS);
+
+	}
+
+}
+
+#############################################################################
+
+sub wish_to_schedule_modifications_for_table_columns {
+
+	my ($old, $new, $todo, $options) = @_;
+	
+	if ($old -> {REMARKS} ne $new -> {REMARKS}) {
+	
+		push @{$todo -> {comment}}, {name => $new -> {name}, REMARKS => delete $new -> {REMARKS}};
+		
+		delete $old -> {REMARKS};
+		
+		return if Dumper ($old) eq Dumper ($new);
+	
+	}
+
+	push @{$todo -> {$old -> {TYPE_NAME} eq 'VARCHAR2' and $new -> {TYPE_NAME} ne 'VARCHAR2' ? 'recreate' : 'alter'}}, $new;
+
+}
+
+#############################################################################
+
+sub wish_to_actually_comment_table_columns {
+
+	my ($items, $options) = @_;
+	
+	foreach my $i (@$items) {
+	
+		$i -> {REMARKS} =~ s{'}{''}g; #'
+
+		sql_do ("COMMENT ON COLUMN $options->{table}.$i->{name} IS '$i->{REMARKS}'");
+		
+	}
 
 }
 
@@ -180,32 +267,44 @@ sub wish_to_actually_create_table_columns {
 
 	my ($items, $options) = @_;
 	
-	if ($options -> {table} =~ /^_/) {
+	wish_to_actually_alter_table_columns ($items, $options, 'ADD');
 	
-		$options -> {table} = '"' . $options -> {table} . '"';
-	
-	}
-	
-	foreach my $i (@$items) {
-	
-		eval { sql_do ("CREATE INDEX \"$i->{global_name}\" ON $options->{table} (@{[ join ', ', @{$i -> {parts}} ]})") };
-		
-		next if $@ =~ /ORA-01408/;
-		
-		die $@ if $@;	
-	
-	}
+	wish_to_actually_comment_table_columns (@_);
 
-	
 }
 
 #############################################################################
 
-sub wish_to_actually_alter_table_columns {
+sub wish_to_actually_alter_table_columns {	
+
+	my ($items, $options, $verb) = @_;
+	
+	$verb ||= 'MODIFY';
+	
+	sql_do ("ALTER TABLE $options->{table} $verb (" . (join ', ', map {"$_->{name} $_->{SQL}"} @$items) . ')');
+
+}
+
+#############################################################################
+
+sub wish_to_actually_recreate_table_columns {
 
 	my ($items, $options) = @_;
 	
-	wish_to_actually_create_table_columns (@_);
+	foreach my $i (@$items) {
+	
+		foreach (
+		
+			"ALTER TABLE $options->{table} ADD           oracle_suxx    $i->{SQL} ", 
+			"UPDATE      $options->{table} SET           oracle_suxx =  $i->{name}",
+			"ALTER TABLE $options->{table} DROP COLUMN                  $i->{name}",
+			"ALTER TABLE $options->{table} RENAME COLUMN oracle_suxx TO $i->{name}"
+			
+		) sql_do ($_)
+		
+	}
+
+	wish_to_actually_comment_table_columns (@_);
 
 }
 
