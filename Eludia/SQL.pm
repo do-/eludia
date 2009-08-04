@@ -1473,6 +1473,44 @@ sub sql_assert_default_columns {
 
 sub assert {
 
+	my ($self, %params) = @_;
+
+	return $self -> {driver_name} eq 'Oracle' ? assert_new (@_) : assert_old (@_);
+
+}
+
+################################################################################
+
+sub assert_new {
+
+	my ($self, %params) = @_;
+
+	my $tables = sql_assert_default_columns (Storable::dclone ($params {tables}), \%params);
+
+	($tables, my $new_checksums) = checksum_filter ('db_model', $params {prefix}, $tables);
+	
+	(my %tables = %$tables) > 0 or return;
+
+	wish (tables => [map {{name => $_, %{$tables {$_}}}} (keys %tables)], {});
+
+	while (my ($name, $table) = each %tables) {
+
+		wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}} (keys %{$table -> {columns}})], {table => $name}) if exists $table -> {columns};
+
+		wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})], {table => $name, table_def => $table}) if exists $table -> {keys};
+
+		wish (table_data    => $table -> {data}, {table => $name}) if exists $table -> {data};
+		
+	}
+
+	checksum_write ('db_model', $new_checksums);
+
+}
+
+################################################################################
+
+sub assert_old {
+
 	my $time = time;
 
 	my ($self, %params) = @_;
@@ -1627,16 +1665,16 @@ sub sql_clone {
 sub wish {
 
 	my ($type, $items, $options) = @_;
-
+#darn \@_;
 	eval "require Eludia::SQL::Wish::$type";
 	eval "require Eludia::SQL::Dialect::$SQL_VERSION->{driver}::Wish::$type";
 
 	&{"wish_to_adjust_options_for_$type"} ($options);
 		
 	foreach my $i (@$items) { &{"wish_to_clarify_demands_for_$type"} ($i, $options) }
-	
+#darn $items;	
 	my $existing = &{"wish_to_explore_existing_$type"} ($options);
-	
+#darn $existing;	
 	my $todo = {};
 	
 	my @key = @{$options -> {key}};
@@ -1648,11 +1686,13 @@ sub wish {
 		&{"wish_to_update_demands_for_$type"} ($old, $new, $options);
 
 		next if Dumper ($new) eq Dumper ($old);
-
+#warn Dumper ($old) . '-->' . Dumper ($new); 
 		&{"wish_to_schedule_modifications_for_$type"} ($old, $new, $todo, $options);		
 		
 	}
 	
+#darn $todo;
+
 	&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
 		
 	foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }

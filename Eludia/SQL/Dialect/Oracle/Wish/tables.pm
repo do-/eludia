@@ -20,7 +20,7 @@ sub wish_to_clarify_demands_for_tables {
 	
 		$v -> {_PK} or next;
 		
-		$def {pk} = {name => $k, %v};
+		$def {pk} = {name => $k, %$v};
 		
 		last;
 	
@@ -81,7 +81,7 @@ sub wish_to_schedule_modifications_for_tables {
 
 	my ($old, $new, $todo, $options) = @_;
 		
-	push @{$todo -> {comment}}, $new -> {name};
+	push @{$todo -> {comment}}, $new;
 
 }
 
@@ -108,31 +108,27 @@ sub wish_to_actually_create_tables {
 	my ($items, $options) = @_;
 	
 	foreach my $i (@$items) {
-	
+darn $i;	
 		my %name = map {$_ => 'OOC_' . Digest::MD5::md5_base64 ($_ . $i -> {name})} qw {pk seq trigger};
-	
-		my $constraint_name = ;
-	
-		sql_do (qq {CRETATE TABLE "$i->{name}" ($i->{pk}->{name} NUMBER (10, 0) CONSTRAINT $name{pk} PRIMARY KEY)});
+		
+		sql_do (qq {CREATE TABLE "$i->{name}" ($i->{pk}->{name} NUMBER (10, 0) CONSTRAINT "$name{pk}" PRIMARY KEY)});
 		
 		$i -> {pk} -> {_EXTRA} =~ /auto_increment/ or next;
 				
-		sql_do (qq {CREATE SEQUENCE $name{seq} START WITH 1 INCREMENT BY 1 MINVALUE 1});
-		
-		my $trigger_name = 'OOC_' . Digest::MD5::md5_base64 ('TRIGGER_' . $i -> {name});
-		
+		sql_do (qq {CREATE SEQUENCE "$name{seq}" START WITH 1 INCREMENT BY 1 MINVALUE 1});
+
 		sql_do (qq {
-				CREATE TRIGGER $name{trigger} BEFORE INSERT ON "$i->{name}"
+				CREATE TRIGGER "$name{trigger}" BEFORE INSERT ON "$i->{name}"
 				FOR EACH ROW
 				WHEN (new.$i->{pk}->{name} IS NULL)
 				BEGIN
-					SELECT $name{seq}.nextval INTO :new.$i->{pk}->{name} FROM DUAL;
+					SELECT "$name{seq}".nextval INTO :new.$i->{pk}->{name} FROM DUAL;
 				END;		
 		});
 
-		$sql_do (qq {ALTER TRIGGER $name{trigger} COMPILE});
+		sql_do (qq {ALTER TRIGGER "$name{trigger}" COMPILE});
 
-		$sql_do (qq {ALTER TABLE "$i->{name}" ENABLE ALL TRIGGERS});
+		sql_do (qq {ALTER TABLE "$i->{name}" ENABLE ALL TRIGGERS});
 
 	}
 	
