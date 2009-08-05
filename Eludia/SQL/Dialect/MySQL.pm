@@ -887,40 +887,6 @@ sub get_keys {
 
 ################################################################################
 
-sub get_columns {
-
-	my ($self, $table_name) = @_;
-		
-	my $fields = {};
-	
-	my $st = $self -> {db} -> prepare ("SHOW COLUMNS FROM $table_name");
-	
-	$st -> execute ();
-		
-	while (my $r = $st -> fetchrow_hashref) {
-	
-		my $name = $r -> {Field};
-		
-		$r -> {Type} =~ /^\w+/;
-		$r -> {TYPE_NAME} = $&;
-		$r -> {Type} =~ /(\d+)(?:\,(\d+))?/;
-		$r -> {COLUMN_SIZE} = $1;
-		$r -> {DECIMAL_DIGITS} = $2 if defined $2;
-		$r -> {COLUMN_DEF} = $r -> {Default} if $r -> {Default};
-		$r -> {_EXTRA} = $r -> {Extra} if $r -> {Extra};
-		$r -> {_PK} = 1 if $r -> {Key} eq 'PRI';
-		$r -> {NULLABLE} = $r -> {Null} eq 'YES' ? 1 : 0;
-		map {delete $r -> {$_}} grep {/[a-z]/} keys %$r;
-		$fields -> {$name} = $r;
-	
-	}
-	
-	return $fields;
-
-}
-
-################################################################################
-
 sub gen_column_definition {
 
 	my ($self, $name, $definition) = @_;

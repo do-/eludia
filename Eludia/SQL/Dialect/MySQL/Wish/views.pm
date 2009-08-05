@@ -6,7 +6,7 @@ sub wish_to_actually_create_views {
 	
 	foreach my $i (@$items) {
 	
-		sql_do ("CREATE OR REPLACE FORCE VIEW $i->{name} ($i->{columns}) AS $i->{sql}");
+		sql_do ("CREATE OR REPLACE VIEW $i->{name} ($i->{columns}) AS $i->{sql}");
 		
 	}
 
