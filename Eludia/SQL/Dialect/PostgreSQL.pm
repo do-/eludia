@@ -104,6 +104,8 @@ sub sql_prepare {
 
 sub sql_do {
 
+	darn \@_ if $preconf -> {core_debug_sql_do};
+
 	my ($sql, @params) = @_;
 	
 	my $time = time;

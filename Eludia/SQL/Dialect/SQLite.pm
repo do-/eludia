@@ -84,6 +84,7 @@ sub sql_do_refresh_sessions {
 ################################################################################
 
 sub sql_do {
+	darn \@_ if $preconf -> {core_debug_sql_do};
 	my ($sql, @params) = @_;
 	my $st = sql_prepare ($sql);
 	$st -> execute (@params);
