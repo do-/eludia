@@ -132,7 +132,7 @@ sub wish_to_actually_create_tables {
 
 	}
 	
-	wish_to_actually_comment_tables (@_);
+	wish_to_actually_comment_tables ([grep {$_ -> {REMARKS}} @$items], $options);
 
 }
 

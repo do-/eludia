@@ -340,7 +340,7 @@ sub wish_to_actually_create_table_columns {
 
 	wish_to_actually_alter_table_columns ($items, $options, 'ADD');
 	
-	wish_to_actually_comment_table_columns (@_);
+	wish_to_actually_comment_table_columns ([grep {$_ -> {REMARKS}} @$items], $options);
 	
 	__recompile_triggers_for_table ($options -> {table_name});
 
