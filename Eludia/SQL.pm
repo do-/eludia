@@ -1657,6 +1657,20 @@ sub sql_clone {
 
 #############################################################################
 
+sub get_columns {
+
+	my ($self, $table) = @_;
+
+	eval "require Eludia::SQL::Dialect::$SQL_VERSION->{driver}::Wish::table_columns";
+	
+	wish_to_adjust_options_for_table_columns (my $options = {table => $table});
+	
+	return wish_to_explore_existing_table_columns ($options);
+
+}
+
+#############################################################################
+
 sub wish {
 
 	my ($type, $items, $options) = @_;
