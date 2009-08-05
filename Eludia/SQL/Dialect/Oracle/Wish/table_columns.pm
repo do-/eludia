@@ -170,7 +170,7 @@ sub wish_to_explore_existing_table_columns {
 				$def -> {DECIMAL_DIGITS} = $i -> {data_scale};
 			
 			}
-			elsif ($i -> {data_type} eq /VARCHAR2$/) {
+			elsif ($i -> {data_type} eq 'VARCHAR2') {
 			
 				$def -> {COLUMN_SIZE}    = $i -> {char_length};
 			
