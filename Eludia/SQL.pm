@@ -255,18 +255,12 @@ my $time = time;
 			columns => {
 				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
 				fake => {TYPE_NAME  => 'bigint', COLUMN_DEF => 0, NULLABLE => 0},
-				name =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				login =>    {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				label =>    {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				password => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				mail     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				id_role  =>  {TYPE_NAME => 'int'},
-
-				peer_server => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-				peer_id => {TYPE_NAME    => 'int'},
-				
+				id_role  =>  {TYPE_NAME => 'int'},				
 				subset => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-
 			}
 
 		},
@@ -292,6 +286,12 @@ my $time = time;
 	
 	);
 	
+	if ( $conf -> {peer_roles}) {
+	
+		$defs {$conf -> {systables} -> {users}}	-> {peer_server} = {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
+		$defs {$conf -> {systables} -> {users}}	-> {peer_id}     = {TYPE_NAME => 'int'},
+	
+	}
 	
 	$conf -> {core_session_access_logs_dbtable} and $defs {$conf -> {systables} -> {__access_log}} = {
 
@@ -371,23 +371,6 @@ my $time = time;
 			
 			bytes_sent		=> {TYPE_NAME => 'int'},
 			is_gzipped		=> {TYPE_NAME => 'tinyint'}, 
-		},
-
-	};
-
-	$conf -> {core_screenshot} and $defs {$conf -> {systables} -> {__screenshots}} = {
-
-		columns => {
-			id        => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-			subset    => {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
-			type      => {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
-			id_object => {TYPE_NAME => 'int'},
-			id_user	  => {TYPE_NAME => 'int'},
-			dt        => {TYPE_NAME => 'timestamp'},
-			html      => {TYPE_NAME => 'text'},
-			error     => {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
-			gziped    => {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
-			params    => {TYPE_NAME => 'text'},
 		},
 
 	};
@@ -1485,23 +1468,35 @@ sub assert_new {
 
 	my ($self, %params) = @_;
 
-	my $tables = sql_assert_default_columns (Storable::dclone ($params {tables}), \%params);
-
-	($tables, my $new_checksums) = checksum_filter ('db_model', $params {prefix}, $tables);
+	my ($tables, my $new_checksums) = checksum_filter (db_model => $params {prefix}, 
 	
-	(my %tables = %$tables) > 0 or return;
-
-	wish (tables => [map {{name => $_, %{$tables {$_}}}} (keys %tables)], {});
-
-	while (my ($name, $table) = each %tables) {
-
-		wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}} (keys %{$table -> {columns}})], {table => $name}) if exists $table -> {columns};
-
-		wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})], {table => $name, table_def => $table}) if exists $table -> {keys};
-
-		wish (table_data    => $table -> {data}, {table => $name}) if exists $table -> {data};
+		sql_assert_default_columns (Storable::dclone ($params {tables}), \%params)
 		
+	);
+		
+	my $objects = [\my @tables, \my @views];
+
+	while (my ($name, $object) = each %$tables) {
+	
+		$object -> {name} = $name;
+
+		push @{$objects -> [$object -> {sql} ? 1 : 0]}, $object;
+
 	}
+
+	wish (tables => Storable::dclone \@tables, {});
+
+	foreach my $table (@tables) {
+
+		wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], {table => $table -> {name}}) if exists $table -> {columns};
+
+		wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})],    {table => $table -> {name}, table_def => $table}) if exists $table -> {keys};
+
+		wish (table_data    => $table -> {data}, {table => $table -> {name}}) if exists $table -> {data};
+
+	}
+	
+	wish (views => \@views, {});
 
 	checksum_write ('db_model', $new_checksums);
 
@@ -1665,7 +1660,11 @@ sub sql_clone {
 sub wish {
 
 	my ($type, $items, $options) = @_;
+	
 #darn \@_;
+
+	@$items > 0 or return;
+	
 	eval "require Eludia::SQL::Wish::$type";
 	eval "require Eludia::SQL::Dialect::$SQL_VERSION->{driver}::Wish::$type";
 

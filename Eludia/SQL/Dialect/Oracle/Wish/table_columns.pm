@@ -188,6 +188,28 @@ sub wish_to_explore_existing_table_columns {
 
 #############################################################################
 
+sub __recompile_triggers_for_table {
+
+	my ($table) = @_;
+	
+	sql_select_loop (
+	
+		"SELECT trigger_name FROM user_triggers WHERE table_name = ?", 
+		
+		sub {
+		
+			sql_do (qq {ALTER TRIGGER "$i->{trigger_name}" COMPILE});
+		
+		},
+		
+		$table,
+
+	);
+
+}
+
+#############################################################################
+
 sub __genereate_sql_fragment_for_column {
 
 	my ($i) = @_;
@@ -319,6 +341,8 @@ sub wish_to_actually_create_table_columns {
 	wish_to_actually_alter_table_columns ($items, $options, 'ADD');
 	
 	wish_to_actually_comment_table_columns (@_);
+	
+	__recompile_triggers_for_table ($options -> {table_name});
 
 }
 
@@ -331,6 +355,8 @@ sub wish_to_actually_alter_table_columns {
 	$verb ||= 'MODIFY';
 	
 	sql_do ("ALTER TABLE $options->{table} $verb (" . (join ', ', map {"$_->{name} $_->{SQL}"} @$items) . ')');
+
+	__recompile_triggers_for_table ($options -> {table_name});
 
 }
 
@@ -356,6 +382,8 @@ sub wish_to_actually_recreate_table_columns {
 	}
 
 	wish_to_actually_comment_table_columns (@_);
+
+	__recompile_triggers_for_table ($options -> {table_name});
 
 }
 

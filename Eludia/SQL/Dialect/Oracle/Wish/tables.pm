@@ -108,7 +108,7 @@ sub wish_to_actually_create_tables {
 	my ($items, $options) = @_;
 	
 	foreach my $i (@$items) {
-darn $i;	
+#darn $i;	
 		my %name = map {$_ => 'OOC_' . Digest::MD5::md5_base64 ($_ . $i -> {name})} qw {pk seq trigger};
 		
 		sql_do (qq {CREATE TABLE "$i->{name}" ($i->{pk}->{name} NUMBER (10, 0) CONSTRAINT "$name{pk}" PRIMARY KEY)});
