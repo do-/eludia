@@ -1200,57 +1200,6 @@ sub get_keys {
 
 ################################################################################
 
-sub get_columns {
-
-	my ($self, $table_name, $options) = @_;
-	
-	$options -> {default_columns} ||= {};
-
-	my $uc_table_name = $table_name =~ /^_/ ? $table_name : uc $table_name;
-			
-	$pk_column = 'id';
-		
-	my $fields = {};
-	
-	my $st = $self -> {db} -> column_info ('', '', $table_name, '');
-
-	while (my $r = $st -> fetchrow_hashref) {
-				
-		my $name = lc $r -> {COLUMN_NAME};
-
-		next if $options -> {default_columns} -> {$name};
-
-		my $rr = {};
-		
-		$rr -> {TYPE_NAME} = lc $r -> {TYPE_NAME};
-		$rr -> {TYPE_NAME} =~ s{numeric}{decimal};
-		$rr -> {TYPE_NAME} =~ s{int4}{int};
-		$rr -> {TYPE_NAME} =~ s{int8}{bigint};
-		
-		if ($r -> {COLUMN_DEF}) {
-			$rr -> {COLUMN_DEF} = $r -> {COLUMN_DEF};
-			$rr -> {COLUMN_DEF} =~ s{\:\:\w+$}{};
-			$rr -> {COLUMN_DEF} =~ /^\d+$/ or $rr -> {COLUMN_DEF} =~ /\(/ or $rr -> {COLUMN_DEF} = "'$rr->{COLUMN_DEF}'";
-		}
-
-		if ($name eq $pk_column) {
-			$rr -> {_PK} = 1;
-			$rr -> {_EXTRA} = 'auto_increment' if $rr -> {TYPE_NAME} =~ /serial/i;
-			delete $rr -> {COLUMN_DEF};
-		}
-		
-		$rr -> {NULLABLE} = defined $r -> {NULLABLE} ? $r -> {NULLABLE} : 1;
-
-		$fields -> {$name} = $rr;
-	
-	}
-	
-	return $fields;
-
-}
-
-################################################################################
-
 sub get_canonic_type {
 
 	my ($self, $definition, $should_change) = @_;

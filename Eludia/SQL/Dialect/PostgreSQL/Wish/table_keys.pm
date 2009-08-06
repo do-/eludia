@@ -27,19 +27,31 @@ sub wish_to_explore_existing_table_keys {
 	my ($options) = @_;
 
 	my $existing = {};
+	
+	my $len = 4 + length $options -> {table};
 
-	sql_select_loop ('SELECT * FROM pg_indexes WHERE schemaname = current_schema () AND tablename = ?', sub {
+	sql_select_loop ("SELECT * FROM pg_indexes WHERE schemaname = current_schema () AND tablename = ? AND indexname NOT LIKE '%_pkey'", sub {
 
 		$i -> {indexdef} =~ /\((.*)\)/;
 
 		my $def = $1;
 
 		$def =~ s{\s}{}g;
+		
+		my $global_name = lc $i -> {indexname};
 
-		$existing -> {lc $i -> {indexname}} = [split /\,/, lc $def];
+		$existing -> {$global_name} = {
+					
+			parts       => [split /\,/, lc $def],
+			
+			global_name => $global_name,
+
+			name        => substr $global_name, $len
+			
+		};
 
 	}, $options -> {table});
-	
+
 	return $existing;
 
 }

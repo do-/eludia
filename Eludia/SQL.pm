@@ -1458,7 +1458,7 @@ sub assert {
 
 	my ($self, %params) = @_;
 
-	return $self -> {driver_name} eq 'Oracle' || $self -> {driver_name} eq 'MySQL' ? assert_new (@_) : assert_old (@_);
+	return $self -> {driver_name} eq 'Oracle' || $self -> {driver_name} eq 'MySQL' || $self -> {driver_name} eq 'PostgreSQL' ? assert_new (@_) : assert_old (@_);
 
 }
 
