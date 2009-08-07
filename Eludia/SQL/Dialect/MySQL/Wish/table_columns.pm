@@ -111,7 +111,7 @@ sub wish_to_explore_existing_table_columns {
 		$options -> {table}
 
 	);
-darn $existing;
+
 	return $existing;
 
 }
