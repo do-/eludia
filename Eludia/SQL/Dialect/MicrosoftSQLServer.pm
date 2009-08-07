@@ -25,6 +25,24 @@ sub lc_hashref {}
 
 ################################################################################
 
+sub sql_select_loop {
+
+	my ($sql, $coderef, @params) = @_;
+
+	my $st = $db -> prepare ($sql);
+	$st -> execute (@params);
+	
+	our $i;
+	while ($i = $st -> fetchrow_hashref) {
+		&$coderef ();
+	}
+	
+	$st -> finish ();
+
+}
+
+################################################################################
+
 sub sql_do_refresh_sessions {
 
 	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
@@ -850,7 +868,7 @@ print STDERR "Возвращаю ключи: ($table_name) " . Dumper($keys);
 
 ################################################################################
 
-sub get_columns {
+sub __get_columns {
 
 	my ($self, $table_name, $options) = @_;
 	
