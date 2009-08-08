@@ -55,17 +55,3 @@ sub wish_to_explore_existing_table_keys {
 }
 
 1;
-
-
-
-
-
-
-
-
-
-
-	sql_select_loop ("exec sp_helpindex '$options->{table}'", sub {
-	
-		my $global_name = lc $i -> {index_name};
-
