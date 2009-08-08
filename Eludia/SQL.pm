@@ -1566,9 +1566,9 @@ sub wish {
 	my ($type, $items, $options) = @_;
 	
 	@$items > 0 or return;
-	
-	eval "require Eludia::SQL::Wish::$type";
-	eval "require Eludia::SQL::Dialect::$SQL_VERSION->{driver}::Wish::$type";
+
+	eval {require "Eludia/SQL/Wish/$type.pm"};
+	eval {require "Eludia/SQL/Dialect/$SQL_VERSION->{driver}/Wish/$type.pm"};
 
 	&{"wish_to_adjust_options_for_$type"} ($options);
 		
