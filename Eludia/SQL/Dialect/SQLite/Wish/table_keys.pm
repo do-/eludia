@@ -26,6 +26,8 @@ sub wish_to_explore_existing_table_keys {
 
 	my $existing = {};
 
+	my $len = 1 + length $options -> {table};
+
 	sql_select_loop ("SELECT * FROM sqlite_master WHERE type = 'index' and tbl_name = ?", sub {
 
 		$i -> {sql} =~ m{\((.*)\)}gsm or return;
@@ -34,7 +36,17 @@ sub wish_to_explore_existing_table_keys {
 		
 		$def =~ s{\s}{}gsm;
 
-		$existing -> {lc $i -> {name}} = [split /\,/, lc $def];
+		my $global_name = lc $i -> {name};
+
+		$existing -> {$global_name} = {
+					
+			parts       => [split /\,/, lc $def],
+
+			global_name => $global_name,
+
+			name        => substr $global_name, $len
+			
+		};
 
 	}, $options -> {table});
 	
@@ -43,3 +55,17 @@ sub wish_to_explore_existing_table_keys {
 }
 
 1;
+
+
+
+
+
+
+
+
+
+
+	sql_select_loop ("exec sp_helpindex '$options->{table}'", sub {
+	
+		my $global_name = lc $i -> {index_name};
+

@@ -8,7 +8,7 @@ sub wish_to_actually_create_views {
 	
 		sql_do ("DROP VIEW IF EXISTS $i->{name}");
 
-		sql_do ("CREATE VIEW $i->{name} ($i->{columns}) AS $i->{sql}");
+		sql_do ("CREATE VIEW $i->{name} AS $i->{sql}");
 
 	}
 

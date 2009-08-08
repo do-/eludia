@@ -1457,16 +1457,6 @@ sub sql_assert_default_columns {
 sub assert {
 
 	my ($self, %params) = @_;
-
-	return $self -> {driver_name} eq 'Oracle' || $self -> {driver_name} eq 'MySQL' || $self -> {driver_name} eq 'PostgreSQL' || $self -> {driver_name} eq 'MicrosoftSQLServer' ? assert_new (@_) : assert_old (@_);
-
-}
-
-################################################################################
-
-sub assert_new {
-
-	my ($self, %params) = @_;
 	
 	my $core_debug_sql_do = $preconf -> {core_debug_sql_do};
 
@@ -1504,112 +1494,6 @@ sub assert_new {
 
 	$preconf -> {core_debug_sql_do} = $core_debug_sql_do;
 
-	checksum_write ('db_model', $new_checksums);
-
-}
-
-################################################################################
-
-sub assert_old {
-
-	my $time = time;
-
-	my ($self, %params) = @_;
-
-	&{$self -> {before_assert}} (@_) if ref $self -> {before_assert} eq CODE;
-		
-	my $needed_tables = sql_assert_default_columns (Storable::dclone ($params {tables}), \%params);
-		
-	($needed_tables, my $new_checksums) = checksum_filter ('db_model', $params {prefix}, $needed_tables);
-		
-	%$needed_tables > 0 or return;
-		
-	my $existing_tables = {};	
-	
-	foreach my $table ($self -> {db} -> tables ('', $self -> {schema}, '%', "'TABLE'")) {
-	
-		$existing_tables -> {$self -> unquote_table_name ($table)} = {};
-
-	}
-
-	$time = __log_profilinig ($time, '   got existing_tables');
-				
-	foreach my $name (keys %$needed_tables) {
-			
-		my $definition = $needed_tables -> {$name};
-		
-		if ($definition -> {sql}) {
-		
-			$self -> assert_view ($name, $definition);
-			
-			delete $needed_tables -> {$name};
-			
-			next;
-			
-		}
-		
-		exists $existing_tables -> {$name} or next;
-
-		$existing_tables -> {$name} -> {columns} = $self -> get_columns ($name);
-
-	}
-
-	$time = __log_profilinig ($time, '   got columns');
-	
-	
-	
-	foreach my $name (keys %$needed_tables) {
-	
-		my $definition = $needed_tables -> {$name};
-
-		if ($existing_tables -> {$name}) {
-		
-			my $existing_columns = $existing_tables -> {$name} -> {columns};
-			
-			my $new_columns = {};
-				
-			foreach my $c_name (keys %{$definition -> {columns}}) {
-			
-				my $c_definition = $definition -> {columns} -> {$c_name};
-
-				if ($existing_columns -> {$c_name}) {
-				
-					my $existing_column = $existing_columns -> {$c_name};										
-
-					my $flag = $self -> update_column ($name, $c_name, $existing_column, $c_definition,,$conf -> {core_voc_replacement_use});
-
-					$time = __log_profilinig ($time, "    $name.$c_name " . ($flag ? 'updated' : 'checked'));
-
-				}
-				else {
-				
-					$new_columns -> {$c_name} = $c_definition;
-				
-				}
-
-			};
-			
-			if (keys %$new_columns) {
-
-				$self -> add_columns ($name, $new_columns,,$conf -> {core_voc_replacement_use});
-
-				$time = __log_profilinig ($time, "    columns added");
-
-			}
-
-		}
-		else {
-
-			$self -> create_table ($name, $definition, $conf -> {core_voc_replacement_use});
-		
-		}
-		
-		wish (table_keys => [map {{name => $_, parts => $definition -> {keys} -> {$_}}} (keys %{$definition -> {keys}})], {table => $name, table_def => $definition}) if exists $definition -> {keys};
-
-		wish (table_data => $definition -> {data}, {table => $name}) if exists $definition -> {data};
-		
-	}
-	
 	checksum_write ('db_model', $new_checksums);
 
 }
@@ -1681,8 +1565,6 @@ sub wish {
 
 	my ($type, $items, $options) = @_;
 	
-#darn \@_;
-
 	@$items > 0 or return;
 	
 	eval "require Eludia::SQL::Wish::$type";
@@ -1691,9 +1573,9 @@ sub wish {
 	&{"wish_to_adjust_options_for_$type"} ($options);
 		
 	foreach my $i (@$items) { &{"wish_to_clarify_demands_for_$type"} ($i, $options) }
-#darn $items;	
+
 	my $existing = &{"wish_to_explore_existing_$type"} ($options);
-#darn $existing;	
+
 	my $todo = {};
 	
 	my @key = @{$options -> {key}};
@@ -1705,13 +1587,11 @@ sub wish {
 		&{"wish_to_update_demands_for_$type"} ($old, $new, $options);
 
 		next if Dumper ($new) eq Dumper ($old);
-#warn Dumper ($old) . '-->' . Dumper ($new); 
+
 		&{"wish_to_schedule_modifications_for_$type"} ($old, $new, $todo, $options);		
 		
 	}
 	
-#darn $todo;
-
 	&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
 		
 	foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
