@@ -3,7 +3,7 @@
 sub wish_to_clarify_demands_for_tables {	
 
 	my ($i, $options) = @_;
-		
+
 	my %def = (
 
 		name    => $i -> {name},
@@ -11,7 +11,7 @@ sub wish_to_clarify_demands_for_tables {
 		REMARKS => $i -> {REMARKS} || $i -> {label},
 
 	);
-	
+
 	$def {name} =~ /^_/ or $def {name} = uc $def {name};
 	
 	my %columns = %{$i -> {columns}};
@@ -51,7 +51,13 @@ sub wish_to_explore_existing_tables {
 		
 		sub {
 		
-			$existing -> {$i -> {table_name}} = {REMARKS => $i -> {comments}};
+			$existing -> {$i -> {table_name}} = {
+			
+				name    => $i -> {table_name},
+			
+				REMARKS => $i -> {comments},
+				
+			};
 					
 		},
 
@@ -80,7 +86,7 @@ sub wish_to_update_demands_for_tables {
 sub wish_to_schedule_modifications_for_tables {
 
 	my ($old, $new, $todo, $options) = @_;
-		
+
 	push @{$todo -> {comment}}, $new;
 
 }

@@ -42,7 +42,13 @@ sub wish_to_explore_existing_tables {
 		
 		sub {
 
-			$existing -> {$i -> {table_name}} = {REMARKS => $i -> {table_comment}};
+			$existing -> {$i -> {table_name}} = {
+			
+				name    => $i -> {table_name},
+			
+				REMARKS => length $i -> {table_comment} ? $i -> {table_comment} : undef,
+				
+			};
 					
 		},
 
@@ -71,7 +77,7 @@ sub wish_to_update_demands_for_tables {
 sub wish_to_schedule_modifications_for_tables {
 
 	my ($old, $new, $todo, $options) = @_;
-		
+
 	push @{$todo -> {comment}}, $new;
 
 }
