@@ -749,36 +749,20 @@ EOS
 
 	}
 	
-	my $seq_name;
+	my $seq_name = $_SEQUENCE_NAMES -> {$table_name} ||= sql_select_scalar (q {
 	
-	if ($conf -> {core_voc_replacement_use}) {
-		my $voc_replacements_table = sql_table_name ($conf->{systables}->{__voc_replacements});
-		my $id = sql_select_scalar ("SELECT id FROM $voc_replacements_table WHERE table_name='$table_name' and object_type=2");
-		$seq_name ='SEQ_' . $id if $id;
-	}
-	
-	$seq_name ||= $table_name . '_SEQ';	
-	
-	my $nextval;
-	
-	eval {$nextval = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL")};
-	
-	if ($@) {
-	
-		if (sql_select_scalar ("SELECT trigger_body FROM user_triggers WHERE table_name = ? AND triggering_event like '%INSERT%'", uc $table_name) =~ /(\S+)\.nextval/ism) {
-		
-			$seq_name = $1;
+		SELECT 
+			trigger_body 
+		FROM 
+			user_triggers 
+		WHERE 
+			table_name = ? 
+			AND triggering_event like '%INSERT%'
 			
-			$nextval = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
-		
-		}
-		
-		else {
-			die $@;
-		}
+	}, uc_table_name ($table_name)) =~ /(\S+)\.nextval/ism ? $1 : undef;
 	
-	}
-	
+	my $nextval = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
+		
 	while (1) {
 	
 		my $max = sql_select_scalar ("SELECT MAX(id) FROM $table_name_safe");
