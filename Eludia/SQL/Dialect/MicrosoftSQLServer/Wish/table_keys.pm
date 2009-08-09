@@ -27,22 +27,28 @@ sub wish_to_explore_existing_table_keys {
 	my $existing = {};
 
 	my $len = 1 + length $options -> {table};
-
-	sql_select_loop ("exec sp_helpindex '$options->{table}'", sub {
 	
-		my $global_name = lc $i -> {index_name};
+	eval {
 
-		$existing -> {$global_name} = {
-					
-			parts       => [split /\,/, lc $i -> {index_keys}],
-			
-			global_name => $global_name,
+		sql_select_loop ("exec sp_helpindex '$options->{table}'", sub {
+		
+			return if lc $i -> {index_keys} eq 'id';
 
-			name        => substr $global_name, $len
-			
-		};
+			my $global_name = lc $i -> {index_name};
 
-	});
+			$existing -> {$global_name} = {
+
+				parts       => [split /\,/, lc $i -> {index_keys}],
+
+				global_name => $global_name,
+
+				name        => substr $global_name, $len
+
+			};
+
+		})
+	
+	};
 	
 	return $existing;
 

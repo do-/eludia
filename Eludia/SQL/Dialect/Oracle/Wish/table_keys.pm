@@ -14,7 +14,7 @@ sub wish_to_clarify_demands_for_table_keys {
 
 	my ($i, $options) = @_;
 
-	$i -> {global_name} = 'OOC_' . Digest::MD5::md5_base64 ($options -> {table} . '_' . delete $i -> {name});
+	$i -> {global_name} = sql_mangled_name ($options -> {table} . '_' . delete $i -> {name});
 
 	ref $i -> {parts} eq ARRAY or $i -> {parts} = [split /\,/, $i -> {parts}];
 
@@ -103,6 +103,8 @@ EOS
 			def         => join ', ', @$parts,
 		
 		};
+		
+		next if $i -> {def} eq 'id';
 	
 		$existing -> {$i -> {def}} = $i;
 	

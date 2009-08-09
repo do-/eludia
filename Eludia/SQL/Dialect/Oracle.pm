@@ -1335,6 +1335,14 @@ sub get_sql_translator_ref {
 }
 
 ################################################################################
+
+sub sql_mangled_name {
+
+	'OOC_' . Digest::MD5::md5_base64 ($_[0])
+
+}
+
+################################################################################
 ################################################################################
 
 #package DBIx::ModelUpdate::Oracle;
@@ -1384,6 +1392,22 @@ sub uc_table_name {
 	my ($table) = @_;
 	
 	return $table =~ /^_/ ? $table : uc $table;
+
+}
+
+#############################################################################
+
+sub get_keys {
+
+	my ($self, $table) = @_;
+	
+	require_wish 'table_keys';
+	
+	wish_to_adjust_options_for_table_keys (my $options = {table => $table});
+
+	my %names = map {sql_mangled_name ($_) => $_} (map {"${table}_$_"} keys %{$DB_MODEL -> {tables} -> {$table} -> {keys}});
+
+	return {map {$names {$_ -> {global_name}} || lc $_ -> {global_name} => join ', ', @{$_ -> {parts}}} values %{wish_to_explore_existing_table_keys ($options)}};
 
 }
 

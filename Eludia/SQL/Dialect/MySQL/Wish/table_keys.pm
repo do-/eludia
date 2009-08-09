@@ -25,24 +25,30 @@ sub wish_to_explore_existing_table_keys {
 	my ($options) = @_;
 
 	my $existing = {};
+	
+	eval {
 
-	sql_select_loop ("SHOW KEYS FROM $options->{table}", sub {
-			
-		my $part = $i -> {Column_name};
+		sql_select_loop ("SHOW KEYS FROM $options->{table}", sub {
 		
-		$part .= '(' . $i -> {Sub_part} . ')' if $i -> {Sub_part};
-		
-		my $name = lc $i -> {Key_name};
-		
-		my $definition = ($existing -> {$name} ||= {
-			name        => $name, 
-			global_name => $name,
-			parts       => [],
-		});	
-		
-		push @{$definition -> {parts}}, $part;
+			return if $i -> {Key_name} eq 'PRIMARY';
 
-	});
+			my $part = $i -> {Column_name};
+
+			$part .= '(' . $i -> {Sub_part} . ')' if $i -> {Sub_part};
+
+			my $name = lc $i -> {Key_name};
+
+			my $definition = ($existing -> {$name} ||= {
+				name        => $name, 
+				global_name => $name,
+				parts       => [],
+			});	
+
+			push @{$definition -> {parts}}, $part;
+
+		})
+	
+	};
 
 	return $existing;
 

@@ -1517,15 +1517,9 @@ sub sql_clone {
 
 #############################################################################
 
-sub get_columns {
+sub require_wish ($) {
 
-	my ($self, $table) = @_;
-
-	eval {require "Eludia/SQL/Dialect/$SQL_VERSION->{driver}/Wish/table_columns.pm"};
-	
-	wish_to_adjust_options_for_table_columns (my $options = {table => $table});
-	
-	return wish_to_explore_existing_table_columns ($options);
+	eval {require $_} foreach map {"Eludia/SQL$_/Wish/$_[0].pm"} ('', '/Dialect/' . $SQL_VERSION -> {driver});
 
 }
 
@@ -1536,9 +1530,8 @@ sub wish {
 	my ($type, $items, $options) = @_;
 	
 	@$items > 0 or return;
-
-	eval {require "Eludia/SQL/Wish/$type.pm"};
-	eval {require "Eludia/SQL/Dialect/$SQL_VERSION->{driver}/Wish/$type.pm"};
+	
+	require_wish $type;
 
 	&{"wish_to_adjust_options_for_$type"} ($options);
 		
@@ -1565,6 +1558,48 @@ sub wish {
 	&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
 		
 	foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
+
+}
+
+#############################################################################
+
+sub get_columns {
+
+	my ($self, $table) = @_;
+
+	require_wish 'table_columns';
+	
+	wish_to_adjust_options_for_table_columns (my $options = {table => $table});
+	
+	return wish_to_explore_existing_table_columns ($options);
+
+}
+
+#############################################################################
+
+sub get_keys {
+
+	my ($self, $table) = @_;
+	
+	require_wish 'table_keys';
+	
+	wish_to_adjust_options_for_table_keys (my $options = {table => $table});
+	
+	my %keys = ();
+		
+	foreach my $i (values %{wish_to_explore_existing_table_keys ($options)}) {		
+		
+		if ($i -> {global_name} =~ /.*?$options->{table}_/i) {
+		
+			$i -> {global_name} = $';
+		
+		}
+			
+		$keys {lc $i -> {global_name}} = join ', ', @{$i -> {parts}}
+
+	}
+		
+	return \%keys;
 
 }
 
