@@ -1371,30 +1371,6 @@ use DBI::Const::GetInfoType;
 
 ################################################################################
 
-sub canonic_key_definition {
-
-	my ($self, $s) = @_;
-	
-	$s =~ s{\s+}{}g;
-	
-	return $s;
-
-}
-
-################################################################################
-
-sub do {
-
-	my ($self, $sql, @params) = @_;
-
-	warn $sql . (join ',', map {" '$_' "} @params) . "\n" if $self -> {dump_to_stderr};
-
-	$self -> {db} -> do ($sql, undef, @params);
-
-}
-
-################################################################################
-
 sub new {
 
 	my ($package_name, $db, @options) = @_;
@@ -1402,8 +1378,6 @@ sub new {
 	my $driver_name = $db -> get_info ($GetInfoType {SQL_DBMS_NAME});
 	
 	$driver_name =~ s{\s}{}gsm;
-		
-#	$package_name .= "::$driver_name";
 	
 	die $@ if $@;
 
