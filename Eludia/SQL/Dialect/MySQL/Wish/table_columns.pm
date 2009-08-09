@@ -15,7 +15,7 @@ sub wish_to_clarify_demands_for_table_columns {
 	my ($i, $options) = @_;
 	
 	$i -> {REMARKS} ||= delete $i -> {label};
-
+	
 	exists $i -> {NULLABLE} or $i -> {NULLABLE} = $i -> {name} eq 'id' ? 0 : 1;
 
 	$i -> {COLUMN_DEF} ||= undef;
@@ -39,6 +39,12 @@ sub wish_to_clarify_demands_for_table_columns {
 	if ($i -> {TYPE_NAME} eq 'VARCHAR') {
 
 		$i -> {COLUMN_SIZE} ||= 255;
+
+	}
+
+	if ($i -> {TYPE_NAME} eq 'TIMESTAMP') {
+
+		$i -> {NULLABLE} = 0;
 
 	}
 
@@ -83,7 +89,7 @@ sub wish_to_explore_existing_table_columns {
 
 				COLUMN_DEF => $i -> {column_default},
 
-				REMARKS    => $i -> {column_comment},
+				REMARKS    => length $i -> {column_comment} ? $i -> {column_comment} : undef,
 
 				NULLABLE   => ($i -> {is_nullable} eq 'NO' ? 0 : 1),
 
@@ -181,7 +187,7 @@ sub wish_to_update_demands_for_table_columns {
 sub wish_to_schedule_modifications_for_table_columns {
 
 	my ($old, $new, $todo, $options) = @_;
-	
+
 	$new -> {verb} = 'MODIFY';
 	
 	push @{$todo -> {create}}, $new;
