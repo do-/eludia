@@ -1551,7 +1551,7 @@ sub get_columns {
 
 	my ($self, $table) = @_;
 
-	eval "require Eludia::SQL::Dialect::$SQL_VERSION->{driver}::Wish::table_columns";
+	eval {require "Eludia/SQL/Dialect/$SQL_VERSION->{driver}/Wish/table_columns.pm"};
 	
 	wish_to_adjust_options_for_table_columns (my $options = {table => $table});
 	
