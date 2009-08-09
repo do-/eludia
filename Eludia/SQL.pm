@@ -242,7 +242,7 @@ my $time = time;
 
 			columns => {
 				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake => {TYPE_NAME  => 'bigint', COLUMN_DEF => 0, NULLABLE => 0},
+				fake => {TYPE_NAME  => 'bigint'},
 				name  => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
 				label => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
 			},
@@ -253,7 +253,7 @@ my $time = time;
 
 			columns => {
 				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake => {TYPE_NAME  => 'bigint', COLUMN_DEF => 0, NULLABLE => 0},
+				fake => {TYPE_NAME  => 'bigint'},
 				login =>    {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				label =>    {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				password => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
