@@ -137,7 +137,6 @@ sub check_systables {
 		__access_log
 		__queries
 		__defaults
-		__voc_replacements	
 		__benchmarks		
 		__request_benchmarks
 		__last_update		
@@ -515,8 +514,6 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
 			dump_to_stderr 		=> 1,
 			before_assert		=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
 			schema			=> $preconf -> {db_schema},
-			__voc_replacements	=> $conf -> {systables} -> {__voc_replacements}, 
-			core_voc_replacement_use=> $conf -> {core_voc_replacement_use},
 		);
 	
 	}
@@ -1391,7 +1388,6 @@ sub new {
 	if ($driver_name eq 'Oracle') {
   		$self -> {characterset} = sql_select_scalar ('SELECT VALUE FROM V$NLS_PARAMETERS WHERE PARAMETER = ?', 'NLS_CHARACTERSET');
   		$self -> {schema} ||= uc $db -> {Username};
-  		$self -> {__voc_replacements} = "$self->{quote}$self->{__voc_replacements}$self->{quote}" if $self -> {__voc_replacements} =~ /^_/;
 	}
 	
 	$self -> {schema} ||= '';
