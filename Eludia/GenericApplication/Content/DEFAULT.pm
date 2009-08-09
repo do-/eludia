@@ -76,12 +76,8 @@ sub do_create_DEFAULT { # создание
 			
 			unless ($column -> {ref}) {
 			
-				foreach my $table ($db -> tables ('', $self -> {schema}, '%', "'TABLE'")) {
-					
-					$table = $model_update -> unquote_table_name ($table);
-				
-					$table =~ s{\W}{}g;
-														
+				foreach my $table ($model_update -> get_tables) {
+
 					$key eq 'id_' . en_unplural ($table) or next;
 					
 					$parent -> {table} = $table;

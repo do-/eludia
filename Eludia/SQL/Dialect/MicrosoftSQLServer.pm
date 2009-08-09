@@ -809,31 +809,4 @@ sub _sql_ok_subselects { 1 }
 
 sub get_sql_translator_ref { 0 }
 
-################################################################################
-################################################################################
-
-#package DBIx::ModelUpdate::MicrosoftSQLServer;
-
-#no warnings;
-
-#use Data::Dumper;
-
-#our @ISA = qw (DBIx::ModelUpdate);
-
-################################################################################
-
-sub unquote_table_name {
-
-	my ($self, $name) = @_;
-
-	my @tokens = split /\./, $name;
-
-	$name = $tokens [-1];
-
-	$name =~ s{^\W*(\w+)\W*$}{$1};
-
-	return lc $name;
-
-}
-
 1;

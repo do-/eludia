@@ -1563,6 +1563,18 @@ sub wish {
 
 #############################################################################
 
+sub get_tables {
+
+	my ($self, $table) = @_;
+
+	require_wish 'tables';
+		
+	return sort keys %{wish_to_explore_existing_tables ()};
+
+}
+
+#############################################################################
+
 sub get_columns {
 
 	my ($self, $table) = @_;

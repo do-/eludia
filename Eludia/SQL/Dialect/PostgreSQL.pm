@@ -1150,22 +1150,6 @@ sub get_sql_translator_ref {
 
 ################################################################################
 
-sub unquote_table_name {
-
-	my ($self, $name) = @_;
-	
-	my @name = split /\./, $name;
-	
-	$name = $name [-1];
-	
-	$name =~ s{"}{}g; #"
-	
-	return $name;
-	
-}
-
-################################################################################
-
 sub prepare {
 
 	my ($self, $sql) = @_;

@@ -1355,20 +1355,6 @@ sub sql_mangled_name {
 
 ################################################################################
 
-sub unquote_table_name {
-	my ($self, $name) = @_;
-
-	$name =~ s{$self->{quote}}{}g;
-
-	if ($name !~ /\./ || $name =~ s/^$self->{schema}\.//i) {
-		return lc $name;
-	}
-
-	return undef;
-}
-
-################################################################################
-
 sub prepare {
 
 	my ($self, $sql) = @_;

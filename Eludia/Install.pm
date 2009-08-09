@@ -106,16 +106,8 @@ sub db_dump {
 	
 	}
 	
-	if (%needed == 0) {
-	
-		foreach my $table ($model_update -> {db} -> tables ('', $model_update -> {schema}, '%', "'TABLE'")) {
+	%needed > 0 or %needed = map {$_ => 1} $model_update -> get_tables;
 
-			$needed {$model_update -> unquote_table_name ($table)} = 1;
-
-		}
-	
-	}
-	
 	foreach (keys %banned) { delete $needed {$_} }
 		
 	foreach my $table (sort keys %needed) { 

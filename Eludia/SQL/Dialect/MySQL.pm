@@ -831,23 +831,4 @@ sub _sql_ok_subselects { 0 }
 
 sub get_sql_translator_ref { 0 }
 
-################################################################################
-################################################################################
-
-#package DBIx::ModelUpdate::MySQL;
-
-#no warnings;
-
-#use Data::Dumper;
-
-#our @ISA = qw (DBIx::ModelUpdate);
-
-################################################################################
-
-sub unquote_table_name {
-	my ($self, $name) = @_;
-	$name =~ s{^.*?(\w+)\W*$}{$1};
-	return $name;
-}
-
 1;
