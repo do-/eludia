@@ -13,7 +13,7 @@ sub wish_to_adjust_options_for_table_columns {
 sub wish_to_clarify_demands_for_table_columns {	
 
 	my ($i, $options) = @_;
-	
+
 	$i -> {REMARKS} ||= delete $i -> {label};
 
 	exists $i -> {NULLABLE} or $i -> {NULLABLE} = $i -> {name} eq 'id' ? 0 : 1;
@@ -153,13 +153,17 @@ sub wish_to_explore_existing_table_columns {
 				
 				NULLABLE   => 1 - $i -> {attnotnull},
 				
-				COLUMN_DEF => $i -> {adsrc} . '' || undef,
-				
-			});
-		
-			delete $r -> {COLUMN_DEF} if $name eq 'id';
+				COLUMN_DEF => undef,
 
-			$r -> {COLUMN_DEF} =~ s{\:\:\w+$}{};
+			});
+			
+			if (length $i -> {adsrc} && $name ne 'id') {
+			
+				$r -> {COLUMN_DEF} = $i -> {adsrc} . '';
+			
+				$r -> {COLUMN_DEF} =~ s{\:\:\w+$}{};
+
+			}
 			
 			if ($r -> {TYPE_NAME} eq 'NUMERIC') {
 			
