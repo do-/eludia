@@ -181,7 +181,7 @@ sub wish_to_explore_existing_table_columns {
 		$options -> {table_name}
 
 	);
-#darn $existing;
+
 	return $existing;
 
 }
@@ -303,7 +303,7 @@ sub wish_to_schedule_modifications_for_table_columns {
 sub wish_to_actually_switch_nulls_on_table_columns {
 
 	my ($items, $options) = @_;
-#darn $items;	
+
 	sql_do ("ALTER TABLE $options->{table} MODIFY (" . (join ', ', map {$_ -> {name} . ($_ -> {NULLABLE} ? ' NULL' : ' NOT NULL')} @$items) . ')');
 
 }
