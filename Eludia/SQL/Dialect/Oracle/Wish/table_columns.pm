@@ -166,8 +166,8 @@ sub wish_to_explore_existing_table_columns {
 			
 			if ($i -> {data_type} eq 'NUMBER') {
 			
-				$def -> {COLUMN_SIZE}    = $i -> {data_precision};
-				$def -> {DECIMAL_DIGITS} = $i -> {data_scale};
+				$def -> {COLUMN_SIZE}    = $i -> {data_precision} || 22;
+				$def -> {DECIMAL_DIGITS} = $i -> {data_scale}     || 0;
 			
 			}
 			elsif ($i -> {data_type} eq 'VARCHAR2') {
@@ -267,7 +267,7 @@ sub wish_to_update_demands_for_table_columns {
 sub wish_to_schedule_modifications_for_table_columns {
 
 	my ($old, $new, $todo, $options) = @_;
-	
+
 	if ($old -> {REMARKS} ne $new -> {REMARKS}) {
 	
 		push @{$todo -> {comment}}, {name => $new -> {name}, REMARKS => delete $new -> {REMARKS}};
