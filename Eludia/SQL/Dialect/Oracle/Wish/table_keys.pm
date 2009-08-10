@@ -116,6 +116,16 @@ EOS
 
 #############################################################################
 
+sub wish_to_update_demands_for_table_keys {
+
+	my ($old, $new, $options) = @_;
+	
+	$new -> {global_name} = $old -> {global_name};
+
+}
+
+#############################################################################
+
 sub wish_to_schedule_modifications_for_table_keys {
 
 	my ($old, $new, $todo, $options) = @_;
