@@ -330,6 +330,10 @@ sub wish_to_actually_create_table_columns {
 
 	my ($items, $options) = @_;
 	
+	$items = [grep {$_ -> {name} ne 'id'} @$items];
+	
+	@$items > 0 or return;
+	
 	foreach my $i (@$items) {
 	
 		__genereate_sql_fragment_for_column ($i);
