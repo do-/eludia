@@ -49,7 +49,12 @@ sub FETCH {
 				$VAR1 -> {$object} ||= [];
 				push @{$VAR1 -> {$object}}, @{$VAR -> {$object}};
 
+			} elsif (!ref $VAR -> {$object}) {
+
+				$VAR1 -> {$object} = $VAR -> {$object};
+
 			}
+
 		}
 
 		$VAR1 -> {_src} ||= $src;
