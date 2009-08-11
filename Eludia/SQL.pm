@@ -1519,7 +1519,17 @@ sub sql_clone {
 
 sub require_wish ($) {
 
-	eval {require $_} foreach map {"Eludia/SQL$_/Wish/$_[0].pm"} ('', '/Dialect/' . $SQL_VERSION -> {driver});
+	return if $INC_FRESH {"Wish::$_[0]"};
+	
+	foreach my $key (map {"Eludia/SQL$_/Wish/$_[0].pm"} ('', '/Dialect/' . $SQL_VERSION -> {driver})) {
+	
+		eval {require $key};
+		
+		delete $INC {$key};
+
+	}
+
+	$INC_FRESH {"Wish::$_[0]"} = 1;
 
 }
 
