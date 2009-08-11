@@ -896,7 +896,7 @@ sub sql {
 	
 	}
 	
-	if ($have_id_filter || $is_first || $is_only_grouping_1) {
+	if ($have_id_filter || $is_first || $is_only_grouping) {
 	
 		return sql_select_scalar ($sql, @params) if $is_ids || $is_only_grouping_1;
 
