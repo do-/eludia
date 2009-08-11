@@ -472,13 +472,13 @@ sub sql {
 	
 	}
 	
-	$root_table =~ /^\w+/ or die "Invalid table definition: '$root_table'\n";
+	$root_table =~ /^\s*(\w+)/sm or die "Invalid table definition: '$root_table'\n";
 
-	my $root = $&;
+	my $root = $1;
 	
 	my $tail = $' || "(*)";
 		
-	$tail =~ /^\s*\((.*?)\)\s*$/ or die "Invalid table definition: '$root_table'\n";	
+	$tail =~ /^\s*\((.*?)\)\s*$/sm or die "Invalid table definition: '$root_table'\n";	
 	
 	my @columns = _sql_list_fields ($1, $root);
 	
