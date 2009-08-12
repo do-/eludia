@@ -773,6 +773,8 @@ sub draw_form {
 sub draw_form_field {
 
 	my ($field, $data, $form_options) = @_;
+	
+	exists $field -> {label} or $field -> {label} = $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {$field -> {name}} -> {REMARKS};
 
 	if (
 		($_REQUEST {__read_only} or $field -> {read_only})
