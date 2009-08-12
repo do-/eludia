@@ -745,7 +745,7 @@ sub sql {
 
 		}		
 
-		$found or die "Referrer for $table->{alias} not found\n";
+		$found or darn \@tables and die "Referrer for $table->{alias} not found\n";
 				
 		foreach my $column (_sql_list_fields (($table -> {columns} || $default_columns), $table -> {name}, $table -> {alias})) {
 
