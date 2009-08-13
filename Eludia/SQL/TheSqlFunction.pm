@@ -535,7 +535,7 @@ sub sql {
 	
 	unless ($have_id_filter) {
 		
-		$default_columns = 'id, label, fake';
+		$default_columns = 'id, fake';
 
 		$where .= $_REQUEST {fake} =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
 
@@ -569,12 +569,27 @@ sub sql {
 		}
 		
 		$table =~ s{\s}{}gsm;
+		
+		my $id_vs_null;
+
+		if ($table =~ /^(DOES)?(N[O']T)?EXISTS?/sm) {
+		
+			$table      = $';
+			$id_vs_null = $2 ? ' IS NULL' : ' IS NOT NULL';
+		
+		}
 
 		$table =~ /(\-?)(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
 
-		my ($minus, $name, $columns) = ($1, $2, $3);
+		my ($minus, $name, $columns) = ($1, $2, $3);		
 
 		$alias ||= $name;
+		
+		if ($id_vs_null) {
+		
+			$where .= "\n  AND $alias.id $id_vs_null";
+		
+		}
 		
 		if ($on && $on !~ /\s/) {
 		
@@ -746,8 +761,16 @@ sub sql {
 		}		
 
 		$found or darn \@tables and die "Referrer for $table->{alias} not found\n";
-				
-		foreach my $column (_sql_list_fields (($table -> {columns} || $default_columns), $table -> {name}, $table -> {alias})) {
+
+		unless ($table -> {columns}) {
+
+			$table -> {columns} = $default_columns;
+			
+			$table -> {columns} .= ',label' if $DB_MODEL -> {tables} -> {$table -> {name}} -> {columns} -> {label};
+
+		}
+
+		foreach my $column (_sql_list_fields ($table -> {columns}, $table -> {name}, $table -> {alias})) {
 
 			$cols [$cols_cnt] = [en_unplural ($table -> {alias}), $column -> {alias}];
 
