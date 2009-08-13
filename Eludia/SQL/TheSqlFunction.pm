@@ -766,7 +766,7 @@ sub sql {
 
 			$table -> {columns} = $default_columns;
 			
-			$table -> {columns} .= ',label' if $DB_MODEL -> {tables} -> {$table -> {name}} -> {columns} -> {label};
+			$table -> {columns} .= ',label' if $default_columns ne '*' and $DB_MODEL -> {tables} -> {$table -> {name}} -> {columns} -> {label};
 
 		}
 
