@@ -55,11 +55,20 @@ sub authentication_is_needed {
 	}
 
 	elsif ($_REQUEST {keepalive}) {
-
-		$_REQUEST {virgin} or keep_alive ($_REQUEST {keepalive});
-
-		out_html ({}, qq{<html><head><META HTTP-EQUIV=Refresh CONTENT="@{[ 60 * $conf -> {session_timeout} - 1 ]}; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}"></head></html>});
 		
+		if (sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE id = ?", $_REQUEST {keepalive})) {
+
+			$_REQUEST {virgin} or keep_alive ($_REQUEST {keepalive});
+
+			out_html ({}, qq{<html><head><META HTTP-EQUIV=Refresh CONTENT="@{[ 60 * $conf -> {session_timeout} - 1 ]}; URL=$_REQUEST{__uri}?keepalive=$_REQUEST{keepalive}"></head></html>});
+
+		}
+		else {
+		
+			out_html ({}, qq{<html><body onLoad="open('/', '_top')"></body></html>});
+		
+		}
+
 		return 0;
 
 	}
