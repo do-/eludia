@@ -22,7 +22,7 @@ sub wish_to_clarify_demands_for_table_columns {
 
 	exists $i -> {NULLABLE} or $i -> {NULLABLE} = $i -> {name} eq 'id' ? 0 : 1;
 
-	$i -> {COLUMN_DEF} ||= undef;
+	exists $i -> {COLUMN_DEF} or $i -> {COLUMN_DEF} = undef;
 
 	$i -> {TYPE_NAME} = uc $i -> {TYPE_NAME};
 	
@@ -222,7 +222,7 @@ sub __genereate_sql_fragment_for_column {
 
 		'');
 
-	if ($i -> {COLUMN_DEF}) {
+	if (defined $i -> {COLUMN_DEF}) {
 	
 		if ($i -> {COLUMN_DEF} ne 'SYSDATE' && $i -> {COLUMN_DEF} !~ /\)/) {
 
