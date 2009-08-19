@@ -246,6 +246,12 @@ sub wish_to_update_demands_for_table_columns {
 
 	my ($old, $new, $options) = @_;
 	
+	if ($old -> {TYPE_NAME} eq 'N' . $new -> {TYPE_NAME}) {
+	
+		$new -> {TYPE_NAME} = $old -> {TYPE_NAME};
+	
+	}
+	
 	if ($old -> {TYPE_NAME} eq $new -> {TYPE_NAME}) {
 	
 		$new -> {$_} >= $old -> {$_} or $new -> {$_} = $old -> {$_} foreach 
