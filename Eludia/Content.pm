@@ -380,6 +380,41 @@ sub tree_sort {
 
 ################################################################################
 
+sub merge_cells {
+
+	my $options = shift;
+	
+	my @result;
+
+	my $last_dump;
+
+	foreach my $cell (@_) {
+	
+		my $dump = Dumper ($cell);
+
+		if ($last_dump eq $dump) {
+		
+			$result [-1] -> {colspan} ||= 1;
+			
+			$result [-1] -> {colspan} ++;
+		
+		}
+		else {
+		
+			push @result, Storable::dclone $cell;
+		
+			$last_dump = $dump;
+
+		}	
+	
+	}
+	
+	return @result;
+
+}
+
+################################################################################
+
 sub defaults {
 
 	my ($data, $context, %vars) = @_;
