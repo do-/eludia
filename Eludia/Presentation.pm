@@ -4409,6 +4409,7 @@ sub setup_skin {
 			adjust_esc
 			out_html
 			user_agent
+			dump_hiddens
 		));
 
 	}
