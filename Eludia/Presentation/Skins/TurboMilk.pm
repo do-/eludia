@@ -1939,11 +1939,6 @@ sub draw_toolbar_input_text {
 		>
 EOH
 
-	foreach my $key (@{$options -> {keep_params}}) {
-		next if $key eq $options -> {name} or $key =~ /^_/ or $key eq 'start' or $key eq 'sid';
-		$html .= qq {<input type=hidden name=$key value="$_REQUEST{$key}">};
-	}
-
 	$html .= "</td><td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
 
 	return $html;
