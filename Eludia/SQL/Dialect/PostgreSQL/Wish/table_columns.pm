@@ -229,15 +229,13 @@ sub wish_to_update_demands_for_table_columns {
 
 	my ($old, $new, $options) = @_;
 	
-	if ($old -> {TYPE_NAME} eq $new -> {TYPE_NAME}) {
+	__adjust_column_dimensions ($old, $new, {
 	
-		$new -> {$_} >= $old -> {$_} or $new -> {$_} = $old -> {$_} foreach 
-		
-			$old -> {TYPE_NAME} eq 'NUMBER' ? qw (COLUMN_SIZE DECIMAL_DIGITS) :
-			
-			()
+		char    => qr {^-},
+	
+		decimal => 'NUMERIC',
 
-	}
+	});
 	
 	__genereate_sql_fragment_for_column ($_) foreach ($old, $new);
 

@@ -29,9 +29,7 @@ sub wish_to_clarify_demands_for_table_columns {
 	if ($i -> {TYPE_NAME} eq 'VARBINARY') {
 	
 		$i -> {TYPE_NAME}  = 'RAW';
-				
-		return;
-		
+						
 	}
 
 	if ($i -> {TYPE_NAME} eq 'TIMESTAMP') {
@@ -39,17 +37,13 @@ sub wish_to_clarify_demands_for_table_columns {
 		$i -> {TYPE_NAME}  = 'DATE';
 		
 		$i -> {COLUMN_DEF} = 'SYSDATE';
-		
-		return;
-		
+				
 	}
 
 	if ($i -> {TYPE_NAME} =~ /(DATE|TIME)/) {
 
 		$i -> {TYPE_NAME}  = 'DATE';
 				
-		return;
-
 	}
 
 	if ($i -> {TYPE_NAME} =~ /^(DECIMAL|NUMERIC)$/) {
@@ -76,9 +70,7 @@ sub wish_to_clarify_demands_for_table_columns {
 		$i -> {COLUMN_SIZE}    ||= 22;
 		
 		$i -> {DECIMAL_DIGITS} ||= 0;
-		
-		return;
-		
+				
 	}
 
 	$i -> {TYPE_NAME} =~ s{^(LONG|MEDIUM)TEXT$}{CLOB};
@@ -89,8 +81,6 @@ sub wish_to_clarify_demands_for_table_columns {
 
 		$i -> {COLUMN_DEF} = 'empty_' . (lc $i -> {TYPE_NAME}) . '()';
 		
-		return;
-
 	}
 
 	if ($i -> {TYPE_NAME} eq 'TEXT') {
@@ -111,6 +101,11 @@ sub wish_to_clarify_demands_for_table_columns {
 		$i -> {COLUMN_SIZE} ||= 255;
 
 	}
+	
+	exists $i -> {NULLABLE} or $i -> {NULLABLE} = $i -> {name} eq 'id' ? 0 : 1;
+
+	exists $i -> {COLUMN_DEF} or $i -> {COLUMN_DEF} = undef;
+	
 
 }
 
@@ -146,9 +141,11 @@ sub wish_to_explore_existing_table_columns {
 
 			if ($i -> {data_default} =~ /\'(.*)\'/sm) {
 			
-				$i -> {data_default} = $1;
+				$i -> {data_default} = $1;				
 			
 			}
+			
+			$i -> {data_default} = undef if $i -> {data_default} eq 'NULL';
 			
 			$existing -> {$name} = my $def = {
 			
@@ -170,7 +167,7 @@ sub wish_to_explore_existing_table_columns {
 				$def -> {DECIMAL_DIGITS} = $i -> {data_scale}     || 0;
 			
 			}
-			elsif ($i -> {data_type} eq 'VARCHAR2') {
+			elsif ($i -> {data_type} =~ /VARCHAR2$/) {
 			
 				$def -> {COLUMN_SIZE}    = $i -> {char_length};
 			
@@ -216,9 +213,9 @@ sub __genereate_sql_fragment_for_column {
 
 	$i -> {SQL} = $i -> {TYPE_NAME} . (
 					
-		$i -> {TYPE_NAME} eq 'NUMBER'   ? " ($i->{COLUMN_SIZE}, $i->{DECIMAL_DIGITS})" :
+		$i -> {TYPE_NAME} eq 'NUMBER'  ? " ($i->{COLUMN_SIZE}, $i->{DECIMAL_DIGITS})" :
 
-		$i -> {TYPE_NAME} eq 'VARCHAR2' ? " ($i->{COLUMN_SIZE} CHAR)" :
+		$i -> {TYPE_NAME} =~ /CHAR2?$/ ? " ($i->{COLUMN_SIZE}@{[ $i -> {TYPE_NAME} =~ /^N/ ? '' : ' CHAR' ]})" :
 
 		'');
 
@@ -235,6 +232,11 @@ sub __genereate_sql_fragment_for_column {
 		$i -> {SQL} .= " DEFAULT $i->{COLUMN_DEF}";
 	
 	}
+	else {
+
+		$i -> {SQL} .= " DEFAULT NULL";
+
+	}
 	
 	%$i = map {$_ => $i -> {$_}} qw (name SQL REMARKS NULLABLE TYPE_NAME);
 
@@ -245,24 +247,20 @@ sub __genereate_sql_fragment_for_column {
 sub wish_to_update_demands_for_table_columns {
 
 	my ($old, $new, $options) = @_;
-	
+
 	if ($old -> {TYPE_NAME} eq 'N' . $new -> {TYPE_NAME}) {
 	
 		$new -> {TYPE_NAME} = $old -> {TYPE_NAME};
 	
 	}
 	
-	if ($old -> {TYPE_NAME} eq $new -> {TYPE_NAME}) {
+	__adjust_column_dimensions ($old, $new, {
 	
-		$new -> {$_} >= $old -> {$_} or $new -> {$_} = $old -> {$_} foreach 
-		
-			$old -> {TYPE_NAME} eq 'NUMBER' ? qw (COLUMN_SIZE DECIMAL_DIGITS) :
+		char    => qr {CHAR2?$},
+	
+		decimal => 'NUMBER',
 
-			$old -> {TYPE_NAME} eq 'VARCHAR2' ? qw (COLUMN_SIZE) :
-			
-			()
-
-	}
+	});
 
 	__genereate_sql_fragment_for_column ($_) foreach ($old, $new);
 
