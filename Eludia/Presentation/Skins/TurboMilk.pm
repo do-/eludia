@@ -769,8 +769,15 @@ EOH
 ################################################################################
 
 sub draw_form_field_hidden {
+
 	my ($_SKIN, $options, $data) = @_;
-	return qq {<input type="hidden" name="_$$options{name}" value="$$options{value}">};
+	
+	return dump_tag (input => {
+		type  => 'hidden', 
+		name  => '_' . $options -> {name},
+		value => $options -> {value},
+	});
+	
 }
 
 ################################################################################
