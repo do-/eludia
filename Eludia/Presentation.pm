@@ -2403,7 +2403,6 @@ sub draw_toolbar_input_text {
 	
 	$options -> {value} ||= $_REQUEST {$options -> {name}};	
 	$options -> {size} ||= 15;		
-	$options -> {keep_params} ||= [keys %_REQUEST];
 	
 	return $_SKIN -> draw_toolbar_input_text (@_);
 
