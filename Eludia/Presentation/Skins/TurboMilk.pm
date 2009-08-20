@@ -2463,9 +2463,16 @@ EOJS
 		
 	my $html = qq {<td $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" value="$$data{label}" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
 		. ($data -> {other} ? qq [<input type="button" value="$data->{other}->{button}" onclick="$data->{other}->{onChange}">] : '')
-		. qq[<input type="hidden" name="_$$data{name}" value="$$data{id}" id="$$data{name}_id"></span>]
-		. qq[</nobr></td>];	
-	
+		. dump_tag (input => {
+		
+			type  => "hidden", 
+			name  => "_$data->{name}", 
+			value => "$data->{id}",
+			id    => "$data->{name}_id",
+			
+		})
+		. '</span></nobr></td>';		
+
 	return $html;
  
 }
