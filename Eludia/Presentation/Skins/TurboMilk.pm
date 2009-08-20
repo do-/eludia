@@ -420,10 +420,14 @@ sub draw_form {
 			>
 			<input type=hidden name="__suggest" value="">
 EOH
+
+	$html .= dump_hiddens (
 	
-	foreach (@{$options -> {keep_params}}) {
-		$html .= qq{\n\t\t\t\t<input type=hidden name="$$_{name}" value="$$_{value}">};
-	}
+		map {[$_ -> {name} => $_ -> {value}]}
+		
+			@{$options -> {keep_params}}
+
+	);
 	
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
