@@ -624,11 +624,13 @@ EOH
 		}
 EOH
 
-	my $attributes = dump_attributes ($options -> {attributes});
-	
 	my $id = '' . $options;
+	
+	$options -> {attributes} -> {id}           = $id;
+	$options -> {attributes} -> {autocomplete} = 'off';
+	$options -> {attributes} -> {type}         = 'text';
 
-	return <<EOH;
+	return qq {
 		<script>
 			var _suggest_timer_$options->{name} = null;
 		</script>
@@ -653,8 +655,24 @@ EOH
 			onKeyPress="set_suggest_result (this, '$id'); $$options{after}; suggest_clicked = 1"
 		>
 		</select>
-		<input type="text" id="$id" $attributes autocomplete="off"><input type="hidden" id="${id}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}"><input type="hidden" id="${id}__id" name="_$options->{name}__id" value="$options->{value__id}">
-EOH
+		
+	}
+	
+	. dump_tag (input => $options -> {attributes})
+
+	. dump_tag (input => {
+		type  => 'hidden',
+		id    => "${id}__label",
+		name  => "_$options->{name}__label",
+		value => "$options->{attributes}->{value}",
+	})
+
+	. dump_tag (input => {
+		type  => 'hidden',
+		id    => "${id}__id",
+		name  => "_$options->{name}__id",
+		value => "$options->{attributes}->{value__id}",
+	});
 
 }
 
