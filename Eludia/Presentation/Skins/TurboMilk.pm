@@ -921,9 +921,9 @@ sub draw_form_field_static {
 	if ($options -> {href}) {
 		$html .= '</a>';
 	}
-	
-	$html .= qq {<input type=hidden name="$$options{hidden_name}" value="$$options{hidden_value}">} if ($options -> {add_hidden});
-	
+		
+	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
+
 	return $html;
 	
 }
