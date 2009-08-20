@@ -1441,17 +1441,15 @@ sub draw_toolbar {
 		<table bgcolor="b9c5d7" cellspacing=0 cellpadding=0 width="100%" border=0>
 			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
 EOH
-
-	foreach (@{$options -> {keep_params}}) {
-		$html .= qq{<input type="hidden" name="$_" value="$_REQUEST{$_}">}	
-	}
+	
+	
+	my %keep_params = map {$_ => 1} @{$options -> {keep_params}};
+	
+	$keep_params {$_} = 1 foreach qw (sid __last_query_string __last_scrollable_table_row __last_last_query_string);
+	
+	$html .= dump_hiddens (map {[$_ => $_REQUEST {$_}]} (keys %keep_params));
 
 	$html .= <<EOH;
-					<input type=hidden name=sid value=$_REQUEST{sid}>
-					<input type=hidden name=__last_query_string value="$_REQUEST{__last_query_string}">
-					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
-					<input type=hidden name=__last_last_query_string value="$_REQUEST{__last_last_query_string}">
-
 				<tr>
 					<td bgcolor="#6f7681" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
