@@ -262,6 +262,12 @@ sub wish_to_update_demands_for_table_columns {
 
 	});
 
+	if ($new -> {TYPE_NAME} =~ /^N/ && $new -> {COLUMN_SIZE} > 2000) {
+
+		$new -> {COLUMN_SIZE} = 2000
+
+	}
+
 	__genereate_sql_fragment_for_column ($_) foreach ($old, $new);
 
 }
