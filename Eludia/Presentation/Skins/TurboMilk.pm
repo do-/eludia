@@ -3161,6 +3161,13 @@ EOH
 		$_REQUEST {__on_load} .= " var d = new Date(); document.form.tz_offset.value=$tz - d.getTimezoneOffset()/60;";
 	} 
 	
+	my $hiddens = dump_hiddens (
+		[type            => 'logon'],
+		[action          => 'execute'],
+		[redirect_params => $_REQUEST {redirect_params}],
+		[tz_offset       => ''],
+	);
+
 	return <<EOH;
 
 <table border="0" cellpadding="0" cellspacing="0" align=center height=100% width=100%>
@@ -3197,10 +3204,7 @@ EOH
 					
 						<table border="0" cellpadding="8" cellspacing="0">
 						<form action="$_REQUEST{__uri}" method=post autocomplete="off" name=form target="$options->{target}">
-							<input type=hidden name=type value=logon>
-							<input type=hidden name=action value=execute>
-							<input type=hidden name=redirect_params value="$_REQUEST{redirect_params}">
-							<input type=hidden name=tz_offset value="">
+							$hiddens
 							<tr class="logon">
 								<td><b>$i18n->{login}:</b></td>
 								<td><input type="text" name="login" value="$_COOKIE{user_login}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
