@@ -106,16 +106,8 @@ sub db_dump {
 	
 	}
 	
-	if (%needed == 0) {
-	
-		foreach my $table ($model_update -> {db} -> tables ('', $model_update -> {schema}, '%', "'TABLE'")) {
+	%needed > 0 or %needed = map {$_ => 1} $model_update -> get_tables;
 
-			$needed {$model_update -> unquote_table_name ($table)} = 1;
-
-		}
-	
-	}
-	
 	foreach (keys %banned) { delete $needed {$_} }
 		
 	foreach my $table (sort keys %needed) { 
@@ -135,6 +127,7 @@ sub valuable_modules () {
 	my %modules = map {$_ => 1} (
 		'CGI::Simple',
 		'Data::Dumper',
+		'Date::Calc',
 		'DBI',
 		'Digest::MD5',
 		'FCGI',

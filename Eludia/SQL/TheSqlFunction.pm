@@ -139,10 +139,41 @@ sub _sql_filters {
 	my $having         = '';
 	my $order;
 	my $limit;
+	my $delete;
+	my $update;
 	my @where_params   = ();
 	my @having_params  = ();
+	
+	my @filters = ();
+	
+	foreach my $filter (@$filters) {	# ['dt_start .. dt_finish...' => [$from, $to]] --> ['dt_start <= ' => $to], ['dt_finish... >= ' => $from]
 
-	foreach my $filter (@$filters) {
+		if (
+			
+			ref $filter eq ARRAY &&
+			
+			$filter -> [0] =~ /^\s*(\w+)\s*\.\.\s*(\w)/sm
+		
+		) {
+		
+			my $values = $filter -> [1];
+			
+			ref $values eq ARRAY or $values = [$values, $values];
+			
+			@$values == 2 or $values -> [1] = $values -> [0];
+			
+			push @filters, ["$1 <= ", $values -> [1]];
+			push @filters, ["$2$' >= ", $values -> [0]];
+			
+			next;
+		
+		}
+		
+		push @filters, $filter;
+	
+	}
+
+	foreach my $filter (@filters) {
 
 		if (ref $filter eq ARRAY and @$filter == 1 and $filter -> [0] =~ /^-?1\s/) {
 		
@@ -153,6 +184,16 @@ sub _sql_filters {
 		ref $filter or $filter = [$filter, $_REQUEST {$filter}];
 
 		my ($field, $values) = @$filter;
+
+		if ($field eq 'DELETE') {
+			$delete = 1;
+			next;
+		}
+
+		if ($field eq 'UPDATE') {
+			$update = $values;
+			next;
+		}		
 
 		if ($field eq 'ORDER') {
 			$order = $values;
@@ -176,8 +217,10 @@ sub _sql_filters {
 			$tied = tied $$first_value;
 
 		}
+		
+		my $is_null = $field =~ /\sIS\s+(NOT\s+)?NULL\s*$/sm;
 
-		unless ($tied) {
+		unless ($tied || $is_null) {
 
 			next if $first_value eq '' or $first_value eq '0000-00-00';
 
@@ -244,13 +287,19 @@ sub _sql_filters {
 				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
 			}
 			
-			unless ($has_placeholder) {
+			unless ($has_placeholder || $is_null) {
 
 				$field  =~ /(=|\<|\>|LIKE)\s*$/ or $field .= ' = ';	# 'id_org'           --> 'id_org = '
 
 				$field .= ' ? '; 					# 'id_org LIKE '     --> 'id_org LIKE ?'
 
-			} 
+			}
+
+			if ($field =~ s{(\w+)\.\.\.}{$1}) {				# 'dt_finish... >= ' --> '((dt_finish >= ?) OR (dt_finish IS NULL))'
+			
+				$field = "(($field) OR ($1 IS NULL))";
+			
+			}
 			
 			my @tokens = split /(LIKE\s+\%?\?\%)/, $field;
 			
@@ -319,6 +368,8 @@ sub _sql_filters {
 	return {
 		have_id_filter => $have_id_filter,
 		cnt_filters    => $cnt_filters,
+		delete         => $delete,
+		update         => $update,
 		order          => $order,
 		limit          => $limit,
 		where          => $where,
@@ -421,13 +472,13 @@ sub sql {
 	
 	}
 	
-	$root_table =~ /^\w+/ or die "Invalid table definition: '$root_table'\n";
+	$root_table =~ /^\s*(\w+)/sm or die "Invalid table definition: '$root_table'\n";
 
-	my $root = $&;
+	my $root = $1;
 	
 	my $tail = $' || "(*)";
 		
-	$tail =~ /^\s*\((.*?)\)\s*$/ or die "Invalid table definition: '$root_table'\n";	
+	$tail =~ /^\s*\((.*?)\)\s*$/sm or die "Invalid table definition: '$root_table'\n";	
 	
 	my @columns = _sql_list_fields ($1, $root);
 	
@@ -444,6 +495,18 @@ sub sql {
 	
 		@other = (['id']);
 	
+	}
+	
+	if (ref $other [0] eq HASH) {
+	
+		return 
+
+			@other == 1    ? sql_do_insert (@_) :
+
+			ref $other [1] ? sql_select_id (@_) :
+
+			                 sql_clone     (@_)
+
 	}
 
 	if (!ref $other [0]) {
@@ -472,7 +535,7 @@ sub sql {
 	
 	unless ($have_id_filter) {
 		
-		$default_columns = 'id, label, fake';
+		$default_columns = 'id, fake';
 
 		$where .= $_REQUEST {fake} =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
 
@@ -506,12 +569,27 @@ sub sql {
 		}
 		
 		$table =~ s{\s}{}gsm;
+		
+		my $id_vs_null;
+
+		if ($table =~ /^(DOES)?(N[O']T)?EXISTS?/sm) {
+		
+			$table      = $';
+			$id_vs_null = $2 ? ' IS NULL' : ' IS NOT NULL';
+		
+		}
 
 		$table =~ /(\-?)(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
 
-		my ($minus, $name, $columns) = ($1, $2, $3);
+		my ($minus, $name, $columns) = ($1, $2, $3);		
 
 		$alias ||= $name;
+		
+		if ($id_vs_null) {
+		
+			$where .= "\n  AND $alias.id $id_vs_null";
+		
+		}
 		
 		if ($on && $on !~ /\s/) {
 		
@@ -682,9 +760,17 @@ sub sql {
 
 		}		
 
-		$found or die "Referrer for $table->{alias} not found\n";
-				
-		foreach my $column (_sql_list_fields (($table -> {columns} || $default_columns), $table -> {name}, $table -> {alias})) {
+		$found or darn \@tables and die "Referrer for $table->{alias} not found\n";
+
+		unless ($table -> {columns}) {
+
+			$table -> {columns} = $default_columns;
+			
+			$table -> {columns} .= ',label' if $default_columns ne '*' and $DB_MODEL -> {tables} -> {$table -> {name}} -> {columns} -> {label};
+
+		}
+
+		foreach my $column (_sql_list_fields ($table -> {columns}, $table -> {name}, $table -> {alias})) {
 
 			$cols [$cols_cnt] = [en_unplural ($table -> {alias}), $column -> {alias}];
 
@@ -715,8 +801,68 @@ sub sql {
 	my $is_only_grouping_1 = $is_only_grouping && @{$columns_by_grouping -> [1]} == 1 ? 1 : 0;
 
 	!$is_ids or $cnt_filters or $is_first or return undef;
+	
+	if ($sql_filters -> {update}) {
+
+		$from =~ s{FROM}{};
+	
+		my $sql = "UPDATE\n$from\nSET";
+		
+		my $isnt_virgin = 0;
+		
+		my @update_params = ();
+		
+		foreach my $field (@{$sql_filters -> {update}}) {
+
+			$sql .= "\n ";
+			
+			$sql .= ', ' if $isnt_virgin;
+		
+			$sql .= $field -> [0];
+		
+			if (@$field > 1) {
+			
+				$sql .= ' = ?';
+			
+				push @update_params, $field -> [1];
+							
+			}
+			
+			push @fields, "$field->[0] = ?";
+			
+			$isnt_virgin ||= 1;			
+
+		}
+		
+		$sql .= $where;		
+		
+		my @params = (@join_params, @update_params, @where_params, @having_params);
+
+		if ($preconf -> {core_debug_sql}) {
+
+			warn Dumper ({args => $_args, sql => $sql, params => \@params});
+
+		}
+		
+		return sql_do ($sql, @params);
+	
+	}
 
 	my @params = (@join_params, @where_params, @having_params);
+
+	if ($sql_filters -> {delete}) {
+	
+		my $sql = "DELETE\n$from\n$where";
+		
+		if ($preconf -> {core_debug_sql}) {
+
+			warn Dumper ({args => $_args, sql => $sql, params => \@params});
+
+		}
+		
+		return sql_do ($sql, @params);
+	
+	}
 
 	my $sql = "SELECT\n "
 	
@@ -773,7 +919,7 @@ sub sql {
 	
 	}
 	
-	if ($have_id_filter || $is_first || $is_only_grouping_1) {
+	if ($have_id_filter || $is_first || $is_only_grouping) {
 	
 		return sql_select_scalar ($sql, @params) if $is_ids || $is_only_grouping_1;
 

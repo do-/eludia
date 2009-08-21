@@ -4,7 +4,7 @@ sub wish_to_adjust_options_for_table_keys {
 
 	my ($options) = @_;
 	
-	$options -> {key} = ['global_name'];
+	$options -> {key} = ['def'];
 
 }
 
@@ -14,16 +14,13 @@ sub wish_to_clarify_demands_for_table_keys {
 
 	my ($i, $options) = @_;
 
-	my $voc_replacements_table = sql_table_name ($conf->{systables}->{__voc_replacements}); 
-	$i -> {global_name}   = sql_select_scalar ("SELECT ID FROM $voc_replacements_table WHERE TABLE_NAME = ? AND OBJECT_NAME = ? AND OBJECT_TYPE = 1", $options -> {table}, $i -> {name}) if ($conf -> {core_voc_replacement_use});
-
-	$i -> {global_name} ||= 'OOC_' . Digest::MD5::md5_base64 ($options -> {table} . '_' . $i -> {name});
+	$i -> {global_name} = sql_mangled_name ($options -> {table} . '_' . delete $i -> {name});
 
 	ref $i -> {parts} eq ARRAY or $i -> {parts} = [split /\,/, $i -> {parts}];
 
 	foreach my $part (@{$i -> {parts}}) {
 	
-		$part = lc $part;
+		$part = uc $part;
 		
 		$part =~ s{\s}{}gsm;
 	
@@ -31,16 +28,16 @@ sub wish_to_clarify_demands_for_table_keys {
 		
 			my ($column, $width) = ($1, $2);
 			
-			my $type = lc $options -> {table_def} -> {columns} -> {$column} -> {TYPE_NAME};
+			my $type = uc $options -> {table_def} -> {columns} -> {lc $column} -> {TYPE_NAME};
 
-			if ($type =~ /char/) {
+			if ($type =~ /CHAR/) {
 
-				$part = "substr($column,1,$width)";
+				$part = qq{SUBSTR("$column",1,$width)};
 
 			} 
-			elsif ($type =~ /(lob|text)$/) {
+			elsif ($type =~ /(LOB|TEXT)$/) {
 
-				$part = "substr(to_char($column),1,$width)";
+				$part = qq{SUBSTR(TO_CHAR("$column"),1,$width)};
 
 			} 
 			else {
@@ -53,6 +50,8 @@ sub wish_to_clarify_demands_for_table_keys {
 		}
 
 	}
+	
+	$i -> {def} = join ', ', @{$i -> {parts}};
 
 }
 
@@ -62,11 +61,9 @@ sub wish_to_explore_existing_table_keys {
 
 	my ($options) = @_;
 
-	my $existing = {};
+	my %k = ();
 
-	my $uc_table_name = $options -> {table} =~ /^_/ ? $options -> {table} : uc $options -> {table};
-
-	sql_select_loop (<<EOS, sub {$existing -> {$i -> {index_name}} -> [$i -> {column_position} - 1] = lc $i -> {column_name}}, $uc_table_name);
+	sql_select_loop (<<EOS, sub {$k {$i -> {index_name}} -> [$i -> {column_position} - 1] = uc $i -> {column_name}}, uc_table_name ($options -> {table}));
 		SELECT 
 			user_indexes.index_name
 			, user_ind_columns.column_name
@@ -79,7 +76,7 @@ sub wish_to_explore_existing_table_keys {
 			AND user_indexes.table_name = ?
 EOS
 
-	sql_select_loop (<<EOS, sub {$existing -> {$i -> {index_name}} -> [$i -> {column_position} - 1] = lc $i -> {column_expression}}, $uc_table_name);
+	sql_select_loop (<<EOS, sub {$k {$i -> {index_name}} -> [$i -> {column_position} - 1] = uc $i -> {column_expression}; $k {$i -> {index_name}} -> [$i -> {column_position} - 1] =~ s/SYS_OP_C2C/TO_CHAR/g;}, uc_table_name ($options -> {table}));
 		SELECT 
 			user_indexes.index_name
 			, user_ind_expressions.column_expression
@@ -92,13 +89,54 @@ EOS
 			AND user_indexes.table_name = ?
 EOS
 
+
+	my $existing = {};
+	
+	while (my ($global_name, $parts) = each %k) {
+	
+		my $i = {
+		
+			global_name => $global_name,
+			
+			parts       => $parts,
+			
+			def         => join ', ', @$parts,
+		
+		};
+		
+		next if $i -> {def} eq 'id';
+	
+		$existing -> {$i -> {def}} = $i;
+	
+	}
+
 	return $existing;
 
 }
 
 #############################################################################
 
-sub wish_to_actually_create_table_keys {	
+sub wish_to_update_demands_for_table_keys {
+
+	my ($old, $new, $options) = @_;
+	
+	$new -> {global_name} = $old -> {global_name};
+
+}
+
+#############################################################################
+
+sub wish_to_schedule_modifications_for_table_keys {
+
+	my ($old, $new, $todo, $options) = @_;
+
+	push @{$todo -> {create}}, $new;
+	
+}
+
+#############################################################################
+
+sub wish_to_actually_create_table_keys {
 
 	my ($items, $options) = @_;
 	
@@ -110,31 +148,13 @@ sub wish_to_actually_create_table_keys {
 	
 	foreach my $i (@$items) {
 	
-		eval { sql_do ("CREATE INDEX \"$i->{global_name}\" ON $options->{table} (@{[ join ', ', @{$i -> {parts}} ]})") };
-		
-		next if $@ =~ /ORA-01408/;
-		
-		die $@ if $@;	
+		eval { sql_do (qq {DROP INDEX \"$i->{global_name}\"})};
+
+		sql_do (qq {CREATE INDEX \"$i->{global_name}\" ON $options->{table} ($i->{def})});
 	
 	}
 
 	
-}
-
-#############################################################################
-
-sub wish_to_actually_alter_table_keys {
-
-	my ($items, $options) = @_;
-
-	foreach my $i (@$items) {
-	
-		sql_do ("DROP INDEX \"$i->{global_name}\"");
-	
-	}
-	
-	wish_to_actually_create_table_keys (@_);
-
 }
 
 1;

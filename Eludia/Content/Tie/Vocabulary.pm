@@ -12,6 +12,24 @@ sub TIEARRAY {
 
 ################################################################################
 
+sub label {
+
+	my ($self, $id, $template) = @_;
+	
+	my $h = $self -> _select_hash ($id);
+	
+	$h -> {id} or return '';
+	
+	$template or return $h -> {label};
+	
+	$template =~ s{\$_(?!\w)}{$h->{label}};
+	
+	return $template;
+
+}
+
+################################################################################
+
 sub _select_hash {
 
 	my ($self, $id) = @_;

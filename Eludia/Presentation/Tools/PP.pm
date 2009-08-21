@@ -20,9 +20,11 @@ sub dump_attributes {
 		else {
 		
 			$v =~ s{\"}{&quot;}g;
+			$v =~ s{\<}{&lt;}g;
+			$v =~ s{\>}{&gt;}g;
 			
 		}
-		
+					
 		$html .= "$v\"";
 
 	}

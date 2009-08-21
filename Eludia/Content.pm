@@ -243,6 +243,32 @@ sub dt_dmy {
 
 ################################################################################
 
+sub dt_add {
+
+	my ($dt, $delta) = @_;
+	
+	my $was_iso = $dt =~ /^\d\d\d\d\-\d\d\-\d\d/;
+	
+	my @delta = split /\s+/, $delta;
+	
+	my $what = 'Days';
+	
+	@delta [-1] =~ /^[A-Za-z]+$/ and $what = pop @delta;
+
+	require Date::Calc;
+
+	my @dt = &{"Date::Calc::Add_Delta_$what"} (dt_y_m_d ($dt), @delta);
+		
+	wantarray ? @dt          :
+		
+	$was_iso  ? dt_iso (@dt) :
+		
+	            dt_dmy (@dt)
+
+}
+
+################################################################################
+
 sub get_ids {
 
 	my ($name) = @_;
@@ -349,6 +375,41 @@ sub tree_sort {
 	}
 	
 	return [sort {$a -> {$ord} cmp $b -> {$ord}} @$list];
+
+}
+
+################################################################################
+
+sub merge_cells {
+
+	my $options = shift;
+	
+	my @result;
+
+	my $last_dump;
+
+	foreach my $cell (@_) {
+	
+		my $dump = Dumper ($cell);
+
+		if ($last_dump eq $dump) {
+		
+			$result [-1] -> {colspan} ||= 1;
+			
+			$result [-1] -> {colspan} ++;
+		
+		}
+		else {
+		
+			push @result, Storable::dclone $cell;
+		
+			$last_dump = $dump;
+
+		}	
+	
+	}
+	
+	return @result;
 
 }
 

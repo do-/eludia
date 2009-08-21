@@ -137,7 +137,6 @@ sub check_systables {
 		__access_log
 		__queries
 		__defaults
-		__voc_replacements	
 		__benchmarks		
 		__request_benchmarks
 		__last_update		
@@ -167,32 +166,6 @@ sub sql_assert_core_tables {
 
 my $time = time;
 	
-	if ($conf -> {core_voc_replacement_use}) {
-	
-		$model_update -> assert (
-		
-			tables => {
-			
-				$conf -> {systables} -> {__voc_replacements} => {
-					columns => {
-						id          => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-						table_name  => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-						object_name => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-						object_type => {TYPE_NAME => 'int', COLUMN_SIZE => 1},
-					},
-					keys => {
-						ix => 'table_name',
-						ix2 => 'object_name',
-					},
-				}
-			},
-						
-			prefix => 'sql_assert_core_tables#',			
-
-		);
-	
-	}
-
 	my %defs = (
 	
 		$conf -> {systables} -> {__defaults} => {
@@ -227,22 +200,10 @@ my $time = time;
 
 		},
 		
-		$conf -> {systables} -> {__required_files} => {
-		
-			columns => {
-				unix_ts   => {TYPE_NAME => 'bigint'},
-				file_name => {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
-			},
-			
-			keys => {
-				ix => 'file_name',
-			},
-
-		},
-
 		$conf -> {systables} -> {__last_update} => {
 		
 			columns => {
+				id        => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
 				pid 	  => {TYPE_NAME => 'int'},
 				unix_ts   => {TYPE_NAME => 'bigint'},
 			},
@@ -281,7 +242,7 @@ my $time = time;
 
 			columns => {
 				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake => {TYPE_NAME  => 'bigint', COLUMN_DEF => 0, NULLABLE => 0},
+				fake => {TYPE_NAME  => 'bigint'},
 				name  => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
 				label => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
 			},
@@ -292,19 +253,13 @@ my $time = time;
 
 			columns => {
 				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake => {TYPE_NAME  => 'bigint', COLUMN_DEF => 0, NULLABLE => 0},
-				name =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+				fake => {TYPE_NAME  => 'bigint'},
 				login =>    {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				label =>    {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				password => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 				mail     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				id_role  =>  {TYPE_NAME => 'int'},
-
-				peer_server => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-				peer_id => {TYPE_NAME    => 'int'},
-				
+				id_role  =>  {TYPE_NAME => 'int'},				
 				subset => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-
 			}
 
 		},
@@ -330,6 +285,12 @@ my $time = time;
 	
 	);
 	
+	if ( $conf -> {peer_roles}) {
+	
+		$defs {$conf -> {systables} -> {users}}	-> {peer_server} = {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
+		$defs {$conf -> {systables} -> {users}}	-> {peer_id}     = {TYPE_NAME => 'int'},
+	
+	}
 	
 	$conf -> {core_session_access_logs_dbtable} and $defs {$conf -> {systables} -> {__access_log}} = {
 
@@ -409,23 +370,6 @@ my $time = time;
 			
 			bytes_sent		=> {TYPE_NAME => 'int'},
 			is_gzipped		=> {TYPE_NAME => 'tinyint'}, 
-		},
-
-	};
-
-	$conf -> {core_screenshot} and $defs {$conf -> {systables} -> {__screenshots}} = {
-
-		columns => {
-			id        => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-			subset    => {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
-			type      => {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
-			id_object => {TYPE_NAME => 'int'},
-			id_user	  => {TYPE_NAME => 'int'},
-			dt        => {TYPE_NAME => 'timestamp'},
-			html      => {TYPE_NAME => 'text'},
-			error     => {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
-			gziped    => {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
-			params    => {TYPE_NAME => 'text'},
 		},
 
 	};
@@ -570,8 +514,6 @@ $time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
 			dump_to_stderr 		=> 1,
 			before_assert		=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
 			schema			=> $preconf -> {db_schema},
-			__voc_replacements	=> $conf -> {systables} -> {__voc_replacements}, 
-			core_voc_replacement_use=> $conf -> {core_voc_replacement_use},
 		);
 	
 	}
@@ -1426,30 +1368,6 @@ use DBI::Const::GetInfoType;
 
 ################################################################################
 
-sub canonic_key_definition {
-
-	my ($self, $s) = @_;
-	
-	$s =~ s{\s+}{}g;
-	
-	return $s;
-
-}
-
-################################################################################
-
-sub do {
-
-	my ($self, $sql, @params) = @_;
-
-	warn $sql . (join ',', map {" '$_' "} @params) . "\n" if $self -> {dump_to_stderr};
-
-	$self -> {db} -> do ($sql, undef, @params);
-
-}
-
-################################################################################
-
 sub new {
 
 	my ($package_name, $db, @options) = @_;
@@ -1457,8 +1375,6 @@ sub new {
 	my $driver_name = $db -> get_info ($GetInfoType {SQL_DBMS_NAME});
 	
 	$driver_name =~ s{\s}{}gsm;
-		
-#	$package_name .= "::$driver_name";
 	
 	die $@ if $@;
 
@@ -1472,7 +1388,6 @@ sub new {
 	if ($driver_name eq 'Oracle') {
   		$self -> {characterset} = sql_select_scalar ('SELECT VALUE FROM V$NLS_PARAMETERS WHERE PARAMETER = ?', 'NLS_CHARACTERSET');
   		$self -> {schema} ||= uc $db -> {Username};
-  		$self -> {__voc_replacements} = "$self->{quote}$self->{__voc_replacements}$self->{quote}" if $self -> {__voc_replacements} =~ /^_/;
 	}
 	
 	$self -> {schema} ||= '';
@@ -1511,104 +1426,44 @@ sub sql_assert_default_columns {
 
 sub assert {
 
-	my $time = time;
-
 	my ($self, %params) = @_;
+	
+	my $core_debug_sql_do = $preconf -> {core_debug_sql_do};
 
-	&{$self -> {before_assert}} (@_) if ref $self -> {before_assert} eq CODE;
-		
-	my $needed_tables = sql_assert_default_columns (Storable::dclone ($params {tables}), \%params);
-		
-	($needed_tables, my $new_checksums) = checksum_filter ('db_model', $params {prefix}, $needed_tables);
-		
-	%$needed_tables > 0 or return;
-		
-	my $existing_tables = {};	
+	$preconf -> {core_debug_sql_do} = 1;
+
+	my ($tables, my $new_checksums) = checksum_filter (db_model => $params {prefix}, 
 	
-	foreach my $table ($self -> {db} -> tables ('', $self -> {schema}, '%', "'TABLE'")) {
+		sql_assert_default_columns (Storable::dclone ($params {tables}), \%params)
+		
+	);
+		
+	my $objects = [\my @tables, \my @views];
+
+	while (my ($name, $object) = each %$tables) {
 	
-		$existing_tables -> {$self -> unquote_table_name ($table)} = {};
+		$object -> {name} = $name;
+
+		push @{$objects -> [$object -> {sql} ? 1 : 0]}, $object;
 
 	}
 
-	$time = __log_profilinig ($time, '   got existing_tables');
-				
-	foreach my $name (keys %$needed_tables) {
-			
-		my $definition = $needed_tables -> {$name};
-		
-		if ($definition -> {sql}) {
-		
-			$self -> assert_view ($name, $definition);
-			
-			delete $needed_tables -> {$name};
-			
-			next;
-			
-		}
-		
-		exists $existing_tables -> {$name} or next;
+	wish (tables => Storable::dclone \@tables, {});
 
-		$existing_tables -> {$name} -> {columns} = $self -> get_columns ($name);
+	foreach my $table (@tables) {
+
+		wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], {table => $table -> {name}}) if exists $table -> {columns};
+
+		wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})],    {table => $table -> {name}, table_def => $table}) if exists $table -> {keys};
+
+		wish (table_data    => $table -> {data}, {table => $table -> {name}}) if exists $table -> {data};
 
 	}
-
-	$time = __log_profilinig ($time, '   got columns');
 	
-	
-	
-	foreach my $name (keys %$needed_tables) {
-	
-		my $definition = $needed_tables -> {$name};
+	wish (views => \@views, {});
 
-		if ($existing_tables -> {$name}) {
-		
-			my $existing_columns = $existing_tables -> {$name} -> {columns};
-			
-			my $new_columns = {};
-				
-			foreach my $c_name (keys %{$definition -> {columns}}) {
-			
-				my $c_definition = $definition -> {columns} -> {$c_name};
+	$preconf -> {core_debug_sql_do} = $core_debug_sql_do;
 
-				if ($existing_columns -> {$c_name}) {
-				
-					my $existing_column = $existing_columns -> {$c_name};										
-
-					my $flag = $self -> update_column ($name, $c_name, $existing_column, $c_definition,,$conf -> {core_voc_replacement_use});
-
-					$time = __log_profilinig ($time, "    $name.$c_name " . ($flag ? 'updated' : 'checked'));
-
-				}
-				else {
-				
-					$new_columns -> {$c_name} = $c_definition;
-				
-				}
-
-			};
-			
-			if (keys %$new_columns) {
-
-				$self -> add_columns ($name, $new_columns,,$conf -> {core_voc_replacement_use});
-
-				$time = __log_profilinig ($time, "    columns added");
-
-			}
-
-		}
-		else {
-
-			$self -> create_table ($name, $definition, $conf -> {core_voc_replacement_use});
-		
-		}
-		
-		wish (table_keys => [map {{name => $_, parts => $definition -> {keys} -> {$_}}} (keys %{$definition -> {keys}})], {table => $name, table_def => $definition}) if exists $definition -> {keys};
-
-		wish (table_data => $definition -> {data}, {table => $name}) if exists $definition -> {data};
-		
-	}
-	
 	checksum_write ('db_model', $new_checksums);
 
 }
@@ -1646,19 +1501,54 @@ sub sql_store_ids {
 
 #############################################################################
 
+sub sql_clone {
+
+	my ($table, $data, %fields) = @_;
+
+	my $clone = {%$data, %fields};
+
+	delete $clone -> {id};
+
+	$clone -> {id} = sql_do_insert ($table => $clone);
+
+	return $clone;
+
+}
+
+#############################################################################
+
+sub require_wish ($) {
+
+	return if $INC_FRESH {"Wish::$_[0]"};
+	
+	foreach my $key (map {"Eludia/SQL$_/Wish/$_[0].pm"} ('', '/Dialect/' . $SQL_VERSION -> {driver})) {
+	
+		eval {require $key};
+		
+		delete $INC {$key};
+
+	}
+
+	$INC_FRESH {"Wish::$_[0]"} = 1;
+
+}
+
+#############################################################################
+
 sub wish {
 
 	my ($type, $items, $options) = @_;
-
-	eval "require Eludia::SQL::Wish::$type";
-	eval "require Eludia::SQL::Dialect::$SQL_VERSION->{driver}::Wish::$type";
+	
+	@$items > 0 or return;
+	
+	require_wish $type;
 
 	&{"wish_to_adjust_options_for_$type"} ($options);
 		
 	foreach my $i (@$items) { &{"wish_to_clarify_demands_for_$type"} ($i, $options) }
-	
+
 	my $existing = &{"wish_to_explore_existing_$type"} ($options);
-	
+
 	my $todo = {};
 	
 	my @key = @{$options -> {key}};
@@ -1678,6 +1568,60 @@ sub wish {
 	&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
 		
 	foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
+
+}
+
+#############################################################################
+
+sub get_tables {
+
+	my ($self, $table) = @_;
+
+	require_wish 'tables';
+		
+	return sort keys %{wish_to_explore_existing_tables ()};
+
+}
+
+#############################################################################
+
+sub get_columns {
+
+	my ($self, $table) = @_;
+
+	require_wish 'table_columns';
+	
+	wish_to_adjust_options_for_table_columns (my $options = {table => $table});
+	
+	return wish_to_explore_existing_table_columns ($options);
+
+}
+
+#############################################################################
+
+sub get_keys {
+
+	my ($self, $table) = @_;
+	
+	require_wish 'table_keys';
+	
+	wish_to_adjust_options_for_table_keys (my $options = {table => $table});
+	
+	my %keys = ();
+		
+	foreach my $i (values %{wish_to_explore_existing_table_keys ($options)}) {		
+		
+		if ($i -> {global_name} =~ /.*?$options->{table}_/i) {
+		
+			$i -> {global_name} = $';
+		
+		}
+			
+		$keys {lc $i -> {global_name}} = join ', ', @{$i -> {parts}}
+
+	}
+		
+	return \%keys;
 
 }
 

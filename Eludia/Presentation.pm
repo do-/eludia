@@ -773,6 +773,8 @@ sub draw_form {
 sub draw_form_field {
 
 	my ($field, $data, $form_options) = @_;
+	
+	exists $field -> {label} or $field -> {label} = $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {$field -> {name}} -> {REMARKS};
 
 	if (
 		($_REQUEST {__read_only} or $field -> {read_only})
@@ -2282,7 +2284,6 @@ sub draw_toolbar_input_text {
 	
 	$options -> {value} ||= $_REQUEST {$options -> {name}};	
 	$options -> {size} ||= 15;		
-	$options -> {keep_params} ||= [keys %_REQUEST];
 	
 	return $_SKIN -> draw_toolbar_input_text (@_);
 
@@ -4289,6 +4290,7 @@ sub setup_skin {
 			adjust_esc
 			out_html
 			user_agent
+			dump_hiddens
 		));
 
 	}

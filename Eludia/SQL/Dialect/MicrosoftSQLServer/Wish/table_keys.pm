@@ -26,11 +26,29 @@ sub wish_to_explore_existing_table_keys {
 
 	my $existing = {};
 
-	sql_select_loop ("exec sp_helpindex '$options->{table}'", sub {
+	my $len = 1 + length $options -> {table};
+	
+	eval {
 
-		$existing -> {lc $i -> {index_name}} = [split /\,/, lc $i -> {index_keys}];
+		sql_select_loop ("exec sp_helpindex '$options->{table}'", sub {
+		
+			return if lc $i -> {index_keys} eq 'id';
 
-	});
+			my $global_name = lc $i -> {index_name};
+
+			$existing -> {$global_name} = {
+
+				parts       => [split /\,/, lc $i -> {index_keys}],
+
+				global_name => $global_name,
+
+				name        => substr $global_name, $len
+
+			};
+
+		})
+	
+	};
 	
 	return $existing;
 
@@ -44,7 +62,7 @@ sub wish_to_actually_create_table_keys {
 	
 	foreach my $i (@$items) {
 	
-		sql_do ("CREATE INDEX $i->{global_name} ON $options->{table} (@{[ join ', ', @{$_ -> {parts}} ]})");
+		sql_do ("CREATE INDEX [$i->{global_name}] ON [$options->{table}] (@{[ join ', ', @{$i -> {parts}} ]})");
 	
 	}
 
@@ -59,7 +77,7 @@ sub wish_to_actually_alter_table_keys {
 
 	foreach my $i (@$items) {
 	
-		sql_do ("DROP INDEX $i->{global_name} ON $options->{table}");
+		sql_do ("DROP INDEX [$options->{table}].[$i->{global_name}]");
 	
 	}
 	
