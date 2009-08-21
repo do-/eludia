@@ -127,6 +127,7 @@ sub valuable_modules () {
 	my %modules = map {$_ => 1} (
 		'CGI::Simple',
 		'Data::Dumper',
+		'Date::Calc',
 		'DBI',
 		'Digest::MD5',
 		'FCGI',
