@@ -785,7 +785,8 @@ sub draw_form_field {
 	 	 &&  $field -> {type} ne 'color'
 	 	 &&  $field -> {type} ne 'multi_select'
 	 	 &&  $field -> {type} ne 'dir'
-		 && ($field -> {type} ne 'text' || !$conf -> {core_keep_textarea})
+		 && ($field -> {type} ne 'text'    || !$conf -> {core_keep_textarea})
+		 && ($field -> {type} ne 'suggest' || !$_REQUEST {__suggest})
 	)
 	{
 		
@@ -837,7 +838,7 @@ sub draw_form_field {
 		$field -> {type} = 'static';
 		
 	}	
-	
+
 	$field -> {type} ||= 'string';
 	
 	if ($_REQUEST {__only_field}) {

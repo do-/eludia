@@ -419,12 +419,18 @@ sub handle_request_of_type_suggest {
 	my ($page) = @_;
 
 	setup_skin ();
+	
+	our $_SUGGEST_SUB = undef;
 
 	call_for_role ("draw_item_of_$$page{type}");
+	
+	if ($_SUGGEST_SUB) {
 				
-	delete $_REQUEST {id};
-				
-	out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
+		delete $_REQUEST {id};
+
+		out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
+	
+	}
 				
 	return handler_finish ();
 				
