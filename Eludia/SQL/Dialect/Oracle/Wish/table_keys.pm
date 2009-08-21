@@ -20,7 +20,7 @@ sub wish_to_clarify_demands_for_table_keys {
 
 	foreach my $part (@{$i -> {parts}}) {
 	
-		$part = lc $part;
+		$part = uc $part;
 		
 		$part =~ s{\s}{}gsm;
 	
@@ -28,16 +28,16 @@ sub wish_to_clarify_demands_for_table_keys {
 		
 			my ($column, $width) = ($1, $2);
 			
-			my $type = uc $options -> {table_def} -> {columns} -> {$column} -> {TYPE_NAME};
+			my $type = uc $options -> {table_def} -> {columns} -> {lc $column} -> {TYPE_NAME};
 
 			if ($type =~ /CHAR/) {
 
-				$part = qq{substr("$column",1,$width)};
+				$part = qq{SUBSTR("$column",1,$width)};
 
 			} 
 			elsif ($type =~ /(LOB|TEXT)$/) {
 
-				$part = qq{substr(to_char("$column"),1,$width)};
+				$part = qq{SUBSTR(TO_CHAR("$column"),1,$width)};
 
 			} 
 			else {
@@ -63,7 +63,7 @@ sub wish_to_explore_existing_table_keys {
 
 	my %k = ();
 
-	sql_select_loop (<<EOS, sub {$k {$i -> {index_name}} -> [$i -> {column_position} - 1] = lc $i -> {column_name}}, uc_table_name ($options -> {table}));
+	sql_select_loop (<<EOS, sub {$k {$i -> {index_name}} -> [$i -> {column_position} - 1] = uc $i -> {column_name}}, uc_table_name ($options -> {table}));
 		SELECT 
 			user_indexes.index_name
 			, user_ind_columns.column_name
@@ -76,7 +76,7 @@ sub wish_to_explore_existing_table_keys {
 			AND user_indexes.table_name = ?
 EOS
 
-	sql_select_loop (<<EOS, sub {$k {$i -> {index_name}} -> [$i -> {column_position} - 1] = lc $i -> {column_expression}}, uc_table_name ($options -> {table}));
+	sql_select_loop (<<EOS, sub {$k {$i -> {index_name}} -> [$i -> {column_position} - 1] = uc $i -> {column_expression}; $k {$i -> {index_name}} -> [$i -> {column_position} - 1] =~ s/SYS_OP_C2C/TO_CHAR/g;}, uc_table_name ($options -> {table}));
 		SELECT 
 			user_indexes.index_name
 			, user_ind_expressions.column_expression
