@@ -116,7 +116,8 @@ function dialog_open (href, arg, options) {
 
 function encode1251 (str) {
 
-	var r = /[à-ÿÀ-ß]/g;
+//	var r = /[à-ÿÀ-ß]/g;
+	var r = /[\340-\377\300-\337]/g;
 	var result = str.replace (r, function (chr) {
 		result = chr.charCodeAt(0) - 848;
 		return '%' + result.toString(16);
