@@ -147,7 +147,7 @@ sub set_last_update {
 
 	sql_do ("DELETE FROM $last_update_table");
 
-	sql_do ("INSERT INTO $last_update_table (unix_ts, pid) VALUES (?, ?)", $value, $$);
+	sql_do ("INSERT INTO $last_update_table (unix_ts, pid, id) VALUES (?, ?, 1)", $value, $$);
 
 	checksum_unlock ($kind);
 
