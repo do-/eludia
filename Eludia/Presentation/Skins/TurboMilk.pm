@@ -420,10 +420,14 @@ sub draw_form {
 			>
 			<input type=hidden name="__suggest" value="">
 EOH
+
+	$html .= dump_hiddens (
 	
-	foreach (@{$options -> {keep_params}}) {
-		$html .= qq{\n\t\t\t\t<input type=hidden name="$$_{name}" value="$$_{value}">};
-	}
+		map {[$_ -> {name} => $_ -> {value}]}
+		
+			@{$options -> {keep_params}}
+
+	);
 	
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
@@ -620,11 +624,13 @@ EOH
 		}
 EOH
 
-	my $attributes = dump_attributes ($options -> {attributes});
-	
 	my $id = '' . $options;
+	
+	$options -> {attributes} -> {id}           = $id;
+	$options -> {attributes} -> {autocomplete} = 'off';
+	$options -> {attributes} -> {type}         = 'text';
 
-	return <<EOH;
+	return qq {
 		<script>
 			var _suggest_timer_$options->{name} = null;
 		</script>
@@ -649,8 +655,24 @@ EOH
 			onKeyPress="set_suggest_result (this, '$id'); $$options{after}; suggest_clicked = 1"
 		>
 		</select>
-		<input type="text" id="$id" $attributes autocomplete="off"><input type="hidden" id="${id}__label" name="_$options->{name}__label" value="$options->{attributes}->{value}"><input type="hidden" id="${id}__id" name="_$options->{name}__id" value="$options->{value__id}">
-EOH
+		
+	}
+	
+	. dump_tag (input => $options -> {attributes})
+
+	. dump_tag (input => {
+		type  => 'hidden',
+		id    => "${id}__label",
+		name  => "_$options->{name}__label",
+		value => "$options->{attributes}->{value}",
+	})
+
+	. dump_tag (input => {
+		type  => 'hidden',
+		id    => "${id}__id",
+		name  => "_$options->{name}__id",
+		value => "$options->{attributes}->{value__id}",
+	});
 
 }
 
@@ -747,8 +769,15 @@ EOH
 ################################################################################
 
 sub draw_form_field_hidden {
+
 	my ($_SKIN, $options, $data) = @_;
-	return qq {<input type="hidden" name="_$$options{name}" value="$$options{value}">};
+	
+	return dump_tag (input => {
+		type  => 'hidden', 
+		name  => '_' . $options -> {name},
+		value => $options -> {value},
+	});
+	
 }
 
 ################################################################################
@@ -892,9 +921,9 @@ sub draw_form_field_static {
 	if ($options -> {href}) {
 		$html .= '</a>';
 	}
-	
-	$html .= qq {<input type=hidden name="$$options{hidden_name}" value="$$options{hidden_value}">} if ($options -> {add_hidden});
-	
+		
+	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
+
 	return $html;
 	
 }
@@ -1122,9 +1151,19 @@ EOJS
 
 
 	my $html = qq[<span style="white-space: nowrap" id="_$options->{name}_span"><input type="text" $attributes id="${options}_label" >]
+
 		. ($options -> {other} ? qq [ <input type="button" value="..." onclick="$options->{other}->{onChange}">] : '')
-		. qq[<input type="hidden" name="_$options->{name}" value="$options->{id}" id="${options}_id"></span>];
 		
+		. dump_tag (input => {
+		
+			type  => "hidden", 
+			name  => "_$options->{name}", 
+			value => "$options->{id}",
+			id    => "${options}_id",
+			
+		})
+		
+		. '</span>';		
 
 	return $html;
 	
@@ -1402,17 +1441,15 @@ sub draw_toolbar {
 		<table bgcolor="b9c5d7" cellspacing=0 cellpadding=0 width="100%" border=0>
 			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
 EOH
-
-	foreach (@{$options -> {keep_params}}) {
-		$html .= qq{<input type="hidden" name="$_" value="$_REQUEST{$_}">}	
-	}
+	
+	
+	my %keep_params = map {$_ => 1} @{$options -> {keep_params}};
+	
+	$keep_params {$_} = 1 foreach qw (sid __last_query_string __last_scrollable_table_row __last_last_query_string);
+	
+	$html .= dump_hiddens (map {[$_ => $_REQUEST {$_}]} (keys %keep_params));
 
 	$html .= <<EOH;
-					<input type=hidden name=sid value=$_REQUEST{sid}>
-					<input type=hidden name=__last_query_string value="$_REQUEST{__last_query_string}">
-					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
-					<input type=hidden name=__last_last_query_string value="$_REQUEST{__last_last_query_string}">
-
 				<tr>
 					<td bgcolor="#6f7681" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
@@ -1902,11 +1939,6 @@ sub draw_toolbar_input_text {
 		>
 EOH
 
-	foreach my $key (@{$options -> {keep_params}}) {
-		next if $key eq $options -> {name} or $key =~ /^_/ or $key eq 'start' or $key eq 'sid';
-		$html .= qq {<input type=hidden name=$key value="$_REQUEST{$key}">};
-	}
-
 	$html .= "</td><td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
 
 	return $html;
@@ -2315,8 +2347,8 @@ sub draw_text_cell {
 	}
 		
 	$html .= '</nobr>' unless $data -> {no_nobr};
-		
-	$html .= qq {<input type=hidden name="$$data{hidden_name}" value="$$data{hidden_value}">} if ($data -> {add_hidden});
+
+	$html .= dump_hiddens ([$data -> {hidden_name} => $data -> {hidden_value}]) if $data -> {add_hidden};
 			
 	$html .= '</td>';
 
@@ -2431,9 +2463,16 @@ EOJS
 		
 	my $html = qq {<td $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" value="$$data{label}" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
 		. ($data -> {other} ? qq [<input type="button" value="$data->{other}->{button}" onclick="$data->{other}->{onChange}">] : '')
-		. qq[<input type="hidden" name="_$$data{name}" value="$$data{id}" id="$$data{name}_id"></span>]
-		. qq[</nobr></td>];	
-	
+		. dump_tag (input => {
+		
+			type  => "hidden", 
+			name  => "_$data->{name}", 
+			value => "$data->{id}",
+			id    => "$data->{name}_id",
+			
+		})
+		. '</span></nobr></td>';		
+
 	return $html;
  
 }
@@ -3122,6 +3161,13 @@ EOH
 		$_REQUEST {__on_load} .= " var d = new Date(); document.form.tz_offset.value=$tz - d.getTimezoneOffset()/60;";
 	} 
 	
+	my $hiddens = dump_hiddens (
+		[type            => 'logon'],
+		[action          => 'execute'],
+		[redirect_params => $_REQUEST {redirect_params}],
+		[tz_offset       => ''],
+	);
+
 	return <<EOH;
 
 <table border="0" cellpadding="0" cellspacing="0" align=center height=100% width=100%>
@@ -3158,10 +3204,7 @@ EOH
 					
 						<table border="0" cellpadding="8" cellspacing="0">
 						<form action="$_REQUEST{__uri}" method=post autocomplete="off" name=form target="$options->{target}">
-							<input type=hidden name=type value=logon>
-							<input type=hidden name=action value=execute>
-							<input type=hidden name=redirect_params value="$_REQUEST{redirect_params}">
-							<input type=hidden name=tz_offset value="">
+							$hiddens
 							<tr class="logon">
 								<td><b>$i18n->{login}:</b></td>
 								<td><input type="text" name="login" value="$_COOKIE{user_login}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
