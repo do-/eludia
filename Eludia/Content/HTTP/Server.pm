@@ -210,6 +210,8 @@ sub handle_connection {
 		
 		$uri =~ s{^/+}{/};
 		
+		$uri = '/i/favicon.ico' if $uri eq '/favicon.ico';
+		
 		print ACCESS_LOG $request -> method . " $uri\n";
 
 		if ($uri =~ m{^/i/}) {
