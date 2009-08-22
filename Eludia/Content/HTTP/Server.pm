@@ -208,6 +208,8 @@ sub handle_connection {
 
 		my $uri = $request -> uri -> as_string;
 		
+		$uri =~ s{^/+}{/};
+		
 		print ACCESS_LOG $request -> method . " $uri\n";
 
 		if ($uri =~ m{^/i/}) {
