@@ -2334,7 +2334,7 @@ sub draw_text_cell {
 
 	if ($data -> {href}) {
 		
-		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
+		$html .= qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
 		
 	}
 
@@ -2342,7 +2342,7 @@ sub draw_text_cell {
 
 	if ($data -> {href}) {
 
-		$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
+		$html .= '</a>';
 		
 	}
 		
@@ -3154,8 +3154,24 @@ EOH
 
 
 	my $focused_field = $_COOKIE {user_login} ? 'password' : 'login';
+	
+	$_REQUEST {__on_load} .= qq {
+	
+		\$('#$focused_field').focus ();
 
-	$_REQUEST {__on_load} .= qq {document.forms[0].elements["$focused_field"].focus ();};
+		\$("#login").keypress ( function (e) { 
+				
+			if (get_event (e).keyCode == 13) \$("#password").focus ();
+		
+		});
+
+		\$("#password").keypress ( function (e) { 
+
+			if (get_event (e).keyCode == 13) this.form.submit ();
+		
+		});
+	
+	};
 	
 	if ($preconf -> {core_fix_tz}) {
 		my $tz = (Date::Calc::Timezone ()) [3] || 0;
@@ -3208,11 +3224,11 @@ EOH
 							$hiddens
 							<tr class="logon">
 								<td><b>$i18n->{login}:</b></td>
-								<td><input type="text" name="login" value="$_COOKIE{user_login}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.password.focus ()"></td>
+								<td><input type="text" id="login" name="login" value="$_COOKIE{user_login}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false"></td>
 							</tr>
 							<tr class="logon">
 								<td><b>$i18n->{password}:</b></td>
-								<td><input type="password" name="password" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false" onKeyPress="if (window.event.keyCode == 13) form.submit ()"></td>
+								<td><input type="password" id="password" name="password" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false"></td>
 							</tr>
 							
 							
