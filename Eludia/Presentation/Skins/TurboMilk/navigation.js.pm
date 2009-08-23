@@ -34,6 +34,7 @@ var suggest_clicked = 0;
 var suggest_is_visible = 0;
 var lastClientHeight = 0;
 var lastClientWidth = 0;
+var lastKeyDownEvent = {};
 var typeAheadInfo = {last:0, 
 	accumString:"", 
 	delay:500,
@@ -148,7 +149,6 @@ function handle_hotkey_href     (r) {
 	if (r.confirm && !confirm (r.confirm)) return blockEvent ();
 
 	if (r.href) {
-//		nope (r.href + '&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');
 		nope (r.href + '&__from_table=1&salt=' + Math.random (), '_self');
 	}
 	else {
@@ -216,7 +216,7 @@ function check_menu_md5 (menu_md5) {
 }
 
 function code_alt_ctrl (code, alt, ctrl) {
-	var e = window.event;
+	var e = get_event (lastKeyDownEvent);
 	if (e.keyCode != code) return 0;
 	if (e.altKey  != alt)  return 0;
 	if (e.ctrlKey != ctrl) return 0;
@@ -236,17 +236,44 @@ function check_top_window () {
 
 function activate_link_by_id (id) {
 
+	var e = get_event (lastKeyDownEvent);
+
 	var a = document.getElementById (id);
 
 	if (a.onclick) {
-		try { window.event.cancelBubble = false } catch (e) {}
+	
+		try { e.cancelBubble = false } catch (xxx) {}
+	
 		a.onclick ();
+
 	}
 	
-	if (!window.event.cancelBubble) {
-		a.click ();
-	}
+	if (e.cancelBubble) return;
+	
+	if (browser_is_msie) {
 
+		a.click ();
+
+	}
+	else {
+	
+		var txt = '' + a;
+
+		if (txt.substr (0, 11).toUpperCase() == 'JAVASCRIPT:') {
+		
+			var code = decodeURI (txt.substr (11));
+
+			eval (code);
+		
+		}
+		else {
+					
+			nope (a.href, a.target);
+		
+		}
+	
+	}
+	
 }
 
 function focus_on_input (__focused_input) {
@@ -842,7 +869,7 @@ function handle_basic_navigation_keys () {
 
 	}
 
-	var e = window.event;
+	var e = get_event (lastKeyDownEvent);
 	var keyCode = e.keyCode;
 	var i = 0;
 	

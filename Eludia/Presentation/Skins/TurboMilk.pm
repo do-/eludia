@@ -2807,7 +2807,7 @@ sub draw_page {
 
 		$_REQUEST {__on_mousedown}    .= "if (window.event.button == 2 && window.event.ctrlKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
 
-		$_REQUEST {__on_keydown}      .= " handle_basic_navigation_keys ();";
+		$_REQUEST {__on_keydown}      .= " lastKeyDownEvent = event; handle_basic_navigation_keys ();";
 
 		foreach my $r (@{$page -> {scan2names}}) {
 			next if $r -> {off};
@@ -2907,8 +2907,8 @@ sub draw_page {
 		
 			my $what = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
 		
-			$_REQUEST {__script} .= qq {\n \$($what).bind ('$1', function () { $code }) };
-		
+			$_REQUEST {__script} .= qq {\n \$($what).bind ('$1', function (event) { $code }) };
+
 #			$attributes -> {event} = "on$1";
 #			$attributes -> {for}   = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
 				
@@ -2954,68 +2954,6 @@ sub draw_page {
 	}
 
 	return qq {<html xmlns:v="urn:schemas-microsoft-com:vml"><head>$_REQUEST{__head_links}</head>$body</html>};
-
-}
-
-################################################################################
-
-sub handle_hotkey_focus {
-
-	my ($r) = @_;
-	
-	$r -> {ctrl} += 0;
-	$r -> {alt}  += 0;
-
-	<<EOJS
-		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) {
-			document.form.$$r{data}.focus ();
-			return blockEvent ();
-		}
-EOJS
-
-}
-
-################################################################################
-
-sub handle_hotkey_focus_id {
-
-	my ($r) = @_;
-
-	$r -> {ctrl} += 0;
-	$r -> {alt}  += 0;
-
-	<<EOJS
-		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) {
-			document.getElementById ('$r->{data}').focus ();
-			return blockEvent ();
-		}
-EOJS
-
-}
-
-################################################################################
-
-sub handle_hotkey_href {
-
-	my ($r) = @_;
-	
-	$r -> {ctrl} += 0;
-	$r -> {alt}  += 0;
-	
-	my $condition = 
-		$r -> {off}     ? '0' :
-		$r -> {confirm} ? 'window.confirm(' . js_escape ($r -> {confirm}) . ')' : 
-		'1';
-			
-#	my $code = !$r -> {href} ? "activate_link_by_id ('$$r{data}')" : "nope ('$$r{href}&__from_table=1&salt=' + Math.random () + '&' + scrollable_rows [scrollable_table_row].id, '_self');";
-	my $code = !$r -> {href} ? "activate_link_by_id ('$$r{data}')" : "nope ('$$r{href}&__from_table=1&salt=' + Math.random (), '_self');";
-
-	$condition eq '1' or $code = "if ($condition) {$code}";
-	
-
-	return <<EOJS
-		if (code_alt_ctrl ($$r{code}, $r->{alt}, $r->{ctrl})) $code;
-EOJS
 
 }
 
