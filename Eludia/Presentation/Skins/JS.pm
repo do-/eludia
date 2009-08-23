@@ -28,12 +28,12 @@ sub draw_error_page {
 
 	my ($_SKIN, $page) = @_;
 
-	$_REQUEST {__content_type} ||= 'text/plain; charset=' . $i18n -> {_charset};
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
 
 	my $data = $_JSON -> encode ([$_REQUEST {error}]);
 
 	$_REQUEST {__script} = <<EOJ;
-		function onload () {
+		function on_load () {
 EOJ
 
 	if ($page -> {error_field}) {
@@ -53,7 +53,7 @@ EOJ
 		}
 EOJ
 
-	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="onload ()"></body><html>};
+	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};
 
 }
 
