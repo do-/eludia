@@ -2900,15 +2900,20 @@ sub draw_page {
 			
 			$code  = "\n\$(document).ready (function () {\n${code}\n})\n";
 			
+			$_REQUEST {__head_links} .= dump_tag (script => $attributes, $code) . "\n";
+
 		}
 		else {
 		
-			$attributes -> {event} = "on$1";
-			$attributes -> {for}   = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
+			my $what = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
+		
+			$_REQUEST {__script} .= qq {\n \$($what).bind ('$1', function () { $code }) };
+		
+#			$attributes -> {event} = "on$1";
+#			$attributes -> {for}   = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
 				
 		}
 		
-		$_REQUEST {__head_links} .= dump_tag (script => $attributes, $code) . "\n";
 
 	}
 	
