@@ -66,7 +66,7 @@ sub require_model {
 
 		my %tables = ();
 
-		tie %tables, Eludia::Tie::FileDumpHash, {path => [grep {-d} map {"$_/Model"} @$PACKAGE_ROOT]};
+		tie %tables, Eludia::Tie::FileDumpHash, {conf => $conf, path => [grep {-d} map {"$_/Model"} @$PACKAGE_ROOT]};
 
 		$DB_MODEL -> {tables} = \%tables;
 
@@ -162,13 +162,22 @@ sub require_scripts_of_type ($) {
 		foreach my $script (@scripts) {
 		
 			my $src = '';
-						
-			open (SCRIPT, $script -> {path}) or die "Can't open $script->{path}:$!\n";
-			while (<SCRIPT>) { $src .= $_; };
-			close (SCRIPT);
 			
-			$src = "\n$script->{name} => {$src, _src => q{$src}}" if $script_type eq 'model';
-			
+			if ($script_type eq 'model') {
+
+				$src = Dumper ($DB_MODEL -> {tables} -> {$script -> {name}});
+				$src =~ s{^\$VAR1 =}{$script->{name} =>};
+				$src =~ s{;\s*$}{}sm;
+
+			}
+			else {
+
+				open  (SCRIPT, $script -> {path}) or die "Can't open $script->{path}:$!\n";
+				while (<SCRIPT>) { $src .= $_; };
+				close (SCRIPT);
+
+			}
+
 			push @src, $src;
 									
 		}

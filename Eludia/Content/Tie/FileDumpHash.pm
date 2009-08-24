@@ -29,19 +29,55 @@ sub FETCH_ {
 	my ($options, $key) = @_;
 	
 	my $VAR1 = {};
+	
+	my $sql_types = $options -> {conf} -> {sql_types};
 
 	foreach my $dir (reverse @{$options -> {path}}) {
 
 		my $path = "${dir}/${key}.pm";
 
 		-f $path or next;
+		
+		my %remarks = ();
 
 		my $VAR;
 		open (I, $path) or die "Can't open '$path': $!\n";
-		my $src = join '', (<I>);
+		
+		my $src = '';
+		
+		while (my $line = <I>) {
+		
+			$src .= $line;
+			
+			if ($line =~ /(\w+)\s*\=\>.*?\#\s*(.*?)\s*$/sm) {
+			
+				$remarks {$1} = $2;
+							
+			}
+		
+		}
+		
 		eval "\$VAR = {$src}"; die $@ if $@;
 		close I;
 		
+		foreach my $column (values %{$VAR -> {columns}}) {
+		
+			ref $column or $column = {TYPE => $column};
+			
+			$column -> {TYPE} or next;
+			
+			$column = {%$column, %{$sql_types -> {$column -> {TYPE}} ||= {TYPE_NAME => $column -> {TYPE}}}};
+
+		}
+		
+		foreach my $column_name (keys %remarks) {
+		
+			exists $VAR -> {columns} -> {$column_name} or next;
+			
+			$VAR -> {columns} -> {$column_name} -> {REMARKS} ||= $remarks {$column_name};
+			
+		}
+
 		foreach my $object (keys (%$VAR)) {
 
 			if (ref $VAR -> {$object} eq HASH) {
