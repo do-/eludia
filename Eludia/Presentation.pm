@@ -774,6 +774,28 @@ sub draw_form_field {
 
 	my ($field, $data, $form_options) = @_;
 	
+	my $table_def = $DB_MODEL -> {tables} -> {$_REQUEST {__the_table} ||= $_REQUEST {type}};
+	
+	if ($table_def) {
+	
+		my $field_def = $table_def -> {columns} -> {$field -> {name}};
+		
+		if ($field_def) {
+		
+			my %field_options = %{$field_def -> {FIELD_OPTIONS} || {}};
+			
+			$field_options {type}  ||= $field_def -> {TYPE};
+			
+			$field_options {label} ||= $field_def -> {REMARKS};
+		
+			$field_options {label} ||= $field_def -> {label};
+
+			$field = {%field_options, %$field};
+		
+		}
+	
+	}
+	
 	exists $field -> {label} or $field -> {label} = $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {$field -> {name}} -> {REMARKS};
 
 	if (
