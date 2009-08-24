@@ -72,9 +72,9 @@ sub fill_in {
 
 		string   => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
    		
-		checkbox => {TYPE_NAME => 'tinyint', COLUMN_DEF  =>  0 },
+		checkbox => {TYPE_NAME => 'tinyint', NULLABLE => 0, COLUMN_DEF  =>  0 },
    		
-		radio    => {TYPE_NAME => 'tinyint', COLUMN_DEF  => -1 },
+		radio    => {TYPE_NAME => 'tinyint', NULLABLE => 0, COLUMN_DEF  => -1 },
 
 		select   => {TYPE_NAME => 'int'},
 
