@@ -19,6 +19,12 @@ sub TIEHASH  {
 }
 
 sub FETCH {
+	
+	return $_ [0] -> {cache} -> {$_ [1]} ||= FETCH_ (@_);
+
+}
+
+sub FETCH_ {
 
 	my ($options, $key) = @_;
 	

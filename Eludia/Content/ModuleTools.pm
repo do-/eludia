@@ -317,9 +317,11 @@ sub require_fresh {
 
 	}
 	
-	if ($type eq 'menu' && $db) {
+	if ($type eq 'menu') {
 	
-		require_scripts ();
+		(tied %{$DB_MODEL -> {tables}}) -> {cache} = {};
+	
+		require_scripts () if $db;
 
 	}
 			
