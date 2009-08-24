@@ -256,7 +256,9 @@ function activate_link_by_id (id) {
 
 	}
 	else {
-	
+		
+		blockEvent (e);
+
 		var txt = '' + a;
 
 		if (txt.substr (0, 11).toUpperCase() == 'JAVASCRIPT:') {
@@ -834,11 +836,13 @@ function focus_on_first_input (td) {
 
 }
 
-function blockEvent () {
+function blockEvent (event) {
 
-	try { window.event.keyCode = 0         } catch (e) {}
-	try { window.event.cancelBubble = true } catch (e) {}
-	try { window.event.returnValue = false } catch (e) {}
+	if (browser_is_msie) event = window.event;
+
+	try { event.keyCode = 0         } catch (e) {}
+	try { event.cancelBubble = true } catch (e) {}
+	try { event.returnValue = false } catch (e) {}
 
 	return false;
 	
