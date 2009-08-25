@@ -68,6 +68,8 @@ sub fill_in {
 
    	fill_in_things (sql_types =>
    	
+		int      => {TYPE_NAME => 'int', FIELD_OPTIONS => {type => 'string'}},
+
 		money    => {TYPE_NAME => 'decimal', COLUMN_SIZE => 10, DECIMAL_DIGITS => 2, FIELD_OPTIONS => {type => 'string', picture => '### ### ### ###,##'}},
 
 		string   => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
