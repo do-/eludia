@@ -795,6 +795,8 @@ sub draw_form_field {
 		}
 	
 	}
+
+	$field -> {data_source} and $field -> {values} ||= $data -> {$field -> {data_source}};
 	
 	exists $field -> {label} or $field -> {label} = $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {$field -> {name}} -> {REMARKS};
 

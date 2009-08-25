@@ -66,7 +66,51 @@ sub FETCH_ {
 			
 			$column -> {TYPE} or next;
 			
-			$column = {%$column, %{$sql_types -> {$column -> {TYPE}} ||= {TYPE_NAME => $column -> {TYPE}}}};
+			my %options;
+
+			if ($column -> {TYPE} =~ /^\s*(\w+)/) {
+			
+				$column -> {TYPE_NAME} = $1;
+			
+				%options = %{$sql_types -> {$1} ||= {TYPE_NAME => $1}};
+
+				$options {FIELD_OPTIONS} -> {type} ||= $1;
+			
+			}
+
+			if ($column -> {TYPE} =~ /\s*\(\s*(\w+)\s*\)\s*$/) {
+			
+				$column -> {TYPE_NAME} ||= 'int';
+
+				$options {ref} = $1;
+				
+				$options {FIELD_OPTIONS} -> {data_source} ||= $1;
+			
+			}
+			
+			if ($column -> {TYPE} =~ /\s*\[\s*(\d+)(\s*\,\s*(\d+))?\s*\]\s*$/) {
+			
+				$options {COLUMN_SIZE} = $1;
+				
+				$options {FIELD_OPTIONS} -> {size} ||= $1;
+				
+				if ($3) {
+				
+					$options {DECIMAL_DIGITS} = $3;
+					
+					if ($options {FIELD_OPTIONS} -> {picture}) {
+					
+						my $tail = '#' x $3;
+						
+						$options {FIELD_OPTIONS} -> {picture} =~ s{\,.*}{,$tail};
+					
+					}
+				
+				}
+			
+			}
+
+			$column = {%$column, %options};
 
 		}
 		
