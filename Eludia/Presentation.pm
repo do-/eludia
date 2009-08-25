@@ -770,16 +770,16 @@ sub draw_form {
 
 ################################################################################
 
-sub draw_form_field {
+sub _adjust_field {
 
-	my ($field, $data, $form_options) = @_;
-	
+	my ($field, $data) = @_;
+
 	my $table_def = $DB_MODEL -> {tables} -> {$_REQUEST {__the_table} ||= $_REQUEST {type}};
 	
 	if ($table_def) {
 	
 		my $field_def = $table_def -> {columns} -> {$field -> {name}};
-		
+
 		if ($field_def) {
 		
 			my %field_options = %{$field_def -> {FIELD_OPTIONS} || {}};
@@ -798,7 +798,17 @@ sub draw_form_field {
 
 	$field -> {data_source} and $field -> {values} ||= $data -> {$field -> {data_source}};
 	
-	exists $field -> {label} or $field -> {label} = $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {$field -> {name}} -> {REMARKS};
+	return $field;
+
+}
+
+################################################################################
+
+sub draw_form_field {
+
+	my ($field, $data, $form_options) = @_;
+	
+	$field = _adjust_field ($field, $data);
 
 	if (
 		($_REQUEST {__read_only} or $field -> {read_only})
@@ -1184,6 +1194,8 @@ sub draw_form_field_hgroup {
 	foreach my $item (@{$options -> {items}}) {
 	
 		next if $item -> {off} && $data -> {id};
+		
+		$item = _adjust_field ($item, $data);		
 		
 		$item -> {label} .= ': ' if $item -> {label} && !$item -> {no_colon};
 		
