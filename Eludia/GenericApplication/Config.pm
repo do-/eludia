@@ -66,7 +66,29 @@ sub fill_in {
 
    	$conf -> {lang} ||= 'RUS';   	
 
-   	fill_in_button_presets (
+   	fill_in_things (sql_types =>
+   	
+		int      => {TYPE_NAME => 'int', FIELD_OPTIONS => {type => 'string'}},
+
+		money    => {TYPE_NAME => 'decimal', COLUMN_SIZE => 10, DECIMAL_DIGITS => 2, FIELD_OPTIONS => {type => 'string', picture => '### ### ### ###,##'}},
+
+		string   => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+   		
+		checkbox => {TYPE_NAME => 'tinyint', NULLABLE => 0, COLUMN_DEF  =>  0 },
+   		
+		radio    => {TYPE_NAME => 'tinyint', NULLABLE => 0, COLUMN_DEF  => -1 },
+
+		select   => {TYPE_NAME => 'int'},
+
+		suggest  => {TYPE_NAME => 'int'},
+   		
+		text     => {TYPE_NAME => 'text'},
+
+		ref      => {TYPE_NAME => 'int'},
+
+   	);
+
+   	fill_in_things (button_presets =>
 
    		ok => {
    			icon    => 'ok',
@@ -134,17 +156,21 @@ sub fill_in {
 
 ################################################################################
 
-sub fill_in_button_presets {
+sub fill_in_things {
 
-	my %entries = @_;
-   	$conf -> {button_presets} ||= {};
-	return if $conf -> {button_presets} -> {_is_filled};
+	my ($name, %entries) = @_;
+	
+   	my $h = ($conf -> {$name} ||= {});
+   	
+	return if $h -> {_is_filled};
 	
 	while (my ($key, $value) = each %entries) {
-		$conf -> {button_presets} -> {$key} ||= $value;
+	
+		$h -> {$key} ||= $value;
+		
 	}
 	
-	$conf -> {button_presets} -> {_is_filled} = 1;
+	$h -> {_is_filled} = 1;
 
 };
 

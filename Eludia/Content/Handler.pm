@@ -452,6 +452,8 @@ sub setup_page_content {
 
 	my ($page) = @_;
 	
+	delete $_REQUEST {__the_table};
+	
 	eval { $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
 
 	$@ and return $_REQUEST {error} = $@;
