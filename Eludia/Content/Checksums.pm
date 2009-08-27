@@ -146,8 +146,18 @@ sub set_last_update {
 	my $last_update_table = sql_table_name ($conf->{systables}->{__last_update});
 
 	sql_do ("DELETE FROM $last_update_table");
+	
+	eval {
 
-	sql_do ("INSERT INTO $last_update_table (unix_ts, pid, id) VALUES (?, ?, 1)", $value, $$);
+		sql_do ("INSERT INTO $last_update_table (unix_ts, pid) VALUES (?, ?)", $value, $$);
+
+	};
+	
+	if ($@) {
+
+		sql_do ("INSERT INTO $last_update_table (unix_ts, pid, id) VALUES (?, ?, 1)", $value, $$);
+
+	}
 
 	checksum_unlock ($kind);
 
