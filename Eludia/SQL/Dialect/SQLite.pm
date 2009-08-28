@@ -218,10 +218,18 @@ sub sql_select_hash {
 	
 		@params = ({}) if (@params == 0);
 		
+		$_REQUEST {__the_table} = $sql_or_table_name;
+
 		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE $field = ?", $id);
 
 	}	
 	
+	if (!$_REQUEST {__the_table} && $sql_or_table_name =~ /\s+FROM\s+(\w+)/sm) {
+	
+		$_REQUEST {__the_table} = $1;
+	
+	}
+
 	my $st = sql_prepare ($sql_or_table_name);
 	$st -> execute (@params);
 	my $result = $st -> fetchrow_hashref ();

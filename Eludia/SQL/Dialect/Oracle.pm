@@ -513,11 +513,19 @@ sub sql_select_hash {
 		@params = ({}) if (@params == 0);
 		
 		my $sql_or_table_name_safe = sql_table_name ($sql_or_table_name);
+		
+		$_REQUEST {__the_table} = $sql_or_table_name;
 
 		return sql_select_hash ("SELECT * FROM $sql_or_table_name_safe WHERE $field = ?", $id);
 		
 	}	
 	
+	if (!$_REQUEST {__the_table} && $sql_or_table_name =~ /\s+FROM\s+(\w+)/sm) {
+	
+		$_REQUEST {__the_table} = $1;
+	
+	}
+
 	my $time = time;	
 
 	my $st = sql_execute ($sql_or_table_name, @params);

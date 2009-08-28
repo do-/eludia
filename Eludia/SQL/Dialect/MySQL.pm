@@ -373,11 +373,19 @@ sub sql_select_hash {
 	
 		@params = ({}) if (@params == 0);
 		
+		$_REQUEST {__the_table} ||= $sql_or_table_name;
+		
 		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE id = ?", $id);
 		
 	}	
 
 	$sql_or_table_name =~ s{^\s+}{};
+	
+	if (!$_REQUEST {__the_table} && $sql_or_table_name =~ /\s+FROM\s+(\w+)/sm) {
+	
+		$_REQUEST {__the_table} = $1;
+	
+	}
 	
 	$sql_or_table_name .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
 
