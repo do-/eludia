@@ -2806,6 +2806,8 @@ sub draw_page {
 
 		$_REQUEST {__on_keydown}      .= " lastKeyDownEvent = event; handle_basic_navigation_keys ();";
 
+		$_REQUEST {__on_keypress}     .= " if (!browser_is_msie && event.keyCode == 27) return false;";
+
 		foreach my $r (@{$page -> {scan2names}}) {
 			next if $r -> {off};
 			$r -> {data} .= '';
