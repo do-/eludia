@@ -1035,7 +1035,7 @@ TableSlider.prototype.set_row = function (row) {
 		}
 	}
 	
-	if (row) this.cell_on ();
+	this.cell_on ();
 
 }
 
@@ -1070,10 +1070,11 @@ TableSlider.prototype.cell_on = function () {
 	if (this.isVirgin && this.row == 0 && this.initial_row == 0) return;
 
 	var cell         = this.get_cell ();
-	
+
 	if (!cell) return;
 	
 	var c            = $(cell);
+		
 	var table        = c.parents ('table').eq (0);
 	var div          = table.parents ('div').eq (0);
 	var offset       = div.offset ($(document.body));
@@ -1106,16 +1107,29 @@ TableSlider.prototype.cell_on = function () {
 	
 	css.top        --;
 	css.left       --;
-	css.visibility = 'visible';	
-
-	$('#slider').css (css);
-	
+	css.visibility = 'visible';
+		
 	$('#slider_').css ({	
-		left : css.left + css.width - 3,
-		top  : css.top  + css.height - 3,
+		left   : css.left + css.width  - 2 - browser_is_msie,
+		top    : css.top  + css.height - 2 - browser_is_msie,
 		'visibility': 'visible'
 	});
 
+	if (!browser_is_msie) {
+	
+		css.width  -= 2;
+		css.height -= 2;
+	
+	}
+	else {
+
+		css.width  ++;
+		css.height ++;
+
+	}
+
+	$('#slider').css (css);
+	
 	if (this.last_cell_id != cell.uniqueID) focus_on_first_input (cell);
 
 	last_cell_id = cell.uniqueID;	
@@ -1126,12 +1140,21 @@ TableSlider.prototype.cell_on = function () {
 
 function td_on_click (event) {
 
-	if ($.browser.msie) event = window.event;
+	event = get_event (event);
 
-	var td = $.browser.msie ? event.srcElement : event.target;
+	var td = browser_is_msie ? event.srcElement : event.target;
 
 	if (td.tagName != 'TD') return;
 	
+
+	var tr = td;
+
+	while (tr && tr.tagName != 'TR') {
+		tr = tr.parentNode;
+	};
+
+	var uid = tr.uniqueID;
+
 	tableSlider.col = -1;
 	
 	var i = td;
@@ -1140,18 +1163,12 @@ function td_on_click (event) {
 		i = i.previousSibling;
 		tableSlider.col ++;
 	};
-	
-	var tr = td;
-
-	while (tr && tr.tagName != 'TR') {
-		tr = tr.parentElement;
-	};
-
-	var uid = tr.uniqueID;
-	
+		
 	for (i = 0; i < tableSlider.cnt; i ++) {
 	
-		if (tableSlider.rows [i].uniqueID != uid) continue;
+		if (tableSlider.rows [i] != tr) continue;
+
+//		if (tableSlider.rows [i].uniqueID != uid) continue;
 		
 		tableSlider.row = i;
 		
@@ -1233,11 +1250,11 @@ TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 	
 	if (!td) return;
 	
-	var tr = td.parentElement;	
-	if (tr.tagName == 'A') tr = tr.parentElement;
-	var table = tr.parentElement.parentElement;
+	var tr = td.parentNode;	
+	if (tr.tagName == 'A') tr = tr.parentNode;
+	var table = tr.parentNode.parentNode;
 	var thead = table.tHead;
-	var div   = table.parentElement;
+	var div   = table.parentNode;
 
 	// checking top border
 	
