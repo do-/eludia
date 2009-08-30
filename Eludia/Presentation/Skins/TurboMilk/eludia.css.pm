@@ -899,7 +899,14 @@ select {
 	FONT-FAMILY: Tahoma, 'MS Sans Serif'; 
 }
 
-input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs {
+select.form-active-inputs, select.form-active-deleted {
+}
+
+select.form-mandatory-inputs {
+	background-color: #f4ff00;
+}
+
+input.form-active-inputs, textarea.form-active-inputs {
 	FONT-SIZE: 8pt; 
 	COLOR: #000000; 
 	background-color: #ffffff;
@@ -908,7 +915,7 @@ input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs
 	padding-left: 3px;
 	padding-right: 3px;
 }
-input.form-active-deleted, select.form-active-deleted, textarea.form-active-deleted {
+input.form-active-deleted, textarea.form-active-deleted {
 	FONT-SIZE: 8pt; 
 	COLOR: #000000; 
 	background-color: #ffffff;
@@ -918,7 +925,7 @@ input.form-active-deleted, select.form-active-deleted, textarea.form-active-dele
 	padding-right: 3px;
 }
 
-input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
+input.form-mandatory-inputs, textarea.form-mandatory-inputs {
 	FONT-SIZE: 8pt; 
 	COLOR: #000000; 
 	background-color: #f4ff00;
