@@ -822,7 +822,7 @@ function focus_on_first_input (td) {
 
 	if (!td) return blur_all_inputs ();	
 	
-	last_cell_id = td.uniqueID;
+	last_cell_id = td;
 
 	$('input', td).each (function () {
 		try {
@@ -1001,7 +1001,7 @@ function TableSlider (initial_row) {
 	this.rows = [];		
 	this.row = 0;
 	this.col = 0;
-	this.last_cell_id = '';
+	this.last_cell_id = null;
 
 }
 
@@ -1130,9 +1130,9 @@ TableSlider.prototype.cell_on = function () {
 
 	$('#slider').css (css);
 	
-	if (this.last_cell_id != cell.uniqueID) focus_on_first_input (cell);
+	if (this.last_cell_id != cell) focus_on_first_input (cell);
 
-	last_cell_id = cell.uniqueID;	
+	last_cell_id = cell;	
 
 	return cell;
 
@@ -1153,8 +1153,6 @@ function td_on_click (event) {
 		tr = tr.parentNode;
 	};
 
-	var uid = tr.uniqueID;
-
 	tableSlider.col = -1;
 	
 	var i = td;
@@ -1167,8 +1165,6 @@ function td_on_click (event) {
 	for (i = 0; i < tableSlider.cnt; i ++) {
 	
 		if (tableSlider.rows [i] != tr) continue;
-
-//		if (tableSlider.rows [i].uniqueID != uid) continue;
 		
 		tableSlider.row = i;
 		
@@ -1180,9 +1176,9 @@ function td_on_click (event) {
 
 	tableSlider.cell_on (cell);
 
-	if (tableSlider.last_cell_id != cell.uniqueID) focus_on_first_input (cell);
+	if (tableSlider.last_cell_id != cell) focus_on_first_input (cell);
 
-	tableSlider.last_cell_id = cell.uniqueID;	
+	tableSlider.last_cell_id = cell;	
 
 	return false;
 	
