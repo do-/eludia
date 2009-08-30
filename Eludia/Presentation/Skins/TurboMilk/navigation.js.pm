@@ -240,6 +240,12 @@ function activate_link_by_id (id) {
 
 	var a = document.getElementById (id);
 
+	a_click (a)
+
+}
+
+function a_click (a, e) {
+
 	if (a.onclick) {
 	
 		try { e.cancelBubble = false } catch (xxx) {}
@@ -248,8 +254,8 @@ function activate_link_by_id (id) {
 
 	}
 	
-	if (e.cancelBubble) return;
-	
+	if (e != null && e.cancelBubble) return;
+
 	if (browser_is_msie) {
 
 		a.click ();
@@ -1074,6 +1080,7 @@ TableSlider.prototype.cell_on = function () {
 	if (!cell) return;
 	
 	var c            = $(cell);
+	var a            = $('a', c).get (0);
 		
 	var table        = c.parents ('table').eq (0);
 	var div          = table.parents ('div').eq (0);
@@ -1099,6 +1106,17 @@ TableSlider.prototype.cell_on = function () {
 	if (css.width < 1) return this.cell_off (cell);
 	
 	css.height       = c.outerHeight ();
+	css.cursor       = a == null ? 'default' : 'pointer';
+
+	$('#slider').click (a == null ? null : function (event) {
+		
+		$('a', tableSlider.get_cell ()).each ( function () { 
+			
+			a_click (this, event) 
+				
+		})
+		
+	})
 
 	if (
 		css.top < offset.top + thead.outerHeight ()
