@@ -78,7 +78,8 @@ div.checkboxes {
 /* The main calendar widget.  DIV containing a table. */
 
 .calendar {
-  position: relative;
+  position: absolute;
+  z-index: 200;
   display: none;
   border-top: 2px solid #fff;
   border-right: 2px solid #000;
