@@ -1118,6 +1118,12 @@ TableSlider.prototype.cell_on = function () {
 		
 	})
 
+	$('#slider').dblclick (function (event) {
+		
+		$(tableSlider.get_cell ()).dblclick ();
+		
+	})
+
 	if (
 		css.top < offset.top + thead.outerHeight ()
 		|| css.top + css.height + ((div.scrollHeight > div.offsetHeight - 12) ? 16 : 0) > offset.top + div.outerHeight ()
