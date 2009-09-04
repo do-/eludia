@@ -711,7 +711,7 @@ sub draw_form {
 		
 			check_href ($item);
 
-			if (exists $item -> {keep_esc}) {
+			if (!exists $item -> {keep_esc}) {
 						
 				$item -> {href} =~ s{\&?__last_query_string=\d*}{}gsm;
 				$item -> {href} .= "&__last_query_string=$_REQUEST{__last_last_query_string}";

@@ -249,21 +249,75 @@ sub dt_add {
 	
 	my $was_iso = $dt =~ /^\d\d\d\d\-\d\d\-\d\d/;
 	
+	my $was_hms = $dt =~ /(\d+):(\d+):(\d+)$/;
+	
+	my @hms = $was_hms ? ($1, $2, $3) : ();
+
 	my @delta = split /\s+/, $delta;
 	
 	my $what = 'Days';
 	
-	@delta [-1] =~ /^[A-Za-z]+$/ and $what = pop @delta;
-
+	@delta [-1] =~ /^[A-Za-z]/ and $what = pop @delta;
+	
+	my $want_24 = ($what =~ s{24}{});
+	
+	if ($what =~ /^H/i) {
+		
+		$what = 'DHMS'; 	@delta = (0, @delta [0], 0, 0);
+	
+	}
+	elsif ($what =~ /^M/i) {
+		
+		$what = 'DHMS';		@delta = (0, 0, @delta [0], 0);
+	
+	}
+	elsif ($what =~ /^S/i) {
+		
+		$what = 'DHMS';		@delta = (0, 0, 0, @delta [0]);
+	
+	}
+	
 	require Date::Calc;
+	
+	my @ymd = dt_y_m_d ($dt);
 
-	my @dt = &{"Date::Calc::Add_Delta_$what"} (dt_y_m_d ($dt), @delta);
+	my $want_hms = $what =~ /HMS$/;
+	
+	if ($want_hms) { 
 		
-	wantarray ? @dt          :
+		@hms > 0 or @hms = (0, 0, 0);
 		
-	$was_iso  ? dt_iso (@dt) :
+		if ($hms [0] == 24) {
 		
-	            dt_dmy (@dt)
+			$hms [0] = 0;
+			
+			@ymd = Date::Calc::Add_Delta_Days (@ymd, 1);
+		
+		}
+	
+	} else {	
+		
+		@hms = ();
+	
+	}
+
+	my @dt = &{"Date::Calc::Add_Delta_$what"} (@ymd, @hms, @delta);
+
+	return @dt if wantarray;
+	
+	if ($want_hms && $want_24 && $dt [3] == 0) {
+	
+		@dt [0 .. 2] = Date::Calc::Add_Delta_Days (@dt [0 .. 2], -1);
+		
+		$dt [3] = 24;
+
+	}
+
+	my $dt = $was_iso ? dt_iso (@dt [0 .. 2]) : dt_dmy (@dt [0 .. 2]);
+
+	$dt .= sprintf (' %02d:%02d:%02d', @dt [3 .. 5]) if $want_hms;
+
+	return $dt;
 
 }
 

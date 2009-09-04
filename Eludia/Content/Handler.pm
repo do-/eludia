@@ -119,6 +119,16 @@ sub setup_request_params {
 		
 	our %_REQUEST_VERBATIM = %_REQUEST;
 	
+	foreach my $k (keys %_REQUEST) {
+
+		my $k_ = $k;
+		if ($k =~ s/</&lt;/g || $k =~ s/>/&gt;/g) {
+			$_REQUEST {$k} = delete $_REQUEST {$k_};
+		}
+		
+		$_REQUEST {$k} =~ s/</&lt;/g; $_REQUEST {$k} =~ s/>/&gt;/g;
+	}
+	
 	our $_QUERY = undef;
 
 	$_REQUEST {__skin} = '';

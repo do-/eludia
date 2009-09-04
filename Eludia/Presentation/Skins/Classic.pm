@@ -159,14 +159,14 @@ sub draw_auth_toolbar {
 	
 	if (@{$_SKIN -> {subset} -> {items}} > 1) {
 	
-		$subset_selector = <<EOH;
-			<td class=bgr1>
-			<input type=hidden name=sid value='$_REQUEST{sid}'>
-			<input type=hidden name=select value='$_REQUEST{select}'>
-			<input type=hidden name=__last_query_string value='$_REQUEST{__last_last_query_string}'>
-			<input type=hidden name=__last_scrollable_table_row value='$_REQUEST{__last_scrollable_table_row}'>
-			<select name=__subset onChange="submit()">
-EOH
+		$subset_selector = q[<td class=bgr1>];
+		$subset_selector .= dump_hiddens (
+			[sid                         => $_REQUEST{sid}],
+			[select                      => $_REQUEST{select}],
+			[__last_query_string         => $_REQUEST{__last_last_query_string}],
+			[__last_scrollable_table_row => $_REQUEST{__last_scrollable_table_row}],
+		);
+		$subset_selector .= q[<select name=__subset onChange="submit()">];
 
 		foreach my $item (@{$_SKIN -> {subset} -> {items}}) {
 			$subset_selector .= "<option value='$$item{name}'";
@@ -469,9 +469,13 @@ sub draw_form {
 			>
 EOH
 	
-	foreach (@{$options -> {keep_params}}) {
-		$html .= qq{\n\t\t\t\t<input type=hidden name="$$_{name}" value="$$_{value}">};
-	}
+	$html .= dump_hiddens (
+		
+		map {
+			[$_ -> {name} => $_ -> {value}]
+		} @{$options -> {keep_params}}
+		
+	);
 	
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
@@ -629,8 +633,15 @@ EOH
 ################################################################################
 
 sub draw_form_field_hidden {
+
 	my ($_SKIN, $options, $data) = @_;
-	return qq {<input type="hidden" name="_$$options{name}" value="$$options{value}">};
+	
+	return dump_tag (input => {
+		type  => 'hidden',
+		name  => '_' . $options -> {name},
+		value => $options -> {value},
+	});
+
 }
 
 ################################################################################
@@ -718,9 +729,9 @@ sub draw_form_field_static {
 	if ($options -> {href}) {
 		$html .= '</a>';
 	}
-	
-	$html .= qq {<input type=hidden name="$$options{hidden_name}" value="$$options{hidden_value}">} if ($options -> {add_hidden});
-	
+
+	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
+
 	return $html;
 	
 }
@@ -1134,9 +1145,8 @@ sub draw_toolbar {
 			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}" method=post>
 EOH
 
-	foreach (@{$options -> {keep_params}}) {
-		$html .= qq{<input type="hidden" name="$_" value="$_REQUEST{$_}">}	
-	}
+	my %keep_params = map {$_ => 1} @{$options -> {keep_params}};
+	$html .= dump_hiddens (map {[$_ => $_REQUEST {$_}]} (keys %keep_params));
 	
 	$html .= <<EOH;
 				<tr><td class=bgr0 colspan=20><${spacer}1></td></tr>
@@ -1377,11 +1387,6 @@ sub draw_toolbar_input_text {
 			id="$options->{id}"
 		>
 EOH
-
-	foreach my $key (@{$options -> {keep_params}}) {
-		next if $key eq $options -> {name} or $key =~ /^_/ or $key eq 'start' or $key eq 'sid';
-		$html .= qq {<input type=hidden name=$key value="$_REQUEST{$key}">};
-	}
 
 	$html .= "<td><img height=15 vspace=1 hspace=4 src='$_REQUEST{__static_url}/razd1.gif?$_REQUEST{__static_salt}' width=2 border=0></td>";
 
@@ -1738,9 +1743,9 @@ sub draw_text_cell {
 		$html .= '&nbsp;';		
 		
 		$html .= '</nobr>' unless $data -> {no_nobr};
-		
-		$html .= qq {<input type=hidden name="$$data{hidden_name}" value="$$data{hidden_value}">} if ($data -> {add_hidden});		
-		
+
+		$html .= dump_hiddens ([$data -> {hidden_name} => $data -> {hidden_value}]) if $data -> {add_hidden};
+
 	}
 	
 	$html .= '</td>';
@@ -2001,16 +2006,33 @@ sub draw_table {
 		<table cellspacing=0 cellpadding=0 width="100%">		
 			<tr>		
 				<form name=$$options{name} action="$_REQUEST{__uri}$_REQUEST{__script_name}" method=post enctype=multipart/form-data target=invisible>
-					<input type=hidden name=type value=$$options{type}>
-					<input type=hidden name=action value=$$options{action}>
-					<input type=hidden name=sid value=$_REQUEST{sid}>
-					<input type=hidden name=__last_query_string value="$_REQUEST{__last_last_query_string}">
-					<input type=hidden name=__last_scrollable_table_row value="$_REQUEST{__last_scrollable_table_row}">
 EOH
 
-	foreach my $key (keys %_REQUEST) {
-		next if $key =~ /^_/ or $key =~/^(type|action|sid|__last_query_string)$/;
-		$html .= qq {<input type=hidden name=$key value="$_REQUEST{$key}">\n};
+	my %hidden = ();
+	
+	$hidden {$_} = $_REQUEST {$_} foreach (
+		'__tree', 
+		'__last_scrollable_table_row',
+		grep {/^[^_]/ or /^__get_ids_/} keys %_REQUEST
+	);
+	
+	$hidden {$_} = $options -> {$_} foreach (
+		'type', 
+		'action',
+	);
+
+	$hidden {__last_query_string} = $_REQUEST{__last_last_query_string};
+	
+	while (my ($k, $v) = each %hidden) {
+	
+		$html .= "\n" . dump_tag (input => {
+			
+			type  => 'hidden',
+			name  => $k,
+			value => $v,
+			
+		}) if defined $v;
+	
 	}
 
 	$html .= $options -> {no_scroll} ?
@@ -2564,6 +2586,14 @@ sub draw_logon_form {
 	my ($options) = @_;
 
 	$_REQUEST {__on_load} = "document.getElementsByName(\"password\")[0].focus()" if ($_COOKIES{user_login} && $_COOKIES{user_login}->value);
+	
+	my $hiddens = dump_hiddens (
+		[type            => 'logon'],
+		[action          => 'execute'],
+		[redirect_params => $_REQUEST {redirect_params}],
+		[_url            => $_REQUEST{_url}],
+	);
+		
 		
 	return <<EOH;
 	
@@ -2572,10 +2602,7 @@ sub draw_logon_form {
 				<td align=middle>   
 					<table cellspacing=0 cellpadding=0 border=0>      
 						<form action="$_REQUEST{__uri}$_REQUEST{__script_name}" method=post autocomplete="off">
-							<input type=hidden name=type value=logon>
-							<input type=hidden name=_url value="$_REQUEST{_url}">
-							<input type=hidden name=action value=execute>
-							<input type=hidden name=redirect_params value="$_REQUEST{redirect_params}">
+							$hiddens
 							<tr>
 								<td width=1 bgcolor=black><img height=1 src="/i/0.gif" width=1 border=0></td>
 								<td valign=top>
