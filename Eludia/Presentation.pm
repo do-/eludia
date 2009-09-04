@@ -710,13 +710,17 @@ sub draw_form {
 			}
 		
 			check_href ($item);
-						
-			$item -> {href} =~ s{\&?__last_query_string=\d*}{}gsm;
-			$item -> {href} .= "&__last_query_string=$_REQUEST{__last_last_query_string}";
 
-			$item -> {href} =~ s{\&?__last_scrollable_table_row=\d*}{}gsm;
-			$item -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" unless ($_REQUEST {__windows_ce});
+			if (exists $item -> {keep_esc}) {
 						
+				$item -> {href} =~ s{\&?__last_query_string=\d*}{}gsm;
+				$item -> {href} .= "&__last_query_string=$_REQUEST{__last_last_query_string}";
+
+				$item -> {href} =~ s{\&?__last_scrollable_table_row=\d*}{}gsm;
+				$item -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" unless ($_REQUEST {__windows_ce});
+			
+			}
+
 			if ($item -> {hotkey}) {
 				hotkey ({
 					%{$item -> {hotkey}},
@@ -882,6 +886,11 @@ sub draw_form_field {
 		if ($field -> {type} eq 'hgroup') {
 			my $html = '';
 			foreach (@{$field -> {items}}) {$html .= draw_form_field ($_, $data)}
+			return $html;
+		}
+		elsif ($field -> {type} eq 'radio') {
+			my $html = '';
+			foreach (@{$field -> {values}}) {$html .= draw_form_field ($_, $data)}
 			return $html;
 		}
 		else {
