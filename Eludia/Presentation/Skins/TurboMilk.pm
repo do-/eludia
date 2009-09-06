@@ -178,7 +178,7 @@ EOH
 					$subset_cell = <<EOH;
 						<td width="5" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2px" height="28px"></td>
 						<td><img src="$_REQUEST{__static_url}/0.gif" border="0" hspace="0" width=5 height=1></td>
-						<td><div id="admin" onClick="subsets_are_visible = 1 - subsets_are_visible; document.getElementById ('_body_iframe').contentWindow.subsets_are_visible = subsets_are_visible"><a href="#">$$item{label}</a></div></td>
+						<td><div id="admin" onClick="subsets_are_visible_ (1 - subsets_are_visible); document.getElementById ('_body_iframe').contentWindow.subsets_are_visible_ (subsets_are_visible)"><a href="#">$$item{label}</a></div></td>
 EOH
 				
 				}
@@ -2181,7 +2181,7 @@ EOH
 		
 		my $label = dump_tag (a => $a_options, "&nbsp;$type->{label}&nbsp;");
 		
-		$html .= qq {<td onmouseover="if (!edit_mode || $core_unblock_navigation) {$$type{onhover}; subsets_are_visible = 0; document.getElementById ('_body_iframe').contentWindow.subsets_are_visible = 0}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;$label</td>};
+		$html .= qq {<td onmouseover="if (!edit_mode || $core_unblock_navigation) {$$type{onhover}; subsets_are_visible_ (0); document.getElementById ('_body_iframe').contentWindow.subsets_are_visible_ (0)}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;$label</td>};
 			
 	}
 
@@ -2800,7 +2800,7 @@ sub draw_page {
 		
 		}
 
-		$_REQUEST {__on_mouseover}    .= "window.parent.subsets_are_visible = 0; subsets_are_visible = 0;";
+		$_REQUEST {__on_mouseover}    .= "window.parent.subsets_are_visible_ (0); subsets_are_visible_ (0);";
 
 		$_REQUEST {__on_mousedown}    .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
 

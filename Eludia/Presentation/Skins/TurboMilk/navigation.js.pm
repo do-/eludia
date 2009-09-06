@@ -73,6 +73,31 @@ function get_event (e) {
 
 }
 
+function subsets_are_visible_ (value) {
+//alert ('subsets_are_visible_: ' + value);
+	subsets_are_visible = value;
+	
+	var menu = $('#Menu');
+//alert (menu);	
+	if (subsets_are_visible) {
+	
+		var offset = $('#admin').offset ($(document.body));
+
+		menu.css ({
+			left : offset.left,
+			top  : offset.top + 25
+		});	
+		
+		menu.slideDown ('fast');
+	
+	}
+	else {
+	
+		menu.slideUp ('fast');
+	
+	}
+
+}
 
 function select_visibility () {
 	if (top.last_vert_menu && top.last_vert_menu [0]) return 'hidden';
@@ -84,7 +109,7 @@ function select_visibility () {
 function cell_select_visibility (select, fixed_cols) {
 
 	var td    = select.offsetParent;
-	var tr    = td.parentElement;
+	var tr    = td.parentNode;
 	var cells = tr.cells;
 	var last_fixed_cell_offset_right = 0;
 
@@ -203,7 +228,7 @@ function _dumper_href (tail, target) {
 
 function check_menu_md5 (menu_md5) {
 
-	window.parent.subsets_are_visible = 0;
+	window.parent.subsets_are_visible_ (0);
 
 	if (
 		window.parent.menu_md5 == menu_md5
@@ -348,10 +373,10 @@ function subset_on_change (subset_name, href) {
 
 	var subset_tr = document.getElementById(subset_tr_id);
 
-	var subset_table = subset_tr.parentElement;
+	var subset_table = subset_tr.parentNode;
 
 	for (var i = 0; i < subset_table.rows.length; i++) {
-		subset_table.rows(i).style.display = '';
+		subset_table.rows [i].style.display = '';
 	}
 
 	subset_tr.style.display = 'none';
@@ -373,9 +398,9 @@ function subset_on_change (subset_name, href) {
 	var fname = document.getElementById('_body_iframe');
 	fname.src = href + '&_salt' + Math.random ();
 
-	subsets_are_visible = 1 - subsets_are_visible;
+	subsets_are_visible_ (1 - subsets_are_visible);
 
-	document.getElementById ("_body_iframe").contentWindow.subsets_are_visible = subsets_are_visible;
+	document.getElementById ("_body_iframe").contentWindow.subsets_are_visible_ (subsets_are_visible);
 
 }
 
@@ -752,7 +777,7 @@ function setCursor (w, c) {
 
 			try { if (e.tagName == 'A' || e.tagName == 'SPAN') e.style.cursor = c } catch (err) {};
 
-			e = e.parentElement;
+			e = e.parentNode;
 
 		}
 
@@ -1222,7 +1247,7 @@ TableSlider.prototype.handle_keyboard = function (keyCode) {
 		
 		if (children == null || children.length == 0) {
 		
-			while (cell && cell.tagName != 'TR') cell = cell.parentElement;
+			while (cell && cell.tagName != 'TR') cell = cell.parentNode;
 			
 			children = cell.getElementsByTagName ('a');
 		
