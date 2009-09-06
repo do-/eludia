@@ -350,7 +350,7 @@ sub _draw_input_datetime {
 	
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
-	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
+	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
 	
 	my $attributes = dump_attributes ($options -> {attributes});
 			
@@ -563,7 +563,7 @@ sub draw_form_field_string {
 	
 	my $attributes = $options -> {attributes};
 	
-	$attributes -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
+	$attributes -> {onKeyPress} .= ';if (event.keyCode != 27) is_dirty=true;';
 	$attributes -> {onKeyDown}  .= ';tabOnEnter();';
 	$attributes -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$attributes -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
@@ -579,6 +579,8 @@ sub draw_form_field_suggest {
 
 	my ($_SKIN, $options, $data) = @_;
 
+	my $id = '' . $options;
+
 	$_REQUEST {__script} .= qq{; 	
 	
 		function off_suggest_$options->{name} () {
@@ -588,17 +590,31 @@ sub draw_form_field_suggest {
 		
 	};
 	
-	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
+	$options -> {attributes} -> {onKeyPress} .= q {;
+	
+		if (event.keyCode == 13) {
+			return blockEvent (event);
+		}
+
+		if (event.keyCode != 27) { is_dirty=true }
+		
+	};
+	
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
-	$options -> {attributes} -> {onBlur}     .= qq{;scrollable_table_is_blocked = false; q_is_focused = false; getElementById('_$options->{name}__label').value = this.value; _suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);};
+	$options -> {attributes} -> {onBlur}     .= qq {;
+		scrollable_table_is_blocked = false; 
+		q_is_focused = false; 
+		this.form.elements ['_$options->{name}__label'].value = this.value; 
+		_suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);
+	};
 	$options -> {attributes} -> {onChange}   .= "$$options{after};";
 
 	$options -> {attributes} -> {onKeyDown}  .= <<EOH;
 	
 		var s = getElementById('_$options->{name}__suggest');
-
-		if (window.event.keyCode == 40 && s.style.display == 'block') {
+		
+		if (event.keyCode == 40 && s.style.display == 'block') {
 			s.focus ();
 		}
    
@@ -606,25 +622,30 @@ EOH
 	
 	
 	$options -> {attributes} -> {onKeyUp} .= <<EOH;
+
+		if (event.keyCode == 13) {
+			getElementById('_$options->{name}__suggest').style.display = 'none';
+			return blockEvent (event);
+		}
+
 		if (suggest_clicked) {
 			suggest_clicked = 0;
 		}
 		else {
 			var f = this.form;
-			f.elements ['_$options->{name}__label'].value = '';
-			f.elements ['_$options->{name}__id'].value = '';
-			var s = f.elements ['__suggest'];
-			document.getElementById ('_$options->{name}__suggest').style.display = 'none';
+			var e = f.elements;
+			e ['_$options->{name}__label'].value = '';
+			e ['_$options->{name}__id'].value = '';
+			var s = e ['__suggest'];
+			\$('#_$options->{name}__suggest').hide ();
 			if (this.value.length > 0) {
 				s.value = '$options->{name}';
-				document.getElementById ('_$options->{name}__label').value = this.value;
+				e ['_$options->{name}__label'].value = this.value;
 				f.submit ();
 				s.value = '';
 			}
 		}
 EOH
-
-	my $id = '' . $options;
 	
 	$options -> {attributes} -> {id}           = $id;
 	$options -> {attributes} -> {autocomplete} = 'off';
@@ -649,10 +670,11 @@ EOH
 					clearTimeout (_suggest_timer_$options->{name});
 					_suggest_timer_$options->{name} = null;
 				}
+				this.options[0].focus ();
 			"
 			onBlur="this.style.display='none'; $$options{after}"
 			onDblClick="set_suggest_result (this, '$id'); $$options{after}"
-			onKeyPress="set_suggest_result (this, '$id'); $$options{after}; suggest_clicked = 1"
+			onKeyPress="if (event.keyCode == 13) { set_suggest_result (this, '$id'); $$options{after}; suggest_clicked = 1 } return false;"
 		>
 		</select>
 		
@@ -878,7 +900,7 @@ EOH
 sub draw_form_field_password {
 	my ($_SKIN, $options, $data) = @_;
 	my $attributes = dump_attributes ($options -> {attributes});
-	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (window.event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false">};
+	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false">};
 }
 
 ################################################################################
@@ -1115,11 +1137,11 @@ sub draw_form_field_string_voc {
 	
 	$options -> {attributes} ||= {};
 
-	$options -> {attributes} -> {onKeyPress} .= qq[;if (window.event.keyCode != 27) {is_dirty=true;document.getElementById('${options}_id').value = 0; }];
-	$options -> {attributes} -> {onKeyDown}  .= qq[;if (window.event.keyCode == 8 || window.event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter();];
+	$options -> {attributes} -> {onKeyPress} .= qq[;if (event.keyCode != 27) {is_dirty=true;document.getElementById('${options}_id').value = 0; }];
+	$options -> {attributes} -> {onKeyDown}  .= qq[;if (event.keyCode == 8 || event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter();];
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
 	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
-	$options -> {attributes} -> {onChange}   .= 'is_dirty=true;' . ( $options->{onChange} ? $options->{onChange} . ' try { window.event.cancelBubble = false } catch (e) {} try { window.event.returnValue = true } catch (e) {}': '');
+	$options -> {attributes} -> {onChange}   .= 'is_dirty=true;' . ( $options->{onChange} ? $options->{onChange} . ' try { event.cancelBubble = false } catch (e) {} try { event.returnValue = true } catch (e) {}': '');
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -1920,7 +1942,7 @@ sub draw_toolbar_input_text {
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
 	
-	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {form.submit()}";
+	$options -> {onKeyPress} ||= "if (event.keyCode == 13) {form.submit()}";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -1952,7 +1974,7 @@ sub draw_toolbar_input_datetime {
 	my ($_SKIN, $options) = @_;
 
 	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";	
-	$options -> {onKeyPress} = "if (window.event.keyCode == 13) {this.form.submit()}";
+	$options -> {onKeyPress} = "if (event.keyCode == 13) {this.form.submit()}";
 
 	my $html = '<td class="toolbar" nowrap>';
 		
@@ -2933,8 +2955,6 @@ sub draw_page {
 			td.main-menu    { padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
 			td.vert-menu    { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
 			td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
-			td.submit-area  { text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
-			div.grey-submit { background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
 		</style>
 
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
@@ -3179,12 +3199,17 @@ EOH
 					</td>
 				</tr>
 				<tr>
-					<td class="submit-area">						
-						<div class="grey-submit">
-							<div style="float:left;margin-top:5px;"><a href="#"><img src="$_REQUEST{__static_url}/i_logon.gif?$_REQUEST{__static_salt}" border="0" align="left" hspace="5"></a><a href="javascript:document.forms['form'].submit()">$i18n->{execute_logon}</a></div>
-							<div style="float:right;"><img src="$_REQUEST{__static_url}/grey_ear_right.gif?$_REQUEST{__static_salt}" border="0"></div>
-						</div>
-					</td>
+					<td style="text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;"><center>
+						
+						<table border=0 cellspacing=0 cellpadding=0>
+							<tr>
+								<td style="background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0;"><a href="#"><img src="$_REQUEST{__static_url}/i_logon.gif?$_REQUEST{__static_salt}" border="0" align="absmiddle" hspace="5"></a><a class="grey-submit" href="javascript:document.forms['form'].submit()">$i18n->{execute_logon}</a></td>
+								<td><img src="$_REQUEST{__static_url}/grey_ear_right.gif?$_REQUEST{__static_salt}" border="0"></td>
+							</tr>
+						</table>
+						
+						
+					</center></td>
 				</tr>
 			</table>
 			

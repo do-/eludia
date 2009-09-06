@@ -978,8 +978,8 @@ a.hint {
 #Menu a {color:#23385A;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 #Menu a:hover {color:#23385A;text-decoration:underline;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 
-div.grey-submit a {color:#222323;text-decoration:none;}
-div.grey-submit a:hover {color:#222323;text-decoration:underline;}
+a.grey-submit {color:#222323;text-decoration:none;FONT-SIZE: 8pt;}
+a.grey-submit:hover {color:#222323;text-decoration:underline;FONT-SIZE: 8pt;}
 
 .logon {font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal;font-weight: normal;color:#414141;text-decoration: none;}
 

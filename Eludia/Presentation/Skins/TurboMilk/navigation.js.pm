@@ -127,6 +127,7 @@ function cell_select_visibility (select, fixed_cols) {
 }
 
 function set_suggest_result (sel, id) {
+	if (sel.selectedIndex < 0) return; 
 	var o = sel.options [sel.selectedIndex];
 	document.getElementById (id + '__id').value    = o.value;
 	document.getElementById (id + '__label').value = o.text;
