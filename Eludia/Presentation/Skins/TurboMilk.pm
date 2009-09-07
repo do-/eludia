@@ -2822,7 +2822,7 @@ sub draw_page {
 		
 		}
 
-		$_REQUEST {__on_mouseover}    .= "window.parent.subsets_are_visible_ (0); subsets_are_visible_ (0);";
+		$_REQUEST {__on_mouseover}    .= "subsets_are_visible_ (0); try { window.parent.subsets_are_visible_ (0); } catch (xxx) {}";
 
 		$_REQUEST {__on_mousedown}    .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
 
