@@ -1316,6 +1316,13 @@ EOH
 			</div>
 EOH
 	}
+	else {
+		$html = <<EOH;
+			<span id="input_$$options{name}">
+				$html
+			</span>
+EOH
+	}
 	
 	$_REQUEST {__tabindex} = $tabindex;
 	
