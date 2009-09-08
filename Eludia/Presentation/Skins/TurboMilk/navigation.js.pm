@@ -229,7 +229,11 @@ function _dumper_href (tail, target) {
 
 function check_menu_md5 (menu_md5) {
 
-	window.parent.subsets_are_visible_ (0);
+	try {
+
+		window.parent.subsets_are_visible_ (0);
+		
+	} catch (xxx) {}
 
 	if (
 		window.parent.menu_md5 == menu_md5
