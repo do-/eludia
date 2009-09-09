@@ -924,7 +924,7 @@ sub draw_form_field_static {
 		
 	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
 
-	return $html;
+	return "<span id='input_$$options{name}'>$html</span>";
 	
 }
 
