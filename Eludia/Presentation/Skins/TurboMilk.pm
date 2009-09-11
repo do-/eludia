@@ -664,14 +664,14 @@ EOH
 		type  => 'hidden',
 		id    => "${id}__label",
 		name  => "_$options->{name}__label",
-		value => "$options->{attributes}->{value}",
+		value => $options -> {attributes} -> {value},
 	})
 
 	. dump_tag (input => {
 		type  => 'hidden',
 		id    => "${id}__id",
 		name  => "_$options->{name}__id",
-		value => "$options->{attributes}->{value__id}",
+		value => $options -> {value__id},
 	});
 
 }
