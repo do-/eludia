@@ -1069,7 +1069,7 @@ sub draw_form_field_suggest {
 	
 	$options -> {value}   ||= $data -> {$options -> {name}};
 	$options -> {value__id} = $options -> {value};
-	
+
 	my $id = $_REQUEST {id};
 	
 	if ($data -> {id}) {
@@ -4337,6 +4337,7 @@ sub setup_skin {
 			out_html
 			user_agent
 			dump_hiddens
+			darn
 		));
 
 	}
