@@ -800,7 +800,7 @@ sub _adjust_field {
 	
 	}
 
-	$field -> {data_source} and $field -> {values} ||= $data -> {$field -> {data_source}};
+	$field -> {data_source} and $field -> {values} ||= ($data -> {$field -> {data_source}} ||= sql_select_vocabulary ($field -> {data_source}));
 	
 	return $field;
 
