@@ -1,19 +1,48 @@
+use threads;
+
 use FCGI;
-use Eludia::Content::HTTP::API;
 use IO;
+use Eludia::Content::HTTP::API;
 
 sub start {
 
-	my $request = FCGI::Request (\*STDIN, \*STDOUT, new IO::File, \%ENV, FCGI::OpenSocket ($_[0] || ':9000', $_[1] || 10));
+	if ($^O eq 'MSWin32') {
 
-	while ($request -> Accept >= 0) {
+		threads -> create (sub {
 
-		my $app = $ENV {DOCUMENT_ROOT};
+			require Win32::Pipe;
 
-		$app =~ s{/docroot/?$}{};
+			$_[0] =~ /\d+/;
 
-		check_configuration_and_handle_request_for_application ($app);
+			my $pipe_out = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.out.Eludia_$&");
+			my $pipe_in  = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.in.Eludia_$&");
 
+			$pipe_in -> Read ();
+
+			exit;
+
+		}, @_) -> detach;
+	
+	}
+
+	while (1) {
+
+		threads -> create ({'exit' => 'threads_only'}, sub {
+
+			my $request = FCGI::Request (\*STDIN, \*STDOUT, new IO::File, \%ENV, FCGI::OpenSocket ($_[0], $_[2] || 10));
+
+			while ($request -> Accept >= 0) {
+
+				my $app = $ENV {DOCUMENT_ROOT};
+
+				$app =~ s{/docroot/?$}{};
+
+				check_configuration_and_handle_request_for_application ($app);
+
+			}
+
+		}, @_) -> join;	
+	
 	}
 
 }

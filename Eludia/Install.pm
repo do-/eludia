@@ -1636,9 +1636,17 @@ EOT
 
 sub fcgi {
 
-	require Eludia::Content::HTTP::FCGI::nginx;
+	my ($port) = @_;
+
+	my $path = core_path ();
+
+	if ($^O eq 'MSWin32') {
 	
-	start (@_);
+		`winserv uninstall Eludia_$port`;
+
+		`winserv install Eludia_$port -description "Eludia Perl server on $port port" -start auto -ipcmethod pipe -noninteractive $^X -I $path -MEludia::Content::HTTP::FCGI::nginx -e "start(':$port')"`;
+
+	}
 
 }
 
