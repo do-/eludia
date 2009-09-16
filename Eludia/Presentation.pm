@@ -1266,11 +1266,30 @@ sub draw_form_field_multi_select {
 	
 	my $url_dialog_id = $_REQUEST {__dialog_cnt};
 
+	my $detail_from;
+	if (exists $options -> {detail_from}) {
+		if (ref $options -> {detail_from} ne ARRAY) {
+			$options -> {detail_from} = [$options -> {detail_from}];
+		}
+		foreach my $field (@{$options -> {detail_from}}) {
+			$detail_from .= <<EOJS;
+                        re = /&$field=[\\d]*/;
+                        dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
+			dialog_open_$url_dialog_id.href += '&$field=' + document.getElementsByName ('_$field') [0].value;
+EOJS
+		}
+	}
+	
+
 	return draw_form_field_hgroup (
 		{
 			label	=> $options -> {label},
 			type	=> 'hgroup',
 			items	=> [
+#				{
+#					type	=> 'static',
+#					value	=> qq[<table id="_$$options{name}">],
+#				},
 				{
 					type	=> 'static',
 					value	=> qq[<span id="ms_$options">] . join ('<br>', map {$_ -> {label}} @{$options -> {values}}) . '</span>',
@@ -1285,13 +1304,15 @@ sub draw_form_field_multi_select {
 					type	=> 'button',
 					value	=> 'Изменить',
 					onclick	=> <<EOJS,
-						re = /&salt=[\\d\\.]*/;
+						re = /&_?salt=[\\d\\.]*/g;
 						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
 						dialog_open_$url_dialog_id.href += '&salt=' + Math.random ();
 						
 						re = /&ids=[^&]*/i; 
 						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
 						dialog_open_$url_dialog_id.href += '&ids=' + document.getElementsByName ('_$options->{name}') [0].value; 
+
+						$detail_from
 
 						$url
 EOJS
@@ -1304,6 +1325,10 @@ EOJS
 					onclick => "document.getElementById ('ms_$options').innerHTML=''; document.form._$options->{name}.value='';" . $js_detail,
 					off	=> $_REQUEST {__read_only},
 				},
+#				{
+#					type	=> 'static',
+#					value	=> qq[</table>],
+#				},
 			],
 		},
 		$data
