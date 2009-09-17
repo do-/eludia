@@ -794,7 +794,7 @@ sub _adjust_field {
 		
 			$field_options {label} ||= $field_def -> {label};
 
-			$field = {%field_options, %$field};
+			%$field = (%field_options, %$field);
 		
 		}
 	
