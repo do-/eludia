@@ -800,7 +800,7 @@ sub _adjust_field {
 	
 	}
 
-	$field -> {data_source} and $field -> {values} ||= $data -> {$field -> {data_source}};
+	$field -> {data_source} and $field -> {values} ||= ($data -> {$field -> {data_source}} ||= sql_select_vocabulary ($field -> {data_source}));
 	
 	return $field;
 
@@ -1069,7 +1069,7 @@ sub draw_form_field_suggest {
 	
 	$options -> {value}   ||= $data -> {$options -> {name}};
 	$options -> {value__id} = $options -> {value};
-	
+
 	my $id = $_REQUEST {id};
 	
 	if ($data -> {id}) {
@@ -4362,6 +4362,7 @@ sub setup_skin {
 			out_html
 			user_agent
 			dump_hiddens
+			darn
 		));
 
 	}
