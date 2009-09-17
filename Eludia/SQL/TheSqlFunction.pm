@@ -587,7 +587,7 @@ sub sql {
 		my ($minus, $name, $columns) = ($1, $2, $3);		
 		
 		$columns = 'NONE'
-			if $table =~ /\(\)/;
+			if $table =~ /\(\)/ && $columns eq '';
 
 		$alias ||= $name;
 		
