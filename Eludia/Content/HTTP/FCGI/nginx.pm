@@ -419,40 +419,76 @@ sub start_unix {
 
 ################################################################################
 
+sub options_win32 {
+
+	my %options = @_;
+	
+	$options {-address}      ||= ':9000';
+	$options {-backlog}      ||= 1024;
+	$options {-processes}    ||= 2;
+	$options {-timeout}      ||= 1;
+
+	return %options;
+
+}
+
+################################################################################
+
 sub start_win32 {
+
+	my %options = options_win32 (@_);
 
 	threads -> create (sub {
 
 		require Win32::Pipe;
 
-		$_[0] =~ /\d+/;
+		$options {-address} =~ /\d+/;
 
 		my $pipe_out = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.out.Eludia_$&");
 		my $pipe_in  = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.in.Eludia_$&");
+		
+		if ($pipe_in) {
 
-		$pipe_in -> Read ();
+			$pipe_in -> Read ();
 
-		exit;
+			exit;
+
+		}
+
 
 	}, @_) -> detach;
+
+	my $socket = FCGI::OpenSocket ($options {-address}, $options {-backlog});
 	
-	while (1) {
+	my @threads = ();
+		
+	for (; 1; sleep ($options {-timeout})) {
 
-		threads -> create ({'exit' => 'threads_only'}, sub {
+		@threads = grep {$_ -> is_running} @threads;
+		
+		foreach (1 .. $options {-processes} - @threads) {
+	
+			push @threads, (my $thread = threads -> create ({'exit' => 'threads_only'}, sub {
 
-			my $request = FCGI::Request (\*STDIN, \*STDOUT, new IO::File, \%ENV, FCGI::OpenSocket ($_[0], $_[2] || 1024));
+				my $request = FCGI::Request (\*STDIN, \*STDOUT, new IO::File, \%ENV, $socket);
 
-			while ($request -> Accept >= 0) {
+				while ($request -> Accept >= 0) {
 
-				my $app = $ENV {DOCUMENT_ROOT};
+					my $app = $ENV {DOCUMENT_ROOT};
 
-				$app =~ s{/docroot/?$}{};
+					$app =~ s{/docroot/?$}{};
 
-				check_configuration_and_handle_request_for_application ($app);
+					open (STDERR, ">>$app/logs/error.log");
 
-			}
+					check_configuration_and_handle_request_for_application ($app);
 
-		}, @_) -> join;	
+				}
+
+			}));
+			
+			$thread -> detach;
+			
+		}
 
 	}
 

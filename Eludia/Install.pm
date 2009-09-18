@@ -1644,7 +1644,21 @@ sub fcgi {
 	
 		`winserv uninstall Eludia_$port`;
 
-		`winserv install Eludia_$port -description "Eludia Perl server on $port port" -start auto -ipcmethod pipe -noninteractive $^X -I $path -MEludia::Content::HTTP::FCGI::nginx -e "start(':$port')"`;
+		`winserv install Eludia_$port -description "Eludia Perl server on $port port" -start auto -ipcmethod pipe -noninteractive $^X -I $path -MEludia::Content::HTTP::FCGI::nginx -e "start(-address => ':$port')"`;
+
+	}
+
+}
+
+################################################################################
+
+sub nginx {
+
+	if ($^O eq 'MSWin32') {
+	
+		`winserv uninstall Nginx`;
+
+		`winserv install Nginx -start auto -ipcmethod blind -noninteractive c:\\nginx\\nginx.exe`;
 
 	}
 
