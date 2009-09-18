@@ -1650,4 +1650,26 @@ sub fcgi {
 
 }
 
+################################################################################
+
+sub elud {
+
+	my $path = core_path ();
+
+	open (F, '>/usr/sbin/elud');
+	
+	print F <<EOF;
+#!/usr/bin/perl
+
+use lib '$path';
+
+use Eludia::Content::HTTP::FCGI::nginx;
+
+cmd_unix ();
+EOF
+
+	close (F);
+
+}
+
 1;
