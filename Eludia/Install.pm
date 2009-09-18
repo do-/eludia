@@ -1632,4 +1632,44 @@ EOT
 
 }
 
+################################################################################
+
+sub fcgi {
+
+	my ($port) = @_;
+
+	my $path = core_path ();
+
+	if ($^O eq 'MSWin32') {
+	
+		`winserv uninstall Eludia_$port`;
+
+		`winserv install Eludia_$port -description "Eludia Perl server on $port port" -start auto -ipcmethod pipe -noninteractive $^X -I $path -MEludia::Content::HTTP::FCGI::nginx -e "start(':$port')"`;
+
+	}
+
+}
+
+################################################################################
+
+sub elud {
+
+	my $path = core_path ();
+
+	open (F, '>/usr/sbin/elud');
+	
+	print F <<EOF;
+#!/usr/bin/perl
+
+use lib '$path';
+
+use Eludia::Content::HTTP::FCGI::nginx;
+
+cmd_unix ();
+EOF
+
+	close (F);
+
+}
+
 1;

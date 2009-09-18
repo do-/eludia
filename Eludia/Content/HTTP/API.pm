@@ -19,7 +19,7 @@ sub check_configuration_for_application {
 		next if $s =~ /\s*\#/;
 	
 		$cnf_src .= $s;
-		
+
 		if ($s =~ /Location\s+(.*)\>/) {
 		
 			$last_location = $1;
@@ -38,8 +38,8 @@ sub check_configuration_for_application {
 
 		}
 
-		if ($s =~ /SetEnv\s+(\w+)\s+(.*)/) {
-		
+		if ($s =~ /SetEnv\s+(\w+)\s+(.*)/ || $s =~ /\$ENV\s*{(\w+)}\s*=\s*\"(.*)\"/) {
+
 			my ($k, $v) = ($1, $2);
 			
 			$v =~ s{$\s*\"?}{};
@@ -76,7 +76,7 @@ sub check_configuration_for_application {
 sub handle_request_for_application {
 
 	my ($app) = @_;
-	
+
 	my $config = $main::configs -> {$app} or die "Configuration is not defined for '$app'\n";
 	
 	foreach my $k (keys %{$config -> {env}}) {
@@ -89,9 +89,11 @@ sub handle_request_for_application {
 
 	ref $handler eq CODE or die "handler '$handler' not defined for '$app' ($ENV{SCRIPT_NAME})\n";
 
-	eval { &$handler () }; $@ or return;
+	eval { my $result = &$handler (); }; $@ or return;
 
 	warn $@; print "Status: 500 Internal Error\r\nContent-type: text/html\r\n\r\n<pre>$@</pre>";
+	
+	return $@;
 
 }
 
