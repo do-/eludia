@@ -158,6 +158,8 @@ sub REAPER {
 	while (($child = waitpid (-1,WNOHANG)) > 0) {}
 	
 	$SIG {CHLD} = \&REAPER;
+	
+	alarm 0;
 
 }
 
@@ -353,7 +355,7 @@ sub start_unix {
 	
 	$options {-address} =~ /^\:/ or chmod 0777, $options {-address};
 
-	for (; 1; sleep ($options {-timeout})) {		
+	for (; 1; sleep) {
 	
 		foreach (keys %pids) {
 		
