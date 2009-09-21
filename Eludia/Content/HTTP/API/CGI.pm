@@ -123,13 +123,15 @@ sub send_http_header {
 	
 	my $self = shift;
 
+	$self -> {_headers} -> {status} = $self -> {status} . ' ' . status_message ($self -> {status});
+
 	while (my ($name, $value) = each %{$self -> {_headers}}) {
 	
 		$self -> {headers} -> header ($name, $value);
 	
 	}
 
-	my $h = 'HTTP/1.1 '. $self -> {status} . ' ' . status_message ($self -> {status}) . "\015\012" . $self -> {headers} -> as_string;
+	my $h = "HTTP/1.1 $self->{_headers}->{status} \015\012" . $self -> {headers} -> as_string;
 	
 	$h =~ s{[\015\012]+}{\015\012}gsm;
 	
