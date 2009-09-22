@@ -310,7 +310,7 @@ sub new {
 
 			open (STDIN, "$fn");
 			$self -> {Q} = new CGI ();
-			close (STDIN);
+			open (STDIN, $^X);
 			unlink $fn;
 
 		}

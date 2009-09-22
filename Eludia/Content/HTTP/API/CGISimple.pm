@@ -340,7 +340,7 @@ sub new {
 
 			open (STDIN, "$fn");
 			$self -> {Q} = new CGI::Simple ();
-			close (STDIN);
+			open (STDIN, $^X);
 			unlink $fn;
 
 		}
