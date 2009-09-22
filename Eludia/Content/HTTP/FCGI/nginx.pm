@@ -458,6 +458,48 @@ sub start_win32 {
 		}, @_) -> detach;
 	
 	}
+	
+	my $nginx = {conf => 'c:/nginx/conf/nginx.conf'};
+
+	if ($nginx -> {conf} and open (N, $nginx -> {conf})) {
+
+		open STDOUT, '>/dev/null';
+
+		while (<N>) {
+
+			next if /^\s*\#/;
+			
+			/root\s+/ or next;
+			
+			my $app = $';
+			
+			$app =~ s{\s*;\s*$}{};
+			
+			if ($app =~ /^"(.*)"$/) {$app = $1}
+
+			$app =~ s{/docroot/?}{};
+
+			-f "$app/conf/httpd.conf" and -f "$app/lib/Config.pm" or next;
+			
+			next if $main::configs -> {$app};
+			
+			print STDERR "Loading $app...\n";
+	
+			check_configuration_for_application ($app);
+
+			print STDERR "Trying $app...\n";
+			
+			$ENV {SCRIPT_NAME} = '/__try__and__disconnect';
+
+			my $error = handle_request_for_application ($app);
+						
+			die $error if $error;
+
+		}
+	
+		close (N);
+	
+	}
 
 	my $socket = FCGI::OpenSocket ($options {-address}, $options {-backlog});
 	
