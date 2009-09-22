@@ -440,25 +440,24 @@ sub start_win32 {
 
 	my %options = options_win32 (@_);
 
-	threads -> create (sub {
+	require Win32::Pipe;
 
-		require Win32::Pipe;
+	$options {-address} =~ /\d+/;
 
-		$options {-address} =~ /\d+/;
+	my $pipe_out = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.out.Eludia_$&");
+	my $pipe_in  = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.in.Eludia_$&");
 
-		my $pipe_out = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.out.Eludia_$&");
-		my $pipe_in  = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.in.Eludia_$&");
-		
-		if ($pipe_in) {
+	if ($pipe_in) {
+
+		threads -> create (sub {
 
 			$pipe_in -> Read ();
 
 			exit;
 
-		}
-
-
-	}, @_) -> detach;
+		}, @_) -> detach;
+	
+	}
 
 	my $socket = FCGI::OpenSocket ($options {-address}, $options {-backlog});
 	
