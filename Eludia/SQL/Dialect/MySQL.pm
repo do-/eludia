@@ -4,6 +4,8 @@ no warnings;
 ################################################################################
 
 sub sql_version {
+	
+	$db -> {mysql_auto_reconnect} = 0;
 
 	$preconf -> {db_charset} ||= 'cp1251';
 	
