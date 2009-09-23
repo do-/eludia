@@ -552,10 +552,6 @@ sub sql_disconnect {
 
 	undef $db;
 
-	delete $$_PACKAGE {model_update};
-
-	delete $$_PACKAGE {db};
-
 }
 
 ################################################################################
