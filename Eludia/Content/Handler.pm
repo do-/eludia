@@ -496,7 +496,7 @@ sub handler_finish {
 		
 	}) if $preconf -> {core_debug_profiling} > 2;
 	
-	sql_disconnect () if $ENV {SCRIPT_NAME} = '/__try__and__disconnect';
+	sql_disconnect () if $ENV {SCRIPT_NAME} eq '/__try__and__disconnect';
 	
 	if ($_REQUEST {__suicide}) {
 		$r -> print (' ' x 8192);
