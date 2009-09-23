@@ -473,13 +473,19 @@ sub sql_reconnect {
 
 my $time = time;
 
-	if ($db && $model_update && $model_update -> {core_ok}) {
+	our $db, $model_update, $SQL_VERSION;
+
+	if ($db && ($preconf -> {no_model_update} || ($model_update && $model_update -> {core_ok}))) {
+
 		my $ping = $db -> ping;
-$time = __log_profilinig ($time, '  sql_reconnect: ping');
+		
+$time = __log_profilinig ($time, '  sql_reconnect: ping OK');
+		
 		return if $ping;
+
 	}
 	
-	our $db = DBI -> connect ($preconf -> {'db_dsn'}, $preconf -> {'db_user'}, $preconf -> {'db_password'}, {
+	$db = DBI -> connect ($preconf -> {db_dsn}, $preconf -> {db_user}, $preconf -> {db_password}, {
 		RaiseError  => 1, 
 		AutoCommit  => 1,
 		LongReadLen => 1000000,
@@ -487,51 +493,69 @@ $time = __log_profilinig ($time, '  sql_reconnect: ping');
 		InactiveDestroy => 0,
 	});
 
-$time = __log_profilinig ($time, '  sql_reconnect: connect');
+$time = __log_profilinig ($time, "  sql_reconnect: connected to $preconf->{db_dsn}");
 
-	my $driver_name = $db -> get_info ($GetInfoType {SQL_DBMS_NAME});
+	unless ($INC_FRESH {db_driver}) {
 
-$time = __log_profilinig ($time, '  sql_reconnect: driver name selected');
+		my $driver_name = $db -> get_info ($GetInfoType {SQL_DBMS_NAME});
 	
-	$driver_name =~ s{\W}{}gsm;
+		$driver_name =~ s{\W}{}gsm;
 
-	my $path = __FILE__;
+		my $path = __FILE__;
 	
-	$path =~ s{(.)SQL\.pm$}{${1}SQL$1Dialect$1${driver_name}.pm};
+		$path =~ s{(.)SQL\.pm$}{${1}SQL$1Dialect$1${driver_name}.pm};
 
-	do $path;
+		do $path;
+		
+		die $@ if $@;
 
-$time = __log_profilinig ($time, '  sql_reconnect: driver reloaded');
+		$INC_FRESH {db_driver} = time;
 
-	die $@ if $@;
+		$SQL_VERSION = {driver => $driver_name};
 
-$time = __log_profilinig ($time, '  sql_reconnect: driver version selected');
+$time = __log_profilinig ($time, "  sql_reconnect: $driver_name is loaded");
+
+	}
+	
+	sql_version ();
+
+$time = __log_profilinig ($time, "  sql_reconnect: driver version is $SQL_VERSION->{string}");
 
 	unless ($preconf -> {no_model_update}) {
+		
+		if ($model_update) {
+		
+			$model_update -> {db} = $db;
+		
+		}
+		else {
 	
-		our $model_update = $_NEW_PACKAGE -> new (
-			$db, 
-			dump_to_stderr 		=> 1,
-			before_assert		=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
-			schema			=> $preconf -> {db_schema},
-		);
-	
-	}
-
-	our $SQL_VERSION = {
-		driver => $driver_name,
-	};
-	sql_version();
+			$model_update = $_NEW_PACKAGE -> new (
+				$db, 
+				before_assert		=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
+				schema			=> $preconf -> {db_schema},
+			);
 
 $time = __log_profilinig ($time, '  sql_reconnect: $model_update created');
+
+		}
+	
+	}
 
 }   	
 
 ################################################################################
 
 sub sql_disconnect {
-	if ($db) { $db -> disconnect; }
+
+	eval { $db -> disconnect };
+
 	undef $db;
+
+	delete $$_PACKAGE {model_update};
+
+	delete $$_PACKAGE {db};
+
 }
 
 ################################################################################
