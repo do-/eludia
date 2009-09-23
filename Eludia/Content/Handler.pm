@@ -503,7 +503,7 @@ sub handler_finish {
 		CORE::exit (0);
 	}
 
-	__log_profilinig ($first_time, '<TOTAL>');
+	__log_profilinig ($first_time, "<TOTAL>\n");
 
 	return _ok ();
 
