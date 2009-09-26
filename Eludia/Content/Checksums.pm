@@ -167,7 +167,7 @@ sub set_last_update {
 
 BEGIN {
 
-	print STDERR " checksums.....................................";
+	print STDERR " checksums........................... ";
 
 	my @modules = MP2 ? ('Txt') : ('SDBM');
 

@@ -1,10 +1,23 @@
 no warnings;   
 
+use Carp;
+use Cwd;
+use Data::Dumper;
+use DBI;
+use DBI::Const::GetInfoType;
+use Digest::MD5;
+use Fcntl qw(:DEFAULT :flock);
+use File::Copy 'move';
+use HTML::Entities;
+use HTTP::Date;
+use MIME::Base64;
+use Number::Format;
+use Time::HiRes 'time';
+use Storable;
+
 ################################################################################
 
 sub check_constants {
-
-	use Carp;
 
 	$| = 1;
 
@@ -20,13 +33,7 @@ sub check_constants {
 	
 	our @_OVERRIDING_PARAMETER_NAMES     = qw (select __no_navigation __tree __last_query_string);
 
-	our %INC_FRESH = ();	
-	
-	while (my ($name, $path) = each %INC) {
-	
-		delete $INC {$name} if $name =~ m{Eludia[\./]}; 
-		
-	}
+	our %INC_FRESH = ();
 
 }
 
@@ -316,42 +323,15 @@ sub check_application_directory {
 
 ################################################################################
 
-sub check_external_modules {
+sub check_module_want {
 
-	use Cwd;
-	use Data::Dumper;
-	use DBI;
-	use DBI::Const::GetInfoType;
-	use Digest::MD5;
-	use Fcntl qw(:DEFAULT :flock);
-	use File::Copy 'move';
-	use HTML::Entities;
-	use HTTP::Date;
-	use MIME::Base64;
-	use Number::Format;
-	use Time::HiRes 'time';
-	use Storable;
-
-	check_web_server                           (); 
-	check_external_module_math_fixed_precision ();
-	check_external_module_zlib                 ();
-	check_external_module_uri_escape           ();
-	check_external_module_json                 ();
-	check_external_module_want                 ();
-	
-}
-
-################################################################################
-
-sub check_external_module_want {
-
-	print STDERR " check_external_module_want................... ";
+	print STDERR " check_module_want................... ";
 
 	eval 'use Want';
 	
 	if ($@) {
 
-		print STDERR "Please consider installing Want\n";
+		print STDERR "no Want.pm, ok. [INSTALL SUGGESTED]\n";
 		
 		eval 'sub want {0}';
 
@@ -366,9 +346,9 @@ sub check_external_module_want {
 
 ################################################################################
 
-sub check_external_module_math_fixed_precision {
+sub check_module_math_fixed_precision {
 
-	print STDERR " check_external_module_math_fixed_precision... ";
+	print STDERR " check_module_math_fixed_precision... ";
 
 	eval { 
 		require Math::FixedPrecision;
@@ -376,7 +356,7 @@ sub check_external_module_math_fixed_precision {
 	
 	if ($@) {
 
-		print STDERR "We *strongly* suggest you to install Math::FixedPrecision\n";
+		print STDERR "no Math::FixedPrecision, ok. [INSTALL SUGGESTED]\n";
 
 	}
 	else {
@@ -389,9 +369,9 @@ sub check_external_module_math_fixed_precision {
 
 ################################################################################
 
-sub check_external_module_zlib {
+sub check_module_zlib {
 
-	print STDERR " check_external_module_zlib................... ";
+	print STDERR " check_module_zlib................... ";
 
 	if (!$preconf -> {core_gzip}) {
 
@@ -405,7 +385,7 @@ sub check_external_module_zlib {
 
 	if ($@) {
 	
-		print "Compress::Raw::Zlib not installed, ok.\n";
+		print "no Compress::Raw::Zlib, ok. [INSTALL SUGGESTED]\n";
 		
 		delete $preconf -> {core_gzip};
 		
@@ -420,9 +400,9 @@ sub check_external_module_zlib {
 
 ################################################################################
 
-sub check_external_module_uri_escape {
+sub check_module_uri_escape {
 	
-	print STDERR " check_external_module_uri_escape............. ";
+	print STDERR " check_module_uri_escape............. ";
 
 	eval 'use URI::Escape::XS qw(uri_escape uri_unescape)';
 
@@ -432,7 +412,7 @@ sub check_external_module_uri_escape {
 		
 		die $@ if $@;
 
-		print STDERR "URI::Escape $URI::Escape::VERSION ok. (URI::Escape::XS suggested)\n";
+		print STDERR "URI::Escape $URI::Escape::VERSION ok. [URI::Escape::XS SUGGESTED]\n";
 		
 	}
 	else {
@@ -445,9 +425,9 @@ sub check_external_module_uri_escape {
 
 ################################################################################
 
-sub check_external_module_json {
+sub check_module_json {
 	
-	print STDERR " check_external_module_json................... ";
+	print STDERR " check_module_json................... ";
 	
 	unless ($ENV {PERL_JSON_BACKEND}) {
 	
@@ -478,34 +458,9 @@ sub check_external_module_json {
 
 ################################################################################
 
-sub check_internal_modules {
+sub check_module_schedule {
 
-	require Eludia::Content;
-	require Eludia::Presentation;
-	require Eludia::SQL;
-	
-	require Eludia::GenericApplication::Config;
-	
-	require_config ();
-
-	check_internal_module_peering             ();
-	check_internal_module_mail                ();
-	check_internal_module_queries             ();
-	check_internal_module_mac                 ();
-	check_internal_module_auth                ();
-	check_internal_module_checksums           ();
-	check_internal_module_session_access_logs ();
-	check_internal_module_schedule            ();
-	check_internal_module_presentation_tools  ();
-	check_internal_module_memory              ();
-
-}
-
-################################################################################
-
-sub check_internal_module_schedule {
-
-	print STDERR " check_internal_module_schedule............... ";
+	print STDERR " check_module_schedule............... ";
 	
 	my $crontab = $preconf -> {schedule} -> {crontab};
 
@@ -699,7 +654,9 @@ sub check_internal_module_schedule {
 
 ################################################################################
 
-sub check_internal_module_memory {
+sub check_module_memory {
+
+	print STDERR " check_module_memory................. ";
 
 	require Eludia::Content::Memory;
 
@@ -707,7 +664,7 @@ sub check_internal_module_memory {
 
 ################################################################################
 
-sub check_internal_module_checksums {
+sub check_module_checksums {
 
 	require Eludia::Content::Checksums;
 
@@ -715,9 +672,9 @@ sub check_internal_module_checksums {
 
 ################################################################################
 
-sub check_internal_module_presentation_tools {
+sub check_module_presentation_tools {
 
-	print STDERR " check_internal_module_presentation_tools......";
+	print STDERR " check_module_presentation_tools..... ";
 
 	require Eludia::Presentation::Tools;
 
@@ -725,9 +682,9 @@ sub check_internal_module_presentation_tools {
 
 ################################################################################
 
-sub check_internal_module_mac {
+sub check_module_mac {
 
-	print STDERR " check_internal_module_mac.................... ";
+	print STDERR " check_module_mac.................... ";
 
 	exists $preconf -> {core_no_log_mac} or $preconf -> {core_no_log_mac} = 1;
 	
@@ -750,9 +707,9 @@ sub check_internal_module_mac {
 
 ################################################################################
 
-sub check_internal_module_session_access_logs {
+sub check_module_session_access_logs {
 
-	print STDERR " check_internal_module_session_access_logs.... ";
+	print STDERR " check_module_session_access_logs.... ";
 
 	if ($conf -> {core_session_access_logs_dbtable}) {
 
@@ -773,9 +730,9 @@ sub check_internal_module_session_access_logs {
 
 ################################################################################
 
-sub check_internal_module_peering {
+sub check_module_peering {
 
-	print STDERR " check_internal_module_peering................ ";
+	print STDERR " check_module_peering................ ";
 
 	if ($preconf -> {peer_servers}) {
 	
@@ -796,9 +753,9 @@ sub check_internal_module_peering {
 
 ################################################################################
 
-sub check_internal_module_mail {
+sub check_module_mail {
 
-	print STDERR " check_internal_module_mail................... ";
+	print STDERR " check_module_mail................... ";
 
 	if ($preconf -> {mail}) { 
 		
@@ -819,23 +776,23 @@ sub check_internal_module_mail {
 
 ################################################################################
 
-sub check_internal_module_auth {
+sub check_module_auth {
 
-	print STDERR " check_internal_module_auth:\n";
+	print STDERR " check_module_auth:\n";
 	
 	$preconf -> {_} -> {pre_auth}  = [];
 	$preconf -> {_} -> {post_auth} = [];
 
-	check_internal_module_auth_cookie ();
-	check_internal_module_auth_ntlm ();
+	check_module_auth_cookie ();
+	check_module_auth_ntlm ();
 	
 }
 
 ################################################################################
 
-sub check_internal_module_auth_cookie {
+sub check_module_auth_cookie {
 
-	print STDERR "  check_internal_module_auth_cookie........... ";
+	print STDERR "  check_module_auth_cookie........... ";
 
 	if ($preconf -> {core_auth_cookie}) { 
 		
@@ -854,9 +811,9 @@ sub check_internal_module_auth_cookie {
 
 ################################################################################
 
-sub check_internal_module_auth_ntlm {
+sub check_module_auth_ntlm {
 
-	print STDERR "  check_internal_module_auth_ntlm............. ";
+	print STDERR "  check_module_auth_ntlm............. ";
 
 	if ($preconf -> {ldap} -> {ntlm}) { 
 		
@@ -875,9 +832,9 @@ sub check_internal_module_auth_ntlm {
 
 ################################################################################
 
-sub check_internal_module_queries {
+sub check_module_queries {
 
-	print STDERR " check_internal_module_queries................ ";
+	print STDERR " check_module_queries................ ";
 
 	if ($conf -> {core_store_table_order}) { 
 		
@@ -908,8 +865,16 @@ BEGIN {
 	start_loading_logging       ();
 
 	check_application_directory ();
-	check_external_modules      ();
-	check_internal_modules      ();
+	check_web_server                           (); 
+
+	require Eludia::Content;
+	require Eludia::Presentation;
+	require Eludia::SQL;	
+	require Eludia::GenericApplication::Config;
+	
+	require_config ();
+	
+	&{"check_module_$_"} () foreach sort grep {!/^_/} keys %{$conf -> {core_modules}};
 
 	finish_loading_logging      ();
 

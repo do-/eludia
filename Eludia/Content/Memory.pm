@@ -2,8 +2,6 @@
 
 BEGIN {
 
-	print STDERR " check_internal_module_memory..................";
-
 	require Eludia::Content::Memory::Dummy;
 
 	if ($^O eq 'MSWin32') {
@@ -11,13 +9,17 @@ BEGIN {
 		eval "require Eludia::Content::Memory::MSWin32OLE";
 
 	}
-	else {
 	
-		print STDERR " not yet implemented for this platform, sorry... ";
+	if ($preconf -> {_} -> {memory} -> {first} = memory_usage ()) {
+	
+		print STDERR ' (' . format_picture ($preconf -> {_} -> {memory} -> {first} >> 20, "### ### ### ### MiB), ok.\n");		
 	
 	}
+	else {
 	
-	print STDERR ' (' . format_picture (($preconf -> {_} -> {memory} -> {first} = memory_usage ()) >> 20, "### ### ### ### MiB)\n");
+		print STDERR "no memory measurement, ok. \n";
+	
+	}
 
 }
 
