@@ -865,16 +865,13 @@ BEGIN {
 	start_loading_logging       ();
 
 	check_application_directory ();
-	check_web_server                           (); 
+	check_web_server            (); 
+	
+	require "Eludia/$_.pm" foreach qw (Content Presentation SQL GenericApplication/Config);
 
-	require Eludia::Content;
-	require Eludia::Presentation;
-	require Eludia::SQL;	
-	require Eludia::GenericApplication::Config;
+	require_config              ();
 	
-	require_config ();
-	
-	&{"check_module_$_"} () foreach sort grep {!/^_/} keys %{$conf -> {core_modules}};
+	&{"check_module_$_"}        () foreach sort grep {!/^_/} keys %{$conf -> {core_modules}};
 
 	finish_loading_logging      ();
 
