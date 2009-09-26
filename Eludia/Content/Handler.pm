@@ -501,26 +501,37 @@ sub handler_finish {
 	my $time = __log_profilinig ($first_time, "<TOTAL>\n");
 
 	if (my $memory_usage = memory_usage ()) {
-		
-		$preconf -> {_} -> {memory} -> {last} ||= $preconf -> {_} -> {memory} -> {first};
 	
-		if ($preconf -> {core_debug_profiling}) {
+		if (exists $preconf -> {core_memory_limit} && $memory_usage >> 20 > $preconf -> {core_memory_limit}) {
 		
-			__log_profilinig ($time, sprintf (
-				
-				"<P. S.: %s B (first + %s B; last + %s B)>\n", 
-				
-				$memory_usage,
-				
-				$memory_usage - $preconf -> {_} -> {memory} -> {first},
-				
-				$memory_usage - $preconf -> {_} -> {memory} -> {last},
-				
-			));
+			__log_profilinig ($time, sprintf ("<P. S. Memory limit of %s MiB exceeded: have %s MiB. This was the suicide note.>\n", $preconf -> {core_memory_limit}, $memory_usage >> 20));
+			
+			$_REQUEST {__suicide} = 1;
+		
+		}		
+		else {
+		
+			$preconf -> {_} -> {memory} -> {last} ||= $preconf -> {_} -> {memory} -> {first};
 
+			if ($preconf -> {core_debug_profiling}) {
+
+				__log_profilinig ($time, sprintf (
+
+					"<P. S. %s B (first + %s B; last + %s B)>\n", 
+
+					$memory_usage,
+
+					$memory_usage - $preconf -> {_} -> {memory} -> {first},
+
+					$memory_usage - $preconf -> {_} -> {memory} -> {last},
+
+				));
+
+			}
+
+			$preconf -> {_} -> {memory} -> {last} = $memory_usage;
+		
 		}
-
-		$preconf -> {_} -> {memory} -> {last} = $memory_usage;
 
 	}
 	
