@@ -32,6 +32,58 @@ sub check_constants {
 
 ################################################################################
 
+sub check_version_by_git_files {
+
+	require Compress::Raw::Zlib or return;
+
+	-d (my $dir = "$preconf->{core_path}/.git") or return undef;
+
+	open (H, "$dir/HEAD") or return undef;
+	
+	my $head = <H>; close H;
+	
+	$head =~ /ref:\s*([\w\/]+)/ or return undef;
+	
+	open (H, "$dir/$1") or return undef;
+	
+	$head = <H>; close H;
+	
+	$head =~ /^([a-f\d]{2})([a-f\d]{5})([a-f\d]{33})/ or return undef;
+	
+	my $tag = "$1$2";
+	
+	my $fn = "$dir/objects/$1/$2$3";
+	
+	open (H, $fn) or return undef;
+	
+	my $zipped;
+	
+	read (H, $zipped, -s $fn);
+	
+	close (H);
+	
+	length $zipped or return undef;
+	
+	my ($i, $status) = new Compress::Raw::Zlib::Inflate ();
+
+	$status and return undef;
+
+	$status = $i -> inflate ($zipped, my $src, 1);
+	
+	foreach (split /\n/, $src) {
+	
+		/committer.*?(\d+) ([\+\-])(\d{4})$/ or next;
+		
+		my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = gmtime ($1);
+		
+		return sprintf ("%02d.%02d.%02d.%s", $year - 100, $mon + 1, $mday, $tag);
+
+	}
+
+}
+
+################################################################################
+
 sub check_version_by_git {
 
 	my $cwd = getcwd ();
@@ -42,7 +94,7 @@ sub check_version_by_git {
 	
 	chdir $cwd;
 	
-	$head =~ /^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/sm or return undef;
+	$head =~ /^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/sm or return check_version_by_git_files ();
 	
         return sprintf ("%02d.%02d.%02d.%s", 
         	$4 - 2000,
