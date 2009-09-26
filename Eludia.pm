@@ -497,6 +497,7 @@ sub check_internal_modules {
 	check_internal_module_session_access_logs ();
 	check_internal_module_schedule            ();
 	check_internal_module_presentation_tools  ();
+	check_internal_module_memory              ();
 
 }
 
@@ -693,6 +694,14 @@ sub check_internal_module_schedule {
 		print STDERR " ok.\n";
 
 	}	
+
+}
+
+################################################################################
+
+sub check_internal_module_memory {
+
+	require Eludia::Content::Memory;
 
 }
 
