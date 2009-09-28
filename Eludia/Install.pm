@@ -214,7 +214,7 @@ sub cpan {
 	
 	die $@ if $@;
 	
-	foreach my $module ('CPAN', valuable_modules) {
+	foreach my $module ('CPAN', valuable_modules, 'Proc::ProcessTable') {
 		CPAN::install ($module);
 		CPAN::upgrade ($module);
 	};

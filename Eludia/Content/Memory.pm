@@ -9,6 +9,17 @@ BEGIN {
 		eval "require Eludia::Content::Memory::MSWin32OLE";
 
 	}
+	else {
+
+		eval "require Proc::ProcessTable";
+
+		if ($INC {'Proc/ProcessTable.pm'}) {
+
+			eval "require Eludia::Content::Memory::ProcessTable";
+
+		}
+
+	}
 	
 	if ($preconf -> {_} -> {memory} -> {first} = memory_usage ()) {
 	
