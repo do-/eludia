@@ -4,9 +4,13 @@ BEGIN {
 
 	require Eludia::Content::Memory::Dummy;
 
-	if ($^O eq 'MSWin32' && !$ENV {MOD_PERL}) {
+	if ($^O eq 'MSWin32') {
 	
-		eval "require Eludia::Content::Memory::MSWin32OLE";
+		if (!$ENV {MOD_PERL}) {
+
+			eval "require Eludia::Content::Memory::MSWin32OLE";
+
+		}	
 
 	}
 	else {
