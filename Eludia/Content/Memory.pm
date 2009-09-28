@@ -18,6 +18,11 @@ BEGIN {
 			eval "require Eludia::Content::Memory::ProcessTable";
 
 		}
+		else {
+
+			eval "require Eludia::Content::Memory::PS";
+
+		}
 
 	}
 	
