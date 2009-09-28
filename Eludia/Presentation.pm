@@ -651,6 +651,7 @@ sub draw_form {
 			$row = \@row;
 		}
 		else {
+			ref $field or $field = {name => $field};
 			next if $field -> {off} && $data -> {id};
 			next if $_REQUEST {__read_only} && $field -> {type} eq 'password';
 			$row = [$field];
@@ -1201,6 +1202,8 @@ sub draw_form_field_hgroup {
 	my ($options, $data) = @_;
 			
 	foreach my $item (@{$options -> {items}}) {
+		
+		ref $item or $item = {name => $item};
 	
 		next if $item -> {off} && $data -> {id};
 		
