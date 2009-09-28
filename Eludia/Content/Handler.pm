@@ -517,7 +517,9 @@ sub handler_finish {
 
 				__log_profilinig ($time, sprintf (
 
-					"<P. S. %s B (first + %s B; last + %s B)>\n", 
+					"<P. S. %s MiB (%s B: first + %s B; last + %s B)>\n", 
+
+					$memory_usage >> 20,
 
 					$memory_usage,
 
