@@ -2545,6 +2545,8 @@ sub draw_centered_toolbar {
 
 	my ($options, $list) = @_;
 	
+	$options -> {off} and return '';
+
 	$options -> {cnt} = 0;
 		
 	foreach my $i (@$list) {
