@@ -2302,7 +2302,6 @@ sub js_set_select_option {
 
 	$_REQUEST {__script} .= " var $var = $a; "
 		unless ($_REQUEST {__script} =~ / var $var =/);
-
 	return "javaScript:invoke_setSelectOption ($var)";
 
 }
@@ -2412,9 +2411,12 @@ sub draw_select_cell {
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	my $multiple = $data -> {rows} > 1 ? "multiple size=$$data{rows}" : '';
+	
+	$data -> {onChange} ||= $options -> {onChange};
+	
 	my $html = qq {<td $attributes><select 
 		name="$$data{name}" 
-		onChange="is_dirty=true; $$options{onChange}" 
+		onChange="is_dirty=true; $$data{onChange}" 
 		onkeypress='typeAhead();' 
 		$multiple
 	};
