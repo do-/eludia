@@ -298,7 +298,7 @@ sub _sql_filters {
 
 			}
 
-			if ($field =~ s{(\w+)\.\.\.}{$1}) {				# 'dt_finish... >= ' --> '((dt_finish >= ?) OR (dt_finish IS NULL))'
+			if ($field =~ s{(\w*\.?\w+)\.\.\.}{$1}) {				# 'dt_finish... >= ' --> '((dt_finish >= ?) OR (dt_finish IS NULL))'
 			
 				$field = "(($field) OR ($1 IS NULL))";
 			
