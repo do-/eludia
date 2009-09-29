@@ -651,6 +651,7 @@ sub draw_form {
 			$row = \@row;
 		}
 		else {
+			ref $field or $field = {name => $field};
 			next if $field -> {off} && $data -> {id};
 			next if $_REQUEST {__read_only} && $field -> {type} eq 'password';
 			$row = [$field];
@@ -1201,6 +1202,8 @@ sub draw_form_field_hgroup {
 	my ($options, $data) = @_;
 			
 	foreach my $item (@{$options -> {items}}) {
+		
+		ref $item or $item = {name => $item};
 	
 		next if $item -> {off} && $data -> {id};
 		
@@ -4390,12 +4393,30 @@ sub check_static_files {
 	return if $_SKIN -> {options} -> {no_static};
 	$r or return;
 	
-	my $time = time();
+	my $time = time;
 	
 	my $skin_root = $r -> document_root () . $_REQUEST {__static_url};
 		
-	-d $skin_root or mkdir $skin_root or die "Can't create $skin_root: $!";
+	-d $skin_root or mkdir $skin_root or die "Can't create $skin_root: $!";	
+	
+	if ($Eludia::VERSION =~ /^\d/ && open (V, "$skin_root/VERSION")) {
+	
+		my $version = <V>;
+	
+		close (V);
+		
+		if ($Eludia::VERSION eq $version) {
+		
+			$_SKIN -> {static_ok} -> {$_NEW_PACKAGE} = 1;
 
+			__log_profilinig ($time, " check_static_files: at $version");
+			
+			return;
+		
+		}
+
+	}
+	
 	my $static_path = $_SKIN -> static_path;
 
 	opendir (DIR, $static_path) || die "can't opendir $static_path: $!";
@@ -4433,7 +4454,7 @@ sub check_static_files {
 		
  	if ($preconf -> {core_gzip}) {
 
-		foreach my $fn ('navigation.js', 'eludia.css', 'navigation_setup.js') {
+		foreach my $fn ('navigation.js', 'eludia.css') {
 		
 			if (-f "$skin_root/$fn") {
 			
@@ -4452,11 +4473,26 @@ sub check_static_files {
 	
 				print OUT "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $js);
 				close OUT;
+
+__log_profilinig ($time, "  	$fn gzipped");
+
 			}
 		}
 	}
 
 	$_SKIN -> {static_ok} -> {$_NEW_PACKAGE} = 1;
+	
+	if ($Eludia::VERSION =~ /^\d/) {
+	
+		my $fn = "$skin_root/VERSION";
+		
+		open (V, ">$fn") or die "Can't write to $fn:$!\n";
+
+		print V $Eludia::VERSION;
+
+		close (V);
+	
+	}
 
 	__log_profilinig ($time, ' check_static_files');
 

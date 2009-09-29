@@ -496,12 +496,51 @@ sub handler_finish {
 		
 	}) if $preconf -> {core_debug_profiling} > 2;
 	
+	sql_disconnect () if $ENV {SCRIPT_NAME} eq '/__try__and__disconnect';
+	
+	my $time = __log_profilinig ($first_time, "<TOTAL>\n");
+
+	if (my $memory_usage = memory_usage ()) {
+	
+		if (exists $preconf -> {core_memory_limit} && $memory_usage >> 20 > $preconf -> {core_memory_limit}) {
+		
+			__log_profilinig ($time, sprintf ("<P. S. Memory limit of %s MiB exceeded: have %s MiB. This was the suicide note.>\n", $preconf -> {core_memory_limit}, $memory_usage >> 20));
+			
+			$_REQUEST {__suicide} = 1;
+		
+		}		
+		else {
+		
+			$preconf -> {_} -> {memory} -> {last} ||= $preconf -> {_} -> {memory} -> {first};
+
+			if ($preconf -> {core_debug_profiling}) {
+
+				__log_profilinig ($time, sprintf (
+
+					"<P. S. %s MiB (%s B: first + %s B; last + %s B)>\n", 
+
+					$memory_usage >> 20,
+
+					$memory_usage,
+
+					$memory_usage - $preconf -> {_} -> {memory} -> {first},
+
+					$memory_usage - $preconf -> {_} -> {memory} -> {last},
+
+				));
+
+			}
+
+			$preconf -> {_} -> {memory} -> {last} = $memory_usage;
+		
+		}
+
+	}
+	
 	if ($_REQUEST {__suicide}) {
 		$r -> print (' ' x 8192);
 		CORE::exit (0);
 	}
-
-	__log_profilinig ($first_time, '<TOTAL>');
 
 	return _ok ();
 

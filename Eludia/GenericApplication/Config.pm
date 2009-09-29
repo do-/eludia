@@ -66,6 +66,26 @@ sub fill_in {
 
    	$conf -> {lang} ||= 'RUS';   	
 
+   	fill_in_things (core_modules =>
+   		
+		auth                 => 1,
+		checksums            => 1,
+		json                 => 1,
+		mac                  => 1,
+		mail                 => 1,
+		math_fixed_precision => 1,
+		memory               => 1,
+		peering              => 1,
+		presentation_tools   => 1,
+		queries              => 1,
+		schedule             => 1,
+		session_access_logs  => 1,
+		uri_escape           => 1,
+		want                 => 1,
+		zlib                 => 1,
+   	
+	);
+
    	fill_in_things (sql_types =>
    	
 		int      => {TYPE_NAME => 'int', FIELD_OPTIONS => {type => 'string'}},
