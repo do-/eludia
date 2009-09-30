@@ -477,11 +477,9 @@ my $time = time;
 
 	if ($db && ($preconf -> {no_model_update} || ($model_update && $model_update -> {core_ok}))) {
 
-		my $ping = $db -> ping;
+		$db -> ping and return
 		
 $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
-		
-		return if $ping;
 
 	}
 	
@@ -740,6 +738,8 @@ sub sql_select_vocabulary {
 sub sql_select_id {
 
 	my ($table, $values, @lookup_field_sets) = @_;
+	
+	my $result = {};
 
 	my $table_safe = sql_table_name ($table);
 
@@ -826,6 +826,8 @@ sub sql_select_id {
 
 			($forced -> {$key} && $values -> {$key} ne $record -> {$key}) or $record -> {$key} eq '' or next;
 
+			$result -> {update} -> {$key} = {old => $record -> {$key}, new => $values -> {$key}};
+
 			push @keys,   $key;
 			push @values, $values -> {$key};
 
@@ -838,8 +840,15 @@ sub sql_select_id {
 		}
 	
 	}
+	
+	unless ($record -> {id}) {
+	
+		$record -> {id} = sql_do_insert ($table, $values);
+		
+		$result -> {insert} = $values;
+	
+	}
 
-	$record -> {id} ||= sql_do_insert ($table, $values);
 	
 	};
 
@@ -854,7 +863,7 @@ sub sql_select_id {
 
 	}
 	
-	return $record -> {id};
+	return wantarray ? ($record -> {id}, $result) : $record -> {id};
 
 }
 
