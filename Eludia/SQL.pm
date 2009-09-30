@@ -477,11 +477,9 @@ my $time = time;
 
 	if ($db && ($preconf -> {no_model_update} || ($model_update && $model_update -> {core_ok}))) {
 
-		my $ping = $db -> ping;
+		$db -> ping and return
 		
 $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
-		
-		return if $ping;
 
 	}
 	
