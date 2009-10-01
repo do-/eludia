@@ -2334,15 +2334,15 @@ sub draw_text_cell {
 
 	$html .= '<nobr>' unless $data -> {no_nobr};
 
-	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
-	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
-	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
-
 	if ($data -> {href}) {
 		
 		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
 		
 	}
+
+	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
+	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
 
 	$html .= $data -> {label};
 
