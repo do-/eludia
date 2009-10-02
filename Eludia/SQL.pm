@@ -761,6 +761,8 @@ sub sql_select_id {
 	
 	@lookup_field_sets = (['label']) if @lookup_field_sets == 0;
 	
+	my $options = ref $lookup_field_sets [-1] eq HASH ? pop @lookup_field_sets : {};
+	
 	my $record = {};
 	
 	my $auto_commit = $db -> {AutoCommit};
@@ -863,7 +865,7 @@ sub sql_select_id {
 
 	}
 	
-	return wantarray ? ($record -> {id}, $result) : $record -> {id};
+	return $options -> {show_diff} && wantarray ? ($record -> {id}, $result) : $record -> {id};
 
 }
 
