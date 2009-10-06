@@ -7,7 +7,7 @@ use HTTP::Request::Common;
 
 sub check_peer_server {
 
-	$r -> headers_in -> {'User-Agent'} =~ m{^Eludia/.*? \((.*?)\)} or return undef;
+	$r -> headers_in -> {'User-Agent'} =~ m{^(Eludia|Zanas)/.*? \((.*?)\)} or return undef;
 
 	my $peer_server = $1;
 
