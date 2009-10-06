@@ -791,9 +791,13 @@ sub _adjust_field {
 			
 			$field_options {type}  ||= $field_def -> {TYPE};
 			
-			$field_options {label} ||= $field_def -> {REMARKS};
+			unless ($field -> {label_off}) {
+
+				$field_options {label} ||= $field_def -> {REMARKS};
 		
-			$field_options {label} ||= $field_def -> {label};
+				$field_options {label} ||= $field_def -> {label};
+
+			}
 
 			%$field = (%field_options, %$field);
 		
@@ -1301,7 +1305,8 @@ EOJS
 					type	=> 'hidden',
 					name	=> $options->{name},
 					value	=> join (',', map {$_ -> {id}} @{$options -> {values}}),
-					off	=> $_REQUEST {__read_only},
+					off		=> $_REQUEST {__read_only},
+					label_off => 1,
 				},
 				{
 					type	=> 'button',
