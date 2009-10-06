@@ -9,7 +9,7 @@ sub check_peer_server {
 
 	$r -> headers_in -> {'User-Agent'} =~ m{^(Eludia|Zanas)/.*? \((.*?)\)} or return undef;
 
-	my $peer_server = $1;
+	my $peer_server = $2;
 
 #	my $local_sid = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE peer_id = ? AND peer_server = ?", $_REQUEST {sid}, $peer_server) or return undef;
 	
