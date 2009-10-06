@@ -18,7 +18,35 @@ sub sql_version {
 	($version -> {number}) = $version -> {string} =~ /([\d\.]+)/;
 	
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
-	
+
+        $db -> {HandleError} = sub {
+        
+		my $err = $_[0] or return 0;
+		
+		if (		
+			$err =~ m{Incorrect key file for table .*?(\w+)\.MYI'} || 
+			$err =~ m{Table .*?(\w+)' is marked as crashed and should be repaired}
+		) {
+                
+			warn "FOUND CORRUPTED TABLE [$1]! TRYING TO 'REPAIR TABLE `$1` QUICK' ORIG ERR:[$err]";
+                
+			my $db_repair = DBI -> connect ($conf -> {'db_dsn'}, $conf -> {'db_user'}, $conf -> {'db_password'}, {
+				AutoCommit  => 1,
+				LongReadLen => 100000000,
+				LongTruncOk => 1,
+				InactiveDestroy => 0,
+			});
+			
+			$db_repair -> do ("REPAIR TABLE `$1` QUICK") or warn "UNABLE TO REPAIR [$1]: ", $db -> errstr;
+
+			$db_repair -> disconnect;
+
+            }
+
+            return 0;
+            
+        };
+
 	return $version;
 	
 }
