@@ -225,6 +225,7 @@ sub send_mail {
 
 	$smtp -> datasend (<<EOT);
 From: $from
+Return-Path: $from
 To: $to
 Subject: $subject
 Content-type: multipart/mixed;
