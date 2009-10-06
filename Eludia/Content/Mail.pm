@@ -269,6 +269,12 @@ EOT
 			}
 			close (FILE);
 
+			if ($attach -> {delete_after_send}) {
+			
+				unlink $attach -> {real_path} || warn "Can't unlink $attach->{real_path}: $!\n";
+				
+			}
+
 		}
 
 	}
