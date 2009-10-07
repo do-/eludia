@@ -642,7 +642,7 @@ sub draw_form {
 		
 		if (ref $field eq ARRAY) {
 			my @row = ();
-			foreach (@$field) {
+			foreach (map {_adjust_field ($_)} @$field) {
 				next if $_ -> {off} && $data -> {id};
 				next if $_REQUEST {__read_only} && $_ -> {type} eq 'password';
 				push @row, $_;
@@ -778,6 +778,8 @@ sub draw_form {
 sub _adjust_field {
 
 	my ($field, $data) = @_;
+	
+	ref $field or $field = {name => $field};
 
 	my $table_def = $DB_MODEL -> {tables} -> {$_REQUEST {__the_table} ||= $_REQUEST {type}};
 	
