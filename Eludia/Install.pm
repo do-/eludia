@@ -1174,7 +1174,7 @@ EOS
 
 	print "ok\n";
 	
-	my $cmd = "git clone $application_dst $instpath 2>1";
+	my $cmd = "git clone $application_dst $instpath 2>&1";
 
 	print "Copying standard files ($cmd)... \n";
 	
