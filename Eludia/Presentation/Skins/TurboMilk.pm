@@ -2289,19 +2289,15 @@ sub js_set_select_option {
 	my ($_SKIN, $name, $item, $fallback_href) = @_;
 
 	return ($fallback_href || $i) unless $_REQUEST {select};
+	
+	$item -> {question} ||= "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?" unless $conf -> {core_no_confirm_other};
 
-	my $a = $_JSON -> encode ({
-		$conf -> {core_no_confirm_other} ? () : (question => "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?"),
-		id       => $item -> {id},
-		label    => $item -> {label},
-	});
+	my $a = $_JSON -> encode ($item);
 
-	my $var = "sso_" . (0 + $item -> {id}) . int (rand() * time ());
-	$var =~ s/[.]//g;
-	$var =~ s/-/_/g;
+	my $var = "sso_" . substr ('' . $item, 7, 7);
 
-	$_REQUEST {__script} .= " var $var = $a; "
-		unless ($_REQUEST {__script} =~ / var $var =/);
+	$_REQUEST {__script} .= " var $var = $a; ";
+	
 	return "javaScript:invoke_setSelectOption ($var)";
 
 }

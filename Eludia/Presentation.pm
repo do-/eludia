@@ -3057,7 +3057,12 @@ sub draw_text_cell {
 
 		if ($_REQUEST {select}) {
 
-			$data -> {href}   = js_set_select_option ('', {id => $i -> {id}, label => $options -> {select_label}});
+			$data -> {href}   = js_set_select_option ('', {
+				id       => $i -> {id}, 
+				label    => $options -> {select_label},
+				question => $options -> {select_question},
+			});
+
 		}
 #		else {
 #			$data -> {href}   ||= $options -> {href} unless $options -> {is_total};
