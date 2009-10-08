@@ -580,7 +580,7 @@ sub draw_form_field_suggest {
 	my ($_SKIN, $options, $data) = @_;
 
 	$_REQUEST {__script} .= qq{; 	
-	
+
 		function off_suggest_$options->{name} () {
 			var s = document.getElementById ('_$options->{name}__suggest'); 
 			s.style.display = 'none';
@@ -3530,7 +3530,7 @@ sub draw_suggest_page {
 
 	my ($_SKIN, $data) = @_;
 			
-	my $a = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}]} @$data]);
+	my $a = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}, $_ -> {_confirm}]} @$data]);
 	
 	$size = 10 if $size > 10;
 	
@@ -3539,6 +3539,8 @@ sub draw_suggest_page {
 	<head>
 		<script>
 			function r () {
+								
+				var q = {};
 			
 				var a = $a;
 								
@@ -3557,6 +3559,7 @@ sub draw_suggest_page {
 				for (var i = 0; i < a.length; i++) {
 					var o = a [i];
 					s.options [i] = new Option (o [1], o [0]);
+					if (o [2]) q [o [0]] = o [2];
 				}
 				
 				if (a.length > 0) {
@@ -3568,6 +3571,8 @@ sub draw_suggest_page {
 					s.style.display = 'none';
 					parent.suggest_is_visible = 0;
 				}
+				
+				parent.questions_for_suggest ['_$_REQUEST{__suggest}__suggest'] = q;
 				
 			}
 		</script>
