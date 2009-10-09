@@ -225,6 +225,7 @@ sub send_mail {
 
 	$smtp -> datasend (<<EOT);
 From: $from
+Return-Path: $from
 To: $to
 Subject: $subject
 Content-type: multipart/mixed;
@@ -268,6 +269,12 @@ EOT
 				$smtp -> datasend (encode_base64 ($buf));
 			}
 			close (FILE);
+
+			if ($attach -> {delete_after_send}) {
+			
+				unlink $attach -> {real_path} || warn "Can't unlink $attach->{real_path}: $!\n";
+				
+			}
 
 		}
 

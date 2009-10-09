@@ -4,6 +4,9 @@ sub _sql_list_fields {
 
 	my ($src, $table, $table_alias) = @_;
 	
+	return ()
+		if $src eq 'NONE';
+
 	$table_alias ||= $table; 
 	
 	my @fields = ();
@@ -295,7 +298,7 @@ sub _sql_filters {
 
 			}
 
-			if ($field =~ s{(\w+)\.\.\.}{$1}) {				# 'dt_finish... >= ' --> '((dt_finish >= ?) OR (dt_finish IS NULL))'
+			if ($field =~ s{(\w*\.?\w+)\.\.\.}{$1}) {				# 'dt_finish... >= ' --> '((dt_finish >= ?) OR (dt_finish IS NULL))'
 			
 				$field = "(($field) OR ($1 IS NULL))";
 			
@@ -582,6 +585,9 @@ sub sql {
 		$table =~ /(\-?)(\w+)(?:\((.*?)\))?/ or die "Invalid table definition: '$table'\n";
 
 		my ($minus, $name, $columns) = ($1, $2, $3);		
+		
+		$columns = 'NONE'
+			if $table =~ /\(\)/ && $columns eq '';
 
 		$alias ||= $name;
 		

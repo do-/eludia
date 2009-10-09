@@ -27,6 +27,7 @@ var q_is_focused = false;
 var left_right_blocked = false;					
 var last_vert_menu = [];
 var subsets_are_visible = 0;
+var questions_for_suggest = {};
 var clockID = 0;
 var clockSeparatorID = 0;
 var clockSeparators = [':', ' '];
@@ -127,16 +128,33 @@ function cell_select_visibility (select, fixed_cols) {
 }
 
 function set_suggest_result (sel, id) {
+
 	if (sel.selectedIndex < 0) return; 
+
 	var o = sel.options [sel.selectedIndex];
+	
+	var qs = questions_for_suggest [sel.name];
+
+	if (qs) {
+
+		var q = qs [o.value];
+		if (q && !confirm (q)) return blockEvent ();
+	
+	}
+	
 	document.getElementById (id + '__id').value    = o.value;
 	document.getElementById (id + '__label').value = o.text;
+	
 	var i = document.getElementById (id);
 	i.value = o.text;
 	i.focus ();
+	
 	sel.style.display = 'none';
+	
 	suggest_is_visible = 0;
+	
 	return blockEvent ();
+	
 }
 
 function dialog_open (href, arg, options) {

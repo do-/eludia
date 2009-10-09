@@ -214,7 +214,7 @@ sub cpan {
 	
 	die $@ if $@;
 	
-	foreach my $module ('CPAN', valuable_modules) {
+	foreach my $module ('CPAN', valuable_modules, 'Proc::ProcessTable') {
 		CPAN::install ($module);
 		CPAN::upgrade ($module);
 	};
@@ -1174,7 +1174,7 @@ EOS
 
 	print "ok\n";
 	
-	my $cmd = "git clone $application_dst $instpath 2>1";
+	my $cmd = "git clone $application_dst $instpath 2>&1";
 
 	print "Copying standard files ($cmd)... \n";
 	
@@ -1636,9 +1636,53 @@ EOT
 
 sub fcgi {
 
-	require Eludia::Content::HTTP::FCGI::nginx;
+	my ($port) = @_;
+
+	my $path = core_path ();
+
+	if ($^O eq 'MSWin32') {
 	
-	start (@_);
+		`winserv uninstall Eludia_$port`;
+
+		`winserv install Eludia_$port -description "Eludia Perl server on $port port" -start auto -ipcmethod pipe -noninteractive $^X -I $path -MEludia::Content::HTTP::FCGI::nginx -e "start(-address => ':$port')"`;
+
+	}
+
+}
+
+################################################################################
+
+sub nginx {
+
+	if ($^O eq 'MSWin32') {
+	
+		`winserv uninstall Nginx`;
+
+		`winserv install Nginx -start auto -ipcmethod blind -noninteractive c:\\nginx\\nginx.exe`;
+
+	}
+
+}
+
+################################################################################
+
+sub elud {
+
+	my $path = core_path ();
+
+	open (F, '>/usr/sbin/elud');
+	
+	print F <<EOF;
+#!/usr/bin/perl
+
+use lib '$path';
+
+use Eludia::Content::HTTP::FCGI::nginx;
+
+cmd_unix ();
+EOF
+
+	close (F);
 
 }
 

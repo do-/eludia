@@ -5,6 +5,7 @@ sub setup_page_content {
 	my ($page) = @_;
 	
 	$_REQUEST {__allow_check___query} = 1;
+	delete $_REQUEST {__the_table};
 
 	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
 

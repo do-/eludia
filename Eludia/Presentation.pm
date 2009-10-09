@@ -642,7 +642,7 @@ sub draw_form {
 		
 		if (ref $field eq ARRAY) {
 			my @row = ();
-			foreach (@$field) {
+			foreach (map {_adjust_field ($_)} @$field) {
 				next if $_ -> {off} && $data -> {id};
 				next if $_REQUEST {__read_only} && $_ -> {type} eq 'password';
 				push @row, $_;
@@ -651,6 +651,7 @@ sub draw_form {
 			$row = \@row;
 		}
 		else {
+			ref $field or $field = {name => $field};
 			next if $field -> {off} && $data -> {id};
 			next if $_REQUEST {__read_only} && $field -> {type} eq 'password';
 			$row = [$field];
@@ -777,6 +778,8 @@ sub draw_form {
 sub _adjust_field {
 
 	my ($field, $data) = @_;
+	
+	ref $field or $field = {name => $field};
 
 	my $table_def = $DB_MODEL -> {tables} -> {$_REQUEST {__the_table} ||= $_REQUEST {type}};
 	
@@ -790,11 +793,15 @@ sub _adjust_field {
 			
 			$field_options {type}  ||= $field_def -> {TYPE};
 			
-			$field_options {label} ||= $field_def -> {REMARKS};
-		
-			$field_options {label} ||= $field_def -> {label};
+			unless ($field -> {label_off}) {
 
-			$field = {%field_options, %$field};
+				$field_options {label} ||= $field_def -> {REMARKS};
+		
+				$field_options {label} ||= $field_def -> {label};
+
+			}
+
+			%$field = (%field_options, %$field);
 		
 		}
 	
@@ -1201,6 +1208,8 @@ sub draw_form_field_hgroup {
 	my ($options, $data) = @_;
 			
 	foreach my $item (@{$options -> {items}}) {
+		
+		ref $item or $item = {name => $item};
 	
 		next if $item -> {off} && $data -> {id};
 		
@@ -1266,11 +1275,30 @@ sub draw_form_field_multi_select {
 	
 	my $url_dialog_id = $_REQUEST {__dialog_cnt};
 
+	my $detail_from;
+	if (exists $options -> {detail_from}) {
+		if (ref $options -> {detail_from} ne ARRAY) {
+			$options -> {detail_from} = [$options -> {detail_from}];
+		}
+		foreach my $field (@{$options -> {detail_from}}) {
+			$detail_from .= <<EOJS;
+                        re = /&$field=[\\d]*/;
+                        dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
+			dialog_open_$url_dialog_id.href += '&$field=' + document.getElementsByName ('_$field') [0].value;
+EOJS
+		}
+	}
+	
+
 	return draw_form_field_hgroup (
 		{
 			label	=> $options -> {label},
 			type	=> 'hgroup',
 			items	=> [
+#				{
+#					type	=> 'static',
+#					value	=> qq[<table id="_$$options{name}">],
+#				},
 				{
 					type	=> 'static',
 					value	=> qq[<span id="ms_$options">] . join ('<br>', map {$_ -> {label}} @{$options -> {values}}) . '</span>',
@@ -1279,19 +1307,22 @@ sub draw_form_field_multi_select {
 					type	=> 'hidden',
 					name	=> $options->{name},
 					value	=> join (',', map {$_ -> {id}} @{$options -> {values}}),
-					off	=> $_REQUEST {__read_only},
+					off		=> $_REQUEST {__read_only},
+					label_off => 1,
 				},
 				{
 					type	=> 'button',
 					value	=> 'Изменить',
 					onclick	=> <<EOJS,
-						re = /&salt=[\\d\\.]*/;
+						re = /&_?salt=[\\d\\.]*/g;
 						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
 						dialog_open_$url_dialog_id.href += '&salt=' + Math.random ();
 						
 						re = /&ids=[^&]*/i; 
 						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
 						dialog_open_$url_dialog_id.href += '&ids=' + document.getElementsByName ('_$options->{name}') [0].value; 
+
+						$detail_from
 
 						$url
 EOJS
@@ -1304,6 +1335,10 @@ EOJS
 					onclick => "document.getElementById ('ms_$options').innerHTML=''; document.form._$options->{name}.value='';" . $js_detail,
 					off	=> $_REQUEST {__read_only},
 				},
+#				{
+#					type	=> 'static',
+#					value	=> qq[</table>],
+#				},
 			],
 		},
 		$data
@@ -2517,6 +2552,8 @@ sub draw_centered_toolbar {
 
 	my ($options, $list) = @_;
 	
+	$options -> {off} and return '';
+
 	$options -> {cnt} = 0;
 		
 	foreach my $i (@$list) {
@@ -3020,7 +3057,12 @@ sub draw_text_cell {
 
 		if ($_REQUEST {select}) {
 
-			$data -> {href}   = js_set_select_option ('', {id => $i -> {id}, label => $options -> {select_label}});
+			$data -> {href}   = js_set_select_option ('', {
+				id       => $i -> {id}, 
+				label    => $options -> {select_label},
+				question => $options -> {select_question},
+			});
+
 		}
 #		else {
 #			$data -> {href}   ||= $options -> {href} unless $options -> {is_total};
@@ -4253,7 +4295,7 @@ sub setup_skin {
 		if ($_REQUEST {xls}) {
 			$_REQUEST {__skin} = 'XL';
 		}
-		elsif (($_REQUEST {__dump} || $_REQUEST {__d}) && $preconf -> {core_show_dump}) {
+		elsif (($_REQUEST {__dump} || $_REQUEST {__d}) && ($preconf -> {core_show_dump} || $_USER -> {peer_server})) {
 			$_REQUEST {__skin} = 'Dumper';
 		}
 		elsif ($_REQUEST {__proto}) {
@@ -4363,12 +4405,30 @@ sub check_static_files {
 	return if $_SKIN -> {options} -> {no_static};
 	$r or return;
 	
-	my $time = time();
+	my $time = time;
 	
 	my $skin_root = $r -> document_root () . $_REQUEST {__static_url};
 		
-	-d $skin_root or mkdir $skin_root or die "Can't create $skin_root: $!";
+	-d $skin_root or mkdir $skin_root or die "Can't create $skin_root: $!";	
+	
+	if ($Eludia::VERSION =~ /^\d/ && open (V, "$skin_root/VERSION")) {
+	
+		my $version = <V>;
+	
+		close (V);
+		
+		if ($Eludia::VERSION eq $version) {
+		
+			$_SKIN -> {static_ok} -> {$_NEW_PACKAGE} = 1;
 
+			__log_profilinig ($time, " check_static_files: at $version");
+			
+			return;
+		
+		}
+
+	}
+	
 	my $static_path = $_SKIN -> static_path;
 
 	opendir (DIR, $static_path) || die "can't opendir $static_path: $!";
@@ -4406,7 +4466,7 @@ sub check_static_files {
 		
  	if ($preconf -> {core_gzip}) {
 
-		foreach my $fn ('navigation.js', 'eludia.css', 'navigation_setup.js') {
+		foreach my $fn ('navigation.js', 'eludia.css') {
 		
 			if (-f "$skin_root/$fn") {
 			
@@ -4425,11 +4485,26 @@ sub check_static_files {
 	
 				print OUT "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $js);
 				close OUT;
+
+__log_profilinig ($time, "  	$fn gzipped");
+
 			}
 		}
 	}
 
 	$_SKIN -> {static_ok} -> {$_NEW_PACKAGE} = 1;
+	
+	if ($Eludia::VERSION =~ /^\d/) {
+	
+		my $fn = "$skin_root/VERSION";
+		
+		open (V, ">$fn") or die "Can't write to $fn:$!\n";
+
+		print V $Eludia::VERSION;
+
+		close (V);
+	
+	}
 
 	__log_profilinig ($time, ' check_static_files');
 

@@ -1,0 +1,10 @@
+You (personally you, who are reading this right now) can use and/or distribute the content of the  directory containing this file under the conditions of any license from the following list:
+
+* GNU General Public License 3.0 (http://www.gnu.org/licenses/gpl.html)
+* The MIT License (http://www.opensource.org/licenses/mit-license.html)
+* Artistic License 1.0 (http://www.perlfoundation.org/artistic_license_1_0)
+* Poetic License (http://genaud.net/2005/10/poetic-license/)
+* Free Beer License (http://code.tryba.nl/docs/utils/nl/tryba/license/BeerLicense.html)
+* WTFPL 2.0 (http://sam.zoy.org/wtfpl/COPYING)
+
+If all of these are unavailable at the moment of reading or none fit your needs, please feel free to choose or invent a new one and then follow it strictly, keeping in mind all the resonsability possible under the law.

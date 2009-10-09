@@ -126,8 +126,10 @@ sub draw_form_field {
 		
 	my $style = $field -> {picture} ? 'style="mso-number-format:' . $_SKIN -> _picture ($field -> {picture}) . '"' : '';
 
+	my $colspan_label = $field -> {colspan_label} ? 'colspan=' . $field -> {colspan_label} : '';
+
 	return (<<EOH);
-		<td nowrap align=right><b>$$field{label}</b></td>
+		<td nowrap align=right $colspan_label><b>$$field{label}</b></td>
 		<td $colspan $style>\n$$field{html}</td>
 EOH
 

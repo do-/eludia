@@ -582,7 +582,7 @@ sub draw_form_field_suggest {
 	my $id = '' . $options;
 
 	$_REQUEST {__script} .= qq{; 	
-	
+
 		function off_suggest_$options->{name} () {
 			var s = document.getElementById ('_$options->{name}__suggest'); 
 			s.style.display = 'none';
@@ -646,6 +646,8 @@ EOH
 			}
 		}
 EOH
+
+	my $id = '' . $options;
 	
 	$options -> {attributes} -> {id}           = $id;
 	$options -> {attributes} -> {autocomplete} = 'off';
@@ -1026,7 +1028,7 @@ sub draw_form_field_select {
 					
 					try {
 
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random()}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 					
 						focus ();
 						
@@ -2311,20 +2313,15 @@ sub js_set_select_option {
 	my ($_SKIN, $name, $item, $fallback_href) = @_;
 
 	return ($fallback_href || $i) unless $_REQUEST {select};
+	
+	$item -> {question} ||= "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?" unless $conf -> {core_no_confirm_other};
 
-	my $a = $_JSON -> encode ({
-		$conf -> {core_no_confirm_other} ? () : (question => "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?"),
-		id       => $item -> {id},
-		label    => $item -> {label},
-	});
+	my $a = $_JSON -> encode ($item);
 
-	my $var = "sso_" . (0 + $item -> {id}) . int (rand() * time ());
-	$var =~ s/[.]//g;
-	$var =~ s/-/_/g;
+	my $var = "sso_" . substr ('' . $item, 7, 7);
 
-	$_REQUEST {__script} .= " var $var = $a; "
-		unless ($_REQUEST {__script} =~ / var $var =/);
-
+	$_REQUEST {__script} .= " var $var = $a; ";
+	
 	return "javaScript:invoke_setSelectOption ($var)";
 
 }
@@ -2357,15 +2354,15 @@ sub draw_text_cell {
 
 	$html .= '<nobr>' unless $data -> {no_nobr};
 
-	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
-	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
-	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
-
 	if ($data -> {href}) {
 		
 		$html .= qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
 		
 	}
+
+	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
+	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
 
 	$html .= $data -> {label};
 
@@ -2434,9 +2431,12 @@ sub draw_select_cell {
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	my $multiple = $data -> {rows} > 1 ? "multiple size=$$data{rows}" : '';
+	
+	$data -> {onChange} ||= $options -> {onChange};
+	
 	my $html = qq {<td $attributes><select 
 		name="$$data{name}" 
-		onChange="is_dirty=true; $$options{onChange}" 
+		onChange="is_dirty=true; $$data{onChange}" 
 		onkeypress='typeAhead();' 
 		$multiple
 	};
@@ -3515,7 +3515,7 @@ sub draw_suggest_page {
 
 	my ($_SKIN, $data) = @_;
 			
-	my $a = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}]} @$data]);
+	my $a = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}, $_ -> {_confirm}]} @$data]);
 	
 	$size = 10 if $size > 10;
 	
@@ -3524,6 +3524,8 @@ sub draw_suggest_page {
 	<head>
 		<script>
 			function r () {
+								
+				var q = {};
 			
 				var a = $a;
 								
@@ -3542,6 +3544,7 @@ sub draw_suggest_page {
 				for (var i = 0; i < a.length; i++) {
 					var o = a [i];
 					s.options [i] = new Option (o [1], o [0]);
+					if (o [2]) q [o [0]] = o [2];
 				}
 				
 				if (a.length > 0) {
@@ -3553,6 +3556,8 @@ sub draw_suggest_page {
 					s.style.display = 'none';
 					parent.suggest_is_visible = 0;
 				}
+				
+				parent.questions_for_suggest ['_$_REQUEST{__suggest}__suggest'] = q;
 				
 			}
 		</script>
