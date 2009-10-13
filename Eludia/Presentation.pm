@@ -4460,8 +4460,15 @@ sub check_static_files {
 		closedir DIR;
 
 		foreach my $src (@files) {
+		
 			$src =~ /\w\.\w+$/ or next;
-			File::Copy::copy ($over_root . '/' . $src,  $skin_root . '/' . $src) or die "can't copy $src: $!";
+			
+			my ($from, $to) = map {"$_/$src"} ($over_root, $skin_root);
+			
+			$to =~ s{\.pm$}{};
+						
+			File::Copy::copy ($from, $to) or die "can't copy '$from' -> '$to': $!\n";
+			
 		}
 
 	}
