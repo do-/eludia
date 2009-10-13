@@ -1544,7 +1544,7 @@ sub draw_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
 	my $html = <<EOH;
-		<td>
+		<td class="bgr0">
 		<table cellspacing=0 cellpadding=0 border=0 valign="middle">
 		<tr>
 			<td class="bgr0" width=6><img src="$_REQUEST{__static_url}/btn2_l.gif?$_REQUEST{__static_salt}" width="6" height="21" border="0"></td>
@@ -1982,7 +1982,7 @@ sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
 		
-	my $html = '<td><table cellspacing=2 cellpadding=0><tr>';
+	my $html = '<td class="bgr0"><table cellspacing=2 cellpadding=0><tr>';
 	
 	if ($options -> {total}) {
 
