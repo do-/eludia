@@ -163,7 +163,7 @@ sub peer_query {
 	my ($peer_server, $params, $options) = @_;
 	
 	my $url = $preconf -> {peer_servers} -> {$peer_server} or die "Peer server '$peer_server' not defined\n";
-	
+		
 	peer_reconnect ();
 
 	unless ($_REQUEST {__only_params}) {
@@ -203,7 +203,11 @@ sub peer_query {
 
 	my $request = POST (@args);
 
+	$UA -> {timeout} = 600 if (ref $options -> {files} eq ARRAY);
+
 	my $response = $UA -> request ($request);
+
+	$UA -> {timeout} = $preconf -> {peer_timeout} || 180 if (ref $options -> {files} eq ARRAY);
 
 	unless ($_REQUEST {no_upload_file}) {
 		foreach my $k (keys %$params) {
