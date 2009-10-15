@@ -825,6 +825,7 @@ sub draw_form_field {
 		($_REQUEST {__read_only} or $field -> {read_only})
 	 	 &&  $field -> {type} ne 'hgroup'
 	 	 &&  $field -> {type} ne 'banner'
+	 	 &&  $field -> {type} ne 'button'
 	 	 &&  $field -> {type} ne 'article'
 	 	 &&  $field -> {type} ne 'iframe'
 	 	 &&  $field -> {type} ne 'color'
@@ -1217,7 +1218,7 @@ sub draw_form_field_hgroup {
 		
 		$item -> {label} .= ': ' if $item -> {label} && !$item -> {no_colon};
 		
-		if ($_REQUEST {__read_only} || $options -> {read_only} || $item -> {read_only}) {
+		if (($_REQUEST {__read_only} || $options -> {read_only} || $item -> {read_only}) && $item -> {type} ne 'button') {
 
 			if ($item -> {type} eq 'checkbox') {
 				$item -> {value} = $data -> {$item -> {name}} || $item -> {checked} ? $i18n -> {yes} : $i18n -> {no};
