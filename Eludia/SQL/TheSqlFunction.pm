@@ -540,7 +540,7 @@ sub sql {
 		
 		$default_columns = 'id, fake';
 
-		$where .= $_REQUEST {fake} =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
+		$where .= ($_REQUEST {fake} || '') =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
 
 	}	
 		
