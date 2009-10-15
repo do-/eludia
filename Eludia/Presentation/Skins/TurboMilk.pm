@@ -3072,7 +3072,7 @@ sub lrt_start {
 	
 	$_SKIN -> lrt_print (<<EOH);
 		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
-			<iframe name=invisible src="$_REQUEST{__uri}0.html" width=0 height=0 application="yes">
+			<iframe name=invisible src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes">
 			</iframe>
 EOH
 
