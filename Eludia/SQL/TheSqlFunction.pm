@@ -225,7 +225,7 @@ sub _sql_filters {
 
 		unless ($tied || $is_null) {
 
-			next if $first_value eq '' or $first_value eq '0000-00-00';
+			next if ($first_value || '') eq '' or $first_value eq '0000-00-00';
 
 		}
 		
