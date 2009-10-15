@@ -151,10 +151,14 @@ sub __genereate_sql_fragment_for_column {
 		$i -> {SQL} .= " DEFAULT '$i->{COLUMN_DEF}'";
 	
 	}
+	
+	if (defined $i -> {REMARKS}) {
 
-	$i -> {REMARKS} =~ s{'}{''}g; #';
+		$i -> {REMARKS} =~ s{'}{''}g; #';
 
-	$i -> {SQL} .= " COMMENT '$i->{REMARKS}'";
+		$i -> {SQL} .= " COMMENT '$i->{REMARKS}'";
+
+	}
 
 	%$i = map {$_ => $i -> {$_}} qw (name SQL REMARKS NULLABLE TYPE_NAME);
 
