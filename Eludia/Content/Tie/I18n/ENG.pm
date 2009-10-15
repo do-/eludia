@@ -10,6 +10,7 @@
 	confirm_esc              => 'Cancel changes?',
 	confirm_delete           => 'Delete record, are you sure?',
 	confirm_undelete         => 'Restore record, are you sure',
+	confirm_session_term     => 'Logout, are you sure?',
 	ok                       => 'ok', 
 	cancel                   => 'cancel', 
 	choose                   => 'choose', 

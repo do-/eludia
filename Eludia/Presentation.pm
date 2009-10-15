@@ -642,7 +642,7 @@ sub draw_form {
 		
 		if (ref $field eq ARRAY) {
 			my @row = ();
-			foreach (@$field) {
+			foreach (map {_adjust_field ($_)} @$field) {
 				next if $_ -> {off} && $data -> {id};
 				next if $_REQUEST {__read_only} && $_ -> {type} eq 'password';
 				push @row, $_;
@@ -778,6 +778,8 @@ sub draw_form {
 sub _adjust_field {
 
 	my ($field, $data) = @_;
+	
+	ref $field or $field = {name => $field};
 
 	my $table_def = $DB_MODEL -> {tables} -> {$_REQUEST {__the_table} ||= $_REQUEST {type}};
 	
@@ -3056,7 +3058,12 @@ sub draw_text_cell {
 
 		if ($_REQUEST {select}) {
 
-			$data -> {href}   = js_set_select_option ('', {id => $i -> {id}, label => $options -> {select_label}});
+			$data -> {href}   = js_set_select_option ('', {
+				id       => $i -> {id}, 
+				label    => $options -> {select_label},
+				question => $options -> {select_question},
+			});
+
 		}
 #		else {
 #			$data -> {href}   ||= $options -> {href} unless $options -> {is_total};
@@ -4454,8 +4461,15 @@ sub check_static_files {
 		closedir DIR;
 
 		foreach my $src (@files) {
+		
 			$src =~ /\w\.\w+$/ or next;
-			File::Copy::copy ($over_root . '/' . $src,  $skin_root . '/' . $src) or die "can't copy $src: $!";
+			
+			my ($from, $to) = map {"$_/$src"} ($over_root, $skin_root);
+			
+			$to =~ s{\.pm$}{};
+						
+			File::Copy::copy ($from, $to) or die "can't copy '$from' -> '$to': $!\n";
+			
 		}
 
 	}

@@ -580,7 +580,7 @@ sub draw_form_field_suggest {
 	my ($_SKIN, $options, $data) = @_;
 
 	$_REQUEST {__script} .= qq{; 	
-	
+
 		function off_suggest_$options->{name} () {
 			var s = document.getElementById ('_$options->{name}__suggest'); 
 			s.style.display = 'none';
@@ -1544,7 +1544,7 @@ sub draw_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
 	my $html = <<EOH;
-		<td>
+		<td class="bgr0">
 		<table cellspacing=0 cellpadding=0 border=0 valign="middle">
 		<tr>
 			<td class="bgr0" width=6><img src="$_REQUEST{__static_url}/btn2_l.gif?$_REQUEST{__static_salt}" width="6" height="21" border="0"></td>
@@ -1982,7 +1982,7 @@ sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
 		
-	my $html = '<td><table cellspacing=2 cellpadding=0><tr>';
+	my $html = '<td class="bgr0"><table cellspacing=2 cellpadding=0><tr>';
 	
 	if ($options -> {total}) {
 
@@ -2289,19 +2289,15 @@ sub js_set_select_option {
 	my ($_SKIN, $name, $item, $fallback_href) = @_;
 
 	return ($fallback_href || $i) unless $_REQUEST {select};
+	
+	$item -> {question} ||= "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?" unless $conf -> {core_no_confirm_other};
 
-	my $a = $_JSON -> encode ({
-		$conf -> {core_no_confirm_other} ? () : (question => "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?"),
-		id       => $item -> {id},
-		label    => $item -> {label},
-	});
+	my $a = $_JSON -> encode ($item);
 
-	my $var = "sso_" . (0 + $item -> {id}) . int (rand() * time ());
-	$var =~ s/[.]//g;
-	$var =~ s/-/_/g;
+	my $var = "sso_" . substr ('' . $item, 7, 7);
 
-	$_REQUEST {__script} .= " var $var = $a; "
-		unless ($_REQUEST {__script} =~ / var $var =/);
+	$_REQUEST {__script} .= " var $var = $a; ";
+	
 	return "javaScript:invoke_setSelectOption ($var)";
 
 }
@@ -3534,7 +3530,7 @@ sub draw_suggest_page {
 
 	my ($_SKIN, $data) = @_;
 			
-	my $a = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}]} @$data]);
+	my $a = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}, $_ -> {_confirm}]} @$data]);
 	
 	$size = 10 if $size > 10;
 	
@@ -3543,6 +3539,8 @@ sub draw_suggest_page {
 	<head>
 		<script>
 			function r () {
+								
+				var q = {};
 			
 				var a = $a;
 								
@@ -3561,6 +3559,7 @@ sub draw_suggest_page {
 				for (var i = 0; i < a.length; i++) {
 					var o = a [i];
 					s.options [i] = new Option (o [1], o [0]);
+					if (o [2]) q [o [0]] = o [2];
 				}
 				
 				if (a.length > 0) {
@@ -3572,6 +3571,8 @@ sub draw_suggest_page {
 					s.style.display = 'none';
 					parent.suggest_is_visible = 0;
 				}
+				
+				parent.questions_for_suggest ['_$_REQUEST{__suggest}__suggest'] = q;
 				
 			}
 		</script>

@@ -10,6 +10,7 @@
 	confirm_esc              => 'Quitter sans sauvegarde?',
 	confirm_delete           => 'Supprimer cette fiche, vous êtes sûr(e) ?',
 	confirm_undelete         => 'Restaurer cette fiche, vous êtes sûr(e) ?',
+	confirm_session_term     => 'Voulez-vous vraiment terminer la session ?',
 	ok                       => 'appliquer', 
 	cancel                   => 'annuler', 
 	choose                   => 'choisir', 
