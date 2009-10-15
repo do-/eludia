@@ -72,12 +72,12 @@ sub draw_redirect_page {
 		$options -> {before} = "var data = $data; alert(data[0]); ";
 	}
 	
-	$$options{before} .= ';' if $$options{before};
+	$options -> {$_} ||= '' foreach qw (before window_options);
 
 	return <<EOH;
 <html>
 	<script for=window event=onload>
-		$$options{before}
+		$options->{before};
 		var w = window; 
 		w.open ('$options->{url}&salt=' + Math.random (), $target, '$options->{window_options}');
 	</script>
@@ -93,6 +93,9 @@ EOH
 sub static_path {
 
 	my ($package, $file) = @_;
+	
+	$file ||= '';
+	
 	my $path = __FILE__;
 
 	$path    =~ s{\.pm}{/$file};
