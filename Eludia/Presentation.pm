@@ -4302,6 +4302,9 @@ sub setup_skin {
 		elsif ($_REQUEST {__proto}) {
 			$_REQUEST {__skin} = 'XMLProto';
 		}
+		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON') {
+			$_REQUEST {__skin} = 'JSONDumper';
+		}
 		elsif ($_REQUEST {__x}) {
 			$_REQUEST {__skin} = 'XMLDumper';
 		}

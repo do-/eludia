@@ -66,4 +66,39 @@ sub redirect {
 	
 }
 
+################################################################################
+
+sub external_session {
+
+	my ($host, $login_params, $ua_options) = @_;
+
+	require LWP::UserAgent;
+		
+	require Eludia::Content::HTTP::ExternalSession;
+	
+	$_JSON or setup_json ();
+	
+	my $o = {
+	
+		json => $_JSON,
+	
+		host => $host,
+	
+		ua   => LWP::UserAgent -> new (%{$ua_options || {}}),
+	
+	};
+	
+	push @{$o -> {ua} -> requests_redirectable}, 'POST';	
+	
+	$o -> {ua} -> agent ('Want JSON');
+
+	require HTTP::Cookies;
+	require File::Temp;
+
+	$o -> {ua} -> cookie_jar (HTTP::Cookies -> new (file => File::Temp::tempfile ()));
+
+	bless $o, 'Eludia::Content::HTTP::ExternalSession';
+	
+}
+
 1;
