@@ -73,7 +73,7 @@ sub sql_insert_fakes {
 		
 		$st_prev_existing -> finish;
 		
-		my $min = $last_id + 1;
+		my $min = ($last_id ||= 0) + 1;
 		
 		$min >= 1 or $min = 1; 
 		
