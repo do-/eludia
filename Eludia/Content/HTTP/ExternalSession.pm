@@ -26,15 +26,11 @@ sub query {
 
 	$params -> {sid} = $self -> {sid} if $self -> {sid};
 	
-warn Data::Dumper::Dumper ($params);
-
 	my $request = HTTP::Request::Common::POST ($self -> {host}, $params, 'Content_Type' => 'form-data');
 	
 	my $response = $self -> {ua} -> request ($request);
 	
 	$response -> is_error and return $self -> {error} = $response -> message;
-
-warn Data::Dumper::Dumper ([$response -> code, $response -> content]);
 
 	my $h = $self -> {json} -> decode ($response -> content);
 	
