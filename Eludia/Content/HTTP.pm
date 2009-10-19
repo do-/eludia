@@ -86,6 +86,8 @@ sub external_session {
 	
 		ua   => LWP::UserAgent -> new (%{$ua_options || {}}),
 	
+		package  => current_package (),
+
 	};
 	
 	push @{$o -> {ua} -> requests_redirectable}, 'POST';	
