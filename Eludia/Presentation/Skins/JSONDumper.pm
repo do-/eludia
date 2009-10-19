@@ -26,10 +26,12 @@ sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 	
+	$page -> {content} -> {__this_content_is_ok_to_be_shown_completely} or $page -> {content} = 'Sorry?..';
+	
 	return $_SKIN -> draw_hash ({ 
 	
-		content => 'Sorry?..',
-		
+		content => $page -> {content},
+
 	});
 
 }
