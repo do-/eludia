@@ -2,6 +2,25 @@ no warnings;
 
 ################################################################################
 
+sub current_package {
+	
+	my ($_package, $filename, $line, $subroutine, $hasargs, $wantarray, $evaltext, $is_require, $hints, $bitmask) = caller (1);
+
+	if ($subroutine =~ /^(\w+)\:\:/) {
+	
+		return $1;
+	
+	}
+	else {
+	
+		return __PACKAGE__;
+	
+	}
+	
+}
+
+################################################################################
+
 sub require_content ($) {
 
 	require_fresh ("${_PACKAGE}Content::$_[0]");

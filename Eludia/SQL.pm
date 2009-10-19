@@ -700,21 +700,6 @@ sub sql_select_vocabulary {
 	
 	my @list;
 	
-	my $package; # = __PACKAGE__;
-	
-	my ($_package, $filename, $line, $subroutine, $hasargs, $wantarray, $evaltext, $is_require, $hints, $bitmask) = caller (0);
-	
-	if ($subroutine =~ /^(\w+)\:\:/) {
-	
-		$package = $1;
-	
-	}
-	else {
-	
-		$package = __PACKAGE__;
-	
-	}
-
 	tie @list, 'Eludia::Tie::Vocabulary', {
 	
 		sql      => "SELECT id, $$options{label}, fake FROM $table_name WHERE $filter ORDER BY $$options{order} $limit",
@@ -723,7 +708,7 @@ sub sql_select_vocabulary {
 		
 		_REQUEST => \%_REQUEST,
 		
-		package  => $package,
+		package  => current_package (),
 		
 		tree     => $options -> {tree},
 		
