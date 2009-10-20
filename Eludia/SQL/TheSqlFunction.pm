@@ -212,7 +212,7 @@ sub _sql_filters {
 		my $was_array = ref $values eq ARRAY or $values = [$values];
 
 		my $first_value = $values -> [0];
-
+		
 		my $tied;
 
 		if (ref $first_value eq SCALAR) {
@@ -225,7 +225,15 @@ sub _sql_filters {
 
 		unless ($tied || $is_null) {
 
-			next if ($first_value || '') eq '' or $first_value eq '0000-00-00';
+			next if 
+				
+				!defined $first_value or 
+				
+				$first_value eq '' or 
+				
+				$first_value eq '0000-00-00'
+
+			;
 
 		}
 		
