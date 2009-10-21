@@ -195,6 +195,14 @@ sub find_nginx {
 	
 	}
 	
+	if (!$nginx -> {conf}) {
+	
+		my $path = '/usr/local/nginx/conf/nginx.conf';
+		
+		-f $path and $nginx -> {conf} = $path;
+
+	}	
+	
 	if ($nginx -> {conf}) {
 	
 		$nginx -> {eludia_fastcgi_pass} = $nginx -> {conf};
