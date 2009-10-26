@@ -238,9 +238,9 @@ sub param {
 
 sub upload {
 
-	my ($self, $name) = shift;
+	my ($self, $name) = @_;
 
-	(my $h = $self -> {upload_cache}) 
+	(my $h = ($self -> {upload_cache} ||= {}))
 		
 		-> {$name} ||= 
 	
