@@ -33,7 +33,7 @@
 	confirm_open_vocabulary  => 'Ouvrir le vocabulaire?',
 	confirm_close_vocabulary => 'Vous avez choisi',
 	session_terminated       => 'Déconnecté',
-	save_or_cancel           => "Veuillez sauvegarder vos données (Ctrl-Enter) ou bien annuler l'opération (Esc)",
+	save_or_cancel           => "Veuillez sauvegarder vos données (Ctrl-Enter) ou bien annuler l\\'opération (Esc)",
 	infty                    => '&infin;', 
 	voc                      => ' vocabulaire...',
 	today                    => "Aujourd'hui", 
