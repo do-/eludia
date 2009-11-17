@@ -2293,12 +2293,22 @@ sub js_set_select_option {
 	$item -> {question} ||= "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?" unless $conf -> {core_no_confirm_other};
 
 	my $a = $_JSON -> encode ($item);
+	
+	return $_SSO_VARIABLES -> {$a}
+		if $_SSO_VARIABLES -> {$a};
 
 	my $var = "sso_" . substr ('' . $item, 7, 7);
+	
+	my $i = 0;
+	while (index ($_REQUEST {__script}, "var $var") != -1) {
+		$var .= $i ++;
+	}
 
 	$_REQUEST {__script} .= " var $var = $a; ";
+
+	$_SSO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption ($var)";
 	
-	return "javaScript:invoke_setSelectOption ($var)";
+	return $_SSO_VARIABLES -> {$a};
 
 }
 

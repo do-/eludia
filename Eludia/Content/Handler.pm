@@ -148,6 +148,8 @@ sub setup_request_params {
 		}
 	
 	}
+	
+	our $_SSO_VARIABLES = {};
 
 	$_REQUEST {type} =~ s/_for_.*//;
 	$_REQUEST {__uri} = $r -> uri;

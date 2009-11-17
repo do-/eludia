@@ -1283,8 +1283,8 @@ sub draw_form_field_multi_select {
 		}
 		foreach my $field (@{$options -> {detail_from}}) {
 			$detail_from .= <<EOJS;
-                        re = /&$field=[\\d]*/;
-                        dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
+			re = /&$field=[\\d]*/;
+			dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
 			dialog_open_$url_dialog_id.href += '&$field=' + document.getElementsByName ('_$field') [0].value;
 EOJS
 		}
@@ -4365,6 +4365,7 @@ sub setup_skin {
 			_COOKIES
 			_USER
 			_QUERY
+			_SSO_VARIABLES
 			SQL_VERSION
 			conf
 			preconf
