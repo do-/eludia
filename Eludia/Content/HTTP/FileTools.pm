@@ -163,23 +163,9 @@ sub upload_file {
 
 		
 	}
-
-	my ($y, $m, $d) = split /-/, sprintf ('%04d-%02d-%02d', Date::Calc::Today);
-
-	$options -> {dir} ||= 'upload/images';
-
-	my $dir = $r -> document_root . "/i/$$options{dir}";
-
-	foreach my $subdir ('', $y, $m, $d) {
-		$dir .= "/$subdir" if $subdir;
-		-d $dir or mkdir $dir;
-	}
-
-	$filename =~ /[A-Za-z0-9]+$/;
-	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . '-' . (++ $_REQUEST {__files_cnt}) . "-$$.$&";
 	
-	my $real_path = $r -> document_root . $path;
-	
+	my ($path, $real_path) = upload_path ($filename, $options);
+
 	open (OUT, ">$real_path") or die "Can't write to $real_path: $!";
 	binmode OUT;
 		
@@ -201,6 +187,34 @@ sub upload_file {
 		real_path => $real_path,
 	}
 	
+}
+
+################################################################################
+
+sub upload_path {
+	
+	my ($filename, $options) = @_;
+	
+	my ($y, $m, $d) = split /-/, sprintf ('%04d-%02d-%02d', Date::Calc::Today);
+
+	$options -> {dir} ||= 'upload/images';
+
+	my $dir = $r -> document_root . "/i/$$options{dir}";
+
+	foreach my $subdir ('', $y, $m, $d) {
+
+		$dir .= "/$subdir" if $subdir;
+
+		-d $dir or mkdir $dir;
+
+	}
+
+	$filename =~ /[A-Za-z0-9]+$/;
+	
+	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . '-' . (++ $_REQUEST {__files_cnt}) . "-$$.$&";
+	
+	return ($path, $r -> document_root . $path);
+
 }
 
 1;

@@ -152,7 +152,7 @@ sub __genereate_sql_fragment_for_column {
 	
 	}
 
-	$i -> {REMARKS} =~ s{'}{''}g; #';
+	($i -> {REMARKS} ||= '') =~ s{'}{''}g; #';
 
 	$i -> {SQL} .= " COMMENT '$i->{REMARKS}'";
 

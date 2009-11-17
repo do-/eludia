@@ -115,8 +115,6 @@ sub check_version_by_git {
 ################################################################################
 
 sub check_version {
-
-	return if $ENV {ELUDIA_BANNER_PRINTED};
 	
 	use File::Spec;
 
@@ -124,9 +122,13 @@ sub check_version {
 		
 	$dir =~ s{Eludia.pm}{};
 	
+	$dir =~ y{\\}{/};
+	
 	$preconf -> {core_path} = $dir;
 
 	require Date::Calc;
+
+	return if $ENV {ELUDIA_BANNER_PRINTED};
 	
 	my ($year) = Date::Calc::Today ();
 	

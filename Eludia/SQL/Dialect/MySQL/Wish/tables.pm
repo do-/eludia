@@ -90,7 +90,7 @@ sub wish_to_actually_comment_tables {
 	
 	foreach my $i (@$items) {
 	
-		$i -> {REMARKS} =~ s{'}{''}g; #'
+		($i -> {REMARKS} ||= '') =~ s{'}{''}g; #'
 
 		sql_do (qq {ALTER TABLE $i->{name} COMMENT '$i->{REMARKS}'});
 		

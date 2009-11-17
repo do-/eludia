@@ -1,3 +1,5 @@
+no warnings;
+
 use constant MP2 => 0;
 
 ################################################################################
@@ -26,8 +28,8 @@ sub send_http_header {
 sub set_cookie {
 
 	my $cookie = CGI::Simple::Cookie -> new (@_);
-		
-	$r -> headers_out -> {'Set-Cookie'} = $cookie -> as_string;
+	
+	push @{$r -> {_headers} -> {'Set-Cookie'}}, $cookie -> as_string;
 
 }
 
@@ -266,17 +268,19 @@ sub param {
 
 sub upload {
 
-	my $self = shift;
+	my ($self, $name) = @_;
+
+	(my $h = ($self -> {upload_cache} ||= {}))
+		
+		-> {$name} ||= 
 	
-	my $q = $self -> {Q};
+			Eludia::ApacheLikeRequest::Upload 
+			
+				-> new ($self -> {Q}, $name);
+			
+	seek ($h -> {$name} -> {FH}, 0, 0);
 
-	my $param = $_ [0];
-	
-	return $self -> {$param} if ($self -> {$param});
-
-	$self -> {$param} = Eludia::ApacheLikeRequest::Upload -> new ($q, $param);
-
-	return $self -> {$param};
+	return $h -> {$name};
 	
 }
 
