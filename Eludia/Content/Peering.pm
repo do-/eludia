@@ -7,12 +7,19 @@ use HTTP::Request::Common;
 
 sub check_peer_server {
 
+	$_REQUEST {sid} or return undef;
+
 	$r -> headers_in -> {'User-Agent'} =~ m{^(Eludia|Zanas)/.*? \((.*?)\)} or return undef;
 
 	my $peer_server = $2;
 
-	sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE peer_id = ? AND peer_server = ?", $_REQUEST {sid}, $peer_server) and return $peer_server;
-	
+	my $local_sid = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE peer_id = ? AND peer_server = ?", $_REQUEST {sid}, $peer_server);
+	if ($local_sid) {
+		sql_do ("UPDATE sessions SET peer_id = ? WHERE id = ?", $_REQUEST {sid}, $local_sid);
+		$_REQUEST {sid} = $local_sid;
+	        return $peer_server;
+	}
+
 	my $user = peer_query ($peer_server, {__whois => $_REQUEST {sid}});
 	
 	my $role = $conf -> {peer_roles} -> {$peer_server} -> {$user -> {role}} || $conf -> {peer_roles} -> {$peer_server} -> {''};
