@@ -106,7 +106,7 @@ sub wish_to_actually_create_tables {
 	
 	foreach my $i (@$items) {	
 		
-		sql_do (qq {CREATE TABLE $i->{name} ($i->{pk}->{name} INT $i->{pk}->{_EXTRA} PRIMARY KEY)});
+		sql_do (qq {CREATE TABLE $i->{name} ($i->{pk}->{name} INT $i->{pk}->{_EXTRA} PRIMARY KEY)} . ($options -> {default_storage_engine} ? qq { ENGINE=$options->{default_storage_engine}} : ''));
 		
 	}
 	
