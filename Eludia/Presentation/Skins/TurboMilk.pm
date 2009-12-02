@@ -2820,7 +2820,7 @@ sub draw_page {
 
 		$_REQUEST {__on_mouseover}    .= "window.parent.subsets_are_visible = 0; subsets_are_visible = 0;";
 
-		$_REQUEST {__on_mousedown}    .= "if (window.event.button == 2 && window.event.ctrlKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
+		$_REQUEST {__on_mousedown}    .= "if (window.event.button == 2 && window.event.ctrlKey && !window.event.altKey && !window.event.shiftKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
 
 		$_REQUEST {__on_keydown}      .= " handle_basic_navigation_keys ();";
 
