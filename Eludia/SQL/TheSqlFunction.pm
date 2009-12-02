@@ -933,16 +933,7 @@ sub sql {
 	
 	}
 	
-	if ($have_id_filter || $is_first || $is_only_grouping) {
-	
-		return sql_select_scalar ($sql, @params) if $is_ids || $is_only_grouping_1;
-
-		@result = (sql_select_hash ($sql, @params));
-
-		$records = [$result [0]];
-
-	}
-	elsif ($sub) {
+	if ($sub) {
 	
 		return sql_select_loop (
 			
@@ -960,6 +951,15 @@ sub sql {
 			
 		);
 	
+	}
+	elsif ($have_id_filter || $is_first || $is_only_grouping) {
+	
+		return sql_select_scalar ($sql, @params) if $is_ids || $is_only_grouping_1;
+
+		@result = (sql_select_hash ($sql, @params));
+
+		$records = [$result [0]];
+
 	}
 	else {
 	
