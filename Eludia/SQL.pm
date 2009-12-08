@@ -800,10 +800,12 @@ sub sql_select_id {
 
 	}
 		
-	while (my $id = ($record -> {is_merged_to} || $record -> {id_merged_to})) {
-		$record = sql_select_hash ($table, $id);
+	unless ($_REQUEST {_no_search_merged_record}) {
+		while (my $id = ($record -> {is_merged_to} || $record -> {id_merged_to})) {
+			$record = sql_select_hash ($table, $id);
+		}
 	}
-	
+
 	if ($record -> {id}) {
 	
 		my @keys   = ();
