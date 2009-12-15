@@ -885,67 +885,15 @@ BEGIN {
 
 =head1 NAME
 
-Eludia.pm - a framework for rapid (~5 min for trivial CRUD; ~1 h for average complex screen) development and comfortable maintenance of large scale (hundreds of dialog screens) mission critical WEB applications. 
+Eludia.pm - a mature non-OO MVC.
 
-=head1 FEATURES
+=head1 WARNING
 
-=over 1
-
-=item *
-
-active DB model: tables are created and altered automatically according to a textual schema definition;
-
-=item *
-
-one shot autoexec scripts making it possible to deploy application updates by simply copying new files;
-
-=item *
-
-rich DHTML (or call it AJAX) widget set available just out-of-the-box;
-
-=item *
-
-i18n with Russian, French and English bootstrap dictionnaries;
-
-=item *
-
-complex server side data validation made easy;
-
-=item *
-
-default handlers for basic CRUD actions;
-
-=item *
-
-automatic support for delete/undelete and merge/unmerge operations;
-
-=item *
-
-transparent logging of all user actions (with parameter values);
-
-=item *
-
-per-session access logging and smart ESC button (like BACK, but works well with data being edited);
-
-=item *
-
-built-in automaintenance tools;
-
-and some more...
-
-=back
+We totally neglect most of so called 'good style' conventions. We do find it really awkward and quite useless.
 
 =head1 APOLOGIES
 
-Using Eludia.pm requires some learning. We are unable to cite here a short synopsis suitable for copying / pasting and running. Ten lines will show nothing, and for structured content we prefer MediaWiki. Thank you for understanding.
-
-We are really sorry, but it is in Russian only. We know, some people consider this insulting, but, honest, we force nobody to study our language. Writing such a manual en English is not easier to us than learning Russian to you.
-
-Having said that, we humbly invite all Russian-speaking Perl WEB developpers to visit L<http://eludia.ru/wiki>. Volunteer translators are, of course, welcome.
-
-=head1 DISCLAIMER
-
-The authors of Eludia.pm DOES NOT follow certain rules widely considered as "good style" attributes. We DO NOT recommend using Eludia.pm to any person who believe that formal accordance with these rules come first to factual quality and performance. NOR we beg from people who obviously will never use our software for exploring and "assessing" it.
+The project is deeply documented (L<http://eludia.ru/wiki>), but, sorry, in Russian only.
 
 =head1 AUTHORS
 
