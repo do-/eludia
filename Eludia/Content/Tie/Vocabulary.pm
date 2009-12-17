@@ -5,6 +5,8 @@ package Eludia::Tie::Vocabulary;
 sub TIEARRAY {
 
 	my ($class, $options) = @_;
+	
+	$options or return [];
 
 	bless $options, $class;
 	
