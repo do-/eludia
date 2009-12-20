@@ -879,13 +879,17 @@ BEGIN {
 
 }
 
+package Eludia;
+
 1;
+
+__END__
 
 ################################################################################
 
 =head1 NAME
 
-Eludia.pm - a mature non-OO MVC.
+Eludia - a non-OO MVC.
 
 =head1 WARNING
 
@@ -897,7 +901,7 @@ The project is deeply documented (L<http://eludia.ru/wiki>), but, sorry, in Russ
 
 =head1 AUTHORS
 
-Dmitry Ovsyanko, <'do_' -- like this, with a trailing underscore -- at 'pochta.ru'>
+Dmitry Ovsyanko
 
 Pavel Kudryavtzev
 
