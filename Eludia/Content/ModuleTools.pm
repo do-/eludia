@@ -85,7 +85,7 @@ sub require_model {
 
 		my %tables = ();
 
-		tie %tables, Eludia::Tie::FileDumpHash, {conf => $conf, path => [grep {-d} map {"$_/Model"} @$PACKAGE_ROOT]};
+		tie %tables, Eludia::Tie::FileDumpHash, {conf => $conf, path => \&INC};
 
 		$DB_MODEL -> {tables} = \%tables;
 

@@ -3,16 +3,8 @@ package Eludia::Tie::FileDumpHash;
 sub TIEHASH  {
 
 	my ($package, $options) = @_;
-
-	$options -> {path} or die "Path not defined\n";
 	
-	ref $options -> {path} or $options -> {path} = [$options -> {path}];
-	
-	foreach my $dir (@{$options -> {path}}) {
-
-		-d $dir or die "$dir is not a directory\n";
-
-	}
+	ref $options -> {path} eq CODE or die "Invalid {path} option\n";
 
 	bless $options, $package;
 
@@ -32,7 +24,11 @@ sub FETCH_ {
 	
 	my $sql_types = $options -> {conf} -> {sql_types};
 
-	foreach my $dir (reverse @{$options -> {path}}) {
+	foreach my $dir (&{$options -> {path}} ()) {
+	
+		$dir .= '/Model';
+		
+		-d $dir or next;
 
 		my $path = "${dir}/${key}.pm";
 
