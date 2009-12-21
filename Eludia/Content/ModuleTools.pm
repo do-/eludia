@@ -105,7 +105,7 @@ sub require_scripts_of_type ($) {
 	
 	my $is_updated;
 	
-	foreach my $the_path (reverse @$PACKAGE_ROOT) {
+	foreach my $the_path (INC ()) {
 
 		my $time = time;
 	
@@ -283,6 +283,14 @@ sub localtime_to_iso {
 
 ################################################################################
 
+sub INC {
+
+	return reverse @$PACKAGE_ROOT;
+
+}
+
+################################################################################
+
 sub require_fresh {
 
 	my $time = time;
@@ -301,7 +309,7 @@ sub require_fresh {
 	
 	my $found = 0;
 
-	foreach my $path (reverse (@$PACKAGE_ROOT)) {
+	foreach my $path (INC ()) {
 		my $local_file_name = $path . $file_name . '.pm';
 		-f $local_file_name or next;
 		$file_name = $local_file_name;
