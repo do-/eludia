@@ -52,7 +52,7 @@ sub sql_do_refresh_sessions {
 			1;
 	}
 	
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN (SELECT id FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?)", $timeout / 1440);
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?", $timeout / 1440);
 
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?", $_REQUEST {sid});
 
