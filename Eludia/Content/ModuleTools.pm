@@ -361,7 +361,7 @@ sub last_modified_time_if_refresh_is_needed {
 
 sub require_fresh {
 
-	my $time = time;
+	local $time = time;
 
 	my ($module_name) = @_;	
 
