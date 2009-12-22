@@ -285,7 +285,32 @@ sub localtime_to_iso {
 
 sub INC {
 
-	return reverse @$PACKAGE_ROOT;
+	my ($prefix) = split /_/, $_REQUEST {type};
+	
+	my @result = ();
+	
+	foreach my $dir (reverse @$PACKAGE_ROOT) {
+	
+		my $default = $dir . '/_';
+	
+		if (-d $default) {
+					
+			my $specific = $dir . '/_' . $prefix;
+			
+			-d $specific and push @result, $specific;
+
+			push @result, $default;
+		
+		}
+		else {
+		
+			push @result, $dir;
+		
+		}
+	
+	}
+
+	return @result;
 
 }
 
