@@ -1180,7 +1180,7 @@ sub sql_extract_params {
 			) {
 
 				my $value = $1;
-				$value =~ s{\\\'}{\'}gsm;
+				$value =~ s{\\\'}{\'}gsm; #'
 				push @params1, $value;
 				$token = '?';
 
