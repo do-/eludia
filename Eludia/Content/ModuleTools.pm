@@ -302,11 +302,8 @@ sub INC {
 			push @result, $default;
 		
 		}
-		else {
 		
-			push @result, $dir;
-		
-		}
+		push @result, $dir;
 	
 	}
 
