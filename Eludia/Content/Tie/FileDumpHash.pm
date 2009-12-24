@@ -110,6 +110,14 @@ sub FETCH_ {
 
 		}
 		
+		if ($VAR ->{sql}) {
+
+			$VAR -> {sql} =~ s/\s+/ /smg;
+
+			$VAR -> {sql} =~s/^\s+//;
+			
+		}
+
 		foreach my $column_name (keys %remarks) {
 		
 			exists $VAR -> {columns} -> {$column_name} or next;
