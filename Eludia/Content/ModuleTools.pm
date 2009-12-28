@@ -85,7 +85,7 @@ sub require_model {
 
 		my %tables = ();
 
-		tie %tables, Eludia::Tie::FileDumpHash, {conf => $conf, path => [grep {-d} map {"$_/Model"} @$PACKAGE_ROOT]};
+		tie %tables, Eludia::Tie::FileDumpHash, {conf => $conf, path => \&INC};
 
 		$DB_MODEL -> {tables} = \%tables;
 
@@ -105,7 +105,7 @@ sub require_scripts_of_type ($) {
 	
 	my $is_updated;
 	
-	foreach my $the_path (reverse @$PACKAGE_ROOT) {
+	foreach my $the_path (INC ()) {
 
 		my $time = time;
 	
@@ -283,117 +283,153 @@ sub localtime_to_iso {
 
 ################################################################################
 
+sub INC {
+
+	my ($prefix) = split /_/, $_REQUEST {type};
+	
+	my @result = ();
+	
+	foreach my $dir (reverse @$PACKAGE_ROOT) {
+	
+		my $default = $dir . '/_';
+	
+		if (-d $default) {
+					
+			my $specific = $dir . '/_' . $prefix;
+			
+			-d $specific and push @result, $specific;
+
+			push @result, $default;
+		
+		}
+		
+		push @result, $dir;
+	
+	}
+
+	return @result;
+
+}
+
+################################################################################
+
+sub require_fresh_message {
+
+	my ($file_name) = @_;
+
+	my $message = $file_name;
+
+	$message =~ s{\\}{/}g;
+
+	$message =~ s{.*?/(lib|GenericApplication)/}{};
+	
+	return $message;
+	
+}
+
+################################################################################
+
+sub last_modified_time_if_refresh_is_needed {
+
+	my ($file_name) = @_;
+	
+	my $last_recorded_time = $INC_FRESH_BY_PATH {$file_name};
+	
+	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat ($file_name);
+	
+	return $mtime if $mtime > $last_recorded_time;
+	
+	if ($preconf -> {core_debug_profiling}) {
+
+		my $last_modified_iso = localtime_to_iso ($mtime);
+	
+		my $message = require_fresh_message ($file_name) .
+
+			($last_recorded_time == $mtime ? " ==" : 
+			
+				' : ' . localtime_to_iso ($last_recorded_time) . " >");
+
+		$time = __log_profilinig ($time, "   $message $last_modified_iso");
+
+	}
+	
+	return undef;
+
+}
+
+################################################################################
+
 sub require_fresh {
 
-	my $time = time;
+	local $time = time;
 
 	my ($module_name) = @_;	
-	
-	my $file_name = $module_name;
-	
-	$file_name =~ s{(::)+}{\/}g;
-	
+
+	my $local_file_name = $module_name;
+
+	$local_file_name =~ s{(::)+}{\/}g;
+
 	my $type = $';
 
-	my $inc_key = $file_name . '.pm';
+	$local_file_name =~ s{^(.+?)\/}{\/};
 
-	$file_name =~ s{^(.+?)\/}{\/};
-	
-	my $found = 0;
+	my @file_names = grep {-f} map {"${_}$local_file_name.pm"} INC ();
 
-	foreach my $path (reverse (@$PACKAGE_ROOT)) {
-		my $local_file_name = $path . $file_name . '.pm';
-		-f $local_file_name or next;
-		$file_name = $local_file_name;
-		$found = 1;
-		last;
-	}
-	
-	$found or return "File not found: $file_name\n";
-	
-	my $need_refresh = !$INC {$inc_key};
-	
-	my $last_modified;
-		
-	if ($need_refresh) {
-		my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat ($file_name);
-		$last_modified = $mtime;
-		$need_refresh = ($INC_FRESH {$module_name} < $last_modified);
-	}
+	@file_names > 0 or return "Module $module_name not found in " . (join '; ', INC ()) . "\n";
 
-	unless ($need_refresh) {
-	
-		if ($preconf -> {core_debug_profiling}) {
-	
-			my $last_modified_iso = localtime_to_iso ($last_modified);
-			
-			my $message = $module_name;
-			
-			$message =~ s{\w+::(\w)\w*::(\w+)$}{$2 ($1)};
-	
-			$message .=
+	foreach my $file_name (@file_names) {
 
-				$INC_FRESH {$module_name} == $last_modified ? " == $last_modified_iso" :
+		my $last_modified = last_modified_time_if_refresh_is_needed ($file_name) or next;
 
-					' : ' . localtime_to_iso ($INC_FRESH {$module_name}) . " > $last_modified_iso)";
+		if ($type eq 'menu') {
 
-			$time = __log_profilinig ($time, '   ' . $message);
+			(tied %{$DB_MODEL -> {tables}}) -> {cache} = {};
 
-		}				
-		
-		return;
+			require_scripts () if $db;
 
-	}
-	
-	if ($type eq 'menu') {
-	
-		(tied %{$DB_MODEL -> {tables}}) -> {cache} = {};
-	
-		require_scripts () if $db;
-
-	}
-			
-	my $src = '';
-				
-	open (S, $file_name);
-
-	while (my $line = <S>) {
-
-		if ($_OLD_PACKAGE) {
-			$line =~ s{package\s+$_OLD_PACKAGE}{package $_NEW_PACKAGE}g;
-			$line =~ s{$_OLD_PACKAGE\:\:}{$_NEW_PACKAGE\:\:}g;
 		}
-					
-		$src .= $line;
-		
-		$line =~ /^sub (\w+)_$type \{ # / or next;
 
-		my $sub   = $1;
-		my $label = $';
-		$label =~ s{[\r\n]+$}{}gsm;
+		my $src = '';
 
-		my $action = $sub =~ /^(do|validate)_/ ? $' : ''; 
-				
-		$_ACTIONS -> {_actions} -> {$type} -> {$action} ||= $label;
+		open (S, $file_name);
 
-	}
-		
-	close (S);
+		while (my $line = <S>) {
+
+			if ($_OLD_PACKAGE) {
+				$line =~ s{package\s+$_OLD_PACKAGE}{package $_NEW_PACKAGE}g;
+				$line =~ s{$_OLD_PACKAGE\:\:}{$_NEW_PACKAGE\:\:}g;
+			}
+
+			$src .= $line;
+
+			$line =~ /^sub (\w+)_$type \{ # / or next;
+
+			my $sub   = $1;
+			my $label = $';
+			$label =~ s{[\r\n]+$}{}gsm;
+
+			my $action = $sub =~ /^(do|validate)_/ ? $' : ''; 
+
+			$_ACTIONS -> {_actions} -> {$type} -> {$action} ||= $label;
+
+		}
+
+		close (S);
+
+		eval qq{# line 1 "$file_name"\n $src \n; 1;\n};
+
+		die "$module_name: " . $@ if $@;
+
+		$INC_FRESH {$module_name} = $INC_FRESH_BY_PATH {$file_name} = $last_modified;
+
+		if ($preconf -> {core_debug_profiling}) {
+
+			my $message = require_fresh_message ($file_name);
+
+			$time = __log_profilinig ($time, "   $message -> " . localtime_to_iso ($last_modified));
+
+		}
 	
-	eval qq{# line 1 "$file_name"\n $src \n; 1;\n};
-		
-	die "$module_name: " . $@ if $@;
-		
-	$INC_FRESH {$module_name} = $last_modified;		
-
-	if ($preconf -> {core_debug_profiling}) {
-				
-		my $message = $module_name;
-			
-		$message =~ s{\w+::(\w)\w*::(\w+)$}{$2 ($1)};
-	
-		$time = __log_profilinig ($time, "   $message -> " . localtime_to_iso ($last_modified));
-
 	}
         	
 }

@@ -71,8 +71,12 @@ sub get_user_with_fixed_session {
 	my ($peer_server) = @_;
 	
 	$_REQUEST {sid} or return undef;
-				
+
+	my $time = time ();				
+
 	my $user = sql_select_hash ($preconf -> {_} -> {sql} -> {get_user} ||= get_user_sql (), $_REQUEST {sid});
+
+	__log_profilinig ($time, ' <get_user>');
 	
 	$user -> {id} or return undef;
 	

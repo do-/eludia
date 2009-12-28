@@ -105,6 +105,8 @@ sub setup_request_params {
 
 	get_request (@_);
 
+	our %_REQUEST_VERBATIM = %_REQUEST;
+
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 	
 	set_cookie_for_root (client_cookie => $_COOKIE {client_cookie} || Digest::MD5::md5_hex (rand ()));
@@ -116,8 +118,6 @@ sub setup_request_params {
 	our $first_time = $time;
 
 	$_REQUEST {__sql_time} = 0;
-		
-	our %_REQUEST_VERBATIM = %_REQUEST;
 	
 	foreach my $k (keys %_REQUEST) {
 
@@ -574,12 +574,12 @@ sub log_action_start {
 
 sub log_action_finish {
 	
-	$_REQUEST {_params} = $_REQUEST {params} = Data::Dumper -> Dump ([\%_OLD_REQUEST], ['_REQUEST']);
+	$_REQUEST {_params} = $_REQUEST {params} = Data::Dumper -> Dump ([\%_REQUEST_VERBATIM], ['_REQUEST']);
 	$_REQUEST {_params} =~ s/ {2,}/\t/g;
 		
 	$_REQUEST {error} = substr ($_REQUEST {error}, 0, 255);
 	$_REQUEST {_error}  = $_REQUEST {error};
-	$_REQUEST {_id_object} = $__log_id || $_REQUEST {id} || $_OLD_REQUEST {id};
+	$_REQUEST {_id_object} = $__log_id || $_REQUEST {id} || $_OLD_REQUEST {id} || $_REQUEST_VERBATIM {id};
 	$_REQUEST {_id_user} = $__log_user || $_USER -> {id};
 	
 	sql_do_update ($conf -> {systables} -> {log}, ['params', 'error', 'id_object', 'id_user'], {id => $_REQUEST {_id_log}, lobs => ['params']});
