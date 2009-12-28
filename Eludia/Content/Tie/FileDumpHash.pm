@@ -24,7 +24,7 @@ sub FETCH_ {
 	
 	my $sql_types = $options -> {conf} -> {sql_types};
 
-	foreach my $dir (&{$options -> {path}} ()) {
+	foreach my $dir (&{$options -> {path}} ($key)) {
 	
 		$dir .= '/Model';
 		
