@@ -785,8 +785,9 @@ sub check_module_auth {
 	$preconf -> {_} -> {pre_auth}  = [];
 	$preconf -> {_} -> {post_auth} = [];
 
-	check_module_auth_cookie ();
-	check_module_auth_ntlm ();
+	check_module_auth_cookie  ();
+	check_module_auth_ntlm    ();
+	check_module_auth_opensso ();
 	
 }
 
@@ -806,6 +807,27 @@ sub check_module_auth_cookie {
 	else { 
 		
 		print STDERR "disabled, ok.\n";
+		
+	}
+
+}
+
+################################################################################
+
+sub check_module_auth_opensso {
+
+	print STDERR "  check_module_auth_opensso.......... ";
+
+	if ($preconf -> {ldap} -> {opensso}) { 
+		
+		require Eludia::Content::Auth::OpenSSO; 
+		
+		print STDERR "$preconf->{ldap}->{opensso}, ok.\n";
+
+	} 
+	else { 
+
+		print STDERR "no OpenSSO, ok.\n";
 		
 	}
 
