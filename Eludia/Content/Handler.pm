@@ -400,8 +400,6 @@ sub handle_request_of_type_action {
 
 	eval {
 
-		delete_fakes () if $action eq 'create';
-
 		call_for_role ("do_${action}_$$page{type}");
 
 		call_for_role ("recalculate_$$page{type}") if $action ne 'create';

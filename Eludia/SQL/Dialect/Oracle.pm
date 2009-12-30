@@ -721,6 +721,8 @@ sub sql_increment_sequence {
 sub sql_do_insert {
 
 	my ($table_name, $pairs) = @_;
+
+	delete_fakes ($table_name);	
 		
 	my $fields = '';
 	my $args   = '';

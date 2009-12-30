@@ -1063,11 +1063,11 @@ sub delete_fakes {
 	
 	$table_name    ||= $_REQUEST {type};
 
-	return if is_recyclable ($table_name);
+	return if ($_REQUEST {__delete_fakes} -> {$table_name} ||= is_recyclable ($table_name));
 	
 	assert_fake_key ($table_name);
 	
-	my $ids = sql_select_ids (<<EOS);
+	my ($ids, $in_clause) = sql_select_ids (<<EOS);
 		SELECT
 			$table_name.id
 		FROM
@@ -1078,7 +1078,9 @@ sub delete_fakes {
 			AND $conf->{systables}->{sessions}.id_user IS NULL
 EOS
 			
-	sql_do ("DELETE FROM $table_name WHERE id IN ($ids)");
+	sql_do ("DELETE FROM $table_name WHERE id IN ($in_clause)");
+	
+	$_REQUEST {__delete_fakes} -> {$table_name} = 1;
 
 }
 
