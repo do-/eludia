@@ -2671,7 +2671,8 @@ sub draw_table {
 	foreach our $i (@$list) {
 		
 		foreach my $tr (@{$i -> {__trs}}) {
-			
+		
+			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 			
 			$html .= "<tr id='$$i{__tr_id}'";
 			
@@ -2681,9 +2682,9 @@ sub draw_table {
 			}
 
 			$html .= '>';
-			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id});
+			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $has_href;
 			$html .= $tr;
-			$html .= qq {</a>} if $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id});
+			$html .= qq {</a>} if $has_href;
 			$html .= '</tr>';
 			
 		}
