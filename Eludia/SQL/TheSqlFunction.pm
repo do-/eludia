@@ -922,6 +922,22 @@ sub sql {
 		
 		$sql .= "\nORDER BY\n $order";
 
+		if ($SQL_VERSION -> {driver} eq 'Oracle') {
+
+			foreach ($order =~ /\w+\.\w+/g) {
+
+				my ($table, $column) = split /\./;
+				
+				$DB_MODEL -> {tables} -> {$table} -> {columns} -> {$column} -> {TYPE_NAME} =~ /char/ or next;
+				
+				$sql =~ s{WHERE\s+}{WHERE\n ${table}.${column} LIKE '%'\n AND };
+
+				last;
+			
+			};
+			
+		}
+
 	}
 	
 	my @result;
@@ -965,12 +981,25 @@ sub sql {
 	
 		if ($limit) {
 		
-			$sql .= "\nLIMIT\n " . (join ', ', @$limit);
+			if ($SQL_VERSION -> {driver} eq 'Oracle') {
 			
-			@result = (sql_select_all_cnt ($sql, @params), $limit -> [1]);
+				$sql .= "\nLIMIT\n " . (join ', ', @$limit);
+
+				@result = (sql_select_all_cnt ($sql, @params), $limit -> [1]);
+
+				$records = $result [0];
+			
+			}
+			else {
+		
+				$sql .= "\nLIMIT\n " . (join ', ', @$limit);
+
+				@result = (sql_select_all_cnt ($sql, @params), $limit -> [1]);
+
+				$records = $result [0];
 	
-			$records = $result [0];
-	
+			}
+
 		}
 		else {
 
