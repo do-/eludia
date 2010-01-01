@@ -1120,7 +1120,7 @@ $pattern = $sql;
 
 my @order_by;
 
-if ($sql =~ /\s+ORDER\s+BY\s+(.*)/igsm) {
+if (!$conf -> {db_nulls_last} && $sql =~ /\s+ORDER\s+BY\s+(.*)/igsm) {
       
     @order_by = split ',',$1;
          
