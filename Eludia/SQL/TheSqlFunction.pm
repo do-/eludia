@@ -494,11 +494,13 @@ sub sql {
 	my @columns = _sql_list_fields ($1, $root);
 	
 	my $from   = "\nFROM\n $root";
+	my $inner_from = $from;
 	my $where  = "\nWHERE  1=1";
 	my $having = "\nHAVING 1=1";
 	my $order;
 	my $limit;
 	my @join_params   = ();
+	my @inner_join_params = ();
 	my @where_params  = ();
 	my @having_params = ();
 
@@ -646,6 +648,16 @@ sub sql {
 			push @join_params, @{$sql_filters -> {where_params}};
 				
 			$found = 1;
+			
+			if ($table -> {join} !~ /^LEFT/) {
+			
+				$inner_from .= "\n $table->{join} $table->{name}";
+				$inner_from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+				$inner_from .= " ON ($table->{on} $sql_filters->{where})";
+
+				push @inner_join_params, @{$sql_filters -> {where_params}};
+			
+			}
 		
 		}
 		
@@ -697,6 +709,16 @@ sub sql {
 				$from .= " ON ($table->{alias}.$referring_field_name = $t->{name}.id $sql_filters->{where})";
 				
 				push @join_params, @{$sql_filters -> {where_params}};
+
+				if ($table -> {join} !~ /^LEFT/) {
+
+					$inner_from .= "\n $table->{join} $table->{name}";
+					$inner_from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+					$inner_from .= " ON ($table->{alias}.$referring_field_name = $t->{name}.id $sql_filters->{where})";
+
+					push @inner_join_params, @{$sql_filters -> {where_params}};
+
+				}
 				
 				if ($sql_filters -> {having_params}) {
 					
@@ -747,12 +769,28 @@ sub sql {
 				$from .= "\n $table->{join} $table->{name}";
 				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
 				
+				if ($table -> {join} !~ /^LEFT/) {
+
+					$inner_from .= "\n $table->{join} $table->{name}";
+					$inner_from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+
+				}
+
 				$t -> {alias} ||= $t -> {name};
 
 				if ($table -> {filters}) {
+				
 					my $sql_filters = _sql_filters ($table -> {alias}, $table -> {filters});
 					$from .= " ON ($t->{alias}.$referring_field_name = $table->{alias}.id $sql_filters->{where})";
 					push @join_params, @{$sql_filters -> {where_params}};
+
+					if ($table -> {join} !~ /^LEFT/) {
+
+						$inner_from .= " ON ($t->{alias}.$referring_field_name = $table->{alias}.id $sql_filters->{where})";
+
+						push @inner_join_params, @{$sql_filters -> {where_params}};
+
+					}
 					
 					if ($sql_filters -> {having_params}) {
 
@@ -763,7 +801,15 @@ sub sql {
 					
 				}
 				else {
+
 					$from .= " ON $t->{alias}.$referring_field_name = $table->{alias}.id";
+
+					if ($table -> {join} !~ /^LEFT/) {
+
+						$inner_from .= " ON $t->{alias}.$referring_field_name = $table->{alias}.id";
+
+					}
+
 				}
 
 				$found = 1;
@@ -922,22 +968,6 @@ sub sql {
 		
 		$sql .= "\nORDER BY\n $order";
 
-		if ($SQL_VERSION -> {driver} eq 'Oracle') {
-
-			foreach ($order =~ /\w+\.\w+/g) {
-
-				my ($table, $column) = split /\./;
-				
-				$DB_MODEL -> {tables} -> {$table} -> {columns} -> {$column} -> {TYPE_NAME} =~ /char/ or next;
-				
-				$sql =~ s{WHERE\s+}{WHERE\n ${table}.${column} LIKE '%'\n AND };
-
-				last;
-			
-			};
-			
-		}
-
 	}
 	
 	my @result;
@@ -983,15 +1013,65 @@ sub sql {
 		
 			if ($SQL_VERSION -> {driver} eq 'Oracle') {
 						
-				$sql .= "\nLIMIT\n " . (join ', ', @$limit);
-
 				my $last = $limit -> [0] + $limit -> [1] - 1;
+				
+				$sql = mysql_to_oracle ($sql) if $conf -> {core_auto_oracle};
+
+				foreach ($order =~ /\w+\.\w+/g) {
+
+					my ($table, $column) = split /\./;
+
+					$DB_MODEL -> {tables} -> {$table} -> {columns} -> {$column} -> {TYPE_NAME} =~ /char/ or next;
+
+					$sql =~ s{WHERE\s+}{WHERE\n ${table}.${column} >= ' '\n AND };
+
+					last;
+
+				};
 			
-				$sql =~ s{SELECT}{SELECT /*+FIRST_ROWS($last)*/};
+				$sql =~ s{SELECT}{SELECT /*+FIRST_ROWS*/};
 
-				@result = (sql_select_all_cnt ($sql, @params), $limit -> [1]);
+				my $st = sql_execute ($sql, @params);
 
-				$records = $result [0];
+				my $n = 0;
+				
+				$records = [];
+				
+				while (my $r = $st -> fetchrow_hashref) {
+				
+					$n ++;
+				
+					next if $n < $limit -> [0];
+
+					lc_hashref ($r);
+
+					_sql_unwrap_record ($r, \@cols);
+					
+					push @$records, $r;
+					
+					last if @$records >= $limit -> [1];
+				
+				}
+				
+				$st -> finish;
+
+				my $sql_cnt = "SELECT COUNT(*)\n "
+
+					. $inner_from
+
+					. $where
+
+				;
+
+				$sql_cnt = mysql_to_oracle ($sql_cnt) if $conf -> {core_auto_oracle};
+
+				my $st = sql_execute ($sql_cnt, @params);
+
+				my ($cnt) = $st -> fetchrow_array;
+				
+				$st -> finish;
+
+				@result = ($records, $cnt);
 			
 			}
 			else {
