@@ -982,8 +982,12 @@ sub sql {
 		if ($limit) {
 		
 			if ($SQL_VERSION -> {driver} eq 'Oracle') {
-			
+						
 				$sql .= "\nLIMIT\n " . (join ', ', @$limit);
+
+				my $last = $limit -> [0] + $limit -> [1] - 1;
+			
+				$sql =~ s{SELECT}{SELECT /*+FIRST_ROWS($last)*/};
 
 				@result = (sql_select_all_cnt ($sql, @params), $limit -> [1]);
 
