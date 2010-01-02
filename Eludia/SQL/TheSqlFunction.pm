@@ -1018,10 +1018,12 @@ sub sql {
 				$sql = mysql_to_oracle ($sql) if $conf -> {core_auto_oracle};
 
 				$sql =~ s{SELECT}{SELECT /*+FIRST_ROWS*/};
+								
+				my $core_auto_oracle = delete $conf -> {core_auto_oracle};
 
 				my $st = sql_execute ($sql, @params);
 
-				my $n = 0;
+				$conf -> {core_auto_oracle} = $core_auto_oracle;
 				
 				$records = [];
 				
