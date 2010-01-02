@@ -649,7 +649,7 @@ sub sql {
 				
 			$found = 1;
 			
-			if ($table -> {join} !~ /^LEFT/) {
+#			if ($table -> {join} !~ /^LEFT/) {
 			
 				$inner_from .= "\n $table->{join} $table->{name}";
 				$inner_from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
@@ -657,7 +657,7 @@ sub sql {
 
 				push @inner_join_params, @{$sql_filters -> {where_params}};
 			
-			}
+#			}
 		
 		}
 		
@@ -710,7 +710,7 @@ sub sql {
 				
 				push @join_params, @{$sql_filters -> {where_params}};
 
-				if ($table -> {join} !~ /^LEFT/) {
+#				if ($table -> {join} !~ /^LEFT/) {
 
 					$inner_from .= "\n $table->{join} $table->{name}";
 					$inner_from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
@@ -718,7 +718,7 @@ sub sql {
 
 					push @inner_join_params, @{$sql_filters -> {where_params}};
 
-				}
+#				}
 				
 				if ($sql_filters -> {having_params}) {
 					
