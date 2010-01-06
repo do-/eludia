@@ -1,0 +1,12 @@
+columns => {
+	id_user		=> {TYPE_NAME => 'int'},
+	id_object	=> {TYPE_NAME => 'int'},
+	ip		=> {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+	ip_fw		=> {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+	type		=> {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+	action		=> {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+	error		=> {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+	params		=> {TYPE_NAME => 'longtext'},
+	dt		=> {TYPE_NAME => 'timestamp'},
+	mac		=> {TYPE_NAME => 'varchar', COLUMN_SIZE => 17},
+},

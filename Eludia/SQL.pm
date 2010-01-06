@@ -165,202 +165,30 @@ sub sql_assert_core_tables {
 	return if $model_update -> {core_ok};
 
 my $time = time;
-	
-	my %defs = (
-	
-		$conf -> {systables} -> {__defaults} => {
-		
-			columns => {
-				id          => {TYPE_NAME => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake        => {TYPE_NAME => 'bigint'},
-				context     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				name        => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				value       => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			},
-			
-			keys => {
-				context => 'context,name',
-			},
-
-		},
-		
-		$conf -> {systables} -> {__moved_links} => {
-		
-			columns => {
-				id          => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-				table_name  => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				column_name => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				id_from     => {TYPE_NAME => 'int'},
-				id_to       => {TYPE_NAME => 'int'},
-			},
-			
-			keys => {
-				id_to => 'id_to',
-			},
-
-		},
-		
-		$conf -> {systables} -> {__last_update} => {
-		
-			columns => {
-				id        => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-				pid 	  => {TYPE_NAME => 'int'},
-				unix_ts   => {TYPE_NAME => 'bigint'},
-			},
-			
-		},
-
-		$conf -> {systables} -> {sessions} => {
-		
-			columns => {
-
-				id      => {TYPE_NAME  => 'bigint', _PK    => 1},
-				id_user => {TYPE_NAME  => 'int'},
-				id_role => {TYPE_NAME  => 'int'},
-				ts      => {TYPE_NAME  => 'timestamp'},
-
-				ip =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				ip_fw =>  {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-
-				client_cookie =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-	
-				peer_server => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-				peer_id => {TYPE_NAME    => 'bigint'},
-				
-				tz_offset	=> {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
-			},
-			
-			keys => {
-			
-				ts => 'ts',
-			
-			},
-
-		},
-
-		$conf -> {systables} -> {roles} => {
-
-			columns => {
-				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake => {TYPE_NAME  => 'bigint'},
-				name  => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-				label => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-			},
-
-		},
-
-		$conf -> {systables} -> {log} => {
-
-			columns => {
-				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake => {TYPE_NAME  => 'bigint', COLUMN_DEF => 0, NULLABLE => 0},
-				id_user =>   {TYPE_NAME => 'int'},
-				id_object => {TYPE_NAME => 'int'},
-				ip =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				ip_fw =>  {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				type =>   {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				action => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				error  => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				params => {TYPE_NAME => 'longtext'},
-				dt     => {TYPE_NAME => 'timestamp'},
-				mac    => {TYPE_NAME  => 'varchar', COLUMN_SIZE => 17},
-			}
-
-		},	
-	
-	);
-		
-	$conf -> {core_session_access_logs_dbtable} and $defs {$conf -> {systables} -> {__access_log}} = {
-
-		columns => {
-			id         => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-			id_session => {TYPE_NAME => 'bigint'},
-			ts         => {TYPE_NAME => 'timestamp'},
-			no         => {TYPE_NAME => 'int'},
-			href       => {TYPE_NAME => 'text'},
-		},
-		
-		keys => {
-			ix => 'id_session,no',
-			ix2 => 'id_session,href(255)',
-		},
-
-	};
-
-	$conf -> {core_store_table_order} and $defs {$conf -> {systables} -> {__queries}} = {
-
-		columns => {
-			id          => {TYPE_NAME => 'int', _EXTRA => 'auto_increment', _PK => 1},
-			parent      => {TYPE_NAME => 'int'},
-			fake        => {TYPE_NAME => 'bigint'},
-			id_user     => {TYPE_NAME => 'int', COLUMN_DEF => 0, NULLABLE => 0},
-			type        => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			dump        => {TYPE_NAME => 'longtext'},
-			label       => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			order_context     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-		},
-
-		keys => {
-			ix => 'id_user,type,label',
-		},
-
-	};
-	
-	$preconf -> {core_debug_profiling} > 1 and $defs {$conf->{systables}->{__benchmarks}} = {
-
-		columns => {
-			id       => {TYPE_NAME  => 'int'    , _EXTRA => 'auto_increment', _PK => 1},
-			fake     => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			label    => {TYPE_NAME  => 'varchar', COLUMN_SIZE  => 255},
-			cnt      => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			ms       => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			mean     => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			selected => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			mean_selected => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-		},
-		
-		keys => {
-			label => 'label',
-		},
-		
-	};
-
-	$preconf -> {core_debug_profiling} > 2 and $defs {$conf->{systables}->{__request_benchmarks}} = {
-
-		columns => {
-			id	=> {TYPE_NAME  => 'int'    , _EXTRA => 'auto_increment', _PK => 1},
-			fake	=> {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			id_user	=> {TYPE_NAME => 'int'},
-			dt	=> {TYPE_NAME => 'timestamp'},
-			params	=> {TYPE_NAME => 'longtext'},
-			ip =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			ip_fw =>  {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			type =>   {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			mac    => {TYPE_NAME  => 'varchar', COLUMN_SIZE => 17},
-
-			connection_id		=> {TYPE_NAME => 'int'},
-			connection_no		=> {TYPE_NAME => 'int'},
-
-			request_time		=> {TYPE_NAME => 'int'},
-			application_time	=> {TYPE_NAME => 'int'},
-			sql_time		=> {TYPE_NAME => 'int'},
-			response_time		=> {TYPE_NAME => 'int'},
-			
-			bytes_sent		=> {TYPE_NAME => 'int'},
-			is_gzipped		=> {TYPE_NAME => 'tinyint'}, 
-		},
-
-	};
 
 	$model_update -> assert (
 	
-		tables => \%defs, 
+		tables => {
+
+			$conf -> {systables} -> {__last_update} => {
+
+				columns => {
+				
+					id        => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
+					pid 	  => {TYPE_NAME => 'int'},
+					unix_ts   => {TYPE_NAME => 'bigint'},
+				
+				},
+
+			},
+		
+		}, 
 				
 		prefix => 'sql_assert_core_tables#',
 		
 	);
 
-	sql_version();
+	sql_version ();
 
 	$model_update -> {core_ok} = 1;
 		
@@ -1408,6 +1236,8 @@ sub sql_assert_default_columns {
 
 		next if $definition -> {sql};
 
+		next if $definition -> {columns} -> {id};
+
 		foreach my $dc_name (keys %$default_columns) {
 
 			$definition -> {columns} -> {$dc_name} ||= Storable::dclone $default_columns -> {$dc_name};
@@ -1439,6 +1269,8 @@ sub assert {
 	my $objects = [\my @tables, \my @views];
 
 	while (my ($name, $object) = each %$tables) {
+	
+		next if $object -> {off};
 	
 		$object -> {name} = $name;
 
