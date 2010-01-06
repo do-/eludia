@@ -53,7 +53,7 @@ sub FETCH_ {
 		
 		}
 		
-		eval "\$VAR = {$src}"; die $@ if $@;
+		eval "package $options->{package};\n \$VAR = {$src}"; die $@ if $@;
 		close I;
 		
 		foreach my $column (values %{$VAR -> {columns}}) {
