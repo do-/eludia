@@ -249,21 +249,6 @@ my $time = time;
 
 		},
 
-		$conf -> {systables} -> {users} => {
-
-			columns => {
-				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake => {TYPE_NAME  => 'bigint'},
-				login =>    {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				label =>    {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				password => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				mail     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				id_role  =>  {TYPE_NAME => 'int'},				
-				subset => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-			}
-
-		},
-
 		$conf -> {systables} -> {log} => {
 
 			columns => {
@@ -284,14 +269,7 @@ my $time = time;
 		},	
 	
 	);
-	
-	if ( $conf -> {peer_roles}) {
-	
-		$defs {$conf -> {systables} -> {users}}	-> {peer_server} = {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
-		$defs {$conf -> {systables} -> {users}}	-> {peer_id}     = {TYPE_NAME => 'int'},
-	
-	}
-	
+		
 	$conf -> {core_session_access_logs_dbtable} and $defs {$conf -> {systables} -> {__access_log}} = {
 
 		columns => {
