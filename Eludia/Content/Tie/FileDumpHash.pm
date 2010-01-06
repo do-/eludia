@@ -129,23 +129,28 @@ sub FETCH_ {
 		}
 
 		foreach my $object (keys (%$VAR)) {
+		
+			my $value = $VAR -> {$object};
 
-			if (ref $VAR -> {$object} eq HASH) {
+			if (ref $value eq HASH) {
 
-				foreach my $key (keys %{$VAR -> {$object}}) {
-					$VAR1 -> {$object} -> {$key} ||= $VAR -> {$object} -> {$key};
+				foreach my $key (keys %$value) {
+
+					$VAR1 -> {$object} -> {$key} ||= $value -> {$key};
+
 				}
 
 			} 
-			elsif (ref $VAR -> {$object} eq ARRAY) {
+			elsif (ref $value eq ARRAY) {
 
 				$VAR1 -> {$object} ||= [];
-				push @{$VAR1 -> {$object}}, @{$VAR -> {$object}};
+
+				push @{$VAR1 -> {$object}}, @$value;
 
 			}
-			elsif (!ref $VAR -> {$object}) {
+			elsif (!ref $value) {
 
-				$VAR1 -> {$object} ||= $VAR -> {$object};
+				$VAR1 -> {$object} ||= $value;
 
 			}
 
