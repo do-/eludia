@@ -56,6 +56,8 @@ sub FETCH_ {
 		eval "package $options->{package};\n \$VAR = {$src}"; die $@ if $@;
 		close I;
 		
+		next if exists $VAR -> {off} && $VAR -> {off};
+		
 		foreach my $column (values %{$VAR -> {columns}}) {
 		
 			ref $column or $column = {TYPE => $column};
