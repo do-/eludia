@@ -95,6 +95,24 @@ sub require_model {
 
 ################################################################################
 
+sub reverse_systables {
+
+	return if $conf -> {systables_reverse};
+
+	foreach my $key (keys %{$conf -> {systables}}) {
+	
+		my $value = $conf -> {systables} -> {$key};
+		
+		next if $key eq $value;
+	
+		$conf -> {systables_reverse} -> {$value} = $key;
+	
+	}					
+
+}
+
+################################################################################
+
 sub require_scripts_of_type ($) {
 
 	my ($script_type) = @_;
@@ -133,6 +151,14 @@ sub require_scripts_of_type ($) {
 			$file_name =~ /\.p[lm]$/ or next;
 			
 			my $script = {name => $`};
+			
+			if (-f "$dir/core") {
+			
+				reverse_systables ();
+				
+				$script -> {name} = $conf -> {systables_reverse} -> {$script -> {name}} || $script -> {name};
+
+			}
 
 			$script -> {path} = "$dir/$file_name";
 						

@@ -29,8 +29,18 @@ sub FETCH_ {
 		$dir .= '/Model';
 		
 		-d $dir or next;
+		
+		my $name = $key;
+		
+		if (-f "$dir/core") {
+		
+			&{"$options->{package}::reverse_systables"} ();
+				
+			$name = ${"$options->{package}::conf"} -> {systables_reverse} -> {$key} || $name;
+		
+		}
 
-		my $path = "${dir}/${key}.pm";
+		my $path = "${dir}/${name}.pm";
 
 		-f $path or next;
 		
