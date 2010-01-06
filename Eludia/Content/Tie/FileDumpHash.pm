@@ -135,8 +135,12 @@ sub FETCH_ {
 			if (ref $value eq HASH) {
 
 				foreach my $key (keys %$value) {
+				
+					my $v = $value -> {$key};
+					
+					ref $v ne HASH or !exists $v -> {off} or !$v -> {off} or next;
 
-					$VAR1 -> {$object} -> {$key} ||= $value -> {$key};
+					$VAR1 -> {$object} -> {$key} ||= $v;
 
 				}
 
