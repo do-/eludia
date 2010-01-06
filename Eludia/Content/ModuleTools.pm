@@ -70,6 +70,8 @@ sub get_item_of_ ($) {
 
 sub require_model {
 
+	my $core_was_ok = $model_update -> {core_ok};
+
 	sql_assert_core_tables ();
 	
 	our $DB_MODEL ||= {
@@ -89,7 +91,9 @@ sub require_model {
 
 		$DB_MODEL -> {tables} = \%tables;
 
-	}	
+	}
+	
+	$core_was_ok or require_scripts ();
 
 }
 
