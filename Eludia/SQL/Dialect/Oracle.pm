@@ -23,6 +23,10 @@ sub sql_version {
 	sql_do ("ALTER SESSION SET nls_date_format      = '$conf->{db_date_format}'");
 	sql_do ("ALTER SESSION SET nls_timestamp_format = '$conf->{db_date_format}'");
 
+	$conf -> {db_sort}        ||= 'BINARY';
+
+	sql_do ("ALTER SESSION SET nls_sort             = '$conf->{db_sort}'");
+
 	my $systables = {};
 	foreach my $key (keys %{$conf -> {systables}}) {
 	    my $table = $conf -> {systables} -> {$key};
@@ -52,7 +56,7 @@ sub sql_do_refresh_sessions {
 			1;
 	}
 	
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN (SELECT id FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?)", $timeout / 1440);
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?", $timeout / 1440);
 
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?", $_REQUEST {sid});
 
@@ -721,6 +725,8 @@ sub sql_increment_sequence {
 sub sql_do_insert {
 
 	my ($table_name, $pairs) = @_;
+
+	delete_fakes ($table_name);	
 		
 	my $fields = '';
 	my $args   = '';
@@ -1114,7 +1120,7 @@ $pattern = $sql;
 
 my @order_by;
 
-if ($sql =~ /\s+ORDER\s+BY\s+(.*)/igsm) {
+if (!$conf -> {db_nulls_last} && $sql =~ /\s+ORDER\s+BY\s+(.*)/igsm) {
       
     @order_by = split ',',$1;
          

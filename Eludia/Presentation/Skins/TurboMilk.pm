@@ -2502,7 +2502,9 @@ sub draw_input_cell {
 	
 	$data -> {label} =~ s{\"}{\&quot;}gsm;
 
-	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}"></nobr></td>};
+	my $tabindex = 'tabindex=' . (++ $_REQUEST {__tabindex});
+
+	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" onKeyDown="tabOnEnter();" type="text" name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex></nobr></td>};
 
 }
 
@@ -2669,7 +2671,8 @@ sub draw_table {
 	foreach our $i (@$list) {
 		
 		foreach my $tr (@{$i -> {__trs}}) {
-			
+		
+			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 			
 			$html .= "<tr id='$$i{__tr_id}'";
 			
@@ -2679,9 +2682,9 @@ sub draw_table {
 			}
 
 			$html .= '>';
-			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id});
+			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $has_href;
 			$html .= $tr;
-			$html .= qq {</a>} if $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id});
+			$html .= qq {</a>} if $has_href;
 			$html .= '</tr>';
 			
 		}

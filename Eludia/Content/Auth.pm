@@ -41,16 +41,17 @@ sub refresh_sessions {
 sub get_user_sql {
 
 	my ($users, $sessions, $roles) = map {$conf -> {systables} -> {$_}} qw (users sessions roles);
+	
+	my @session_fields = qw (ip ip_fw client_cookie);
+	
+	push @session_fields, 'tz_offset' if $preconf -> {core_fix_tz};
 
 	<<EOS;
 		SELECT
 			$users.*
 			, $roles.name AS role
 			, $roles.label AS role_label
-			, $sessions.ip
-			, $sessions.tz_offset
-			, $sessions.ip_fw
-			, $sessions.client_cookie
+			@{[ map {', ' . $sessions . '.' . $_} @session_fields]}
 		FROM
 			$sessions
 			LEFT JOIN $users ON (
@@ -71,8 +72,12 @@ sub get_user_with_fixed_session {
 	my ($peer_server) = @_;
 	
 	$_REQUEST {sid} or return undef;
-				
+
+	my $time = time ();				
+
 	my $user = sql_select_hash ($preconf -> {_} -> {sql} -> {get_user} ||= get_user_sql (), $_REQUEST {sid});
+
+	__log_profilinig ($time, ' <get_user>');
 	
 	$user -> {id} or return undef;
 	

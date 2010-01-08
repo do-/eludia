@@ -3,16 +3,8 @@ package Eludia::Tie::FileDumpHash;
 sub TIEHASH  {
 
 	my ($package, $options) = @_;
-
-	$options -> {path} or die "Path not defined\n";
 	
-	ref $options -> {path} or $options -> {path} = [$options -> {path}];
-	
-	foreach my $dir (@{$options -> {path}}) {
-
-		-d $dir or die "$dir is not a directory\n";
-
-	}
+	ref $options -> {path} eq CODE or die "Invalid {path} option\n";
 
 	bless $options, $package;
 
@@ -32,9 +24,23 @@ sub FETCH_ {
 	
 	my $sql_types = $options -> {conf} -> {sql_types};
 
-	foreach my $dir (reverse @{$options -> {path}}) {
+	foreach my $dir (&{$options -> {path}} ($key)) {
+	
+		$dir .= '/Model';
+		
+		-d $dir or next;
+		
+		my $name = $key;
+		
+		if (-f "$dir/core") {
+		
+			&{"$options->{package}::reverse_systables"} ();
+				
+			$name = ${"$options->{package}::conf"} -> {systables_reverse} -> {$key} || $name;
+		
+		}
 
-		my $path = "${dir}/${key}.pm";
+		my $path = "${dir}/${name}.pm";
 
 		-f $path or next;
 		
@@ -57,8 +63,10 @@ sub FETCH_ {
 		
 		}
 		
-		eval "\$VAR = {$src}"; die $@ if $@;
+		eval "package $options->{package};\n \$VAR = {$src}"; die $@ if $@;
 		close I;
+		
+#		next if exists $VAR -> {off} && $VAR -> {off};
 		
 		foreach my $column (values %{$VAR -> {columns}}) {
 		
@@ -114,6 +122,14 @@ sub FETCH_ {
 
 		}
 		
+		if ($VAR ->{sql}) {
+
+			$VAR -> {sql} =~ s/\s+/ /smg;
+
+			$VAR -> {sql} =~s/^\s+//;
+			
+		}
+
 		foreach my $column_name (keys %remarks) {
 		
 			exists $VAR -> {columns} -> {$column_name} or next;
@@ -123,23 +139,32 @@ sub FETCH_ {
 		}
 
 		foreach my $object (keys (%$VAR)) {
+		
+			my $value = $VAR -> {$object};
 
-			if (ref $VAR -> {$object} eq HASH) {
+			if (ref $value eq HASH) {
 
-				foreach my $key (keys %{$VAR -> {$object}}) {
-					$VAR1 -> {$object} -> {$key} ||= $VAR -> {$object} -> {$key};
+				foreach my $key (keys %$value) {
+				
+					my $v = $value -> {$key};
+					
+					ref $v ne HASH or !exists $v -> {off} or !$v -> {off} or next;
+
+					$VAR1 -> {$object} -> {$key} ||= $v;
+
 				}
 
 			} 
-			elsif (ref $VAR -> {$object} eq ARRAY) {
+			elsif (ref $value eq ARRAY) {
 
 				$VAR1 -> {$object} ||= [];
-				push @{$VAR1 -> {$object}}, @{$VAR -> {$object}};
+
+				push @{$VAR1 -> {$object}}, @$value;
 
 			}
-			elsif (!ref $VAR -> {$object}) {
+			elsif (!ref $value) {
 
-				$VAR1 -> {$object} ||= $VAR -> {$object};
+				$VAR1 -> {$object} ||= $value;
 
 			}
 
