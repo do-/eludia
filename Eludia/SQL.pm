@@ -1466,7 +1466,7 @@ sub assert {
 
 	}
 
-	wish (tables => Storable::dclone \@tables, {default_storage_engine => $preconf -> {db_default_storage_engine}});
+	wish (tables => Storable::dclone \@tables, {});
 
 	foreach my $table (@tables) {
 
