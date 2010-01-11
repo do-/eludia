@@ -1012,7 +1012,7 @@ sub sql {
 		if ($limit) {
 		
 			if ($SQL_VERSION -> {driver} eq 'Oracle') {
-						
+
 				my $last = $limit -> [0] + $limit -> [1] - 1;
 				
 				$sql = mysql_to_oracle ($sql) if $conf -> {core_auto_oracle};
@@ -1026,6 +1026,8 @@ sub sql {
 				$conf -> {core_auto_oracle} = $core_auto_oracle;
 				
 				$records = [];
+				
+				my $n = 0;
 				
 				while (my $r = $st -> fetchrow_hashref) {
 				
@@ -1061,7 +1063,7 @@ sub sql {
 				
 				$st -> finish;
 
-				@result = ($records, $cnt);
+				@result = ($records, $cnt, $limit -> [1]);
 			
 			}
 			else {
