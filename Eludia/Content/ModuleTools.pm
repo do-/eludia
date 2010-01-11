@@ -213,6 +213,9 @@ sub require_scripts_of_type ($) {
 			my $src = '';
 			
 			if ($script_type eq 'model') {
+			
+				local $__the_dir = $dir;				
+				$__the_dir =~ s{/Model$}{};
 
 				$src = Dumper ($DB_MODEL -> {tables} -> {$script -> {name}});
 				$src =~ s{^\$VAR1 =}{$script->{name} =>};

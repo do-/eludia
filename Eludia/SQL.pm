@@ -1285,8 +1285,18 @@ sub assert {
 		wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], {table => $table -> {name}}) if exists $table -> {columns};
 
 		wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})],    {table => $table -> {name}, table_def => $table}) if exists $table -> {keys};
-
-		wish (table_data    => $table -> {data}, {table => $table -> {name}}) if exists $table -> {data};
+		
+		if (exists $table -> {data} && ref $table -> {data} eq ARRAY && @{$table -> {data}} > 0) {
+				
+			wish (table_data => $table -> {data}, {
+			
+				table => $table -> {name},
+				
+				key   => exists $table -> {data} -> [0] -> {id} ? 'id' : 'name',
+				
+			});
+		
+		}
 
 	}
 	
@@ -1368,7 +1378,7 @@ sub require_wish ($) {
 sub wish {
 
 	my ($type, $items, $options) = @_;
-	
+
 	@$items > 0 or return;
 	
 	require_wish $type;

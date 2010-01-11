@@ -23,11 +23,15 @@ sub FETCH_ {
 	my $VAR1 = {};
 	
 	my $sql_types = $options -> {conf} -> {sql_types};
+	
+	my %dirs = ('' . ${"$options->{package}::__the_dir"} => 1);
+	
+	$dirs {$_} = 1 foreach (&{$options -> {path}} ($key));
 
-	foreach my $dir (&{$options -> {path}} ($key)) {
+	foreach my $dir (keys %dirs) {
 	
 		$dir .= '/Model';
-		
+
 		-d $dir or next;
 		
 		my $name = $key;
