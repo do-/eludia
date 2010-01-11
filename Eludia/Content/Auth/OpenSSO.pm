@@ -48,8 +48,28 @@ warn Dumper ($token);
 	unless ($token) {
 	
 		$r -> status (302);
+
+		my ($head, @tail) = split /\./, $ENV {HTTP_HOST};
+
+		my $domain = '';
+						
+		foreach my $part (reverse @tail) {
+			
+			$domain = '.' . $part . $domain;
+
+			set_cookie (
+			
+				-name    => $preconf -> {_} -> {opensso_cookie_name},
+ 				-expires =>  '-1M',
+				-value   => '',
+				-path    => '/',
+				-domain  => $domain,
+				
+			);
+	
+			
+		}
 		
-		$r -> headers_out -> {'Set-Cookie'} = "$preconf->{_}->{opensso_cookie_name}=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT";
 		$r -> headers_out -> {'Location'}   = $preconf -> {ldap} -> {opensso} . "/UI/Login?goto=http://$ENV{HTTP_HOST}/";
 		
 		send_http_header ();
