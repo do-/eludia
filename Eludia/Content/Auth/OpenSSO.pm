@@ -147,8 +147,17 @@ warn Dumper ($user);
 		start_session (sql (users => $user, ['login']));
 
 	}	
+	
+	if ($_COOKIE {redirect_params}) {
 
-	delete $_REQUEST {type};
+		$_REQUEST {type}   = 'logon';
+		$_REQUEST {action} = 'execute';
+
+		recalculate_logon ();
+		
+		redirect ({});
+	
+	}
 
 warn Dumper (\%_REQUEST);
 
