@@ -40,6 +40,8 @@ sub vld_date {
 	
 	$day   > 0  or die "#${name}#:$$i18n{wrong_day}\n";
 	$day   < 32 or die "#${name}#:$$i18n{wrong_day}\n";
+	
+	Date::Calc::check_date ($year, $month, $day) or die "#${name}#:Некорректная дата\n";
 
 	$_REQUEST {$name} = sprintf ('%04d-%02d-%02d', $year, $month, $day);
 		
