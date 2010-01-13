@@ -87,7 +87,7 @@ sub require_model {
 
 		my %tables = ();
 
-		tie %tables, Eludia::Tie::FileDumpHash, {conf => $conf, path => \&INC, package => current_package ()};
+		tie %tables, Eludia::Tie::FileDumpHash, {conf => $conf, path => \&_INC, package => current_package ()};
 
 		$DB_MODEL -> {tables} = \%tables;
 
@@ -127,7 +127,7 @@ sub require_scripts_of_type ($) {
 	
 	my $is_updated;
 	
-	foreach my $the_path (INC ()) {
+	foreach my $the_path (_INC ()) {
 
 		my $time = time;
 	
@@ -316,7 +316,7 @@ sub localtime_to_iso {
 
 ################################################################################
 
-sub INC {
+sub _INC {
 
 	my ($prefix) = split /_/, ($_[0] || $_REQUEST {type});
 	
@@ -406,9 +406,9 @@ sub require_fresh {
 
 	$local_file_name =~ s{^(.+?)\/}{\/};
 
-	my @file_names = grep {-f} map {"${_}$local_file_name.pm"} INC ();
+	my @file_names = grep {-f} map {"${_}$local_file_name.pm"} _INC ();
 
-	@file_names > 0 or return "Module $module_name not found in " . (join '; ', INC ()) . "\n";
+	@file_names > 0 or return "Module $module_name not found in " . (join '; ', _INC ()) . "\n";
 
 	foreach my $file_name (@file_names) {
 
