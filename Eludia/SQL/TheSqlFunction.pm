@@ -642,7 +642,7 @@ sub sql {
 			my $sql_filters = _sql_filters ($table -> {alias}, $table -> {filters});
 
 			$from .= "\n $table->{join} $table->{name}";
-			$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+			$from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
 			$from .= " ON ($table->{on} $sql_filters->{where})";
 
 			push @join_params, @{$sql_filters -> {where_params}};
@@ -652,7 +652,7 @@ sub sql {
 #			if ($table -> {join} !~ /^LEFT/) {
 			
 				$inner_from .= "\n $table->{join} $table->{name}";
-				$inner_from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+				$inner_from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
 				$inner_from .= " ON ($table->{on} $sql_filters->{where})";
 
 				push @inner_join_params, @{$sql_filters -> {where_params}};
@@ -705,7 +705,7 @@ sub sql {
 				my $sql_filters = _sql_filters ($table -> {alias}, $table -> {filters});
 
 				$from .= "\n $table->{join} $table->{name}";
-				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+				$from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
 				$from .= " ON ($table->{alias}.$referring_field_name = $t->{name}.id $sql_filters->{where})";
 				
 				push @join_params, @{$sql_filters -> {where_params}};
@@ -713,7 +713,7 @@ sub sql {
 #				if ($table -> {join} !~ /^LEFT/) {
 
 					$inner_from .= "\n $table->{join} $table->{name}";
-					$inner_from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+					$inner_from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
 					$inner_from .= " ON ($table->{alias}.$referring_field_name = $t->{name}.id $sql_filters->{where})";
 
 					push @inner_join_params, @{$sql_filters -> {where_params}};
@@ -767,12 +767,12 @@ sub sql {
 				$column or next;
 
 				$from .= "\n $table->{join} $table->{name}";
-				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+				$from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
 				
 				if ($table -> {join} !~ /^LEFT/) {
 
 					$inner_from .= "\n $table->{join} $table->{name}";
-					$inner_from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+					$inner_from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
 
 				}
 
@@ -928,7 +928,7 @@ sub sql {
 	
 		. (join "\n, ", 
 		
-			map {"$_->{src} AS $_->{alias}"} (
+			map {"$_->{src} $_->{alias}"} (
 				@{$columns_by_grouping -> [0]}, 
 				@{$columns_by_grouping -> [1]},
 			)
