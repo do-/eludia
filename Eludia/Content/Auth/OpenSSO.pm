@@ -48,8 +48,12 @@ warn Dumper ($token);
 	unless ($token) {
 	
 		$r -> status (302);
+		
+		my $host = $ENV {HTTP_HOST};
+		
+		$host =~ s{\:\d+$}{};
 
-		my ($head, @tail) = split /\./, $ENV {HTTP_HOST};
+		my ($head, @tail) = split /\./, $host;
 
 		my $domain = '';
 						
