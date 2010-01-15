@@ -2623,6 +2623,7 @@ sub draw_ok_esc_toolbar {
 		},
 		{
 			preset => 'edit',
+			label => $options -> {label_edit}, 
 			href  => create_url (
 				__last_query_string         => $_REQUEST {__last_last_query_string},
 				__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
