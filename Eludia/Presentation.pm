@@ -4368,7 +4368,7 @@ sub setup_skin {
 			_COOKIES
 			_USER
 			_QUERY
-			_SSO_VARIABLES
+			_SO_VARIABLES
 			SQL_VERSION
 			conf
 			preconf

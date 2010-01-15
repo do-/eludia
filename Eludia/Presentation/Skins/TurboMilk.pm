@@ -2294,10 +2294,11 @@ sub js_set_select_option {
 
 	my $a = $_JSON -> encode ($item);
 	
-	return $_SSO_VARIABLES -> {$a}
-		if $_SSO_VARIABLES -> {$a};
+	return $_SO_VARIABLES -> {$a}
+		if $_SO_VARIABLES -> {$a};
 
-	my $var = "sso_" . substr ('' . $item, 7, 7);
+	my $var = "so_" . substr ('' . $item, 7, 7);
+	$var =~ s/\)$//;
 	
 	my $i = 0;
 	while (index ($_REQUEST {__script}, "var $var") != -1) {
@@ -2306,9 +2307,9 @@ sub js_set_select_option {
 
 	$_REQUEST {__script} .= " var $var = $a; ";
 
-	$_SSO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption ($var)";
+	$_SO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption ($var)";
 	
-	return $_SSO_VARIABLES -> {$a};
+	return $_SO_VARIABLES -> {$a};
 
 }
 
