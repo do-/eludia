@@ -34,6 +34,7 @@ sub check_constants {
 	our @_OVERRIDING_PARAMETER_NAMES     = qw (select __no_navigation __tree __last_query_string);
 
 	our %INC_FRESH = ();
+	our %INC_FRESH_BY_PATH = ();
 
 }
 
