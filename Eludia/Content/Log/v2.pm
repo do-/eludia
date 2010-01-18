@@ -5,6 +5,8 @@ sub log_action_start {
 	our $__log_id     = $_REQUEST {id};
 	our $__log_user   = $_USER -> {id};	
 	
+	setup_json ();
+	
 	my $r = {
 	
 		fake    => 0,
