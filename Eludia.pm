@@ -685,31 +685,6 @@ sub check_module_presentation_tools {
 
 ################################################################################
 
-sub check_module_mac {
-
-	print STDERR " check_module_mac.................... ";
-
-	exists $preconf -> {core_no_log_mac} or $preconf -> {core_no_log_mac} = 1;
-	
-	if ($preconf -> {core_no_log_mac}) { 
-
-		eval 'sub get_mac {""}';
-		
-		print STDERR "no MAC logging, ok.\n";
-
-	} 
-	else { 
-
-		require Eludia::Content::Mac;
-
-		print STDERR "MAC logging enabled, ok.\n";		
-
-	}
-
-}
-
-################################################################################
-
 sub check_module_session_access_logs {
 
 	print STDERR " check_module_session_access_logs.... ";
@@ -875,6 +850,28 @@ sub check_module_queries {
 		print STDERR "no stored queries, ok.\n";
 
 	}
+
+}
+
+################################################################################
+
+sub check_module_log {
+
+	print STDERR " check_module_log.................... ";
+	
+	$conf -> {core_log} -> {version} ||= 'v1';
+	
+	$preconf -> {_} -> {core_log} = $conf -> {core_log};
+
+	!exists $preconf -> {core_no_log_mac}
+
+		or $preconf -> {core_no_log_mac}
+
+			or $preconf -> {_} -> {core_log} -> {log_mac} = 1;
+
+	require "Eludia/Content/Log/$preconf->{_}->{core_log}->{version}.pm";
+	
+	print STDERR "$preconf->{_}->{core_log}->{version}, ok.\n";
 
 }
 
