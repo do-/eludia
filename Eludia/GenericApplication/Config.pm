@@ -71,7 +71,7 @@ sub fill_in {
 		auth                 => 1,
 		checksums            => 1,
 		json                 => 1,
-		mac                  => 1,
+		log                  => 1,
 		mail                 => 1,
 		math_fixed_precision => 1,
 		memory               => 1,
