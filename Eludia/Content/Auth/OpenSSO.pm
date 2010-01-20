@@ -73,8 +73,8 @@ warn Dumper ($token);
 	
 			
 		}
-		
-		$r -> headers_out -> {'Location'}   = $preconf -> {ldap} -> {opensso} . "/UI/Login?goto=http://$ENV{HTTP_HOST}/";
+
+		$r -> headers_out -> {'Location'}   = $preconf -> {ldap} -> {opensso} . "/UI/Login?goto=http://$ENV{HTTP_HOST}$ENV{REQUEST_URI}";
 		
 		send_http_header ();
 		
