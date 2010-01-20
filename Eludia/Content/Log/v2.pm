@@ -41,7 +41,7 @@ sub log_action_finish {
 
 	my $fields = 'href = ?, id_user = ?';
 	
-	my @values = ("type=$_REQUEST_VERBATIM{type}&id=$__log_id", $__log_user);
+	my @values = ("type=" . ($_REQUEST_VERBATIM {type} || $_REQUEST {type}) . "&id=$__log_id", $__log_user);
 	
 	if ($_REQUEST {error}) {
 	
