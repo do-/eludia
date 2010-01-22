@@ -1040,7 +1040,7 @@ sub sql_select_loop {
 
 	my $st = sql_execute ($sql, @params);
 	
-	our $i;
+	local $i;
 	
 	while ($i = $st -> fetchrow_hashref) {
 		lc_hashref ($i);
