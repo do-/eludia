@@ -1783,7 +1783,7 @@ sub js_set_select_option {
 		label    => $item -> {label},
 	});
 
-	my $var = "sso_" . (0 + $item);
+	my $var = "so_" . (0 + $item);
 
 	$_REQUEST {__script} .= " var $var = $a; ";
 

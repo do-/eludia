@@ -1,6 +1,18 @@
 #############################################################################
 
-sub wish_to_clarify_demands_for_tables {	
+sub wish_to_adjust_options_for_tables {
+
+	my ($options) = @_;
+	
+	$options -> {key} = ['name'];
+
+	$options -> {default_storage_engine} = $preconf -> {db_default_storage_engine};
+
+}
+
+#############################################################################
+
+sub wish_to_clarify_demands_for_tables {
 
 	my ($i, $options) = @_;
 		

@@ -1973,7 +1973,7 @@ sub js_set_select_option {
 		label    => $item -> {label},
 	});
 
-	my $var = "sso_" . (0 + $item -> {id}) . int (rand() * time ());
+	my $var = "so_" . (0 + $item -> {id}) . int (rand() * time ());
 	$var =~ s/[.]//g;
 
 	$_REQUEST {__script} .= " var $var = $a; "
