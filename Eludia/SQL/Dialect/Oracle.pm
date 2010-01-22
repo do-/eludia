@@ -686,8 +686,9 @@ sub sql_do_update {
 #	my @field_list = grep {!$lobs {$_}} @$field_list;
                       
 	if (@$field_list > 0) {
-		my $sql = join ', ', map {"$_ = ?"} @$field_list;
-		$options -> {stay_fake} or $sql .= ', fake = 0';
+		my $have_fake_param;
+		my $sql = join ', ', map {$have_fake_param ||= ($_ eq 'fake'); "$_ = ?"} @$field_list;
+		$options -> {stay_fake} or $have_fake_param or $sql .= ', fake = 0';
 		$sql = "UPDATE $table_name SET $sql WHERE id = ?";	
 
 		my @params = @_REQUEST {(map {"_$_"} @$field_list)};	
