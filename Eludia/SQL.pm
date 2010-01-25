@@ -1379,8 +1379,6 @@ sub wish {
 
 	my ($type, $items, $options) = @_;
 
-	@$items > 0 or return;
-	
 	require_wish $type;
 
 	&{"wish_to_adjust_options_for_$type"} ($options);
@@ -1404,9 +1402,9 @@ sub wish {
 		&{"wish_to_schedule_modifications_for_$type"} ($old, $new, $todo, $options);		
 		
 	}
-	
+
 	&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
-		
+
 	foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
 
 }
