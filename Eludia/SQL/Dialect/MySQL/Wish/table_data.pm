@@ -54,7 +54,13 @@ sub wish_to_actually_delete_table_data {
 	
 	@$items > 0 or return;
 	
-	sql_do ("DELETE FROM $options->{table} WHERE id IN (" . join (',', map {$_ -> {id}} @$items) . ")");
+	my $sql = $options -> {soft_delete} ? 
+	
+		"UPDATE $options->{table} SET fake = -1" : 
+		
+		"DELETE FROM $options->{table}";
+	
+	sql_do ("$sql WHERE id IN (" . join (',', map {$_ -> {id}} @$items) . ")");
 	
 }
 
