@@ -27,7 +27,7 @@ push @{$preconf -> {_} -> {pre_auth}}, sub {
 
 warn Dumper ($preconf -> {_} -> {opensso_cookie_name});
 	
-	my $token = $_COOKIE {$preconf -> {_} -> {opensso_cookie_name}};
+	my $token = $_REQUEST {$preconf -> {_} -> {opensso_cookie_name}};
 
 warn Dumper ($token);
 
@@ -49,9 +49,11 @@ warn Dumper ($token);
 	
 		$r -> status (302);
 		
-		my $host = $ENV {HTTP_HOST};
+		my $host = $preconf -> {ldap} -> {opensso};
 		
-		$host =~ s{\:\d+$}{};
+		$host =~ s{^https?://}{};
+
+		$host =~ s{(\:\d+)?(/.*)?$}{};
 
 		my ($head, @tail) = split /\./, $host;
 
