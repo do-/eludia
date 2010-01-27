@@ -7,19 +7,25 @@ sub log_action_start {
 	
 	setup_json ();
 	
+	my %r = (%_REQUEST_VERBATIM);
+	
+	foreach my $name (@{$preconf -> {core_log} -> {suppress} -> {always}}) {delete $r {$name}};
+	
+	foreach my $name (@{$preconf -> {core_log} -> {suppress} -> {empty}})  {delete $r {$name} if $r {$name} eq ''};
+
 	my $r = {
 	
 		fake    => 0,
 		
-		id_user => $__log_user, 
+		id_user => $__log_user,
 		
 		href    => "type=$_REQUEST{type}&id=$_REQUEST{id}",
 		
-		action  => $_REQUEST {action}, 
+		action  => $_REQUEST {action},
 		
-		params  => $_JSON -> encode (\%_REQUEST_VERBATIM),
+		params  => $_JSON -> encode (\%r),
 		
-		ip      => $ENV      {REMOTE_ADDR}, 
+		ip      => $ENV      {REMOTE_ADDR},
 		
 		ip_fw   => $ENV      {HTTP_X_FORWARDED_FOR},
 		
@@ -28,7 +34,7 @@ sub log_action_start {
 	$r -> {mac} = get_mac () if $conf -> {core_log} -> {log_mac};
 
 	$_REQUEST {_id_log} = sql_do_insert ($conf -> {systables} -> {log}, $r);
-	
+
 }
 
 ################################################################################
