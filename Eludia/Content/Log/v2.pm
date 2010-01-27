@@ -12,6 +12,12 @@ sub log_action_start {
 	foreach my $name (@{$preconf -> {core_log} -> {suppress} -> {always}}) {delete $r {$name}};
 	
 	foreach my $name (@{$preconf -> {core_log} -> {suppress} -> {empty}})  {delete $r {$name} if $r {$name} eq ''};
+	
+	foreach my $name (grep {$_} split /\,/, delete $r {__form_checkboxes})  {$r {$name} ||= ''};
+	
+	my $params = $_JSON -> encode (\%r);
+	
+	chop ($params);
 
 	my $r = {
 	
@@ -23,7 +29,7 @@ sub log_action_start {
 		
 		action  => $_REQUEST {action},
 		
-		params  => $_JSON -> encode (\%r),
+		params  => substr ($params, 1),
 		
 		ip      => $ENV      {REMOTE_ADDR},
 		
