@@ -16,17 +16,15 @@ sub log_action_start {
 	foreach my $name (grep {$_} split /\,/, delete $r {__form_checkboxes})  {$r {$name} ||= ''};
 	
 	my $params = $_JSON -> encode (\%r);
-	
-	chop ($params);
 
+	chop ($params);
+	
 	my $r = {
 	
 		fake    => 0,
 		
 		id_user => $__log_user,
-		
-		href    => "type=$_REQUEST{type}&id=$_REQUEST{id}",
-		
+
 		action  => $_REQUEST {action},
 		
 		params  => substr ($params, 1),
@@ -53,7 +51,11 @@ sub log_action_finish {
 
 	my $fields = 'href = ?, id_user = ?';
 	
-	my @values = ("type=" . ($_REQUEST_VERBATIM {type} || $_REQUEST {type}) . "&id=$__log_id", $__log_user);
+	my $href = $_REQUEST_VERBATIM {type} || $_REQUEST {type};
+	
+	$href .= "&id=$__log_id" if $__log_id;
+
+	my @values = ($href, $__log_user);
 	
 	if ($_REQUEST {error}) {
 	
