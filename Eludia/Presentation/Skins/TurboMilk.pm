@@ -19,6 +19,16 @@ BEGIN {
 
 ################################################################################
 
+sub msie_less_7 {
+
+	$r -> headers_in -> {'User-Agent'} =~ /MSIE (\d)/ or return 0;
+	
+	return $1 < 7;
+
+}
+
+################################################################################
+
 sub options {
 
 	return {
@@ -983,7 +993,7 @@ sub draw_form_field_select {
 	my ($_SKIN, $options, $data) = @_;
 	
 	$options -> {attributes} ||= {};
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
+	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 	my $attributes = dump_attributes ($options -> {attributes});
 	
 	if (defined $options -> {other}) {
@@ -1842,7 +1852,7 @@ EOJS
 
 	$options -> {attributes} ||= {};
 	
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
+	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 	
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
 	
@@ -1925,7 +1935,7 @@ sub draw_toolbar_input_text {
 
 
 	$options -> {attributes} ||= {};
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
+	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 	
 	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {form.submit()}";
 
@@ -2428,8 +2438,10 @@ sub draw_select_cell {
 		$multiple
 	};
 	
-	if (($options -> {__fixed_cols} > 0) && ($r -> headers_in -> {'User-Agent'} !~ /MSIE 7/)) {
+	if (($options -> {__fixed_cols} > 0) && msie_less_7) {
+
 		$html .= qq {style= "visibility:expression(cell_select_visibility(this, $options->{__fixed_cols}))"};
+
 	}
 
 	$html .= '>';
