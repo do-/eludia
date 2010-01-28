@@ -731,7 +731,7 @@ sub draw_form_field_files {
 		tabindex=-1
 	};
 	
-	$tail =~ y{'}{"}; #"
+	$tail =~ y{'}{"}; #"'
 	$tail =~ s{[\n\r\t]+}{ }gsm;
 	
 	$_REQUEST {__script} .= <<EOH;
