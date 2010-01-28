@@ -28,7 +28,7 @@ sub load_template {
 
 	my $fn;
 	
-	my @dirs = map {"$_/templates"} ((map {"$_/Presentation"} reverse @$PACKAGE_ROOT), $r -> document_root);
+	my @dirs = map {"$_/templates"} ((map {"$_/Presentation"} _INC ()), $r -> document_root);
 	
 	foreach my $dir (@dirs) {
 	
