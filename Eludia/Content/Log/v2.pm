@@ -19,6 +19,34 @@ sub log_action_start {
 
 	chop ($params);
 	
+	$params = substr ($params, 1);
+
+	my $params_size = (
+	
+		$preconf -> {_} -> {core_log} -> {params_size} ||= (
+	
+			($model_update -> get_columns ($conf -> {systables} -> {log})) -> {params} -> {COLUMN_SIZE} 
+		
+			|| -1
+			
+		)
+			
+	);
+			
+	if ($params_size > 0) {
+
+		while (length $params > $params_size) {
+
+			my $portion = substr $params, length ($params) - $params_size;
+
+			my $id = sql_do_insert ($conf -> {systables} -> {log}, {fake => 0, params => $portion});
+
+			$params = (substr $params, 0, length ($params) - $params_size) . "…$id";
+
+		}
+
+	}	
+	
 	my $r = {
 	
 		fake    => 0,
@@ -27,7 +55,7 @@ sub log_action_start {
 
 		action  => $_REQUEST {action},
 		
-		params  => substr ($params, 1),
+		params  => $params,
 		
 		ip      => $ENV      {REMOTE_ADDR},
 		
