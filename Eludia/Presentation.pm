@@ -1396,7 +1396,7 @@ sub draw_form_field_static {
 		$options -> {hidden_value} =~ s/\"/\&quot\;/gsm; #";
 	}	
 
-	if ($options -> {href} && !$_REQUEST {__edit} && !$_REQUEST {xls}) {
+	if ($options -> {href} && !$_REQUEST {__edit} && !$_REQUEST {xls} && !$_REQUEST {__only_field}) {
 		check_href ($options);
 	}
 	else {
