@@ -46,7 +46,7 @@ sub wish_to_explore_existing_table_data {
 	my $existing = {};
 
 	my @key = @{$options -> {key}};
-		
+
 	sql_select_loop ($sql, sub { $existing -> {join '_', @$i {@key}} = $i }, @params);
 	
 	return $existing;
@@ -149,7 +149,15 @@ sub wish_to_actually_delete_table_data {
 	
 	@$items > 0 or return;
 	
-	my $sth = $db -> prepare ("DELETE FROM $options->{table} WHERE id = ?");
+	my $sth = $db -> prepare (
+	
+		$options -> {soft_delete} ? 
+
+			"UPDATE $options->{table} SET fake = -1 WHERE id = ?" :
+	
+			"DELETE FROM $options->{table} WHERE id = ?"
+		
+	);
 	
 	$sth -> execute_array ({}, [map {$_ -> {id}} @$items]);
 	

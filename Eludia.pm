@@ -861,6 +861,35 @@ sub check_module_log {
 	
 	$conf -> {core_log} -> {version} ||= 'v1';
 	
+	$preconf -> {core_log} -> {suppress} ||= {
+	
+		always => [qw (
+		
+			__infty
+			__last_query_string
+			__last_scrollable_table_row
+			__no_infty
+			__no_navigation
+			__popup
+			__this_query_string
+			redirect_params
+			sid
+			lang
+			salt
+
+		)],
+		
+		empty  => [qw (
+		
+			__form_checkboxes
+			__suggest
+			__tree
+			select
+			
+		)],
+	
+	};
+	
 	$preconf -> {_} -> {core_log} = $conf -> {core_log};
 
 	!exists $preconf -> {core_no_log_mac}

@@ -4525,4 +4525,21 @@ __log_profilinig ($time, "  	$fn gzipped");
 
 }
 
+#################################################################################
+
+sub file_icon {
+
+	my ($s) = @_;
+	
+	$s = $s -> {file_name} if ref $s eq HASH;
+	
+	$s =~ /\.docx?$/        ? (status => {icon => 'msword', label => 'MS Word'})  :
+	$s =~ /\.xlsx?$/        ? (status => {icon => 'excel',  label => 'MS Excel'}) :
+	$s =~ /\.vdx$/          ? (status => {icon => 'visio',  label => 'MS Visio'}) :
+	$s =~ /\.pdf$/          ? (status => {icon => 'pdf',    label => 'Adode PDF'}) :
+	$s =~ /\.(zip|rar|gz)$/ ? (status => {icon => 'zip',    label => 'ZIP'}) :
+				  (status => {icon => 'file'});
+
+}
+
 1;

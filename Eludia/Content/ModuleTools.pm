@@ -219,7 +219,7 @@ sub require_scripts_of_type ($) {
 
 				$src = Dumper ($DB_MODEL -> {tables} -> {$script -> {name}});
 				$src =~ s{^\$VAR1 =}{$script->{name} =>};
-				$src =~ s{;\s*$}{}sm;
+				$src =~ s{;\s*$}{}smg;
 
 			}
 			else {
