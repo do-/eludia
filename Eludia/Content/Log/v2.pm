@@ -33,13 +33,15 @@ sub log_action_start {
 			
 	);
 			
-	if ($params_size > 0) {
-
+	if ($params_size > -1) {
+	
 		while (length $params > $params_size) {
 
 			my $portion = substr $params, length ($params) - $params_size;
 
 			my $id = sql_do_insert ($conf -> {systables} -> {log}, {fake => 0, params => $portion});
+			
+			$params_size > 1 + length ($id) or die "Too small log.params field\n";
 
 			$params = (substr $params, 0, length ($params) - $params_size) . "…$id";
 
