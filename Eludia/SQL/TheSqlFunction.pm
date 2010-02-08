@@ -1033,7 +1033,7 @@ sub sql {
 				
 					$n ++;
 				
-					next if $n < $limit -> [0];
+					next if $n <= $limit -> [0];
 
 					lc_hashref ($r);
 

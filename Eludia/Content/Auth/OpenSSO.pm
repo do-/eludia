@@ -181,6 +181,8 @@ warn Dumper ($user);
 
 		recalculate_logon ();
 		
+		delete $_REQUEST {action};
+		
 		redirect ({});
 	
 	}
