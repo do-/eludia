@@ -52,7 +52,7 @@ sub draw_auth_toolbar {
 
 	my ($_SKIN, $options) = @_;
 
-	return 'auth_toolbar';
+	return 'auth_toolbar000';
 
 }
 
@@ -62,7 +62,36 @@ sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 	
-	return '<pre>' . Data::Dumper::Dumper (\%_REQUEST_VERBATIM) . Data::Dumper::Dumper ($page) . '</pre>';
+	return qq {<html><head>
+	
+	
+		<link rel="stylesheet" type="text/css" href="/i/ext/resources/css/ext-all.css" />
+
+		<script type="text/javascript" src="/i/ext/adapter/ext/ext-base.js"></script>
+		<script type="text/javascript" src="/i/ext/ext-all.js"></script>
+		<script type="text/javascript" src="/i/ext/src/locale/ext-lang-ru.js"></script>
+	
+	<script>
+			
+		var viewport = null;
+		
+		var panels = [];
+		
+		$page->{body};
+
+		Ext.onReady (function () {
+		
+			viewport = new Ext.Viewport ({
+
+				layout: 'vbox',
+
+				items: panels
+
+			});
+					
+		});
+		
+	</script></head></html>}
 
 }
 
@@ -96,7 +125,7 @@ sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
 
-	return 'auth_toolbar';
+	return $options -> {label};
 
 }
 
@@ -106,7 +135,69 @@ sub draw_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
 	
-	return 'draw_table';
+	$options -> {id}     ||= 0 + $options;
+		
+	my $data     = '';
+	
+	my $n = 0 + @{$options -> {header}};
+	
+	foreach my $i (@$list) {
+	
+		$data .= ',' if $data;
+	
+		my $line = $i -> {__trs} -> [0];
+		
+		chop $line;
+		
+		$data .= "[$line]";
+		
+		$n ||= 0 + @{$_JSON -> decode ("[$line]")};
+	
+	}
+	
+	my $columns  = $_JSON -> encode ($options -> {header} ||= [
+	
+		map {{
+		
+			header    => '',
+		
+			dataIndex => 'f' . $_,
+	
+		}} (1 .. $n)
+	
+	]);
+	
+	my $fields   = $_JSON -> encode ([map {{name => $_ -> {dataIndex}}} @{$options -> {header}}]);
+
+	my $var_name = "gridPanel_$options->{id}";
+	
+	return qq {
+
+		var store = new Ext.data.ArrayStore({
+		
+			autoDestroy : true,
+			storeId     : 'myStore',
+			idIndex     : 0,  
+			fields      : $fields,
+			data        : [$data]
+			
+		});	
+	
+		var $var_name = new Ext.grid.GridPanel ({
+		
+			flex : 100,
+			title      : '$options->{title}',
+			border     : false,
+			store      : store,
+			colModel   : new Ext.grid.ColumnModel ({columns: $columns}),
+			viewConfig : {forceFit: true},
+			sm         : new Ext.grid.RowSelectionModel ({singleSelect:true})
+
+		});
+		
+		panels.push ($var_name);
+	
+	};
 
 }
 
@@ -156,7 +247,7 @@ sub draw_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	return 'draw_text_cell';
+	return $_JSON -> encode ($data -> {label}) . ',';
 
 }
 
@@ -166,7 +257,7 @@ sub draw_table_header_cell {
 	
 	my ($_SKIN, $cell) = @_;
 
-	return 'draw_table_header_cell';
+	return $cell;
 
 }
 
@@ -176,7 +267,7 @@ sub draw_table_header_row {
 	
 	my ($_SKIN, $data_cells, $html_cells) = @_;
 
-	return 'draw_table_header_row';
+	return $html_cells;
 
 }
 
@@ -184,9 +275,29 @@ sub draw_table_header_row {
 
 sub draw_table_header {
 	
-	my ($_SKIN, $data_rows, $html_rows) = @_;
+	my ($_SKIN, $raw_rows, $rows) = @_;
 
-	return 'draw_table_header';
+	@$rows > 0 or return '[]';
+
+	my @cols = ();
+	
+	my $n    = 0;
+	
+	foreach my $i (@{$rows -> [0]}) {
+	
+		my $col = {
+		
+			header    => $i -> {label},
+			
+			dataIndex => 'f' . $n ++,
+		
+		};
+		
+		push @cols, $col;
+	
+	}
+
+	return \@cols;
 
 }
 
