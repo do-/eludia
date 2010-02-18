@@ -293,6 +293,8 @@ sub draw_table_header {
 		
 		};
 		
+		$col -> {width} = $i -> {width} if $i -> {width};
+		
 		push @cols, $col;
 	
 	}
