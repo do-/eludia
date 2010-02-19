@@ -62,13 +62,7 @@ sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 	
-	return qq {
-
-		$page->{body};
-		
-		_body_iframe.doLayout ();
-		
-	}
+	return "$_REQUEST{__script};$page->{body};_body_iframe.doLayout();";
 
 }
 
@@ -121,7 +115,7 @@ sub draw_window_title {
 sub draw_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
-	
+
 	$options -> {id}     ||= 0 + $options;
 		
 	my $data     = '';
@@ -131,15 +125,15 @@ sub draw_table {
 	foreach my $i (@$list) {
 	
 		$data .= ',' if $data;
+		
+		$i -> {id} ||= 0 + $i;
 	
-		my $line = $i -> {__trs} -> [0];
-		
-		chop $line;
-		
+		my $line = qq {"$i->{id}"$i->{__trs}->[0]};
+
 		$data .= "[$line]";
-		
-		$n ||= 0 + @{$_JSON -> decode ("[$line]")};
-	
+
+		$n ||= @{$_JSON -> decode ("[$line]")} - 1;
+
 	}
 	
 	my $columns  = $_JSON -> encode ($options -> {header} ||= [
@@ -154,37 +148,22 @@ sub draw_table {
 	
 	]);
 	
-	my $fields   = $_JSON -> encode ([map {{name => $_ -> {dataIndex}}} @{$options -> {header}}]);
+	my $fields   = $_JSON -> encode (['id', map {{name => $_ -> {dataIndex}}} @{$options -> {header}}]);
 
-	my $var_name = "gridPanel_$options->{id}";
-	
-	return qq {
+	my $storeOptions = $_JSON -> encode ({
+		autoDestroy => \1,
+		storeId     => 'myStore',
+		idIndex     => 0,  			
+	});
 
-		var store = new Ext.data.ArrayStore({
-		
-			autoDestroy : true,
-			storeId     : 'myStore',
-			idIndex     : 0,  
-			fields      : $fields,
-			data        : [$data]
-			
-		});	
-	
-		var $var_name = new Ext.grid.GridPanel ({
-		
-			anchor     : '100 100%',
-			title      : '$options->{title}',
-			border     : false,
-			store      : store,
-			colModel   : new Ext.grid.ColumnModel ({columns: $columns}),
-			viewConfig : {forceFit: true},
-			sm         : new Ext.grid.RowSelectionModel ({singleSelect:true})
+	my $panelOptions = $_JSON -> encode ({
+		anchor     => '100 100%',
+		title      => $options -> {title},
+		border     => \0,
+		viewConfig => {autoFill => \1},
+	});
 
-		});
-		
-		_body_iframe.add ($var_name);
-			
-	};
+	return "_body_iframe.add (createGridPanel ([$data], $columns, $storeOptions, $fields, $panelOptions));"
 
 }
 
@@ -234,7 +213,7 @@ sub draw_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	return $_JSON -> encode ($data -> {label}) . ',';
+	return ',' . $_JSON -> encode ($data -> {label});
 
 }
 
