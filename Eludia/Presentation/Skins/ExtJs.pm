@@ -62,36 +62,13 @@ sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 	
-	return qq {<html><head>
-	
-	
-		<link rel="stylesheet" type="text/css" href="/i/ext/resources/css/ext-all.css" />
+	return qq {
 
-		<script type="text/javascript" src="/i/ext/adapter/ext/ext-base.js"></script>
-		<script type="text/javascript" src="/i/ext/ext-all.js"></script>
-		<script type="text/javascript" src="/i/ext/src/locale/ext-lang-ru.js"></script>
-	
-	<script>
-			
-		var viewport = null;
-		
-		var panels = [];
-		
 		$page->{body};
-
-		Ext.onReady (function () {
 		
-			viewport = new Ext.Viewport ({
-
-				layout: 'vbox',
-
-				items: panels
-
-			});
-					
-		});
+		_body_iframe.doLayout ();
 		
-	</script></head></html>}
+	}
 
 }
 
@@ -112,6 +89,16 @@ sub draw_menu {
 	my ($_SKIN, $_options) = @_;
 
 	return 'draw_menu';
+
+}
+
+################################################################################
+
+sub draw_toolbar_button {
+
+	my ($_SKIN, $_options) = @_;
+
+	return 'draw_toolbar_button';
 
 }
 
@@ -185,7 +172,7 @@ sub draw_table {
 	
 		var $var_name = new Ext.grid.GridPanel ({
 		
-			flex : 100,
+			anchor     : '100 100%',
 			title      : '$options->{title}',
 			border     : false,
 			store      : store,
@@ -195,8 +182,8 @@ sub draw_table {
 
 		});
 		
-		panels.push ($var_name);
-	
+		_body_iframe.add ($var_name);
+			
 	};
 
 }
@@ -300,6 +287,44 @@ sub draw_table_header {
 	}
 
 	return \@cols;
+
+}
+
+################################################################################
+
+sub draw_error_page {
+
+	my ($_SKIN, $page) = @_;
+
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+
+	my $data = $_JSON -> encode (['<pre>' . $_REQUEST {error} . '</pre>']);
+
+	return qq {
+
+		var data = $data;
+		Ext.MessageBox.alert ('ќшибка', data [0]);
+
+	};
+
+}
+
+################################################################################
+
+sub draw_logon_form {
+
+	return qq {
+	
+		var dialog = Ext.Msg.show ({
+			title    : '¬ход в систему',
+			closable : false,
+			msg      : 'You are closing a tab that has unsaved changes. Would you like to save your changes?',
+			buttons  : Ext.Msg.YESNO,
+		//	fn: processResult,
+		//	icon: Ext.MessageBox.QUESTION
+		});
+
+	};
 
 }
 

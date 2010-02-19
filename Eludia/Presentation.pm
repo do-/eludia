@@ -4295,9 +4295,9 @@ sub setup_skin {
 		delete $_REQUEST {__x} if $preconf -> {core_no_xml};
 
 		if ($_COOKIE {ExtJs}) {
-			$_REQUEST {__skin} = $r -> headers_in -> {'x-requested-with'} eq 'XMLHttpRequest' ? 'ExtJsDumper' : 'ExtJs';
+			$_REQUEST {__skin} = $_REQUEST {__d} ? 'ExtJsDumper' : 'ExtJs';
 		}
-		if ($_REQUEST {xls}) {
+		elsif ($_REQUEST {xls}) {
 			$_REQUEST {__skin} = 'XL';
 		}
 		elsif (($_REQUEST {__dump} || $_REQUEST {__d}) && ($preconf -> {core_show_dump} || $_USER -> {peer_server})) {
