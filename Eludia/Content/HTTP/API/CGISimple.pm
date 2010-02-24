@@ -247,7 +247,7 @@ sub parms {
 	my @names = $self -> {Q} -> param;
 	
 	foreach my $name (@names) {
-		$vars {$name} = $self -> {Q} -> param ($name);
+		($vars {$name}) = reverse ($self -> {Q} -> param ($name));
 	}
 	
 	return \%vars;	
