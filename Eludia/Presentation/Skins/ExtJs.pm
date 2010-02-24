@@ -122,19 +122,27 @@ sub draw_table {
 	
 	my $n = 0 + @{$options -> {header}};
 	
+	my @rows = ();
+	
 	foreach my $i (@$list) {
-	
-		$data .= ',' if $data;
+
+		my $field_values = $i -> {__field_values};
 		
-		$i -> {id} ||= 0 + $i;
-	
-		my $line = qq {"$i->{id}"$i->{__trs}->[0]};
+		$n ||= 0 + @$field_values;
+		
+		my %field_values = (id => $i -> {id});
+		
+		foreach my $j (0 .. @$field_values - 1) {
+		
+			$field_values {"f$j"} = $field_values -> [$j]
+		
+		}
 
-		$data .= "[$line]";
-
-		$n ||= @{$_JSON -> decode ("[$line]")} - 1;
+		push @rows, \%field_values;
 
 	}
+		
+	$data = $_JSON -> encode (\@rows);
 	
 	my $columns  = $_JSON -> encode ($options -> {header} ||= [
 	
@@ -151,9 +159,7 @@ sub draw_table {
 	my $fields   = $_JSON -> encode (['id', map {{name => $_ -> {dataIndex}}} @{$options -> {header}}]);
 
 	my $storeOptions = $_JSON -> encode ({
-		autoDestroy => \1,
-		storeId     => 'myStore',
-		idIndex     => 0,  			
+		storeId     => "store_$options->{name}",
 	});
 
 	my $panelOptions = $_JSON -> encode ({
@@ -163,8 +169,8 @@ sub draw_table {
 		viewConfig => {autoFill => \1},
 	});
 
-	return "_body_iframe.add (createGridPanel ([$data], $columns, $storeOptions, $fields, $panelOptions));"
-
+	return "_body_iframe.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions));"
+	
 }
 
 ################################################################################
@@ -213,8 +219,10 @@ sub draw_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	return ',' . $_JSON -> encode ($data -> {label});
-
+	push @{${$_PACKAGE . 'i'} -> {__field_values}}, $data -> {label};
+		
+	return undef;
+	
 }
 
 ####################################################################
