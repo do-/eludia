@@ -187,6 +187,8 @@ sub __genereate_sql_fragment_for_column {
 					
 		$i -> {TYPE_NAME} eq 'DECIMAL' ? " ($i->{COLUMN_SIZE}, $i->{DECIMAL_DIGITS})" :
 
+		$i -> {TYPE_NAME} eq 'VARBINARY' ? " ($i->{COLUMN_SIZE})" :
+
 		$i -> {TYPE_NAME} =~ /CHAR$/ ? " ($i->{COLUMN_SIZE})" :
 
 		'');
