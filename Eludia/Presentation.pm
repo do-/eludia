@@ -4295,7 +4295,7 @@ sub setup_skin {
 		delete $_REQUEST {__x} if $preconf -> {core_no_xml};
 
 		if ($_COOKIE {ExtJs}) {
-			$_REQUEST {__skin} = $_REQUEST {__d} ? 'ExtJsDumper' : 'ExtJs';
+			$_REQUEST {__skin} = 'ExtJs';
 		}
 		elsif ($_REQUEST {xls}) {
 			$_REQUEST {__skin} = 'XL';
