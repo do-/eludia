@@ -65,7 +65,17 @@ sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 	
-	return "$_REQUEST{__script};$page->{body};_body_iframe.doLayout();";
+	my $user_subset_menu = Data::Dumper::Dumper (
+		
+		&{$_PACKAGE . 'get_user_subset_menu'} ()
+			
+	);
+	
+warn $user_subset_menu;
+		
+	my $md5 = Digest::MD5::md5_hex ($user_subset_menu);
+	
+	return "$_REQUEST{__script};checkMenu('$md5');$page->{body};_body_iframe.doLayout();";
 
 }
 

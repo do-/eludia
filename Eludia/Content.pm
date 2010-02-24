@@ -582,4 +582,22 @@ sub get_mac {
 
 }
 
+################################################################################
+
+sub get_user_subset_menu {
+
+	my $content = {
+	
+		user      => {subset => $_REQUEST {__subset} || $_USER -> {subset}},
+
+		__subsets => $_SUBSET -> {items},
+		
+		__menu    => select_menu (),
+	
+	};
+		
+	return $content;
+
+}
+
 1;
