@@ -16,7 +16,10 @@ BEGIN {
 sub options {
 
 	return {
+	
 		core_unblock_navigation => $preconf -> {core_unblock_navigation},
+		no_trunc_string => 1,
+		
 	};
 	
 }
@@ -115,10 +118,10 @@ sub draw_window_title {
 sub draw_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
+	
+	!exists $_REQUEST {__only_table} or $_REQUEST {__only_table} eq $options -> {name} or return '';
 
 	$options -> {id}     ||= 0 + $options;
-		
-	my $data     = '';
 	
 	my $n = 0 + @{$options -> {header}};
 	
@@ -141,8 +144,28 @@ sub draw_table {
 		push @rows, \%field_values;
 
 	}
+	
+	my $content = {
 		
-	$data = $_JSON -> encode (\@rows);
+		success => \1,
+	
+		root    => \@rows,
+		
+	};
+	
+	foreach my $button (@{$options -> {top_toolbar} -> {buttons}}) {
+	
+		if ($button -> {type} eq 'pager') {
+		
+			$content -> {$_} = $button -> {$_} foreach qw (total cnt);
+		
+		}
+	
+	}
+		
+	my $data = $_JSON -> encode ($content);
+	
+	!exists $_REQUEST {__only_table} or return out_html ({}, $data);
 	
 	my $columns  = $_JSON -> encode ($options -> {header} ||= [
 	
@@ -168,8 +191,14 @@ sub draw_table {
 		border     => \0,
 		viewConfig => {autoFill => \1},
 	});
+	
+	my %base_params = %{$_PACKAGE . '_REQUEST_VERBATIM'};
+	
+	$base_params {__only_table} = $options -> {name};
+	
+	my $base_params = $_JSON -> encode (\%base_params);
 
-	return "_body_iframe.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions));"
+	return "_body_iframe.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions, $base_params));"
 	
 }
 
@@ -199,7 +228,7 @@ sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
 
-	return 'draw_toolbar_input_select';
+	return 'draw_toolbar_pager';
 	
 }
 
@@ -209,7 +238,7 @@ sub draw_toolbar {
 
 	my ($_SKIN, $options) = @_;
 
-	return 'draw_toolbar';
+	return $options;
 
 }
 
