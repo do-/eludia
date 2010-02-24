@@ -165,7 +165,7 @@ sub trunc_string {
 
 	my ($s, $len) = @_;
 
-	return $s if $_REQUEST {xls};
+	return $s if $_SKIN -> {options} -> {no_trunc_string};
 	
 	my $cached = $_REQUEST {__trunc_string} -> {$s, $len};
 	
