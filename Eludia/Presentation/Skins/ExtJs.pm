@@ -163,16 +163,30 @@ sub draw_table {
 		
 	};
 	
+	my @toolbar = ();
+	
 	foreach my $button (@{$options -> {top_toolbar} -> {buttons}}) {
 	
-		if ($button -> {type} eq 'pager') {
+		if ($button -> {off}) {
+		
+			next;		
+		
+		}
+		elsif ($button -> {type} eq 'pager') {
 		
 			$content -> {$_} = $button -> {$_} foreach qw (total cnt);
 		
 		}
-	
-	}
+		else {
 		
+			push @toolbar, $button;
+
+		}
+
+	}
+	
+	my $toolbar = $_JSON -> encode (\@toolbar);
+
 	my $data = $_JSON -> encode ($content);
 	
 	!exists $_REQUEST {__only_table} or return out_html ({}, $data);
@@ -208,7 +222,7 @@ sub draw_table {
 	
 	my $base_params = $_JSON -> encode (\%base_params);
 
-	return "target.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions, $base_params));"
+	return "target.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions, $base_params, $toolbar));"
 	
 }
 
@@ -368,7 +382,7 @@ sub draw_logon_form {
 
 			var refreshSubset = function (combo, record, index) {
 
-				subsetStore.proxy.setUrl ("/content/?type=menu&action=serialize&sid=" + sid + "&__subset=" + (
+				subsetStore.proxy.setUrl ("/?type=menu&action=serialize&sid=" + sid + "&__subset=" + (
 
 					record ? record.data.name : combo.getValue ()
 
@@ -492,7 +506,7 @@ sub draw_logon_form {
 
 				});
 
-				nope ("/content/?type=logon&action=check");
+				nope ("/?type=logon&action=check");
 
 			});
 

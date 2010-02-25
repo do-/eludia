@@ -73,7 +73,7 @@
 
 	}
 
-	function createGridPanel (data, columns, storeOptions, fields, panelOptions, base_params) {
+	function createGridPanel (data, columns, storeOptions, fields, panelOptions, base_params, buttons) {
 
 		adjust_column_widths (columns, data.root);
 
@@ -81,7 +81,7 @@
 		storeOptions.root        = 'root';
 		storeOptions.autoDestroy = true,
 		storeOptions.data        = data;
-		storeOptions.url         = '/content';
+		storeOptions.url         = '/';
 		storeOptions.baseParams  = base_params;
 
 		panelOptions.store    = new Ext.data.JsonStore (storeOptions);
@@ -125,7 +125,7 @@
 
 		if (options.name) {
 
-			var href = '/content/?sid=' + sid + '&type=' + b.options.name;
+			var href = '/?sid=' + sid + '&type=' + b.options.name;
 
 			href += '&_salt=' + Math.random ();
 
