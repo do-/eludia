@@ -354,8 +354,10 @@ sub draw_error_page {
 sub draw_logon_form {
 
 	return <<EOS;
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 	<head>
+		<meta http-equiv='X-UA-Compatible' content='IE=7' />
 		<link rel="stylesheet" type="text/css" href="/i/ext/resources/css/ext-all.css" />
 		<script type="text/javascript" src="/i/ext/adapter/ext/ext-base.js"></script>
 		<script type="text/javascript" src="/i/ext/ext-all.js"></script>
@@ -365,8 +367,6 @@ sub draw_logon_form {
 		<style>
 			.ext-ie .x-form-text {
 			    margin: 0px;
-			    height: 22px;
-			    font-size: 12px;
 			}
 		</style>
 

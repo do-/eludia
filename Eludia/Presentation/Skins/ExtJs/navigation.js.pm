@@ -77,8 +77,6 @@
 	function createGridToolbar (buttons, store) {
 	
 		var tb = new Ext.Toolbar ({
-		
-			height          : 28
 			
 		});
 		
@@ -89,11 +87,13 @@
 			if (button.type == 'input_text') {
 
 				if (button.label) tb.add (button.label + ': ');
-			
+
 				var f = new Ext.form.TextField ({
 				
-					name : button.name,
-					grow : true,
+					name  : button.name,
+					grow  : true,
+					width : 30,
+
 					enableKeyEvents : true,
 
 					listeners       : {
@@ -113,11 +113,11 @@
 				});
 				
 				tb.add (f);
-			
+				
 			}
 		
 		}
-
+		
 		return tb;
 
 	};
@@ -264,3 +264,4 @@
 		);
 
 	}
+
