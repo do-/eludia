@@ -373,6 +373,10 @@ sub draw_logon_form {
 		<script type="text/javascript">
 
 			var oldSubset = '';
+			
+			Ext.Ajax.defaultHeaders = {
+				'Content-Type-Charset': '$$i18n{_charset}'
+			};
 
 			function checkMenu (md5) {
 

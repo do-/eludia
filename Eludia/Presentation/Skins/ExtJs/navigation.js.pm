@@ -1,5 +1,6 @@
 	Ext.BLANK_IMAGE_URL = '/i/0.gif';
 	Ext.util.Cookies.set ('ExtJs', 1);
+	Ext.Ajax.url        = '/';
 
 	var sid			= null;
 	var fio			= null;
@@ -73,6 +74,54 @@
 
 	}
 
+	function createGridToolbar (buttons, store) {
+	
+		var tb = new Ext.Toolbar ({
+		
+			height          : 28
+			
+		});
+		
+		for (var i = 0; i < buttons.length; i ++) {
+		
+			var button = buttons [i];
+			
+			if (button.type == 'input_text') {
+
+				if (button.label) tb.add (button.label + ': ');
+			
+				var f = new Ext.form.TextField ({
+				
+					name : button.name,
+					grow : true,
+					enableKeyEvents : true,
+
+					listeners       : {
+
+						keyup : function (_this, _e) {
+						
+							if (store.baseParams [_this.name] == _this.getValue ()) return;
+
+							store.setBaseParam (_this.name, _this.getValue ());
+							
+							store.load ({});
+
+						}
+
+					}
+				
+				});
+				
+				tb.add (f);
+			
+			}
+		
+		}
+
+		return tb;
+
+	};
+
 	function createGridPanel (data, columns, storeOptions, fields, panelOptions, base_params, buttons) {
 
 		adjust_column_widths (columns, data.root);
@@ -87,6 +136,7 @@
 		panelOptions.store    = new Ext.data.JsonStore (storeOptions);
 		panelOptions.colModel = new Ext.grid.ColumnModel ({columns: columns});
 		panelOptions.sm       = new Ext.grid.RowSelectionModel ({singleSelect:true});
+		if (buttons.length > 0)	panelOptions.tbar = createGridToolbar (buttons, panelOptions.store);
 
 		if (data.total) {
 
