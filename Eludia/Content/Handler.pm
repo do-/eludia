@@ -104,6 +104,14 @@ sub setup_request_params {
 	$ENV {HTTP_HOST} = $http_host if $http_host;
 
 	get_request (@_);
+	
+	my $charset = $r -> header_in ('Content-Type-Charset');
+	
+	if ($charset && $r -> header_in ('Content-Type') =~ /UTF\-?8/i) {
+
+		Encode::from_to ($_, 'utf8', $charset) foreach (values %_REQUEST);
+
+	}
 
 	our %_REQUEST_VERBATIM = %_REQUEST;
 
