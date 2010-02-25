@@ -63,6 +63,8 @@ sub draw_auth_toolbar {
 
 sub draw_page {
 
+	$_REQUEST_VERBATIM {type} or return &{$_PACKAGE . 'draw_logon'} ();
+
 	my ($_SKIN, $page) = @_;
 	
 	my $user_subset_menu = Data::Dumper::Dumper (
@@ -70,12 +72,10 @@ sub draw_page {
 		&{$_PACKAGE . 'get_user_subset_menu'} ()
 			
 	);
-	
-warn $user_subset_menu;
-		
+
 	my $md5 = Digest::MD5::md5_hex ($user_subset_menu);
 	
-	return "$_REQUEST{__script};checkMenu('$md5');$page->{body};_body_iframe.doLayout();";
+	return "$_REQUEST{__script};checkMenu('$md5');$page->{body};target.doLayout();";
 
 }
 
@@ -202,13 +202,13 @@ sub draw_table {
 		viewConfig => {autoFill => \1},
 	});
 	
-	my %base_params = %{$_PACKAGE . '_REQUEST_VERBATIM'};
+	my %base_params = %_REQUEST_VERBATIM;
 	
 	$base_params {__only_table} = $options -> {name};
 	
 	my $base_params = $_JSON -> encode (\%base_params);
 
-	return "_body_iframe.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions, $base_params));"
+	return "target.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions, $base_params));"
 	
 }
 
@@ -339,18 +339,171 @@ sub draw_error_page {
 
 sub draw_logon_form {
 
-	return qq {
-	
-		var dialog = Ext.Msg.show ({
-			title    : 'Вход в систему',
-			closable : false,
-			msg      : 'You are closing a tab that has unsaved changes. Would you like to save your changes?',
-			buttons  : Ext.Msg.YESNO,
-		//	fn: processResult,
-		//	icon: Ext.MessageBox.QUESTION
-		});
+	return <<EOS;
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="/i/ext/resources/css/ext-all.css" />
+		<script type="text/javascript" src="/i/ext/adapter/ext/ext-base.js"></script>
+		<script type="text/javascript" src="/i/ext/ext-all.js"></script>
+		<script type="text/javascript" src="/i/ext/src/locale/ext-lang-ru.js"></script>
+		<script type="text/javascript" src="/i/_skins/ExtJs/navigation.js"></script>
 
-	};
+		<style>
+			.ext-ie .x-form-text {
+			    margin: 0px;
+			    height: 22px;
+			    font-size: 12px;
+			}
+		</style>
+
+		<script type="text/javascript">
+
+			var oldSubset = '';
+
+			function checkMenu (md5) {
+
+				if (menu_md5 != md5) refreshSubset (subsetCombo, null, 0);
+
+			}
+
+			var refreshSubset = function (combo, record, index) {
+
+				subsetStore.proxy.setUrl ("/content/?type=menu&action=serialize&sid=" + sid + "&__subset=" + (
+
+					record ? record.data.name : combo.getValue ()
+
+				));
+
+				subsetStore.load ({
+
+					params   : {},
+					scope    : subsetStore,
+					callback : function () {
+
+						var data = subsetStore.reader.jsonData;
+
+						subsetCombo.setValue (data.user.subset);
+												
+						createMenu (center.getTopToolbar (), data.__menu, oldSubset != data.user.subset);
+
+						oldSubset = data.user.subset;
+
+						menu_md5 = data.md5;
+
+						combo.collapse ();
+
+						center.focus ();
+
+					}
+
+				});
+
+			}
+
+			var	subsetStore = new Ext.data.JsonStore ({
+
+				url        : "/",
+				root       : "__subsets",
+				fields     : ['name', 'label'],
+				idProperty : 'name'
+
+			});
+
+
+			var	subsetCombo = new Ext.form.ComboBox ({
+
+				editable         : false,
+				forceSelection   : true,
+
+				displayField     : 'label',
+				valueField       : 'name',
+				mode			 : 'local',
+
+				fieldLabel       : 'Бизнес-процесс',
+
+				disableKeyFilter : false,
+				triggerAction    : 'all',
+
+				listeners        : {
+
+					select : refreshSubset
+
+				},
+
+				store: subsetStore
+
+			});
+
+			var	north = new Ext.form.FormPanel ({
+
+				frame:true,
+				bodyStyle:'padding:1px 1px 0',
+				layout: 'hbox',
+				layoutConfig  : {
+					align: 'middle',
+					defaultMargins  : {top:0, right:20, bottom:0, left:0}
+				},
+				region: 'north',
+				split: true,
+				header: false,
+				height: 80,
+				collapsible: true,
+				margins: '0 0 0 0'
+
+			});
+
+			var exitButton = new Ext.Button ({
+
+				text       : 'Выход',
+				icon       : '/i/ext/examples/shared/icons/fam/user_delete.png',
+				iconAlign  : 'right',
+				scale      : 'medium',
+				listeners  : {click : applicationExit}
+
+			});
+
+			north.add ([
+
+				new Ext.form.Label ({html : '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/i/logo_in.gif"></img>'}),
+				new Ext.form.Label ({text : 'Бизнес-процесс: '}),
+
+				subsetCombo,
+
+				new Ext.form.Label ({text : fio}),
+				new Ext.form.Label ({text : ' ', flex : 1}),
+
+				exitButton
+
+			]);
+
+			var	center = new Ext.form.FormPanel ({
+				tbar   : {},
+				region : 'center',
+				layout : 'anchor'
+			});
+
+			Ext.onReady (function () {
+
+				var viewport = new Ext.Viewport ({
+
+					layout: 'border',
+
+					items: [north, center]
+
+				});
+
+				nope ("/content/?type=logon&action=check");
+
+			});
+
+		</script>
+
+	</head>
+
+	<body></body>
+
+</html>
+EOS
 
 }
 
