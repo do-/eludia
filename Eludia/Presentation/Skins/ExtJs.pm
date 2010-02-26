@@ -248,6 +248,18 @@ sub draw_toolbar_input_select {
 
 ################################################################################
 
+sub draw_toolbar_input_datetime {
+
+	my ($_SKIN, $options) = @_;
+	
+	$options -> {format} =~ s{\%}{}g;
+
+	return 'draw_toolbar_input_datetime';
+	
+}
+
+################################################################################
+
 sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;

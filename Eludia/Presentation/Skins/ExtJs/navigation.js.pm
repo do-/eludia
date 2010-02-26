@@ -73,7 +73,7 @@
 		}
 
 	}
-
+	
 	function createGridToolbar (buttons, store) {
 	
 		var tb = new Ext.Toolbar ({
@@ -91,6 +91,7 @@
 				var f = new Ext.form.TextField ({
 				
 					name  : button.name,
+					value : button.value,
 					grow  : true,
 					width : 30,
 
@@ -122,6 +123,56 @@
 				
 				tb.add (f);
 				
+			}
+			else if (button.type == 'input_date') {
+
+
+
+
+
+				if (button.label) tb.add (button.label + ': ');
+
+				var f = new Ext.form.DateField ({
+				
+					name   : button.name,
+					format : button.format,
+					value  : button.value,
+					width  : 80,
+
+					listeners       : {
+
+						afterRender : function () {
+
+							if (Ext.isIE6 || Ext.isIE7) {
+								this.el.setY(2 + this.el.getY());
+								this.trigger.setY(1 + this.trigger.getY());
+							}
+
+						},
+
+						select : function (_this, _e) {
+						
+							if (store.baseParams [_this.name] == _this.getValue ()) return;
+
+							store.setBaseParam (_this.name, _this.getValue ());
+							
+							store.load ({});
+
+						}
+
+					}
+				
+				});
+
+				tb.add (f);
+
+
+
+
+
+
+
+
 			}
 			else if (button.type == 'input_select') {
 			
