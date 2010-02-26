@@ -1791,9 +1791,10 @@ sub draw_form_field_select {
 
 	foreach my $value (@{$options -> {values}}) {
 
-		$value -> {selected} = (($value -> {id} eq $data -> {$options -> {name}}) or ($value -> {id} eq $options -> {value})) ? 'selected' : '';
+		$value -> {selected} = 'selected' if (($value -> {id} eq $data -> {$options -> {name}}) or ($value -> {id} eq $options -> {value}));
 		$value -> {label} = trunc_string ($value -> {label}, $options -> {max_len});
 		$value -> {id} =~ s{\"}{\&quot;}g; #";
+		delete $value -> {fake} if $value -> {fake} == 0;
 
 	}
 
