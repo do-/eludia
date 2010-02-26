@@ -354,10 +354,10 @@ sub draw_error_page {
 sub draw_logon_form {
 
 	return <<EOS;
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" 
+    "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 	<head>
-		<meta http-equiv='X-UA-Compatible' content='IE=7' />
 		<link rel="stylesheet" type="text/css" href="/i/ext/resources/css/ext-all.css" />
 		<script type="text/javascript" src="/i/ext/adapter/ext/ext-base.js"></script>
 		<script type="text/javascript" src="/i/ext/ext-all.js"></script>

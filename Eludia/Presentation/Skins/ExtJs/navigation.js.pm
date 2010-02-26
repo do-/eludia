@@ -98,6 +98,14 @@
 
 					listeners       : {
 
+						afterRender : function () {
+
+							if (Ext.isIE6 || Ext.isIE7) {
+								this.el.setY(2 + this.el.getY());
+							}
+
+						},
+
 						keyup : function (_this, _e) {
 						
 							if (store.baseParams [_this.name] == _this.getValue ()) return;
@@ -114,6 +122,79 @@
 				
 				tb.add (f);
 				
+			}
+			else if (button.type == 'input_select') {
+			
+				var values = button.values;
+
+
+				var f = new Ext.form.ComboBox ({
+				
+					name  : button.name,
+
+					store: new Ext.data.JsonStore ({
+						id: 0,
+						fields: ['id', 'label'],
+						data: values
+					}),
+					
+					valueField: 'id',
+					displayField: 'label',
+					mode: 'local',
+					editable: false,
+					triggerAction: 'all',
+
+					listeners       : {
+					
+						afterRender : function () {
+
+							if (Ext.isIE6 || Ext.isIE7) {
+								this.el.setY(2 + this.el.getY());
+								this.trigger.setY(1 + this.trigger.getY());
+							}
+
+						},
+
+						select : function (_this, record, index) {
+
+								if (store.baseParams [_this.name] == _this.getValue ()) return;
+
+								store.setBaseParam (_this.name, _this.getValue ());
+
+								store.load ({});
+
+							}
+
+						}
+				
+					}
+					
+				);
+				
+				var max = 0;
+				
+				for (var j = 0; j < values.length; j ++) {
+				
+					var v = values [j];
+					
+					var l = v.label.length;
+					
+					if (max < l) max = l;
+					
+					if (v.selected) {
+					
+						f.setValue (v.id);
+						
+						break;
+					
+					}
+				
+				}
+				
+				f.setWidth (10 * max);
+				
+				tb.add (f);
+
 			}
 		
 		}
