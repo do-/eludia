@@ -44,6 +44,22 @@
 
 	}
 
+/////////////// FORM
+
+	function createFormPanel (options) {
+		
+		var formOptions = {
+		
+			items : []
+		
+		};
+	
+		var form = new Ext.grid.GridPanel (formOptions);
+		
+		return form;
+	
+	}
+
 /////////////// TABLE
 
 	function adjust_column_widths (columns, data) {

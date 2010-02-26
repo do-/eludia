@@ -26,6 +26,14 @@ sub options {
 
 ################################################################################
 
+sub js_set_select_option {
+
+	my ($_SKIN, $name, $item, $fallback_href) = @_;
+
+}
+
+################################################################################
+
 sub draw_dump_button { () }
 
 ################################################################################
@@ -339,6 +347,88 @@ sub draw_table_header {
 	}
 
 	return \@cols;
+
+}
+
+################################################################################
+
+sub draw_form_field_datetime {
+
+	my ($_SKIN, $options, $data) = @_;
+		
+	return 'draw_form_field_datetime';
+	
+}
+
+################################################################################
+
+sub draw_form_field_hgroup {
+
+	my ($_SKIN, $options, $data) = @_;
+		
+	return 'draw_form_field_hgroup';
+	
+}
+
+################################################################################
+
+sub draw_form_field_select {
+
+	my ($_SKIN, $options, $data) = @_;
+		
+	return 'draw_form_field_select';
+	
+}
+
+################################################################################
+
+sub draw_form_field {
+
+	my ($_SKIN, $field, $data) = @_;
+	
+	return 'draw_form_field';
+
+}
+
+################################################################################
+
+sub draw_path {
+
+	my ($_SKIN, $options, $list) = @_;
+	
+	return 'draw_path';
+	
+}	
+
+################################################################################
+
+sub draw_centered_toolbar_button {
+
+	my ($_SKIN, $options) = @_;
+	
+	return 'draw_centered_toolbar_button';
+
+}
+
+################################################################################
+
+sub draw_centered_toolbar {
+
+	my ($_SKIN, $options, $list) = @_;
+	
+	return 'draw_centered_toolbar';
+
+}
+
+################################################################################
+
+sub draw_form {
+
+	my ($_SKIN, $options) = @_;
+	
+	delete $options -> {data};
+	
+	return 'target.add (createFormPanel(' . $_JSON -> encode ($options) . '));';
 
 }
 
