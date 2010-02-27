@@ -283,8 +283,10 @@ sub setup_page {
 
 	call_for_role ('get_page');
 
-	require_both $page -> {type};	
+	eval { require_both $page -> {type} };
 	
+	$_REQUEST {error} ||= $@;
+		
 	$page -> {request_type} = 
 
 		$_REQUEST {__suggest} ? 'suggest' :
