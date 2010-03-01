@@ -118,7 +118,7 @@
 						afterRender : function () {
 
 							if (Ext.isIE6 || Ext.isIE7) {
-								this.el.setY(2 + this.el.getY());
+								this.el.setY(1 + this.el.getY());
 							}
 
 						},
