@@ -382,6 +382,16 @@ sub draw_form_field_select {
 
 ################################################################################
 
+sub draw_form_field_checkboxes {
+
+	my ($_SKIN, $options, $data) = @_;
+	
+	return 'draw_form_field_checkboxes';
+	
+}
+
+################################################################################
+
 sub draw_form_field {
 
 	my ($_SKIN, $field, $data) = @_;
@@ -438,16 +448,21 @@ sub draw_error_page {
 
 	my ($_SKIN, $page) = @_;
 
-	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+	$_REQUEST {__content_type} = 'text/html; charset=' . $i18n -> {_charset};
 
-	my $data = $_JSON -> encode (['<pre>' . $_REQUEST {error} . '</pre>']);
-
-	return qq {
-
-		var data = $data;
-		Ext.MessageBox.alert ('Îøèáêà', data [0]);
-
-	};
+	my $js = qq {Ext.MessageBox.alert ('Îøèáêà', @{[$_JSON -> encode ('<pre>' . $_REQUEST {error} . '</pre>')]});};
+	
+	$_REQUEST {__iframe_target} or return $js;
+	
+	$_REQUEST {__content_type} ||= 'text/javascript; charset=' . $i18n -> {_charset};
+	
+	$data = $_JSON -> encode ($js);
+	
+	return qq {<html><head><script>
+	
+		parent.eval (@{[$_JSON -> encode ($js)]});
+	
+	</script></head></html>}
 
 }
 
@@ -470,6 +485,10 @@ sub draw_logon_form {
 			.ext-ie .x-form-text {
 			    margin: 0px;
 			}
+			.no-icon {
+				display : none;
+			}
+		
 		</style>
 
 		<script type="text/javascript">
@@ -620,7 +639,10 @@ sub draw_logon_form {
 
 	</head>
 
-	<body></body>
+	<body>
+		<iframe name=invisible src="about:blanc" width=0 height=0 application="yes">
+		</iframe>
+	</body>
 
 </html>
 EOS

@@ -23,16 +23,16 @@
 
 				var s = response.responseText;
 
-				try {
+//				try {
 
 					eval (s);
 
-				}
-				catch (e) {
+//				}
+//				catch (e) {
 
-					Ext.MessageBox.alert ('Ошибка', '<pre>' + e.description + "\n" + s + '</pre>');
+//					Ext.MessageBox.alert ('Ошибка', '<pre>' + e.description + "\n" + s + '</pre>');
 
-				}
+//				}
 
 
 
@@ -50,12 +50,187 @@
 		
 		var formOptions = {
 		
-			items : []
+			frame:true,
+			title: 'Simple Form',
+			layout: 'form',
+			buttonAlign  : 'center',
+
+			labelWidth: 200,
+			labelSeparator: ' ',
+
+			defaults: {width: 230},
+			
+			autoScroll  : true,
+
+			listeners : {
+			
+				afterrender : function (_this) {
+				
+					var f = _this.getEl ().dom.parentNode;
+					
+					f.enctype = f.encoding = 'multipart/form-data';					
+					f.target  = 'invisible';
+								
+				}
+			
+			}
+                    
 		
 		};
 	
-		var form = new Ext.grid.GridPanel (formOptions);
+		var form = new Ext.Panel (formOptions);
+	
+		if (!options.no_ok) {
+				
+			form.addButton ({text: options.label_ok}, function () {this.getEl ().dom.parentNode.submit ()}, form);
+			
+		}
 		
+		if (!options.no_cancel) {
+		
+			var esc_href = options.esc + '&sid=' + sid;
+		
+			form.addButton ({text: options.label_cancel}, function () {nope (esc_href, this)}, target);
+			
+		}
+		
+		form.add (new Ext.form.Hidden ({name: '__iframe_target', value: 1}));
+
+		for (var k = 0; k < options.keep_params.length; k ++) {
+		
+			var kp = options.keep_params [k];
+		
+			form.add (new Ext.form.Hidden ({name: kp.name, value: kp.value}));
+		
+		}
+		
+		for (var r = 0; r < options.rows.length; r ++) {
+		
+			var row = options.rows [r];
+			
+			var button = row [0];
+			
+				if (button.type == 'select') {
+									
+					var values = button.values;
+					
+					if (button.empty) values.unshift ({id : '', label : button.empty});
+
+					var f = new Ext.form.ComboBox ({
+
+						name  : '__' + button.name,
+						hiddenName  : '_' + button.name,
+
+						store: new Ext.data.JsonStore ({
+							id: 0,
+							fields: ['id', 'label'],
+							data: values
+						}),
+
+						valueField: 'id',
+						fieldLabel: button.label,
+						displayField: 'label',
+						width: '100%',
+						mode: 'local',
+						editable: false,
+						triggerAction: 'all'
+
+					});
+
+					var max = 0;
+
+					for (var j = 0; j < values.length; j ++) {
+
+						var v = values [j];
+
+						var l = v.label.length;
+
+						if (max < l) max = l;
+
+						if (v.selected) {
+
+							f.setValue (v.id);
+
+							break;
+
+						}
+
+					}
+
+					f.setWidth (10 * max);
+
+					form.add (f);
+				
+				}				
+				else if (button.type == 'checkboxes') {
+				
+					var node = new Ext.tree.TreeNode ();
+
+
+
+
+					for (var i = 0; i < button.values.length; i ++) {
+					
+						var v = button.values [i];
+											
+						node.appendChild ({
+						
+							text: v.label,
+							leaf: true,
+							iconCls :'no-icon',
+							checked: false
+						
+						});
+					
+					}
+
+
+					form.add ({
+					
+						xtype:'treepanel',
+
+						fieldLabel: button.label,
+						autoScroll: true,
+						animate: true,
+						lines: false,
+						containerScroll: true,
+						border: false,
+						rootVisible: false,
+						height: 150,
+					        margins: '5 0 5 5',
+					        width:300,
+						root: node
+					
+					});					
+				
+				}
+				else if (button.type == '_checkboxes') {
+				
+					var items = [];
+					
+					for (var i = 0; i < button.values.length; i ++) {
+					
+						var v = button.values [i];
+					
+						items.push ({boxLabel: v.label, name: '_' + button.name + '_' + v.id, inputValue: 1});
+					
+					}
+				
+					var f = new Ext.form.CheckboxGroup ({
+						xtype: 'checkboxgroup',
+						fieldLabel: button.label,
+						columns: button.cols,
+						items: items
+					});
+
+					form.add (f);					
+				
+				}
+			
+
+		
+		}
+
 		return form;
 	
 	}
