@@ -1946,20 +1946,27 @@ sub draw_form_field_checkboxes {
 	
 	push @{$form_options -> {keep_params}}, $key;
 	
+	my $value = $data -> {$options -> {name}};
+	
+	my %values = ();
+	
+	%values = map {$_ => 1} @$value if ref $value eq ARRAY;
+
 	foreach my $value (@{$options -> {values}}) {
 
-		$value -> {type} ||= $value -> {items} ? 'checkboxes' : undef;
+		$value -> {type} ||= 'checkboxes' if $value -> {items};
 		
 		if ($value -> {type} eq 'checkboxes') {
 			$value -> {values} = $value -> {items};
 			$value -> {inline} = 1;
-			$value -> {name} = $options -> {name} if ($options -> {name});
+			$value -> {name} = $options -> {name} if $value;
 		};
-		
+
+		$value -> {checked} = 1 if $values {$value -> {id}};
+
 		$value -> {type} or next;
 
 		$value -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
-		$value -> {attributes} -> {checked} = 1 if $data -> {$options -> {name}} == $value -> {id};
 
 		my $renderrer = "draw_form_field_$$value{type}";
 		
@@ -1969,7 +1976,7 @@ sub draw_form_field_checkboxes {
 		delete $value -> {attributes} -> {class};
 						
 	}
-		
+
 	return $_SKIN -> draw_form_field_checkboxes (@_);
 	
 }
