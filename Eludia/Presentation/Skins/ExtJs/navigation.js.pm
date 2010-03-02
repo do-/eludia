@@ -223,6 +223,24 @@
 					});					
 				
 				}
+				else if (button.type == 'date') {
+									
+					var values = button.values;
+					
+					if (button.empty) values.unshift ({id : '', label : button.empty});
+
+					var f = new Ext.form.DateField ({
+
+						name  : '_' + button.name,
+						fieldLabel: button.label,
+						format : button.format,
+						value  : button.value
+
+					});
+
+					form.add (f);
+				
+				}				
 		
 		}
 

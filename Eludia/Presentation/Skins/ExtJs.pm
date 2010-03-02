@@ -356,6 +356,8 @@ sub draw_form_field_datetime {
 
 	my ($_SKIN, $options, $data) = @_;
 		
+	$options -> {format} =~ s{\%}{}g;
+
 	return 'draw_form_field_datetime';
 	
 }
