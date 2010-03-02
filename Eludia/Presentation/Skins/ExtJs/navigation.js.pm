@@ -46,7 +46,7 @@
 
 /////////////// FORM
 
-	var addFieldOfType = {
+	var createFieldOfType = {
 	
 		'select' : function (form, button) {
 		
@@ -97,7 +97,7 @@
 
 			f.setWidth (10 * max);
 
-			form.add (f);
+			return f;
 		
 		},
 		
@@ -131,7 +131,7 @@
 			
 			}
 
-			form.add ({
+			return {
 			
 				xtype:'treepanel',
 				fieldLabel: button.label,
@@ -156,22 +156,54 @@
 				
 				}
 
-			});					
+			};					
 
 		},
 	
 		'date' : function (form, button) {
 
-			form.add (new Ext.form.DateField ({
+			return new Ext.form.DateField ({
 				name       : '_' + button.name,
 				fieldLabel : button.label,
 				format     : button.format,
 				value      : button.value
-			}));
+			});
+
+		},
+		
+		'hgroup' : function (form, button) {
+		
+			addFields (form, button.items);
 
 		}
 
 	};
+	
+	function addFields (form, buttons) {
+	
+		var a = [];
+		
+		for (var i = 0; i < buttons.length; i ++) {
+		
+			var button = buttons [i];
+			
+			var createField = createFieldOfType [button.type];
+		
+			if (!createField) continue;
+			
+			var f = createField (form, button);
+			
+			if (!f) continue;
+			
+			a.push (f);
+
+		}
+
+		if (!a.length) return;
+				
+		form.add ([a]);
+
+	}
 
 	function createFormPanel (options) {
 	
@@ -228,13 +260,9 @@
 		
 		for (var r = 0; r < options.rows.length; r ++) {
 		
-			var row = options.rows [r];
-			
-			var button = row [0];
-			
-			var addField = addFieldOfType [button.type];
-			
-			if (addField) addField (form, button);
+			var buttons = options.rows [r];
+
+			addFields (form, buttons);
 					
 		}
 
