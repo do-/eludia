@@ -46,6 +46,133 @@
 
 /////////////// FORM
 
+	var addFieldOfType = {
+	
+		'select' : function (form, button) {
+		
+			var values = button.values;
+			
+			if (button.empty) values.unshift ({id : '', label : button.empty});
+
+			var f = new Ext.form.ComboBox ({
+
+				name  : '__' + button.name,
+				hiddenName  : '_' + button.name,
+
+				store: new Ext.data.JsonStore ({
+					id: 0,
+					fields: ['id', 'label'],
+					data: values
+				}),
+
+				valueField: 'id',
+				fieldLabel: button.label,
+				displayField: 'label',
+				width: '100%',
+				mode: 'local',
+				editable: false,
+				triggerAction: 'all'
+
+			});
+
+			var max = 0;
+
+			for (var j = 0; j < values.length; j ++) {
+
+				var v = values [j];
+
+				var l = v.label.length;
+
+				if (max < l) max = l;
+
+				if (v.selected) {
+
+					f.setValue (v.id);
+
+					break;
+
+				}
+
+			}
+
+			f.setWidth (10 * max);
+
+			form.add (f);
+		
+		},
+		
+		'checkboxes' : function (form, button) {
+		
+			var node = new Ext.tree.TreeNode ();
+
+			var width = 100;
+
+			for (var i = 0; i < button.values.length; i ++) {
+			
+				var v = button.values [i];
+				
+				var l = v.label;
+				
+				form.add (new Ext.form.Hidden ({name: '_' + button.name + '_' + v.id, value: v.checked}));
+										
+				var w = 34 + 7 * l.length;
+
+				if (width < w) width = w;
+									
+				node.appendChild ({
+
+					id: button.name + '_' + v.id,
+					text: l,							
+					leaf: true,
+					iconCls :'no-icon',
+					checked: (v.checked == 1)
+				
+				});
+			
+			}
+
+			form.add ({
+			
+				xtype:'treepanel',
+				fieldLabel: button.label,
+				autoScroll: true,
+				animate: true,
+				lines: false,
+				containerScroll: true,
+				border: false,
+				rootVisible: false,
+				height: button.height ? button.height : 150,
+			        margins: '5 0 5 5',
+			        width:width,
+				root: node,
+			
+				listeners : {
+				
+					checkchange : function (node, checked) {
+
+						Ext.DomQuery.selectNode ("*[name='_" + node.ui.getIconEl ().parentNode.attributes ['ext:tree-node-id'].value + "']").value = checked ? 1 : '';
+
+					}
+				
+				}
+
+			});					
+
+		},
+	
+		'date' : function (form, button) {
+
+			form.add (new Ext.form.DateField ({
+				name       : '_' + button.name,
+				fieldLabel : button.label,
+				format     : button.format,
+				value      : button.value
+			}));
+
+		}
+
+	};
+
 	function createFormPanel (options) {
 	
 		var form_name = options.name;
@@ -105,143 +232,10 @@
 			
 			var button = row [0];
 			
-				if (button.type == 'select') {
-									
-					var values = button.values;
+			var addField = addFieldOfType [button.type];
+			
+			if (addField) addField (form, button);
 					
-					if (button.empty) values.unshift ({id : '', label : button.empty});
-
-					var f = new Ext.form.ComboBox ({
-
-						name  : '__' + button.name,
-						hiddenName  : '_' + button.name,
-
-						store: new Ext.data.JsonStore ({
-							id: 0,
-							fields: ['id', 'label'],
-							data: values
-						}),
-
-						valueField: 'id',
-						fieldLabel: button.label,
-						displayField: 'label',
-						width: '100%',
-						mode: 'local',
-						editable: false,
-						triggerAction: 'all'
-
-					});
-
-					var max = 0;
-
-					for (var j = 0; j < values.length; j ++) {
-
-						var v = values [j];
-
-						var l = v.label.length;
-
-						if (max < l) max = l;
-
-						if (v.selected) {
-
-							f.setValue (v.id);
-
-							break;
-
-						}
-
-					}
-
-					f.setWidth (10 * max);
-
-					form.add (f);
-				
-				}				
-				else if (button.type == 'checkboxes') {
-				
-					var node = new Ext.tree.TreeNode ();
-
-					var width = 100;
-
-					for (var i = 0; i < button.values.length; i ++) {
-					
-						var v = button.values [i];
-						
-						var l = v.label;
-						
-						form.add (new Ext.form.Hidden ({name: '_' + button.name + '_' + v.id, value: v.checked}));
-												
-						var w = 34 + 7 * l.length;
-
-						if (width < w) width = w;
-											
-						node.appendChild ({
-
-							id: button.name + '_' + v.id,
-							text: l,							
-							leaf: true,
-							iconCls :'no-icon',
-							checked: (v.checked == 1)
-						
-						});
-					
-					}
-
-					form.add ({
-					
-						xtype:'treepanel',
-						fieldLabel: button.label,
-						autoScroll: true,
-						animate: true,
-						lines: false,
-						containerScroll: true,
-						border: false,
-						rootVisible: false,
-						height: button.height ? button.height : 150,
-					        margins: '5 0 5 5',
-					        width:width,
-						root: node,
-					
-						listeners : {
-						
-							checkchange : function (node, checked) {
-
-								var div = node.ui.getIconEl ().parentNode;
-								
-								var name = div.attributes ['ext:tree-node-id'].value;
-								
-								var q = "*[name='_" + name + "']";
-
-								var hidden = Ext.DomQuery.selectNode (q);
-
-								hidden.value = checked ? 1 : '';
-
-							}
-						
-						}
-
-					});					
-				
-				}
-				else if (button.type == 'date') {
-									
-					var values = button.values;
-					
-					if (button.empty) values.unshift ({id : '', label : button.empty});
-
-					var f = new Ext.form.DateField ({
-
-						name  : '_' + button.name,
-						fieldLabel: button.label,
-						format : button.format,
-						value  : button.value
-
-					});
-
-					form.add (f);
-				
-				}				
-		
 		}
 
 		for (var k = 0; k < options.keep_params.length; k ++) {
