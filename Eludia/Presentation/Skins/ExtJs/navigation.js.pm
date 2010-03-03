@@ -6,6 +6,28 @@
 	var fio			= null;
 	var menu_md5	= '';
 	var target		= null;
+	
+	Ext.applyIf (Array.prototype, {
+
+		map : function (fun, scope) {
+                
+			var len = this.length;
+
+			if (typeof fun != "function") throw new TypeError ();
+
+			var res = new Array (len);
+
+			for (var i = 0; i < len; i++) {
+
+				if (i in this) res [i] = fun.call (scope || this, this [i], i, this);
+
+			}
+
+			return res;
+
+		}		
+		
+	});
 
 /////////////// CORE
 
@@ -214,7 +236,7 @@
 		var formOptions = {
 		
 			frame:true,
-			title: 'Simple Form',
+			title: '',
 			layout: 'form',
 			buttonAlign  : 'center',
 
@@ -239,7 +261,9 @@
 			}                    
 
 		};
-	
+		
+		if (options.path) formOptions.title = options.path.map (function (i) {return i.label}).join (' / ');
+			
 		var form = new Ext.Panel (formOptions);
 	
 		if (!options.no_ok) {

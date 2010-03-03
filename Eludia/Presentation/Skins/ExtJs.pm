@@ -407,8 +407,8 @@ sub draw_form_field {
 sub draw_path {
 
 	my ($_SKIN, $options, $list) = @_;
-	
-	return 'draw_path';
+		
+	return $list;
 	
 }	
 
