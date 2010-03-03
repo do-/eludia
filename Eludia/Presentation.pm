@@ -2227,31 +2227,8 @@ sub draw_toolbar_button {
 		$options -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" unless ($_REQUEST {__windows_ce});
 	
 	}		
-
-	my $cursor_state = $options -> {no_wait_cursor} ? q[; window.document.body.onbeforeunload = function() {document.body.style.cursor = 'default';};] : '';
-
-	if ($options -> {confirm}) {
-		$options -> {target} ||= '_self';
-		my $salt = rand;
-		my $msg = js_escape ($options -> {confirm});
-		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope($cursor_state '$$options{href}', '$$options{target}')} else {document.body.style.cursor = 'default'; nop ();}];
-	} elsif ($options -> {no_wait_cursor}) {
-	    $options -> {onclick} = qq[onclick="$cursor_state  void(0);"];
-	} 
 	
-	if ($options -> {href} =~ /^java/) {
-		$options -> {target} = '_self';
-	}
-
-	if ($options -> {hotkey}) {
-		$options -> {id} ||= $options;
-		$options -> {hotkey} -> {data}    = $options -> {id};
-		$options -> {hotkey} -> {off}     = $options -> {off};
-		hotkey ($options -> {hotkey});
-	}	
-		
-	$options -> {id} ||= '' . $options;
+	$_SKIN -> __adjust_button_href ($options);
 	
 	return $_SKIN -> draw_toolbar_button ($options);
 
@@ -2514,13 +2491,6 @@ sub draw_centered_toolbar_button {
 		$options -> {preconfirm} ||= $preset -> {preconfirm};
 	}	
 
-	if ($options -> {hotkey}) {
-		$options -> {id} ||= $options . '';
-		$options -> {hotkey} -> {data}    = $options -> {id};
-		$options -> {hotkey} -> {off}     = $options -> {off};
-		hotkey ($options -> {hotkey});
-	}
-
 	$options -> {href} = 'javaScript:' . $options -> {onclick} if $options -> {onclick};
 
 	check_href ($options);
@@ -2534,25 +2504,8 @@ sub draw_centered_toolbar_button {
 		$options -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
 	}
 
-	$options -> {target} ||= '_self';
+	$_SKIN -> __adjust_button_href ($options);
 
-	my $cursor_state = $options -> {no_wait_cursor} ? q[; window.document.body.onbeforeunload = function() {document.body.style.cursor = 'default';};] : '';
-
-	if ($options -> {confirm}) {
-		my $salt = rand;
-		my $msg = js_escape ($options -> {confirm});
-		$options -> {preconfirm} ||= 1;
-		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-		my $href = js_escape ($options -> {href});
-		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {$cursor_state nope ($href, '$options->{target}')} else {document.body.style.cursor = 'default'; nop ();} ];
-        } elsif ($options -> {no_wait_cursor}) {
-		$options -> {onclick} = qq{onclick="$cursor_state; void(0);"};
-	} 	
-
-	if ($options -> {href} =~ /^java/) {
-		$options -> {target} = '_self';
-	}
-	
 	return $_SKIN -> draw_centered_toolbar_button (@_);
 
 }
@@ -4402,6 +4355,8 @@ sub setup_skin {
 			user_agent
 			dump_hiddens
 			darn
+			scan2names
+			hotkey
 		));
 
 	}
