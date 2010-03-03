@@ -1251,9 +1251,13 @@ sub draw_form_field_multi_select {
 
 	check_href ($options);
 
+	my $label = $options -> {label};
+	$label =~ s/<br>/ /g;
+	$label =~ s/\s+/ /g;
+
 	my $url = dialog_open ({
 		href	=> $options -> {href} . '&multi_select=1',
-		title	=> $options -> {label},
+		title	=> $label,
 	}, {
 		dialogHeight	=> 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)',
 		dialogWidth	=> 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)',
@@ -1396,7 +1400,7 @@ sub draw_form_field_static {
 		$options -> {hidden_value} =~ s/\"/\&quot\;/gsm; #";
 	}	
 
-	if ($options -> {href} && !$_REQUEST {__edit} && !$_REQUEST {xls}) {
+	if ($options -> {href} && !$_REQUEST {__edit} && !$_REQUEST {xls} && !$_REQUEST {__only_field}) {
 		check_href ($options);
 	}
 	else {

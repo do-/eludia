@@ -155,8 +155,8 @@ EOJS
 EOJS
 		} else {
 			$_REQUEST {__script} .= <<EOJS;
-		var element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
-		if (!element) element = doc.getElementById ('input_$field_name');
+		var element = doc.getElementById ('input_$field_name');
+		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
 EOJS
 		}
