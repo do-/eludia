@@ -34,6 +34,13 @@
 	function nope (url, _target, options) {
 
 		target = _target ? _target : center;
+		
+		if (target == invisible) {
+		
+			window.open (url, 'invisible');
+					
+		}
+		else {
 
 		clear (target);
 
@@ -63,6 +70,8 @@
 		});
 
 		target.doLayout ();
+
+		}
 
 	}
 

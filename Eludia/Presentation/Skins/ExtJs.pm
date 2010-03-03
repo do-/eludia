@@ -42,6 +42,29 @@ sub register_hotkey {
 
 	my ($_SKIN, $hashref) = @_;
 
+	$hashref -> {label} =~ s{\&(.)}{<u>$1</u>} or return undef;
+	
+	return undef if $_REQUEST {__edit};
+
+	my $c = $1;
+		
+	if ($c eq '<') {
+		return 37;
+	}
+	elsif ($c eq '>') {
+		return 39;
+	}
+	elsif (lc $c eq 'æ') {
+		return 186;
+	}
+	elsif (lc $c eq 'ı') {
+		return 222;
+	}
+	else {
+		$c =~ y{ÉÖÓÊÅÍÃØÙÇÕÚÔÛÂÀÏĞÎËÄÆİß×ÑÌÈÒÜÁŞéöóêåíãøùçõúôûâàïğîëäæıÿ÷ñìèòüáş}{qwertyuiop[]asdfghjkl;'zxcvbnm,.qwertyuiop[]asdfghjkl;'zxcvbnm,.};
+		return (ord ($c) - 32);
+	}
+
 }
 
 ################################################################################
@@ -82,7 +105,7 @@ sub draw_page {
 	);
 
 	my $md5 = Digest::MD5::md5_hex ($user_subset_menu);
-	
+
 	return "$_REQUEST{__script};checkMenu('$md5');$page->{body};target.doLayout();";
 
 }
@@ -418,8 +441,21 @@ sub draw_centered_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
 	
-	return 'draw_centered_toolbar_button';
-
+	if ($options -> {href} =~ /^javaScript\:/i) {
+		
+		$options -> {handler} = $';
+	
+	}
+	else {
+	
+		$options -> {handler} = qq {nope ('$options->{href}', '$options->{target}')};
+	
+	}
+	
+	delete $options -> {$_} foreach qw (href target off);
+	
+	return '';
+	
 }
 
 ################################################################################
@@ -428,7 +464,7 @@ sub draw_centered_toolbar {
 
 	my ($_SKIN, $options, $list) = @_;
 	
-	return 'draw_centered_toolbar';
+	return $list;
 
 }
 
