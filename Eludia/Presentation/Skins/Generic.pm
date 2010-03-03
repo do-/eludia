@@ -15,4 +15,14 @@ sub js_escape {
 
 sub draw_gantt_bars {}
 
+################################################################################
+
+sub __submit_href {
+
+	my ($_SKIN, $name) = @_;
+
+	"javaScript:var f = document.$name; f.fireEvent ('onsubmit'); f.submit()";
+
+}
+
 1;
