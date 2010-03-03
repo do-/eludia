@@ -32,7 +32,9 @@
 /////////////// CORE
 
 	function nope (url, _target, options) {
-
+	
+		if (_target == '_self') _target = null;
+	
 		target = _target ? _target : center;
 		
 		if (target == invisible) {
@@ -239,8 +241,6 @@
 	}
 
 	function createFormPanel (options) {
-	
-		var form_name = options.name;
 			
 		var formOptions = {
 		
@@ -253,6 +253,7 @@
 			labelSeparator: ' ',
 
 			defaults: {width: 230},
+			id: '__form_' + options.name,
 			
 			autoScroll: true,
 

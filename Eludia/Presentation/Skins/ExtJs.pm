@@ -26,9 +26,21 @@ sub options {
 
 ################################################################################
 
+sub __submit_href {
+
+	my ($_SKIN, $name) = @_;
+
+	"javaScript:var f = ext.getDom ('__form_$name').parentNode; f.submit ()";
+
+}
+
+################################################################################
+
 sub js_set_select_option {
 
 	my ($_SKIN, $name, $item, $fallback_href) = @_;
+	
+	'';
 
 }
 
@@ -451,9 +463,7 @@ sub draw_centered_toolbar_button {
 		$options -> {handler} = qq {nope ('$options->{href}', '$options->{target}')};
 	
 	}
-	
-	delete $options -> {$_} foreach qw (href target off);
-	
+		
 	return '';
 	
 }
@@ -464,7 +474,21 @@ sub draw_centered_toolbar {
 
 	my ($_SKIN, $options, $list) = @_;
 	
-	return $list;
+	my @list = ();
+	
+	foreach my $i (@$list) {
+	
+		next if $i -> {off};
+		
+		delete $i -> {$_} foreach qw (href target off id preset html preconfirm confirm);
+
+		delete $i -> {hotkey} -> {$_} foreach qw (data off type);
+
+		push @list, $i;
+	
+	}
+
+	return \@list;
 
 }
 
