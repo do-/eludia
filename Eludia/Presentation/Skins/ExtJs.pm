@@ -620,7 +620,8 @@ sub draw_logon_form {
 			var	center = new Ext.form.FormPanel ({
 				tbar   : {},
 				region : 'center',
-				layout : 'anchor'
+				border : false,
+				layout : 'fit'
 			});
 
 			Ext.onReady (function () {
