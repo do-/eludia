@@ -46,6 +46,12 @@
 
 /////////////// FORM
 
+	var checkboxesCheckChange = function (node, checked) {
+
+		Ext.DomQuery.selectNode ("*[name='_" + node.ui.getIconEl ().parentNode.attributes ['ext:tree-node-id'].value + "']").value = checked ? 1 : '';
+
+	}
+
 	var createFieldOfType = {
 	
 		'select' : function (form, button) {
@@ -62,6 +68,7 @@
 				store: new Ext.data.JsonStore ({
 					id: 0,
 					fields: ['id', 'label'],
+					autoDestroy  : true,
 					data: values
 				}),
 
@@ -145,18 +152,13 @@
 			        margins: '5 0 5 5',
 			        width:width,
 				root: node,
-			
 				listeners : {
 				
-					checkchange : function (node, checked) {
-
-						Ext.DomQuery.selectNode ("*[name='_" + node.ui.getIconEl ().parentNode.attributes ['ext:tree-node-id'].value + "']").value = checked ? 1 : '';
-
-					}
+					checkchange : checkboxesCheckChange
 				
 				}
 
-			};					
+			};
 
 		},
 	
@@ -221,9 +223,7 @@
 
 			defaults: {width: 230},
 			
-			autoScroll  : true,
-			
-			id : form_name,
+			autoScroll: true,
 
 			listeners : {
 			
@@ -419,6 +419,7 @@
 
 					store: new Ext.data.JsonStore ({
 						id: 0,
+						autoDestroy  : true,
 						fields: ['id', 'label'],
 						data: values
 					}),
@@ -579,15 +580,8 @@
 	}
 
 	function clear (container) {
-
-		var items = container.items;
-
-		items.each (function (item) {
-
-			this.remove (item);
-			item.destroy ();
-
-		}, items);
+	
+		container.removeAll (true);
 
 	}
 
