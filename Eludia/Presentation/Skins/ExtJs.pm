@@ -26,11 +26,58 @@ sub options {
 
 ################################################################################
 
-sub __submit_href {
+sub __submit_href { "javaScript:submitFormNamed('$_[1]')" }
 
-	my ($_SKIN, $name) = @_;
+################################################################################
 
-	"javaScript:var f = ext.getDom ('__form_$name').parentNode; f.submit ()";
+sub __adjust_button_href {
+
+	my ($_SKIN, $options) = @_;
+		
+	if ($options -> {confirm}) {
+	
+		my $js_action;
+		
+		if ($options -> {href} =~ /^javaScript\:/i) {
+		
+			$js_action = $'
+		
+		}
+		else {
+
+			$options -> {target} ||= 'center';
+			
+			$js_action = "nope('$options->{href}','$options->{target}')";
+
+		}
+		
+		my $condition = 'confirm(' . js_escape ($options -> {confirm}) . ')';
+		
+		if ($options -> {preconfirm}) {
+
+			$condition = "!$options->{preconfirm}||($options->{preconfirm}&&$condition)";
+
+		}
+
+		$options -> {href} = "javascript:if($condition){$js_action}";
+		
+	}
+	
+	if ((my $h = $options -> {hotkey}) && !$h -> {off}) {
+			
+		hotkey ($h);
+		
+		$h -> {key} = delete $h -> {code};
+		
+		foreach my $name (qw (ctrl alt)) {
+		
+			delete $h -> {$name} or next;
+			
+			$h -> {$name} = \1;
+
+		}
+
+	}
 
 }
 
@@ -480,9 +527,9 @@ sub draw_centered_toolbar {
 	
 		next if $i -> {off};
 		
-		delete $i -> {$_} foreach qw (href target off id preset html preconfirm confirm);
+		delete $i -> {$_} foreach qw (href target off preset html preconfirm confirm);
 
-		delete $i -> {hotkey} -> {$_} foreach qw (data off type);
+		delete $i -> {hotkey} -> {$_} foreach qw (off type);
 
 		push @list, $i;
 	
@@ -680,6 +727,7 @@ sub draw_logon_form {
 			var	center = new Ext.form.FormPanel ({
 				tbar   : {},
 				region : 'center',
+				id     : 'center',
 				border : false,
 				layout : 'fit'
 			});

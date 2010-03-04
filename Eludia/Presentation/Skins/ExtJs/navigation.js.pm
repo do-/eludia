@@ -6,6 +6,7 @@
 	var fio			= null;
 	var menu_md5	= '';
 	var target		= null;
+	var is_dirty		= 0;
 	
 	Ext.applyIf (Array.prototype, {
 
@@ -37,47 +38,61 @@
 	
 		target = _target ? _target : center;
 		
-		if (target == invisible) {
+		if (Ext.isString (target)) {
 		
-			window.open (url, 'invisible');
-					
+			var component = Ext.ComponentMgr.get (target);
+			
+			if (component) {target = component};
+		
+		}
+		
+		if (Ext.isString (target)) {
+
+			window.open (url, target);
+
 		}
 		else {
 
-		clear (target);
+			clear (target);
 
-		Ext.Ajax.request ({
+			Ext.Ajax.request ({
 
-			url: url,
+				url: url,
 
-			success: function (response, options) {
+				success: function (response, options) {
 
-				var s = response.responseText;
+					var s = response.responseText;
 
-//				try {
+//					try {
 
-					eval (s);
+						eval (s);
 
-//				}
-//				catch (e) {
+//					}
+//					catch (e) {
 
-//					Ext.MessageBox.alert ('Ошибка', '<pre>' + e.description + "\n" + s + '</pre>');
+//						Ext.MessageBox.alert ('Ошибка', '<pre>' + e.description + "\n" + s + '</pre>');
 
-//				}
+//					}
 
 
 
-			}
+				}
 
-		});
+			});
 
-		target.doLayout ();
+			target.doLayout ();
 
 		}
 
 	}
 
 /////////////// FORM
+
+	function submitFormNamed (name) { 
+	
+		Ext.getDom('__form_' + name).parentNode.submit ();
+		
+	}
 
 	var checkboxesCheckChange = function (node, checked) {
 
@@ -239,6 +254,36 @@
 		form.add ([a]);
 
 	}
+	
+	var toolbarButtonHandler = function (b, e) {
+	
+		eval (b.__handler_source);
+	
+	}
+	
+	function createToolbarButton (options) {
+	
+		var button = new Ext.Button ({
+
+			text: options.label,
+			
+			__handler_source: options.handler,
+			
+			handler : toolbarButtonHandler
+
+		});
+		
+//		if (options.hotkey) {
+		
+//			options.hotkey.scope = button;
+
+//			new Ext.KeyMap (center.getEl (), options.hotkey, toolbarButtonHandler);
+		
+//		}
+		
+		return button;
+	
+	}
 
 	function createFormPanel (options) {
 			
@@ -275,7 +320,10 @@
 		if (options.path) formOptions.title = options.path.map (function (i) {return i.label}).join (' / ');
 			
 		var form = new Ext.Panel (formOptions);
-	
+		
+		Ext.each (options.bottom_toolbar, function (i) {form.addButton (createToolbarButton (i))});
+				
+/*	
 		if (!options.no_ok) {
 				
 			form.addButton ({text: options.label_ok}, function () {this.getEl ().dom.parentNode.submit ()}, form);
@@ -289,6 +337,7 @@
 			form.addButton ({text: options.label_cancel}, function () {nope (esc_href, this)}, target);
 			
 		}
+*/		
 		
 		form.add (new Ext.form.Hidden ({name: '__iframe_target', value: 1}));
 		
@@ -616,6 +665,8 @@
 	function clear (container) {
 	
 		container.removeAll (true);
+		
+		if (container == center) is_dirty = 0;
 
 	}
 
