@@ -210,6 +210,25 @@
 
 		},
 	
+		'static' : function (form, button) {
+
+			return new Ext.form.DisplayField ({
+				fieldLabel : button.label,
+				value      : button.value
+			});
+
+		},
+		
+		'string' : function (form, button) {
+
+			return new Ext.form.TextField ({
+				name       : '_' + button.name,
+				fieldLabel : button.label,
+				value      : button.value
+			});
+
+		},
+		
 		'date' : function (form, button) {
 
 			return new Ext.form.DateField ({

@@ -476,6 +476,28 @@ sub draw_form_field_checkboxes {
 
 ################################################################################
 
+sub draw_form_field_string {
+
+	my ($_SKIN, $options, $data) = @_;
+	
+	delete $options -> {attributes};
+	
+	return 'draw_form_field_string';
+	
+}
+
+################################################################################
+
+sub draw_form_field_static {
+
+	my ($_SKIN, $options, $data) = @_;
+		
+	return 'draw_form_field_static';
+	
+}
+
+################################################################################
+
 sub draw_form_field {
 
 	my ($_SKIN, $field, $data) = @_;
@@ -546,7 +568,7 @@ sub draw_form {
 	my ($_SKIN, $options) = @_;
 	
 	delete $options -> {data};
-	
+
 	return 'target.add (createFormPanel(' . $_JSON -> encode ($options) . '));';
 
 }
