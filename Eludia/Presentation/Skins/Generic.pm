@@ -27,6 +27,72 @@ sub __submit_href {
 
 ################################################################################
 
+sub __adjust_form_field {
+
+	my ($options) = @_;
+
+	my $attributes = ($options -> {attributes} ||= {});
+
+	$attributes -> {class}    ||= $options -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';
+
+	$attributes -> {tabindex}   = ++ $_REQUEST {__tabindex};
+
+}
+
+################################################################################
+
+sub __adjust_form_field_string {
+
+	my ($options) = @_;
+
+	$options -> {value} =~ s{\"}{\&quot;}gsm;
+
+	my $attributes = ($options -> {attributes} ||= {});
+
+	$attributes -> {value}        = \$options -> {value};
+	
+	$attributes -> {name}         = '_' . $options -> {name};
+			
+	$attributes -> {size}         = ($options -> {size} ||= 120);
+
+	$attributes -> {maxlength}    = $options -> {max_len} || $options -> {size} || 255;
+	
+	$attributes -> {autocomplete} = 'off' unless exists $attributes -> {autocomplete};
+		
+	$attributes -> {id}           = 'input_' . $options -> {name};
+
+}
+
+################################################################################
+
+sub __adjust_form_field_datetime {
+
+	__adjust_form_field_string (@_);
+
+}
+
+################################################################################
+
+sub __adjust_form_field_suggest {
+
+	my ($_SKIN, $options) = @_;
+
+	__adjust_form_field_string (@_);
+
+}
+
+################################################################################
+
+sub __adjust_form_field_hidden {
+
+	my ($options) = @_;
+
+	$options -> {value} =~ s/\"/\&quot\;/gsm; #";
+
+}
+
+################################################################################
+
 sub __adjust_button_href {
 
 	my ($_SKIN, $options) = @_;
@@ -68,6 +134,12 @@ sub __adjust_button_href {
 		$options -> {onclick} = qq {onclick="$cursor_state void(0);"};
 		
 	} 
+		
+	if ($options -> {href} =~ /^javaScript\:/i) {
+		
+		delete $options -> {target};
+		
+	}
 
 	$options -> {id} ||= '' . $options;
 
