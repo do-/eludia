@@ -4,9 +4,6 @@ no warnings;
 
 BEGIN {
 
-	require Eludia::Presentation::Skins::Generic;
-	delete $INC {"Eludia/Presentation/Skins/Generic.pm"};
-
 	our $replacement = {};
 
 }
@@ -51,7 +48,7 @@ sub __adjust_button_href {
 
 		}
 		
-		my $condition = 'confirm(' . js_escape ($options -> {confirm}) . ')';
+		my $condition = 'confirm(' . $_JSON -> encode ($options -> {confirm}) . ')';
 		
 		if ($options -> {preconfirm}) {
 
