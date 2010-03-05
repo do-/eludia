@@ -2486,40 +2486,41 @@ sub setup_skin {
 
 	unless ($_REQUEST {__skin}) {
 
-		delete $_REQUEST {__x} if $preconf -> {core_no_xml};
-
 		if ($_COOKIE {ExtJs}) {
+		
 			$_REQUEST {__skin} = 'ExtJs';
+			
 		}
 		elsif ($_REQUEST {xls}) {
+		
 			$_REQUEST {__skin} = 'XL';
+			
 		}
 		elsif (($_REQUEST {__dump} || $_REQUEST {__d}) && ($preconf -> {core_show_dump} || $_USER -> {peer_server})) {
+		
 			$_REQUEST {__skin} = 'Dumper';
-		}
-		elsif ($_REQUEST {__proto}) {
-			$_REQUEST {__skin} = 'XMLProto';
+			
 		}
 		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON') {
+		
 			$_REQUEST {__skin} = 'JSONDumper';
+			
 		}
-		elsif ($_REQUEST {__x}) {
-			$_REQUEST {__skin} = 'XMLDumper';
-		}
-		elsif ($_REQUEST {__windows_ce}) {
-			$_REQUEST {__skin} = 'WinCE';
+		else {
+
+			$_REQUEST {__skin} = ($preconf -> {core_skin} ||= 'Classic');
+
 		}
 
 	}
 
-	$_REQUEST {__skin} ||= $preconf -> {core_skin};
-	$_REQUEST {__skin} ||= 'Classic';
-
-	$_REQUEST {__skin}   = 'TurboMilk_Gecko' if $_REQUEST {__skin} =~ /^TurboMilk/ && $r -> headers_in -> {'User-Agent'} =~ /Gecko/;
-
 	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
-	eval "require $_SKIN";
-	warn $@ if $@;
+	
+	my $path = $_SKIN;
+	
+	$path    =~ s{\:\:}{/}gsm;
+	
+	require $path . '.pm';
 	
 	$_REQUEST {__static_site} = '';
 	
@@ -2587,9 +2588,7 @@ sub setup_skin {
 	$_REQUEST {__no_navigation} ||= $_SKIN -> {options} -> {no_navigation};
 	
 	check_static_files ();
-	
-#	$_REQUEST {__static_site} ||= $r -> document_root () if $ENV {REMOTE_ADDR} eq '127.0.0.1' and $^O eq 'MSWin32';
-	
+
 	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
 
 	setup_json ();
