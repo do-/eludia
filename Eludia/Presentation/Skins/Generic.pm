@@ -361,6 +361,69 @@ sub __adjust_row_cell_style {
 
 ################################################################################
 
+sub __adjust_menu_item {
+
+	my ($_SKIN, $type) = @_;
+	
+	if ($_REQUEST {__edit} && !($type -> {no_off} || $_SKIN -> {options} -> {core_unblock_navigation})) {
+	
+		$type -> {href} = "javaScript:alert('$$i18n{save_or_cancel}'); document.body.style.cursor = 'default'; nop ();";
+		
+	}
+	elsif ($type -> {no_page}) {
+	
+		$type -> {href} = "javaScript:document.body.style.cursor = 'default'; nop ()";
+		
+	} 
+
+	$type -> {onmouseout} = "menuItemOut ()";
+
+	if (ref $type -> {items} eq ARRAY && (!$_REQUEST {__edit} || $_SKIN -> {options} -> {core_unblock_navigation})) {
+
+		$type -> {onhover} = "menuItemOver(this, '$$type{name}')";
+		
+	} 
+	else {
+	
+		$type -> {onhover} = "menuItemOver(this)";
+		
+	}
+
+}
+
+################################################################################
+
+sub __adjust_vert_menu_item {
+
+	my ($_SKIN, $type, $name, $types, $level, $is_main) = @_;
+	
+	$type -> {onmouseout} = "menuItemOut ()";
+
+	if (ref $type -> {items} eq ARRAY && !$_REQUEST {__edit}) {
+
+		$type -> {onhover}    = "menuItemOver (this, '$$type{name}', '$name', $level)";		
+		
+	}
+	else {
+
+		$type -> {onhover}    = "menuItemOver (this, null, '$name', $level)";
+
+		$type -> {onclick}    = 
+		
+			$type  -> {href} =~ /^javascript\:/i ? $' : 
+			
+			$_SKIN -> {options} -> {core_unblock_navigation} ? "hideSubMenus(0); if (!check_edit_mode (this, '$$type{href}')) activate_link('$$type{href}', '$$type{target}')" :
+			
+			"hideSubMenus(0); activate_link('$$type{href}', '$$type{target}')";
+			
+		$type -> {onclick} =~ s{[\n\r]}{}gsm;
+
+	}
+
+}
+
+################################################################################
+
 sub draw_error_page {
 
 	my ($_SKIN, $page) = @_;

@@ -1303,23 +1303,7 @@ sub draw_menu {
 
 	if ($preconf -> {core_show_dump}) {
 	
-		push @$types, $_SKIN -> draw_dump_button();
-
-		push @$types, {
-			label  => 'Info',
-			href   => "/?type=_object_info&object_type=$_REQUEST{type}&id=$_REQUEST{id}",
-			side   => 'right_items',
-			no_off => 1,
-		} if $_REQUEST {id} && $DB_MODEL -> {tables} -> {$_REQUEST {type}};
-
-		push @$types, {
-			label  => 'Proto',
-			name   => '_proto',
-			href   => create_url () . '&__proto=1&__edit=' . $_REQUEST {__edit},			
-			side   => 'right_items',
-			target => '_blank',
-			no_off => 1,
-		};
+		push @$types, $_SKIN -> draw_dump_button ();
 	
 	}
 
@@ -1342,41 +1326,34 @@ sub draw_menu {
 		side  => 'right_items',
 	};
 
+	$conf -> {kb_options_menu} ||= {ctrl => 1, alt => 1};
+
 	foreach my $type (@$types)	{
 	
 		next if $type -> {off};
-	
-		$conf -> {kb_options_menu} ||= {ctrl => 1, alt => 1};
 
-		$type -> {name} ||= "$type->{items}";
-		$type -> {name} ||= "$type";
+		$type -> {href}   ||= "/?type=$$type{name}" if $type -> {name};
+
+		$type -> {href} .= "&role=$$type{role}" if $type -> {role};
+			
+		check_href ($type);
+
+		$type -> {name}   ||= ('' . $type -> {items} || '' . $type);
+
+		$type -> {side}   ||= 'left_items';
+		
+		$type -> {target} ||= '_self';
 
 		register_hotkey ($type, 'href', 'main_menu_' . $type -> {name}, $conf -> {kb_options_menu});
 		
-		if ($_REQUEST {__edit} && !($type -> {no_off} || $_SKIN -> {options} -> {core_unblock_navigation})) {
-			$type -> {href} = "javaScript:alert('$$i18n{save_or_cancel}'); document.body.style.cursor = 'default'; nop ();";
-		}
-		elsif ($type -> {no_page}) {
-			$type -> {href} = "javaScript:document.body.style.cursor = 'default'; nop ()";
-		} 
-		else {
-			$type -> {href} ||= "/?type=$$type{name}";
-			$type -> {href} .= "&role=$$type{role}" if $type -> {role};
-			check_href ($type);
-		}
-
-		$type -> {onmouseout} = "menuItemOut ()";
-
 		if (ref $type -> {items} eq ARRAY && (!$_REQUEST {__edit} || $_SKIN -> {options} -> {core_unblock_navigation})) {
-			$type -> {vert_menu} = draw_vert_menu ($type -> {name}, $type -> {items}, 0, 1);
-			$type -> {onhover} = "menuItemOver(this, '$$type{name}')";
-		} else {
-			$type -> {onhover} = "menuItemOver(this)";
-		}
-		
-		$type -> {side  } ||= 'left_items';
-		$type -> {target} ||= '_self';
 
+			$type -> {vert_menu} = draw_vert_menu ($type -> {name}, $type -> {items}, 0, 1);
+
+		} 
+		
+		$_SKIN -> {options} -> {no_server_html} or $_SKIN -> __adjust_menu_item ($type);
+		
 		push @{$_options -> {$type -> {side}}}, $type;
 	
 	}
@@ -1395,40 +1372,38 @@ sub draw_vert_menu {
 	
 	$types = [grep {!$_ -> {off}} @$types];
 	
+	my @types = ();
+	
 	foreach my $type (@$types) {
+	
+		next if $type -> {off};
 	
 		if (ref $type -> {items} eq ARRAY && !$_REQUEST {__edit}) {
 
-			my $sublevel = $level + 1;
 			$type -> {name}     ||= '' . $type if $type -> {items};
-			$type -> {vert_menu}  = draw_vert_menu ($type -> {name}, $type -> {items}, $sublevel, $is_main);
-
-			$type -> {onhover} = "menuItemOver (this, '$$type{name}', '$name', $level)";
-			$type -> {onmouseout} = "menuItemOut ()";
+			
+			$type -> {vert_menu}  = draw_vert_menu ($type -> {name}, $type -> {items}, $level + 1, $is_main);
 			
 		}
 		else {
 			
-			$type -> {onhover}    = "menuItemOver (this, null, '$name', $level)";
-			$type -> {onmouseout} = "menuItemOut ()";
-
 			$type -> {href}     ||= "/?type=$$type{name}";
+			
 			$type -> {href}      .= "&role=$$type{role}" if $type -> {role};
 
 			check_href ($type);
 
 			$type -> {target}   ||= "_self";
 
-			$type -> {onclick} = 
-				$type -> {href} =~ /^javascript\:/i ? $' : 
-				$_SKIN -> {options} -> {core_unblock_navigation} ? "hideSubMenus(0); if (!check_edit_mode (this, '$$type{href}')) activate_link('$$type{href}', '$$type{target}')" :
-				"hideSubMenus(0); activate_link('$$type{href}', '$$type{target}')";  #'
-			$type -> {onclick} =~ s{[\n\r]}{}gsm;
 		}
-	
+
+		$_SKIN -> {options} -> {no_server_html} or $_SKIN -> __adjust_vert_menu_item ($type, $name, $types, $level, $is_main);
+
+		push @types, $type;
+
 	}
 
-	return $_SKIN -> draw_vert_menu ($name, $types, $level);
+	return $_SKIN -> draw_vert_menu ($name, \@types, $level);
 
 }
 
