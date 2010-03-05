@@ -948,7 +948,9 @@ sub draw_form_field {
 
 	$field -> {label_width} = '20%' unless $field -> {is_slave};	
 
-	return $_REQUEST {__only_field} ? $_JS_SKIN -> draw_form_field ($field) : $_SKIN -> draw_form_field ($field);
+	$_REQUEST {__no_navigation} ||= $_REQUEST {__only_field};
+
+	return $_REQUEST {__only_field} ? $_SKIN -> draw_form_field__only_field ($field) : $_SKIN -> draw_form_field ($field);
 
 }
 
@@ -1028,124 +1030,7 @@ sub adjust_form_field_options {
 
 sub js_detail {
 
-	my ($options) = @_;
-
-	ref $options -> {detail} eq ARRAY or $options -> {detail} = [$options -> {detail}];
-
-	my ($codetail_js, $tab_js);
-
-	my (@all_details, @all_codetails); 
-
-	foreach my $detail_ (@{$options -> {detail}}) {
-
-		my ($detail, $codetails);
-		if (ref $detail_ eq HASH) {
-			($detail, $codetails) = (%{$detail_}); 
-		} else {
-			$detail = $detail_;
-		}
-		
-		if (defined $codetails) {
-
-			ref $codetails eq ARRAY or $codetails = [$codetails];
-
-			foreach my $codetail (@{$codetails}) {
-
-				next
-					if ((grep {$_ eq $codetail} @all_codetails) > 0);
-
-				push (@all_codetails, $codetail);
-
-			}
-
-		}
-
-
-		push @all_details, $detail;
-		
-		$tab_js .= <<EOJS;
-			element = this.form.elements['_${detail}'];
-			if (element) {
-				tabs.push (element.tabIndex);
-			}
-EOJS
-		
-	}
-
-	my $h = {href => {}};
-
-	check_href ($h);
-
-	my $script_name = $ENV {SCRIPT_NAME} eq '/' ? '' : $ENV {SCRIPT_NAME};
-	my $href = $$h{href};
-	$href =~ s{^/}{};
-	
-	$options -> {value_src} ||= 'this.value';
-	my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}=this.value&__only_field=" . (join ',', @all_details) : <<EOJS;
-		activate_link (
-
-			'$script_name/$href&__only_field=${\(join (',', @all_details))}&__only_form=' + 
-			this.form.name + 
-			'&_$$options{name}=' + 
-			$options->{value_src} + 
-			codetails_url +
-			tab
-
-			, 'invisible_$$options{name}'
-			
-			, 1
-
-		);
-EOJS
-
-
-	push @{$_REQUEST{__invisibles}}, 'invisible_' . $options -> {name};
-	
-	my $codetails = $_JSON -> encode (\@all_codetails);
-	$codetails =~ s/\"/\'/g;
-	
-	return <<EOJS;
-	
-		var element;
-		var tabs = [];
-
-		$tab_js
-		
-		var tab = tabs.length > 0 ? '&__only_tabindex=' + tabs.join (',') : '';
-		var codetails = $codetails;
-		var codetails_url = '';
-
-		for (i=0; i < codetails.length; i ++) {
-		
-			if (document.getElementById('_' + codetails[i] + '_select')) {
-				codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementById('_' + codetails[i] + '_select').value;
-
-				continue; 
-			} 
-			
-			if (document.getElementsByName('_' + codetails[i]).length > 1) {
-
-				for (j=0; j < document.getElementsByName('_' + codetails[i]).length; j ++) {
-				
-					r = document.getElementsByName('_' + codetails[i]) [j];
-
-					if (r.checked) {
-						codetails_url += '&' + '_' + codetails[i] + '=' + r.value;
-						break;
-					}
-				}
-				continue;
-			}
-
-			if (document.getElementById('_' + codetails[i])) {
-				codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementById('_' + codetails[i]).value;
-				continue; 
-			} 
-		}
-		
-		$onchange
-
-EOJS
+	return &{"$_SKIN::js_detail"} ($options);
 
 }
 
@@ -3040,7 +2925,7 @@ sub draw_page {
 	
 	$@ and return draw_error_page ($page, $@);
 	
-	($_REQUEST {__only_field} ? $_JS_SKIN : $_SKIN) -> draw_page ($page);
+	$_REQUEST {__only_field} ? $_SKIN -> draw_page__only_field ($page) : $_SKIN -> draw_page ($page);
 
 }
 
@@ -3321,10 +3206,6 @@ sub setup_skin {
 	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
 	eval "require $_SKIN";
 	warn $@ if $@;
-
-	our $_JS_SKIN = "Eludia::Presentation::Skins::JS";
-	eval "require $_JS_SKIN";
-	warn $@ if $@;
 	
 	$_REQUEST {__static_site} = '';
 	
@@ -3351,35 +3232,38 @@ sub setup_skin {
 	$_REQUEST {__static_url}  = '/i/_skins/' . $_REQUEST {__skin};
 	$_REQUEST {__static_salt} = $_REQUEST {sid} || rand ();
 
-	foreach my $package ($_SKIN, $_JS_SKIN) {
+	foreach my $package ($_SKIN) {
 
 		attach_globals ($_PACKAGE => $package, qw(
-			_PACKAGE
-			_REQUEST
-			_REQUEST_VERBATIM
+			SQL_VERSION
 			_COOKIE
 			_COOKIES
-			_USER
+			_JSON
+			_PACKAGE
 			_QUERY
+			_REQUEST
+			_REQUEST_VERBATIM
+			_SKIN
 			_SO_VARIABLES
-			SQL_VERSION
+			_SUBSET
+			_USER
+			adjust_esc
+			check_href
 			conf
+			create_url
+			darn
+			dump_attributes
+			dump_hiddens
+			dump_tag
+			hotkey
+			i18n
+			out_html
 			preconf
 			r
-			i18n
-			create_url
-			dump_attributes
-			dump_tag
-			_SUBSET
-			_JSON
-			tree_sort
-			adjust_esc
-			out_html
-			user_agent
-			dump_hiddens
-			darn
 			scan2names
-			hotkey
+			tree_sort
+			trunc_string
+			user_agent
 		));
 
 	}
