@@ -322,6 +322,45 @@ sub __adjust_button_href {
 
 ################################################################################
 
+sub __adjust_row_cell_style {
+
+	my ($data, $options) = @_;
+	
+	my $a = ($data -> {attributes} ||= {});
+
+	$a -> {colspan} = $data -> {colspan} if $data -> {colspan};
+	$a -> {rowspan} = $data -> {rowspan} if $data -> {rowspan};
+	
+	$a -> {$_} ||= ($data -> {$_} || $options -> {$_}) foreach (qw (bgcolor style));
+
+	unless ($a -> {style}) {
+	
+		delete $a -> {style};
+
+		$a -> {class} ||= (
+		
+			$data    -> {class} || 
+			
+			$options -> {class} || (
+			
+				$options -> {is_total} ? 'row-cell-total' : 
+				
+				$a -> {bgcolor}        ? 'row-cell-transparent' : 
+				
+				'row-cell'
+			
+			)
+			
+		);
+
+		$a -> {class} .= '-no-scroll' if ($data -> {no_scroll} && $data -> {attributes} -> {class} =~ /row-cell/);
+		
+	}
+
+}
+
+################################################################################
+
 sub draw_error_page {
 
 	my ($_SKIN, $page) = @_;

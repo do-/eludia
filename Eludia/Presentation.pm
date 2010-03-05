@@ -1587,28 +1587,9 @@ sub draw_row_buttons {
 
 sub _adjust_row_cell_style {
 
-	my ($data, $options) = @_;
+	return if $_SKIN -> {options} -> {no_server_html};
 
-	$data -> {attributes} ||= {};
-	$data -> {attributes} -> {colspan} = $data -> {colspan} if $data -> {colspan};
-	$data -> {attributes} -> {rowspan} = $data -> {rowspan} if $data -> {rowspan};
-	
-	$data -> {attributes} -> {bgcolor} ||= $data    -> {bgcolor};
-	$data -> {attributes} -> {bgcolor} ||= $options -> {bgcolor};
-
-	$data -> {attributes} -> {style} ||= $data    -> {style};
-	$data -> {attributes} -> {style} ||= $options -> {style};
-	
-	unless ($data -> {attributes} -> {style}) {
-		delete $data -> {attributes} -> {style};
-		$data -> {attributes} -> {class} ||= $data    -> {class};
-		$data -> {attributes} -> {class} ||= $options -> {class};
-		$data -> {attributes} -> {class} ||= 
-			$options -> {is_total} ? 'row-cell-total' : 
-			$data -> {attributes} -> {bgcolor} ? 'row-cell-transparent' : 
-			'row-cell';
-		$data -> {attributes} -> {class} .= '-no-scroll' if ($data -> {no_scroll} && $data -> {attributes} -> {class} =~ /row-cell/);
-	}	
+	&{"${_SKIN}::__adjust_row_cell_style"} (@_);
 
 }
 
