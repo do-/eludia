@@ -65,6 +65,14 @@ sub __adjust_form_field_string {
 
 ################################################################################
 
+sub __adjust_form_field_date {
+
+	__adjust_form_field_string (@_);
+
+}
+
+################################################################################
+
 sub __adjust_form_field_datetime {
 
 	__adjust_form_field_string (@_);

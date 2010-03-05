@@ -815,10 +815,34 @@ sub _adjust_field {
 
 ################################################################################
 
+sub draw_form_field_of_type {
+
+	my ($field, @other) = @_;
+
+	my $html;
+	
+	foreach my $try (0, 1) {
+
+		eval {$html = &{"draw_form_field_$$field{type}"} ($field, @other)};
+
+		$@ =~ /^Undefined subroutine/ or return $html;
+
+		my $path = "Eludia/Presentation/FormFields/$field->{type}.pm";
+
+ 		require $path;
+ 		
+ 		delete $INC {$path};
+ 		
+	}
+
+}
+
+################################################################################
+
 sub draw_form_field {
 
 	my ($field, $data, $form_options) = @_;
-		
+
 	$field = _adjust_field ($field, $data);
 
 	if (
@@ -909,20 +933,8 @@ sub draw_form_field {
 
 	$field -> {tr_id}  = 'tr_' . $field -> {name};
 	
-	foreach (0, 1) {
+	$field -> {html} = draw_form_field_of_type ($field, $data, $form_options);
 	
-		eval {$field -> {html} = &{"draw_form_field_$$field{type}"} ($field, $data, $form_options)};
-		
-		$@ =~ /^Undefined subroutine/ or last;
-
-		my $path = "Eludia/Presentation/FormFields/$field->{type}.pm";
-	
- 		require $path;
- 		
- 		delete $INC {$path};
- 		
-	}
-
 	$conf -> {kb_options_focus} ||= $conf -> {kb_options_buttons};
 	$conf -> {kb_options_focus} ||= {ctrl => 1, alt => 1};
 

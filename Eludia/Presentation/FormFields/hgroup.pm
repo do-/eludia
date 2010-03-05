@@ -1,9 +1,9 @@
 sub draw_form_field_hgroup {
 
 	my ($options, $data) = @_;
-			
+				
 	foreach my $item (@{$options -> {items}}) {
-		
+
 		ref $item or $item = {name => $item};
 	
 		next if $item -> {off} && $data -> {id};
@@ -29,8 +29,8 @@ sub draw_form_field_hgroup {
 		
 		$item -> {type} ||= 'string';
 		
-		$item -> {html}   = &{'draw_form_field_' . $item -> {type}} ($item, $data);
-		
+		$item -> {html}   = draw_form_field_of_type ($item, $data);
+
 	}
 	
 	return $_SKIN -> draw_form_field_hgroup (@_);
