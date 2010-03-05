@@ -15,7 +15,10 @@ sub options {
 	return {
 	
 		core_unblock_navigation => $preconf -> {core_unblock_navigation},
+		
 		no_trunc_string => 1,
+		
+		no_server_html  => 1,
 		
 	};
 	
