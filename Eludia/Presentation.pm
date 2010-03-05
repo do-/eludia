@@ -817,23 +817,9 @@ sub _adjust_field {
 
 sub draw_form_field_of_type {
 
-	my ($field, @other) = @_;
+	my ($field) = @_;
 
-	my $html;
-	
-	foreach my $try (0, 1) {
-
-		eval {$html = &{"draw_form_field_$$field{type}"} ($field, @other)};
-
-		$@ =~ /^Undefined subroutine/ or return $html;
-
-		my $path = "Eludia/Presentation/FormFields/$field->{type}.pm";
-
- 		require $path;
- 		
- 		delete $INC {$path};
- 		
-	}
+	return call_from_file ("Eludia/Presentation/FormFields/$field->{type}.pm", "draw_form_field_$$field{type}", @_);
 
 }
 

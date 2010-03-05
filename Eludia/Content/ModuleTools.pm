@@ -469,6 +469,30 @@ sub require_fresh {
 
 ################################################################################
 
+sub call_from_file {
+
+	my ($path, $sub_name, @params) = @_;
+
+	my @result;
+
+	foreach my $try (0, 1) {
+
+		eval {@result = &$sub_name (@params)};
+
+		$@ =~ /^Undefined subroutine/ or last;
+
+ 		require $path;
+ 
+		delete $INC {$path};
+ 
+	}
+
+	return wantarray ? @result : $result [0];
+
+}
+
+################################################################################
+
 sub call_for_role {
 
 	my $sub_name = shift;
