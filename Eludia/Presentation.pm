@@ -1012,6 +1012,8 @@ sub draw_path {
 
 sub adjust_form_field_options {
 
+	return if $_SKIN -> {options} -> {no_server_html};
+
 	my ($options) = @_;
 	
 	foreach (map {$_SKIN . '::__adjust_form_field' . $_} ('', "_$options->{type}")) {
@@ -3050,7 +3052,7 @@ sub draw_error_page {
 	
 	$_REQUEST {error} ||= $_[1];
 	
-	Carp::cluck $_REQUEST {error};
+	Carp::cluck ($_REQUEST {error});
 	
 	if ($_REQUEST {error} =~ s{^\#(\w+)\#\:}{}) {
 	
@@ -3073,8 +3075,6 @@ sub draw_error_page {
 sub draw_redirect_page {
 
 	my ($page) = @_;
-
-	setup_skin ({kind => 'redirect'});
 
 	return $_SKIN -> draw_redirect_page ($page);
 
@@ -3317,13 +3317,6 @@ sub setup_skin {
 	$_REQUEST {__skin} ||= 'Classic';
 
 	$_REQUEST {__skin}   = 'TurboMilk_Gecko' if $_REQUEST {__skin} =~ /^TurboMilk/ && $r -> headers_in -> {'User-Agent'} =~ /Gecko/;
-
-	$options -> {kind} = 'error' if $_REQUEST {error};
-
-	if ($options -> {kind} && !$_REQUEST {__response_started}) {
-		eval "require Eludia::Presentation::Skins::$_REQUEST{__skin}";
-		$_REQUEST {__skin} = (${"Eludia::Presentation::Skins::$_REQUEST{__skin}::replacement"} -> {$options->{kind}} ||= $_REQUEST {__skin});
-	}
 
 	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
 	eval "require $_SKIN";
