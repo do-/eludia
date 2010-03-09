@@ -157,6 +157,14 @@ sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 	
+	if ($page -> {body} =~ /\<html\>\s*$/ism) {
+	
+		$_REQUEST {__content_type} = 'text/html; charset=' . $i18n -> {_charset};
+
+		return $page -> {body};
+	
+	}
+
 	my $user_subset_menu = Data::Dumper::Dumper (
 		
 		&{$_PACKAGE . 'get_user_subset_menu'} ()
@@ -164,6 +172,8 @@ sub draw_page {
 	);
 
 	my $md5 = Digest::MD5::md5_hex ($user_subset_menu);
+
+	$_REQUEST {__content_type} = 'text/javascript; charset=' . $i18n -> {_charset};
 
 	return "$_REQUEST{__script};checkMenu('$md5');$page->{body};target.doLayout();";
 
