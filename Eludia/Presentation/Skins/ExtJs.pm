@@ -635,6 +635,7 @@ sub draw_logon_form {
 		<script type="text/javascript">
 
 			var oldSubset = '';
+			var sid	      = @{[ $_JSON -> encode ($_REQUEST {sid}) ]};
 			
 			Ext.Ajax.defaultHeaders = {
 				'Content-Type-Charset': '$$i18n{_charset}'

@@ -2,7 +2,6 @@
 	Ext.util.Cookies.set ('ExtJs', 1);
 	Ext.Ajax.url        = '/';
 
-	var sid			= null;
 	var fio			= null;
 	var menu_md5	= '';
 	var target		= null;
