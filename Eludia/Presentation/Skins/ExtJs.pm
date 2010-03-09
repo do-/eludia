@@ -783,7 +783,7 @@ sub draw_logon_form {
 	</head>
 
 	<body>
-		<iframe name=invisible src="about:blanc" width=0 height=0 application="yes">
+		<iframe name=invisible src="about:blank" width=0 height=0 application="yes">
 		</iframe>
 	</body>
 
