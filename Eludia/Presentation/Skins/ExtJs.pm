@@ -175,7 +175,7 @@ sub draw_page {
 
 	$_REQUEST {__content_type} = 'text/javascript; charset=' . $i18n -> {_charset};
 
-	return "$_REQUEST{__script};checkMenu('$md5');$page->{body};target.doLayout();";
+	return "$_REQUEST{__script};ui.checkMenu('$md5');$page->{body};ui.target.doLayout();";
 
 }
 
@@ -322,7 +322,7 @@ sub draw_table {
 	
 	my $base_params = $_JSON -> encode (\%base_params);
 
-	return "target.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions, $base_params, $toolbar));"
+	return "ui.target.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions, $base_params, $toolbar));"
 	
 }
 
@@ -579,7 +579,7 @@ sub draw_form {
 	
 	delete $options -> {data};
 
-	return 'target.add (createFormPanel(' . $_JSON -> encode ($options) . '));';
+	return 'ui.target.add (createFormPanel(' . $_JSON -> encode ($options) . '));';
 
 }
 
@@ -633,41 +633,43 @@ sub draw_logon_form {
 		</style>
 
 		<script type="text/javascript">
-
-			var oldSubset = '';
-			var sid	      = @{[ $_JSON -> encode ($_REQUEST {sid}) ]};
 			
 			Ext.Ajax.defaultHeaders = {
 				'Content-Type-Charset': '$$i18n{_charset}'
 			};
+			
+			var ui = {
+				sid : @{[ $_JSON -> encode ($_REQUEST {sid}) ]},
+				panels : {}
+			};
 
-			function checkMenu (md5) {
+			ui.checkMenu = function (md5) {
 
-				if (menu_md5 != md5) refreshSubset (subsetCombo, null, 0);
+				if (menu_md5 != md5) ui.refreshSubset (ui.subsetCombo, null, 0);
 
 			}
 
-			var refreshSubset = function (combo, record, index) {
+			ui.refreshSubset = function (combo, record, index) {
 
-				subsetStore.proxy.setUrl ("/?type=menu&action=serialize&sid=" + sid + "&__subset=" + (
+				ui.subsetStore.proxy.setUrl ("/?type=menu&action=serialize&sid=" + ui.sid + "&__subset=" + (
 
 					record ? record.data.name : combo.getValue ()
 
 				));
 
-				subsetStore.load ({
+				ui.subsetStore.load ({
 
 					params   : {},
-					scope    : subsetStore,
+					scope    : ui.subsetStore,
 					callback : function () {
 
-						var data = subsetStore.reader.jsonData;
+						var data = ui.subsetStore.reader.jsonData;
 
-						subsetCombo.setValue (data.user.subset);
+						ui.subsetCombo.setValue (data.user.subset);
 												
-						createMenu (center.getTopToolbar (), data.__menu, oldSubset != data.user.subset);
+						createMenu (center.getTopToolbar (), data.__menu, ui.oldSubset != data.user.subset);
 
-						oldSubset = data.user.subset;
+						ui.oldSubset = data.user.subset;
 
 						menu_md5 = data.md5;
 
@@ -681,7 +683,7 @@ sub draw_logon_form {
 
 			}
 
-			var	subsetStore = new Ext.data.JsonStore ({
+			ui.subsetStore = new Ext.data.JsonStore ({
 
 				url        : "/",
 				root       : "__subsets",
@@ -691,7 +693,7 @@ sub draw_logon_form {
 			});
 
 
-			var	subsetCombo = new Ext.form.ComboBox ({
+			ui.subsetCombo = new Ext.form.ComboBox ({
 
 				editable         : false,
 				forceSelection   : true,
@@ -707,11 +709,11 @@ sub draw_logon_form {
 
 				listeners        : {
 
-					select : refreshSubset
+					select : ui.refreshSubset
 
 				},
 
-				store: subsetStore
+				store: ui.subsetStore
 
 			});
 
@@ -733,7 +735,7 @@ sub draw_logon_form {
 
 			});
 
-			var exitButton = new Ext.Button ({
+			ui.exitButton = new Ext.Button ({
 
 				text       : 'Выход',
 				icon       : '/i/ext/examples/shared/icons/fam/user_delete.png',
@@ -742,18 +744,19 @@ sub draw_logon_form {
 				listeners  : {click : applicationExit}
 
 			});
+			
+			ui.fioLabel = new Ext.form.Label ({
+				text : fio
+			});
 
 			north.add ([
 
 				new Ext.form.Label ({html : '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/i/logo_in.gif"></img>'}),
 				new Ext.form.Label ({text : 'Бизнес-процесс: '}),
-
-				subsetCombo,
-
-				new Ext.form.Label ({text : fio}),
+				ui.subsetCombo,
+				ui.fioLabel,
 				new Ext.form.Label ({text : ' ', flex : 1}),
-
-				exitButton
+				ui.exitButton
 
 			]);
 

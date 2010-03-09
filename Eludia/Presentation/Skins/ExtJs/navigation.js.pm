@@ -4,7 +4,6 @@
 
 	var fio			= null;
 	var menu_md5	= '';
-	var target		= null;
 	var is_dirty		= 0;
 	
 	Ext.applyIf (Array.prototype, {
@@ -35,7 +34,7 @@
 	
 		if (_target == '_self') _target = null;
 	
-		target = _target ? _target : center;
+		var target = _target ? _target : center;
 		
 		if (Ext.isString (target)) {
 		
@@ -51,6 +50,8 @@
 
 		}
 		else {
+		
+			ui.target = target;
 
 			clear (target);
 
@@ -340,23 +341,7 @@
 		var form = new Ext.Panel (formOptions);
 		
 		Ext.each (options.bottom_toolbar, function (i) {form.addButton (createToolbarButton (i))});
-				
-/*	
-		if (!options.no_ok) {
-				
-			form.addButton ({text: options.label_ok}, function () {this.getEl ().dom.parentNode.submit ()}, form);
-			
-		}
-		
-		if (!options.no_cancel) {
-		
-			var esc_href = options.esc + '&sid=' + sid;
-		
-			form.addButton ({text: options.label_cancel}, function () {nope (esc_href, this)}, target);
-			
-		}
-*/		
-		
+
 		form.add (new Ext.form.Hidden ({name: '__iframe_target', value: 1}));
 		
 		for (var r = 0; r < options.rows.length; r ++) {
@@ -643,7 +628,7 @@
 
 		if (options.name) {
 
-			var href = '/?sid=' + sid + '&type=' + b.options.name;
+			var href = '/?sid=' + ui.sid + '&type=' + b.options.name;
 
 			href += '&_salt=' + Math.random ();
 
