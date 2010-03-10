@@ -603,10 +603,47 @@
 	
 	}
 	
+
+
+
+Ext.ux.EludiaGridPanel = Ext.extend (Ext.grid.GridPanel, {
+
+    processEvent : function(name, e){
+        this.fireEvent(name, e);
+        var t = e.getTarget(),
+            v = this.view,
+            header = v.findHeaderIndex(t);
+            
+        if(header !== false){
+            this.fireEvent('header' + name, this, header, e);
+        }else{
+            var row = v.findRowIndex(t),
+                cell,
+                body;
+            if(row !== false){
+                this.fireEvent('row' + name, this, row, e);
+                cell = v.findCellIndex(t);
+                body = v.findRowBody(t);
+                if(cell !== false){
+                    this.fireEvent('cell' + name, this, row, cell, e);
+                }
+                if(body){
+                    this.fireEvent('rowbody' + name, this, row, e);
+                }
+            }else{
+                this.fireEvent('container' + name, this, e);
+            }
+        }
+	if (this.view) this.view.processEvent(name, e);
+    }
+
+});
+
 	var tableCellClicked = function (grid, row, col, e) {
 	
 		var href = grid.store.reader.jsonData.href [row] [col];
-		
+
+/*		
 		ui.target = new Ext.Window ({
 		
 			layout:'fit',
@@ -615,11 +652,10 @@
 			height:300
 		
 		});
+*/		
 				
 		if (href) nope (href, ui.target);
-		
-		e.stopEvent ();
-	
+			
 	}
 
 	function createGridPanel (data, columns, storeOptions, fields, panelOptions, base_params, buttons) {
@@ -653,7 +689,7 @@
 
 		}
 
-		return new Ext.grid.GridPanel (panelOptions);
+		return new Ext.ux.EludiaGridPanel (panelOptions);
 
 	}
 
