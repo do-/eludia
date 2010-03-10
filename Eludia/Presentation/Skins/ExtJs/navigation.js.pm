@@ -34,7 +34,7 @@
 	
 		if (_target == '_self') _target = null;
 	
-		var target = _target ? _target : center;
+		var target = _target ? _target : ui.panel.center;
 		
 		if (Ext.isString (target)) {
 		
@@ -296,7 +296,7 @@
 		
 //			options.hotkey.scope = button;
 
-//			new Ext.KeyMap (center.getEl (), options.hotkey, toolbarButtonHandler);
+//			new Ext.KeyMap (ui.panel.center.getEl (), options.hotkey, toolbarButtonHandler);
 		
 //		}
 		
@@ -669,7 +669,7 @@
 	
 		container.removeAll (true);
 		
-		if (container == center) is_dirty = 0;
+		if (container == ui.panel.center) is_dirty = 0;
 
 	}
 

@@ -639,13 +639,13 @@ sub draw_logon_form {
 			};
 			
 			var ui = {
-				sid : @{[ $_JSON -> encode ($_REQUEST {sid}) ]},
-				panels : {}
+				sid   : @{[ $_JSON -> encode ($_REQUEST {sid}) ]},
+				panel : {}
 			};
 
 			ui.checkMenu = function (md5) {
 
-				if (menu_md5 != md5) ui.refreshSubset (ui.subsetCombo, null, 0);
+				if (ui.menu_md5 != md5) ui.refreshSubset (ui.subsetCombo, null, 0);
 
 			}
 
@@ -667,15 +667,17 @@ sub draw_logon_form {
 
 						ui.subsetCombo.setValue (data.user.subset);
 												
-						createMenu (center.getTopToolbar (), data.__menu, ui.oldSubset != data.user.subset);
+						createMenu (ui.panel.center.getTopToolbar (), data.__menu, ui.oldSubset != data.user.subset);
+						
+						ui.fioLabel.setText (data.user.label);
 
 						ui.oldSubset = data.user.subset;
 
-						menu_md5 = data.md5;
+						ui.menu_md5 = data.md5;
 
 						combo.collapse ();
 
-						center.focus ();
+						ui.panel.center.focus ();
 
 					}
 
@@ -717,7 +719,7 @@ sub draw_logon_form {
 
 			});
 
-			var	north = new Ext.form.FormPanel ({
+			ui.panel.north = new Ext.form.FormPanel ({
 
 				frame:true,
 				bodyStyle:'padding:1px 1px 0',
@@ -749,7 +751,7 @@ sub draw_logon_form {
 				text : fio
 			});
 
-			north.add ([
+			ui.panel.north.add ([
 
 				new Ext.form.Label ({html : '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="/i/logo_in.gif"></img>'}),
 				new Ext.form.Label ({text : 'Бизнес-процесс: '}),
@@ -760,7 +762,7 @@ sub draw_logon_form {
 
 			]);
 
-			var	center = new Ext.form.FormPanel ({
+			ui.panel.center = new Ext.form.FormPanel ({
 				tbar   : {},
 				region : 'center',
 				id     : 'center',
@@ -770,15 +772,15 @@ sub draw_logon_form {
 
 			Ext.onReady (function () {
 
-				var viewport = new Ext.Viewport ({
+				ui.viewport = new Ext.Viewport ({
 
 					layout: 'border',
 
-					items: [north, center]
+					items: [ui.panel.north, ui.panel.center]
 
 				});
 
-				nope ("/?type=logon&action=check");
+				ui.checkMenu (-1);
 
 			});
 

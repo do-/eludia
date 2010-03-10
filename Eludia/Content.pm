@@ -588,7 +588,13 @@ sub get_user_subset_menu {
 
 	my $content = {
 	
-		user      => {subset => $_REQUEST {__subset} || $_USER -> {subset}},
+		user => {
+		
+			label  => $_USER -> {label},
+			
+			subset => $_REQUEST {__subset} || $_USER -> {subset},
+			
+		},
 
 		__subsets => $_SUBSET -> {items},
 		
