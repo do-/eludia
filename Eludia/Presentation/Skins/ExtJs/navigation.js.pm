@@ -74,7 +74,7 @@
 
 //					}
 
-
+					try { ui.target.show () } catch (e) {}
 
 				}
 
@@ -603,11 +603,22 @@
 	
 	}
 	
-	var tableCellClicked = function (grid, row, col) {
+	var tableCellClicked = function (grid, row, col, e) {
 	
 		var href = grid.store.reader.jsonData.href [row] [col];
 		
-		if (href) nope (href);
+		ui.target = new Ext.Window ({
+		
+			layout:'fit',
+			modal:true,
+			width:500,
+			height:300
+		
+		});
+				
+		if (href) nope (href, ui.target);
+		
+		e.stopEvent ();
 	
 	}
 
