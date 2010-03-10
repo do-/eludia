@@ -235,31 +235,17 @@ sub draw_table {
 	
 	my $n = 0 + @{$options -> {header}};
 	
-	my @rows = ();
-	
-	foreach my $i (@$list) {
+	my @rows = map {$_ -> {__field_values}} @$list;
 
-		my $field_values = $i -> {__field_values};
-		
-		$n ||= 0 + @$field_values;
-		
-		my %field_values = (id => $i -> {id});
-		
-		foreach my $j (0 .. @$field_values - 1) {
-		
-			$field_values {"f$j"} = $field_values -> [$j]
-		
-		}
-
-		push @rows, \%field_values;
-
-	}
-	
 	my $content = {
 		
-		success => \1,
+		success          => \1,
+		
+		cell_hrefs       => \%cell_hrefs,
+		
+		cell_href_prefix => $_REQUEST {__uri_root_common},
 	
-		root    => \@rows,
+		root             => \@rows,
 		
 	};
 	
@@ -289,6 +275,8 @@ sub draw_table {
 
 	my $data = $_JSON -> encode ($content);
 	
+	%cell_hrefs = ();
+
 	!exists $_REQUEST {__only_table} or return out_html ({}, $data);
 	
 	my $columns  = $_JSON -> encode ($options -> {header} ||= [
@@ -321,7 +309,7 @@ sub draw_table {
 	$base_params {__only_table} = $options -> {name};
 	
 	my $base_params = $_JSON -> encode (\%base_params);
-
+	
 	return "ui.target.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions, $base_params, $toolbar));"
 	
 }
@@ -383,10 +371,34 @@ sub draw_toolbar {
 sub draw_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
-
-	push @{${$_PACKAGE . 'i'} -> {__field_values}}, $data -> {label};
+	
+	my $i = ${$_PACKAGE . 'i'};
+	
+	my $v = ($i -> {__field_values} ||= {
 		
-	return undef;
+		id   => $i -> {id}, 
+		
+		cnt  => 0,
+		
+	});
+
+	if ($data -> {href}) {
+			
+		my $l = length $_REQUEST {__uri_root_common};
+
+		if ($_REQUEST {__uri_root_common} eq substr $data -> {href}, 0, $l) {
+		
+			$data -> {href} = substr $data -> {href}, $l;
+		
+		}
+			
+		push @{$cell_hrefs {$data -> {href}}}, [$i -> {__n}, $v -> {cnt}];
+
+	}
+
+	$v -> {'f' . ($v -> {cnt} ++)} = $data -> {label};
+
+	return 1;
 	
 }
 

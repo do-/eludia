@@ -574,6 +574,42 @@
 		return tb;
 
 	};
+	
+	var tableStoreLoaded = function (jsonStore) {
+			
+		var data = jsonStore.reader.jsonData;
+		
+		cell_hrefs = data.cell_hrefs;
+		
+		data.href = [];
+		
+		for (href in cell_hrefs) {
+		
+			var full_href = data.cell_href_prefix + href;
+					
+			var list = cell_hrefs [href];
+			
+			for (var i = 0; i < list.length; i ++) {
+			
+				var c = list [i];
+				
+				if (!data.href [c [0]]) data.href [c [0]] = [];
+				
+				data.href [c [0]] [c [1]] = full_href;
+			
+			}
+		
+		}
+	
+	}
+	
+	var tableCellClicked = function (grid, row, col) {
+	
+		var href = grid.store.reader.jsonData.href [row] [col];
+		
+		if (href) nope (href);
+	
+	}
 
 	function createGridPanel (data, columns, storeOptions, fields, panelOptions, base_params, buttons) {
 
@@ -587,9 +623,15 @@
 		storeOptions.baseParams  = base_params;
 
 		panelOptions.store    = new Ext.data.JsonStore (storeOptions);
+		tableStoreLoaded      (panelOptions.store);
+		panelOptions.store.on ('load', tableStoreLoaded);
+		
 		panelOptions.colModel = new Ext.grid.ColumnModel ({columns: columns});
 		panelOptions.sm       = new Ext.grid.RowSelectionModel ({singleSelect:true});
 		if (buttons.length > 0)	panelOptions.tbar = createGridToolbar (buttons, panelOptions.store);
+		
+		if (!panelOptions.listeners) panelOptions.listeners = {};
+		if (!panelOptions.listeners.cellclick) panelOptions.listeners.cellclick = tableCellClicked;
 
 		if (data.total) {
 
