@@ -205,6 +205,8 @@ sub esc_href {
 	}
 
 	$href = check_href ({href => $href}, 1);
+	
+	$href =~ s{&__only_table=\w+}{};
 
 	return "${href}&__next_query_string=$_REQUEST{__last_query_string}";
 
