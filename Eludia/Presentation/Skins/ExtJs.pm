@@ -597,6 +597,38 @@ sub draw_form {
 
 ################################################################################
 
+sub draw_redirect_page {
+
+	my ($_SKIN, $options) = @_;
+
+	my $target = $options -> {target} ? "'$$options{target}'" : 'null';
+	
+	if ($options -> {label}) {
+
+		$options -> {before} = 'Ext.MessageBox.alert (' . $_JSON -> encode ($options -> {label}) . ');';
+
+	}
+	
+	my $js = qq {
+	
+		$options->{before};
+		
+		nope ('$options->{url}&_salt=' + Math.random (), $target);
+	
+	};
+	
+	return qq {<html><head><script>
+	
+		var w = window.name == 'invisible' ? window.parent : window;
+	
+		w.eval (@{[$_JSON -> encode ($js)]});
+	
+	</script></head></html>}
+
+}
+
+################################################################################
+
 sub draw_error_page {
 
 	my ($_SKIN, $page) = @_;
