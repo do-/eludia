@@ -658,7 +658,7 @@ Ext.ux.EludiaGridPanel = Ext.extend (Ext.grid.GridPanel, {
 			
 	}
 
-	function createGridPanel (data, columns, storeOptions, fields, panelOptions, base_params, buttons) {
+	function createGridPanel (data, columns, storeOptions, fields, panelOptions, base_params, buttons, scrollable_table_row) {
 
 		adjust_column_widths (columns, data.root);
 
@@ -688,8 +688,16 @@ Ext.ux.EludiaGridPanel = Ext.extend (Ext.grid.GridPanel, {
 			});
 
 		}
+		
+		var grid = new Ext.ux.EludiaGridPanel (panelOptions);
+		
+		grid.on ("render", function () {
+		
+			grid.getSelectionModel ().selectRow (scrollable_table_row);
+		
+		}, grid, {delay: 200});
 
-		return new Ext.ux.EludiaGridPanel (panelOptions);
+		return grid;
 
 	}
 

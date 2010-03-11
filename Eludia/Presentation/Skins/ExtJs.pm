@@ -310,7 +310,9 @@ sub draw_table {
 	
 	my $base_params = $_JSON -> encode (\%base_params);
 	
-	return "ui.target.add (createGridPanel ($data, $columns, $storeOptions, $fields, $panelOptions, $base_params, $toolbar));"
+	$_REQUEST {__scrollable_table_row} += 0;
+	
+	return qq {ui.target.add (createGridPanel($data,$columns,$storeOptions,$fields,$panelOptions,$base_params,$toolbar,$_REQUEST{__scrollable_table_row}));};
 	
 }
 
