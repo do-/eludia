@@ -404,7 +404,28 @@
 		
 			var button = buttons [i];
 			
-			if (button.type == 'input_text') {
+			if (button.type == 'button') {
+			
+				if (!button.target) button.target = 'invisible';
+			
+				var f = new Ext.Button ({
+				
+					text    : button.label,
+					
+					href    : button.href,
+					
+					handler : button.target == 'invisible' ?  
+
+						function (b) {document.frames ['invisible'].location.href = b.href} : 
+
+						function () {nope (button.href, button.target);}
+				
+				});
+
+				tb.add (f);
+
+			}
+			else if (button.type == 'input_text') {
 
 				if (button.label) tb.add (button.label + ': ');
 
@@ -446,10 +467,6 @@
 			}
 			else if (button.type == 'input_date') {
 
-
-
-
-
 				if (button.label) tb.add (button.label + ': ');
 
 				var f = new Ext.form.DateField ({
@@ -485,13 +502,6 @@
 				});
 
 				tb.add (f);
-
-
-
-
-
-
-
 
 			}
 			else if (button.type == 'input_select') {
