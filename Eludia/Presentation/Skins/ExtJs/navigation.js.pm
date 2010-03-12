@@ -32,6 +32,20 @@
 
 	function nope (url, _target, options) {
 	
+		if (!ui.sid) {
+		
+			var m = url.match (/sid\=\d+/);
+			
+			if (m && m [0]) {
+
+				ui.sid = m [0].substr (4);
+				
+				return ui.init ();
+
+			}
+
+		}
+	
 		if (_target == '_self') _target = null;
 	
 		var target = _target ? _target : ui.panel.center;

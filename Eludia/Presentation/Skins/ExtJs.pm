@@ -815,18 +815,96 @@ sub draw_logon_form {
 				border : false,
 				layout : 'fit'
 			});
+			
+			ui.viewportOptions = {			
+				layout: 'border',
+				items: [ui.panel.north, ui.panel.center]
+			}
+			
+			ui.init = function () {
+
+				ui.viewport = new Ext.Viewport (ui.viewportOptions);
+
+				if (ui.loginForm) ui.loginForm.close ();
+
+				ui.checkMenu (-1);
+				
+				return null;
+
+			}
 
 			Ext.onReady (function () {
+			
+				if (ui.sid) return ui.init ();
+				
+				var loginFormPanel =  new Ext.FormPanel ({ 
 
-				ui.viewport = new Ext.Viewport ({
+					labelWidth   : 80,
+					url          : '/', 
+					frame        : true, 
+					title        : '$i18n->{authorization}', 
+					defaultType  : 'textfield',
+					monitorValid : true,
 
-					layout: 'border',
+					items:[
+						{ 
+							name:'type', 
+							inputType:'hidden', 
+							value:'logon'
+						},
+						{ 
+							name:'action', 
+							inputType:'hidden', 
+							value:'execute'
+						},
+						{ 
+							name:'__iframe_target', 
+							inputType:'hidden', 
+							value:'invisible'
+						},
+						{ 
+							fieldLabel:'$i18n->{login}', 
+							name:'login', 
+							allowBlank:false 
+						},
+						{ 
+							fieldLabel:'$i18n->{password}', 
+							name:'password', 
+							inputType:'password', 
+							allowBlank:false 
+						}
+					],
 
-					items: [ui.panel.north, ui.panel.center]
+					buttons: [
+
+						{ 
+							text:'$i18n->{execute_logon}',
+							formBind: true,
+							handler:function () { 
+								var f = loginFormPanel.getForm ().getEl ().dom;
+								f.target = 'invisible';
+								f.submit ();
+							} 
+						}
+
+					] 
 
 				});
 
-				ui.checkMenu (-1);
+				ui.loginForm = new Ext.Window ({
+
+					layout    :'fit',
+					width     : 300,
+					height    : 150,
+					closable  : false,
+					resizable : false,
+					plain     : true,
+					border    : false,
+					items     : [loginFormPanel]
+
+				});
+	
+				ui.loginForm.show ();
 
 			});
 
