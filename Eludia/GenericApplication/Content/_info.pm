@@ -58,7 +58,6 @@ sub select__info {
 			
 			id    => 'WEB server',
 			label => $ENV {SERVER_SOFTWARE},
-			path  => $^X,
 		
 		},	
 
@@ -116,6 +115,10 @@ sub select__info {
 		},
 
 	]};
+	
+	my $exe = $^X;
+	
+	$data -> {rows} -> [$exe =~ /perl(\.\w+)?/ ? 2 : 1] -> {path} = $exe;
 	
 	foreach my $i (@{$data -> {rows}}) {
 	

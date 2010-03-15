@@ -14,8 +14,12 @@ sub sql_version {
 
 	$version -> {string} = $version -> {strings} -> [0];
 	
-	$version -> {number} = ($version -> {string} =~ /([\d\.]+)/g) [-1];
+	if ($version -> {string} =~ /release ([\d\.]+)/i) {
 	
+		$version -> {number} = $1;
+	
+	}
+
 	$version -> {string} =~ s{ release.*}{}i;
 
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
