@@ -4,23 +4,67 @@ no warnings;
 
 sub handler {
 
-	my $time = 
-
-	setup_request_params     (@_);				$time = __log_profilinig ($time, '<setup_request_params>');	my $request_time = 1000 * (time - $first_time);
-
-	require_config           (  );				$time = __log_profilinig ($time, '<require_config>');
-
-	sql_reconnect            (  );				$time = __log_profilinig ($time, '<sql_reconnect>');
-
-	require_model            (  );				$time = __log_profilinig ($time, '<require_model>');		__log_request_profilinig ($request_time);
-
-	authentication_is_needed (  ) or return _ok ();		$time = __log_profilinig ($time, '<authentication_is_needed>');
-
-	setup_user               (  ) or return _ok ();		$time = __log_profilinig ($time, '<setup_user>');
-
+	my $time = time ();
+	
+	return _ok () if eval { page_is_not_needed (\$time, @_) };
+	
+	if ($@) {
+	
+		warn "$@\n";
+		
+		setup_json ();
+		
+		my $s = $_JSON -> encode ($@);
+	
+		out_html ({}, qq {
+		
+			<html>
+				<head>
+					<script>
+					
+						var s = $s;
+						
+						var d = window.top.document;
+						
+						d.write ('<pre>' + s + '</s>');
+						
+						d.close ();
+					
+					</script>
+				</head>
+			</html>
+		
+		});
+		
+		return _ok ();
+	
+	}
+	
 	my $page = setup_page    (  );				$time = __log_profilinig ($time, '<setup_page>');
 
 	return &{"handle_request_of_type_$page->{request_type}"} ($page);
+
+}
+
+#################################################################################
+
+sub page_is_not_needed {
+
+	my $ptime = shift;
+
+	setup_request_params     (@_);				$$ptime = __log_profilinig ($$ptime, '<setup_request_params>');	my $request_time = 1000 * (time - $first_time);
+
+	require_config           (  );				$$ptime = __log_profilinig ($$ptime, '<require_config>');
+
+	sql_reconnect            (  );				$$ptime = __log_profilinig ($$ptime, '<sql_reconnect>');
+
+	require_model            (  );				$$ptime = __log_profilinig ($$ptime, '<require_model>');		__log_request_profilinig ($request_time);
+
+	authentication_is_needed (  ) or return 1;		$$ptime = __log_profilinig ($$ptime, '<authentication_is_needed>');
+
+	setup_user               (  ) or return 1;		$$ptime = __log_profilinig ($$ptime, '<setup_user>');
+	
+	return 0;
 
 }
 
