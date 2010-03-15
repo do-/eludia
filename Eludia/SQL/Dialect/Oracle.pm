@@ -16,6 +16,8 @@ sub sql_version {
 	
 	$version -> {number} = ($version -> {string} =~ /([\d\.]+)/g) [-1];
 	
+	$version -> {string} =~ s{ release.*}{}i;
+
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
 	
 	$conf -> {db_date_format} ||= 'yyyy-mm-dd hh24:mi:ss';
