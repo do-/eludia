@@ -14,7 +14,7 @@ sub sql_version {
 
 	$version -> {string} = $version -> {strings} -> [0];
 	
-	($version -> {number}) = $version -> {string} =~ /([\d\.]+)/;
+	$version -> {number} = ($version -> {string} =~ /([\d\.]+)/g) [-1];
 	
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
 	

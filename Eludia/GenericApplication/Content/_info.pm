@@ -57,6 +57,7 @@ sub select__info {
 		{
 			id    => 'DBMS',
 			label => $SQL_VERSION -> {string},
+			version => $SQL_VERSION -> {number},
 		},
 
 		{

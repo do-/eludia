@@ -33,12 +33,23 @@ sub draw__info {
 			
 			}
 			
+			if ($i -> {version}) {
+			
+				$i -> {product} = $i -> {label};
+			
+			}
+			else {
+
+				($i -> {product}, $i -> {version}) = split m{[ /]}, $i -> {label};
+
+			}
+			
 			my ($product, $version) = split m{[ /]}, $i -> {label};
 		
 			draw_cells ({}, [			
 				$i -> {id},
-				{label => $product, max_len => 10000000},
-				{label => $version, max_len => 10000000},
+				{label => $i -> {product}, max_len => 10000000},
+				{label => $i -> {version}, max_len => 10000000},
 				{label => $i -> {path}, max_len => 10000000},
 			])
 			
