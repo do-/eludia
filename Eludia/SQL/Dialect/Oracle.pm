@@ -28,6 +28,7 @@ sub sql_version {
 	
 	sql_do ("ALTER SESSION SET nls_date_format      = '$conf->{db_date_format}'");
 	sql_do ("ALTER SESSION SET nls_timestamp_format = '$conf->{db_date_format}'");
+	sql_do ("ALTER SESSION SET nls_numeric_characters = '.,'");
 
 	$conf -> {db_sort}        ||= 'BINARY';
 
