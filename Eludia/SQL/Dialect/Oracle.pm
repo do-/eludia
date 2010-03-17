@@ -61,7 +61,7 @@ sub sql_do_refresh_sessions {
 			$2 eq 'd' ? 1440 :
 			1;
 	}
-	
+
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?", $timeout / 1440);
 
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?", $_REQUEST {sid});
@@ -76,24 +76,29 @@ sub sql_execute {
 	
 	my $affected;
 	
-	while (1) {
+	my $last_i = -1;
+	
+	foreach (@params, 1) {
 
 		eval { $affected = $st -> execute (@params); };
-		
+
 		$@                   or last;
-		
-		$@ =~ /ORA-01722/    or die $@;		
+
+		$@ =~ /ORA-01722/    or die $@;
 		$@ =~ /\<\*\>p(\d+)/ or die $@;
 		
 		my $i = $1 - 1;
 		
 		my $old = $params [$i];
-		
+
+		$last_i != $i or die "Oracle refused twice to treat '$old' as a number";
+		$last_i  = $i;
+
 		$params [$i] =~ s{[^\d\.\,\-]}{}gsm;
 		$params [$i] =~ y{,}{.};
 		$params [$i] =~ s{\.+}{\.}gsm;
 		$params [$i] += 0;
-		
+
 		$params [$i] > 0 or $params [$i] < 0 or $params [$i] eq '0' or die "Значение '$old' не может быть истолковано как число.";
 
 	}
