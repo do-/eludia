@@ -57,13 +57,7 @@ sub sql_weave_model {
 
 	my ($db_model) = @_;
 
-	my @tables = ();
-	
-	foreach my $table_name ($db -> tables) {
-		$table_name =~ s{.*?(\w+)\W*$}{$1}gsm;
-		next if $table_name eq $conf -> {systables} -> {log};
-		push @tables, lc $table_name;
-	}
+	my @tables = grep {$_ ne $conf -> {systables} -> {log}} map {lc} get_tables ();
 		
 	foreach my $table_name (@tables) {
 	
