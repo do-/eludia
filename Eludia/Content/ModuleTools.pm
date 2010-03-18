@@ -318,7 +318,7 @@ sub localtime_to_iso {
 
 sub _INC {
 
-	my ($prefix) = split /_/, ($_[0] || $_REQUEST {type});
+	my ($prefix) = split /_/, ($_[0] || $_REQUEST {type} || $_SUBSET -> {name});
 	
 	my @result = ();
 	
