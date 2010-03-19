@@ -443,7 +443,7 @@ sub require_fresh {
 
 			my $action = $sub =~ /^(do|validate)_/ ? $' : ''; 
 
-			$_ACTIONS -> {_actions} -> {$type} -> {$action} ||= $label;
+			$_ACTIONS -> {_actions} -> {$type} -> {$action} = $label;
 
 		}
 
