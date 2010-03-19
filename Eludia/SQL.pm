@@ -269,6 +269,26 @@ sub sql_is_temporal_table {
 
 ################################################################################
 
+sub sql_ping {
+
+	my $r;
+
+	eval {
+	
+		my $st = $db -> prepare ('SELECT 1');
+		
+		$st -> execute;
+		
+		$r = $st -> fetchrow_arrayref;
+	
+	};
+	
+	return @$r == 1 && $r -> [0] == 1 ? 1 : 0;
+
+}
+
+################################################################################
+
 sub sql_reconnect {
 
 my $time = time;
@@ -277,7 +297,7 @@ my $time = time;
 
 	if ($db && ($preconf -> {no_model_update} || ($model_update && $model_update -> {core_ok}))) {
 
-		$db -> ping and return
+		sql_ping () and return
 		
 $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
 

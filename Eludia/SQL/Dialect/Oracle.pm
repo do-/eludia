@@ -51,6 +51,26 @@ sub sql_version {
 
 ################################################################################
 
+sub sql_ping {
+
+	my $r;
+
+	eval {
+	
+		my $st = $db -> prepare ('SELECT 1 FROM DUAL');
+		
+		$st -> execute;
+		
+		$r = $st -> fetchrow_arrayref;
+	
+	};
+	
+	return @$r == 1 && $r -> [0] == 1 ? 1 : 0;
+
+}
+
+################################################################################
+
 sub sql_do_refresh_sessions {
 
 	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
