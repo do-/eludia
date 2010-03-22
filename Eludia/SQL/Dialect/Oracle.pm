@@ -45,6 +45,11 @@ sub sql_version {
 		next unless ($systables -> {lc $i -> {table_name}});
 		$version -> {tables} -> {lc $i -> {table_name}} = $i -> {table_name};
 	});
+	
+	$version -> {_keys_map} = {
+		REWBFHHHKGKGLLD => 'user',
+		NBHCQQEHGDFJFXF => 'level',
+	};
 
 	return $version;
 
@@ -98,7 +103,7 @@ sub sql_execute {
 	
 	my $affected;
 	
-	my $last_i = -1;
+	my $last_i = -1;	
 	
 	foreach (@params, 1) {
 
@@ -201,6 +206,12 @@ sub sql_prepare {
 		my $msg = "sql_prepare: $@ (SQL = $sql)\n";
 		print STDERR $msg;
 		die $msg;
+	}
+	
+	foreach (@params) {
+	
+		Encode::is_utf8	($_) or $_ = Encode::decode ($i18n -> {_charset}, $_);
+	
 	}
 		
 	return ($st, @params);
@@ -501,26 +512,15 @@ sub lc_hashref {
 
 	my ($hr) = @_;
 
-	return undef unless (defined $hr);	
+	defined $hr or return undef;
 
-	if ($conf -> {core_auto_oracle}) {	
-		foreach my $key (keys %$hr) {
-		        my $old_key = $key;
-			$key =~ s/RewbfhHHkgkglld/user/igsm;
-			$key =~ s/NbhcQQehgdfjfxf/level/igsm;
-			$hr -> {lc $key} = $hr -> {$old_key};
-			delete $hr -> {uc $key};
-		}
-	}
-	else {
-		foreach my $key (keys %$hr) {
-			$hr -> {lc $key} = $hr -> {$key};
-			delete $hr -> {uc $key};
-		}
-	}
+	foreach my $key (keys %$hr) {
+	
+		my $s = delete $hr -> {$key};
 
-	delete $hr -> {REWBFHHHKGKGLLD};
-	delete $hr -> {NBHCQQEHGDFJFXF};
+		$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = Encode::is_utf8 ($s) ? Encode::encode ($i18n -> {_charset}, $s) : $s;
+
+	}
 
 	return $hr;
 
