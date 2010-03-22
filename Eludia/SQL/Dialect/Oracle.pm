@@ -23,17 +23,18 @@ sub sql_version {
 	$version -> {string} =~ s{ release.*}{}i;
 
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
+
+	my %s = (
 	
-	$conf -> {db_date_format} ||= 'yyyy-mm-dd hh24:mi:ss';
+		nls_numeric_characters => '.,',
+		nls_sort               => ($conf -> {db_sort} ||= 'BINARY'),
+
+	);
 	
-	sql_do ("ALTER SESSION SET nls_date_format      = '$conf->{db_date_format}'");
-	sql_do ("ALTER SESSION SET nls_timestamp_format = '$conf->{db_date_format}'");
-	sql_do ("ALTER SESSION SET nls_numeric_characters = '.,'");
+	$s {nls_date_format} = $s {nls_timestamp_format} = ($conf -> {db_date_format} ||= 'yyyy-mm-dd hh24:mi:ss');
 
-	$conf -> {db_sort}        ||= 'BINARY';
-
-	sql_do ("ALTER SESSION SET nls_sort             = '$conf->{db_sort}'");
-
+	sql_do ('ALTER SESSION SET ' . (join ' ', map {"$_ = '$s{$_}'"} keys %s));
+	
 	my $systables = {};
 	foreach my $key (keys %{$conf -> {systables}}) {
 	    my $table = $conf -> {systables} -> {$key};
