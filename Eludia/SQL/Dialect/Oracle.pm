@@ -98,7 +98,7 @@ sub sql_do_refresh_sessions {
 ################################################################################
 
 sub sql_execute {
-	
+
 	my ($st, @params) = sql_prepare (@_);
 	
 	my $affected;
@@ -207,13 +207,7 @@ sub sql_prepare {
 		print STDERR $msg;
 		die $msg;
 	}
-	
-	foreach (@params) {
-	
-		Encode::is_utf8	($_) or $_ = Encode::decode ($i18n -> {_charset}, $_);
-	
-	}
-		
+			
 	return ($st, @params);
 
 }
@@ -227,6 +221,8 @@ sub sql_do {
 	my ($sql, @params) = @_;	
 	
 	my $time = time;
+	
+	Encode::is_utf8	($_) or $_ = Encode::decode ($i18n -> {_charset}, $_) foreach (@params);
 
 	(my $st, $affected) = sql_execute ($sql, @params);
 
