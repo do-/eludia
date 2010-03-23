@@ -48,6 +48,8 @@ sub __adjust_button_href {
 
 			$options -> {target} ||= '_self';
 			
+			$options -> {href} =~ s{\%}{\%25}g;
+			
 			$js_action = "nope('$options->{href}','$options->{target}')";
 
 		}
