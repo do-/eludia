@@ -207,7 +207,13 @@ sub sql_prepare {
 		print STDERR $msg;
 		die $msg;
 	}
-			
+	
+	if ($db -> {Driver} -> {Name} eq ODBC) {
+
+		Encode::is_utf8	($_) or $_ = Encode::decode ($i18n -> {_charset}, $_) foreach (@params);
+
+	}
+
 	return ($st, @params);
 
 }
@@ -222,8 +228,6 @@ sub sql_do {
 	
 	my $time = time;
 	
-	Encode::is_utf8	($_) or $_ = Encode::decode ($i18n -> {_charset}, $_) foreach (@params);
-
 	(my $st, $affected) = sql_execute ($sql, @params);
 
 	$st -> finish;	
@@ -510,13 +514,30 @@ sub lc_hashref {
 
 	defined $hr or return undef;
 
-	foreach my $key (keys %$hr) {
-	
-		my $s = delete $hr -> {$key};
+	if ($db -> {Driver} -> {Name} eq ODBC) {
 
-		$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = Encode::is_utf8 ($s) ? Encode::encode ($i18n -> {_charset}, $s) : $s;
+		foreach my $key (keys %$hr) {
+
+			my $s = delete $hr -> {$key};
+
+			$s = Encode::encode ($i18n -> {_charset}, $s) if Encode::is_utf8 ($s);
+
+			$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = $s;
+
+		}
 
 	}
+	else {
+
+		foreach my $key (keys %$hr) {
+
+			$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = delete $hr -> {$key};
+
+		}
+
+	}
+	
+
 
 	return $hr;
 
