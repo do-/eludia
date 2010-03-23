@@ -319,7 +319,7 @@ sub localtime_to_iso {
 sub _INC {
 
 	my ($prefix) = split /_/, ($_[0] || $_REQUEST {type} || $_SUBSET -> {name});
-	
+
 	my @result = ();
 	
 	foreach my $dir (reverse @$PACKAGE_ROOT) {
@@ -405,10 +405,18 @@ sub require_fresh {
 	my $type = $';
 
 	$local_file_name =~ s{^(.+?)\/}{\/};
+	
+	my $old_type = $_REQUEST {type};
+	
+	$_REQUEST {type} = $type     if $type !~ /^(menu|subset)/;
 
-	my @file_names = grep {-f} map {"${_}$local_file_name.pm"} _INC ();
+	my @inc = _INC ();
 
-	@file_names > 0 or return "Module $module_name not found in " . (join '; ', _INC ()) . "\n";
+	$_REQUEST {type} = $old_type;
+
+	my @file_names = grep {-f} map {"${_}$local_file_name.pm"} @inc;
+
+	@file_names > 0 or return "Module $module_name not found in " . (join '; ', @inc) . "\n";
 
 	foreach my $file_name (@file_names) {
 
