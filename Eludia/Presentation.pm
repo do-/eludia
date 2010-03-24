@@ -2501,87 +2501,91 @@ EOJS
 
 }
 
+#################################################################################
+
+sub gzip_in_memory {
+
+	my ($html) = @_;
+
+	my $z;
+			
+	my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
+	
+	$x -> deflate ($html, $z);
+	
+	$x -> flush ($z);
+	
+	"\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $html);
+
+}
+
+#################################################################################
+
+sub gzip_if_it_is_needed (\$) {
+
+	my ($ref_html) = @_;
+	
+	my $old_size = length $$ref_html;
+
+	$preconf -> {core_gzip} 
+		
+		and $r -> headers_in -> {'Accept-Encoding'} =~ /gzip/
+		
+		and (400 + $old_size) > ($preconf -> {core_mtu} ||= 1500)
+		
+		and !$_REQUEST {__is_gzipped}
+			
+		or return;
+	
+	my $time = time;
+
+	$$ref_html = gzip_in_memory ($$ref_html);
+			
+	my $new_size = length $$ref_html;
+
+	my $ratio = int (10000 * ($old_size - $new_size) / $old_size) / 100;
+			
+	__log_profilinig ($time, sprintf (" <gzip: %d -> %d, %.2f\%>", $old_size, $new_size, 100 * ($old_size - $new_size) / $old_size));
+
+	$r -> content_encoding ('gzip');
+
+	$_REQUEST {__is_gzipped} = 1;	
+
+}
+
 ################################################################################
 
 sub out_html {
 
 	my ($options, $html) = @_;
 
-	$html or return;
+	$html and !$_REQUEST {__response_sent} or return;
+
+	$_REQUEST {__out_html_time} = my $time = time;  
+
+	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
 	
-	return if $_REQUEST {__response_sent};
+	$html = Encode::encode ('windows-1252', $html);
 
-	my $time = time;
+	return print $html if $_REQUEST {__response_started};
 
-	$_REQUEST {__out_html_time} = $time;  
-
-	if ($conf -> {core_sweep_spaces}) {
-		$html =~ s{^\s+}{}gsm;
-		$html =~ s{[ \t]+}{ }g;
-	}
-
-	unless ($preconf -> {core_no_morons}) {
-		$html =~ s{window\.open}{nope}gsm;
-	}
+	$r -> content_type ($_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset});
 	
-	if ($] > 5.007) {
-		require Encode;
-		$html = Encode::encode ('windows-1252', $html);
-	}
+	gzip_if_it_is_needed ($html);
 
-	if ($_REQUEST {__response_started}) {
-		print $html;
-		return;
-	}
+	$r -> headers_out -> {'Content-Length'} = my $length = length $html;
 
-	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
-
-	$r -> content_type ($_REQUEST {__content_type});
 	$r -> headers_out -> {'X-Powered-By'} = 'Eludia/' . $Eludia::VERSION;
-	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
-
-	$preconf -> {core_mtu} ||= 1500;
 	
-	if (
-		$preconf -> {core_gzip} &&
-		400 + length $html > $preconf -> {core_mtu} &&
-		($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/)
-	) {
-		
-		$r -> content_encoding ('gzip');
-		
-		unless ($_REQUEST {__is_gzipped}) {
-			
-			my $time = time;
-			my $old_size = length $html;
-			
-			my $z;
-			my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
-			$x -> deflate ($html, $z) ;
-			$x -> flush ($z) ;
-			$html = "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $html);
-			$_REQUEST {__is_gzipped} = 1;
-			
-			my $new_size = length $html;
-
-			my $ratio = int (10000 * ($old_size - $new_size) / $old_size) / 100;
-			
-			__log_profilinig ($time, " <gzip: $old_size -> $new_size, $ratio%>");
-
-		}
-	}
-
-	$r -> headers_out -> {'Content-Length'} = length $html;
-
+	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
+	
 	send_http_header ();
 
 	$r -> header_only && !MP2 or print $html;
 	
 	$_REQUEST {__response_sent} = 1;
 
-	__log_profilinig ($time, ' <out_html: ' . (length $html) . ' bytes>');
-	
-	return _ok ();
+	__log_profilinig ($time, " <out_html: $length bytes>");
 
 }
 
@@ -2784,24 +2788,18 @@ sub check_static_files {
 		foreach my $fn ('navigation.js', 'eludia.css') {
 		
 			if (-f "$skin_root/$fn") {
-			
-				my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
-	
+
+				my $js = '';
 				open (IN, "$skin_root/$fn");
-				my $js = join ('', <IN>);
+				$js .= $_ while (<IN>);
 				close IN;
 	
 				open (OUT, ">$skin_root/$fn.gz");
-				binmode (OUT);
-	
-				my $z;
-				$x -> deflate ($js, $z) ;
-				$x -> flush ($z) ;
-	
-				print OUT "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $js);
+				binmode (OUT);	
+				print OUT gzip_in_memory ($js);
 				close OUT;
 
-__log_profilinig ($time, "  	$fn gzipped");
+				__log_profilinig ($time, "  	$fn gzipped");
 
 			}
 		}

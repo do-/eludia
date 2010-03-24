@@ -6,6 +6,7 @@ use Data::Dumper;
 use DBI;
 use DBI::Const::GetInfoType;
 use Digest::MD5;
+use Encode;
 use Fcntl qw(:DEFAULT :flock);
 use File::Copy 'move';
 use HTML::Entities;
