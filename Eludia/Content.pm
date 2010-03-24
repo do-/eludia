@@ -1,6 +1,7 @@
 no warnings;
 
 use Eludia::Content::Auth;
+use Eludia::Content::Dt;
 use Eludia::Content::ModuleTools;
 use Eludia::Content::Mbox;
 use Eludia::Content::Handler;
@@ -319,6 +320,165 @@ sub dt_add {
 
 	return $dt;
 
+}
+
+################################################################################
+
+sub dt_add_workdays {
+
+	my ($dt, $workdays) = @_;
+	
+	my ($y, $m, $d) = Add_Delta_Days (dt_y_m_d ($dt), 1);
+	
+	$workdays --;
+	
+	my %years = ();
+	
+	my $dow = Day_of_Week ($y, $m, $d);
+	
+	while (1) {
+
+		my $year = $years {$y};
+
+		unless ($year) {
+		
+			$year = {};
+		
+			sql (holidays => [['dt BETWEEN ? AND ?' => ["$y-01-01", "$y-12-31"]]], sub {
+			
+				$year -> {dt_iso ($i -> {dt})} = 1;
+		
+			});
+			
+			$years {$y} = $year;
+			
+		}
+
+		next if (!%$year ? ($dow > 5) : $year -> {dt_iso ($y, $m, $d)});
+				
+		(-- $workdays) > 0 or last;
+	
+	}
+	continue {
+
+		($y, $m, $d) = Add_Delta_Days ($y, $m, $d, 1);
+		
+		$dow ++;
+		
+		$dow <= 7 or $dow = 1;
+
+	}
+	
+	return dt_iso ($y, $m, $d);
+
+}
+
+################################################################################
+
+sub cal_month {
+
+	my ($_year, $_month) = @_;
+	
+	my $month = {
+	
+		year  => $_year,
+		month => $_month,
+		weeks => [],
+		days  => [],
+		
+	};
+	
+	my $day_of_week   = Day_of_Week ($_year, $_month, 1);
+	
+	my $week_of_month = 1;
+
+	foreach my $i (1 .. Date::Calc::Days_in_Month ($_year, $_month)) {
+
+		my $day = {
+		
+			year          => $_year,
+			month         => $_month,
+			day           => $i,
+			iso           => sprintf ('%04d-%02d-%02d', $_year, $_month, $i),
+			day_of_week   => $day_of_week,
+			week_of_month => $week_of_month,
+			
+		};
+		
+		$month -> {days}  -> [$i - 1] = $day;
+		
+		$month -> {weeks} -> [$week_of_month - 1] -> [$day_of_week - 1] = $day;
+				
+		next if ++ $day_of_week <= 7;
+		
+		$day_of_week = 1;
+		
+		$week_of_month ++;
+			
+	}
+
+	return $month;
+
+}
+
+################################################################################
+
+sub cal_quarter {
+
+	my ($_year, $_quarter) = @_;
+	
+	my $first_month = 1 + 3 * ($_quarter - 1);
+	
+	my $quarter = {
+	
+		year    => $_year,
+		
+		quarter => $_quarter,
+		
+		months  => [map {cal_month ($_year, $_)} ($first_month .. $first_month + 2)],
+		
+		lines   => [],		
+	
+	};
+	
+	push @{$quarter -> {lines}}, {type => 'start_quarter', quarter => $quarter};
+	
+	foreach my $i (0 .. 4) {
+	
+		my @line = map {$quarter -> {months} -> [$_] -> {weeks} -> [$i]} (0 .. 2);
+		
+		last if $i == 4 and 0 == grep {$_} @line;
+		
+		push @{$quarter -> {lines}}, \@line;
+	
+	}
+	
+	push @{$quarter -> {lines}}, {type => 'finish_quarter', quarter => $quarter};
+	
+	Scalar::Util::weaken ($quarter -> {lines} -> [$_] -> {quarter}) foreach (-1, 0);
+
+	return $quarter;
+
+}
+
+################################################################################
+
+sub cal_year {
+
+	my ($_year) = @_;
+	
+	my $year = {
+	
+		year     => $_year,
+		
+		quarters => [map {cal_quarter ($_year, $_)} (1 .. 4)],
+	
+	};
+	
+	$year -> {lines} = [map {@{$_ -> {lines}}} @{$year -> {quarters}}];
+	
+	return $year;
+	
 }
 
 ################################################################################

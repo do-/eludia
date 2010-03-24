@@ -6,6 +6,8 @@ sub handler {
 
 	my $time = time ();
 	
+	our $i18n = i18n ();
+
 	return _ok () if eval { page_is_not_needed (\$time, @_) };
 	
 	if ($@) {
@@ -384,7 +386,7 @@ sub setup_menu {
 
 	require_content 'menu';
 
-	our $i18n = i18n ();
+	$i18n = i18n ();
 
 	my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
 	

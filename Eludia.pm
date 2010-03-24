@@ -13,6 +13,7 @@ use HTTP::Date;
 use MIME::Base64;
 use Number::Format;
 use Time::HiRes 'time';
+use Scalar::Util;
 use Storable;
 
 ################################################################################

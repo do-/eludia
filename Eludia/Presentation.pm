@@ -2189,6 +2189,113 @@ sub draw_node {
 
 ################################################################################
 
+sub draw_calendar_year {
+
+	my ($callback, $options) = @_;
+
+	my $empty      = {label => '', bgcolor => '#EFEFEF'};
+
+	my @wdays      = map {{label => $_, bold => 1, bgcolor => '#FFFFEF', attributes => {align => 'center'}}} @{$i18n -> {wd}};
+
+	my $spacer     = $_REQUEST {xls} ? '' : '<img src="/i/_skins/TurboMilk/0.gif" border=0 height=10 width=6>';
+	
+	my $lines = [map {
+	
+		ref $_ ne HASH ? {fields => $_} :
+			
+		$_ -> {type} eq 'finish_quarter' ? () :
+		
+		(
+		
+			{type => 'month_names', quarter => $_ -> {quarter}},
+			
+			{type => 'day_names'},
+
+		)
+	
+	} @{cal_year ($options -> {year} || $_REQUEST {year}) -> {lines}}];
+	
+	my $xlempty    = $_REQUEST {xls} ? draw_text_cell ('&nbsp;') : '';
+
+	my $empty_cell = draw_text_cell ($empty);
+
+	my $day_names = $xlempty . draw_cells ({}, [
+		@wdays, $empty,
+		@wdays, $empty,
+		@wdays
+	]);			
+
+	my $day = {
+		no_check_href => 1,
+		a_class => 'row-cell',
+		attributes	=> {
+			align	=> 'center',
+			class   => 'row-cell-transparent',
+		},
+	};
+
+
+		draw_table (
+
+			sub {
+			
+				$i -> {type} eq 'day_names' and return $day_names;
+
+				$i -> {type} eq 'month_names' and return
+				
+					$xlempty .
+					
+					(join $empty_cell, map {
+					
+						draw_text_cell ({
+						
+							label => $spacer . $i18n -> {month_names_1} -> [$_ -> {month} - 1],
+							colspan => 7,
+							bgcolor => '#FFFFEF',
+							bold => 1,
+							max_len => 10000,
+							
+						})} @{$i -> {quarter} -> {months}
+					
+					});
+												
+				my $s = '';
+				
+				foreach my $week (@{$i -> {fields}}) {
+				
+					$s .= $empty_cell if $s;
+					
+					for (my $wd = 0; $wd < 7; $wd ++) {
+					
+						my $d = $week -> [$wd];
+												
+						$day -> {label} = $d -> {day};
+						
+						$day -> {attributes} -> {id} = "day_$d->{iso}";
+
+						&$callback ($day, $d);
+											
+						$s .= $_SKIN -> draw_text_cell ($day);
+																	
+					}
+				
+				}
+				
+				return $s;
+							
+			},
+
+			$lines,
+			
+			$options,
+			
+		);
+
+
+}
+
+################################################################################
+
 sub draw_suggest_page {
 
 	my ($data) = @_;

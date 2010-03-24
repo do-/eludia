@@ -23,16 +23,18 @@ sub sql_version {
 	$version -> {string} =~ s{ release.*}{}i;
 
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
+
+	my %s = (
 	
-	$conf -> {db_date_format} ||= 'yyyy-mm-dd hh24:mi:ss';
+		nls_numeric_characters => '.,',
+		nls_sort               => ($conf -> {db_sort} ||= 'BINARY'),
+
+	);
 	
-	sql_do ("ALTER SESSION SET nls_date_format      = '$conf->{db_date_format}'");
-	sql_do ("ALTER SESSION SET nls_timestamp_format = '$conf->{db_date_format}'");
+	$s {nls_date_format} = $s {nls_timestamp_format} = ($conf -> {db_date_format} ||= 'yyyy-mm-dd hh24:mi:ss');
 
-	$conf -> {db_sort}        ||= 'BINARY';
-
-	sql_do ("ALTER SESSION SET nls_sort             = '$conf->{db_sort}'");
-
+	sql_do ('ALTER SESSION SET ' . (join ' ', map {"$_ = '$s{$_}'"} keys %s));
+	
 	my $systables = {};
 	foreach my $key (keys %{$conf -> {systables}}) {
 	    my $table = $conf -> {systables} -> {$key};
@@ -43,8 +45,33 @@ sub sql_version {
 		next unless ($systables -> {lc $i -> {table_name}});
 		$version -> {tables} -> {lc $i -> {table_name}} = $i -> {table_name};
 	});
+	
+	$version -> {_keys_map} = {
+		REWBFHHHKGKGLLD => 'user',
+		NBHCQQEHGDFJFXF => 'level',
+	};
 
 	return $version;
+
+}
+
+################################################################################
+
+sub sql_ping {
+
+	my $r;
+
+	eval {
+	
+		my $st = $db -> prepare ('SELECT 1 FROM DUAL');
+		
+		$st -> execute;
+		
+		$r = $st -> fetchrow_arrayref;
+	
+	};
+	
+	return @$r == 1 && $r -> [0] == 1 ? 1 : 0;
 
 }
 
@@ -61,7 +88,7 @@ sub sql_do_refresh_sessions {
 			$2 eq 'd' ? 1440 :
 			1;
 	}
-	
+
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?", $timeout / 1440);
 
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?", $_REQUEST {sid});
@@ -71,29 +98,34 @@ sub sql_do_refresh_sessions {
 ################################################################################
 
 sub sql_execute {
-	
+
 	my ($st, @params) = sql_prepare (@_);
 	
 	my $affected;
 	
-	while (1) {
+	my $last_i = -1;	
+	
+	foreach (@params, 1) {
 
 		eval { $affected = $st -> execute (@params); };
-		
+
 		$@                   or last;
-		
-		$@ =~ /ORA-01722/    or die $@;		
+
+		$@ =~ /ORA-01722/    or die $@;
 		$@ =~ /\<\*\>p(\d+)/ or die $@;
 		
 		my $i = $1 - 1;
 		
 		my $old = $params [$i];
-		
+
+		$last_i != $i or die "Oracle refused twice to treat '$old' as a number";
+		$last_i  = $i;
+
 		$params [$i] =~ s{[^\d\.\,\-]}{}gsm;
 		$params [$i] =~ y{,}{.};
 		$params [$i] =~ s{\.+}{\.}gsm;
 		$params [$i] += 0;
-		
+
 		$params [$i] > 0 or $params [$i] < 0 or $params [$i] eq '0' or die "Значение '$old' не может быть истолковано как число.";
 
 	}
@@ -175,7 +207,13 @@ sub sql_prepare {
 		print STDERR $msg;
 		die $msg;
 	}
-		
+	
+	if ($db -> {Driver} -> {Name} eq ODBC) {
+
+		Encode::is_utf8	($_) or $_ = Encode::decode ($i18n -> {_charset}, $_) foreach (@params);
+
+	}
+
 	return ($st, @params);
 
 }
@@ -189,7 +227,7 @@ sub sql_do {
 	my ($sql, @params) = @_;	
 	
 	my $time = time;
-
+	
 	(my $st, $affected) = sql_execute ($sql, @params);
 
 	$st -> finish;	
@@ -474,26 +512,32 @@ sub lc_hashref {
 
 	my ($hr) = @_;
 
-	return undef unless (defined $hr);	
+	defined $hr or return undef;
 
-	if ($conf -> {core_auto_oracle}) {	
+	if ($db -> {Driver} -> {Name} eq ODBC) {
+
 		foreach my $key (keys %$hr) {
-		        my $old_key = $key;
-			$key =~ s/RewbfhHHkgkglld/user/igsm;
-			$key =~ s/NbhcQQehgdfjfxf/level/igsm;
-			$hr -> {lc $key} = $hr -> {$old_key};
-			delete $hr -> {uc $key};
+
+			my $s = delete $hr -> {$key};
+
+			$s = Encode::encode ($i18n -> {_charset}, $s) if Encode::is_utf8 ($s);
+
+			$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = $s;
+
 		}
+
 	}
 	else {
-		foreach my $key (keys %$hr) {
-			$hr -> {lc $key} = $hr -> {$key};
-			delete $hr -> {uc $key};
-		}
-	}
 
-	delete $hr -> {REWBFHHHKGKGLLD};
-	delete $hr -> {NBHCQQEHGDFJFXF};
+		foreach my $key (keys %$hr) {
+
+			$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = delete $hr -> {$key};
+
+		}
+
+	}
+	
+
 
 	return $hr;
 
