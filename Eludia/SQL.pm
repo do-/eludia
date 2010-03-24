@@ -138,6 +138,7 @@ sub check_systables {
 		__required_files	
 		__screenshots		
 		cache_html		
+		holidays
 		log			
 		roles			
 		sessions		

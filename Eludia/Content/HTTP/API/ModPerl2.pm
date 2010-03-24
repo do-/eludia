@@ -37,7 +37,7 @@ BEGIN {
 	require Apache2::compat;
 	require Apache2::Cookie;
 
-	$ENV {PERL_JSON_BACKEND} = 'JSON::PP';		
+#	$ENV {PERL_JSON_BACKEND} = 'JSON::PP';
 
 	Apache -> push_handlers (PerlChildInitHandler => \&sql_reconnect );
 	Apache -> push_handlers (PerlChildExitHandler => \&sql_disconnect);
