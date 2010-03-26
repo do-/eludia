@@ -2219,31 +2219,8 @@ sub draw_toolbar_button {
 		$options -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" unless ($_REQUEST {__windows_ce});
 	
 	}		
-
-	my $cursor_state = $options -> {no_wait_cursor} ? q[; window.document.body.onbeforeunload = function() {document.body.style.cursor = 'default';};] : '';
-
-	if ($options -> {confirm}) {
-		$options -> {target} ||= '_self';
-		my $salt = rand;
-		my $msg = js_escape ($options -> {confirm});
-		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope($cursor_state '$$options{href}', '$$options{target}')} else {document.body.style.cursor = 'default'; nop ();}];
-	} elsif ($options -> {no_wait_cursor}) {
-	    $options -> {onclick} = qq[onclick="$cursor_state  void(0);"];
-	} 
 	
-	if ($options -> {href} =~ /^java/) {
-		$options -> {target} = '_self';
-	}
-
-	if ($options -> {hotkey}) {
-		$options -> {id} ||= $options;
-		$options -> {hotkey} -> {data}    = $options -> {id};
-		$options -> {hotkey} -> {off}     = $options -> {off};
-		hotkey ($options -> {hotkey});
-	}	
-		
-	$options -> {id} ||= '' . $options;
+	$_SKIN -> __adjust_button_href ($options);
 	
 	return $_SKIN -> draw_toolbar_button ($options);
 
@@ -2506,13 +2483,6 @@ sub draw_centered_toolbar_button {
 		$options -> {preconfirm} ||= $preset -> {preconfirm};
 	}	
 
-	if ($options -> {hotkey}) {
-		$options -> {id} ||= $options . '';
-		$options -> {hotkey} -> {data}    = $options -> {id};
-		$options -> {hotkey} -> {off}     = $options -> {off};
-		hotkey ($options -> {hotkey});
-	}
-
 	$options -> {href} = 'javaScript:' . $options -> {onclick} if $options -> {onclick};
 
 	check_href ($options);
@@ -2526,25 +2496,8 @@ sub draw_centered_toolbar_button {
 		$options -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
 	}
 
-	$options -> {target} ||= '_self';
+	$_SKIN -> __adjust_button_href ($options);
 
-	my $cursor_state = $options -> {no_wait_cursor} ? q[; window.document.body.onbeforeunload = function() {document.body.style.cursor = 'default';};] : '';
-
-	if ($options -> {confirm}) {
-		my $salt = rand;
-		my $msg = js_escape ($options -> {confirm});
-		$options -> {preconfirm} ||= 1;
-		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-		my $href = js_escape ($options -> {href});
-		$options -> {href} = qq [javascript:if (!($$options{preconfirm}) || ($$options{preconfirm} && confirm ($msg))) {$cursor_state nope ($href, '$options->{target}')} else {document.body.style.cursor = 'default'; nop ();} ];
-        } elsif ($options -> {no_wait_cursor}) {
-		$options -> {onclick} = qq{onclick="$cursor_state; void(0);"};
-	} 	
-
-	if ($options -> {href} =~ /^java/) {
-		$options -> {target} = '_self';
-	}
-	
 	return $_SKIN -> draw_centered_toolbar_button (@_);
 
 }
@@ -2621,7 +2574,7 @@ sub draw_ok_esc_toolbar {
 		{
 			preset => 'ok',
 			label => $options -> {label_ok}, 
-			href => $_REQUEST {__windows_ce} || $_SKIN =~ /Universal/ || $_SKIN =~ /Gecko/ ? "javaScript:document.$name.submit()" : "javaScript:document.$name.fireEvent('onsubmit'); document.$name.submit()", 
+			href => $_SKIN -> __submit_href ($name), 
 			off  => $_REQUEST {__read_only} || $options -> {no_ok},
 			(exists $options -> {confirm_ok} ? (confirm => $options -> {confirm_ok}) : ()),
 		},
@@ -4001,6 +3954,113 @@ sub draw_node {
 
 ################################################################################
 
+sub draw_calendar_year {
+
+	my ($callback, $options) = @_;
+
+	my $empty      = {label => '', bgcolor => '#EFEFEF'};
+
+	my @wdays      = map {{label => $_, bold => 1, bgcolor => '#FFFFEF', attributes => {align => 'center'}}} @{$i18n -> {wd}};
+
+	my $spacer     = $_REQUEST {xls} ? '' : '<img src="/i/_skins/TurboMilk/0.gif" border=0 height=10 width=6>';
+	
+	my $lines = [map {
+	
+		ref $_ ne HASH ? {fields => $_} :
+			
+		$_ -> {type} eq 'finish_quarter' ? () :
+		
+		(
+		
+			{type => 'month_names', quarter => $_ -> {quarter}},
+			
+			{type => 'day_names'},
+
+		)
+	
+	} @{cal_year ($options -> {year} || $_REQUEST {year}) -> {lines}}];
+	
+	my $xlempty    = $_REQUEST {xls} ? draw_text_cell ('&nbsp;') : '';
+
+	my $empty_cell = draw_text_cell ($empty);
+
+	my $day_names = $xlempty . draw_cells ({}, [
+		@wdays, $empty,
+		@wdays, $empty,
+		@wdays
+	]);			
+
+	my $day = {
+		no_check_href => 1,
+		a_class => 'row-cell',
+		attributes	=> {
+			align	=> 'center',
+			class   => 'row-cell-transparent',
+		},
+	};
+
+
+		draw_table (
+
+			sub {
+			
+				$i -> {type} eq 'day_names' and return $day_names;
+
+				$i -> {type} eq 'month_names' and return
+				
+					$xlempty .
+					
+					(join $empty_cell, map {
+					
+						draw_text_cell ({
+						
+							label => $spacer . $i18n -> {month_names_1} -> [$_ -> {month} - 1],
+							colspan => 7,
+							bgcolor => '#FFFFEF',
+							bold => 1,
+							max_len => 10000,
+							
+						})} @{$i -> {quarter} -> {months}
+					
+					});
+												
+				my $s = '';
+				
+				foreach my $week (@{$i -> {fields}}) {
+				
+					$s .= $empty_cell if $s;
+					
+					for (my $wd = 0; $wd < 7; $wd ++) {
+					
+						my $d = $week -> [$wd];
+												
+						$day -> {label} = $d -> {day};
+						
+						$day -> {attributes} -> {id} = "day_$d->{iso}";
+
+						&$callback ($day, $d);
+											
+						$s .= $_SKIN -> draw_text_cell ($day);
+																	
+					}
+				
+				}
+				
+				return $s;
+							
+			},
+
+			$lines,
+			
+			$options,
+			
+		);
+
+
+}
+
+################################################################################
+
 sub draw_suggest_page {
 
 	my ($data) = @_;
@@ -4208,87 +4268,91 @@ EOJS
 
 }
 
+#################################################################################
+
+sub gzip_in_memory {
+
+	my ($html) = @_;
+
+	my $z;
+			
+	my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
+	
+	$x -> deflate ($html, $z);
+	
+	$x -> flush ($z);
+	
+	"\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $html);
+
+}
+
+#################################################################################
+
+sub gzip_if_it_is_needed (\$) {
+
+	my ($ref_html) = @_;
+	
+	my $old_size = length $$ref_html;
+
+	$preconf -> {core_gzip} 
+		
+		and $r -> headers_in -> {'Accept-Encoding'} =~ /gzip/
+		
+		and (400 + $old_size) > ($preconf -> {core_mtu} ||= 1500)
+		
+		and !$_REQUEST {__is_gzipped}
+			
+		or return;
+	
+	my $time = time;
+
+	$$ref_html = gzip_in_memory ($$ref_html);
+			
+	my $new_size = length $$ref_html;
+
+	my $ratio = int (10000 * ($old_size - $new_size) / $old_size) / 100;
+			
+	__log_profilinig ($time, sprintf (" <gzip: %d -> %d, %.2f\%>", $old_size, $new_size, 100 * ($old_size - $new_size) / $old_size));
+
+	$r -> content_encoding ('gzip');
+
+	$_REQUEST {__is_gzipped} = 1;	
+
+}
+
 ################################################################################
 
 sub out_html {
 
 	my ($options, $html) = @_;
 
-	$html or return;
+	$html and !$_REQUEST {__response_sent} or return;
+
+	$_REQUEST {__out_html_time} = my $time = time;  
+
+	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
 	
-	return if $_REQUEST {__response_sent};
+	$html = Encode::encode ('windows-1252', $html);
 
-	my $time = time;
+	return print $html if $_REQUEST {__response_started};
 
-	$_REQUEST {__out_html_time} = $time;  
-
-	if ($conf -> {core_sweep_spaces}) {
-		$html =~ s{^\s+}{}gsm;
-		$html =~ s{[ \t]+}{ }g;
-	}
-
-	unless ($preconf -> {core_no_morons}) {
-		$html =~ s{window\.open}{nope}gsm;
-	}
+	$r -> content_type ($_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset});
 	
-	if ($] > 5.007) {
-		require Encode;
-		$html = Encode::encode ('windows-1252', $html);
-	}
+	gzip_if_it_is_needed ($html);
 
-	if ($_REQUEST {__response_started}) {
-		print $html;
-		return;
-	}
+	$r -> headers_out -> {'Content-Length'} = my $length = length $html;
 
-	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
-
-	$r -> content_type ($_REQUEST {__content_type});
 	$r -> headers_out -> {'X-Powered-By'} = 'Eludia/' . $Eludia::VERSION;
-	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
-
-	$preconf -> {core_mtu} ||= 1500;
 	
-	if (
-		$preconf -> {core_gzip} &&
-		400 + length $html > $preconf -> {core_mtu} &&
-		($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/)
-	) {
-		
-		$r -> content_encoding ('gzip');
-		
-		unless ($_REQUEST {__is_gzipped}) {
-			
-			my $time = time;
-			my $old_size = length $html;
-			
-			my $z;
-			my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
-			$x -> deflate ($html, $z) ;
-			$x -> flush ($z) ;
-			$html = "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $html);
-			$_REQUEST {__is_gzipped} = 1;
-			
-			my $new_size = length $html;
-
-			my $ratio = int (10000 * ($old_size - $new_size) / $old_size) / 100;
-			
-			__log_profilinig ($time, " <gzip: $old_size -> $new_size, $ratio%>");
-
-		}
-	}
-
-	$r -> headers_out -> {'Content-Length'} = length $html;
-
+	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
+	
 	send_http_header ();
 
 	$r -> header_only && !MP2 or print $html;
 	
 	$_REQUEST {__response_sent} = 1;
 
-	__log_profilinig ($time, ' <out_html: ' . (length $html) . ' bytes>');
-	
-	return _ok ();
+	__log_profilinig ($time, " <out_html: $length bytes>");
 
 }
 
@@ -4396,6 +4460,8 @@ sub setup_skin {
 			user_agent
 			dump_hiddens
 			darn
+			scan2names
+			hotkey
 		));
 
 	}
@@ -4494,24 +4560,18 @@ sub check_static_files {
 		foreach my $fn ('navigation.js', 'eludia.css') {
 		
 			if (-f "$skin_root/$fn") {
-			
-				my $x = new Compress::Raw::Zlib::Deflate (-Level => 9, -CRC32 => 1);
-	
+
+				my $js = '';
 				open (IN, "$skin_root/$fn");
-				my $js = join ('', <IN>);
+				$js .= $_ while (<IN>);
 				close IN;
 	
 				open (OUT, ">$skin_root/$fn.gz");
-				binmode (OUT);
-	
-				my $z;
-				$x -> deflate ($js, $z) ;
-				$x -> flush ($z) ;
-	
-				print OUT "\37\213\b\0\0\0\0\0\0\377" . substr ($z, 2, (length $z) - 6) . pack ('VV', $x -> crc32, length $js);
+				binmode (OUT);	
+				print OUT gzip_in_memory ($js);
 				close OUT;
 
-__log_profilinig ($time, "  	$fn gzipped");
+				__log_profilinig ($time, "  	$fn gzipped");
 
 			}
 		}

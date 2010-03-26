@@ -6,6 +6,7 @@ use Data::Dumper;
 use DBI;
 use DBI::Const::GetInfoType;
 use Digest::MD5;
+use Encode;
 use Fcntl qw(:DEFAULT :flock);
 use File::Copy 'move';
 use HTML::Entities;
@@ -13,6 +14,7 @@ use HTTP::Date;
 use MIME::Base64;
 use Number::Format;
 use Time::HiRes 'time';
+use Scalar::Util;
 use Storable;
 
 ################################################################################
@@ -129,7 +131,7 @@ sub check_version {
 
 	require Date::Calc;
 
-	return if $ENV {ELUDIA_BANNER_PRINTED};
+	return if $Eludia::VERSION ||= $ENV {ELUDIA_BANNER_PRINTED};
 	
 	my ($year) = Date::Calc::Today ();
 	
@@ -174,7 +176,7 @@ sub check_version {
 
 EOT
 
-	$ENV {ELUDIA_BANNER_PRINTED} = 1;
+	$ENV {ELUDIA_BANNER_PRINTED} = $Eludia::VERSION;
 
 }
 

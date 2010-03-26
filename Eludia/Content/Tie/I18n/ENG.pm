@@ -59,4 +59,27 @@
 		november
 		december
 	)],
+	month_names_1		 => [qw(
+		January
+		February
+		March
+		April
+		May
+		June
+		July
+		August
+		September
+		October
+		November
+		December
+	)],
+	wd			=> [qw(
+		mo
+		tu
+		we
+		th
+		fr
+		sa
+		su
+	)],
 }

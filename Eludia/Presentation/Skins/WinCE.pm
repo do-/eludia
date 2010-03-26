@@ -16,6 +16,14 @@ sub options {
 
 ################################################################################
 
+sub __submit_href {
+
+	"javaScript:var f = document.$_[0].submit()";
+
+}
+
+################################################################################
+
 sub _icon_path {
 	-r $r -> document_root . "/i/_skins/Classic/$_[0].gif" ?
 	"$_REQUEST{__static_url}/$_[0].gif?$_REQUEST{__static_salt}" :
