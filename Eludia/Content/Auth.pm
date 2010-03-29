@@ -68,8 +68,16 @@ sub get_user_with_fixed_session {
 		$time = __log_profilinig ($time, ' <refresh_sessions>');
 
 	}
-
-	my $user = sql_select_hash ($preconf -> {_} -> {sql} -> {get_user} ||= get_user_sql (), $_REQUEST {sid});
+	
+	my $st = ($SQL_VERSION -> {_} -> {st_select_user} ||= $db -> prepare_cached (get_user_sql (), {}, 3));					
+	
+	$st -> execute ($_REQUEST {sid});
+	
+	my ($user) = $st -> fetchrow_hashref;
+	
+	$st -> finish;
+	
+	lc_hashref ($user);
 
 	__log_profilinig ($time, ' <get_user>');
 	
