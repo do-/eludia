@@ -59,15 +59,7 @@ sub lc_hashref {}
 
 sub sql_do_refresh_sessions {
 
-	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
-	
-	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
-		$timeout = $1;
-		$timeout *= 
-			$2 eq 'h' ? 60 :
-			$2 eq 'd' ? 1440 :
-			1;
-	}
+	my $timeout = sql_sessions_timeout_in_minutes ();
 
 	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < now() - INTERVAL ? MINUTE", $timeout);
 	

@@ -3,6 +3,31 @@ no warnings;
 use Eludia::SQL::Transfer;
 use Eludia::SQL::TheSqlFunction;
 
+
+################################################################################
+
+sub sql_sessions_timeout_in_minutes {
+
+	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
+
+	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
+	
+		$timeout = $1 * (
+
+			$2 eq 'h' ? 60 :
+			
+			$2 eq 'd' ? 1440 :
+				
+			1
+				
+		)
+	
+	}
+	
+	return $timeout;
+
+}
+
 ################################################################################
 
 sub add_vocabularies {

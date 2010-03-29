@@ -80,18 +80,8 @@ sub sql_ping {
 sub sql_do_refresh_sessions {
 
 	unless ($SQL_VERSION -> {_} -> {st_refresh_sessions}) {
-	
-		my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
-
-		if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
-			$timeout = $1;
-			$timeout *= 
-				$2 eq 'h' ? 60 :
-				$2 eq 'd' ? 1440 :
-				1;
-		}
-		
-		$timeout /= 1440;
+			
+		my $timeout = sql_sessions_timeout_in_minutes () / 1440;
 		
 		$SQL_VERSION -> {_} -> {st_refresh_sessions} = $db -> prepare_cached (<<EOS, {}, 3);
 		

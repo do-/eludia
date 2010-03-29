@@ -45,17 +45,8 @@ sub sql_select_loop {
 
 sub sql_do_refresh_sessions {
 
-	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
+	my $timeout = sql_sessions_timeout_in_minutes ();
 
-	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
-		$timeout = $1;
-		$timeout *= 
-			$2 eq 'h' ? 60 :
-			$2 eq 'd' ? 1440 :
-			1;
-	}
-
-#	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < now() - INTERVAL ? MINUTE", $timeout);
 	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < dateadd(MINUTE, -" . $timeout . ", getdate())");
 	
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
