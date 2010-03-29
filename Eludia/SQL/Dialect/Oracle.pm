@@ -1020,6 +1020,8 @@ sub sql_store_file {
 		
 	open F, $options -> {real_path} or die "Can't open $options->{real_path}: $!\n";
 		
+	binmode F;
+
 	while (read (F, $buffer, $options -> {chunk_size})) {
 		$db -> ora_lob_append ($lob_locator, $buffer);
 	}
