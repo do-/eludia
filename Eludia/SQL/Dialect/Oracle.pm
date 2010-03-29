@@ -79,19 +79,35 @@ sub sql_ping {
 
 sub sql_do_refresh_sessions {
 
-	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
+	unless ($SQL_VERSION -> {_} -> {st_refresh_sessions}) {
+	
+		my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
 
-	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
-		$timeout = $1;
-		$timeout *= 
-			$2 eq 'h' ? 60 :
-			$2 eq 'd' ? 1440 :
-			1;
+		if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
+			$timeout = $1;
+			$timeout *= 
+				$2 eq 'h' ? 60 :
+				$2 eq 'd' ? 1440 :
+				1;
+		}
+		
+		$timeout /= 1440;
+		
+		$SQL_VERSION -> {_} -> {st_refresh_sessions} = $db -> prepare_cached (<<EOS, {}, 3);
+		
+			BEGIN
+		
+				DELETE FROM $conf->{systables}->{sessions} WHERE ts < sysdate - $timeout;
+
+				UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?;
+				
+			END;
+
+EOS
+	
 	}
 
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?", $timeout / 1440);
-
-	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?", $_REQUEST {sid});
+	$SQL_VERSION -> {_} -> {st_refresh_sessions} -> execute ($_REQUEST {sid});
 
 }
 
