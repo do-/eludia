@@ -163,6 +163,8 @@ BEGIN {
 
 		\$_REQUEST {__skin} = 'STDERR';
 
+		our \$i18n = i18n ();
+
 		sql_reconnect ();
 		
 		require_model ();

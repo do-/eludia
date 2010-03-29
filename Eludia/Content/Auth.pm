@@ -24,20 +24,6 @@ sub start_session {
 
 ################################################################################
 
-sub refresh_sessions {
-
-	return if $_REQUEST {__suggest};
-
-	my $time = time;
-
-	sql_do_refresh_sessions ();
-
-	__log_profilinig ($time, ' <refresh_sessions>');
-	
-}
-
-################################################################################
-
 sub get_user_sql {
 
 	my ($users, $sessions, $roles) = map {$conf -> {systables} -> {$_}} qw (users sessions roles);
@@ -75,7 +61,23 @@ sub get_user_with_fixed_session {
 
 	my $time = time ();				
 
-	my $user = sql_select_hash ($preconf -> {_} -> {sql} -> {get_user} ||= get_user_sql (), $_REQUEST {sid});
+	unless ($_REQUEST {__suggest}) {
+
+		sql_do_refresh_sessions ();
+
+		$time = __log_profilinig ($time, ' <refresh_sessions>');
+
+	}
+	
+	my $st = ($SQL_VERSION -> {_} -> {st_select_user} ||= $db -> prepare_cached (get_user_sql (), {}, 3));					
+	
+	$st -> execute ($_REQUEST {sid});
+	
+	my ($user) = $st -> fetchrow_hashref;
+	
+	$st -> finish;
+	
+	lc_hashref ($user);
 
 	__log_profilinig ($time, ' <get_user>');
 	
@@ -109,8 +111,6 @@ sub get_user_with_fixed_session {
 ################################################################################
 
 sub get_user {
-	
-	refresh_sessions ();
 
 	foreach (@{$preconf -> {_} -> {pre_auth}}) {&$_ ()};
 	
