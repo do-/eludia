@@ -340,6 +340,18 @@ $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
 		InactiveDestroy => 0,
 	});
 
+	if ($preconf -> {db_cache_statements}) {
+
+		require Eludia::Content::Tie::LRUHash;
+		
+		my %cache;
+
+		tie %cache, 'Eludia::Content::Tie::LRUHash', {size => 300};
+
+		$db -> {CachedKids} = \%cache;
+
+	}
+
 $time = __log_profilinig ($time, "  sql_reconnect: connected to $preconf->{db_dsn}");
 
 	unless ($INC_FRESH {db_driver}) {
