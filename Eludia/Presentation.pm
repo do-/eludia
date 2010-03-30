@@ -1080,7 +1080,12 @@ sub draw_form_field_suggest {
 
 	my $id = $_REQUEST {id};
 	
-	if ($data -> {id}) {
+	if ($_REQUEST {__suggest} eq $options -> {name}) {
+	
+		our $_SUGGEST_SUB = $options -> {values};
+	
+	}
+	elsif ($data -> {id}) {
 	
 		if ($options -> {value} == 0) {
 		
@@ -1096,11 +1101,6 @@ sub draw_form_field_suggest {
 
 		}
 
-	}
-	elsif ($_REQUEST {__suggest} eq $options -> {name}) {
-	
-		our $_SUGGEST_SUB = $options -> {values};
-	
 	}
 	
 	$options -> {value} =~ s/\"/\&quot\;/gsm; #";
@@ -3237,7 +3237,7 @@ sub draw_input_cell {
 
 	my ($data, $options) = @_;
 	
-	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit}) || $data -> {read_only} || $data -> {off};
+	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit} && !$_REQUEST {__suggest}) || $data -> {read_only} || $data -> {off};
 
 	$data -> {size} ||= 30;
 	
@@ -3250,7 +3250,13 @@ sub draw_input_cell {
 		$data -> {label} =~ s/^\s+//g;
 		$data -> {attributes} -> {align} ||= 'right';
 	}
-			
+	
+	if ($data -> {autocomplete} && $_REQUEST {__suggest} eq $data -> {name}) {
+	
+		our $_SUGGEST_SUB = &{$data -> {autocomplete} -> {values}} ();
+	
+	}
+	
 	check_title ($data);
 		
 	return $_SKIN -> draw_input_cell ($data, $options);
