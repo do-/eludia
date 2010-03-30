@@ -138,8 +138,12 @@ sub upload_files {
 sub upload_file {
 	
 	my ($options) = @_;
-		
-	my ($fh, $filename, $file_size, $file_type) = upload_file_dimensions ($apr -> upload ('_' . $options -> {name}));
+	
+	my $upload = $apr -> upload ('_' . $options -> {name});
+	
+	$upload or return undef;
+
+	my ($fh, $filename, $file_size, $file_type) = upload_file_dimensions ($upload);
 	
 	$file_size > 0 or return undef;
 	
