@@ -392,6 +392,7 @@ function UpdateClock () {
 
 	var tDate = new Date ();
 
+	$('#clock_d').text (tDate.getDate () + ' ' + __month_names [tDate.getMonth ()] + ' ' + tDate.getFullYear ());
 	$('#clock_h').text (twoDigits (tDate.getHours ()));
 	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
 	$('#clock_m').text (twoDigits (tDate.getMinutes ()));
