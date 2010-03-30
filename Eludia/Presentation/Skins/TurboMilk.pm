@@ -1949,7 +1949,7 @@ sub draw_toolbar_input_text {
 
 	$html .= <<EOH;
 		<input 
-			onKeyPress="$$options{onKeyPress}" 
+			onKeyPress="$$options{onKeyPress}; blockEvent ();" 
 			type=text 
 			size=$$options{size} 
 			name=$$options{name} 
