@@ -36,11 +36,13 @@ sub sql_version {
 	sql_do ('ALTER SESSION SET ' . (join ' ', map {"$_ = '$s{$_}'"} keys %s));
 	
 	my $systables = {};
+	
 	foreach my $key (keys %{$conf -> {systables}}) {
 	    my $table = $conf -> {systables} -> {$key};
 	    $table =~ s/[\"\']//g;
 	    $systables -> {lc $table} = 1;
 	}
+	
 	sql_select_loop ("SELECT table_name FROM user_tables", sub {
 		next unless ($systables -> {lc $i -> {table_name}});
 		$version -> {tables} -> {lc $i -> {table_name}} = $i -> {table_name};
