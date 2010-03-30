@@ -138,31 +138,10 @@ sub upload_files {
 sub upload_file {
 	
 	my ($options) = @_;
-	
-	my $upload = $apr -> upload ('_' . $options -> {name});
-	
-	my ($fh, $filename, $file_size, $file_type);
-
-	if (ref $apr eq 'Apache2::Request') {
-	
-		return undef unless ($upload and $upload -> upload_size > 0);
 		
-		$fh = $upload -> upload_fh;
-		$filename = $upload -> upload_filename;
-		$file_size = $upload -> upload_size;
-		$file_type = $upload -> upload_type;
-		  
-	} else {
+	my ($fh, $filename, $file_size, $file_type) = upload_file_dimensions ($apr -> upload ('_' . $options -> {name}));
 	
-		return undef unless ($upload and $upload -> size > 0);
-
-		$fh = $upload -> fh;
-		$filename = $upload -> filename;
-		$file_size = $upload -> size;
-		$file_type = $upload -> type;
-
-		
-	}
+	$file_size > 0 or return undef;
 	
 	my ($path, $real_path) = upload_path ($filename, $options);
 
