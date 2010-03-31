@@ -1686,47 +1686,6 @@ sub draw_table_header_cell {
 
 ################################################################################
 
-sub draw_table_row {
-
-	my ($n, $tr_callback) = @_;
-
-	$i -> {__n} = $n;		
-	$i -> {__types} = [];
-	$i -> {__trs}   = [];
-	
-	$_SKIN -> {__current_row} = $i;
-
-	my $tr_id = {href => 'id=' . $i -> {id}};
-	check_href ($tr_id);
-	$tr_id -> {href} =~ s{[\&\?]salt=[\d\.]+}{};
-	$i -> {__tr_id} = $tr_id -> {href};
-
-	foreach my $callback (@$tr_callback) {
-
-		$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . ($_REQUEST {__windows_ce} ? '' : '&__last_scrollable_table_row=' . $scrollable_row_id);
-
-		$_SKIN -> start_table_row if $_SKIN -> {options} -> {no_buffering};
-		my $tr = &$callback ();
-		$_SKIN -> draw_table_row ($tr) if $_SKIN -> {options} -> {no_buffering};
-							
-		$tr or next;
-		
-		$scrollable_row_id ++;
-		
-		push @{$i -> {__trs}}, $tr unless $_SKIN -> {options} -> {no_buffering};
-					
-	}
-
-	$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common};
-	
-	if (@{$i -> {__types}} > 0) {			
-		$i -> {__menu} = draw_vert_menu ($i, $i -> {__types});			
-	}
-
-}
-
-################################################################################
-
 sub draw_table {
 
 	return '' if $_REQUEST {__only_form};
@@ -1874,23 +1833,56 @@ sub draw_table {
 
 	my $n = 0;
 	
-	if (ref $list eq 'DBI::st') {
+	local $i;
 	
-		while (our $i = $list -> fetchrow_hashref) {
-			draw_table_row ($n++, $tr_callback);
-		}
-		
-		$list -> finish;
-		
-	}
-	else {
+	foreach $i (@$list) {
 
-		foreach our $i (@$list) {
-			draw_table_row ($n++, $tr_callback);
+		$i -> {__n} = ++ $n;
+		$i -> {__types} = [];
+		$i -> {__trs}   = [];
+
+		$_SKIN -> {__current_row} = $i;
+
+		my $tr_id = {href => 'id=' . $i -> {id}};
+		check_href ($tr_id);
+		$tr_id -> {href} =~ s{[\&\?]salt=[\d\.]+}{};
+		$i -> {__tr_id} = $tr_id -> {href};
+
+		foreach my $callback (@$tr_callback) {
+
+			$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . ($_REQUEST {__windows_ce} ? '' : '&__last_scrollable_table_row=' . $scrollable_row_id);
+
+			$_SKIN -> start_table_row if $_SKIN -> {options} -> {no_buffering};
+			
+			my $tr = &$callback ();
+			
+			$tr or next;
+
+			if ($_SKIN -> {options} -> {no_buffering}) {
+			
+				$_SKIN -> draw_table_row ($tr);
+			
+			}
+			else {
+
+				push @{$i -> {__trs}}, $tr;
+
+			}
+
+			$scrollable_row_id ++;
+
+		}
+
+		if (@{$i -> {__types}} > 0) {			
+		
+			$i -> {__menu} = draw_vert_menu ($i, $i -> {__types});
+			
 		}
 		
-	}
+	}		
 	
+	$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common};
+
 	if ($_REQUEST {__gantt_from_year}) {
 	
 		$headers ||= [''];
