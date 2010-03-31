@@ -312,7 +312,7 @@ sub __adjust_button_href {
 
 	$options -> {id} ||= '' . $options;
 
-	if ((my $h = $options -> {hotkey}) && !$h -> {off}) {
+	if ((my $h = $options -> {hotkey}) && !$options -> {off}) {
 	
 		$h -> {data} = $options -> {id};
 		
