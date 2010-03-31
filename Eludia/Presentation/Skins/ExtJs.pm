@@ -34,22 +34,22 @@ sub __adjust_button_href {
 
 	my ($_SKIN, $options) = @_;
 		
-	if ($options -> {confirm}) {
-	
-		my $js_action;
+	my $js_action;
 		
-		if ($options -> {href} =~ /^javaScript\:/i) {
+	if ($options -> {href} =~ /^javaScript\:/i) {
 		
-			$js_action = $'
+		$js_action = $'
 		
-		}
-		else {
+	}
+	else {
 
-			$options -> {target} ||= 'center';
+		$options -> {target} ||= 'center';
 			
-			$js_action = "nope('$options->{href}','$options->{target}')";
+		$js_action = "nope('$options->{href}','$options->{target}')";
 
-		}
+	}
+
+	if ($options -> {confirm}) {	
 		
 		my $condition = 'confirm(' . $_JSON -> encode ($options -> {confirm}) . ')';
 		
@@ -59,23 +59,19 @@ sub __adjust_button_href {
 
 		}
 
-		$options -> {href} = "javascript:if($condition){$js_action}";
+		$js_action = "if($condition){$js_action}";
 		
 	}
-	
-	if ((my $h = $options -> {hotkey}) && !$h -> {off}) {
-			
-		hotkey ($h);
-		
-		$h -> {key} = delete $h -> {code};
-		
-		foreach my $name (qw (ctrl alt)) {
-		
-			delete $h -> {$name} or next;
-			
-			$h -> {$name} = \1;
 
-		}
+	$options -> {href} = "javascript:$js_action";
+
+	if ((my $h = $options -> {hotkey}) && !$options -> {off}) {
+
+		$h -> {type} = 'href';
+
+		$h -> {js_code} = $js_action;
+
+		hotkey ($h);
 
 	}
 
@@ -175,7 +171,17 @@ sub draw_page {
 
 	$_REQUEST {__content_type} = 'text/javascript; charset=' . $i18n -> {_charset};
 
-	return "$_REQUEST{__script};ui.checkMenu('$md5');$page->{body};ui.target.doLayout();";
+	my %hotkeys = ();
+
+	foreach my $i (@{$page -> {scan2names}}) {
+
+		my $key = (join '', map {my $x = $i -> {$_}; (ref $x ? $$x : $x) ? 1 : 0} qw (ctrl alt shift)) . $i -> {code};
+
+		$hotkeys {$key} = $i -> {js_code} ? {js_code => $i -> {js_code}} : {href => $i -> {data} -> {href}};
+
+	}
+
+	return "$_REQUEST{__script};ui.hotkeys=" . $_JSON -> encode (\%hotkeys) . ";ui.checkMenu('$md5');$page->{body};ui.target.doLayout();";
 
 }
 
@@ -835,6 +841,12 @@ sub draw_logon_form {
 
 			Ext.onReady (function () {
 			
+				Ext.get (document.body).on ('keydown', function (e, t, o) {
+				
+//					alert (e.keyCode + ' ' + e.ctrlKey + ' ' + e.altKey + ' ' + e.shiftKey);
+					
+				});
+
 				if (ui.sid) return ui.init ();
 				
 				var loginFormPanel =  new Ext.FormPanel ({ 
@@ -905,7 +917,7 @@ sub draw_logon_form {
 				});
 	
 				ui.loginForm.show ();
-
+				
 			});
 
 		</script>
