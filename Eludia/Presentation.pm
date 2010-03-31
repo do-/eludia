@@ -369,14 +369,14 @@ sub order {
 sub check_title {
 
 	my ($options) = @_;
+	
+	my $title = exists $options -> {title} ? $options -> {title} : '' . $options -> {label};
 
-	return if exists $options -> {title} && $options -> {title} eq '';
-
-	$options -> {title} ||= '' . $options -> {label};
-	$options -> {title} =~ s{\<.*?\>}{}g;	
-	$options -> {title} =~ s{^(\&nbsp\;)+}{};	
-	$options -> {title} =~ s{\"}{\&quot\;}g;	
-	$options -> {attributes} -> {title} = $options -> {title};
+	$title =~ s{\<.*?\>}{}g;
+	$title =~ s{^(\&nbsp\;)+}{};
+	$title =~ s{\"}{\&quot\;}g;
+	
+	$options -> {attributes} -> {title} = $title;
 
 }
 
