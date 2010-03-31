@@ -232,10 +232,10 @@ sub draw_table {
 	!exists $_REQUEST {__only_table} or $_REQUEST {__only_table} eq $options -> {name} or return '';
 
 	$options -> {id}     ||= 0 + $options;
-	
-	my $n = 0 + @{$options -> {header}};
-	
+		
 	my @rows = map {$_ -> {__field_values}} @$list;
+
+	my $n = @rows ? $rows [0] -> {cnt} : 0;
 
 	my $content = {
 		
@@ -278,7 +278,7 @@ sub draw_table {
 	%cell_hrefs = ();
 
 	!exists $_REQUEST {__only_table} or return out_html ({}, $data);
-	
+
 	my $columns  = $_JSON -> encode ($options -> {header} ||= [
 	
 		map {{
@@ -287,7 +287,7 @@ sub draw_table {
 		
 			dataIndex => 'f' . $_,
 	
-		}} (1 .. $n)
+		}} (0 .. $n - 1)
 	
 	]);
 	
