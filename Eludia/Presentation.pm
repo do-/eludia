@@ -18,26 +18,6 @@ sub json_dump_to_function {
 
 ################################################################################
 
-sub is_off {
-	
-	my ($options, $value) = @_;
-	
-	return 0 unless $options -> {off};
-	
-	if ($options -> {off} eq 'if zero') {
-		return ($value == 0);
-	}
-	elsif ($options -> {off} eq 'if not') {
-		return !$value;
-	}
-	else {
-		return $options -> {off};
-	}
-
-}
-
-################################################################################
-
 sub action_type_label (;$$) {
 	
 	my ($action, $type) = @_;
@@ -397,7 +377,6 @@ sub check_title {
 	$options -> {title} =~ s{^(\&nbsp\;)+}{};	
 	$options -> {title} =~ s{\"}{\&quot\;}g;	
 	$options -> {attributes} -> {title} = $options -> {title};
-	$options -> {title} = qq{title="$$options{title}"} if length $options -> {title}; #"
 
 }
 

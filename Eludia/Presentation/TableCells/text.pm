@@ -7,9 +7,22 @@ sub draw_text_cell {
 	ref $data eq HASH or $data = {label => $data};
 			
 	_adjust_row_cell_style ($data, $options);
-				
-	$data -> {off} = is_off ($data, $data -> {label});
-	
+
+	if (exists $data -> {off}) {
+			
+		if ($data -> {off} eq 'if zero') {
+		
+			$data -> {label} == 0 or delete $data -> {off};
+			
+		}
+		elsif ($options -> {off} eq 'if not') {
+		
+			$data -> {label}      or delete $data -> {off};
+			
+		}
+		
+	}
+
 	unless ($data -> {off}) {
 
 		$data -> {max_len} ||= $data -> {size} || $conf -> {size}  || $conf -> {max_len} || 30;
