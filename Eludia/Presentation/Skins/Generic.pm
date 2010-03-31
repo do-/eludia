@@ -343,7 +343,7 @@ sub __adjust_row_cell_style {
 		
 			$data    -> {class} || 
 			
-			$options -> {class} || (
+			($options -> {class} ||= (
 			
 				$options -> {is_total} ? 'row-cell-total' : 
 				
@@ -351,7 +351,7 @@ sub __adjust_row_cell_style {
 				
 				'row-cell'
 			
-			)
+			))
 			
 		);
 
