@@ -617,9 +617,11 @@
 			
 				var c = list [i];
 				
-				if (!data.href [c [0]]) data.href [c [0]] = [];
+				var r = c [0] - 1;
 				
-				data.href [c [0]] [c [1]] = full_href;
+				if (!data.href [r]) data.href [r] = [];
+				
+				data.href [r] [c [1]] = full_href;
 			
 			}
 		
