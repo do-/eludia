@@ -11,7 +11,12 @@ sub draw_form_field_suggest {
 
 	my $id = $_REQUEST {id};
 	
-	if ($data -> {id}) {
+	if ($_REQUEST {__suggest} eq $options -> {name}) {
+	
+		our $_SUGGEST_SUB = $options -> {values};
+	
+	}
+	elsif ($data -> {id}) {
 	
 		if ($options -> {value} == 0) {
 		
@@ -27,11 +32,6 @@ sub draw_form_field_suggest {
 
 		}
 
-	}
-	elsif ($_REQUEST {__suggest} eq $options -> {name}) {
-	
-		our $_SUGGEST_SUB = $options -> {values};
-	
 	}
 	
 	adjust_form_field_options ($options);

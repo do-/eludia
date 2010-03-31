@@ -106,8 +106,10 @@ function set_suggest_result (sel, id) {
 	
 	}
 	
+	try {
 	document.getElementById (id + '__id').value    = o.value;
 	document.getElementById (id + '__label').value = o.text;
+	} catch (e) {}
 	
 	var i = document.getElementById (id);
 	i.value = o.text;

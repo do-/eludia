@@ -488,13 +488,17 @@ sub handle_request_of_type_suggest {
 	
 	our $_SUGGEST_SUB = undef;
 
-	call_for_role ("draw_item_of_$$page{type}");
-	
+	$_REQUEST {__edit} = 1;
+	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
+
+	delete $_REQUEST {__read_only};
+	call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content});
+
 	if ($_SUGGEST_SUB) {
-				
+
 		delete $_REQUEST {id};
 
-		out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
+		out_html ({}, draw_suggest_page (ref $_SUGGEST_SUB eq 'CODE' ? &$_SUGGEST_SUB () : $_SUGGEST_SUB));
 	
 	}
 				

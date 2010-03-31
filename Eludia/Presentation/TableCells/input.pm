@@ -2,7 +2,7 @@ sub draw_input_cell {
 
 	my ($data, $options) = @_;
 	
-	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit}) || $data -> {read_only} || $data -> {off};
+	return draw_text_cell ($data, $options) if ($_REQUEST {__read_only} && !$data -> {edit} && !$_REQUEST {__suggest}) || $data -> {read_only} || $data -> {off};
 
 	$data -> {size} ||= 30;
 	
@@ -16,6 +16,12 @@ sub draw_input_cell {
 		$data -> {attributes} -> {align} ||= 'right';
 	}
 			
+	if ($data -> {autocomplete} && $_REQUEST {__suggest} eq $data -> {name}) {
+
+		our $_SUGGEST_SUB = &{$data -> {autocomplete} -> {values}} ();
+		
+	} 
+
 	check_title ($data);
 		
 	return $_SKIN -> draw_input_cell ($data, $options);

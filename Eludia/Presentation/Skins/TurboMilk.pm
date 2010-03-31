@@ -2517,13 +2517,86 @@ sub draw_input_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	my $autocomplete;
+	my $attr_input = {
+		onBlur => 'q_is_focused = false; left_right_blocked = false;',
+		onKeyDown => 'tabOnEnter();'
+	};
+	
+	if ($data -> {autocomplete}) {
+		my $id = '' . $data -> {autocomplete};
+		$_REQUEST {__script} .= qq{;
+			function off_suggest$data->{name} () {
+				var s = document.getElementById ('$data->{name}__suggest');
+				s.style.display = 'none';
+				try {tableSlider.cell_on ();} catch(e) {};
+			};
+		};
+
+		$attr_input -> {autocomplete} = 'off';
+		$attr_input -> {onBlur}     .= qq{; _suggest_timer$data->{name} = setTimeout (off_suggest$data->{name}, 100);};
+		$attr_input -> {onChange}   .= "$data->{autocomplete}{after};";
+		$attr_input -> {onKeyDown}  .= <<EOH;
+			var s = getElementById('$data->{name}__suggest');
+
+			if (window.event.keyCode == 40 && s.style.display == 'block') {
+				s.focus ();
+			}
+EOH
+		$attr_input -> {onKeyUp} .= <<EOH;
+			if (suggest_clicked) {
+				suggest_clicked = 0;
+			}
+			else {
+				var f = this.form;
+				var s = f.elements ['__suggest'];
+				document.getElementById ('$data->{name}__suggest').style.display = 'none';
+				if (this.value.length > 0) {
+					s.value = '$data->{name}';
+					f.submit ();
+					s.value = '';
+				}
+			}
+EOH
+		$data -> {autocomplete} -> {after} .= ';try {tableSlider.cell_on ();} catch(e) {};';
+		$data -> {autocomplete} -> {lines} ||= 10;
+
+		$autocomplete = qq {
+			<script>
+				var _suggest_timer$data->{name} = null;
+			</script>
+			<select 
+				id="$data->{name}__suggest" 
+				name="$data->{name}__suggest" 
+				size="$data->{autocomplete}{lines}"
+				style="
+					display : none;
+					position: absolute;
+					border  : solid black 1px;
+					z-index : 100;
+				"
+				onFocus="
+					if (_suggest_timer$data->{name}) {
+						clearTimeout (_suggest_timer$data->{name});
+						_suggest_timer$data->{name} = null;
+					}
+				"
+				onBlur="this.style.display='none'; $data->{autocomplete}{after}"
+				onDblClick="set_suggest_result (this, '$$data{name}'); $data->{autocomplete}{after}"
+				onKeyPress="set_suggest_result (this, '$$data{name}'); $data->{autocomplete}{after}; suggest_clicked = 1"
+			>
+			</select>
+		};
+	}
+
 	my $attributes = dump_attributes ($data -> {attributes});
+	$attr_input = dump_attributes ($attr_input);
 	
 	$data -> {label} =~ s{\"}{\&quot;}gsm;
 
 	my $tabindex = 'tabindex=' . (++ $_REQUEST {__tabindex});
 
-	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" onKeyDown="tabOnEnter();" type="text" name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex></nobr></td>};
+	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" $attr_input name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex>$autocomplete</nobr></td>};
 
 }
 
@@ -2730,6 +2803,7 @@ EOH
 		<table cellspacing=0 cellpadding=0 width="100%">
 			<tr>
 				<form name=$$options{name} action=$_REQUEST{__uri} method=post target=invisible $enctype>
+				<input type=hidden name="__suggest" value="">
 EOH
 
 }
@@ -3571,21 +3645,31 @@ sub draw_suggest_page {
 	<head>
 		<script>
 			function r () {
-								
+				
 				var q = {};
 			
 				var a = $a;
 								
 				var s = parent.document.getElementById ('_$_REQUEST{__suggest}__suggest');
+				if (!s) {
+					s = parent.document.getElementById ('$_REQUEST{__suggest}__suggest');
+					var t = parent.document.getElementById ('$_REQUEST{__suggest}');
+					try {parent.tableSlider.cell_off ()} catch (e) {}
+					parent.\$(s).css ({
+						top : 0,
+						left : 0,
+						width : t.offsetWidth,
+						position : 'relative'
+					});
+				} else {
+					var t = s.form.elements ['_$_REQUEST{__suggest}'];
+					var o = parent.\$(t).offset (parent.\$(parent.document.body));
 				
-				var t = s.form.elements ['_$_REQUEST{__suggest}'];
-				
-				var o = parent.\$(t).offset (parent.\$(parent.document.body));
-				
-				parent.\$(s).css ({
-					top   : o.top + 18,
-					width : t.offsetWidth
-				});
+					parent.\$(s).css ({
+						top   : o.top + 18,
+						width : t.offsetWidth
+					});
+				}
 				
 				s.options.length = 0;
 				for (var i = 0; i < a.length; i++) {
