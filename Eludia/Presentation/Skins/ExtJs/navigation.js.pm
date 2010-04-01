@@ -126,6 +126,20 @@
 
 	}
 
+	function sendKeepAliveRequest () {
+				
+		Ext.Ajax.request ({
+					
+			url    : '/',
+						
+			method : 'GET',
+						
+			params : {keepalive : ui.sid}
+					
+		});
+				
+	}
+
 /////////////// FORM
 
 	function submitFormNamed (name) { 

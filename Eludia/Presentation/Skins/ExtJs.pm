@@ -674,6 +674,8 @@ sub draw_error_page {
 
 sub draw_logon_form {
 
+	$keepalive = $preconf -> {no_keepalive} ? '' : 'setInterval (sendKeepAliveRequest, ' . (60000 * (($conf -> {session_timeout} ||= 30) - 0.5)) . ');';
+
 	return <<EOS;
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" 
     "http://www.w3.org/TR/html4/loose.dtd">
@@ -852,6 +854,8 @@ sub draw_logon_form {
 			}
 
 			Ext.onReady (function () {
+			
+				$keepalive
 			
 				Ext.get (document.body).on ('keydown', bodyOnKeyDown);
 
