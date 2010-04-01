@@ -750,6 +750,13 @@ Ext.ux.EludiaGridPanel = Ext.extend (Ext.grid.GridPanel, {
 		
 		panelOptions.colModel = new Ext.grid.ColumnModel ({columns: columns});
 		panelOptions.sm       = new Ext.grid.RowSelectionModel ({singleSelect:true});
+		
+		panelOptions.sm.on ('rowselect', function (m, i, r) {
+		
+			m.lastSelectedRow = i;
+
+		});
+
 		if (buttons.length > 0)	panelOptions.tbar = createGridToolbar (buttons, panelOptions.store);
 		
 		if (!panelOptions.listeners) panelOptions.listeners = {};
@@ -768,9 +775,26 @@ Ext.ux.EludiaGridPanel = Ext.extend (Ext.grid.GridPanel, {
 		
 		grid.on ("render", function () {
 		
-			grid.getSelectionModel ().selectRow (scrollable_table_row);
+			try {
 		
+				grid.getSelectionModel ().selectRow (scrollable_table_row);
+			
+				grid.getView ().focusRow (scrollable_table_row);
+			
+			}
+			catch (e) {}
+
 		}, grid, {delay: 200});
+
+		grid.on ("keydown", function (e) {
+		
+			if (e.keyCode == 13) {
+			
+				tableCellClicked (grid, grid.getSelectionModel ().lastSelectedRow, 0, e);
+						
+			}
+
+		}, grid, {});
 
 		return grid;
 
