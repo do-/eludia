@@ -176,8 +176,19 @@ sub draw_page {
 	foreach my $i (@{$page -> {scan2names}}) {
 
 		my $key = (join '', map {my $x = $i -> {$_}; (ref $x ? $$x : $x) ? 1 : 0} qw (ctrl alt shift)) . $i -> {code};
+		
+		if ($i -> {data} -> {href} =~ /^javaScript\:/i) {
+		
+			$i -> {js_code} = $';
+		
+		}
+		elsif ($i -> {data} -> {href}) {
+		
+			$i -> {js_code} = "nope($i->{data}->{href})";
+			
+		}
 
-		$hotkeys {$key} = $i -> {js_code} ? {js_code => $i -> {js_code}} : {href => $i -> {data} -> {href}};
+		$hotkeys {$key} = $i -> {js_code};
 
 	}
 
@@ -691,8 +702,9 @@ sub draw_logon_form {
 			};
 			
 			var ui = {
-				sid   : @{[ $_JSON -> encode ($_REQUEST {sid}) ]},
-				panel : {}
+				sid     : @{[ $_JSON -> encode ($_REQUEST {sid}) ]},
+				panel   : {},
+				hotkeys : {}
 			};
 
 			ui.checkMenu = function (md5) {
@@ -841,11 +853,7 @@ sub draw_logon_form {
 
 			Ext.onReady (function () {
 			
-				Ext.get (document.body).on ('keydown', function (e, t, o) {
-				
-//					alert (e.keyCode + ' ' + e.ctrlKey + ' ' + e.altKey + ' ' + e.shiftKey);
-					
-				});
+				Ext.get (document.body).on ('keydown', bodyOnKeyDown);
 
 				if (ui.sid) return ui.init ();
 				

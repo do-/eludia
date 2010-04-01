@@ -76,6 +76,12 @@
 				success: function (response, options) {
 
 					var s = response.responseText;
+					
+					if (s.substr (0, 20) == '<html><head><script>') {
+					
+						s = s.replace ('<html><head><script>', '').replace ('</script></head></html>', '');
+					
+					}
 
 //					try {
 
@@ -97,6 +103,26 @@
 			target.doLayout ();
 
 		}
+
+	}
+	
+	function bodyOnKeyDown (e, t, o) {
+
+		var key = '' +
+			(e.ctrlKey  ? 1 : 0) +
+			(e.altKey   ? 1 : 0) +
+			(e.shiftKey ? 1 : 0) +
+			 e.keyCode;
+
+		var d = ui.hotkeys [key];
+
+		if (!d) return;
+
+		eval (d);
+
+		try { e.browserEvent.keyCode = 8; } catch (e) {}
+
+		e.stopEvent ();
 
 	}
 
@@ -306,14 +332,6 @@
 
 		});
 		
-//		if (options.hotkey) {
-		
-//			options.hotkey.scope = button;
-
-//			new Ext.KeyMap (ui.panel.center.getEl (), options.hotkey, toolbarButtonHandler);
-		
-//		}
-		
 		return button;
 	
 	}
@@ -428,12 +446,14 @@
 					
 					href    : button.href,
 					
-					handler : button.target == 'invisible' ?  
+					handler :
 
-						function (b) {document.frames ['invisible'].location.href = b.href} : 
+						button.href.charAt (0) == 'j' ? function (b) {eval (b.href.substr (11))} :
 
-						function () {nope (button.href, button.target);}
-				
+						button.target == 'invisible'  ? function (b) {document.frames ['invisible'].location.href = b.href} :
+
+						                                function (b) {nope (b.href, b.target);}
+
 				});
 
 				tb.add (f);
