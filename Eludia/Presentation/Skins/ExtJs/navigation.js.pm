@@ -95,6 +95,8 @@
 //					}
 
 					try { ui.target.show () } catch (e) {}
+					
+					if (target == ui.panel.center) ui.last_url = url;
 
 				}
 
@@ -107,18 +109,27 @@
 	}
 	
 	function bodyOnKeyDown (e, t, o) {
+	
+		if (e.keyCode == 116 && ui.last_url) {
+		
+			nope (ui.last_url);
+		
+		}
+		else {
 
-		var key = '' +
-			(e.ctrlKey  ? 1 : 0) +
-			(e.altKey   ? 1 : 0) +
-			(e.shiftKey ? 1 : 0) +
-			 e.keyCode;
+			var key = '' +
+				(e.ctrlKey  ? 1 : 0) +
+				(e.altKey   ? 1 : 0) +
+				(e.shiftKey ? 1 : 0) +
+				 e.keyCode;
 
-		var d = ui.hotkeys [key];
+			var d = ui.hotkeys [key];
 
-		if (!d) return;
+			if (!d) return;
 
-		eval (d);
+			eval (d);
+		
+		}
 
 		try { 
 		
