@@ -120,9 +120,13 @@
 
 		eval (d);
 
-		try { e.browserEvent.keyCode = 8; } catch (e) {}
-
-		e.stopEvent ();
+		try { 
+		
+			e.browserEvent.keyCode = 32;
+	
+			e.stopEvent ();
+			
+		} catch (e) {}
 
 	}
 
