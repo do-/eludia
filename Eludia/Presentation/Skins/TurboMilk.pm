@@ -138,10 +138,16 @@ EOH
 ################################################################################
 
 sub draw_calendar {
-
-	my ($year, $mon, $mday) = Date::Calc::Today; $mon --;
 	
-	"$mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s' style='width:5px'></span><span id='clock_m'></span>";
+	my $month_names = $_JSON -> encode ($i18n -> {months});
+	
+	qq {
+		
+		<script>var __month_names = $month_names;</script>
+	
+		<span id='clock_d'></span>&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s' style='width:5px'></span><span id='clock_m'></span>
+		
+	}
 
 }
 
@@ -1943,7 +1949,7 @@ sub draw_toolbar_input_text {
 
 	$html .= <<EOH;
 		<input 
-			onKeyPress="$$options{onKeyPress}" 
+			onKeyPress="$$options{onKeyPress}; blockEvent ();" 
 			type=text 
 			size=$$options{size} 
 			name=$$options{name} 

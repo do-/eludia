@@ -107,8 +107,8 @@ function set_suggest_result (sel, id) {
 	}
 	
 	try {
-		document.getElementById (id + '__id').value    = o.value;
-		document.getElementById (id + '__label').value = o.text;
+	document.getElementById (id + '__id').value    = o.value;
+	document.getElementById (id + '__label').value = o.text;
 	} catch (e) {}
 	
 	var i = document.getElementById (id);
@@ -394,6 +394,7 @@ function UpdateClock () {
 
 	var tDate = new Date ();
 
+	$('#clock_d').text (tDate.getDate () + ' ' + __month_names [tDate.getMonth ()] + ' ' + tDate.getFullYear ());
 	$('#clock_h').text (twoDigits (tDate.getHours ()));
 	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
 	$('#clock_m').text (twoDigits (tDate.getMinutes ()));
@@ -1037,8 +1038,7 @@ TableSlider.prototype.set_row = function (row) {
 			this.rows [row].scrollIntoView(false);
 		}
 	}
-
-	
+	
 	if (row) this.cell_on ();
 
 }

@@ -36,11 +36,13 @@ sub sql_version {
 	sql_do ('ALTER SESSION SET ' . (join ' ', map {"$_ = '$s{$_}'"} keys %s));
 	
 	my $systables = {};
+	
 	foreach my $key (keys %{$conf -> {systables}}) {
 	    my $table = $conf -> {systables} -> {$key};
 	    $table =~ s/[\"\']//g;
 	    $systables -> {lc $table} = 1;
 	}
+	
 	sql_select_loop ("SELECT table_name FROM user_tables", sub {
 		next unless ($systables -> {lc $i -> {table_name}});
 		$version -> {tables} -> {lc $i -> {table_name}} = $i -> {table_name};
@@ -57,41 +59,31 @@ sub sql_version {
 
 ################################################################################
 
-sub sql_ping {
-
-	my $r;
-
-	eval {
-	
-		my $st = $db -> prepare ('SELECT 1 FROM DUAL');
-		
-		$st -> execute;
-		
-		$r = $st -> fetchrow_arrayref;
-	
-	};
-	
-	return @$r == 1 && $r -> [0] == 1 ? 1 : 0;
-
-}
+sub sql_ping { 1 }
 
 ################################################################################
 
 sub sql_do_refresh_sessions {
 
-	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
+	unless ($SQL_VERSION -> {_} -> {st_refresh_sessions}) {
+			
+		my $timeout = sql_sessions_timeout_in_minutes () / 1440;
+		
+		$SQL_VERSION -> {_} -> {st_refresh_sessions} = $db -> prepare_cached (<<EOS, {}, 3);
+		
+			BEGIN
+		
+				DELETE FROM $conf->{systables}->{sessions} WHERE ts < sysdate - $timeout;
 
-	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
-		$timeout = $1;
-		$timeout *= 
-			$2 eq 'h' ? 60 :
-			$2 eq 'd' ? 1440 :
-			1;
+				UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?;
+				
+			END;
+
+EOS
+	
 	}
 
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?", $timeout / 1440);
-
-	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?", $_REQUEST {sid});
+	$SQL_VERSION -> {_} -> {st_refresh_sessions} -> execute ($_REQUEST {sid});
 
 }
 
@@ -1014,6 +1006,8 @@ sub sql_store_file {
 		
 	open F, $options -> {real_path} or die "Can't open $options->{real_path}: $!\n";
 		
+	binmode F;
+
 	while (read (F, $buffer, $options -> {chunk_size})) {
 		$db -> ora_lob_append ($lob_locator, $buffer);
 	}

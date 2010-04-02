@@ -53,15 +53,7 @@ sub sql_prepare {
 
 sub sql_do_refresh_sessions {
 
-	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
-
-	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
-		$timeout = $1;
-		$timeout *= 
-			$2 eq 'h' ? 60 :
-			$2 eq 'd' ? 1440 :
-			1;
-	}
+	my $timeout = sql_sessions_timeout_in_minutes ();
 	
 	my @now = Date::Calc::Today_and_Now;
 

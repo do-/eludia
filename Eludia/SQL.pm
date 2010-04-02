@@ -5,6 +5,34 @@ use Eludia::SQL::Transfer;
 
 ################################################################################
 
+sub lc_hashref {}
+
+################################################################################
+
+sub sql_sessions_timeout_in_minutes {
+
+	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
+
+	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
+	
+		$timeout = $1 * (
+
+			$2 eq 'h' ? 60 :
+			
+			$2 eq 'd' ? 1440 :
+				
+			1
+				
+		)
+	
+	}
+	
+	return $timeout;
+
+}
+
+################################################################################
+
 sub add_vocabularies {
 
 	my ($item, @items) = @_;
@@ -311,6 +339,18 @@ $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
 		LongTruncOk => 1,
 		InactiveDestroy => 0,
 	});
+
+	if ($preconf -> {db_cache_statements}) {
+
+		require Eludia::Content::Tie::LRUHash;
+		
+		my %cache;
+
+		tie %cache, 'Eludia::Content::Tie::LRUHash', {size => 300};
+
+		$db -> {CachedKids} = \%cache;
+
+	}
 
 $time = __log_profilinig ($time, "  sql_reconnect: connected to $preconf->{db_dsn}");
 
