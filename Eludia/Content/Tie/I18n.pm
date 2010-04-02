@@ -22,11 +22,35 @@ sub i18n {
 		
 	};
 	
-	return \%i18n;
+	return bless \%i18n, 'Eludia::Tie::I18n';
 
 }
 
 package Eludia::Tie::I18n;
+
+sub lc {&{$_[0] -> {_subs} -> {lc}} ($_[1])};
+
+sub uc {&{$_[0] -> {_subs} -> {uc}} ($_[1])};
+
+sub ucfirst {
+
+	my ($self, $s) = @_;
+
+	$self -> uc (substr ($s, 0, 1)) . 
+	
+	substr ($s, 1)
+	
+};
+
+sub ucfirstlcrest {
+
+	my ($self, $s) = @_;
+
+	$self -> uc (substr ($s, 0, 1)) . 
+	
+	$self -> lc (substr ($s, 1))
+	
+};
 
 sub TIEHASH  {
 
@@ -37,6 +61,34 @@ sub TIEHASH  {
 	${"Eludia::Tie::I18n::$options->{lang}"} ||= eval "require Eludia::Content::Tie::I18n::$options->{lang}";
 	
 	$options -> {under} = ${"Eludia::Tie::I18n::$options->{lang}"};
+	
+	$options -> {under} -> {_subs} -> {'lc'} = eval qq { 
+
+		sub {
+
+			my (\$s) = \@_; 
+
+			\$s =~ y/$options->{under}->{_uc}/$options->{under}->{_lc}/;
+
+			return \$s;
+
+		} 
+
+	};
+	
+	$options -> {under} -> {_subs} -> {'uc'} = eval qq { 
+
+		sub {
+
+			my (\$s) = \@_; 
+
+			\$s =~ y/$options->{under}->{_lc}/$options->{under}->{_uc}/;
+
+			return \$s;
+
+		} 
+
+	};
 
 	bless $options, $package;
 

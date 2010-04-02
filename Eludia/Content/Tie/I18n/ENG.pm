@@ -3,6 +3,8 @@
 	_calendar_lang           => 'en',
 	_format_d		 => '%d.%m.%Y',
 	_format_dt		 => '%d.%m.%Y  %k:%M',
+	_lc			 => 'a-z',
+	_uc			 => 'A-Z',
 	Exit                     => 'Exit',
 	toolbar_pager_empty_list => 'empty list',		
 	toolbar_pager_of         => ' of ',

@@ -3,6 +3,8 @@
 	_calendar_lang           => 'ru',
 	_format_d		 => '%d.%m.%Y',
 	_format_dt		 => '%d.%m.%Y  %k:%M',
+	_lc			 => 'a-zа-яё',
+	_uc			 => 'A-ZА-ЯЁ',
 	Exit                     => 'Выход',
 	toolbar_pager_empty_list => 'список пуст',		
 	toolbar_pager_of         => ' из ',

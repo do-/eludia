@@ -3,6 +3,8 @@
 	_calendar_lang           => 'fr',
 	_format_d		 => '%d/%m/%Y',
 	_format_dt		 => '%d/%m/%Y  %k:%M',
+	_lc			 => 'a-zà-öø-ÿ',
+	_uc			 => 'A-ZÀ-ÖØ-ß',
 	Exit                     => 'Déconnexion',
 	toolbar_pager_empty_list => 'liste vide',
 	toolbar_pager_of         => ' de ',
