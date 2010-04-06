@@ -1943,13 +1943,13 @@ sub draw_toolbar_input_text {
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 	
-	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {form.submit()}";
+	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {form.submit (); blockEvent ()}";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
 		<input 
-			onKeyPress="$$options{onKeyPress}; blockEvent ();" 
+			onKeyPress="$$options{onKeyPress};" 
 			type=text 
 			size=$$options{size} 
 			name=$$options{name} 
