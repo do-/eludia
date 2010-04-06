@@ -140,6 +140,10 @@ sub js_detail {
 	my ($options) = @_;
 
 	ref $options -> {detail} eq ARRAY or $options -> {detail} = [$options -> {detail}];
+	
+	$options -> {master} ||= [];
+
+	ref $options -> {master} eq ARRAY or $options -> {master} = [$options -> {master}];
 
 	my ($codetail_js, $tab_js);
 
@@ -169,7 +173,6 @@ sub js_detail {
 
 		}
 
-
 		push @all_details, $detail;
 		
 		$tab_js .= <<EOJS;
@@ -190,7 +193,7 @@ EOJS
 	$href =~ s{^/}{};
 	
 	$options -> {value_src} ||= 'this.value';
-	
+
 	my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}=this.value&__only_field=" . (join ',', @all_details) : <<EOJS;
 		activate_link (
 
@@ -209,10 +212,10 @@ EOJS
 EOJS
 
 	push @{$_REQUEST{__invisibles}}, 'invisible_' . $options -> {name};
-	
-	my $codetails = $_JSON -> encode (\@all_codetails);
+
+	my $codetails = $_JSON -> encode ([@all_codetails, @{$options -> {master}}]);
 	$codetails =~ s/\"/\'/g;
-		
+
 	return <<EOJS;
 	
 		var element;
