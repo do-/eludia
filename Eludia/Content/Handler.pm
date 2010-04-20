@@ -10,6 +10,14 @@ sub handler {
 
 	return _ok () if eval { page_is_not_needed (\$time, @_) };
 	
+	my $code = $@ ? 500 : eval {
+
+		my $page = setup_page    (  );				$time = __log_profilinig ($time, '<setup_page>');
+
+		return &{"handle_request_of_type_$page->{request_type}"} ($page);
+
+	};
+	
 	if ($@) {
 	
 		warn "$@\n";
@@ -42,9 +50,7 @@ sub handler {
 	
 	}
 	
-	my $page = setup_page    (  );				$time = __log_profilinig ($time, '<setup_page>');
-
-	return &{"handle_request_of_type_$page->{request_type}"} ($page);
+	return $code;
 
 }
 
