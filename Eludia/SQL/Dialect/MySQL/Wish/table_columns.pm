@@ -140,6 +140,8 @@ sub __genereate_sql_fragment_for_column {
 
 		'');
 
+	$i -> {SQL} .= ' ' . $i -> {_EXTRA};
+
 	if (!$i -> {NULLABLE}) {
 	
 		$i -> {SQL} .= " NOT NULL";

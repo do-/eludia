@@ -350,13 +350,13 @@ sub __adjust_row_cell_style {
 			
 				$options -> {is_total} ? 'row-cell-total' : 
 				
-				$a -> {bgcolor}        ? 'row-cell-transparent' : 
-				
 				'row-cell'
 			
 			))
-			
+
 		);
+
+		$a -> {class} .= '-transparent' if $a -> {bgcolor};
 
 		$a -> {class} .= '-no-scroll' if ($data -> {no_scroll} && $data -> {attributes} -> {class} =~ /row-cell/);
 		
