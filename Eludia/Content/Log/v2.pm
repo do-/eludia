@@ -32,6 +32,8 @@ sub log_action_start {
 		)
 			
 	);
+	
+	$params_size = 1000 if $params_size == 4000;
 			
 	if ($params_size > -1) {
 	
