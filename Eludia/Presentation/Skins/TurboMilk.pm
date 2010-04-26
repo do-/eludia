@@ -756,7 +756,7 @@ sub draw_form_field_files {
 		
 		function file_field_add_$options->{name} () {
 		
-			document.body.style.cursor = 'default';
+			setCursor ();
 
 			var d = document.getElementById ('file_field_$options->{name}');
 
