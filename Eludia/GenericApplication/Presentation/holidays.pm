@@ -2,6 +2,8 @@
 
 sub draw_holidays {
 
+	require "Eludia/Presentation/TableCells/text.pm";
+	
 	my ($data) = @_;
 		
 	my @color = ('#FFFFFF', '#FFa0a0');
