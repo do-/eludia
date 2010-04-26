@@ -265,6 +265,7 @@ EOT
 
 			my $buf = '';
 			open (FILE, $attach -> {real_path}) or die "Can't open $attach->{real_path}: $!";
+			binmode (FILE);
 			while (read (FILE, $buf, 60*57)) {
 				$smtp -> datasend (encode_base64 ($buf));
 			}
