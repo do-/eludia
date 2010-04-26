@@ -376,6 +376,8 @@ $time = __log_profilinig ($time, "  sql_reconnect: $driver_name is loaded");
 
 	}
 	
+	delete $SQL_VERSION -> {_};
+	
 	sql_version ();
 
 $time = __log_profilinig ($time, "  sql_reconnect: driver version is $SQL_VERSION->{string}");
