@@ -112,7 +112,7 @@ sub get_user_with_fixed_session {
 
 sub get_user {
 
-	foreach (@{$preconf -> {_} -> {pre_auth}}) {&$_ ()};
+	eval { foreach (@{$preconf -> {_} -> {pre_auth}}) {&$_ ()} }; warn $@ if $@;
 	
 	my $user = get_user_with_fixed_session (check_peer_server ());
 	
