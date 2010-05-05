@@ -453,7 +453,7 @@ EOJ
 	$_REQUEST {__script} .= <<EOJ;
 			var data = $data;
 			alert (data [0]);
-			try {window.top.setCursor ()} catch (e) {}
+			try {window.parent.setCursor ()} catch (e) {}
 			window.parent.document.body.style.cursor = 'default';
 		}
 EOJ
