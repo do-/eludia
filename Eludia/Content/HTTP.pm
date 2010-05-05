@@ -50,6 +50,7 @@ sub redirect {
 
 	if ($options -> {kind} eq 'js') {
 	
+		setup_skin ();
 		$options -> {url} = $url;	
 		out_html ({}, draw_redirect_page ($options));
 		
