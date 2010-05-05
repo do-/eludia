@@ -237,11 +237,11 @@ sub cal_quarter {
 	
 	push @{$quarter -> {lines}}, {type => 'start_quarter', quarter => $quarter};
 	
-	foreach my $i (0 .. 4) {
+	foreach my $i (0 .. 5) {
 	
 		my @line = map {$quarter -> {months} -> [$_] -> {weeks} -> [$i]} (0 .. 2);
 		
-		last if $i == 4 and 0 == grep {$_} @line;
+		last if 0 == grep {$_} @line;
 		
 		push @{$quarter -> {lines}}, \@line;
 	
