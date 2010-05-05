@@ -356,7 +356,7 @@ sub __adjust_row_cell_style {
 
 		);
 
-		$a -> {class} .= '-transparent' if $a -> {bgcolor};
+		$a -> {class} .= '-transparent' if $a -> {bgcolor} && $a -> {class} !~ /-transparent/;
 
 		$a -> {class} .= '-no-scroll' if ($data -> {no_scroll} && $data -> {attributes} -> {class} =~ /row-cell/);
 		
