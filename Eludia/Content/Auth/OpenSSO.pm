@@ -170,7 +170,7 @@ warn Dumper ([$key, $login_field]);
 
 warn Dumper ($user);
 
-		start_session (sql (users => $user, ['login']));
+		start_session (sql (users => $user, [$preconf -> {ldap} -> {pk}]));
 
 	}	
 	
