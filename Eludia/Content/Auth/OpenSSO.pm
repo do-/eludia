@@ -114,18 +114,10 @@ warn Dumper ($response -> content);
 		}
 	
 	}
-	
-	
-	
-	
-	
-	
+		
 	my $login_field = $preconf -> {ldap} -> {fields} -> {login};
 		
 	$h {$login_field} or die "Empty login: " . Dumper (\%h);
-
-
-
 	
 	my $ldap = Net::LDAP -> new ($preconf -> {ldap} -> {host}) or die $@;
 
@@ -143,49 +135,22 @@ warn Dumper ($response -> content);
 		
 	);
 		
+	require_content 'logon';
 	
-	foreach my $entry ($mesg -> entries) {
+	$_REQUEST {type}   = 'logon';
+	$_REQUEST {action} = 'execute';
+	$_REQUEST {login}  = $h {$login_field};
 
-		my $user = {-fake => 0};
-
-		my $f = $preconf -> {ldap} -> {fields};
-
-		foreach my $key (keys %$f) {
-		
-			my $s = $entry -> get_value ($f -> {$key});
-
-			Encode::from_to ($s, 'utf8', 'windows-1251');
-			
-			$f -> {$key} eq $login_field or $key = "-$key";
-
-warn Dumper ([$key, $login_field]);
-
-			$user -> {$key} = $s;
-
-		}
-
-		($user -> {-f}, $user -> {-i}, $user -> {-o}) = split /\s+/, $user -> {-label};
-
-		$user -> {-is_female} = $user -> {-o} =~ /à$/ ? 1 : 0;
-
-warn Dumper ($user);
-
-		start_session (sql (users => $user, [$preconf -> {ldap} -> {pk}]));
-
-	}	
+	eval { validate_execute_logon ()};
 	
-	if ($_COOKIE {redirect_params}) {
+warn Dumper ($_USER);
 
-		$_REQUEST {type}   = 'logon';
-		$_REQUEST {action} = 'execute';
+	eval {       do_execute_logon ()};
+	eval {      recalculate_logon ()};
+		
+	redirect ({}) if $_COOKIE {redirect_params};
 
-		recalculate_logon ();
-		
-		delete $_REQUEST {action};
-		
-		redirect ({});
-	
-	}
+	delete $_REQUEST {$_} foreach qw (login action);
 
 warn Dumper (\%_REQUEST);
 
