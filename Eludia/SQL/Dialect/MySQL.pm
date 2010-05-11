@@ -57,15 +57,7 @@ sub sql_do_refresh_sessions {
 
 	my $timeout = sql_sessions_timeout_in_minutes ();
 
-	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < now() - INTERVAL ? MINUTE", $timeout);
-	
-	if ($ids ne '-1') {
-
-		sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
-
-		$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
-
-	}
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < now() - INTERVAL ? MINUTE", $timeout);
 
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = NULL WHERE id = ? ", $_REQUEST {sid});
 
