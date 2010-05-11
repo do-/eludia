@@ -2537,10 +2537,18 @@ sub out_json ($) {
 sub out_script {
 
 	my $html = '<html><head><script>';
-	
-	$html .= 'var data = ' . $_JSON -> encode ($_[1]) . ';' if $_[1]; 
 
-	$html .= $_[0] . '</script></head></html>';
+	$html .= 'var data = ' . $_JSON -> encode ($_[1]) . ';' if $_[1];
+
+	my $is_function_name = $_[0] =~ /^\w+$/;
+	
+	$html .= 'parent.' if $is_function_name;
+
+	$html .= $_[0];
+
+	$html .= '(data)' if $is_function_name;
+
+	$html .= '</script></head></html>';
 
 	out_html ({}, $html);
 
