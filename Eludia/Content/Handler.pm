@@ -19,32 +19,18 @@ sub handler {
 	};
 	
 	if ($@) {
-	
+
 		warn "$@\n";
-		
-		setup_json ();
-		
-		my $s = $_JSON -> encode ($@);
+
+		out_script (q {
 	
-		out_html ({}, qq {
-		
-			<html>
-				<head>
-					<script>
-					
-						var s = $s;
-						
-						var d = window.top.document;
-						
-						d.write ('<pre>' + s + '</s>');
-						
-						d.close ();
-					
-					</script>
-				</head>
-			</html>
-		
-		});
+			var d = window.top.document;
+
+			d.write ('<pre>' + data + '</pre>');
+
+			d.close ();
+
+		}, $@);
 		
 		return _ok ();
 	
