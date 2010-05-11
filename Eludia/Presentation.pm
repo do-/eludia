@@ -6,6 +6,16 @@ sub js ($)    {$_REQUEST {__script} .= ";\n$_[0];\n"; return ''}
 
 sub j  ($)    {js "\$(document).ready (function () { $_[0] })"}
 
+sub function (@)  {
+
+	my $name = shift;
+	my $code = pop;
+	my $args = join ',', @_;
+	
+	js ("function $name ($args) {$code}");
+
+}
+
 ################################################################################
 
 sub json_dump_to_function {
