@@ -768,8 +768,6 @@ sub sql_increment_sequence {
 sub sql_do_insert {
 
 	my ($table_name, $pairs) = @_;
-
-	delete_fakes ($table_name);	
 		
 	my $fields = '';
 	my $args   = '';
@@ -777,6 +775,8 @@ sub sql_do_insert {
 	my $table_name_safe = sql_table_name ($table_name);
 
 	$pairs -> {fake} = $_REQUEST {sid} unless exists $pairs -> {fake};
+	
+	delete_fakes ($table_name) if $pairs -> {fake} > 0;
 
 	if (is_recyclable ($table_name)) {
 	
