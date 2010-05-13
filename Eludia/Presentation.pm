@@ -1489,9 +1489,9 @@ sub draw_cells {
 	
 	foreach my $cell (@cells) {
 	
-		if ($options -> {href}) {
+		ref $cell or $cell = {label => $cell, type => 'text'};
 
-			ref $cell or $cell = {label => $cell};
+		if ($options -> {href}) {
 
 			$cell -> {a_class} ||= $options -> {a_class};
 			$cell -> {target}  ||= $options -> {target} || '_self';
@@ -1505,14 +1505,13 @@ sub draw_cells {
 				$cell -> {dialog} = $options -> {dialog};
 			}
 		}
+
+		$options -> {__fixed_cols} ++ if $cell -> {no_scroll};
 		
-		$options -> {__fixed_cols} ++ if ref $cell eq HASH && $cell -> {no_scroll};
-		
+		$cell -> {type}   = 'text' if $cell -> {off} || $cell -> {read_only};
+
 		$cell -> {type} ||= 
 		
-			!ref $cell                ? 'text'     : 
-			$cell -> {off}            ? 'text'     :
-			$cell -> {read_only}      ? 'text'     :
 			$cell -> {icon}           ? 'button'   :
 			exists $cell -> {checked} ? 'checkbox' :
 						    'text'     ;
