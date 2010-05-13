@@ -1409,30 +1409,7 @@ sub js_set_select_option {
 sub draw_cells {
 
 	my $options = (ref $_[0] eq HASH) ? shift () : {};
-	
-	if ($options -> {gantt}) {
 
-		$i -> {__gantt} = $options -> {gantt};
-		
-		$_REQUEST {__gantt_from_year} ||= 3000;
-		$_REQUEST {__gantt_to_year}   ||= 1;
-
-		foreach my $key (keys %{$options -> {gantt}}) {
-		
-			foreach my $ft ('from', 'to') {
-			
-				$options -> {gantt} -> {$key} -> {$ft} =~ s{^(\d\d).(\d\d).(\d\d\d\d)$}{$3-$2-$1};
-
-				$options -> {gantt} -> {$key} -> {$ft} =~ /^(\d\d\d\d)/;
-				$_REQUEST {__gantt_from_year} <= $1 or $_REQUEST {__gantt_from_year} = $1;
-				$_REQUEST {__gantt_to_year} >= $1 or $_REQUEST {__gantt_to_year} = $1;
-			
-			}
-			
-		}
-		
-	}
-	
 	my $result = '';
 	
 	delete $options -> {href} if $options -> {is_total};
@@ -1522,8 +1499,27 @@ sub draw_cells {
 	
 	if ($options -> {gantt}) {
 
-		$result .= draw_gantt_bars ($options -> {gantt});
+		my $g = $i -> {__gantt} = $options -> {gantt};
 		
+		$_REQUEST {__gantt_from_year} ||= 3000;
+		$_REQUEST {__gantt_to_year}   ||= 1;
+
+		foreach my $v (values %$g) {
+				
+			foreach my $ft ('from', 'to') {				
+
+				$v -> {$ft} =~ s{^(\d\d).(\d\d).(\d\d\d\d)$}{$3-$2-$1};
+				$v -> {$ft} =~ /^(\d\d\d\d)/;
+
+				$_REQUEST {__gantt_from_year} <= $1 or $_REQUEST {__gantt_from_year} = $1;
+				$_REQUEST {__gantt_to_year}   >= $1 or $_REQUEST {__gantt_to_year}   = $1;
+
+			}
+			
+		}
+
+		$result .= draw_gantt_bars ($options -> {gantt});
+
 	}
 
 	return $result;
