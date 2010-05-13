@@ -1445,24 +1445,8 @@ sub draw_cells {
 	}
 
 	my @cells = order_cells (@{$_[0]});
-
-	if ($_REQUEST {select} && !$options -> {select_label}) {
 	
-		my @cell;
-
-		if ((@cell = grep {$_ -> {select_href}} @{$_[0]}) == 0) {
-
-			foreach my $cell (@cells) {
-				if (!$cell -> {no_select_href} && ($cell -> {label} ne '')) {
-					$options -> {select_label} = $cell -> {label};
-					last;
-				} 
-			}
-
-		} else {
-			$options -> {select_label} = $cell [0] -> {label};
-		}
-	}
+	$options -> {target} ||= '_self';
 	
 	foreach my $cell (@cells) {
 	
@@ -1471,7 +1455,7 @@ sub draw_cells {
 		if ($options -> {href}) {
 
 			$cell -> {a_class} ||= $options -> {a_class};
-			$cell -> {target}  ||= $options -> {target} || '_self';
+			$cell -> {target}  ||= $options -> {target};
 
 			unless (exists $cell -> {href}) {
 				$cell -> {href} = $options -> {href};
@@ -1497,6 +1481,20 @@ sub draw_cells {
 
 	}
 	
+	if ($_REQUEST {select} && !$options -> {select_label}) {
+
+		foreach my $cell (@cells) {
+
+			next if $cell -> {no_select_href} ||  $cell    -> {label}        eq '';
+
+			$cell         -> {select_href}    and $options -> {select_label} =  $cell -> {label} and last;
+
+			$options      -> {select_label}   ||= $cell    -> {label};
+
+		}
+
+	}
+
 	if ($options -> {gantt}) {
 
 		my $g = $i -> {__gantt} = $options -> {gantt};
