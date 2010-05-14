@@ -1883,83 +1883,17 @@ sub draw_table {
 		
 			push @{$headers -> [0]}, {label => $year, colspan => 12};
 			$headers -> [1] ||= [];
-			push @{$headers -> [1]}, {label => 'I', colspan => 3};
-			push @{$headers -> [1]}, {label => 'II', colspan => 3};
-			push @{$headers -> [1]}, {label => 'III', colspan => 3};
-			push @{$headers -> [1]}, {label => 'IV', colspan => 3};
+
+			push @{$headers -> [1]}, {label => $_, colspan => 3} foreach qw (I II III IV);
 			$headers -> [2] ||= [];
 			
-			
-			
-#			push @{$headers -> [2]}, qw(ß Ô Ì À Ì È È À Ñ Î Í Ä);
+			push @{$headers -> [2]}, {
+				label => (substr $i18n -> {month_names_1} -> [$_ - 1], 0, 1),
+				title => $i18n -> {month_names_1} -> [$_ - 1] . " ${year}",
+				attributes => {id => sprintf ('gantt_%04d_%02d', $year, $_)},
+			} foreach (1 .. 12);
 
-			push @{$headers -> [2]}, {
-				label => 'ß',
-				title => "ÿíâàğü ${year} ã.",
-				attributes => {id => "gantt_${year}_01"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'Ô',
-				title => "ôåâğàëü ${year} ã.",
-				attributes => {id => "gantt_${year}_02"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'Ì',
-				title => "ìàğò ${year} ã.",
-				attributes => {id => "gantt_${year}_03"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'À',
-				title => "àïğåëü ${year} ã.",
-				attributes => {id => "gantt_${year}_04"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'Ì',
-				title => "ìàé ${year} ã.",
-				attributes => {id => "gantt_${year}_05"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'È',
-				title => "èşíü ${year} ã.",
-				attributes => {id => "gantt_${year}_06"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'È',
-				title => "èşëü ${year} ã.",
-				attributes => {id => "gantt_${year}_07"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'À',
-				title => "àâãóñò ${year} ã.",
-				attributes => {id => "gantt_${year}_08"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'Ñ',
-				title => "ñåíòÿáğü ${year} ã.",
-				attributes => {id => "gantt_${year}_09"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'Î',
-				title => "îêòÿáğü ${year} ã.",
-				attributes => {id => "gantt_${year}_10"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'Í',
-				title => "íîÿáğü ${year} ã.",
-				attributes => {id => "gantt_${year}_11"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'Ä',
-				title => "äåêàáğü ${year} ã.",
-				attributes => {id => "gantt_${year}_12"},
-			};
-			
-			
-
-			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
-			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
-			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
-			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
+			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list}) x 4;
 		
 		}
 	
