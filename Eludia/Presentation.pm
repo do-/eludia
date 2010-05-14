@@ -597,6 +597,8 @@ sub draw_form {
 
 	my ($options, $data, $fields) = @_;
 	
+	my $time = time;
+	
 	return '' if $options -> {off} && $data;
 
 	$options -> {hr} = defined $options -> {hr} ? $options -> {hr} : 10;
@@ -758,9 +760,13 @@ sub draw_form {
 	
 	}
 
-	$options -> {keep_params} = \@keep_params;	
+	$options -> {keep_params} = \@keep_params;
+	
+	my $html = $_SKIN -> draw_form ($options);
 		
-	return $_SKIN -> draw_form ($options);
+	__log_profilinig ($time, sprintf ("  draw_form"));
+
+	return $html;
 
 }
 
@@ -1670,6 +1676,8 @@ sub draw_table_header_cell {
 
 sub draw_table {
 
+	my $time = time;
+
 	return '' if $_REQUEST {__only_form};
 
 	my $headers = [];
@@ -1974,6 +1982,8 @@ sub draw_table {
 	delete $_REQUEST {__gantt_from_year};
 	delete $_REQUEST {__gantt_to_year};
 	
+	__log_profilinig ($time, sprintf ("  draw_table"));
+
 	return $html;
 
 }
@@ -1985,6 +1995,8 @@ sub draw_tree {
 	my ($node_callback, $list, $options) = @_;
 	
 	return '' if $options -> {off};
+	
+	my $time = time;
 	
 	$options -> {width} ||= 250;
 		
@@ -2102,6 +2114,8 @@ sub draw_tree {
 	
 	
 	my $html = $_SKIN -> draw_tree ($node_callback, $list, $options);
+
+	__log_profilinig ($time, sprintf ("  draw_tree"));
 
 	return $html;
 
