@@ -6,7 +6,7 @@ sub draw_toolbar_pager {
 	$options -> {total}   ||= $_REQUEST {__page_content} -> {cnt};
 	$options -> {cnt}     ||= 0 + @$list;
 
-	$options -> {start} = $_REQUEST {start} + 0;
+	$options -> {start} = $_REQUEST {start} || 0;
 
 	$conf -> {kb_options_pager} ||= $conf -> {kb_options_buttons};
 	$conf -> {kb_options_pager} ||= {ctrl => 1};
@@ -51,7 +51,7 @@ sub draw_toolbar_pager {
 
 	}
 
-	$options -> {infty_url}   = create_url (__last_query_string => $last_query_string, __infty => 1 - $_REQUEST {__infty}, __no_infty => 1 - $_REQUEST {__no_infty}, @keep_params);
+	$options -> {infty_url}   = create_url (__last_query_string => $last_query_string, __infty => 1 - ($_REQUEST {__infty} || 0), __no_infty => 1 - ($_REQUEST {__no_infty} || 0), @keep_params);
 	
 	$options -> {infty_label} = $options -> {total} > 0 ? $options -> {total} : $i18n -> {infty};
 	
