@@ -76,7 +76,7 @@ sub draw_text_cell {
 			$data -> {label} = trunc_string ($data -> {label}, $data -> {max_len});
 		}
 
-		exists $options -> {strike} or $data -> {strike} ||= $i -> {fake} < 0;
+		exists $options -> {strike} or !exists $i -> {fake} or $data -> {strike} ||= $i -> {fake} < 0;
 		
 	}
 	
