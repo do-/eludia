@@ -314,10 +314,11 @@ sub setup_request_params_for_action {
 sub setup_page {
 
 	my $page = {
-		type   => $_REQUEST {type},
 		subset => setup_subset (),
 		menu   => setup_menu (),
 	};
+	
+	$page -> {type} = $_REQUEST {type};
 
 	call_for_role ('get_page');
 
