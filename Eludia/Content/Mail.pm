@@ -155,7 +155,7 @@ sub send_mail {
 	
 	my $is_child = 0;
 	
-	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'}) {
+	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'} || $_REQUEST {__skin} eq 'STDERR') {
 
 		$SIG {'CHLD'} = "IGNORE";
 
