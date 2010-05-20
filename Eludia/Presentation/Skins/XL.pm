@@ -676,8 +676,8 @@ sub start_page {
 	};
 
 	$r -> content_type ('application/octet-stream');
-	my $page_title = $conf -> {page_title};
-	$page_title =~ s/[\"\?]/_/g;
+	my $page_title = $_REQUEST {__page_title};
+	$page_title =~ s/[\"\?\:\s\\\/]+/_/gs;
 	$r -> header_out ('P3P' => 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
 	$r -> header_out ('Content-Disposition' => "attachment;filename=$page_title.xls"); 	
 	$r -> send_http_header ();
