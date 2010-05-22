@@ -62,6 +62,8 @@ sub download_file_header {
 	
 	delete $r -> headers_out -> {'Content-Encoding'};
 	
+	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
+
 	send_http_header ();
 
 	$_REQUEST {__response_sent} = 1;
