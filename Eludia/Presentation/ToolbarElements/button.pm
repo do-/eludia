@@ -20,7 +20,7 @@ sub draw_toolbar_button {
 		$options -> {href} .= "&__last_query_string=$_REQUEST{__last_last_query_string}";
 
 		$options -> {href} =~ s{\&?__last_scrollable_table_row=\d*}{}gsm;
-		$options -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" unless ($_REQUEST {__windows_ce});
+		$options -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" if defined $_REQUEST{__last_scrollable_table_row} && !$_REQUEST {__windows_ce};
 	
 	}		
 	

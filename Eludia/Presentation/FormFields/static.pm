@@ -22,7 +22,7 @@ sub draw_form_field_static {
 
 	my $static_value = '';
 	
-	if ($options -> {field} =~ /^(\w+)\.(\w+)$/) {
+	if (($options -> {field} || '') =~ /^(\w+)\.(\w+)$/) {
 			
 		$options -> {values} = [map {{
 			type   => 'static',
@@ -138,7 +138,7 @@ sub draw_form_field_static {
 			
 			}			
 			
-			if ($item -> {type} eq 'hgroup') {
+			if (($item -> {type} ||= '') eq 'hgroup') {
 				$item -> {read_only} = 1;
 				$static_value .= ' ';
 				$static_value .= draw_form_field_hgroup ($item, $data);

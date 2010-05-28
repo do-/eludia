@@ -22,7 +22,7 @@ sub draw_toolbar_input_select {
 	
 	exists $options -> {empty} and unshift @{$options -> {values}}, {id => '', label => $options -> {empty}};
 
-	$options -> {value}   ||= $_REQUEST {$options -> {name}};
+	$options -> {value} ||= $_REQUEST {$options -> {name}} || '';
 
 	foreach my $value (@{$options -> {values}}) {		
 		$value -> {label}    = trunc_string ($value -> {label}, $options -> {max_len});						

@@ -597,6 +597,8 @@ sub draw_form {
 
 	my ($options, $data, $fields) = @_;
 	
+	my $time = time;
+	
 	return '' if $options -> {off} && $data;
 
 	$options -> {hr} = defined $options -> {hr} ? $options -> {hr} : 10;
@@ -758,9 +760,13 @@ sub draw_form {
 	
 	}
 
-	$options -> {keep_params} = \@keep_params;	
+	$options -> {keep_params} = \@keep_params;
+	
+	my $html = $_SKIN -> draw_form ($options);
 		
-	return $_SKIN -> draw_form ($options);
+	__log_profilinig ($time, sprintf ("  draw_form"));
+
+	return $html;
 
 }
 
@@ -1670,6 +1676,8 @@ sub draw_table_header_cell {
 
 sub draw_table {
 
+	my $time = time;
+
 	return '' if $_REQUEST {__only_form};
 
 	my $headers = [];
@@ -1875,83 +1883,17 @@ sub draw_table {
 		
 			push @{$headers -> [0]}, {label => $year, colspan => 12};
 			$headers -> [1] ||= [];
-			push @{$headers -> [1]}, {label => 'I', colspan => 3};
-			push @{$headers -> [1]}, {label => 'II', colspan => 3};
-			push @{$headers -> [1]}, {label => 'III', colspan => 3};
-			push @{$headers -> [1]}, {label => 'IV', colspan => 3};
+
+			push @{$headers -> [1]}, {label => $_, colspan => 3} foreach qw (I II III IV);
 			$headers -> [2] ||= [];
 			
-			
-			
-#			push @{$headers -> [2]}, qw(Я Ф М А М И И А С О Н Д);
+			push @{$headers -> [2]}, {
+				label => (substr $i18n -> {month_names_1} -> [$_ - 1], 0, 1),
+				title => $i18n -> {month_names_1} -> [$_ - 1] . " ${year}",
+				attributes => {id => sprintf ('gantt_%04d_%02d', $year, $_)},
+			} foreach (1 .. 12);
 
-			push @{$headers -> [2]}, {
-				label => 'Я',
-				title => "январь ${year} г.",
-				attributes => {id => "gantt_${year}_01"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'Ф',
-				title => "февраль ${year} г.",
-				attributes => {id => "gantt_${year}_02"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'М',
-				title => "март ${year} г.",
-				attributes => {id => "gantt_${year}_03"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'А',
-				title => "апрель ${year} г.",
-				attributes => {id => "gantt_${year}_04"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'М',
-				title => "май ${year} г.",
-				attributes => {id => "gantt_${year}_05"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'И',
-				title => "июнь ${year} г.",
-				attributes => {id => "gantt_${year}_06"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'И',
-				title => "июль ${year} г.",
-				attributes => {id => "gantt_${year}_07"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'А',
-				title => "август ${year} г.",
-				attributes => {id => "gantt_${year}_08"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'С',
-				title => "сентябрь ${year} г.",
-				attributes => {id => "gantt_${year}_09"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'О',
-				title => "октябрь ${year} г.",
-				attributes => {id => "gantt_${year}_10"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'Н',
-				title => "ноябрь ${year} г.",
-				attributes => {id => "gantt_${year}_11"},
-			};
-			push @{$headers -> [2]}, {
-				label => 'Д',
-				title => "декабрь ${year} г.",
-				attributes => {id => "gantt_${year}_12"},
-			};
-			
-			
-
-			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
-			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
-			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
-			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list});
+			$list -> [0] -> {__trs} -> [0] .= draw_text_cell ({colspan => 3, rowspan => 0 + @$list}) x 4;
 		
 		}
 	
@@ -1974,6 +1916,8 @@ sub draw_table {
 	delete $_REQUEST {__gantt_from_year};
 	delete $_REQUEST {__gantt_to_year};
 	
+	__log_profilinig ($time, sprintf ("  draw_table"));
+
 	return $html;
 
 }
@@ -1985,6 +1929,8 @@ sub draw_tree {
 	my ($node_callback, $list, $options) = @_;
 	
 	return '' if $options -> {off};
+	
+	my $time = time;
 	
 	$options -> {width} ||= 250;
 		
@@ -2102,6 +2048,8 @@ sub draw_tree {
 	
 	
 	my $html = $_SKIN -> draw_tree ($node_callback, $list, $options);
+
+	__log_profilinig ($time, sprintf ("  draw_tree"));
 
 	return $html;
 
