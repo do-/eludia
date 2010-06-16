@@ -766,6 +766,7 @@ sub check_module_auth {
 	check_module_auth_cookie  ();
 	check_module_auth_ntlm    ();
 	check_module_auth_opensso ();
+	check_module_auth_tinysso ();
 	
 }
 
@@ -806,6 +807,27 @@ sub check_module_auth_opensso {
 	else { 
 
 		print STDERR "no OpenSSO, ok.\n";
+		
+	}
+
+}
+
+################################################################################
+
+sub check_module_auth_tinysso {
+
+	print STDERR "  check_module_auth_tinysso.......... ";
+
+	if ($preconf -> {ldap} -> {tinysso}) { 
+		
+		require Eludia::Content::Auth::TinySSO; 
+		
+		print STDERR "$preconf->{ldap}->{tinysso}, ok.\n";
+
+	} 
+	else { 
+
+		print STDERR "no TinySSO, ok.\n";
 		
 	}
 
