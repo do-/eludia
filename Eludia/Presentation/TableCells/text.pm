@@ -8,14 +8,14 @@ sub draw_text_cell {
 			
 	_adjust_row_cell_style ($data, $options);
 
-	if (exists $data -> {off}) {
+	if (defined $data -> {off}) {
 			
-		if ($data -> {off} eq 'if zero') {
+		if ($data -> {off} eq 'if zero' && defined $data -> {label}) {
 		
 			$data -> {label} == 0 or delete $data -> {off};
 			
 		}
-		elsif ($options -> {off} eq 'if not') {
+		elsif ($data -> {off} eq 'if not') {
 		
 			$data -> {label}      or delete $data -> {off};
 			
@@ -76,7 +76,7 @@ sub draw_text_cell {
 			$data -> {label} = trunc_string ($data -> {label}, $data -> {max_len});
 		}
 
-		exists $options -> {strike} or $data -> {strike} ||= $i -> {fake} < 0;
+		exists $options -> {strike} or !exists $i -> {fake} or $data -> {strike} ||= $i -> {fake} < 0;
 		
 	}
 	
