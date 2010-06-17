@@ -31,13 +31,26 @@ sub get_user_sql {
 	my @session_fields = qw (ip ip_fw client_cookie);
 	
 	push @session_fields, 'tz_offset' if $preconf -> {core_fix_tz};
+	
+	my $ohter_select = '';
+	my $ohter_join   = '';
+	
+	$ohter_select .= ", $sessions.$_" foreach @session_fields;
+	
+	if ($conf -> {core_delegation}) {
+	
+		$ohter_select .= ', users__real.id AS id__real, users__real.label AS label__real';
+	
+		$ohter_join   .= "LEFT JOIN $users users__real ON $sessions.id_user_real = users__real.id";
+	
+	}
 
 	<<EOS;
 		SELECT
 			$users.*
 			, $roles.name AS role
 			, $roles.label AS role_label
-			@{[ map {', ' . $sessions . '.' . $_} @session_fields]}
+			$ohter_select
 		FROM
 			$sessions
 			LEFT JOIN $users ON (
@@ -45,6 +58,7 @@ sub get_user_sql {
 				AND $users.fake <> -1
 			)
 			LEFT JOIN $roles ON $users.id_role = $roles.id
+			$ohter_join
 		WHERE
 			$sessions.id = ?
 EOS

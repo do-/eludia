@@ -3,6 +3,7 @@ columns => {
 	id      	=> {TYPE_NAME  => 'bigint', _PK    => 1},
 
 	id_user 	=> {TYPE_NAME  => 'int'},
+	id_user_real    => {TYPE_NAME => 'int', off => !$conf -> {core_delegation}},
 	id_role 	=> {TYPE_NAME  => 'int'},
 	ts      	=> {TYPE_NAME  => 'timestamp'},
 

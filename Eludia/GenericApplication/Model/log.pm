@@ -3,6 +3,7 @@ columns => {
 	dt          => {TYPE_NAME => 'timestamp'},
 
 	id_user     => {TYPE_NAME => 'int'},
+	id_user_real=> {TYPE_NAME => 'int', off => !$conf -> {core_delegation}},
 	ip          => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 	ip_fw       => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 	action      => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},

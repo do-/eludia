@@ -102,6 +102,14 @@ sub log_action_finish {
 
 	}
 
+	if ($conf -> {core_delegation}) {
+	
+		$fields .= ', id_user_real = ?';
+	
+		push @values, $_USER -> {id__real};
+	
+	}
+
 	sql_do ("UPDATE $conf->{systables}->{log} SET $fields WHERE id = ?", @values, $_REQUEST {_id_log});
 
 }

@@ -29,13 +29,23 @@ sub log_action_finish {
 	
 	$_REQUEST {_params}    =  $_REQUEST {params} = Data::Dumper -> Dump ([\%_REQUEST_VERBATIM], ['_REQUEST']);
 	$_REQUEST {_params}    =~ s/ {2,}/\t/g;
-		
+
+	my @fields = qw (params error id_object id_user);
+	
 	$_REQUEST {error}      =  substr ($_REQUEST {error}, 0, 255);
 	$_REQUEST {_error}     =  $_REQUEST {error};
 	$_REQUEST {_id_object} =  $__log_id || $_REQUEST {id} || $_OLD_REQUEST {id} || $_REQUEST_VERBATIM {id};
 	$_REQUEST {_id_user}   =  $__log_user || $_USER -> {id};
 	
-	sql_do_update ($conf -> {systables} -> {log}, ['params', 'error', 'id_object', 'id_user'], {id => $_REQUEST {_id_log}});
+	if ($conf -> {core_delegation}) {
+
+		push @fields, 'id_log_real';
+
+		$_REQUEST {_id_log_real} = $_USER -> {id__real};
+	
+	}
+	
+	sql_do_update ($conf -> {systables} -> {log}, \@fields, {id => $_REQUEST {_id_log}});
 	
 	delete $_REQUEST {params};
 	delete $_REQUEST {_params};

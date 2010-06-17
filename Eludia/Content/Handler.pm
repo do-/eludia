@@ -750,6 +750,11 @@ sub recalculate_logon {
 			$fields .= ", tz_offset = ?";
 			push (@params, $_REQUEST {tz_offset});
 		}
+		
+		if ($conf -> {core_delegation} && !$_USER -> {id__real}) {
+			$fields .= ", id_user_real = ?";
+			push (@params, $_USER -> {id});
+		}
 
 		unless ($preconf -> {core_no_cookie_check}) {
 			$fields .= ", client_cookie = ?";
