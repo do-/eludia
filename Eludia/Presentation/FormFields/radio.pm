@@ -21,7 +21,7 @@ sub draw_form_field_radio {
 		my $renderrer = "draw_form_field_$$value{type}";
 		
 		local $value -> {attributes};
-		$value -> {html} = &$renderrer ($value, $data);
+		$value -> {html} = call_from_file ("Eludia/Presentation/FormFields/$value->{type}.pm", "draw_form_field_$value->{type}", $value, $data);
 		delete $value -> {attributes} -> {class};
 						
 	}
