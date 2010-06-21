@@ -383,9 +383,10 @@ sub check_title {
 	my $title = exists $options -> {title} ? $options -> {title} : '' . $options -> {label};
 
 	$title =~ s{\<.*?\>}{}g;
-	$title =~ s{^(\&nbsp\;)+}{};
-	$title =~ s{\"}{\&quot\;}g;
+	$title =~ s{^(\&nbsp\;|\s)+}{};
 	
+	$title = HTML::Entities::decode_entities ($title) if $title =~ /\&/;
+
 	$options -> {attributes} -> {title} = $title;
 
 }
