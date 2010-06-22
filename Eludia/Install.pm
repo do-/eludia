@@ -108,8 +108,37 @@ sub db_dump {
 	
 	%needed > 0 or %needed = map {$_ => 1} $model_update -> get_tables;
 
-	foreach (keys %banned) { delete $needed {$_} }
+	my $code = 'foreach my $key (keys %needed) {if (0';
+	
+	foreach my $ban (keys %banned) { 
 		
+		$ban = quotemeta $ban;
+		
+		if ($ban =~ /\*/) {
+
+			$ban =~ s{\\\*}{.*}g;
+
+			$ban = "^$ban" if $ban =~ /\*$/ && $ban !~ /^\.\*/;
+
+			$ban =~ s{^\.\*}{};
+
+			$ban =~ s{\.\*$}{};
+
+		}
+		else {
+		
+			$ban = "^$ban\$";
+		
+		}
+
+		$code .= " || \$key =~ /$ban/i";
+
+	}
+
+	$code .= ') {delete $needed {$key}}}';
+		
+	eval $code; die $@ if $@;
+	
 	foreach my $table (sort keys %needed) { 
 	
 		sql_export_json ("DESCRIBE $table",      STDOUT);
