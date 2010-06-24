@@ -133,6 +133,7 @@ sub sql_prepare {
 	my ($sql, @params) = @_;
 
 	$sql =~ s{^\s+}{};
+	$sql =~ s{[\015\012]+}{$/}gs;
 	
 #print STDERR "sql_prepare (pid=$$): $sql\n";
 	
