@@ -291,7 +291,7 @@ EOT
 
 	$time = __log ($time, " $signature: done with sending mail");
 		
-	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'}) {
+	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'} || $_REQUEST {__skin} eq 'STDERR') {
 		$db -> disconnect;
 		CORE::exit (0);
 	}
