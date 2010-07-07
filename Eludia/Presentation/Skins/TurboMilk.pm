@@ -2339,9 +2339,7 @@ sub draw_text_cell {
 		$data -> {attributes} -> {style} = 'padding-left:' . ($data -> {level} * 15 + 3);
 	
 	}
-	
-	$data -> {attributes} -> {title} = HTML::Entities::decode_entities ($data -> {attributes} -> {title}) if $data -> {attributes} -> {title} =~ /\&/;
-	
+		
 	my $html = dump_tag ('td', $data -> {attributes});
 	
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {

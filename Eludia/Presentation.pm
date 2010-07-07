@@ -383,9 +383,10 @@ sub check_title {
 	my $title = exists $options -> {title} ? $options -> {title} : '' . $options -> {label};
 
 	$title =~ s{\<.*?\>}{}g;
-	$title =~ s{^(\&nbsp\;)+}{};
-	$title =~ s{\"}{\&quot\;}g;
+	$title =~ s{^(\&nbsp\;|\s)+}{};
 	
+	$title = HTML::Entities::decode_entities ($title) if $title =~ /\&/;
+
 	$options -> {attributes} -> {title} = $title;
 
 }
@@ -2516,8 +2517,8 @@ sub out_html {
 	$_REQUEST {__out_html_time} = my $time = time;  
 
 	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
-	
-	$html = Encode::encode ('windows-1252', $html);
+
+	$i18n -> {_charset} eq 'windows-1252' or $html = Encode::encode ('windows-1252', $html);
 
 	return print $html if $_REQUEST {__response_started};
 
