@@ -57,6 +57,10 @@ sub wish_to_explore_existing_table_columns {
 	my ($options) = @_;
 
 	my $existing = {};
+	
+	my $pk = '';
+	
+	sql_select_loop ("SHOW KEYS FROM $options->{table} WHERE Key_name = 'PRIMARY'", sub {$pk = $i -> {Column_name}});
 
 	sql_select_loop (
 		
@@ -70,6 +74,7 @@ sub wish_to_explore_existing_table_columns {
 				, numeric_precision
 				, numeric_scale
 				, character_maximum_length
+				, extra
 			FROM 
 				information_schema.columns 
 			WHERE 
@@ -95,6 +100,10 @@ sub wish_to_explore_existing_table_columns {
 
 			};
 			
+			$def -> {_EXTRA} = $i -> {extra} if $i -> {extra};
+			
+			$def -> {_PK}    = 1             if $name eq $pk;
+
 			if ($def -> {TYPE_NAME} eq 'DECIMAL') {
 			
 				$def -> {COLUMN_SIZE}    = $i -> {numeric_precision};
@@ -141,6 +150,8 @@ sub __genereate_sql_fragment_for_column {
 		'');
 
 	$i -> {SQL} .= ' ' . $i -> {_EXTRA};
+	
+	$i -> {SQL} .= ' PRIMARY KEY' if  $i -> {_PK};
 
 	if (!$i -> {NULLABLE}) {
 	
