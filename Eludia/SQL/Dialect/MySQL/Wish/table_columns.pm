@@ -149,7 +149,7 @@ sub __genereate_sql_fragment_for_column {
 
 		'');
 
-	$i -> {SQL} .= ' ' . $i -> {_EXTRA};
+	$i -> {SQL} .= ' ' . $i -> {_EXTRA} if $i -> {_EXTRA};
 	
 	$i -> {SQL} .= ' PRIMARY KEY' if  $i -> {_PK};
 
