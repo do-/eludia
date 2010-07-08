@@ -19,6 +19,16 @@ BEGIN {
 
 ################################################################################
 
+sub msie_less_7 {
+
+	$r -> headers_in -> {'User-Agent'} =~ /MSIE (\d)/ or return 0;
+	
+	return $1 < 7;
+
+}
+
+################################################################################
+
 sub options {
 
 	return {
@@ -128,10 +138,16 @@ EOH
 ################################################################################
 
 sub draw_calendar {
-
-	my ($year, $mon, $mday) = Date::Calc::Today; $mon --;
 	
-	"$mday $i18n->{months}->[$mon] $year&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s' style='width:5px'></span><span id='clock_m'></span>";
+	my $month_names = $_JSON -> encode ($i18n -> {months});
+	
+	qq {
+		
+		<script>var __month_names = $month_names;</script>
+	
+		<span id='clock_d'></span>&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s' style='width:5px'></span><span id='clock_m'></span>
+		
+	}
 
 }
 
@@ -755,7 +771,7 @@ sub draw_form_field_files {
 		tabindex=-1
 	};
 	
-	$tail =~ y{'}{"}; #"
+	$tail =~ y{'}{"}; #"'
 	$tail =~ s{[\n\r\t]+}{ }gsm;
 	
 	$_REQUEST {__script} .= <<EOH;
@@ -764,7 +780,7 @@ sub draw_form_field_files {
 		
 		function file_field_add_$options->{name} () {
 		
-			document.body.style.cursor = 'default';
+			setCursor ();
 
 			var d = document.getElementById ('file_field_$options->{name}');
 
@@ -970,7 +986,7 @@ sub draw_form_field_radio {
 
 	my ($_SKIN, $options, $data) = @_;
 				
-	my $html = "<table border=0 cellspacing=2 cellpadding=0 width=100% id='input_$$options{name}'>";
+	my $html = qq {<table border=0 cellspacing=2 cellpadding=0 width=100% id='input_$$options{name}'><tr>};
 	
 	my $n = 0;
 	
@@ -982,19 +998,18 @@ sub draw_form_field_radio {
 		delete $value -> {attributes} -> {onclick};
 	
 		my $attributes = dump_attributes ($value -> {attributes});
+
+		$html .= qq {\n<td class="form-inner" width=1 nowrap="1"><input class=cbx $attributes id="$value" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false" type="radio" name="_$$options{name}" value="$$value{id}" onClick="is_dirty=true;$$value{onclick};" onKeyDown="tabOnEnter()">};
+
+		$html .= qq {\n</td><td class="form-inner" width=1><nobr>&nbsp;$$value{label}</nobr>};
+									
+		$html .= qq {\n\t\t<td class="form-inner"><div style="display:expression(getElementById('$value').checked ? 'block' : 'none')">$$value{html}</div>} if $value -> {html};
 		
-		(!$n and $options -> {no_br}) or $html .= qq {\n<tr><td class="form-inner" valign=top width=1%>};
-		$html .= qq {\n<nobr><input class=cbx $attributes id="$value" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false" type="radio" name="_$$options{name}" value="$$value{id}" onClick="is_dirty=true;$$value{onclick};" onKeyDown="tabOnEnter()">&nbsp;$$value{label}</nobr>};
-							
-		$value -> {html} or next;
-		
-		$html .= qq{\n\t\t<td class="form-inner"><div style="display:expression(getElementById('$value').checked ? 'block' : 'none')">$$value{html}</div>};
-		
-		$n ++;
+		$options -> {no_br} or ++ $n == @{$options -> {values}} or $html .= qq {\n\t\t<td class="form-inner"><div>&nbsp;</div><tr>};
 				
 	}
 	
-	$html .= '</table>';
+	$html .= '<td class="form-inner"><div>&nbsp;</div></table>';
 		
 	return $html;
 	
@@ -1007,7 +1022,7 @@ sub draw_form_field_select {
 	my ($_SKIN, $options, $data) = @_;
 	
 	$options -> {attributes} ||= {};
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
+	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 	my $attributes = dump_attributes ($options -> {attributes});
 	
 	if (defined $options -> {other}) {
@@ -1568,7 +1583,7 @@ sub draw_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
 	my $html = <<EOH;
-		<td>
+		<td class="bgr0">
 		<table cellspacing=0 cellpadding=0 border=0 valign="middle">
 		<tr>
 			<td class="bgr0" width=6><img src="$_REQUEST{__static_url}/btn2_l.gif?$_REQUEST{__static_salt}" width="6" height="21" border="0"></td>
@@ -1866,7 +1881,7 @@ EOJS
 
 	$options -> {attributes} ||= {};
 	
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
+	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 	
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
 	
@@ -1949,15 +1964,15 @@ sub draw_toolbar_input_text {
 
 
 	$options -> {attributes} ||= {};
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if $r -> headers_in -> {'User-Agent'} !~ /MSIE 7/;
+	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 	
-	$options -> {onKeyPress} ||= "if (event.keyCode == 13) {form.submit()}";
+	$options -> {onKeyPress} ||= "if (event.keyCode == 13) {form.submit(); blockEvent ()}";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
 		<input 
-			onKeyPress="$$options{onKeyPress}" 
+			onKeyPress="$$options{onKeyPress};" 
 			type=text 
 			size=$$options{size} 
 			name=$$options{name} 
@@ -2006,7 +2021,7 @@ sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
 		
-	my $html = '<td><table cellspacing=2 cellpadding=0><tr>';
+	my $html = '<td class="bgr0"><table cellspacing=2 cellpadding=0><tr>';
 	
 	if ($options -> {total}) {
 
@@ -2317,12 +2332,23 @@ sub js_set_select_option {
 	$item -> {question} ||= "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?" unless $conf -> {core_no_confirm_other};
 
 	my $a = $_JSON -> encode ($item);
+	
+	return $_SO_VARIABLES -> {$a}
+		if $_SO_VARIABLES -> {$a};
 
-	my $var = "sso_" . substr ('' . $item, 7, 7);
+	my $var = "so_" . substr ('' . $item, 7, 7);
+	$var =~ s/\)$//;
+	
+	my $i = 0;
+	while (index ($_REQUEST {__script}, "var $var") != -1) {
+		$var .= $i ++;
+	}
 
 	$_REQUEST {__script} .= " var $var = $a; ";
+
+	$_SO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption ($var)";
 	
-	return "javaScript:invoke_setSelectOption ($var)";
+	return $_SO_VARIABLES -> {$a};
 
 }
 
@@ -2337,9 +2363,7 @@ sub draw_text_cell {
 		$data -> {attributes} -> {style} = 'padding-left:' . ($data -> {level} * 15 + 3);
 	
 	}
-	
-	$data -> {attributes} -> {title} = HTML::Entities::decode_entities ($data -> {attributes} -> {title}) if $data -> {attributes} -> {title} =~ /\&/;
-	
+		
 	my $html = dump_tag ('td', $data -> {attributes});
 	
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
@@ -2441,8 +2465,10 @@ sub draw_select_cell {
 		$multiple
 	};
 	
-	if (($options -> {__fixed_cols} > 0) && ($r -> headers_in -> {'User-Agent'} !~ /MSIE 7/)) {
+	if (($options -> {__fixed_cols} > 0) && msie_less_7) {
+
 		$html .= qq {style= "visibility:expression(cell_select_visibility(this, $options->{__fixed_cols}))"};
+
 	}
 
 	$html .= '>';
@@ -2512,11 +2538,86 @@ sub draw_input_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	my $autocomplete;
+	my $attr_input = {
+		onBlur => 'q_is_focused = false; left_right_blocked = false;',
+		onKeyDown => 'tabOnEnter();'
+	};
+	
+	if ($data -> {autocomplete}) {
+		my $id = '' . $data -> {autocomplete};
+		$_REQUEST {__script} .= qq{;
+			function off_suggest$data->{name} () {
+				var s = document.getElementById ('$data->{name}__suggest');
+				s.style.display = 'none';
+				try {tableSlider.cell_on ();} catch(e) {};
+			};
+		};
+
+		$attr_input -> {autocomplete} = 'off';
+		$attr_input -> {onBlur}     .= qq{; _suggest_timer$data->{name} = setTimeout (off_suggest$data->{name}, 100);};
+		$attr_input -> {onChange}   .= "$data->{autocomplete}{after};";
+		$attr_input -> {onKeyDown}  .= <<EOH;
+			var s = getElementById('$data->{name}__suggest');
+
+			if (window.event.keyCode == 40 && s.style.display == 'block') {
+				s.focus ();
+			}
+EOH
+		$attr_input -> {onKeyUp} .= <<EOH;
+			if (suggest_clicked) {
+				suggest_clicked = 0;
+			}
+			else {
+				var f = this.form;
+				var s = f.elements ['__suggest'];
+				document.getElementById ('$data->{name}__suggest').style.display = 'none';
+				if (this.value.length > 0) {
+					s.value = '$data->{name}';
+					f.submit ();
+					s.value = '';
+				}
+			}
+EOH
+		$data -> {autocomplete} -> {after} .= ';try {tableSlider.cell_on ();} catch(e) {};';
+		$data -> {autocomplete} -> {lines} ||= 10;
+
+		$autocomplete = qq {
+			<script>
+				var _suggest_timer$data->{name} = null;
+			</script>
+			<select 
+				id="$data->{name}__suggest" 
+				name="$data->{name}__suggest" 
+				size="$data->{autocomplete}{lines}"
+				style="
+					display : none;
+					position: absolute;
+					border  : solid black 1px;
+					z-index : 100;
+				"
+				onFocus="
+					if (_suggest_timer$data->{name}) {
+						clearTimeout (_suggest_timer$data->{name});
+						_suggest_timer$data->{name} = null;
+					}
+				"
+				onBlur="this.style.display='none'; $data->{autocomplete}{after}"
+				onDblClick="set_suggest_result (this, '$$data{name}'); $data->{autocomplete}{after}"
+				onKeyPress="set_suggest_result (this, '$$data{name}'); $data->{autocomplete}{after}; suggest_clicked = 1"
+			>
+			</select>
+		};
+	}
+
 	my $attributes = dump_attributes ($data -> {attributes});
+	$attr_input = dump_attributes ($attr_input);
 	
 	$data -> {label} =~ s{\"}{\&quot;}gsm;
 
-	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}"></nobr></td>};
+	my $tabindex = 'tabindex=' . (++ $_REQUEST {__tabindex});
+
+	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" $attr_input name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex>$autocomplete</nobr></td>};
 
 }
 
@@ -2683,7 +2784,8 @@ sub draw_table {
 	foreach our $i (@$list) {
 		
 		foreach my $tr (@{$i -> {__trs}}) {
-			
+		
+			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 			
 			$html .= "<tr id='$$i{__tr_id}'";
 			
@@ -2693,9 +2795,9 @@ sub draw_table {
 			}
 
 			$html .= '>';
-			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id});
+			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $has_href;
 			$html .= $tr;
-			$html .= qq {</a>} if $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id});
+			$html .= qq {</a>} if $has_href;
 			$html .= '</tr>';
 			
 		}
@@ -2722,6 +2824,7 @@ EOH
 		<table cellspacing=0 cellpadding=0 width="100%">
 			<tr>
 				<form name=$$options{name} action=$_REQUEST{__uri} method=post target=invisible $enctype>
+				<input type=hidden name="__suggest" value="">
 EOH
 
 }
@@ -2831,7 +2934,7 @@ sub draw_page {
 
 		$_REQUEST {__on_mouseover}    .= "subsets_are_visible_ (0); try { window.parent.subsets_are_visible_ (0); } catch (xxx) {}";
 
-		$_REQUEST {__on_mousedown}    .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
+		$_REQUEST {__on_mousedown}    .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
 
 		$_REQUEST {__on_keydown}      .= " lastKeyDownEvent = event; handle_basic_navigation_keys ();";
 
@@ -3036,7 +3139,7 @@ sub lrt_start {
 	
 	$_SKIN -> lrt_print (<<EOH);
 		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
-			<iframe name=invisible src="$_REQUEST{__uri}0.html" width=0 height=0 application="yes">
+			<iframe name=invisible src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes">
 			</iframe>
 EOH
 
@@ -3524,21 +3627,31 @@ sub draw_suggest_page {
 	<head>
 		<script>
 			function r () {
-								
+				
 				var q = {};
 			
 				var a = $a;
 								
 				var s = parent.document.getElementById ('_$_REQUEST{__suggest}__suggest');
+				if (!s) {
+					s = parent.document.getElementById ('$_REQUEST{__suggest}__suggest');
+					var t = parent.document.getElementById ('$_REQUEST{__suggest}');
+					try {parent.tableSlider.cell_off ()} catch (e) {}
+					parent.\$(s).css ({
+						top : 0,
+						left : 0,
+						width : t.offsetWidth,
+						position : 'relative'
+					});
+				} else {
+					var t = s.form.elements ['_$_REQUEST{__suggest}'];
+					var o = parent.\$(t).offset (parent.\$(parent.document.body));
 				
-				var t = s.form.elements ['_$_REQUEST{__suggest}'];
-				
-				var o = parent.\$(t).offset (parent.\$(parent.document.body));
-				
-				parent.\$(s).css ({
-					top   : o.top + 18,
-					width : t.offsetWidth
-				});
+					parent.\$(s).css ({
+						top   : o.top + 18,
+						width : t.offsetWidth
+					});
+				}
 				
 				s.options.length = 0;
 				for (var i = 0; i < a.length; i++) {

@@ -212,7 +212,7 @@ sub _sql_filters {
 		my $was_array = ref $values eq ARRAY or $values = [$values];
 
 		my $first_value = $values -> [0];
-
+		
 		my $tied;
 
 		if (ref $first_value eq SCALAR) {
@@ -225,7 +225,15 @@ sub _sql_filters {
 
 		unless ($tied || $is_null) {
 
-			next if $first_value eq '' or $first_value eq '0000-00-00';
+			next if 
+				
+				!defined $first_value or 
+				
+				$first_value eq '' or 
+				
+				$first_value eq '0000-00-00'
+
+			;
 
 		}
 		
@@ -486,11 +494,13 @@ sub sql {
 	my @columns = _sql_list_fields ($1, $root);
 	
 	my $from   = "\nFROM\n $root";
+	my $inner_from = $from;
 	my $where  = "\nWHERE  1=1";
 	my $having = "\nHAVING 1=1";
 	my $order;
 	my $limit;
 	my @join_params   = ();
+	my @inner_join_params = ();
 	my @where_params  = ();
 	my @having_params = ();
 
@@ -540,7 +550,7 @@ sub sql {
 		
 		$default_columns = 'id, fake';
 
-		$where .= $_REQUEST {fake} =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
+		$where .= ($_REQUEST {fake} || '') =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
 
 	}	
 		
@@ -632,12 +642,22 @@ sub sql {
 			my $sql_filters = _sql_filters ($table -> {alias}, $table -> {filters});
 
 			$from .= "\n $table->{join} $table->{name}";
-			$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+			$from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
 			$from .= " ON ($table->{on} $sql_filters->{where})";
 
 			push @join_params, @{$sql_filters -> {where_params}};
 				
 			$found = 1;
+			
+#			if ($table -> {join} !~ /^LEFT/) {
+			
+				$inner_from .= "\n $table->{join} $table->{name}";
+				$inner_from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
+				$inner_from .= " ON ($table->{on} $sql_filters->{where})";
+
+				push @inner_join_params, @{$sql_filters -> {where_params}};
+			
+#			}
 		
 		}
 		
@@ -685,10 +705,20 @@ sub sql {
 				my $sql_filters = _sql_filters ($table -> {alias}, $table -> {filters});
 
 				$from .= "\n $table->{join} $table->{name}";
-				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+				$from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
 				$from .= " ON ($table->{alias}.$referring_field_name = $t->{name}.id $sql_filters->{where})";
 				
 				push @join_params, @{$sql_filters -> {where_params}};
+
+#				if ($table -> {join} !~ /^LEFT/) {
+
+					$inner_from .= "\n $table->{join} $table->{name}";
+					$inner_from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
+					$inner_from .= " ON ($table->{alias}.$referring_field_name = $t->{name}.id $sql_filters->{where})";
+
+					push @inner_join_params, @{$sql_filters -> {where_params}};
+
+#				}
 				
 				if ($sql_filters -> {having_params}) {
 					
@@ -737,14 +767,30 @@ sub sql {
 				$column or next;
 
 				$from .= "\n $table->{join} $table->{name}";
-				$from .= " AS $table->{alias}" if $table -> {name} ne $table -> {alias};
+				$from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
 				
+				if ($table -> {join} !~ /^LEFT/) {
+
+					$inner_from .= "\n $table->{join} $table->{name}";
+					$inner_from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
+
+				}
+
 				$t -> {alias} ||= $t -> {name};
 
 				if ($table -> {filters}) {
+				
 					my $sql_filters = _sql_filters ($table -> {alias}, $table -> {filters});
 					$from .= " ON ($t->{alias}.$referring_field_name = $table->{alias}.id $sql_filters->{where})";
 					push @join_params, @{$sql_filters -> {where_params}};
+
+					if ($table -> {join} !~ /^LEFT/) {
+
+						$inner_from .= " ON ($t->{alias}.$referring_field_name = $table->{alias}.id $sql_filters->{where})";
+
+						push @inner_join_params, @{$sql_filters -> {where_params}};
+
+					}
 					
 					if ($sql_filters -> {having_params}) {
 
@@ -755,7 +801,15 @@ sub sql {
 					
 				}
 				else {
+
 					$from .= " ON $t->{alias}.$referring_field_name = $table->{alias}.id";
+
+					if ($table -> {join} !~ /^LEFT/) {
+
+						$inner_from .= " ON $t->{alias}.$referring_field_name = $table->{alias}.id";
+
+					}
+
 				}
 
 				$found = 1;
@@ -874,7 +928,7 @@ sub sql {
 	
 		. (join "\n, ", 
 		
-			map {"$_->{src} AS $_->{alias}"} (
+			map {"$_->{src} $_->{alias}"} (
 				@{$columns_by_grouping -> [0]}, 
 				@{$columns_by_grouping -> [1]},
 			)
@@ -925,16 +979,7 @@ sub sql {
 	
 	}
 	
-	if ($have_id_filter || $is_first || $is_only_grouping) {
-	
-		return sql_select_scalar ($sql, @params) if $is_ids || $is_only_grouping_1;
-
-		@result = (sql_select_hash ($sql, @params));
-
-		$records = [$result [0]];
-
-	}
-	elsif ($sub) {
+	if ($sub) {
 	
 		return sql_select_loop (
 			
@@ -953,16 +998,84 @@ sub sql {
 		);
 	
 	}
+	elsif ($have_id_filter || $is_first || $is_only_grouping) {
+	
+		return sql_select_scalar ($sql, @params) if $is_ids || $is_only_grouping_1;
+
+		@result = (sql_select_hash ($sql, @params));
+
+		$records = [$result [0]];
+
+	}
 	else {
 	
 		if ($limit) {
 		
-			$sql .= "\nLIMIT\n " . (join ', ', @$limit);
+			if ($SQL_VERSION -> {driver} eq 'Oracle') {
+
+				my $last = $limit -> [0] + $limit -> [1] - 1;
+				
+				$sql = mysql_to_oracle ($sql) if $conf -> {core_auto_oracle};
+
+				$sql =~ s{SELECT}{SELECT /*+FIRST_ROWS*/};
+								
+				my $core_auto_oracle = delete $conf -> {core_auto_oracle};
+
+				my $st = sql_execute ($sql, @params);
+
+				$conf -> {core_auto_oracle} = $core_auto_oracle;
+				
+				$records = [];
+				
+				my $n = 0;
+				
+				while (my $r = $st -> fetchrow_hashref) {
+				
+					$n ++;
+				
+					next if $n <= $limit -> [0];
+
+					lc_hashref ($r);
+
+					_sql_unwrap_record ($r, \@cols);
+					
+					push @$records, $r;
+					
+					last if @$records >= $limit -> [1];
+				
+				}
+				
+				$st -> finish;
+
+				my $sql_cnt = "SELECT COUNT(*)\n "
+
+					. $inner_from
+
+					. $where
+
+				;
+
+				$sql_cnt = mysql_to_oracle ($sql_cnt) if $conf -> {core_auto_oracle};
+
+				my $st = sql_execute ($sql_cnt, @params);
+
+				my ($cnt) = $st -> fetchrow_array;
+				
+				$st -> finish;
+
+				@result = ($records, $cnt, $limit -> [1]);
 			
-			@result = (sql_select_all_cnt ($sql, @params), $limit -> [1]);
+			}
+			else {
+		
+				$sql .= "\nLIMIT\n " . (join ', ', @$limit);
+
+				@result = (sql_select_all_cnt ($sql, @params), $limit -> [1]);
+
+				$records = $result [0];
 	
-			$records = $result [0];
-	
+			}
+
 		}
 		else {
 

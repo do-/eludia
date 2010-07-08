@@ -1,44 +1,57 @@
 ################################################################################
 
 sub select__info {
-	
+
 	my $os_name = $^O;
+	my $os_version;
+
 	if ($^O eq 'MSWin32') {		
-		eval {
-			require Win32;
-			my ($string, $major, $minor, $build, $id) = Win32::GetOSVersion ();
-			my $imm = $id . $major . $minor;
-			$os_name = 'MS Windows ' . (
-				$imm == 140 ? '95 ' :
-				$imm == 1410 ? '98 ' :
-				$imm == 1490 ? 'Me ' :
-				$imm == 2351 ? 'NT 3.51 ' :
-				$imm == 240 ? 'NT 4.0 ' :
-				$imm == 250 ? '2000 ' :
-				$imm == 251 ? 'XP ' :
-				$imm == 252 ? '2003 ' :
-				$imm == 260 ? 'Vista ' :
-				"Unknown ($id . $major . $minor)"
-			) . $string . " Build $build"
-		};	
-	} else {
-		eval {
-			require POSIX;
-			my ($sysname, $nodename, $release, $version, $machine) = POSIX::uname();
-			my $imm = $id . $major . $minor;
-			$os_name = "$sysname $release [$machine]";
-		};	
-	}
-		
-	my @z = grep {/\d/} split /(\d)/, $Eludia::VERSION;
-		
-	require Config;
 	
-	return [
+		eval {
+		
+			require Win32;
+			
+			my ($string, $major, $minor, $build, $id) = Win32::GetOSVersion ();
+			
+			$os_name    = 'MS Windows';
+			
+			$os_version = {
+			
+				140  => '95',
+				1410 => '98',
+				1490 => 'Me',
+				2351 => 'NT 3.51',
+				240  => 'NT 4.0',
+				250  => '2000',
+				251  => 'XP',
+				252  => '2003',
+				260  => 'Vista',
+				
+			} -> {$id . $major . $minor} . " Build $build";
+			
+		};	
+		
+	} 
+	else {
+	
+		eval {
+
+			require POSIX;
+
+			($os_name, my $nodename, $os_version, my $version, my $machine) = POSIX::uname ();
+
+		};	
+		
+	}
+	
+	setup_skin ();
+	
+	my $data = {rows => [
 	
 		{
 			id    => 'OS',
 			label => $os_name,
+			version => $os_version,
 		},
 
 		{
@@ -51,12 +64,13 @@ sub select__info {
 		{
 			id    => 'Interpreter',
 			label => (sprintf "Perl %vd", $^V),
-			path  => $^X,
 		},
 	
 		{
-			id    => 'DBMS',
-			label => $SQL_VERSION -> {string},
+			id      => 'DBMS',
+			label   => $SQL_VERSION -> {string},
+			version => $SQL_VERSION -> {number},
+			path    => $SQL_VERSION -> {path},
 		},
 
 		{
@@ -72,12 +86,20 @@ sub select__info {
 		{			
 			id    => 'Parameters module',
 			label => ref $apr,
+			version => ${(ref $apr) . '::VERSION'},
 		},
 		
 		{			
 			id    => 'Engine',
-			label => "Eludia $Eludia::VERSION",
+			label => "Eludia",
 			path  => $preconf -> {core_path},
+			version => $Eludia::VERSION,
+		},
+
+		{
+			id    => 'JSON module',
+			label => ref $_JSON,
+			version => ${(ref $_JSON) . '::VERSION'},
 		},
 
 		{			
@@ -86,7 +108,47 @@ sub select__info {
 			path  => join ', ', @$PACKAGE_ROOT,
 		},
 
-	]	
+		{
+			id    => 'Skin',
+			path  => $INC {$_SKIN},
+			label => $_SKIN
+		},
+
+	]};
+	
+	my $exe = $^X;
+	
+	$data -> {rows} -> [$exe =~ /perl(\.\w+)?/ ? 2 : 1] -> {path} = $exe;
+	
+	foreach my $i (@{$data -> {rows}}) {
+	
+		unless ($i -> {path}) {
+		
+			my ($key) = split / /, $i -> {label};
+			
+			$key =~ s{\:\:}{\/}g;
+			
+			$i -> {path} = $INC {$key . '.pm'};
+		
+		}
+		
+		if ($i -> {version}) {
+		
+			$i -> {product} = $i -> {label};
+		
+		}
+		else {
+	
+			($i -> {product}, $i -> {version}) = split m{[ /]}, $i -> {label};
+	
+		}
+		
+		$i -> {product} =~ s{^Eludia::Presentation::Skins::}{};
+						
+	}
+
+	return $data;
+		
 
 }
 

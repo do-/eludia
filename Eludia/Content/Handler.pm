@@ -4,23 +4,61 @@ no warnings;
 
 sub handler {
 
-	my $time = 
+	my $time = time ();
+	
+	our $i18n = i18n ();
 
-	setup_request_params     (@_);				$time = __log_profilinig ($time, '<setup_request_params>');	my $request_time = 1000 * (time - $first_time);
+	return _ok () if eval { page_is_not_needed (\$time, @_) };
+	
+	my $code = $@ ? 500 : eval {
 
-	require_config           (  );				$time = __log_profilinig ($time, '<require_config>');
+		my $page = setup_page    (  );				$time = __log_profilinig ($time, '<setup_page>');
 
-	sql_reconnect            (  );				$time = __log_profilinig ($time, '<sql_reconnect>');
+		return &{"handle_request_of_type_$page->{request_type}"} ($page);
 
-	require_model            (  );				$time = __log_profilinig ($time, '<require_model>');		__log_request_profilinig ($request_time);
+	};
+	
+	if ($@) {
 
-	authentication_is_needed (  ) or return _ok ();		$time = __log_profilinig ($time, '<authentication_is_needed>');
+		warn "$@\n";
 
-	setup_user               (  ) or return _ok ();		$time = __log_profilinig ($time, '<setup_user>');
+		out_script (q {
+	
+			var d = window.top.document;
 
-	my $page = setup_page    (  );				$time = __log_profilinig ($time, '<setup_page>');
+			d.write ('<pre>' + data + '</pre>');
 
-	return &{"handle_request_of_type_$page->{request_type}"} ($page);
+			d.close ();
+
+		}, $@);
+		
+		return _ok ();
+	
+	}
+	
+	return $code;
+
+}
+
+#################################################################################
+
+sub page_is_not_needed {
+
+	my $ptime = shift;
+
+	setup_request_params     (@_);				$$ptime = __log_profilinig ($$ptime, '<setup_request_params>');	my $request_time = 1000 * (time - $first_time);
+
+	require_config           (  );				$$ptime = __log_profilinig ($$ptime, '<require_config>');
+
+	sql_reconnect            (  );				$$ptime = __log_profilinig ($$ptime, '<sql_reconnect>');
+
+	require_model            (  );				$$ptime = __log_profilinig ($$ptime, '<require_model>');		__log_request_profilinig ($request_time);
+
+	authentication_is_needed (  ) or return 1;		$$ptime = __log_profilinig ($$ptime, '<authentication_is_needed>');
+
+	setup_user               (  ) or return 1;		$$ptime = __log_profilinig ($$ptime, '<setup_user>');
+	
+	return 0;
 
 }
 
@@ -104,6 +142,16 @@ sub setup_request_params {
 	$ENV {HTTP_HOST} = $http_host if $http_host;
 
 	get_request (@_);
+	
+	my $charset = $r -> header_in ('Content-Type-Charset');
+	
+	if ($charset && $r -> header_in ('Content-Type') =~ /UTF\-?8/i) {
+
+		Encode::from_to ($_, 'utf8', $charset) foreach (values %_REQUEST);
+
+	}
+
+	our %_REQUEST_VERBATIM = %_REQUEST;
 
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 	
@@ -116,8 +164,6 @@ sub setup_request_params {
 	our $first_time = $time;
 
 	$_REQUEST {__sql_time} = 0;
-		
-	our %_REQUEST_VERBATIM = %_REQUEST;
 	
 	foreach my $k (keys %_REQUEST) {
 
@@ -148,6 +194,8 @@ sub setup_request_params {
 		}
 	
 	}
+	
+	our $_SO_VARIABLES = {};
 
 	$_REQUEST {type} =~ s/_for_.*//;
 	$_REQUEST {__uri} = $r -> uri;
@@ -266,15 +314,18 @@ sub setup_request_params_for_action {
 sub setup_page {
 
 	my $page = {
-		type   => $_REQUEST {type},
 		subset => setup_subset (),
 		menu   => setup_menu (),
 	};
+	
+	$page -> {type} = $_REQUEST {type};
 
 	call_for_role ('get_page');
 
-	require_both $page -> {type};	
+	eval { require_both $page -> {type} };
 	
+	$_REQUEST {error} ||= $@;
+		
 	$page -> {request_type} = 
 
 		$_REQUEST {__suggest} ? 'suggest' :
@@ -328,7 +379,7 @@ sub setup_menu {
 
 	require_content 'menu';
 
-	our $i18n = i18n ();
+	$i18n = i18n ();
 
 	my $menu = call_for_role ('select_menu') || call_for_role ('get_menu');
 	
@@ -398,8 +449,6 @@ sub handle_request_of_type_action {
 
 	eval {
 
-		delete_fakes () if $action eq 'create';
-
 		call_for_role ("do_${action}_$$page{type}");
 
 		call_for_role ("recalculate_$$page{type}") if $action ne 'create';
@@ -432,13 +481,17 @@ sub handle_request_of_type_suggest {
 	
 	our $_SUGGEST_SUB = undef;
 
-	call_for_role ("draw_item_of_$$page{type}");
-	
+	$_REQUEST {__edit} = 1;
+	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
+
+	delete $_REQUEST {__read_only};
+	call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content});
+
 	if ($_SUGGEST_SUB) {
-				
+
 		delete $_REQUEST {id};
 
-		out_html ({}, draw_suggest_page (&$_SUGGEST_SUB ()));
+		out_html ({}, draw_suggest_page (ref $_SUGGEST_SUB eq 'CODE' ? &$_SUGGEST_SUB () : $_SUGGEST_SUB));
 	
 	}
 				
@@ -544,47 +597,6 @@ sub handler_finish {
 
 	return _ok ();
 
-}
-
-################################################################################
-
-sub log_action_start {
-
-	our $__log_id = $_REQUEST {id};
-	our $__log_user = $_USER -> {id};
-	
-	$_REQUEST {error} = substr ($_REQUEST {error}, 0, 255);
-	
-	$_REQUEST {_id_log} = sql_do_insert ($conf -> {systables} -> {log}, {
-		id_user => $_USER -> {id}, 
-		type => $_REQUEST {type}, 
-		action => $_REQUEST {action}, 
-		ip => $ENV {REMOTE_ADDR}, 
-		error => $_REQUEST {error}, 
-		ip_fw => $ENV {HTTP_X_FORWARDED_FOR},
-		fake => 0,
-		mac => get_mac (),
-	});
-		
-}
-
-################################################################################
-
-sub log_action_finish {
-	
-	$_REQUEST {_params} = $_REQUEST {params} = Data::Dumper -> Dump ([\%_OLD_REQUEST], ['_REQUEST']);
-	$_REQUEST {_params} =~ s/ {2,}/\t/g;
-		
-	$_REQUEST {error} = substr ($_REQUEST {error}, 0, 255);
-	$_REQUEST {_error}  = $_REQUEST {error};
-	$_REQUEST {_id_object} = $__log_id || $_REQUEST {id} || $_OLD_REQUEST {id};
-	$_REQUEST {_id_user} = $__log_user || $_USER -> {id};
-	
-	sql_do_update ($conf -> {systables} -> {log}, ['params', 'error', 'id_object', 'id_user'], {id => $_REQUEST {_id_log}, lobs => ['params']});
-	
-	delete $_REQUEST {params};
-	delete $_REQUEST {_params};
-	
 }
 
 ################################################################################
@@ -737,6 +749,11 @@ sub recalculate_logon {
 		if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
 			$fields .= ", tz_offset = ?";
 			push (@params, $_REQUEST {tz_offset});
+		}
+		
+		if ($conf -> {core_delegation} && !$_USER -> {id__real}) {
+			$fields .= ", id_user_real = ?";
+			push (@params, $_USER -> {id});
 		}
 
 		unless ($preconf -> {core_no_cookie_check}) {

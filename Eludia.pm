@@ -6,6 +6,7 @@ use Data::Dumper;
 use DBI;
 use DBI::Const::GetInfoType;
 use Digest::MD5;
+use Encode;
 use Fcntl qw(:DEFAULT :flock);
 use File::Copy 'move';
 use HTML::Entities;
@@ -13,6 +14,7 @@ use HTTP::Date;
 use MIME::Base64;
 use Number::Format;
 use Time::HiRes 'time';
+use Scalar::Util;
 use Storable;
 
 ################################################################################
@@ -34,6 +36,7 @@ sub check_constants {
 	our @_OVERRIDING_PARAMETER_NAMES     = qw (select __no_navigation __tree __last_query_string);
 
 	our %INC_FRESH = ();
+	our %INC_FRESH_BY_PATH = ();
 
 }
 
@@ -115,8 +118,6 @@ sub check_version_by_git {
 ################################################################################
 
 sub check_version {
-
-	return if $ENV {ELUDIA_BANNER_PRINTED};
 	
 	use File::Spec;
 
@@ -124,9 +125,13 @@ sub check_version {
 		
 	$dir =~ s{Eludia.pm}{};
 	
+	$dir =~ y{\\}{/};
+	
 	$preconf -> {core_path} = $dir;
 
 	require Date::Calc;
+
+	return if $Eludia::VERSION ||= $ENV {ELUDIA_BANNER_PRINTED};
 	
 	my ($year) = Date::Calc::Today ();
 	
@@ -171,7 +176,7 @@ sub check_version {
 
 EOT
 
-	$ENV {ELUDIA_BANNER_PRINTED} = 1;
+	$ENV {ELUDIA_BANNER_PRINTED} = $Eludia::VERSION;
 
 }
 
@@ -682,31 +687,6 @@ sub check_module_presentation_tools {
 
 ################################################################################
 
-sub check_module_mac {
-
-	print STDERR " check_module_mac.................... ";
-
-	exists $preconf -> {core_no_log_mac} or $preconf -> {core_no_log_mac} = 1;
-	
-	if ($preconf -> {core_no_log_mac}) { 
-
-		eval 'sub get_mac {""}';
-		
-		print STDERR "no MAC logging, ok.\n";
-
-	} 
-	else { 
-
-		require Eludia::Content::Mac;
-
-		print STDERR "MAC logging enabled, ok.\n";		
-
-	}
-
-}
-
-################################################################################
-
 sub check_module_session_access_logs {
 
 	print STDERR " check_module_session_access_logs.... ";
@@ -783,8 +763,10 @@ sub check_module_auth {
 	$preconf -> {_} -> {pre_auth}  = [];
 	$preconf -> {_} -> {post_auth} = [];
 
-	check_module_auth_cookie ();
-	check_module_auth_ntlm ();
+	check_module_auth_cookie  ();
+	check_module_auth_ntlm    ();
+	check_module_auth_opensso ();
+	check_module_auth_tinysso ();
 	
 }
 
@@ -804,6 +786,48 @@ sub check_module_auth_cookie {
 	else { 
 		
 		print STDERR "disabled, ok.\n";
+		
+	}
+
+}
+
+################################################################################
+
+sub check_module_auth_opensso {
+
+	print STDERR "  check_module_auth_opensso.......... ";
+
+	if ($preconf -> {ldap} -> {opensso}) { 
+		
+		require Eludia::Content::Auth::OpenSSO; 
+		
+		print STDERR "$preconf->{ldap}->{opensso}, ok.\n";
+
+	} 
+	else { 
+
+		print STDERR "no OpenSSO, ok.\n";
+		
+	}
+
+}
+
+################################################################################
+
+sub check_module_auth_tinysso {
+
+	print STDERR "  check_module_auth_tinysso.......... ";
+
+	if ($preconf -> {ldap} -> {tinysso}) { 
+		
+		require Eludia::Content::Auth::TinySSO; 
+		
+		print STDERR "$preconf->{ldap}->{tinysso}, ok.\n";
+
+	} 
+	else { 
+
+		print STDERR "no TinySSO, ok.\n";
 		
 	}
 
@@ -855,6 +879,61 @@ sub check_module_queries {
 
 ################################################################################
 
+sub check_module_log {
+
+	print STDERR " check_module_log.................... ";
+	
+	$conf -> {core_log} -> {version} ||= 'v1';
+	
+	$preconf -> {core_log} -> {suppress} ||= {
+	
+		always => [qw (
+		
+			__infty
+			__last_query_string
+			__last_scrollable_table_row
+			__no_infty
+			__no_navigation
+			__popup
+			__this_query_string
+			redirect_params
+			sid
+			lang
+			salt
+
+		)],
+		
+		empty  => [qw (
+		
+			__form_checkboxes
+			__suggest
+			__tree
+			select
+			
+		)],
+	
+	};
+	
+	$preconf -> {_} -> {core_log} = $conf -> {core_log};
+
+	!exists $preconf -> {core_no_log_mac}
+
+		or $preconf -> {core_no_log_mac}
+
+			or $preconf -> {_} -> {core_log} -> {log_mac} = 1;
+
+	require "Eludia/Content/Log/$preconf->{_}->{core_log}->{version}.pm";
+	
+	print STDERR "$preconf->{_}->{core_log}->{version}, ok.\n";
+
+}
+
+#############################################################################
+
+sub darn ($) {warn Dumper ($_[0]); return $_[0]}
+
+################################################################################
+
 BEGIN {
 
 	foreach (grep {/^Eludia/} keys %INC) { delete $INC {$_} }
@@ -877,77 +956,29 @@ BEGIN {
 
 }
 
+package Eludia;
+
 1;
+
+__END__
 
 ################################################################################
 
 =head1 NAME
 
-Eludia.pm - a framework for rapid (~5 min for trivial CRUD; ~1 h for average complex screen) development and comfortable maintenance of large scale (hundreds of dialog screens) mission critical WEB applications. 
+Eludia - a non-OO MVC.
 
-=head1 FEATURES
+=head1 WARNING
 
-=over 1
-
-=item *
-
-active DB model: tables are created and altered automatically according to a textual schema definition;
-
-=item *
-
-one shot autoexec scripts making it possible to deploy application updates by simply copying new files;
-
-=item *
-
-rich DHTML (or call it AJAX) widget set available just out-of-the-box;
-
-=item *
-
-i18n with Russian, French and English bootstrap dictionnaries;
-
-=item *
-
-complex server side data validation made easy;
-
-=item *
-
-default handlers for basic CRUD actions;
-
-=item *
-
-automatic support for delete/undelete and merge/unmerge operations;
-
-=item *
-
-transparent logging of all user actions (with parameter values);
-
-=item *
-
-per-session access logging and smart ESC button (like BACK, but works well with data being edited);
-
-=item *
-
-built-in automaintenance tools;
-
-and some more...
-
-=back
+We totally neglect most of so called 'good style' conventions. We do find it really awkward and quite useless.
 
 =head1 APOLOGIES
 
-Using Eludia.pm requires some learning. We are unable to cite here a short synopsis suitable for copying / pasting and running. Ten lines will show nothing, and for structured content we prefer MediaWiki. Thank you for understanding.
-
-We are really sorry, but it is in Russian only. We know, some people consider this insulting, but, honest, we force nobody to study our language. Writing such a manual en English is not easier to us than learning Russian to you.
-
-Having said that, we humbly invite all Russian-speaking Perl WEB developpers to visit L<http://eludia.ru/wiki>. Volunteer translators are, of course, welcome.
-
-=head1 DISCLAIMER
-
-The authors of Eludia.pm DOES NOT follow certain rules widely considered as "good style" attributes. We DO NOT recommend using Eludia.pm to any person who believe that formal accordance with these rules come first to factual quality and performance. NOR we beg from people who obviously will never use our software for exploring and "assessing" it.
+The project is deeply documented (L<http://eludia.ru/wiki>), but, sorry, in Russian only.
 
 =head1 AUTHORS
 
-Dmitry Ovsyanko, <'do_' -- like this, with a trailing underscore -- at 'pochta.ru'>
+Dmitry Ovsyanko
 
 Pavel Kudryavtzev
 

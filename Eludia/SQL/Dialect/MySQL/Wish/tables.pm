@@ -1,6 +1,18 @@
 #############################################################################
 
-sub wish_to_clarify_demands_for_tables {	
+sub wish_to_adjust_options_for_tables {
+
+	my ($options) = @_;
+	
+	$options -> {key} = ['name'];
+
+	$options -> {default_storage_engine} = $preconf -> {db_default_storage_engine};
+
+}
+
+#############################################################################
+
+sub wish_to_clarify_demands_for_tables {
 
 	my ($i, $options) = @_;
 		
@@ -90,7 +102,7 @@ sub wish_to_actually_comment_tables {
 	
 	foreach my $i (@$items) {
 	
-		$i -> {REMARKS} =~ s{'}{''}g; #'
+		($i -> {REMARKS} ||= '') =~ s{'}{''}g; #'
 
 		sql_do (qq {ALTER TABLE $i->{name} COMMENT '$i->{REMARKS}'});
 		
@@ -106,7 +118,7 @@ sub wish_to_actually_create_tables {
 	
 	foreach my $i (@$items) {	
 		
-		sql_do (qq {CREATE TABLE $i->{name} ($i->{pk}->{name} INT $i->{pk}->{_EXTRA} PRIMARY KEY)});
+		sql_do (qq {CREATE TABLE $i->{name} ($i->{pk}->{name} INT $i->{pk}->{_EXTRA} PRIMARY KEY)} . ($options -> {default_storage_engine} ? qq { ENGINE=$options->{default_storage_engine}} : ''));
 		
 	}
 	

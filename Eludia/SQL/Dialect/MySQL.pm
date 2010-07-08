@@ -53,31 +53,11 @@ sub sql_version {
 
 ################################################################################
 
-sub lc_hashref {}
-
-################################################################################
-
 sub sql_do_refresh_sessions {
 
-	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
-	
-	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
-		$timeout = $1;
-		$timeout *= 
-			$2 eq 'h' ? 60 :
-			$2 eq 'd' ? 1440 :
-			1;
-	}
+	my $timeout = sql_sessions_timeout_in_minutes ();
 
-	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < now() - INTERVAL ? MINUTE", $timeout);
-	
-	if ($ids ne '-1') {
-
-		sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
-
-		$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
-
-	}
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < now() - INTERVAL ? MINUTE", $timeout);
 
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = NULL WHERE id = ? ", $_REQUEST {sid});
 
@@ -593,6 +573,8 @@ sub sql_do_insert {
 
 	$pairs -> {fake} = $_REQUEST {sid} unless exists $pairs -> {fake};
 	
+	delete_fakes ($table_name) if $pairs -> {fake} > 0;
+
 	my $statement = 'INSERT';
 
 	if (is_recyclable ($table_name)) {
@@ -834,7 +816,7 @@ sub sql_select_loop {
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
 	
-	our $i;
+	local $i;
 	while ($i = $st -> fetchrow_hashref) {
 		lc_hashref ($i)
 			if (exists $$_PACKAGE {'lc_hashref'});

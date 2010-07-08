@@ -142,8 +142,10 @@ function set_suggest_result (sel, id) {
 	
 	}
 	
+	try {
 	document.getElementById (id + '__id').value    = o.value;
 	document.getElementById (id + '__label').value = o.text;
+	} catch (e) {}
 	
 	var i = document.getElementById (id);
 	i.value = o.text;
@@ -170,7 +172,8 @@ function dialog_open (href, arg, options) {
 function encode1251 (str) {
 
 //	var r = /[à-ÿÀ-ß]/g;
-	var r = /[\340-\377\300-\337]/g;
+//	var r = /[\340-\377\300-\337]/g;
+	var r = /[\u0410-\u044f]/g;
 	var result = str.replace (r, function (chr) {
 		result = chr.charCodeAt(0) - 848;
 		return '%' + result.toString(16);
@@ -465,6 +468,7 @@ function UpdateClock () {
 
 	var tDate = new Date ();
 
+	$('#clock_d').text (tDate.getDate () + ' ' + __month_names [tDate.getMonth ()] + ' ' + tDate.getFullYear ());
 	$('#clock_h').text (twoDigits (tDate.getHours ()));
 	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
 	$('#clock_m').text (twoDigits (tDate.getMinutes ()));

@@ -50,6 +50,7 @@ sub redirect {
 
 	if ($options -> {kind} eq 'js') {
 	
+		setup_skin ();
 		$options -> {url} = $url;	
 		out_html ({}, draw_redirect_page ($options));
 		
@@ -63,6 +64,43 @@ sub redirect {
 	}
 
 	$_REQUEST {__response_sent} = 1;
+	
+}
+
+################################################################################
+
+sub external_session {
+
+	my ($host, $login_params, $ua_options) = @_;
+
+	require LWP::UserAgent;
+		
+	require Eludia::Content::HTTP::ExternalSession;
+	
+	$_JSON or setup_json ();
+	
+	my $o = {
+	
+		json => $_JSON,
+	
+		host => $host,
+	
+		ua   => LWP::UserAgent -> new (%{$ua_options || {}}),
+	
+		package  => current_package (),
+
+	};
+	
+	push @{$o -> {ua} -> requests_redirectable}, 'POST';	
+	
+	$o -> {ua} -> agent ('Want JSON');
+
+	require HTTP::Cookies;
+	require File::Temp;
+
+	$o -> {ua} -> cookie_jar (HTTP::Cookies -> new (file => File::Temp::tempfile ()));
+
+	bless $o, 'Eludia::Content::HTTP::ExternalSession';
 	
 }
 

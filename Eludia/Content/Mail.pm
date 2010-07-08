@@ -155,7 +155,7 @@ sub send_mail {
 	
 	my $is_child = 0;
 	
-	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'}) {
+	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'} || $_REQUEST {__skin} eq 'STDERR') {
 
 		$SIG {'CHLD'} = "IGNORE";
 
@@ -265,6 +265,7 @@ EOT
 
 			my $buf = '';
 			open (FILE, $attach -> {real_path}) or die "Can't open $attach->{real_path}: $!";
+			binmode (FILE);
 			while (read (FILE, $buf, 60*57)) {
 				$smtp -> datasend (encode_base64 ($buf));
 			}
@@ -290,7 +291,7 @@ EOT
 
 	$time = __log ($time, " $signature: done with sending mail");
 		
-	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'}) {
+	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'} || $_REQUEST {__skin} eq 'STDERR') {
 		$db -> disconnect;
 		CORE::exit (0);
 	}

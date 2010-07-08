@@ -1,6 +1,7 @@
 no warnings;
 
 use Eludia::Content::Auth;
+use Eludia::Content::Dt;
 use Eludia::Content::ModuleTools;
 use Eludia::Content::Mbox;
 use Eludia::Content::Handler;
@@ -8,10 +9,6 @@ use Eludia::Content::HTTP;
 use Eludia::Content::Validators;
 use Eludia::Content::Templates;
 use Eludia::Content::Tie;
-
-#############################################################################
-
-sub darn ($) {warn Dumper ($_[0]); return $_[0]}
 
 #############################################################################
 
@@ -200,124 +197,6 @@ sub __log_profilinig {
 		if $preconf -> {core_debug_profiling} > 0;
 	
 	return $now;
-
-}
-
-################################################################################
-
-sub dt_y_m_d {
-
-	$_[0] =~ /^(\d+)\D(\d+)\D(\d+)/ or return ();
-		
-	return $1 > 1900 ? ($1, $2, $3) : ($3, $2, $1);
-
-}
-
-################################################################################
-
-sub dt_iso {
-
-	my @ymd = map {split /\D+/} @_;
-	
-	@ymd = reverse @ymd if $ymd [0] < 1000;
-		
-	return sprintf ('%04d-%02d-%02d', @ymd);
-
-}
-
-################################################################################
-
-sub dt_dmy {
-
-	my @dmy = map {split /\D+/} @_;
-	
-	@dmy = reverse @dmy if $dmy [2] < 1000;
-	
-	my $c = substr $i18n -> {_format_d}, 2, 1; 
-	
-	$c ||= '.';
-	
-	return sprintf ("\%02d${c}\%02d${c}\%02d", @dmy);
-
-}
-
-################################################################################
-
-sub dt_add {
-
-	my ($dt, $delta) = @_;
-	
-	my $was_iso = $dt =~ /^\d\d\d\d\-\d\d\-\d\d/;
-	
-	my $was_hms = $dt =~ /(\d+):(\d+):(\d+)$/;
-	
-	my @hms = $was_hms ? ($1, $2, $3) : ();
-
-	my @delta = split /\s+/, $delta;
-	
-	my $what = 'Days';
-	
-	@delta [-1] =~ /^[A-Za-z]/ and $what = pop @delta;
-	
-	my $want_24 = ($what =~ s{24}{});
-	
-	if ($what =~ /^H/i) {
-		
-		$what = 'DHMS'; 	@delta = (0, @delta [0], 0, 0);
-	
-	}
-	elsif ($what =~ /^M/i) {
-		
-		$what = 'DHMS';		@delta = (0, 0, @delta [0], 0);
-	
-	}
-	elsif ($what =~ /^S/i) {
-		
-		$what = 'DHMS';		@delta = (0, 0, 0, @delta [0]);
-	
-	}
-	
-	require Date::Calc;
-	
-	my @ymd = dt_y_m_d ($dt);
-
-	my $want_hms = $what =~ /HMS$/;
-	
-	if ($want_hms) { 
-		
-		@hms > 0 or @hms = (0, 0, 0);
-		
-		if ($hms [0] == 24) {
-		
-			$hms [0] = 0;
-			
-			@ymd = Date::Calc::Add_Delta_Days (@ymd, 1);
-		
-		}
-	
-	} else {	
-		
-		@hms = ();
-	
-	}
-
-	my @dt = &{"Date::Calc::Add_Delta_$what"} (@ymd, @hms, @delta);
-
-	return @dt if wantarray;
-	
-	if ($want_hms && $want_24 && $dt [3] == 0) {
-	
-		@dt [0 .. 2] = Date::Calc::Add_Delta_Days (@dt [0 .. 2], -1);
-		
-		$dt [3] = 24;
-
-	}
-
-	my $dt = $was_iso ? dt_iso (@dt [0 .. 2]) : dt_dmy (@dt [0 .. 2]);
-
-	$dt .= sprintf (' %02d:%02d:%02d', @dt [3 .. 5]) if $want_hms;
-
-	return $dt;
 
 }
 
@@ -552,6 +431,57 @@ sub user_agent {
 	}
 
 	return $result;
+
+}
+
+################################################################################
+
+sub get_mac {
+
+	my ($ip) = @_;	
+	$ip ||= $ENV {REMOTE_ADDR};
+
+	my $cmd = $^O eq 'MSWin32' ? 'arp -a' : 'arp -an';
+	my $arp = '';
+	
+	eval {$arp = lc `$cmd`};
+	$arp or return '';
+	
+	foreach my $line (split /\n/, $arp) {
+
+		$line =~ /\($ip\)/ or next;
+
+		if ($line =~ /[0-9a-f]{2}\:[0-9a-f]{2}\:[0-9a-f]{2}\:[0-9a-f]{2}\:[0-9a-f]{2}\:[0-9a-f]{2}/) {
+			return $&;
+		}
+		
+	}
+	
+	return '';
+
+}
+
+################################################################################
+
+sub get_user_subset_menu {
+
+	my $content = {
+	
+		user => {
+		
+			label  => $_USER -> {label},
+			
+			subset => $_REQUEST {__subset} || $_USER -> {subset},
+			
+		},
+
+		__subsets => $_SUBSET -> {items},
+		
+		__menu    => select_menu (),
+	
+	};
+		
+	return $content;
 
 }
 

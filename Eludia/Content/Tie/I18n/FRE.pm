@@ -3,6 +3,8 @@
 	_calendar_lang           => 'fr',
 	_format_d		 => '%d/%m/%Y',
 	_format_dt		 => '%d/%m/%Y  %k:%M',
+	_lc			 => 'a-zà-öø-ÿ',
+	_uc			 => 'A-ZÀ-ÖØ-ß',
 	Exit                     => 'Déconnexion',
 	toolbar_pager_empty_list => 'liste vide',
 	toolbar_pager_of         => ' de ',
@@ -33,7 +35,7 @@
 	confirm_open_vocabulary  => 'Ouvrir le vocabulaire?',
 	confirm_close_vocabulary => 'Vous avez choisi',
 	session_terminated       => 'Déconnecté',
-	save_or_cancel           => "Veuillez sauvegarder vos données (Ctrl-Enter) ou bien annuler l'opération (Esc)",
+	save_or_cancel           => "Veuillez sauvegarder vos données (Ctrl-Enter) ou bien annuler l\\'opération (Esc)",
 	infty                    => '&infin;', 
 	voc                      => ' vocabulaire...',
 	today                    => "Aujourd'hui", 
@@ -58,5 +60,28 @@
 		octobre
 		novembre
 		décembre
+	)],
+	month_names_1		 => [qw(
+		Janvier
+		Février
+		Mars
+		Avril
+		Mai
+		Juin
+		Juillet
+		Août
+		Séptembre
+		Octobre
+		Novembre
+		Décembre
+	)],
+	wd			=> [qw(
+		lu
+		ma
+		me
+		je
+		ve
+		sa
+		di
 	)],
 }

@@ -406,72 +406,94 @@ sub draw_item_of___queries {
 	foreach my $o (@_ORDER) {
 	
 		next
-                        if $o -> {__hidden};
+			if $o -> {__hidden};
 
-		my @f = (
-			{
-				label 		=> $o -> {title} || $o -> {label},
-				type  		=> 'hgroup',
-				nobr		=> 1,
-				cell_width	=> '50%',
-				items => [
-					{
-						label => 'показ',
-						size  => 2,
-						name  => $o -> {order} . '_ord',
-						value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord},
-					},
-					{
-						label => 'сортировка',
-						size  => 2,
-						name  => $o -> {order} . '_sort',
-						value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {sort},
-					},
-					{
-						name  => $o -> {order} . '_desc',
-						type  => 'select',
-						values => [{id => 1, label => 'убывание'}],
-						empty => 'возрастание',
-						value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {desc},
-					},
-				],
-			},
-		);
+		my @f;
 
-		foreach my $filter (@{$o -> {filters}}) {
- 		
-			my %f = %$filter;
-			
-			$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
-			
-			delete $f {type} 
-				if $f {type} eq 'input_text';
+		if (exists $o -> {type} && $o -> {type} eq 'banner') {
 
-			$f {type} =~ s/^input_//;
-			
-			if ($f {type} eq 'select') {
-				$f {values} = [grep {$_ -> {id} != -1} @{$f {values}}];
-				if ($f {other}) {
-				        $f {name} = '_' . $f {name}; 
-						$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
+			@f = (
+				{
+					type   => 'banner',
+					label  => $o -> {title} || $o -> {label},
 				}
-			} elsif ($f {type} eq 'date') {
-				$f {no_read_only}	= 1;
-			} elsif ($f {type} eq 'checkbox') {
-				$f {checked} = $f {value};
-			} elsif ($f {type} eq 'radio') {
-				$data -> {"filter_$f{name}"} = $f {value}; 
-			} elsif ($f {type} eq 'checkboxes') {
-				$data -> {'filter_' . $f {name}} = [split /,/, $f {value}];
-				delete $f {value}; 
-				
-				$_REQUEST {__form_checkboxes_custom} .= ',' . join ',', map {"_$f{name}_$_->{id}"} @{$f {values}};
-			}
-			
+			);
 
-			$f {name} = 'filter_' . $f {name};
+		} else {
+
+			@f = (
+				{
+					label 		=> $o -> {title} || $o -> {label},
+					type  		=> 'hgroup',
+					nobr		=> 1,
+					cell_width	=> '50%',
+					items => [
+						{
+							label => 'показ',
+							size  => 2,
+							name  => $o -> {order} . '_ord',
+							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord},
+							off   => $o -> {no_column},
+						},
+						{
+							label => 'сортировка',
+							size  => 2,
+							name  => $o -> {order} . '_sort',
+							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {sort},
+							off   => $o -> {no_column},
+						},
+						{
+							name  => $o -> {order} . '_desc',
+							type  => 'select',
+							values => [{id => 1, label => 'убывание'}],
+							empty => 'возрастание',
+							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {desc},
+							off   => $o -> {no_column},
+						},
+						{
+							type  => 'static',
+							value => '',
+							off   => !$o -> {no_column},
+						},
+					],
+				},
+			);
+
+			foreach my $filter (@{$o -> {filters}}) {
+
+				my %f = %$filter;
+
+				$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
+
+				delete $f {type} 
+					if $f {type} eq 'input_text';
+
+				$f {type} =~ s/^input_//;
 			
-			push @f, \%f;
+				if ($f {type} eq 'select') {
+					$f {values} = [grep {$_ -> {id} != -1} @{$f {values}}];
+					if ($f {other}) {
+					        $f {name} = '_' . $f {name}; 
+							$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
+					}
+				} elsif ($f {type} eq 'date') {
+					$f {no_read_only}	= 1;
+				} elsif ($f {type} eq 'checkbox') {
+					$f {checked} = $f {value};
+				} elsif ($f {type} eq 'radio') {
+					$data -> {"filter_$f{name}"} = $f {value}; 
+				} elsif ($f {type} eq 'checkboxes') {
+					$data -> {'filter_' . $f {name}} = [split /,/, $f {value}];
+					delete $f {value}; 
+
+					$_REQUEST {__form_checkboxes_custom} .= ',' . join ',', map {"_$f{name}_$_->{id}"} @{$f {values}};
+				}
+
+				$f {name} = 'filter_' . $f {name};
+
+				push @f, \%f;
+
+			}
 
 		}
 

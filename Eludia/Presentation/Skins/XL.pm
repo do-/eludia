@@ -10,10 +10,13 @@ BEGIN {
 ################################################################################
 
 sub options {
+
 	return {
-		no_buffering => 1,
-		no_static    => 1,
+		no_buffering    => 1,
+		no_static       => 1,
+		no_trunc_string => 1,
 	};
+	
 }
 
 ################################################################################
@@ -459,7 +462,7 @@ sub draw_text_cell {
 		$data -> {attributes} -> {style} .= "background:$data->{bgcolor};";
 	}
 
-	delete $data -> {attributes} -> {bgcolor} if $data -> {picture};
+	delete $data -> {attributes} -> {bgcolor} if $data -> {picture} || !$data -> {attributes} -> {bgcolor};
 
 	if ($data -> {level}) {
 		$data -> {attributes} -> {style} .= "padding-left:" . ($data -> {level} * 12) . "px;";
@@ -668,16 +671,13 @@ sub dialog_open {
 sub start_page {
 
 	$_REQUEST {__no_default_after_xls} or $_REQUEST {__after_xls} .= qq {
-		<table border=0>
-			<tr><td>&nbsp;</td></tr>
-			<tr><td>$_USER->{label}</td></tr>
-			<tr><td>@{[ sprintf ('%02d.%02d.%04d %02d:%02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4,5]) ]}</td></tr>
-		</table>
+		<p>$_USER->{label}</p>
+		<p>@{[ sprintf ('%02d.%02d.%04d %02d:%02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4,5]) ]}</p>
 	};
 
 	$r -> content_type ('application/octet-stream');
-	my $page_title = $conf -> {page_title};
-	$page_title =~ s/[\"\?]/_/g;
+	my $page_title = $_REQUEST {__page_title};
+	$page_title =~ s/[\"\?\:\s\\\/]+/_/gs;
 	$r -> header_out ('P3P' => 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
 	$r -> header_out ('Content-Disposition' => "attachment;filename=$page_title.xls"); 	
 	$r -> send_http_header ();

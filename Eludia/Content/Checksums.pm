@@ -27,7 +27,7 @@ sub checksum_filter {
 		
 		if (ref $def) {
 			$checksum = checksum ($def);			
-			next if $hash -> {$name} eq $checksum;
+			next if ($hash -> {$name} || '') eq $checksum;
 			$needed_tables -> {$key}  = Storable::dclone ($def);
 		}
 		else {

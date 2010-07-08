@@ -14,25 +14,44 @@ sub sql_version {
 
 	$version -> {string} = $version -> {strings} -> [0];
 	
-	($version -> {number}) = $version -> {string} =~ /([\d\.]+)/;
+	if ($version -> {string} =~ /release ([\d\.]+)/i) {
 	
-	$version -> {number_tokens} = [split /\./, $version -> {number}];
+		$version -> {number} = $1;
 	
-	$conf -> {db_date_format} ||= 'yyyy-mm-dd hh24:mi:ss';
-	
-	sql_do ("ALTER SESSION SET nls_date_format      = '$conf->{db_date_format}'");
-	sql_do ("ALTER SESSION SET nls_timestamp_format = '$conf->{db_date_format}'");
+	}
 
+	$version -> {string} =~ s{ release.*}{}i;
+
+	$version -> {number_tokens} = [split /\./, $version -> {number}];
+
+	my %s = (
+	
+		nls_numeric_characters => '.,',
+		nls_sort               => ($conf -> {db_sort} ||= 'BINARY'),
+
+	);
+	
+	$s {nls_date_format} = $s {nls_timestamp_format} = ($conf -> {db_date_format} ||= 'yyyy-mm-dd hh24:mi:ss');
+
+	sql_do ('ALTER SESSION SET ' . (join ' ', map {"$_ = '$s{$_}'"} keys %s));
+	
 	my $systables = {};
+	
 	foreach my $key (keys %{$conf -> {systables}}) {
 	    my $table = $conf -> {systables} -> {$key};
 	    $table =~ s/[\"\']//g;
 	    $systables -> {lc $table} = 1;
 	}
+	
 	sql_select_loop ("SELECT table_name FROM user_tables", sub {
 		next unless ($systables -> {lc $i -> {table_name}});
 		$version -> {tables} -> {lc $i -> {table_name}} = $i -> {table_name};
 	});
+	
+	$version -> {_keys_map} = {
+		REWBFHHHKGKGLLD => 'user',
+		NBHCQQEHGDFJFXF => 'level',
+	};
 
 	return $version;
 
@@ -40,50 +59,65 @@ sub sql_version {
 
 ################################################################################
 
+sub sql_ping { 1 }
+
+################################################################################
+
 sub sql_do_refresh_sessions {
 
-	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
+	unless ($SQL_VERSION -> {_} -> {st_refresh_sessions}) {
+			
+		my $timeout = sql_sessions_timeout_in_minutes () / 1440;
+		
+		$SQL_VERSION -> {_} -> {st_refresh_sessions} = $db -> prepare_cached (<<EOS, {}, 3);
+		
+			BEGIN
+		
+				DELETE FROM $conf->{systables}->{sessions} WHERE ts < sysdate - $timeout;
 
-	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
-		$timeout = $1;
-		$timeout *= 
-			$2 eq 'h' ? 60 :
-			$2 eq 'd' ? 1440 :
-			1;
-	}
+				UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?;
+				
+			END;
+
+EOS
 	
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN (SELECT id FROM $conf->{systables}->{sessions} WHERE ts < sysdate - ?)", $timeout / 1440);
+	}
 
-	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?", $_REQUEST {sid});
+	$SQL_VERSION -> {_} -> {st_refresh_sessions} -> execute ($_REQUEST {sid});
 
 }
 
 ################################################################################
 
 sub sql_execute {
-	
+
 	my ($st, @params) = sql_prepare (@_);
 	
 	my $affected;
 	
-	while (1) {
+	my $last_i = -1;	
+	
+	foreach (@params, 1) {
 
 		eval { $affected = $st -> execute (@params); };
-		
+
 		$@                   or last;
-		
-		$@ =~ /ORA-01722/    or die $@;		
+
+		$@ =~ /ORA-01722/    or die $@;
 		$@ =~ /\<\*\>p(\d+)/ or die $@;
 		
 		my $i = $1 - 1;
 		
 		my $old = $params [$i];
-		
+
+		$last_i != $i or die "Oracle refused twice to treat '$old' as a number";
+		$last_i  = $i;
+
 		$params [$i] =~ s{[^\d\.\,\-]}{}gsm;
 		$params [$i] =~ y{,}{.};
 		$params [$i] =~ s{\.+}{\.}gsm;
 		$params [$i] += 0;
-		
+
 		$params [$i] > 0 or $params [$i] < 0 or $params [$i] eq '0' or die "Значение '$old' не может быть истолковано как число.";
 
 	}
@@ -99,6 +133,7 @@ sub sql_prepare {
 	my ($sql, @params) = @_;
 
 	$sql =~ s{^\s+}{};
+	$sql =~ s{[\015\012]+}{$/}gs;
 	
 #print STDERR "sql_prepare (pid=$$): $sql\n";
 	
@@ -165,7 +200,13 @@ sub sql_prepare {
 		print STDERR $msg;
 		die $msg;
 	}
-		
+	
+	if ($db -> {Driver} -> {Name} eq ODBC) {
+
+		Encode::is_utf8	($_) or $_ = Encode::decode ($i18n -> {_charset}, $_) foreach (@params);
+
+	}
+
 	return ($st, @params);
 
 }
@@ -179,7 +220,7 @@ sub sql_do {
 	my ($sql, @params) = @_;	
 	
 	my $time = time;
-
+	
 	(my $st, $affected) = sql_execute ($sql, @params);
 
 	$st -> finish;	
@@ -464,26 +505,32 @@ sub lc_hashref {
 
 	my ($hr) = @_;
 
-	return undef unless (defined $hr);	
+	defined $hr or return undef;
 
-	if ($conf -> {core_auto_oracle}) {	
+	if ($db -> {Driver} -> {Name} eq ODBC) {
+
 		foreach my $key (keys %$hr) {
-		        my $old_key = $key;
-			$key =~ s/RewbfhHHkgkglld/user/igsm;
-			$key =~ s/NbhcQQehgdfjfxf/level/igsm;
-			$hr -> {lc $key} = $hr -> {$old_key};
-			delete $hr -> {uc $key};
+
+			my $s = delete $hr -> {$key};
+
+			$s = Encode::encode ($i18n -> {_charset}, $s) if Encode::is_utf8 ($s);
+
+			$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = $s;
+
 		}
+
 	}
 	else {
-		foreach my $key (keys %$hr) {
-			$hr -> {lc $key} = $hr -> {$key};
-			delete $hr -> {uc $key};
-		}
-	}
 
-	delete $hr -> {REWBFHHHKGKGLLD};
-	delete $hr -> {NBHCQQEHGDFJFXF};
+		foreach my $key (keys %$hr) {
+
+			$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = delete $hr -> {$key};
+
+		}
+
+	}
+	
+
 
 	return $hr;
 
@@ -686,8 +733,9 @@ sub sql_do_update {
 #	my @field_list = grep {!$lobs {$_}} @$field_list;
                       
 	if (@$field_list > 0) {
-		my $sql = join ', ', map {"$_ = ?"} @$field_list;
-		$options -> {stay_fake} or $sql .= ', fake = 0';
+		my $have_fake_param;
+		my $sql = join ', ', map {$have_fake_param ||= ($_ eq 'fake'); "$_ = ?"} @$field_list;
+		$options -> {stay_fake} or $have_fake_param or $sql .= ', fake = 0';
 		$sql = "UPDATE $table_name SET $sql WHERE id = ?";	
 
 		my @params = @_REQUEST {(map {"_$_"} @$field_list)};	
@@ -728,6 +776,8 @@ sub sql_do_insert {
 	my $table_name_safe = sql_table_name ($table_name);
 
 	$pairs -> {fake} = $_REQUEST {sid} unless exists $pairs -> {fake};
+	
+	delete_fakes ($table_name) if $pairs -> {fake} > 0;
 
 	if (is_recyclable ($table_name)) {
 	
@@ -957,6 +1007,8 @@ sub sql_store_file {
 		
 	open F, $options -> {real_path} or die "Can't open $options->{real_path}: $!\n";
 		
+	binmode F;
+
 	while (read (F, $buffer, $options -> {chunk_size})) {
 		$db -> ora_lob_append ($lob_locator, $buffer);
 	}
@@ -1039,7 +1091,7 @@ sub sql_select_loop {
 
 	my $st = sql_execute ($sql, @params);
 	
-	our $i;
+	local $i;
 	
 	while ($i = $st -> fetchrow_hashref) {
 		lc_hashref ($i);
@@ -1114,7 +1166,7 @@ $pattern = $sql;
 
 my @order_by;
 
-if ($sql =~ /\s+ORDER\s+BY\s+(.*)/igsm) {
+if (!$conf -> {db_nulls_last} && $sql =~ /\s+ORDER\s+BY\s+(.*)/igsm) {
       
     @order_by = split ',',$1;
          

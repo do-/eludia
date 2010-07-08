@@ -7,12 +7,19 @@ use HTTP::Request::Common;
 
 sub check_peer_server {
 
+	$_REQUEST {sid} or return undef;
+
 	$r -> headers_in -> {'User-Agent'} =~ m{^(Eludia|Zanas)/.*? \((.*?)\)} or return undef;
 
 	my $peer_server = $2;
 
-#	my $local_sid = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE peer_id = ? AND peer_server = ?", $_REQUEST {sid}, $peer_server) or return undef;
-	
+	my $local_sid = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE peer_id = ? AND peer_server = ?", $_REQUEST {sid}, $peer_server);
+	if ($local_sid) {
+		sql_do ("UPDATE sessions SET peer_id = ? WHERE id = ?", $_REQUEST {sid}, $local_sid);
+		$_REQUEST {sid} = $local_sid;
+	        return $peer_server;
+	}
+
 	my $user = peer_query ($peer_server, {__whois => $_REQUEST {sid}});
 	
 	my $role = $conf -> {peer_roles} -> {$peer_server} -> {$user -> {role}} || $conf -> {peer_roles} -> {$peer_server} -> {''};
@@ -163,7 +170,7 @@ sub peer_query {
 	my ($peer_server, $params, $options) = @_;
 	
 	my $url = $preconf -> {peer_servers} -> {$peer_server} or die "Peer server '$peer_server' not defined\n";
-	
+		
 	peer_reconnect ();
 
 	unless ($_REQUEST {__only_params}) {
@@ -203,7 +210,11 @@ sub peer_query {
 
 	my $request = POST (@args);
 
+	$UA -> {timeout} = 600 if (ref $options -> {files} eq ARRAY);
+
 	my $response = $UA -> request ($request);
+
+	$UA -> {timeout} = $preconf -> {peer_timeout} || 180 if (ref $options -> {files} eq ARRAY);
 
 	unless ($_REQUEST {no_upload_file}) {
 		foreach my $k (keys %$params) {

@@ -33,6 +33,16 @@ sub set_cookie {
 
 ################################################################################
 
+sub upload_file_dimensions {
+
+	my ($upload) = @_;
+	
+	($upload -> fh, $upload -> filename, $upload -> size, $upload -> type);
+
+}
+
+################################################################################
+
 sub _ok {200};
 
 ################################################################################
@@ -238,17 +248,19 @@ sub param {
 
 sub upload {
 
-	my $self = shift;
+	my ($self, $name) = @_;
+
+	(my $h = ($self -> {upload_cache} ||= {}))
+		
+		-> {$name} ||= 
 	
-	my $q = $self -> {Q};
+			Eludia::ApacheLikeRequest::Upload 
+			
+				-> new ($self -> {Q}, $name);
+			
+	seek ($h -> {$name} -> {FH}, 0, 0);
 
-	my $param = $_ [0];
-	
-	return $self -> {$param} if ($self -> {$param});
-
-	$self -> {$param} = Eludia::ApacheLikeRequest::Upload -> new ($q, $param);
-
-	return $self -> {$param};
+	return $h -> {$name};
 	
 }
 

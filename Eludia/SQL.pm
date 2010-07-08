@@ -5,6 +5,34 @@ use Eludia::SQL::Transfer;
 
 ################################################################################
 
+sub lc_hashref {}
+
+################################################################################
+
+sub sql_sessions_timeout_in_minutes {
+
+	my $timeout = $preconf -> {session_timeout} || $conf -> {session_timeout} || 30;
+
+	if ($preconf -> {core_auth_cookie} =~ /^\+(\d+)([mhd])/) {
+	
+		$timeout = $1 * (
+
+			$2 eq 'h' ? 60 :
+			
+			$2 eq 'd' ? 1440 :
+				
+			1
+				
+		)
+	
+	}
+	
+	return $timeout;
+
+}
+
+################################################################################
+
 sub add_vocabularies {
 
 	my ($item, @items) = @_;
@@ -57,13 +85,7 @@ sub sql_weave_model {
 
 	my ($db_model) = @_;
 
-	my @tables = ();
-	
-	foreach my $table_name ($db -> tables) {
-		$table_name =~ s{.*?(\w+)\W*$}{$1}gsm;
-		next if $table_name eq $conf -> {systables} -> {log};
-		push @tables, lc $table_name;
-	}
+	my @tables = grep {$_ ne $conf -> {systables} -> {log}} map {lc} get_tables ();
 		
 	foreach my $table_name (@tables) {
 	
@@ -144,6 +166,7 @@ sub check_systables {
 		__required_files	
 		__screenshots		
 		cache_html		
+		holidays
 		log			
 		roles			
 		sessions		
@@ -165,224 +188,30 @@ sub sql_assert_core_tables {
 	return if $model_update -> {core_ok};
 
 my $time = time;
-	
-	my %defs = (
-	
-		$conf -> {systables} -> {__defaults} => {
-		
-			columns => {
-				id          => {TYPE_NAME => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake        => {TYPE_NAME => 'bigint'},
-				context     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				name        => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				value       => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			},
-			
-			keys => {
-				context => 'context,name',
-			},
-
-		},
-		
-		$conf -> {systables} -> {__moved_links} => {
-		
-			columns => {
-				id          => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-				table_name  => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				column_name => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				id_from     => {TYPE_NAME => 'int'},
-				id_to       => {TYPE_NAME => 'int'},
-			},
-			
-			keys => {
-				id_to => 'id_to',
-			},
-
-		},
-		
-		$conf -> {systables} -> {__last_update} => {
-		
-			columns => {
-				id        => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-				pid 	  => {TYPE_NAME => 'int'},
-				unix_ts   => {TYPE_NAME => 'bigint'},
-			},
-			
-		},
-
-		$conf -> {systables} -> {sessions} => {
-		
-			columns => {
-
-				id      => {TYPE_NAME  => 'bigint', _PK    => 1},
-				id_user => {TYPE_NAME  => 'int'},
-				id_role => {TYPE_NAME  => 'int'},
-				ts      => {TYPE_NAME  => 'timestamp'},
-
-				ip =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				ip_fw =>  {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-
-				client_cookie =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-	
-				peer_server => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-				peer_id => {TYPE_NAME    => 'bigint'},
-				
-				tz_offset	=> {TYPE_NAME => 'tinyint', COLUMN_DEF => 0},
-			},
-			
-			keys => {
-			
-				ts => 'ts',
-			
-			},
-
-		},
-
-		$conf -> {systables} -> {roles} => {
-
-			columns => {
-				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake => {TYPE_NAME  => 'bigint'},
-				name  => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-				label => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-			},
-
-		},
-
-		$conf -> {systables} -> {users} => {
-
-			columns => {
-				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake => {TYPE_NAME  => 'bigint'},
-				login =>    {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				label =>    {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				password => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				mail     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				id_role  =>  {TYPE_NAME => 'int'},				
-				subset => {TYPE_NAME    => 'varchar', COLUMN_SIZE  => 255},
-			}
-
-		},
-
-		$conf -> {systables} -> {log} => {
-
-			columns => {
-				id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-				fake => {TYPE_NAME  => 'bigint', COLUMN_DEF => 0, NULLABLE => 0},
-				id_user =>   {TYPE_NAME => 'int'},
-				id_object => {TYPE_NAME => 'int'},
-				ip =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				ip_fw =>  {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				type =>   {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				action => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				error  => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-				params => {TYPE_NAME => 'longtext'},
-				dt     => {TYPE_NAME => 'timestamp'},
-				mac    => {TYPE_NAME  => 'varchar', COLUMN_SIZE => 17},
-			}
-
-		},	
-	
-	);
-	
-	if ( $conf -> {peer_roles}) {
-	
-		$defs {$conf -> {systables} -> {users}}	-> {peer_server} = {TYPE_NAME => 'varchar', COLUMN_SIZE  => 255},
-		$defs {$conf -> {systables} -> {users}}	-> {peer_id}     = {TYPE_NAME => 'int'},
-	
-	}
-	
-	$conf -> {core_session_access_logs_dbtable} and $defs {$conf -> {systables} -> {__access_log}} = {
-
-		columns => {
-			id         => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-			id_session => {TYPE_NAME => 'bigint'},
-			ts         => {TYPE_NAME => 'timestamp'},
-			no         => {TYPE_NAME => 'int'},
-			href       => {TYPE_NAME => 'text'},
-		},
-		
-		keys => {
-			ix => 'id_session,no',
-			ix2 => 'id_session,href(255)',
-		},
-
-	};
-
-	$conf -> {core_store_table_order} and $defs {$conf -> {systables} -> {__queries}} = {
-
-		columns => {
-			id          => {TYPE_NAME => 'int', _EXTRA => 'auto_increment', _PK => 1},
-			parent      => {TYPE_NAME => 'int'},
-			fake        => {TYPE_NAME => 'bigint'},
-			id_user     => {TYPE_NAME => 'int', COLUMN_DEF => 0, NULLABLE => 0},
-			type        => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			dump        => {TYPE_NAME => 'longtext'},
-			label       => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			order_context     => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-		},
-
-		keys => {
-			ix => 'id_user,type,label',
-		},
-
-	};
-	
-	$preconf -> {core_debug_profiling} > 1 and $defs {$conf->{systables}->{__benchmarks}} = {
-
-		columns => {
-			id       => {TYPE_NAME  => 'int'    , _EXTRA => 'auto_increment', _PK => 1},
-			fake     => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			label    => {TYPE_NAME  => 'varchar', COLUMN_SIZE  => 255},
-			cnt      => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			ms       => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			mean     => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			selected => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			mean_selected => {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-		},
-		
-		keys => {
-			label => 'label',
-		},
-		
-	};
-
-	$preconf -> {core_debug_profiling} > 2 and $defs {$conf->{systables}->{__request_benchmarks}} = {
-
-		columns => {
-			id	=> {TYPE_NAME  => 'int'    , _EXTRA => 'auto_increment', _PK => 1},
-			fake	=> {TYPE_NAME  => 'bigint' , COLUMN_DEF => 0, NULLABLE => 0},
-			id_user	=> {TYPE_NAME => 'int'},
-			dt	=> {TYPE_NAME => 'timestamp'},
-			params	=> {TYPE_NAME => 'longtext'},
-			ip =>     {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			ip_fw =>  {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			type =>   {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-			mac    => {TYPE_NAME  => 'varchar', COLUMN_SIZE => 17},
-
-			connection_id		=> {TYPE_NAME => 'int'},
-			connection_no		=> {TYPE_NAME => 'int'},
-
-			request_time		=> {TYPE_NAME => 'int'},
-			application_time	=> {TYPE_NAME => 'int'},
-			sql_time		=> {TYPE_NAME => 'int'},
-			response_time		=> {TYPE_NAME => 'int'},
-			
-			bytes_sent		=> {TYPE_NAME => 'int'},
-			is_gzipped		=> {TYPE_NAME => 'tinyint'}, 
-		},
-
-	};
 
 	$model_update -> assert (
 	
-		tables => \%defs, 
+		tables => {
+
+			$conf -> {systables} -> {__last_update} => {
+
+				columns => {
+				
+					id        => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
+					pid 	  => {TYPE_NAME => 'int'},
+					unix_ts   => {TYPE_NAME => 'bigint'},
+				
+				},
+
+			},
+		
+		}, 
 				
 		prefix => 'sql_assert_core_tables#',
 		
 	);
 
-	sql_version();
+	sql_version ();
 
 	$model_update -> {core_ok} = 1;
 		
@@ -469,6 +298,26 @@ sub sql_is_temporal_table {
 
 ################################################################################
 
+sub sql_ping {
+
+	my $r;
+
+	eval {
+	
+		my $st = $db -> prepare ('SELECT 1');
+		
+		$st -> execute;
+		
+		$r = $st -> fetchrow_arrayref;
+	
+	};
+	
+	return @$r == 1 && $r -> [0] == 1 ? 1 : 0;
+
+}
+
+################################################################################
+
 sub sql_reconnect {
 
 my $time = time;
@@ -477,7 +326,7 @@ my $time = time;
 
 	if ($db && ($preconf -> {no_model_update} || ($model_update && $model_update -> {core_ok}))) {
 
-		$db -> ping and return
+		sql_ping () and return
 		
 $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
 
@@ -490,6 +339,18 @@ $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
 		LongTruncOk => 1,
 		InactiveDestroy => 0,
 	});
+
+	if ($preconf -> {db_cache_statements}) {
+
+		require Eludia::Content::Tie::LRUHash;
+		
+		my %cache;
+
+		tie %cache, 'Eludia::Content::Tie::LRUHash', {size => 300};
+
+		$db -> {CachedKids} = \%cache;
+
+	}
 
 $time = __log_profilinig ($time, "  sql_reconnect: connected to $preconf->{db_dsn}");
 
@@ -514,6 +375,8 @@ $time = __log_profilinig ($time, "  sql_reconnect: connected to $preconf->{db_ds
 $time = __log_profilinig ($time, "  sql_reconnect: $driver_name is loaded");
 
 	}
+	
+	delete $SQL_VERSION -> {_};
 	
 	sql_version ();
 
@@ -700,21 +563,6 @@ sub sql_select_vocabulary {
 	
 	my @list;
 	
-	my $package; # = __PACKAGE__;
-	
-	my ($_package, $filename, $line, $subroutine, $hasargs, $wantarray, $evaltext, $is_require, $hints, $bitmask) = caller (0);
-	
-	if ($subroutine =~ /^(\w+)\:\:/) {
-	
-		$package = $1;
-	
-	}
-	else {
-	
-		$package = __PACKAGE__;
-	
-	}
-
 	tie @list, 'Eludia::Tie::Vocabulary', {
 	
 		sql      => "SELECT id, $$options{label}, fake FROM $table_name WHERE $filter ORDER BY $$options{order} $limit",
@@ -723,7 +571,7 @@ sub sql_select_vocabulary {
 		
 		_REQUEST => \%_REQUEST,
 		
-		package  => $package,
+		package  => current_package (),
 		
 		tree     => $options -> {tree},
 		
@@ -815,10 +663,12 @@ sub sql_select_id {
 
 	}
 		
-	while (my $id = ($record -> {is_merged_to} || $record -> {id_merged_to})) {
-		$record = sql_select_hash ($table, $id);
+	unless ($_REQUEST {_no_search_merged_record}) {
+		while (my $id = ($record -> {is_merged_to} || $record -> {id_merged_to})) {
+			$record = sql_select_hash ($table, $id);
+		}
 	}
-	
+
 	if ($record -> {id}) {
 	
 		my @keys   = ();
@@ -1076,11 +926,11 @@ sub delete_fakes {
 	
 	$table_name    ||= $_REQUEST {type};
 
-	return if is_recyclable ($table_name);
+	return if ($_REQUEST {__delete_fakes} -> {$table_name} ||= is_recyclable ($table_name));
 	
 	assert_fake_key ($table_name);
 	
-	my $ids = sql_select_ids (<<EOS);
+	my ($ids, $in_clause) = sql_select_ids (<<EOS);
 		SELECT
 			$table_name.id
 		FROM
@@ -1091,7 +941,9 @@ sub delete_fakes {
 			AND $conf->{systables}->{sessions}.id_user IS NULL
 EOS
 			
-	sql_do ("DELETE FROM $table_name WHERE id IN ($ids)");
+	sql_do ("DELETE FROM $table_name WHERE id IN ($in_clause)");
+	
+	$_REQUEST {__delete_fakes} -> {$table_name} = 1;
 
 }
 
@@ -1193,7 +1045,7 @@ sub sql_extract_params {
 			) {
 
 				my $value = $1;
-				$value =~ s{\\\'}{\'}gsm;
+				$value =~ s{\\\'}{\'}gsm; #'
 				push @params1, $value;
 				$token = '?';
 
@@ -1441,6 +1293,8 @@ sub sql_assert_default_columns {
 
 		next if $definition -> {sql};
 
+		next if $definition -> {columns} -> {id};
+
 		foreach my $dc_name (keys %$default_columns) {
 
 			$definition -> {columns} -> {$dc_name} ||= Storable::dclone $default_columns -> {$dc_name};
@@ -1473,6 +1327,8 @@ sub assert {
 
 	while (my ($name, $object) = each %$tables) {
 	
+		next if $object -> {off};
+	
 		$object -> {name} = $name;
 
 		push @{$objects -> [$object -> {sql} ? 1 : 0]}, $object;
@@ -1486,8 +1342,18 @@ sub assert {
 		wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], {table => $table -> {name}}) if exists $table -> {columns};
 
 		wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})],    {table => $table -> {name}, table_def => $table}) if exists $table -> {keys};
-
-		wish (table_data    => $table -> {data}, {table => $table -> {name}}) if exists $table -> {data};
+		
+		if (exists $table -> {data} && ref $table -> {data} eq ARRAY && @{$table -> {data}} > 0) {
+				
+			wish (table_data => $table -> {data}, {
+			
+				table => $table -> {name},
+				
+				key   => exists $table -> {data} -> [0] -> {id} ? 'id' : 'name',
+				
+			});
+		
+		}
 
 	}
 	
@@ -1569,9 +1435,7 @@ sub require_wish ($) {
 sub wish {
 
 	my ($type, $items, $options) = @_;
-	
-	@$items > 0 or return;
-	
+
 	require_wish $type;
 
 	&{"wish_to_adjust_options_for_$type"} ($options);
@@ -1595,9 +1459,9 @@ sub wish {
 		&{"wish_to_schedule_modifications_for_$type"} ($old, $new, $todo, $options);		
 		
 	}
-	
+
 	&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
-		
+
 	foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
 
 }

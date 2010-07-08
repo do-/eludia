@@ -215,6 +215,8 @@ sub __genereate_sql_fragment_for_column {
 					
 		$i -> {TYPE_NAME} eq 'NUMBER'  ? " ($i->{COLUMN_SIZE}, $i->{DECIMAL_DIGITS})" :
 
+		$i -> {TYPE_NAME} eq 'RAW'  ? " ($i->{COLUMN_SIZE})" :
+
 		$i -> {TYPE_NAME} =~ /CHAR2?$/ ? " ($i->{COLUMN_SIZE}@{[ $i -> {TYPE_NAME} =~ /^N/ ? '' : ' CHAR' ]})" :
 
 		'');

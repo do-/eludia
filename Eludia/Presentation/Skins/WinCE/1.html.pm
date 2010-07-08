@@ -1,1 +1,0 @@
-<html><body onLoad="alert('1.html loaded in ' + window.name);"></body></html>

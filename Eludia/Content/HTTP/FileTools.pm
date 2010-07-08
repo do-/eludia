@@ -62,6 +62,8 @@ sub download_file_header {
 	
 	delete $r -> headers_out -> {'Content-Encoding'};
 	
+	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
+
 	send_http_header ();
 
 	$_REQUEST {__response_sent} = 1;
@@ -141,45 +143,14 @@ sub upload_file {
 	
 	my $upload = $apr -> upload ('_' . $options -> {name});
 	
-	my ($fh, $filename, $file_size, $file_type);
+	$upload or return undef;
 
-	if (ref $apr eq 'Apache2::Request') {
+	my ($fh, $filename, $file_size, $file_type) = upload_file_dimensions ($upload);
 	
-		return undef unless ($upload and $upload -> upload_size > 0);
-		
-		$fh = $upload -> upload_fh;
-		$filename = $upload -> upload_filename;
-		$file_size = $upload -> upload_size;
-		$file_type = $upload -> upload_type;
-		  
-	} else {
+	$file_size > 0 or return undef;
 	
-		return undef unless ($upload and $upload -> size > 0);
+	my ($path, $real_path) = upload_path ($filename, $options);
 
-		$fh = $upload -> fh;
-		$filename = $upload -> filename;
-		$file_size = $upload -> size;
-		$file_type = $upload -> type;
-
-		
-	}
-
-	my ($y, $m, $d) = split /-/, sprintf ('%04d-%02d-%02d', Date::Calc::Today);
-
-	$options -> {dir} ||= 'upload/images';
-
-	my $dir = $r -> document_root . "/i/$$options{dir}";
-
-	foreach my $subdir ('', $y, $m, $d) {
-		$dir .= "/$subdir" if $subdir;
-		-d $dir or mkdir $dir;
-	}
-
-	$filename =~ /[A-Za-z0-9]+$/;
-	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . '-' . (++ $_REQUEST {__files_cnt}) . "-$$.$&";
-	
-	my $real_path = $r -> document_root . $path;
-	
 	open (OUT, ">$real_path") or die "Can't write to $real_path: $!";
 	binmode OUT;
 		
@@ -201,6 +172,34 @@ sub upload_file {
 		real_path => $real_path,
 	}
 	
+}
+
+################################################################################
+
+sub upload_path {
+	
+	my ($filename, $options) = @_;
+	
+	my ($y, $m, $d) = split /-/, sprintf ('%04d-%02d-%02d', Date::Calc::Today);
+
+	$options -> {dir} ||= 'upload/images';
+
+	my $dir = $r -> document_root . "/i/$$options{dir}";
+
+	foreach my $subdir ('', $y, $m, $d) {
+
+		$dir .= "/$subdir" if $subdir;
+
+		-d $dir or mkdir $dir;
+
+	}
+
+	$filename =~ /[A-Za-z0-9]+$/;
+	
+	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . '-' . (++ $_REQUEST {__files_cnt}) . "-$$.$&";
+	
+	return ($path, $r -> document_root . $path);
+
 }
 
 1;
