@@ -1483,8 +1483,6 @@ sub draw_cells {
 			$cell -> {icon}           ? 'button'   :
 			exists $cell -> {checked} ? 'checkbox' :
 						    'text'     ;
-			
-		$result .= call_from_file ("Eludia/Presentation/TableCells/$cell->{type}.pm", "draw_$cell->{type}_cell", $cell, $options);
 
 	}
 	
@@ -1501,6 +1499,8 @@ sub draw_cells {
 		}
 
 	}
+	
+	$result .= call_from_file ("Eludia/Presentation/TableCells/$_->{type}.pm", "draw_$_->{type}_cell", $_, $options) foreach @cells;
 
 	if ($options -> {gantt}) {
 
