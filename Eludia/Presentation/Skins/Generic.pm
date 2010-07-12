@@ -21,7 +21,7 @@ sub __submit_href {
 
 	my ($_SKIN, $name) = @_;
 
-	"javaScript:var f = document.$name; f.fireEvent ('onsubmit'); f.submit()";
+	"javaScript:var f = document.$name; try {f.onsubmit()} catch (e) {}; f.submit()";
 
 }
 
