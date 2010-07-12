@@ -204,9 +204,21 @@ function handle_hotkey_href     (r) {
 	
 }
 		
-function nope (a1, a2, a3) {
+function nope (url, name, options) {
+
 	var w = window;
-	w.open (a1, a2, a3);
+
+	if (name == '_self') {
+	
+		w.location.href = url;
+		
+	}
+	else {
+
+		w.open (url, name, options);
+
+	}
+
 }
 
 function nop () {}
@@ -326,8 +338,12 @@ function a_click (a, e) {
 		
 		}
 		else {
+		
+			var target = a.target;
+
+			if (!target) target = '_self';
 					
-			nope (a.href, a.target);
+			nope (a.href, target);
 		
 		}
 	
