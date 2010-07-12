@@ -1483,10 +1483,8 @@ sub draw_cells {
 			$cell -> {icon}           ? 'button'   :
 			exists $cell -> {checked} ? 'checkbox' :
 						    'text'     ;
-	
-		$result .= call_from_file ("Eludia/Presentation/TableCells/$cell->{type}.pm", "draw_$cell->{type}_cell", $cell, $options);
 
-			}
+	}
 		
 	if ($_REQUEST {select} && !$options -> {select_label}) {
 
@@ -1498,9 +1496,12 @@ sub draw_cells {
 
 			$options      -> {select_label}   ||= $cell    -> {label};
 
-			}
 
 		}
+
+	}
+	
+	$result .= call_from_file ("Eludia/Presentation/TableCells/$_->{type}.pm", "draw_$_->{type}_cell", $_, $options) foreach @cells;
 
 	if ($options -> {gantt}) {
 
@@ -2122,6 +2123,8 @@ sub draw_calendar_year {
 
 	my $spacer     = $_REQUEST {xls} ? '' : '<img src="/i/_skins/TurboMilk/0.gif" border=0 height=10 width=6>';
 	
+	my $spacer1    = $_REQUEST {xls} ? '' : '<img src="/i/_skins/TurboMilk/0.gif" border=0 height=1 width=1>';
+
 	my $lines = [map {
 	
 		ref $_ ne HASH ? {fields => $_} :
@@ -2138,9 +2141,9 @@ sub draw_calendar_year {
 	
 	} @{cal_year ($options -> {year} || $_REQUEST {year}) -> {lines}}];
 	
-	my $xlempty    = $_REQUEST {xls} ? draw_text_cell ('&nbsp;') : '';
+	my $empty_cell = "<td class='row-cell-transparent' bgcolor='#efefef'>$spacer1</td>";
 
-	my $empty_cell = draw_text_cell ($empty);
+	my $xlempty    = $_REQUEST {xls} ? $empty_cell : '';
 
 	my $day_names = $xlempty . draw_cells ({}, [
 		@wdays, $empty,
