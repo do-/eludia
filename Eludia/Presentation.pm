@@ -386,6 +386,7 @@ sub check_title {
 	$title =~ s{^(\&nbsp\;|\s)+}{};
 	
 	$title = HTML::Entities::decode_entities ($title) if $title =~ /\&/;
+	$title =~ s{\"}{\&quot\;}g;
 
 	$options -> {attributes} -> {title} = $title;
 
@@ -865,7 +866,7 @@ sub draw_form_field {
 			delete $field -> {values};
 
 			while (my $value = shift @$values) {
-                                $value -> {label} = "&nbsp; " x (2 * (@spaces - 1)) . $value -> {label};
+				$value -> {label} = "&nbsp; " x (2 * (@spaces - 1)) . $value -> {label};
 
 				if ($value -> {items}) {
 					unshift @spaces, @{$value -> {items}} + 0;
@@ -2259,7 +2260,7 @@ sub draw_page {
 	our $lpt                   = 0;
 
 	$_REQUEST {__script}      .= "; the_page_title = '$_REQUEST{__page_title}';";
-	$_REQUEST {__on_load}     .= "; if (!window.top.title_set) window.top.document.title = the_page_title;";
+	$_REQUEST {__on_load}     .= "; try {if (!window.top.title_set) window.top.document.title = the_page_title;} catch(e) {}";
 
 	$_REQUEST {__invisibles}   = ['invisible'];
 
@@ -2518,6 +2519,11 @@ sub out_html {
 	$html and !$_REQUEST {__response_sent} or return;
 
 	$_REQUEST {__out_html_time} = my $time = time;  
+
+	if ($conf -> {core_sweep_spaces}) {
+		$html =~ s{^\s+}{}gsm;
+		$html =~ s{[ \t]+}{ }g;
+	}
 
 	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
 

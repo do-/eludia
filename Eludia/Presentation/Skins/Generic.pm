@@ -135,6 +135,20 @@ sub __adjust_form_field_select {
 
 ################################################################################
 
+sub __adjust_form_field_text {
+
+	my ($options) = @_;
+
+	$options -> {value} =~ s/\"/\&quot\;/gsm; #";
+
+	my $attributes = ($options -> {attributes} ||= {});
+
+	$attributes -> {readonly} = 1 if $_REQUEST {__read_only} or $options -> {read_only};	
+
+}
+
+################################################################################
+
 sub js_detail {
 
 	my ($options) = @_;

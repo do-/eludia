@@ -147,18 +147,26 @@ sub check___query {
 
 	$_REQUEST {__allow_check___query} or return;
 
-	$conf -> {core_store_table_order} or return;	
+	$conf -> {core_store_table_order} or return;
 
 	$_REQUEST {__order_context} ||= '';
 	
 	if ($_REQUEST {id___query} == -1) {
 
-		sql_do ("DELETE FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?", $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context});
+		if ($SQL_VERSION -> {driver} eq 'Oracle') {
+			sql_do ("DELETE FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label IS NULL AND id_user = ? AND type = ? AND order_context" . ($_REQUEST {__order_context} ? ' = ?' : ' IS NULL'), $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context} || ());
+		} else {
+			sql_do ("DELETE FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?", $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context});
+		}
 
 	}
 	else {
 
-		$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?", $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context});
+		if ($SQL_VERSION -> {driver} eq 'Oracle') {
+			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label IS NULL AND id_user = ? AND type = ? AND order_context" . ($_REQUEST {__order_context} ? ' = ?' : ' IS NULL'), $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context} || ());
+		} else {
+			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?", $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context});
+		}
 
 	}
 	
@@ -208,7 +216,7 @@ EOS
 	eval $_QUERY -> {dump};
 	
 	$_QUERY -> {content} = $VAR1;
-	
+
 	my $filters = $_QUERY -> {content} -> {filters};
 
 	foreach my $key (keys %$filters) {
@@ -317,9 +325,9 @@ sub do_drop_filters___queries {
 sub do_update___queries {
 
 	my $content = {};
-	
+
 	my @order = ();
-	
+
 	foreach my $key (keys %_REQUEST) {
 	
 		$key =~ /^_(\w+)_desc$/ or next;
@@ -338,9 +346,9 @@ sub do_update___queries {
 			$order [ $_REQUEST {"_${order}_sort"} ] .= ' DESC' if $_REQUEST {"_${order}_desc"};
 		
 		}
-	
+
 	}
-	
+
 	$content -> {order} = join ', ', grep { $_ } @order;
 
 	foreach my $cbx (split /,/, $_REQUEST {__form_checkboxes_custom}) {
@@ -392,17 +400,17 @@ sub draw_item_of___queries {
 
 	my ($data) = @_;
 	
- 	my @fields = (
- 	
- 		{
- 			type  => 'banner',
- 			label => 'Столбцы и фильтры',
- 		},
- 		
- 	);
+	my @fields = (
+	
+		{
+			type  => 'banner',
+			label => 'Столбцы и фильтры',
+		},
+		
+	);
 
 	$_REQUEST {__form_checkboxes_custom} = '';
-	
+
 	foreach my $o (@_ORDER) {
 	
 		next
@@ -473,8 +481,8 @@ sub draw_item_of___queries {
 				if ($f {type} eq 'select') {
 					$f {values} = [grep {$_ -> {id} != -1} @{$f {values}}];
 					if ($f {other}) {
-					        $f {name} = '_' . $f {name}; 
-							$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
+						$f {name} = '_' . $f {name}; 
+						$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
 					}
 				} elsif ($f {type} eq 'date') {
 					$f {no_read_only}	= 1;
