@@ -3479,6 +3479,7 @@ EOH
 	$menus =~ s/\"/\\"/gsm;  #"
 	
 	$options -> {active} += 0;
+	$options -> {name} ||= '_content_iframe';
 	
 	if ($_COOKIE {"co_$_REQUEST{type}"}) {
 
@@ -3495,7 +3496,7 @@ EOH
 		win.d._cookie_name = '$_REQUEST{type}';
 		var c = win.d.config;
 		c.iconPath = '$_REQUEST{__static_url}/tree_';
-		c.target = '_content_iframe';
+		c.target = '$options->{name}';
 		c.useStatusText = true;
 		c.useCookies = true;
 		win.d.icon.node = 'folderopen.gif';
