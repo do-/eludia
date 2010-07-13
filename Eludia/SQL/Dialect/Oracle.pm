@@ -38,9 +38,9 @@ sub sql_version {
 	my $systables = {};
 	
 	foreach my $key (keys %{$conf -> {systables}}) {
-	    my $table = $conf -> {systables} -> {$key};
-	    $table =~ s/[\"\']//g;
-	    $systables -> {lc $table} = 1;
+		my $table = $conf -> {systables} -> {$key};
+		$table =~ s/[\"\']//g;
+		$systables -> {lc $table} = 1;
 	}
 	
 	sql_select_loop ("SELECT table_name FROM user_tables", sub {
