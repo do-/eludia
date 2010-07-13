@@ -2958,7 +2958,7 @@ sub draw_page {
 		
 		$_REQUEST {__on_load}  = "window.focus (); setInterval (UpdateClock, 500); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
 		
-		$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive};
+		$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive} && $_REQUEST {sid};
 
 #				<tr height=48><td height=48>$page->{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>
 		$body = qq {
