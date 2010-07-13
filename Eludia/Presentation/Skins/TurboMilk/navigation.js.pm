@@ -307,6 +307,23 @@ function activate_link_by_id (id) {
 
 }
 
+function refresh_radio__div (id) {
+
+	var div = document.getElementById ('radio_div_' + id);
+
+	if (document.getElementById (id).checked) {
+
+		div.style.display = 'block';
+
+	}
+	else {
+
+		div.style.display = 'none';
+
+	}
+
+}
+
 function stibqif (stib, qif) {
 	scrollable_table_is_blocked = stib; 
 	q_is_focused                = qif;

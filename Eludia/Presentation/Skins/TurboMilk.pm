@@ -990,8 +990,20 @@ sub draw_form_field_radio {
 	
 	my $n = 0;
 	
+	my @ids = map {'' . $_} grep {$_ -> {html}} @{$options -> {values}};
 	
+	if (@ids) {
 	
+		$options -> {refresh_name} = "refresh_radio_$options->{name}";
+		
+		$_REQUEST {__script} .= qq {
+		
+			function $options->{refresh_name} () {@{[ map {"refresh_radio__div ('$_');"} @ids ]}}
+		
+		};
+	
+	}
+
 	foreach my $value (@{$options -> {values}}) {
 	
 		my $a = $value -> {attributes};
@@ -1004,6 +1016,7 @@ sub draw_form_field_radio {
 		$a -> {onFocus}   .= ";stibqif (true,true)";
 		$a -> {onBlur}    .= ";stibqif (true,false)";
 		$a -> {onClick}   .= ";is_dirty=true"; 
+		$a -> {onClick}   .= ";$options->{refresh_name}()" if $options -> {refresh_name}; 
 		$a -> {onKeyDown} .= ";tabOnEnter()";
 	
 		$html .= '<td class="form-inner" width=1 nowrap="1">';
@@ -1011,10 +1024,16 @@ sub draw_form_field_radio {
 		$html .= dump_tag (input => $a);
 
 		$html .= qq {</td><td class="form-inner" width=1><nobr>&nbsp;$$value{label}</nobr>};
-									
-		$html .= qq {<td class="form-inner"><div style="display:expression(getElementById('$value').checked ? 'block' : 'none')">$$value{html}</div>} if $value -> {html};
 		
-		$options -> {no_br} or ++ $n == @{$options -> {values}} or $html .= qq {\n\t\t<td class="form-inner"><div>&nbsp;</div><tr>};
+		if ($value -> {html}) {
+		
+			my $bn = $a -> {checked} ? 'block' : 'none';
+		
+			$html .= qq {<td class="form-inner"><div id="radio_div_$value" style="display:$bn">$$value{html}</div>};
+
+		}
+											
+		$options -> {no_br} or ++ $n == @{$options -> {values}} or $html .= qq {<td class="form-inner"><div>&nbsp;</div><tr>};
 				
 	}
 	
