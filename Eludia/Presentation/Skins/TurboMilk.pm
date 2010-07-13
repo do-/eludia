@@ -3526,13 +3526,26 @@ EOH
 EOO
 EOH
 
-	return qq {<frameset cols="$options->{width},*">
+	my $frameset = qq {<frameset cols="$options->{width},*">
 		<frame src="$ENV{SCRIPT_URI}/i/_skins/TurboMilk/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
 		</frame>
-		<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
+		<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="$options->{name}" id="__content_iframe" application="yes" scroll=no>
 		</frame>
 	</frameset>};
 
+	if ($options -> {top}) {
+
+		$frameset = <<EOH;
+			<frameset rows="$options->{top}->{height},*">
+				<frame src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" application="yes" noresize scrolling=no>
+				</frame>
+				$frameset
+			</frameset>
+EOH
+
+	}
+
+	return $frameset;
 }
 
 ################################################################################
