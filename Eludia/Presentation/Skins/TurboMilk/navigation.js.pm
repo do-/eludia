@@ -307,6 +307,11 @@ function activate_link_by_id (id) {
 
 }
 
+function stibqif (stib, qif) {
+	scrollable_table_is_blocked = stib; 
+	q_is_focused                = qif;
+}
+
 function a_click (a, e) {
 
 	if (a.onclick) {

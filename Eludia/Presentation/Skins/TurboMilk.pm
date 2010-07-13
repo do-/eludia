@@ -990,20 +990,29 @@ sub draw_form_field_radio {
 	
 	my $n = 0;
 	
+	
+	
 	foreach my $value (@{$options -> {values}}) {
 	
-		delete $value -> {attributes} -> {name};
-		delete $value -> {attributes} -> {value};
-		delete $value -> {attributes} -> {id};
-		delete $value -> {attributes} -> {onclick};
+		my $a = $value -> {attributes};
 	
-		my $attributes = dump_attributes ($value -> {attributes});
+		$a -> {type}       = 'radio';
+		$a -> {class}    ||= 'cbx';
+		$a -> {name}       = '_' . $options -> {name};
+		$a -> {value}      = $value -> {id};
+		$a -> {id}         = ''  . $value;
+		$a -> {onFocus}   .= ";stibqif (true,true)";
+		$a -> {onBlur}    .= ";stibqif (true,false)";
+		$a -> {onClick}   .= ";is_dirty=true"; 
+		$a -> {onKeyDown} .= ";tabOnEnter()";
+	
+		$html .= '<td class="form-inner" width=1 nowrap="1">';
+		
+		$html .= dump_tag (input => $a);
 
-		$html .= qq {\n<td class="form-inner" width=1 nowrap="1"><input class=cbx $attributes id="$value" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false" type="radio" name="_$$options{name}" value="$$value{id}" onClick="is_dirty=true;$$value{onclick};" onKeyDown="tabOnEnter()">};
-
-		$html .= qq {\n</td><td class="form-inner" width=1><nobr>&nbsp;$$value{label}</nobr>};
+		$html .= qq {</td><td class="form-inner" width=1><nobr>&nbsp;$$value{label}</nobr>};
 									
-		$html .= qq {\n\t\t<td class="form-inner"><div style="display:expression(getElementById('$value').checked ? 'block' : 'none')">$$value{html}</div>} if $value -> {html};
+		$html .= qq {<td class="form-inner"><div style="display:expression(getElementById('$value').checked ? 'block' : 'none')">$$value{html}</div>} if $value -> {html};
 		
 		$options -> {no_br} or ++ $n == @{$options -> {values}} or $html .= qq {\n\t\t<td class="form-inner"><div>&nbsp;</div><tr>};
 				
