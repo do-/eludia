@@ -2891,7 +2891,7 @@ sub draw_page_just_to_reload_menu {
 	qq {
 		var wm = ancestor_window_with_child ('main_menu');
 		var a = $a;
-		wm.child.outerHTML = $a [0];
+		\$(wm.child).html (a[0]);
 		wm.window.menu_md5 = '$md5';
 	}; 
 
