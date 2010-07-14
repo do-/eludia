@@ -1015,7 +1015,7 @@ sub adjust_form_field_options {
 
 sub js_detail {
 
-	return &{"$_SKIN::js_detail"} ($options);
+	return &{$_SKIN . '::js_detail'} (@_);
 
 }
 
