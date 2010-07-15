@@ -2108,15 +2108,13 @@ sub draw_centered_toolbar_button {
 		$img_path = _icon_path ($options -> {icon});
 	}
 	
-	my $nbsp = $options -> {label} ? '&nbsp;' : '';
-
 	return <<EOH;
 		<td nowrap background="$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}">
-			<table cellspacing="0" cellpadding="0" border="0">
+			<table cellspacing=0 cellpadding=0 border=0>
 				<tr>
 					<td width=6><img src="$_REQUEST{__static_url}/btn_l.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
 					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}"><img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=1 align=absmiddle>${nbsp}</a></td>
-					<td background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="absmiddle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}">$$options{label}</a>${nbsp}${nbsp}</td>
+					<td background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" align="center" nowrap><a class="button" style="padding-right:4px;" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}">$$options{label}</a></td>
 					<td width=6><img src="$_REQUEST{__static_url}/btn_r.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
 				</tr>
 			</table>
