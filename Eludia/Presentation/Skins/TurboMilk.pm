@@ -626,22 +626,32 @@ EOH
 			suggest_clicked = 0;
 		}
 		else {
-			var f = this.form;
-			f.elements ['_$options->{name}__label'].value = '';
-			f.elements ['_$options->{name}__id'].value = '';
-			var s = f.elements ['__suggest'];
-			document.getElementById ('_$options->{name}__suggest').style.display = 'none';
-			if (this.value.length > 0) {
-				s.value = '$options->{name}';
-				document.getElementById ('_$options->{name}__label').value = this.value;
-				f.submit ();
-				s.value = '';
-			}
+			var SUGGEST_DELAY = 500;
+			clearTimeout(typingIdleTimer);
+			typingIdleTimer = setTimeout('lookup_$options->{name}()', SUGGEST_DELAY);
 		}
 EOH
 
 	my $id = '' . $options;
-	
+
+	$_REQUEST {__script} .= qq{;
+		var typingIdleTimer;
+		function lookup_$options->{name}() {
+			var suggest_label = document.getElementById ('$id');
+			var f = suggest_label.form;
+			f.elements ['_$options->{name}__label'].value = '';
+			f.elements ['_$options->{name}__id'].value = '';
+			var s = f.elements ['__suggest'];
+			document.getElementById ('_$options->{name}__suggest').style.display = 'none';
+			if (suggest_label.value.length > 0) {
+				s.value = '$options->{name}';
+				document.getElementById ('_$options->{name}__label').value = suggest_label.value;
+				f.submit ();
+				s.value = '';
+			}
+		};
+	};
+
 	$options -> {attributes} -> {id}           = $id;
 	$options -> {attributes} -> {autocomplete} = 'off';
 	$options -> {attributes} -> {type}         = 'text';
