@@ -648,23 +648,33 @@ EOH
 			suggest_clicked = 0;
 		}
 		else {
-			var f = this.form;
+			var SUGGEST_DELAY = 500;
+			clearTimeout(typingIdleTimer);
+			typingIdleTimer = setTimeout('lookup_$options->{name}()', SUGGEST_DELAY);
+		}
+EOH
+
+	my $id = '' . $options;
+
+	$_REQUEST {__script} .= qq{;
+		var typingIdleTimer;
+		function lookup_$options->{name}() {
+			var suggest_label = document.getElementById ('$id');
+			var f = suggest_label.form;
 			var e = f.elements;
 			e ['_$options->{name}__label'].value = '';
 			e ['_$options->{name}__id'].value = '';
 			var s = e ['__suggest'];
 			\$('#_$options->{name}__suggest').hide ();
-			if (this.value.length > 0) {
+			if (suggest_label.value.length > 0) {
 				s.value = '$options->{name}';
-				e ['_$options->{name}__label'].value = this.value;
+				e ['_$options->{name}__label'].value = suggest_label.value;
 				f.submit ();
 				s.value = '';
 			}
-		}
-EOH
+		};
+	};
 
-	my $id = '' . $options;
-	
 	$options -> {attributes} -> {id}           = $id;
 	$options -> {attributes} -> {autocomplete} = 'off';
 	$options -> {attributes} -> {type}         = 'text';

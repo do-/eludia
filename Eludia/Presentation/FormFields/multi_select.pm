@@ -48,9 +48,8 @@ sub draw_form_field_multi_select {
 EOJS
 		}
 	}
-	
 
-	return draw_form_field_hgroup (
+	return draw_form_field_of_type (
 		{
 			label	=> $options -> {label},
 			type	=> 'hgroup',
@@ -103,7 +102,7 @@ EOJS
 		},
 		$data
 	);
-		
+
 }
 
 1;
