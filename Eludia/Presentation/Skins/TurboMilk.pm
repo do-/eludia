@@ -1060,6 +1060,7 @@ sub draw_form_field_select {
 	my ($_SKIN, $options, $data) = @_;
 	
 	$options -> {attributes} ||= {};
+	$options -> {id}         ||= "_$options->{name}_select";
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 	my $attributes = dump_attributes ($options -> {attributes});
 	
@@ -1145,7 +1146,6 @@ EOJS
 	my $html = <<EOH;
 		<select 
 			name="_$$options{name}"
-			id="_$$options{name}_select"
 			$attributes
 			onKeyDown="tabOnEnter()"
 			onChange="is_dirty=true; $$options{onChange}" 
