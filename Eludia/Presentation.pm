@@ -1476,8 +1476,8 @@ sub draw_cells {
 		}
 
 		$options -> {__fixed_cols} ++ if $cell -> {no_scroll};
-		
-		$cell -> {type}   = 'text' if $cell -> {off} || $cell -> {read_only};
+
+		$cell -> {type}   = 'text' if ($cell -> {off} || $cell -> {read_only}) && !$cell -> {icon};
 
 		$cell -> {type} ||= 
 	
