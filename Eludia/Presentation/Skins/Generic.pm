@@ -59,7 +59,7 @@ sub __adjust_form_field_string {
 	
 	$attributes -> {autocomplete} = 'off' unless exists $attributes -> {autocomplete};
 		
-	$attributes -> {id}           = 'input_' . $options -> {name};
+	$attributes -> {id}         ||= 'input_' . $options -> {name};
 
 }
 
