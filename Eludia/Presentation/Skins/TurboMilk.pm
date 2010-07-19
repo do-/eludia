@@ -535,26 +535,35 @@ sub draw_form_field {
 	elsif ($field -> {type} eq 'hidden') {
 		return $field -> {html};
 	}
-				
-	my $colspan       = $field -> {colspan}       ? 'colspan=' . $field -> {colspan}       : '';
-	my $colspan_label = $field -> {colspan_label} ? 'colspan=' . $field -> {colspan_label} : '';
-	my $label_width   = $field -> {label_width}   ? 'width='   . $field -> {label_width}   : '';	
-	my $cell_width    = $field -> {cell_width}    ? 'width='   . $field -> {cell_width}    : '';
-	my $label_title   = $field -> {label_title}   ? 'title="'  . $field -> {label_title} . '"' : '';
 	
-	my $label_cell;
-	$label_cell = qq {<td class='form-$$field{state}-label' nowrap $colspan_label align=right $label_width $label_title>\n$$field{label}</td>}
-		unless ($field -> {label_off});
+	my $html = '';
+	
+	my $class = 'form-' . $field -> {state} . '-';
+	
+	unless ($field -> {label_off}) {
 
-	my $inputs = 'inputs';
-	if ($field -> {fake} == -1) {
-	    $inputs = 'deleted';
+		my $a = {		
+			class  => $class . 'label',
+			nowrap => 1,
+			align  => 'right',		
+		};
+
+		$a -> {colspan} = $field -> {colspan_label} if $field -> {colspan_label};
+		$a -> {width}   = $field -> {label_width}   if $field -> {label_width};
+		$a -> {title}   = $field -> {label_title}   if $field -> {label_title};
+
+		$html .= dump_tag (td => $a, $field -> {label});
+
 	}
 
-	return <<EOH;
-		$label_cell
-		<td class='form-$$field{state}-$inputs' $colspan $cell_width>\n$$field{html}</td>
-EOH
+	my $a = {class  => $class . ($field -> {fake} == -1 ? 'deleted' : 'inputs')};
+
+	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
+	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
+
+	$html .= dump_tag (td => $a, $field -> {html});
+
+	return $html;
 
 }
 
