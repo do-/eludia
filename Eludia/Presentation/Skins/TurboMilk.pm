@@ -447,6 +447,7 @@ EOH
 	
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
+		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
 		$html .= qq{<tr id="$tr_id">};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
