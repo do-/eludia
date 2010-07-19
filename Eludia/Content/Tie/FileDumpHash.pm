@@ -24,11 +24,13 @@ sub FETCH_ {
 	
 	my $sql_types = $options -> {conf} -> {sql_types};
 	
-	my %dirs = ('' . ${"$options->{package}::__the_dir"} => 1);
-	
-	$dirs {$_} = 1 foreach (&{$options -> {path}} ($key));
+	my @dirs = reverse &{$options -> {path}} ($key);
 
-	foreach my $dir (keys %dirs) {
+	my $__the_dir = '' . ${"$options->{package}::__the_dir"};
+	push @dirs, $__the_dir
+		unless grep {$_ eq $__the_dir} @dirs;
+
+	foreach my $dir (@dirs) {
 	
 		$dir .= '/Model';
 
