@@ -2367,8 +2367,12 @@ sub js_set_select_option {
 	
 	$item -> {question} ||= "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?" unless $conf -> {core_no_confirm_other};
 
-	my $a = $_JSON -> encode ($item);
-	
+	my $a = $_JSON -> encode ({
+		id       => $item -> {id},
+		label    => $item -> {label},
+		question => $item -> {question},
+	});
+
 	return $_SO_VARIABLES -> {$a}
 		if $_SO_VARIABLES -> {$a};
 
