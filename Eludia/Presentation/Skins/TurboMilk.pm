@@ -3291,6 +3291,10 @@ EOH
 		[tz_offset       => ''],
 	);
 
+	my $auth_toolbar = &{$_PACKAGE . 'draw_auth_toolbar'} ({
+		top_banner => ($conf -> {top_banner} ? interpolate ($conf -> {top_banner}) : ''),
+	});
+
 	return <<EOH;
 
 <table border="0" cellpadding="0" cellspacing="0" align=center height=100% width=100%>
@@ -3298,19 +3302,7 @@ EOH
 	<tr>
 
 		<td valign=top height=90>
-			<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="$_REQUEST{__static_site}/i/bg_logo_out.gif" style="background-repeat: repeat-x" height=90>
-				<tr>
-				<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=90 border=0></td>
-				<td width=1><table border=0 valign="middle" border=0><tr>
-					<td valign="top" width=1><img src="$_REQUEST{__static_site}/i/logo_out.gif" border="0"></td>
-					<td width=1><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 height=1 border=0></td>
-					<td width=1 valign="bottom" style='padding-bottom: 5px;'><img src="$_REQUEST{__static_url}/gsep.gif?$_REQUEST{__static_salt}" width="4" height="21"></td>
-					<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
-				</tr></table></td>
-				
-				<td width="20px" align="right">&nbsp;</td></tr>
-			</table>
-
+$auth_toolbar
 		</td>
 
 	</tr>
