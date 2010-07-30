@@ -431,6 +431,10 @@ A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
 	FONT-WEIGHT: normal; FONT-SIZE: 8pt; COLOR: #000000; FONT-FAMILY: Tahoma, 'MS Sans Serif';
 }
 
+span#clock_s {
+	FONT-WEIGHT: normal; FONT-SIZE: 8pt; COLOR: #FFFFFF; FONT-FAMILY: courier, 'courier new', monospace;
+}
+
 .txt2 {
 	FONT-WEIGHT: normal; FONT-SIZE: 8pt; COLOR: #323233; FONT-FAMILY: Tahoma, 'MS Sans Serif';
 }
