@@ -3144,7 +3144,7 @@ Calendar.setup = function (params) {
 
 // Node object
 
-function Node (id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox) {
+function Node (id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox, is_radio) {
 
 	this.id = id;
 	this.pid = pid;
@@ -3157,6 +3157,7 @@ function Node (id, pid, name, url, title, target, icon, iconOpen, open, context_
 	this._io = open || false;
 	this.context_menu = context_menu;
 	this.is_checkbox = is_checkbox;
+	this.is_radio = is_radio;
 	this._is = false;
 	this._ls = false;
 	this._hc = false;
@@ -3218,9 +3219,9 @@ function dTree (objName) {
 
 // Adds a new node to the node array
 
-dTree.prototype.add = function(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox) {
+dTree.prototype.add = function(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox, is_radio) {
 
-	this.aNodes[this.aNodes.length] = new Node(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox);
+	this.aNodes[this.aNodes.length] = new Node(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox, is_radio);
 
 };
 
@@ -3370,6 +3371,12 @@ dTree.prototype.node = function(node, nodeId) {
 	if (node.is_checkbox) {
 		str += '<input class=cbx type=checkbox name="' + this.checkbox_name_prefix + this.obj + '_' + node.id + '"' + (node.is_checkbox > 1 ? 'checked' : '') + ' value=1 tabindex=-1 onChange="is_dirty=true" />';
 		if (node.is_checkbox > 1)
+			this.checkedNodes[this.checkedNodes.length] = nodeId;
+	}
+
+	if (node.is_radio) {
+		str += '<input class=cbx type=radio name="' + this.checkbox_name_prefix + this.obj + '" ' + (node.is_radio > 1 ? 'checked' : '') + ' value=' + node.id + ' tabindex=-1 onChange="is_dirty=true" />';
+		if (node.is_radio > 1)
 			this.checkedNodes[this.checkedNodes.length] = nodeId;
 	}
   
