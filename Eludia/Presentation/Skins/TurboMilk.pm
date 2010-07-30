@@ -536,6 +536,12 @@ sub draw_form_field {
 		return $field -> {html};
 	}
 	
+	if ($field -> {plus}) {
+
+		$field -> {html} .= qq{<img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle onClick="clone_form_tr_for_this_plus_icon(this)" lowsrc="$field->{plus}">};
+
+	}
+	
 	my $html = '';
 	
 	my $class = 'form-' . $field -> {state} . '-';

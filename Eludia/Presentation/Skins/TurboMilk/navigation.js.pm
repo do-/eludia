@@ -65,6 +65,62 @@ window.confirm = function (s) {
 	return r;
 
 };
+
+function drop_form_tr_for_this_minus_icon (i) {
+
+	$(i).parent ().parent ().remove ();
+
+}
+
+function clone_form_tr_for_this_plus_icon (i) {
+
+	var tr_old = $(i).parent ().parent ();
+	
+	if (i.src.indexOf ('minus.gif') > -1) {
+	
+		tr_old.remove ();
+		
+		return;
+	
+	}
+
+	var id = tr_old.attr ('id');
+	
+	var selector = "tr[id^='" + id + "']";
+
+	var n = 0;
+	
+	var last = null; 
+	
+	$(selector, tr_old.parent ()).each (function () {
+
+		n ++;
+		
+		last = this;
+	
+	});
+
+	var tr_new = tr_old.clone ();
+	
+	tr_new.attr ('id', id + '_' + n);
+	
+	var img = $('img:last', tr_new);
+	
+	img.attr ('src', img.attr ('src').replace ('plus', 'minus'));
+	
+	var td = $('td:first', tr_new);
+	
+	td.text (img.attr ('lowsrc') + ' ' + n + ':');
+
+	$(':input', tr_new).each (function () {
+
+		this.name += ('_' + n);
+	
+	});
+
+	tr_new.insertAfter (last);
+
+}
 
 function select_visibility () {
 	if (top.last_vert_menu && top.last_vert_menu [0]) return 'hidden';
