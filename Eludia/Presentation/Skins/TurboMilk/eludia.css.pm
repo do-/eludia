@@ -432,7 +432,7 @@ A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
 }
 
 span#clock_s {
-	FONT-WEIGHT: normal; FONT-SIZE: 8pt; COLOR: #FFFFFF; FONT-FAMILY: courier, 'courier new', monospace;
+	FONT-WEIGHT: normal; FONT-SIZE: 8pt; COLOR: #000000; FONT-FAMILY: courier, 'courier new', monospace;width:2px;
 }
 
 .txt2 {
