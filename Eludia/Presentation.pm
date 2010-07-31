@@ -2583,7 +2583,7 @@ sub setup_skin {
 		}
 		else {
 
-			$_REQUEST {__skin} = ($preconf -> {core_skin} ||= 'Classic');
+			$_REQUEST {__skin} = ($preconf -> {core_skin} ||= 'TurboMilk');
 
 	}
 
