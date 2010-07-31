@@ -30,7 +30,6 @@ var subsets_are_visible = 0;
 var questions_for_suggest = {};
 var clockID = 0;
 var clockSeparatorID = 0;
-var clockSeparators = [':', ' '];
 var suggest_clicked = 0;
 var suggest_is_visible = 0;
 var lastClientHeight = 0;
@@ -508,7 +507,7 @@ function UpdateClock () {
 
 	$('#clock_d').text (tDate.getDate () + ' ' + __month_names [tDate.getMonth ()] + ' ' + tDate.getFullYear ());
 	$('#clock_h').text (twoDigits (tDate.getHours ()));
-	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
+	$('#clock_s').css({visibility : tDate.getSeconds () % 2 ? 'hidden' : 'visible'});
 	$('#clock_m').text (twoDigits (tDate.getMinutes ()));
 
 }

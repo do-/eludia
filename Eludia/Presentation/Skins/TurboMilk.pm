@@ -145,7 +145,7 @@ sub draw_calendar {
 		
 		<script>var __month_names = $month_names;</script>
 	
-		<span id='clock_d'></span>&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s'></span><span id='clock_m'></span>
+		<span id='clock_d'></span>&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s'>:</span><span id='clock_m'></span>
 		
 	}
 
