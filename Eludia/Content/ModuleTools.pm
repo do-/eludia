@@ -418,13 +418,9 @@ sub require_fresh {
 
 	@file_names > 0 or return "Module $module_name not found in " . (join '; ', @inc) . "\n";
 
-	(grep {last_modified_time_if_refresh_is_needed ($_)} @file_names) > 0 or return;
-
 	foreach my $file_name (reverse @file_names) {
 
-		delete $INC_FRESH_BY_PATH {$file_name};
-
-		my $last_modified = last_modified_time_if_refresh_is_needed ($file_name);
+		my $last_modified = last_modified_time_if_refresh_is_needed ($file_name) or next;
 
 		if ($type eq 'menu') {
 
