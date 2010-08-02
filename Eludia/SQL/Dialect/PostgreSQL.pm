@@ -697,9 +697,11 @@ sub sql_delete_file {
 	if ($options -> {path_column}) {
 		$options -> {file_path_columns} = [$options -> {path_column}];
 	}
-	
+
+	$options -> {id} ||= $_REQUEST {id};
+
 	foreach my $column (@{$options -> {file_path_columns}}) {
-		my $path = sql_select_array ("SELECT $$options{path_column} FROM $$options{table} WHERE id = ?", $_REQUEST {id});
+		my $path = sql_select_array ("SELECT $column FROM $$options{table} WHERE id = ?", $options -> {id});
 		delete_file ($path);
 	}
 	

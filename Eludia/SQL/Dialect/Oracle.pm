@@ -38,9 +38,9 @@ sub sql_version {
 	my $systables = {};
 	
 	foreach my $key (keys %{$conf -> {systables}}) {
-	    my $table = $conf -> {systables} -> {$key};
-	    $table =~ s/[\"\']//g;
-	    $systables -> {lc $table} = 1;
+		my $table = $conf -> {systables} -> {$key};
+		$table =~ s/[\"\']//g;
+		$systables -> {lc $table} = 1;
 	}
 	
 	sql_select_loop ("SELECT table_name FROM user_tables", sub {
@@ -937,12 +937,13 @@ sub sql_delete_file {
 	if ($options -> {path_column}) {
 		$options -> {file_path_columns} = [$options -> {path_column}];
 	}
-	
+
+	$options -> {id} ||= $_REQUEST {id};
+
 	foreach my $column (@{$options -> {file_path_columns}}) {
-		my $path = sql_select_array ("SELECT $$options{path_column} FROM $$options{table} WHERE id = ?", $_REQUEST {id});
+		my $path = sql_select_array ("SELECT $column FROM $$options{table} WHERE id = ?", $options -> {id});
 		delete_file ($path);
 	}
-	
 
 }
 

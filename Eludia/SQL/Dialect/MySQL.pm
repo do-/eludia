@@ -19,17 +19,17 @@ sub sql_version {
 	
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
 
-        $db -> {HandleError} = sub {
-        
+	$db -> {HandleError} = sub {
+
 		my $err = $_[0] or return 0;
 		
-		if (		
+		if (
 			$err =~ m{Incorrect key file for table .*?(\w+)\.MYI'} || 
 			$err =~ m{Table .*?(\w+)' is marked as crashed and should be repaired}
 		) {
-                
+
 			warn "FOUND CORRUPTED TABLE [$1]! TRYING TO 'REPAIR TABLE `$1` QUICK' ORIG ERR:[$err]";
-                
+
 			my $db_repair = DBI -> connect ($conf -> {'db_dsn'}, $conf -> {'db_user'}, $conf -> {'db_password'}, {
 				AutoCommit  => 1,
 				LongReadLen => 100000000,
@@ -41,11 +41,11 @@ sub sql_version {
 
 			$db_repair -> disconnect;
 
-            }
+		}
 
-            return 0;
-            
-        };
+		return 0;
+
+	};
 
 	return $version;
 	
@@ -650,16 +650,17 @@ sub sql_do_delete {
 sub sql_delete_file {
 
 	my ($options) = @_;	
-	
+
 	if ($options -> {path_column}) {
 		$options -> {file_path_columns} = [$options -> {path_column}];
 	}
-	
+
+	$options -> {id} ||= $_REQUEST {id};
+
 	foreach my $column (@{$options -> {file_path_columns}}) {
-		my $path = sql_select_array ("SELECT $$options{path_column} FROM $$options{table} WHERE id = ?", $_REQUEST {id});
+		my $path = sql_select_array ("SELECT $column FROM $$options{table} WHERE id = ?", $options -> {id});
 		delete_file ($path);
 	}
-	
 
 }
 

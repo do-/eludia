@@ -23,8 +23,8 @@ function i18n_calendar (Calendar) {
 		"TIME_PART"       : "(Shift-)Click or drag to change value",
 		"DEF_DATE_FORMAT" : "%Y-%m-%d",
 		"TT_DATE_FORMAT"  : "%a, %b %e",
-		"WK"              : "wk",
-	},
+		"WK"              : "wk"
+	};
 
 }
 

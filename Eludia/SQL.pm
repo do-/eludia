@@ -1450,7 +1450,25 @@ sub wish {
 
 	foreach my $new (@$items) {
 
-		my $old = delete $existing -> {join '_', @$new {@key}} or (push @{$todo -> {create}}, $new) and next;
+		my $old;
+
+		if ($type eq 'table_data') {
+
+			$old = $existing -> {join '_', @$new {@key}};
+
+			unless ($old) {
+
+				push @{$todo -> {create}}, $new;
+
+				$existing -> {join '_', @$new {@key}} = $new;
+
+				next;
+			
+			}
+
+		} else {
+			$old = delete $existing -> {join '_', @$new {@key}} or (push @{$todo -> {create}}, $new) and next;
+		}
 
 		&{"wish_to_update_demands_for_$type"} ($old, $new, $options);
 
@@ -1462,7 +1480,7 @@ sub wish {
 
 	&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
 
-	foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
+	foreach my $action (sort keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
 
 }
 
