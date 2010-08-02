@@ -13,9 +13,7 @@ sub draw_form_field_tree {
 	my $v = $options -> {value} || $data -> {$options -> {name}};
 
 	foreach my $value (@{$options -> {values}}) {
-	
-		my $checked = 0 + (grep {$_ eq $value -> {id}} @$v);
-		
+			
 		if ($value -> {href}) {
 	
 			my $__last_query_string = $_REQUEST {__last_query_string};
@@ -26,15 +24,21 @@ sub draw_form_field_tree {
 	
 		}
 		
-		$value -> {__node} = draw_node ({
+		my $o = {
 			label	=> $value -> {label},
 			id	=> $value -> {id},
 			parent	=> $value -> {parent},
-			is_checkbox	=> $value -> {is_checkbox} + $checked,
+			is_radio	=> $value -> {is_radio} + $checked,
 			icon    	=> $value -> {icon},
 			iconOpen    	=> $value -> {iconOpen},
 			href  		=> $value -> {href},
-		})
+		};
+		
+		$o -> {is_checkbox} = (grep {$_ eq $value -> {id}} @$v) > 0 ? 2 : 1 if $value -> {is_checkbox};
+
+		$o -> {is_radio}    = $v == $value -> {id} ? 2 : 1 if $value -> {is_radio};
+		
+		$value -> {__node} = draw_node ($o);
 
 	}
 
