@@ -3493,7 +3493,9 @@ EOH
 
 	$_REQUEST {__only_tree_frameset} = 1;
 	
-	$_REQUEST {__on_load} .= <<EOH;
+	$_REQUEST {__script} .= <<EOH;
+
+	\$(window).load (function () {
 		var win = document.getElementById ('__tree_iframe').contentWindow;
 		win.d = new win.dTree ('d');
 		win.d._url_base = '$options->{url_base}';
@@ -3519,9 +3521,14 @@ EOH
 		win.d._href = '$options->{href}';
 		$selected_code
 		var styleNode = win.document.createElement("STYLE");
-    		styleNode.type = "text/css";
-	        win.document.body.appendChild(styleNode);
-    		win.document.styleSheets[0].addRule('td.vert-menu', "background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;");
+		styleNode.type = "text/css";
+		win.document.body.appendChild(styleNode);
+		var sheet = win.document.styleSheets[0];
+		if (sheet.addRule) {
+			sheet.addRule ('td.vert-menu', "background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;");
+		} else {
+			sheet.insertRule ("td.vert-menu {background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}", 0);
+		}
 
 		win.document.body.innerHTML = "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td id='dtree_td' valign=top>" + win.d + "</td></tr></table><div id='dtree_menus'>$menus</div>";
 @{[ $options->{selected_node} ? <<EOO : '' ]}
@@ -3529,6 +3536,8 @@ EOH
 			win.d.openTo ($options->{selected_node}, true);
 		}
 EOO
+	})
+
 EOH
 
 	my $frameset = qq {<frameset cols="$options->{width},*">
