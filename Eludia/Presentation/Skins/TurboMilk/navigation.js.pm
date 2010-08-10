@@ -30,7 +30,6 @@ var subsets_are_visible = 0;
 var questions_for_suggest = {};
 var clockID = 0;
 var clockSeparatorID = 0;
-var clockSeparators = [':', ' '];
 var suggest_clicked = 0;
 var suggest_is_visible = 0;
 var lastClientHeight = 0;
@@ -67,6 +66,63 @@ window.confirm = function (s) {
 	return r;
 
 };
+
+
+function drop_form_tr_for_this_minus_icon (i) {
+
+	$(i).parent ().parent ().remove ();
+
+}
+
+function clone_form_tr_for_this_plus_icon (i) {
+
+	var tr_old = $(i).parent ().parent ();
+	
+	if (i.src.indexOf ('minus.gif') > -1) {
+	
+		tr_old.remove ();
+		
+		return;
+	
+	}
+
+	var id = tr_old.attr ('id');
+	
+	var selector = "tr[id^='" + id + "']";
+
+	var n = 0;
+	
+	var last = null; 
+	
+	$(selector, tr_old.parent ()).each (function () {
+
+		n ++;
+		
+		last = this;
+	
+	});
+
+	var tr_new = tr_old.clone ();
+	
+	tr_new.attr ('id', id + '_' + n);
+	
+	var img = $('img:last', tr_new);
+	
+	img.attr ('src', img.attr ('src').replace ('plus', 'minus'));
+	
+	var td = $('td:first', tr_new);
+	
+	td.text (img.attr ('lowsrc') + ' ' + n + ':');
+
+	$(':input', tr_new).each (function () {
+
+		this.name += ('_' + n);
+	
+	});
+
+	tr_new.insertAfter (last);
+
+}
 
 function get_event (e) {
 
@@ -508,7 +564,7 @@ function UpdateClock () {
 
 	$('#clock_d').text (tDate.getDate () + ' ' + __month_names [tDate.getMonth ()] + ' ' + tDate.getFullYear ());
 	$('#clock_h').text (twoDigits (tDate.getHours ()));
-	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
+	$('#clock_s').css({visibility : tDate.getSeconds () % 2 ? 'hidden' : 'visible'});
 	$('#clock_m').text (twoDigits (tDate.getMinutes ()));
 
 }
@@ -3213,7 +3269,7 @@ Calendar.setup = function (params) {
 
 // Node object
 
-function Node (id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox) {
+function Node (id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox, is_radio) {
 
 	this.id = id;
 	this.pid = pid;
@@ -3226,6 +3282,7 @@ function Node (id, pid, name, url, title, target, icon, iconOpen, open, context_
 	this._io = open || false;
 	this.context_menu = context_menu;
 	this.is_checkbox = is_checkbox;
+	this.is_radio = is_radio;
 	this._is = false;
 	this._ls = false;
 	this._hc = false;
@@ -3287,9 +3344,9 @@ function dTree (objName) {
 
 // Adds a new node to the node array
 
-dTree.prototype.add = function(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox) {
+dTree.prototype.add = function(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox, is_radio) {
 
-	this.aNodes[this.aNodes.length] = new Node(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox);
+	this.aNodes[this.aNodes.length] = new Node(id, pid, name, url, title, target, icon, iconOpen, open, context_menu, is_checkbox, is_radio);
 
 };
 
@@ -3439,6 +3496,12 @@ dTree.prototype.node = function(node, nodeId) {
 	if (node.is_checkbox) {
 		str += '<input class=cbx type=checkbox name="' + this.checkbox_name_prefix + this.obj + '_' + node.id + '"' + (node.is_checkbox > 1 ? 'checked' : '') + ' value=1 tabindex=-1 onChange="is_dirty=true" />';
 		if (node.is_checkbox > 1)
+			this.checkedNodes[this.checkedNodes.length] = nodeId;
+	}
+
+	if (node.is_radio) {
+		str += '<input class=cbx type=radio name="' + this.checkbox_name_prefix + this.obj + '" ' + (node.is_radio > 1 ? 'checked' : '') + ' value=' + node.id + ' tabindex=-1 onChange="is_dirty=true" />';
+		if (node.is_radio > 1)
 			this.checkedNodes[this.checkedNodes.length] = nodeId;
 	}
   

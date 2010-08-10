@@ -1463,7 +1463,7 @@ sub draw_cells {
 		if ($options -> {href}) {
 
 			$cell -> {a_class} ||= $options -> {a_class};
-			$cell -> {target}  ||= $options -> {target};
+			$cell -> {target}  ||= $options -> {target} || '_self';
 
 			unless (exists $cell -> {href}) {
 				$cell -> {href} = $options -> {href};
@@ -2583,7 +2583,7 @@ sub setup_skin {
 		}
 		else {
 
-			$_REQUEST {__skin} = ($preconf -> {core_skin} ||= 'Classic');
+			$_REQUEST {__skin} = ($preconf -> {core_skin} ||= 'TurboMilk');
 
 	}
 

@@ -145,7 +145,7 @@ sub draw_calendar {
 		
 		<script>var __month_names = $month_names;</script>
 	
-		<span id='clock_d'></span>&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s'></span><span id='clock_m'></span>
+		<span id='clock_d'></span>&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s'>:</span><span id='clock_m'></span>
 		
 	}
 
@@ -255,7 +255,7 @@ EOH
 		$header_height = 90;
 	}
 	return <<EOH;
-		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="$_REQUEST{__static_site}/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
+		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 class="tbbga" background="$_REQUEST{__static_site}/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
 			<tr>
 			<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
 			<td width=1><table border=0 valign="middle" border=0><tr>
@@ -291,7 +291,7 @@ EOJ
 	} else {
 	 
 		return <<EOH
-			<table cellspacing=0 cellpadding=0 width="100%"><tr><td bgcolor="#edf1f5" class="header_3"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr><tr><td bgcolor="#e4e9ee"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=1></td></tr></table>
+			<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="header_3"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr><tr><td class="#tbbgb"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=1></td></tr></table>
 EOH
 
 	}
@@ -447,6 +447,7 @@ EOH
 	
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
+		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
 		$html .= qq{<tr id="$tr_id">};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
@@ -505,7 +506,7 @@ EOH
 &nbsp;</td>
 						</tr>
 						<tr>
-							<td bgcolor="#e4e9ee" colspan=2><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+							<td class="tbbgb" colspan=2><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 						</tr>
 					</table>
 				</td>
@@ -534,26 +535,41 @@ sub draw_form_field {
 	elsif ($field -> {type} eq 'hidden') {
 		return $field -> {html};
 	}
-				
-	my $colspan       = $field -> {colspan}       ? 'colspan=' . $field -> {colspan}       : '';
-	my $colspan_label = $field -> {colspan_label} ? 'colspan=' . $field -> {colspan_label} : '';
-	my $label_width   = $field -> {label_width}   ? 'width='   . $field -> {label_width}   : '';	
-	my $cell_width    = $field -> {cell_width}    ? 'width='   . $field -> {cell_width}    : '';
-	my $label_title   = $field -> {label_title}   ? 'title="'  . $field -> {label_title} . '"' : '';
 	
-	my $label_cell;
-	$label_cell = qq {<td class='form-$$field{state}-label' nowrap $colspan_label align=right $label_width $label_title>\n$$field{label}</td>}
-		unless ($field -> {label_off});
+	if ($field -> {plus}) {
 
-	my $inputs = 'inputs';
-	if ($field -> {fake} == -1) {
-	    $inputs = 'deleted';
+		$field -> {html} .= qq{<img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle onClick="clone_form_tr_for_this_plus_icon(this)" lowsrc="$field->{plus}">};
+
+	}
+	
+	my $html = '';
+	
+	my $class = 'form-' . $field -> {state} . '-';
+	
+	unless ($field -> {label_off}) {
+
+		my $a = {		
+			class  => $class . 'label',
+			nowrap => 1,
+			align  => 'right',		
+		};
+
+		$a -> {colspan} = $field -> {colspan_label} if $field -> {colspan_label};
+		$a -> {width}   = $field -> {label_width}   if $field -> {label_width};
+		$a -> {title}   = $field -> {label_title}   if $field -> {label_title};
+
+		$html .= dump_tag (td => $a, $field -> {label});
+
 	}
 
-	return <<EOH;
-		$label_cell
-		<td class='form-$$field{state}-$inputs' $colspan $cell_width>\n$$field{html}</td>
-EOH
+	my $a = {class  => $class . ($field -> {fake} == -1 ? 'deleted' : 'inputs')};
+
+	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
+	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
+
+	$html .= dump_tag (td => $a, $field -> {html});
+
+	return $html;
 
 }
 
@@ -1522,7 +1538,7 @@ sub draw_toolbar {
 	}
 
 	my $html = <<EOH;
-		<table bgcolor="b9c5d7" cellspacing=0 cellpadding=0 width="100%" border=0>
+		<table class="tbbg0" cellspacing=0 cellpadding=0 width="100%" border=0>
 			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
 EOH
 	
@@ -1535,13 +1551,13 @@ EOH
 
 	$html .= <<EOH;
 				<tr>
-					<td bgcolor="#6f7681" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg1" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#949eac" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg2" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#adb8c9" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg3" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
 					<td class="bgr0" width=30><img height=30 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 border=0></td>
@@ -1553,10 +1569,10 @@ EOH
 					<td class="bgr0" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#c5d2df" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg4" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#8c9ab1" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg5" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 			</form>
 		</table>
@@ -1576,26 +1592,26 @@ sub draw_toolbar_break {
 					<td class="bgr0" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#c5d2df" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg4" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#8c9ab1" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg5" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 EOH
 	
 	if ($options -> {break_table}) {		
-		$html .= '</table><table bgcolor="b9c5d7" cellspacing=0 cellpadding=0 width="100%" border=0>';		
+		$html .= '</table><table class="tbbg6" cellspacing=0 cellpadding=0 width="100%" border=0>';
 	}
 
 	$html .= <<EOH;
 				<tr>
-					<td bgcolor="#6f7681" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg1" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#949eac" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg2" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#adb8c9" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg3" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
 					<td class="bgr0" width=30><img height=30 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 border=0></td>
@@ -2291,7 +2307,7 @@ sub draw_vert_menu {
 		
 	my $html = <<EOH;
 		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:100">
-			<table id="vert_menu_table_$name" width=1 bgcolor=#454a7c cellspacing=0 cellpadding=0 border=0 border=1>
+			<table id="vert_menu_table_$name" width=1 class="tbbg7" cellspacing=0 cellpadding=0 border=0 border=1>
 EOH
 
 
@@ -2302,12 +2318,12 @@ EOH
 			$html .= <<EOH;
 				<tr height=2>
 
-					<td bgcolor=#5d6496 width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
-					<td bgcolor=#5d6496 width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
+					<td class="tbbg8" width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
+					<td class="tbbg8" width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
 
 					<td>
 						<table width=90% border=0 cellspacing=0 cellpadding=0 align=center minheight=2>
-							<tr height=1><td bgcolor="#888888"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
+							<tr height=1><td class="tbbg9"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
 							<tr height=1><td bgcolor="#ffffff"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
 						</table>
 					</td>
@@ -2328,8 +2344,8 @@ EOH
 EOH
 			$html .= <<EOH;
 					<tr>
-						<td width=1 bgcolor=#5d6496><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
-						<td width=1 bgcolor=#5d6496><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
+						<td width=1 class="tbbg8"><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
+						<td width=1 class="tbbg8"><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
 					$td
 				</tr>
 EOH
@@ -3236,35 +3252,6 @@ sub draw_logon_form {
 
 	my ($_SKIN, $options) = @_;
 
-	if ($options -> {hta}) {
-	
-		$_REQUEST {__on_load} .= <<EOH;
-		
-			if (window.name != 'application_frame' && confirm ('$i18n->{hta_confirm}')) {
-
-				var _hta = hta ();
-			
-				SetupHTA (
-					_hta.code, 
-					_hta.title, 
-					_hta.url, 
-					_hta.content, 
-					_hta.icon, 
-					_hta.hotkey
-				);
-			
-			}
-		
-EOH
-		
-		
-	
-	}
-
-
-
-
-
 	my $focused_field = $_COOKIE {user_login} ? 'password' : 'login';
 	
 	$_REQUEST {__on_load} .= qq {
@@ -3297,6 +3284,10 @@ EOH
 		[tz_offset       => ''],
 	);
 
+	my $auth_toolbar = &{$_PACKAGE . 'draw_auth_toolbar'} ({
+		top_banner => ($conf -> {top_banner} ? interpolate ($conf -> {top_banner}) : ''),
+	});
+
 	return <<EOH;
 
 <table border="0" cellpadding="0" cellspacing="0" align=center height=100% width=100%>
@@ -3304,19 +3295,7 @@ EOH
 	<tr>
 
 		<td valign=top height=90>
-			<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="$_REQUEST{__static_site}/i/bg_logo_out.gif" style="background-repeat: repeat-x" height=90>
-				<tr>
-				<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=90 border=0></td>
-				<td width=1><table border=0 valign="middle" border=0><tr>
-					<td valign="top" width=1><img src="$_REQUEST{__static_site}/i/logo_out.gif" border="0"></td>
-					<td width=1><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 height=1 border=0></td>
-					<td width=1 valign="bottom" style='padding-bottom: 5px;'><img src="$_REQUEST{__static_url}/gsep.gif?$_REQUEST{__static_salt}" width="4" height="21"></td>
-					<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
-				</tr></table></td>
-				
-				<td width="20px" align="right">&nbsp;</td></tr>
-			</table>
-
+$auth_toolbar
 		</td>
 
 	</tr>
@@ -3325,7 +3304,7 @@ EOH
 	
 		<td align=center valign=middle>
 
-			<table border="0" cellpadding="4" cellspacing="1" width="470" height="225" bgcolor="#EAEAF0" class="logon">
+			<table border="0" cellpadding="4" cellspacing="1" width="470" height="225" class="logon">
 				<tr><td class="login-head">$i18n->{authorization}</td></tr>
 				<tr>
 					<td bgcolor="#F9F9FF" align="center" style="border-bottom:solid 1px #9AA0A3; height:150px;">
@@ -3590,7 +3569,7 @@ sub draw_node {
 		title   => $options -> {title} || $options -> {label},
 	};
 	
-	map {$node -> {$_} = $options -> {$_} if $options -> {$_}} qw (target icon iconOpen is_checkbox);
+	map {$node -> {$_} = $options -> {$_} if $options -> {$_}} qw (target icon iconOpen is_checkbox is_radio);
 
 	if ($options -> {title} && $options -> {title} ne $options -> {label}) {
 		$node -> {title} = $options -> {title};
