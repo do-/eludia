@@ -1,3 +1,17 @@
+
+.tbbg0 {background-color: #b9c5d7;}
+.tbbg1 {background-color: #6f7681;}
+.tbbg2 {background-color: #949eac;}
+.tbbg3 {background-color: #adb8c9;}
+.tbbg4 {background-color: #c5d2df;}
+.tbbg5 {background-color: #8c9ab1;}
+.tbbg6 {background-color: #b9c5d7;}
+.tbbg7 {background-color: #454a7c;}
+.tbbg8 {background-color: #5d6496;}
+.tbbg9 {background-color: #888888;}
+.tbbga {background-color: #e5e5e5;}
+.tbbgb {background-color: #e4e9ee;}
+
 .form-article {
 
 	FONT-SIZE:  12pt; 
@@ -360,7 +374,11 @@ BODY {
 }
 
 .header_3 {
-	FONT-WEIGHT: bold; FONT-SIZE: 10pt; COLOR: #2f3237; FONT-FAMILY: Tahoma, 'MS Sans Serif'; 
+	FONT-WEIGHT: bold; 
+	FONT-SIZE: 10pt; 
+	COLOR: #2f3237; 
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	background-color: #edf1f5;
 }
 
 .header_4 {
@@ -977,7 +995,15 @@ a.hint {
 div.grey-submit a {color:#222323;text-decoration:none;}
 div.grey-submit a:hover {color:#222323;text-decoration:underline;}
 
-.logon {font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal;font-weight: normal;color:#414141;text-decoration: none;}
+.logon {
+	font-family: Tahoma, Verdana, sans-serif;
+	font-size:8pt;
+	font-style:normal;
+	font-weight: normal;
+	color:#414141;
+	text-decoration: none;
+	background-color: #eaeaf0;
+}
 
 
 
