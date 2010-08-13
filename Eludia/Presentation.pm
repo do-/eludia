@@ -2064,7 +2064,9 @@ sub draw_node {
 	my $options = shift;
 	
 	my $result = '';
-	
+
+	$options -> {label} =~ s/[\r\n]+/ /g;
+
 	if ($options -> {href}) {
 
 		my $__last_query_string = $_REQUEST {__last_query_string};
