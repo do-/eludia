@@ -2492,6 +2492,8 @@ sub out_json ($) {
 sub out_script {
 
 	my $html = '<html><head><script>';
+	
+	setup_json ();
 
 	$html .= 'var data = ' . $_JSON -> encode ($_[1]) . ';' if $_[1];
 
