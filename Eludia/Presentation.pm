@@ -2467,7 +2467,7 @@ sub gzip_if_it_is_needed (\$) {
 	
 	my $time = time;
 
-	$$ref_html = gzip_in_memory ($$ref_html);
+	eval {$$ref_html = gzip_in_memory ($$ref_html)};
 			
 	my $new_size = length $$ref_html;
 
