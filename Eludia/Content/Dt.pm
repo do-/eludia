@@ -76,23 +76,23 @@ sub dt_add {
 	
 	my $what = 'Days';
 	
-	@delta [-1] =~ /^[A-Za-z]/ and $what = pop @delta;
+	$delta [-1] =~ /^[A-Za-z]/ and $what = pop @delta;
 	
 	my $want_24 = ($what =~ s{24}{});
 	
 	if ($what =~ /^H/i) {
 		
-		$what = 'DHMS'; 	@delta = (0, @delta [0], 0, 0);
+		$what = 'DHMS'; 	@delta = (0, $delta [0], 0, 0);
 	
 	}
 	elsif ($what =~ /^M/i) {
 		
-		$what = 'DHMS';		@delta = (0, 0, @delta [0], 0);
+		$what = 'DHMS';		@delta = (0, 0, $delta [0], 0);
 	
 	}
 	elsif ($what =~ /^S/i) {
 		
-		$what = 'DHMS';		@delta = (0, 0, 0, @delta [0]);
+		$what = 'DHMS';		@delta = (0, 0, 0, $delta [0]);
 	
 	}
 	
@@ -132,7 +132,7 @@ sub dt_add {
 
 	}
 
-	my $dt = $was_iso ? dt_iso (@dt [0 .. 2]) : dt_dmy (@dt [0 .. 2]);
+	$dt = $was_iso ? dt_iso (@dt [0 .. 2]) : dt_dmy (@dt [0 .. 2]);
 
 	$dt .= sprintf (' %02d:%02d:%02d', @dt [3 .. 5]) if $want_hms;
 

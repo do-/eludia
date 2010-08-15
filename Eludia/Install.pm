@@ -1385,7 +1385,7 @@ sub bin_name {
 
 	my ($app_path, $app_name, $max_requests_per_child, $name) = @_;
 	
-	my $min_port, $max_port;
+	my ($min_port, $max_port);
 	
 	while (1) {
 
