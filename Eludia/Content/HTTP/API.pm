@@ -14,6 +14,8 @@ sub check_configuration_for_application {
 	
 	my $last_location = '';
 	
+	my $package;
+	
 	while (my $s = <C>) {
 	
 		next if $s =~ /\s*\#/;
@@ -31,7 +33,8 @@ sub check_configuration_for_application {
 
 		if ($s =~ /PerlHandler\s+([\w\:]+)/) {
 		
-			my $handler = $1;
+			$package = $1;
+			my $handler = $package;
 			$handler    =~ /\:\:/ or $handler .= '::handler';
 		
 			$main::configs -> {$app} -> {handler_src}  .= "\n \$ENV{SCRIPT_NAME} =~ m{^$last_location} ? $handler (\@_) : ";
@@ -68,6 +71,8 @@ sub check_configuration_for_application {
 	eval $1;
 	
 	die "Application initialization error: $@" if $@;
+	
+	return $package;
 	
 }
 
