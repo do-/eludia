@@ -45,7 +45,7 @@ sub check_configuration_for_application {
 
 			my ($k, $v) = ($1, $2);
 			
-			$v =~ s{$\s*\"?}{};
+			$v =~ s{^\s*\"?}{};
 			$v =~ s{\"?\s*$}{};
 		
 			$main::configs -> {$app} -> {env} -> {$k} = $v;
