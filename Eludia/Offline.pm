@@ -151,13 +151,15 @@ BEGIN {
 	
 	initialize_offline_script_execution;	
 	
-	eval perl_section_from config_file;		
+	my $code = perl_section_from config_file;
 	
+	eval $code; die "$code\n\n$@" if $@;
+
 	my $package = __PACKAGE__;
-	
+
 	$package = $Eludia::last_loaded_package if $package eq 'main';
-		
-	my $code = qq {
+
+	$code = qq {
 	
 		package $package;
 
