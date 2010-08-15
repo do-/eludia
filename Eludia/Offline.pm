@@ -172,8 +172,8 @@ BEGIN {
 		no warnings;
 	
 	} . the_rest_of_the_script;
-	
-	eval $code; die $@ if $@;
+
+	eval $code; die "$code\n\n$@" if $@;
 	
 	finalize_offline_script_execution;
 	
