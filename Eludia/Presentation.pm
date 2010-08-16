@@ -2494,6 +2494,8 @@ sub out_json ($) {
 sub out_script {
 
 	my $html = '<html><head><script>';
+	
+	setup_json ();
 
 	$html .= 'var data = ' . $_JSON -> encode ($_[1]) . ';' if $_[1];
 
@@ -2528,7 +2530,7 @@ sub out_html {
 
 	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
 
-	$i18n -> {_charset} eq 'windows-1252' or $html = Encode::encode ('windows-1252', $html);
+	$html = Encode::encode ('windows-1252', $html);
 
 	return print $html if $_REQUEST {__response_started};
 
