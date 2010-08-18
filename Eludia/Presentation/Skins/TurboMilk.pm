@@ -426,7 +426,6 @@ sub draw_form {
 	$html .= _draw_bottom (@_);
 	
 	$html .=  <<EOH;
-		<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 			<form 
 				name="$$options{name}"
 				target="$$options{target}"
@@ -444,7 +443,9 @@ EOH
 			@{$options -> {keep_params}}
 
 	);
-	
+	$html .=  <<EOH;
+			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
+EOH
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
@@ -1162,6 +1163,7 @@ EOJS
 	my $html = <<EOH;
 		<select 
 			name="_$$options{name}"
+			id="$$options{id}"
 			$attributes
 			onKeyDown="tabOnEnter()"
 			onChange="is_dirty=true; $$options{onChange}" 
@@ -1528,7 +1530,7 @@ sub draw_toolbar {
 			icon    => 'cancel',
 			id      => 'cancel',
 			label   => $i18n -> {close},
-			href    => "javaScript:window.close();",
+			href    => "javaScript:top.close();",
 		};
 		
 		$button -> {html} = $_SKIN -> draw_toolbar_button ($button);
@@ -1538,8 +1540,7 @@ sub draw_toolbar {
 	}
 
 	my $html = <<EOH;
-		<table class="tbbg0" cellspacing=0 cellpadding=0 width="100%" border=0>
-			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
+	<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
 EOH
 	
 	
@@ -1550,6 +1551,7 @@ EOH
 	$html .= dump_hiddens (map {[$_ => $_REQUEST {$_}]} (keys %keep_params));
 
 	$html .= <<EOH;
+		<table class="tbbg0" cellspacing=0 cellpadding=0 width="100%" border=0>
 				<tr>
 					<td class="tbbg1" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
@@ -1574,8 +1576,7 @@ EOH
 				<tr>
 					<td class="tbbg5" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
-			</form>
-		</table>
+		</table></form>
 EOH
 
 	return $html;
@@ -2446,6 +2447,10 @@ sub draw_text_cell {
 
 	$html .= $data -> {label};
 
+	$html .= '</b>'      if $data -> {bold}   || $options -> {bold};
+	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '</strike>' if $data -> {strike} || $options -> {strike};
+
 	if ($data -> {href}) {
 
 		$html .= '</a>';
@@ -2792,6 +2797,8 @@ sub draw_table {
 	
 	my %hidden = ();
 	
+	my $hiddens_html;
+	
 	$hidden {$_} = $_REQUEST {$_} foreach (
 		'__tree', 
 		'__last_scrollable_table_row',
@@ -2807,7 +2814,7 @@ sub draw_table {
 	
 	while (my ($k, $v) = each %hidden) {
 	
-		$html .= "\n" . dump_tag (input => {
+		$hiddens_html .= "\n" . dump_tag (input => {
 			
 			type  => 'hidden',
 			name  => $k,
@@ -2822,10 +2829,17 @@ sub draw_table {
 	$html .= $options -> {container} ?
 		$options -> {container} :
 			$options -> {no_scroll} ?
-			qq {<div class="table-container-x" onScroll="tableSlider.cell_on()">} :
-			qq {<div class="table-container" onScroll="tableSlider.cell_on()" style="height: expression(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));">};
+			qq {<div class="table-container-x" onScroll="tableSlider.cell_on()">} : 
+			qq {<div class="table-container" onScroll="tableSlider.cell_on()">};
 
 	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="$options->{id}">\n};
+
+	$_REQUEST {__on_load} .= ";
+\$('#$options->{id}').parent().each(function(index) {
+	\$(this).height(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));
+	\$(this).width(document.body.offsetWidth - (\$.browser.msie ? (window.name == '_content_iframe' ? 32 : 18) : 18));
+  });
+;";
 
 	$html .= $options -> {header} if $options -> {header};
 
@@ -2838,30 +2852,26 @@ sub draw_table {
 	my $menus = '';
 
 	foreach our $i (@$list) {
-		
+
 		foreach my $tr (@{$i -> {__trs}}) {
-		
-			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
-			
+
 			$html .= "<tr id='$$i{__tr_id}'";
 			
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
 				$menus .= $i -> {__menu};
-				$html  .= qq{ oncontextmenu="open_popup_menu('$i'); blockEvent ();"};
+				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); return blockEvent ();"};
 			}
 
 			$html .= '>';
-			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $has_href;
 			$html .= $tr;
-			$html .= qq {</a>} if $has_href;
 			$html .= '</tr>';
-			
+
 		}
 		
 	}
 
 	$html .= <<EOH;
-			</tbody></table></div>$$options{toolbar}</td></form></tr></table>
+			</tbody></table></div>$$options{toolbar}</td></tr></table></form>
 		$menus
 		
 EOH
@@ -2877,10 +2887,11 @@ EOH
 		$$options{path}
 		$$options{top_toolbar}
 
+		<form name=$$options{name} action=$_REQUEST{__uri} method=post target=invisible $enctype>
+		<input type=hidden name="__suggest" value="">
+		$hiddens_html
 		<table cellspacing=0 cellpadding=0 width="100%">
 			<tr>
-				<form name=$$options{name} action=$_REQUEST{__uri} method=post target=invisible $enctype>
-				<input type=hidden name="__suggest" value="">
 EOH
 
 }
@@ -3035,8 +3046,11 @@ sub draw_page {
 		
 		delete $_REQUEST {__invisibles};
 		
-		$_REQUEST {__on_load}  = "window.focus (); setInterval (UpdateClock, 500); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
-
+		$_REQUEST {__on_load}  .= "window.focus (); setInterval (UpdateClock, 500);" 
+ 			if !$_REQUEST {__tree}; 
+			
+		$_REQUEST {__on_load} .= "nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');"; 
+		
 		$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive} && $_REQUEST {sid};
 
 #				<tr height=48><td height=48>$page->{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>
