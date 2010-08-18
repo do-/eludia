@@ -1313,9 +1313,7 @@ sub assert {
 
 	my ($self, %params) = @_;
 	
-	my $core_debug_sql_do = $preconf -> {core_debug_sql_do};
-
-	$preconf -> {core_debug_sql_do} = 1;
+	local $preconf -> {core_debug_sql_do} = 1;
 
 	my ($tables, my $new_checksums) = checksum_filter (db_model => $params {prefix}, 
 	
@@ -1358,8 +1356,6 @@ sub assert {
 	}
 	
 	wish (views => \@views, {});
-
-	$preconf -> {core_debug_sql_do} = $core_debug_sql_do;
 
 	checksum_write ('db_model', $new_checksums);
 
@@ -1441,46 +1437,44 @@ sub wish {
 	&{"wish_to_adjust_options_for_$type"} ($options);
 		
 	foreach my $i (@$items) { &{"wish_to_clarify_demands_for_$type"} ($i, $options) }
-
-	my $existing = &{"wish_to_explore_existing_$type"} ($options);
-
-	my $todo = {};
 	
 	my @key = @{$options -> {key}};
-
-	foreach my $new (@$items) {
-
-		my $old;
-
-		if ($type eq 'table_data') {
-
-			$old = $existing -> {join '_', @$new {@key}};
-
-			unless ($old) {
-
-				push @{$todo -> {create}}, $new;
-
-				$existing -> {join '_', @$new {@key}} = $new;
-
-				next;
-			
-			}
-
-		} else {
-			$old = delete $existing -> {join '_', @$new {@key}} or (push @{$todo -> {create}}, $new) and next;
-		}
-
-		&{"wish_to_update_demands_for_$type"} ($old, $new, $options);
-
-		next if Dumper ($new) eq Dumper ($old);
-
-		&{"wish_to_schedule_modifications_for_$type"} ($old, $new, $todo, $options);		
+	
+	my @layers = ();
+	
+	my %key_cnt = ();
+	
+	foreach my $i (@$items) {
+	
+		my $key = join '_', @$i {@key};
 		
+		$layers [$key_cnt {$key} ++] -> {$key} = $i;
+	
 	}
 
-	&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
+	foreach my $layer (@layers) {
+	
+		my $existing = &{"wish_to_explore_existing_$type"} ($options);
 
-	foreach my $action (sort keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
+		my $todo = {};
+
+		while (my ($key, $new) = each %$layer) {
+		
+			my $old = delete $existing -> {$key} or (push @{$todo -> {create}}, $new) and next;
+
+			&{"wish_to_update_demands_for_$type"} ($old, $new, $options);
+
+			next if Dumper ($new) eq Dumper ($old);
+
+			&{"wish_to_schedule_modifications_for_$type"} ($old, $new, $todo, $options);		
+		
+		}	
+	
+		&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
+
+		foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
+
+	}
 
 }
 

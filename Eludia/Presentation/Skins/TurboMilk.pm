@@ -3046,11 +3046,21 @@ sub draw_page {
 		
 		delete $_REQUEST {__invisibles};
 		
+<<<<<<< HEAD:Eludia/Presentation/Skins/TurboMilk.pm
 		$_REQUEST {__on_load}  .= "window.focus (); setInterval (UpdateClock, 500);" 
  			if !$_REQUEST {__tree}; 
 			
 		$_REQUEST {__on_load} .= "nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');"; 
 		
+=======
+		$_REQUEST {__on_load} = '';
+
+		$_REQUEST {__on_load}  .= "window.focus (); setInterval (UpdateClock, 500);" 
+			if !$_REQUEST {__tree};
+
+		$_REQUEST {__on_load} .= "nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
+
+>>>>>>> 84c7a22ff4f3fcbaf6613d5b58cffe6f89568606:Eludia/Presentation/Skins/TurboMilk.pm
 		$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive} && $_REQUEST {sid};
 
 #				<tr height=48><td height=48>$page->{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>

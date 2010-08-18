@@ -2065,7 +2065,9 @@ sub draw_node {
 	my $options = shift;
 	
 	my $result = '';
-	
+
+	$options -> {label} =~ s/[\r\n]+/ /g;
+
 	if ($options -> {href}) {
 
 		my $__last_query_string = $_REQUEST {__last_query_string};
@@ -2466,7 +2468,7 @@ sub gzip_if_it_is_needed (\$) {
 	
 			my $time = time;
 
-	$$ref_html = gzip_in_memory ($$ref_html);
+	eval {$$ref_html = gzip_in_memory ($$ref_html)};
 			
 	my $new_size = length $$ref_html;
 
@@ -2493,6 +2495,8 @@ sub out_json ($) {
 sub out_script {
 
 	my $html = '<html><head><script>';
+	
+	setup_json ();
 
 	$html .= 'var data = ' . $_JSON -> encode ($_[1]) . ';' if $_[1];
 
@@ -2527,7 +2531,7 @@ sub out_html {
 
 	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
 
-	$i18n -> {_charset} eq 'windows-1252' or $html = Encode::encode ('windows-1252', $html);
+	$html = Encode::encode ('windows-1252', $html);
 
 	return print $html if $_REQUEST {__response_started};
 

@@ -30,7 +30,7 @@ sub sql_version {
 
 			warn "FOUND CORRUPTED TABLE [$1]! TRYING TO 'REPAIR TABLE `$1` QUICK' ORIG ERR:[$err]";
 
-			my $db_repair = DBI -> connect ($conf -> {'db_dsn'}, $conf -> {'db_user'}, $conf -> {'db_password'}, {
+			my $db_repair = DBI -> connect ($preconf -> {'db_dsn'}, $preconf -> {'db_user'}, $preconf -> {'db_password'}, {
 				AutoCommit  => 1,
 				LongReadLen => 100000000,
 				LongTruncOk => 1,
@@ -113,7 +113,7 @@ sub sql_do {
 
 	}	
 	
-	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
+	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
 
@@ -214,7 +214,7 @@ sub sql_select_all_cnt {
 		$sql =~ s{SELECT}{SELECT SQL_CALC_FOUND_ROWS}i;
 	}
 	
-	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
+	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
@@ -238,7 +238,7 @@ sub sql_select_all_cnt {
 #			pop @params;
 		}
 
-		$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
+		$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 		$st = $db -> prepare ($sql);
 		$st -> execute (@params);
@@ -283,7 +283,7 @@ sub sql_select_all {
 			
 	}
 	
-	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
+	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
@@ -330,7 +330,7 @@ sub sql_select_all_hash {
 	
 	my $result = {};
 	
-	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
+	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
@@ -353,7 +353,7 @@ sub sql_select_col {
 
 	$sql =~ s{^\s+}{};
 		
-	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
+	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my @result = ();
 	my $st = $db -> prepare ($sql);
@@ -397,7 +397,7 @@ sub sql_select_hash {
 	
 	}
 	
-	$sql_or_table_name .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
+	$sql_or_table_name .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql_or_table_name);
 	$st -> execute (@params);
@@ -415,7 +415,7 @@ sub sql_select_array {
 	my ($sql, @params) = @_;
 	$sql =~ s{^\s+}{};
 
-	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
+	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
