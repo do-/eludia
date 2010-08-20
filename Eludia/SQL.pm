@@ -333,6 +333,7 @@ $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
 	}
 	
 	$db = DBI -> connect ($preconf -> {db_dsn}, $preconf -> {db_user}, $preconf -> {db_password}, {
+		PrintError  => 0, 
 		RaiseError  => 1, 
 		AutoCommit  => 1,
 		LongReadLen => 1000000,
