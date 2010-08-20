@@ -53,7 +53,7 @@ BEGIN {
 	require CGI::Simple;
 	require CGI::Simple::Cookie;
 
-	print STDERR "CGI::Simple, ok.\n";
+	loading_log "CGI::Simple, ok.\n";
 
 }
 

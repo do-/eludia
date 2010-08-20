@@ -167,7 +167,7 @@ sub set_last_update {
 
 BEGIN {
 
-	print STDERR " checksums........................... ";
+	loading_log " checksums........................... ";
 
 	my @modules = MP2 ? ('Txt') : ('SDBM');
 
@@ -181,7 +181,7 @@ BEGIN {
 	
 	if ($preconf -> {_} -> {checksums}) {
 
-		print STDERR "  checksum hashes...\n";
+		loading_log "  checksum hashes...\n";
 
 		foreach my $kind (qw( 
 		
@@ -199,7 +199,7 @@ BEGIN {
 	}
 	else {
 	
-		"DISABLED. ok.\n";
+		loading_log "DISABLED. ok.\n";
 	
 	}
 

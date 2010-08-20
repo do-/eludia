@@ -16,7 +16,7 @@ sub memory_usage {
 
 BEGIN {
 
-	print STDERR '`ps`';
+	loading_log '`ps`';
 
 }
 

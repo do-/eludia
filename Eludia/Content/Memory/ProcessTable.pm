@@ -18,7 +18,7 @@ BEGIN {
 
 	$main::proc_processtable_object ||= new Proc::ProcessTable (cache_ttys => 1);
 
-	print STDERR 'ProcessTable';
+	loading_log 'ProcessTable';
 
 }
 

@@ -46,37 +46,9 @@ sub print_file ($$) {
 
 sub db_require_configuration {
 
-	$ENV {DOCUMENT_ROOT} = File::Spec -> rel2abs ('docroot');
-
-	my $conf = File::Spec -> rel2abs ('conf/httpd.conf');
+	require Eludia::Content::HTTP::API;
 	
-	-f $conf or die "$conf not found";
-	
-	open (F, $conf) or return "Can't open $conf: $!\n";	
-	
-	my $code = 'our $preconf = {';
-		
-	while (my $line = <F>) {
-		
-		$line =~ /^\s*db_(dsn|user|password)/ or next;
-		
-		$code .= $line;
-		
-	}
-
-	$code .= '}';
-		
-	close (F);
-	
-	eval $code; $@ and die $@;
-	
-	require Eludia;	
-	require Eludia::Content;
-	require Eludia::SQL;
-	
-	our $_NEW_PACKAGE = 'main';
-
-	sql_reconnect ();
+	check_configuration_for_application (File::Spec -> curdir ());
 
 }
 
@@ -1712,6 +1684,60 @@ cmd_unix ();
 EOF
 
 	close (F);
+
+}
+
+################################################################################
+
+sub test {
+
+	my $core_path = core_path ();
+	
+#	$ENV {HARNESS_NOTTY} = 1;
+
+	db_require_configuration ();
+
+	$ENV {HARNESS_PERL_SWITCHES} = '-MEludia::Offline';
+	
+	$ENV {ELUDIA_SILENT} = 1;
+
+	require Test::Harness::Util;
+	
+	my @core_tests = Test::Harness::Util::all_in ({start => $core_path});
+	
+	mkdir 't';
+	
+	foreach my $fn_from (@core_tests) {
+	
+		my $fn_to = $fn_from;
+		
+		$fn_to =~ y{\\}{/};
+		
+		$fn_to =~ s{.*/}{};
+		
+		$fn_to = "t/_core_$fn_to";
+
+		File::Copy::copy ($fn_from, $fn_to);
+	
+	} 
+
+	my $cmd = qq {perl -I"$core_path" -MTest::Harness -MTest::Harness::Util -e"runtests (Test::Harness::Util::all_in({start => 't'}))"};
+	
+	use IPC::Open3;
+
+	use Symbol qw (gensym);
+	
+	my $pid = open3 (gensym, ">&STDERR", \*PH, $cmd);
+	
+	while (my $line = <PH>) { 
+
+		next if $line =~ /^Subroutine \w+ redefined at/;
+
+		print $line;
+
+	}
+
+	waitpid ($pid, 0);
 
 }
 

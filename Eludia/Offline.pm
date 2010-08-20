@@ -32,7 +32,7 @@ sub lock_file_name () {
 
 sub initialize_offline_script_execution () {
 
-	warn offline_script_log_signature . " starting...\n";
+	$ENV {ELUDIA_SILENT} or warn "\n" . offline_script_log_signature . " starting...\n";
 
 	eval 'require LockFile::Simple';
 	
@@ -70,7 +70,7 @@ sub finalize_offline_script_execution () {
 	
 	}
 
-	warn offline_script_log_signature . " finished.\n";
+	$ENV {ELUDIA_SILENT} or warn offline_script_log_signature . " finished.\n";
 
 }
 
@@ -86,7 +86,7 @@ sub config_file () {
 	
 	$fn =~ y{\\}{/};
 	
-	$fn =~ s{/lib/.*}{/conf/httpd.conf};
+	$fn =~ s{/(lib|t)/.*}{/conf/httpd.conf};
 	
 	return $fn;
 	
