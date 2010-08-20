@@ -1452,6 +1452,8 @@ sub wish {
 		$layers [$key_cnt {$key} ++] -> {$key} = $i;
 	
 	}
+	
+	my $is_virgin = 1;
 
 	foreach my $layer (@layers) {
 	
@@ -1470,8 +1472,14 @@ sub wish {
 			&{"wish_to_schedule_modifications_for_$type"} ($old, $new, $todo, $options);		
 		
 		}	
+		
+		if ($is_virgin) {
 	
-		&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
+			&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
+			
+			$is_virgin = 0;
+		
+		}
 
 		foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
 
