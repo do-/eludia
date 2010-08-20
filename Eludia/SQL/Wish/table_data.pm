@@ -81,7 +81,7 @@ sub wish_to_schedule_cleanup_for_table_data {
 
 	my ($existing, $todo, $options) = @_;
 	
-	%{$options -> {root}} > 0 and %$existing > 0 or return;
+	%{$options -> {root}} and %$existing or return;
 			
 	$todo -> {'delete'} = [ values %$existing ];
 
