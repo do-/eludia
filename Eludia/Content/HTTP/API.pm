@@ -72,6 +72,8 @@ sub check_configuration_for_application {
 	
 	die "Application initialization error: $@" if $@;
 	
+	&{"${package}::sql_reconnect"} ();
+	
 	return $package;
 	
 }
