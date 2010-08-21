@@ -70,15 +70,15 @@ sub checksum_write {
 
 sub checksum_get {
 
-	my ($kind, $name) = @_;
+	my ($kind, $name, $no_lock) = @_;
 	
 	my $hash = $preconf -> {_} -> {checksums} -> {$kind} or return undef;
 	
-	checksum_lock ($kind);
+	checksum_lock ($kind) unless $no_lock;
 	
 	my $value = $hash -> {$name};
 
-	checksum_unlock ($kind);
+	checksum_unlock ($kind) unless $no_lock;
 	
 	return $value;
 
@@ -108,7 +108,7 @@ sub get_last_update {
 
 	checksum_lock ($kind);
 
-	my $value = checksum_get ($kind, $name);
+	my $value = checksum_get ($kind, $name, 1);
 	
 	unless ($value) {
 	
@@ -167,7 +167,7 @@ sub set_last_update {
 
 BEGIN {
 
-	print STDERR " checksums........................... ";
+	loading_log " checksums........................... ";
 
 	my @modules = MP2 ? ('Txt') : ('SDBM');
 
@@ -181,7 +181,7 @@ BEGIN {
 	
 	if ($preconf -> {_} -> {checksums}) {
 
-		print STDERR "  checksum hashes...\n";
+		loading_log "  checksum hashes...\n";
 
 		foreach my $kind (qw( 
 		
@@ -199,7 +199,7 @@ BEGIN {
 	}
 	else {
 	
-		"DISABLED. ok.\n";
+		loading_log "DISABLED. ok.\n";
 	
 	}
 

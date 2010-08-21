@@ -333,6 +333,7 @@ $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
 	}
 	
 	$db = DBI -> connect ($preconf -> {db_dsn}, $preconf -> {db_user}, $preconf -> {db_password}, {
+		PrintError  => 0, 
 		RaiseError  => 1, 
 		AutoCommit  => 1,
 		LongReadLen => 1000000,
@@ -1451,6 +1452,8 @@ sub wish {
 		$layers [$key_cnt {$key} ++] -> {$key} = $i;
 	
 	}
+	
+	my $is_virgin = 1;
 
 	foreach my $layer (@layers) {
 	
@@ -1469,8 +1472,14 @@ sub wish {
 			&{"wish_to_schedule_modifications_for_$type"} ($old, $new, $todo, $options);		
 		
 		}	
+		
+		if ($is_virgin) {
 	
-		&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
+			&{"wish_to_schedule_cleanup_for_$type"} ($existing, $todo, $options);
+			
+			$is_virgin = 0;
+		
+		}
 
 		foreach my $action (keys %$todo) { &{"wish_to_actually_${action}_${type}"} ($todo -> {$action}, $options) }
 

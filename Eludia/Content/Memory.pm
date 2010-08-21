@@ -34,18 +34,18 @@ BEGIN {
 	
 		if (exists $preconf -> {core_memory_limit} && $preconf -> {_} -> {memory} -> {first} > $preconf -> {core_memory_limit} << 20) {
 		
-			print STDERR sprintf ("\n\n* * * PANIC! Memory limit of %s MiB exceeded: have %s MiB. Loading failed.\n", $preconf -> {core_memory_limit}, $preconf -> {_} -> {memory} -> {first} >> 20);
+			loading_log sprintf ("\n\n* * * PANIC! Memory limit of %s MiB exceeded: have %s MiB. Loading failed.\n", $preconf -> {core_memory_limit}, $preconf -> {_} -> {memory} -> {first} >> 20);
 			
 			exit;
 		
 		}
 	
-		print STDERR ' (' . format_picture ($preconf -> {_} -> {memory} -> {first} >> 20, "### ### ### ### MiB), ok.\n");		
+		loading_log ' (' . format_picture ($preconf -> {_} -> {memory} -> {first} >> 20, "### ### ### ### MiB), ok.\n");		
 	
 	}
 	else {
 	
-		print STDERR "no memory measurement, ok. \n";
+		loading_log "no memory measurement, ok. \n";
 	
 	}
 

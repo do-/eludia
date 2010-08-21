@@ -22,7 +22,7 @@ BEGIN {
 
 	$main::winmgmts_cimv2_object ||= Win32::OLE -> GetObject ('winmgmts:\\\\.\\root\\cimv2');
 	
-	print STDERR 'Win32 OLE';
+	loading_log 'Win32 OLE';
 
 }
 

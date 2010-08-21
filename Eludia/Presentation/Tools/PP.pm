@@ -59,7 +59,7 @@ BEGIN {
 	
 	$preconf -> {_} -> {presentation_tools} = 'PP';
 		
-	print STDERR "Pure Perl, ok.\n";
+	loading_log "Pure Perl, ok.\n";
 	
 }
 

@@ -52,7 +52,7 @@ BEGIN {
 	require CGI;
 	require CGI::Cookie;
 
-	print STDERR "CGI, ok.\n";
+	loading_log "CGI, ok.\n";
 
 }
 

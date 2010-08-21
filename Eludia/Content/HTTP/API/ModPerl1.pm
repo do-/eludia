@@ -53,7 +53,7 @@ BEGIN {
 	Apache -> push_handlers (PerlChildInitHandler => \&sql_reconnect );
 	Apache -> push_handlers (PerlChildExitHandler => \&sql_disconnect);
 
-	print STDERR "Apache::Request $Apache::Request::VERSION, ok.\n";
+	loading_log "Apache::Request $Apache::Request::VERSION, ok.\n";
 
 }
 

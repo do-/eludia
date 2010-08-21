@@ -253,7 +253,7 @@ sub sql_import_json {
 
 		}
 		
-		if (ref $r -> [1] eq hash) {
+		if (ref $r -> [1] eq HASH) {
 		
 			$data_item = $r -> [1];
 				

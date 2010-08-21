@@ -38,7 +38,7 @@ sub checksum_init {
 
 	my $filename = checksum_file_name ($kind);
 
-	print STDERR "   $filename... ";
+	loading_log "   $filename... ";
 	
 	open (LOCK, ">$filename.lock") or die "Can't write to $filename.lock: $!\n";
 	print LOCK 1;
@@ -57,7 +57,7 @@ sub checksum_init {
 
 	$preconf -> {_} -> {checksums} -> {$kind} = \%h;
 		
-	print STDERR "ok.\n";
+	loading_log "ok.\n";
 
 }
 
@@ -69,7 +69,7 @@ BEGIN {
 	
 		$preconf -> {_} -> {checksums} = {};
 		
-		print STDERR "Txt, ok.\n";
+		loading_log "Txt, ok.\n";
 	
 	}
 

@@ -19,6 +19,14 @@ use Storable;
 
 ################################################################################
 
+sub loading_log (@) {
+
+	$ENV {ELUDIA_SILENT} or print STDERR @_;
+
+}
+
+################################################################################
+
 sub check_constants {
 
 	$| = 1;
@@ -160,7 +168,7 @@ sub check_version {
 	
 	my $bar = '-' x $length;
 
-	print STDERR <<EOT;
+	loading_log <<EOT;
 
  $bar
 
@@ -192,7 +200,7 @@ sub check_web_server_apache {
 		
 	$module .= '::Request';
 
-	print STDERR "\n  mod_perl detected, checking for $module... ";
+	loading_log "\n  mod_perl detected, checking for $module... ";
 
 	my $version = 
 		$ENV {MOD_PERL_API_VERSION} >= 2                 ? 2   :
@@ -205,7 +213,7 @@ sub check_web_server_apache {
 	if ($@) {
 
 		$preconf -> {use_cgi} = 1;		
-		print STDERR "not found; falling back to CGI :-(\n";		
+		loading_log "not found; falling back to CGI :-(\n";		
 		return;
 
 	}
@@ -216,7 +224,7 @@ sub check_web_server_apache {
 
 sub check_web_server {
 
-	print STDERR " check_web_server... ";
+	loading_log " check_web_server... ";
 	
 	$ENV {MOD_PERL} or $ENV {MOD_PERL_API_VERSION} or $preconf -> {use_cgi} ||= 1;
 
@@ -228,7 +236,7 @@ sub check_web_server {
 		
 		if ($@) {
 
-			print STDERR " CGI::Simple is not installed... ";
+			loading_log " CGI::Simple is not installed... ";
 
 			eval "require Eludia::Content::HTTP::API::CGI";
 
@@ -244,7 +252,7 @@ sub start_loading_logging {
 
 	$_NEW_PACKAGE ||= __PACKAGE__;
 
-	print STDERR "\nLoading {\n" . (join ",\n", map {"\t$_"} @$PACKAGE_ROOT) . "\n} => " . $_NEW_PACKAGE . "...\n";
+	loading_log "\nLoading {\n" . (join ",\n", map {"\t$_"} @$PACKAGE_ROOT) . "\n} => " . $_NEW_PACKAGE . "...\n";
 
 }
 
@@ -252,7 +260,7 @@ sub start_loading_logging {
 
 sub finish_loading_logging {
 
-	print STDERR "Loading $_NEW_PACKAGE is over.\n\n";
+	loading_log "Loading $_NEW_PACKAGE is over.\n\n";
 
 }
 
@@ -260,7 +268,7 @@ sub finish_loading_logging {
 
 sub check_application_directory {
 
-	print STDERR " check_application_directory... ";
+	loading_log " check_application_directory... ";
 
 	my $docroot = $ENV{DOCUMENT_ROOT};
 		
@@ -300,13 +308,13 @@ sub check_application_directory {
 	
 	$docroot .= '/';
 
-	print STDERR "$docroot...\n";
+	loading_log "$docroot...\n";
 	
 	$preconf -> {_} -> {docroot} = $docroot;
 
 	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs', 'i/_mbox', 'i/_mbox/by_user') {
 
-		print STDERR "  checking ${docroot}${subdir}...";
+		loading_log "  checking ${docroot}${subdir}...";
 
 		my $dir = $docroot . $subdir;
 
@@ -320,7 +328,7 @@ sub check_application_directory {
 
 		warn $@ if $@;
 
-		print STDERR "ok\n";
+		loading_log "ok\n";
 
 	}
 
@@ -330,20 +338,20 @@ sub check_application_directory {
 
 sub check_module_want {
 
-	print STDERR " check_module_want................... ";
+	loading_log " check_module_want................... ";
 
 	eval 'use Want';
 	
 	if ($@) {
 
-		print STDERR "no Want.pm, ok. [INSTALL SUGGESTED]\n";
+		loading_log "no Want.pm, ok. [INSTALL SUGGESTED]\n";
 		
 		eval 'sub want {0}';
 
 	}
 	else {
 	
-		print STDERR "Want $Want::VERSION ok.\n";
+		loading_log "Want $Want::VERSION ok.\n";
 
 	}
 
@@ -353,7 +361,7 @@ sub check_module_want {
 
 sub check_module_math_fixed_precision {
 
-	print STDERR " check_module_math_fixed_precision... ";
+	loading_log " check_module_math_fixed_precision... ";
 
 	eval { 
 		require Math::FixedPrecision;
@@ -361,12 +369,12 @@ sub check_module_math_fixed_precision {
 	
 	if ($@) {
 
-		print STDERR "no Math::FixedPrecision, ok. [INSTALL SUGGESTED]\n";
+		loading_log "no Math::FixedPrecision, ok. [INSTALL SUGGESTED]\n";
 
 	}
 	else {
 	
-		print STDERR "Math::FixedPrecision $Math::FixedPrecision::VERSION ok.\n";
+		loading_log "Math::FixedPrecision $Math::FixedPrecision::VERSION ok.\n";
 
 	}
 
@@ -376,11 +384,11 @@ sub check_module_math_fixed_precision {
 
 sub check_module_zlib {
 
-	print STDERR " check_module_zlib................... ";
+	loading_log " check_module_zlib................... ";
 
 	if (!$preconf -> {core_gzip}) {
 
-		print STDERR "DISABLED, ok\n";
+		loading_log "DISABLED, ok\n";
 
 		return;
 		
@@ -397,7 +405,7 @@ sub check_module_zlib {
 	}
 	else {
 	
-		print STDERR "Compress::Raw::Zlib $Compress::Raw::Zlib::VERSION ok.\n";
+		loading_log "Compress::Raw::Zlib $Compress::Raw::Zlib::VERSION ok.\n";
 
 	}
 
@@ -407,7 +415,7 @@ sub check_module_zlib {
 
 sub check_module_uri_escape {
 	
-	print STDERR " check_module_uri_escape............. ";
+	loading_log " check_module_uri_escape............. ";
 
 	eval 'use URI::Escape::XS qw(uri_escape uri_unescape)';
 
@@ -417,12 +425,12 @@ sub check_module_uri_escape {
 		
 		die $@ if $@;
 
-		print STDERR "URI::Escape $URI::Escape::VERSION ok. [URI::Escape::XS SUGGESTED]\n";
+		loading_log "URI::Escape $URI::Escape::VERSION ok. [URI::Escape::XS SUGGESTED]\n";
 		
 	}
 	else {
 	
-		print STDERR "URI::Escape::XS $URI::Escape::XS::VERSION ok.\n";
+		loading_log "URI::Escape::XS $URI::Escape::XS::VERSION ok.\n";
 
 	}
 	
@@ -432,7 +440,7 @@ sub check_module_uri_escape {
 
 sub check_module_json {
 	
-	print STDERR " check_module_json................... ";
+	loading_log " check_module_json................... ";
 	
 	unless ($ENV {PERL_JSON_BACKEND}) {
 	
@@ -440,7 +448,7 @@ sub check_module_json {
 		
 		if ($@) {
 			
-			print STDERR "JSON::XS in not installed :-( ";
+			loading_log "JSON::XS in not installed :-( ";
 			
 			$ENV {PERL_JSON_BACKEND} = 'JSON::PP';
 			
@@ -457,7 +465,7 @@ sub check_module_json {
 	
 	die $@ if $@;
 			
-	print STDERR qq{$ENV{PERL_JSON_BACKEND} ${"$ENV{PERL_JSON_BACKEND}::VERSION"} ok.\n};
+	loading_log qq{$ENV{PERL_JSON_BACKEND} ${"$ENV{PERL_JSON_BACKEND}::VERSION"} ok.\n};
 
 }
 
@@ -465,23 +473,23 @@ sub check_module_json {
 
 sub check_module_schedule {
 
-	print STDERR " check_module_schedule............... ";
+	loading_log " check_module_schedule............... ";
 	
 	my $crontab = $preconf -> {schedule} -> {crontab};
 
 	unless ($crontab) {
 
-		print STDERR "no crontab, ok.\n";
+		loading_log "no crontab, ok.\n";
 		
 		return;
 
 	}
 	
-	print STDERR "$crontab... ";
+	loading_log "$crontab... ";
 	
 	if (-f $crontab) {
 	
-		print STDERR "exists, ok.\n";
+		loading_log "exists, ok.\n";
 	
 	}
 	else {
@@ -491,7 +499,7 @@ sub check_module_schedule {
 		close (F);
 		chmod 0600 , $crontab;
 
-		print STDERR "created, ok.\n";
+		loading_log "created, ok.\n";
 
 	}
 
@@ -505,7 +513,7 @@ sub check_module_schedule {
 
 	foreach my $dir (@$PACKAGE_ROOT) {
 
-		print STDERR "  checking $dir for offline script directories...\n";
+		loading_log "  checking $dir for offline script directories...\n";
 
 		my $logdir  = $dir;		
 		   $logdir  =~ s{[\\/]+lib[\\/]*$}{};		   		   
@@ -519,7 +527,7 @@ sub check_module_schedule {
 			
 			-d $path or next;
 
-			print STDERR "   checking $path for scheduled scripts...\n";
+			loading_log "   checking $path for scheduled scripts...\n";
 
 			opendir (DIR, $path) or die "can't opendir $path: $!";
 
@@ -531,7 +539,7 @@ sub check_module_schedule {
 
 				$file_name =~ /\.pl$/ or next;
 
-				print STDERR "    checking $file_name" . ('.' x (43 - length $file_name));
+				loading_log "    checking $file_name" . ('.' x (43 - length $file_name));
 
 				my $file_path = "$path/$file_name";
 
@@ -555,7 +563,7 @@ sub check_module_schedule {
 
 				if ($the_string) {
 					
-					print STDERR " scheduled at '$the_string', ok\n";
+					loading_log " scheduled at '$the_string', ok\n";
 
 					$the_string .= (' ' x (16 - length $the_string));
 
@@ -568,7 +576,7 @@ sub check_module_schedule {
 				}
 				else {
 
-					print STDERR " not scheduled, ok\n";
+					loading_log " not scheduled, ok\n";
 
 				}
 
@@ -576,7 +584,7 @@ sub check_module_schedule {
 
 		}			
 		
-		print STDERR "  done with $dir.\n";
+		loading_log "  done with $dir.\n";
 
 	}
 
@@ -598,7 +606,7 @@ sub check_module_schedule {
 					
 					next if -f $&;
 					
-					print STDERR "    $& not found, will be commented out";
+					loading_log "    $& not found, will be commented out";
 					
 					push @new_lines, '# ' . $line;
 					
@@ -618,7 +626,7 @@ sub check_module_schedule {
 	
 	if (@new_lines == @old_lines and @lines == 0) {
 	
-		print STDERR "  nothing to do with crontab, ok\n";
+		loading_log "  nothing to do with crontab, ok\n";
 		
 		return;
 	
@@ -631,7 +639,7 @@ sub check_module_schedule {
 
 	if ($old eq $new) {
 	
-		print STDERR "  crontab is not changed, ok\n";
+		loading_log "  crontab is not changed, ok\n";
 		
 		return;
 	
@@ -641,17 +649,17 @@ sub check_module_schedule {
 	syswrite (F, $new);
 	close (F);
 
-	print STDERR "  crontab is overwritten, ok\n";
+	loading_log "  crontab is overwritten, ok\n";
 	
 	my $command = $preconf -> {schedule} -> {command};
 	
 	if ($command) {
 
-		print STDERR "  reloading schedule...";
+		loading_log "  reloading schedule...";
 		
-		print STDERR `$command 2>&1`;
+		loading_log `$command 2>&1`;
 		
-		print STDERR " ok.\n";
+		loading_log " ok.\n";
 
 	}	
 
@@ -661,7 +669,7 @@ sub check_module_schedule {
 
 sub check_module_memory {
 
-	print STDERR " check_module_memory................. ";
+	loading_log " check_module_memory................. ";
 
 	require Eludia::Content::Memory;
 
@@ -679,7 +687,7 @@ sub check_module_checksums {
 
 sub check_module_presentation_tools {
 
-	print STDERR " check_module_presentation_tools..... ";
+	loading_log " check_module_presentation_tools..... ";
 
 	require Eludia::Presentation::Tools;
 
@@ -689,20 +697,20 @@ sub check_module_presentation_tools {
 
 sub check_module_session_access_logs {
 
-	print STDERR " check_module_session_access_logs.... ";
+	loading_log " check_module_session_access_logs.... ";
 
 	if ($conf -> {core_session_access_logs_dbtable}) {
 
 		require Eludia::Content::SessionAccessLogs::DBTable;
 		
-		print STDERR "DBTable, ok.\n";
+		loading_log "DBTable, ok.\n";
 
 	} 
 	else {
 
 		require Eludia::Content::SessionAccessLogs::File4k;
 		
-		print STDERR "File4k, ok.\n";
+		loading_log "File4k, ok.\n";
 
 	}
 	
@@ -712,20 +720,20 @@ sub check_module_session_access_logs {
 
 sub check_module_peering {
 
-	print STDERR " check_module_peering................ ";
+	loading_log " check_module_peering................ ";
 
 	if ($preconf -> {peer_servers}) {
 	
 		require Eludia::Content::Peering;
 
-		print STDERR "$preconf->{peer_name}, ok.\n";
+		loading_log "$preconf->{peer_name}, ok.\n";
 	
 	}
 	else {
 
 		eval 'sub check_peer_server {undef}';
 
-		print STDERR "no peering, ok.\n";
+		loading_log "no peering, ok.\n";
 
 	}; 
 	
@@ -735,20 +743,20 @@ sub check_module_peering {
 
 sub check_module_mail {
 
-	print STDERR " check_module_mail................... ";
+	loading_log " check_module_mail................... ";
 
 	if ($preconf -> {mail}) { 
 		
 		require Eludia::Content::Mail;
 
-		print STDERR "$preconf->{mail}->{host}, ok.\n";
+		loading_log "$preconf->{mail}->{host}, ok.\n";
 		
 	} 
 	else { 
 		
 		eval 'sub send_mail {warn "Mail parameters are not set.\n" }';
 
-		print STDERR "no mail, ok.\n";
+		loading_log "no mail, ok.\n";
 		
 	}
 
@@ -758,7 +766,7 @@ sub check_module_mail {
 
 sub check_module_auth {
 
-	print STDERR " check_module_auth:\n";
+	loading_log " check_module_auth:\n";
 	
 	$preconf -> {_} -> {pre_auth}  = [];
 	$preconf -> {_} -> {post_auth} = [];
@@ -774,18 +782,18 @@ sub check_module_auth {
 
 sub check_module_auth_cookie {
 
-	print STDERR "  check_module_auth_cookie........... ";
+	loading_log "  check_module_auth_cookie........... ";
 
 	if ($preconf -> {core_auth_cookie}) { 
 		
 		require Eludia::Content::Auth::Cookie; 
 		
-		print STDERR "$preconf->{core_auth_cookie}, ok.\n";
+		loading_log "$preconf->{core_auth_cookie}, ok.\n";
 
 	} 
 	else { 
 		
-		print STDERR "disabled, ok.\n";
+		loading_log "disabled, ok.\n";
 		
 	}
 
@@ -795,18 +803,18 @@ sub check_module_auth_cookie {
 
 sub check_module_auth_opensso {
 
-	print STDERR "  check_module_auth_opensso.......... ";
+	loading_log "  check_module_auth_opensso.......... ";
 
 	if ($preconf -> {ldap} -> {opensso}) { 
 		
 		require Eludia::Content::Auth::OpenSSO; 
 		
-		print STDERR "$preconf->{ldap}->{opensso}, ok.\n";
+		loading_log "$preconf->{ldap}->{opensso}, ok.\n";
 
 	} 
 	else { 
 
-		print STDERR "no OpenSSO, ok.\n";
+		loading_log "no OpenSSO, ok.\n";
 		
 	}
 
@@ -816,18 +824,18 @@ sub check_module_auth_opensso {
 
 sub check_module_auth_tinysso {
 
-	print STDERR "  check_module_auth_tinysso.......... ";
+	loading_log "  check_module_auth_tinysso.......... ";
 
 	if ($preconf -> {ldap} -> {tinysso}) { 
 		
 		require Eludia::Content::Auth::TinySSO; 
 		
-		print STDERR "$preconf->{ldap}->{tinysso}, ok.\n";
+		loading_log "$preconf->{ldap}->{tinysso}, ok.\n";
 
 	} 
 	else { 
 
-		print STDERR "no TinySSO, ok.\n";
+		loading_log "no TinySSO, ok.\n";
 		
 	}
 
@@ -837,18 +845,18 @@ sub check_module_auth_tinysso {
 
 sub check_module_auth_ntlm {
 
-	print STDERR "  check_module_auth_ntlm............. ";
+	loading_log "  check_module_auth_ntlm............. ";
 
 	if ($preconf -> {ldap} -> {ntlm}) { 
 		
 		require Eludia::Content::Auth::NTLM; 
 		
-		print STDERR "$preconf->{ldap}->{ntlm}, ok.\n";
+		loading_log "$preconf->{ldap}->{ntlm}, ok.\n";
 
 	} 
 	else { 
 
-		print STDERR "no NTLM, ok.\n";
+		loading_log "no NTLM, ok.\n";
 		
 	}
 
@@ -858,20 +866,20 @@ sub check_module_auth_ntlm {
 
 sub check_module_queries {
 
-	print STDERR " check_module_queries................ ";
+	loading_log " check_module_queries................ ";
 
 	if ($conf -> {core_store_table_order}) { 
 		
 		require Eludia::Content::Queries;
 
-		print STDERR "stored queries enabled, ok.\n";
+		loading_log "stored queries enabled, ok.\n";
 
 	} 
 	else { 
 		
 		eval 'sub fix___query {}; sub check___query {}';
 	
-		print STDERR "no stored queries, ok.\n";
+		loading_log "no stored queries, ok.\n";
 
 	}
 
@@ -881,7 +889,7 @@ sub check_module_queries {
 
 sub check_module_log {
 
-	print STDERR " check_module_log.................... ";
+	loading_log " check_module_log.................... ";
 	
 	$conf -> {core_log} -> {version} ||= 'v1';
 	
@@ -924,7 +932,7 @@ sub check_module_log {
 
 	require "Eludia/Content/Log/$preconf->{_}->{core_log}->{version}.pm";
 	
-	print STDERR "$preconf->{_}->{core_log}->{version}, ok.\n";
+	loading_log "$preconf->{_}->{core_log}->{version}, ok.\n";
 
 }
 
