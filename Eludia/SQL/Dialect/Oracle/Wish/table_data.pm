@@ -27,7 +27,7 @@ sub wish_to_actually_create_table_data {
 
 		my $sth = $db -> prepare ($sql);
 
-		$sth -> execute_array ({}, @prms);
+		$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
 
 		$sth -> finish;
 
