@@ -819,7 +819,7 @@ function menuItemOut () {
 	timer = setTimeout('hideSubMenus(0)',delay);
 }
 
-function open_popup_menu (type, level) {
+function open_popup_menu (event, type, level) {
 
 	clearTimeout(timer);
 
@@ -1051,12 +1051,12 @@ function handle_basic_navigation_keys () {
 
 function actual_table_height (table, min_height, height, id_toolbar) {
 
-	var real_height       = table.firstChild.offsetHeight;
-	
+	var real_height       = $(table.firstChild).height ();
 	real_height += 18;
 
-	var max_screen_height = document.body.offsetHeight - absTop (table) - 23;
-	
+	var offset = $(table).offset();
+	var max_screen_height = $(window).height () - offset.top;
+
 	if (id_toolbar != '') {
 		var toolbar = document.getElementById (id_toolbar);
 		if (toolbar) max_screen_height -= toolbar.offsetHeight;
@@ -3515,7 +3515,7 @@ dTree.prototype.node = function(node, nodeId) {
 
 		if (this.config.useStatusText) str += ' onmouseover="window.status=\'' + node.name + '\';return true;" onmouseout="window.status=\'\';return true;" ';
 
-		if (node.context_menu) str += ' oncontextmenu="' + this.obj + '.s(' + nodeId + '); open_popup_menu(\'' + node.context_menu + '\'); blockEvent ();"';
+		if (node.context_menu) str += ' oncontextmenu="' + this.obj + '.s(' + nodeId + '); open_popup_menu(event, \'' + node.context_menu + '\'); return blockEvent ();"';
 		
 		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc)) str += ' onclick="javascript: ' + this.obj + '.s(' + nodeId + '); "';
 		if (node._hc && node.pid != this.root.id) str += ' onDblClick="' + this.obj + '.o(' + nodeId + '); "';

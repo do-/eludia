@@ -1,4 +1,16 @@
 
+BODY {
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	FONT-WEIGHT: normal; 
+	FONT-SIZE: 8pt; 
+	COLOR: #000000; 
+	background-color: #FFFFFF
+}
+
+FORM {
+	margin-bottom: 0px;
+}
+
 .tbbg0 {background-color: #b9c5d7;}
 .tbbg1 {background-color: #6f7681;}
 .tbbg2 {background-color: #949eac;}
@@ -47,7 +59,6 @@ div.table-container {
       	OVERFLOW-X: auto;
       	PADDING-BOTTOM: 0px;
       	MARGIN: 0px;
-      	WIDTH: expression(document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 18));
       	PADDING-TOP: 0px;      	
       	
 	scrollbar-base-color:#d6d3ce;
@@ -350,14 +361,6 @@ div.checkboxes {
 } 
 
 
-
-BODY {
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
-	FONT-WEIGHT: normal; 
-	FONT-SIZE: 8pt; 
-	COLOR: #000000; 
-	background-color: #FFFFFF
-}
 
 .header_0 {
 	FONT-WEIGHT: bold; 
@@ -919,6 +922,7 @@ select {
 }
 
 select.form-active-inputs, select.form-active-deleted {
+	padding:          1px;
 }
 
 select.form-mandatory-inputs {
