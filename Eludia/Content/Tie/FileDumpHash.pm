@@ -26,7 +26,8 @@ sub FETCH_ {
 	
 	my @dirs = reverse &{$options -> {path}} ($key);
 
-	my $__the_dir = '' . ${"$options->{package}::__the_dir"};
+	my $__the_dir = ${"$options->{package}::__the_dir"} || '';
+	
 	push @dirs, $__the_dir
 		unless grep {$_ eq $__the_dir} @dirs;
 

@@ -28,13 +28,13 @@ sub checksum_init {
 
 	my $filename = "$preconf->{_}->{docroot}dbm/$kind.dd";
 
-	print STDERR "   $filename... ";
+	loading_log "   $filename... ";
 		
 	$preconf -> {_} -> {checksums} -> {$kind} = DBM::Deep -> new ($filename);
 
 	chmod 0777, $filename;
 		
-	print STDERR "ok.\n";
+	loading_log "ok.\n";
 
 }
 
@@ -46,7 +46,7 @@ BEGIN {
 	
 		$preconf -> {_} -> {checksums} = {};
 		
-		print STDERR "DBM::Deep, ok.\n";
+		loading_log "DBM::Deep, ok.\n";
 	
 	}
 

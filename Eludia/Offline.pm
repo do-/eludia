@@ -32,7 +32,7 @@ sub lock_file_name () {
 
 sub initialize_offline_script_execution () {
 
-	warn offline_script_log_signature . " starting...\n";
+	$ENV {ELUDIA_SILENT} or warn "\n" . offline_script_log_signature . " starting...\n";
 
 	eval 'require LockFile::Simple';
 	
@@ -70,7 +70,7 @@ sub finalize_offline_script_execution () {
 	
 	}
 
-	warn offline_script_log_signature . " finished.\n";
+	$ENV {ELUDIA_SILENT} or warn offline_script_log_signature . " finished.\n";
 
 }
 
@@ -86,7 +86,7 @@ sub config_file () {
 	
 	$fn =~ y{\\}{/};
 	
-	$fn =~ s{/lib/.*}{/conf/httpd.conf};
+	$fn =~ s{/(lib|t)/.*}{/conf/httpd.conf};
 	
 	return $fn;
 	
@@ -151,13 +151,15 @@ BEGIN {
 	
 	initialize_offline_script_execution;	
 	
-	eval perl_section_from config_file;		
+	my $code = perl_section_from config_file;
 	
+	eval $code; die "$code\n\n$@" if $@;
+
 	my $package = __PACKAGE__;
-	
+
 	$package = $Eludia::last_loaded_package if $package eq 'main';
-		
-	my $code = qq {
+
+	$code = qq {
 	
 		package $package;
 
@@ -172,8 +174,8 @@ BEGIN {
 		no warnings;
 	
 	} . the_rest_of_the_script;
-	
-	eval $code; die $@ if $@;
+
+	eval $code; die "$code\n\n$@" if $@;
 	
 	finalize_offline_script_execution;
 	

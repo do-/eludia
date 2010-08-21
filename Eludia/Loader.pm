@@ -11,7 +11,7 @@ sub import {
 	ref $root eq ARRAY or $root = [$root];	
 		
 	$root -> [0] =~ /[A-Z0-9_]+$/;
-	my $old_package = $&;
+	my $old_package = $& || '';
 	
 	eval "use lib '$$root[0]'";
 	

@@ -39,9 +39,9 @@ sub log_action_finish {
 	
 	if ($conf -> {core_delegation}) {
 
-		push @fields, 'id_log_real';
+		push @fields, 'id_user_real';
 
-		$_REQUEST {_id_log_real} = $_USER -> {id__real};
+		$_REQUEST {_id_user_real} = $_USER -> {id__real};
 	
 	}
 	

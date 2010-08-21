@@ -194,7 +194,7 @@ sub __log_profilinig {
 		1000 * ($now - $_[0]), 
 		$_[1] 
 		
-		if $preconf -> {core_debug_profiling} > 0;
+		if $preconf -> {core_debug_profiling} > 0 && !$ENV {ELUDIA_SILENT};
 	
 	return $now;
 

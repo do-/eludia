@@ -121,7 +121,7 @@ sub wish_to_actually_create_tables {
 		
 		$i -> {pk} -> {_EXTRA} =~ /auto_increment/ or next;
 				
-		sql_do (qq {CREATE SEQUENCE "$name{seq}" START WITH 1 INCREMENT BY 1 MINVALUE 1});
+		sql_do (qq {CREATE SEQUENCE "$name{seq}" NOCACHE START WITH 1 INCREMENT BY 1 MINVALUE 1});
 
 		sql_do (qq {
 				CREATE TRIGGER "$name{trigger}" BEFORE INSERT ON "$i->{name}"

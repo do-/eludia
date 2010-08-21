@@ -81,7 +81,7 @@ sub wish_to_schedule_cleanup_for_table_data {
 
 	my ($existing, $todo, $options) = @_;
 	
-	%{$options -> {root}} > 0 and %$existing > 0 or return;
+	%{$options -> {root}} and %$existing or return;
 			
 	$todo -> {'delete'} = [ values %$existing ];
 
@@ -107,7 +107,7 @@ sub wish_to_actually_create_table_data {
 		
 	my $sth = $db -> prepare ("INSERT INTO $options->{table} (" . (join ', ', @cols) . ") VALUES (" . (join ', ', map {'?'} @cols) . ")");
 
-	$sth -> execute_array ({}, @prms);
+	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
 	
 	$sth -> finish;
 	
@@ -135,7 +135,7 @@ sub wish_to_actually_update_table_data {
 		
 	my $sth = $db -> prepare ("UPDATE $options->{table} SET " . (join ', ', @cols) . " WHERE id = ?");
 
-	$sth -> execute_array ({}, @prms);
+	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
 	
 	$sth -> finish;
 
@@ -159,7 +159,7 @@ sub wish_to_actually_delete_table_data {
 		
 	);
 	
-	$sth -> execute_array ({}, [map {$_ -> {id}} @$items]);
+	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, [map {$_ -> {id}} @$items]);
 	
 	$sth -> finish;
 
