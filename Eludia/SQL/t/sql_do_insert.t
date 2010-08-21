@@ -1,4 +1,4 @@
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 my $table = 'testtesttesttable1';
 
@@ -55,17 +55,35 @@ is_stored ('Empty table, no ID', [
 
 sql_do_insert ($table => {
 
-	id    => 3,
+	id    => 10,
 	fake  => 0,
-	name  => 'three', 
-	label => 'The Three',
+	name  => 'ten', 
+	label => 'The Ten',
 	
 });
 
 is_stored ('Non-empty table, explicit ID', [
 
-	{id => 1, fake => 0, name => 'one',   label => 'The One'},
-	{id => 3, fake => 0, name => 'three', label => 'The Three'},
+	{id => 1,  fake => 0, name => 'one', label => 'The One'},
+	{id => 10, fake => 0, name => 'ten', label => 'The Ten'},
+
+]);
+
+################################################################################
+
+sql_do ("INSERT INTO $table (fake, name, label) VALUES (?, ?, ?)",
+
+	0,
+	'eleven', 
+	'The Eleven',
+	
+);
+
+is_stored ('Non-empty table, native auto increment after explicit ID', [
+
+	{id => 1,  fake => 0, name => 'one',    label => 'The One'},
+	{id => 10, fake => 0, name => 'ten',    label => 'The Ten'},
+	{id => 11, fake => 0, name => 'eleven', label => 'The Eleven'},
 
 ]);
 
@@ -74,16 +92,17 @@ is_stored ('Non-empty table, explicit ID', [
 sql_do_insert ($table => {
 
 	fake  => 0,
-	name  => 'four', 
-	label => 'The Four',
+	name  => 'twelve', 
+	label => 'The Twelve',
 	
 });
 
-is_stored ('Non-empty table, auto increment after explicit ID', [
+is_stored ('Non-empty table, sql_do_insert again', [
 
-	{id => 1, fake => 0, name => 'one',   label => 'The One'},
-	{id => 3, fake => 0, name => 'three', label => 'The Three'},
-	{id => 4, fake => 0, name => 'four',  label => 'The Four'},
+	{id => 1,  fake => 0, name => 'one',    label => 'The One'},
+	{id => 10, fake => 0, name => 'ten',    label => 'The Ten'},
+	{id => 11, fake => 0, name => 'eleven', label => 'The Eleven'},
+	{id => 12, fake => 0, name => 'twelve', label => 'The Twelve'},
 
 ]);
 
