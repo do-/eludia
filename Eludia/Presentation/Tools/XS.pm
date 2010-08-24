@@ -24,7 +24,7 @@ BEGIN {
 	
 	$preconf -> {_} -> {presentation_tools} = 'XS';
 		
-	print STDERR "HTML::GenerateUtil, ok.\n";
+	loading_log "HTML::GenerateUtil, ok.\n";
 	
 }
 

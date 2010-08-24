@@ -964,7 +964,7 @@ sub sql {
 
 		$order = order ($order)  if $order !~ /\W/;
 		
-		$order =~ s{(?<!\.)\b([a-z][a-z0-9_]*)\b(?!\.)}{${root}.$1}gsm;
+		$order =~ s{(?<!\.)\b([a-z][a-z0-9_]*)\b(?!\.)}{(grep {$_ -> {alias} eq $1} @{$columns_by_grouping -> [1]}) > 0 ? $1 : "${root}.$1"}gsme;
 		
 		$sql .= "\nORDER BY\n $order";
 
@@ -1057,7 +1057,7 @@ sub sql {
 
 				$sql_cnt = mysql_to_oracle ($sql_cnt) if $conf -> {core_auto_oracle};
 
-				my $st = sql_execute ($sql_cnt, @params);
+				$st = sql_execute ($sql_cnt, @params);
 
 				my ($cnt) = $st -> fetchrow_array;
 				

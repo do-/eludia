@@ -386,6 +386,7 @@ sub check_title {
 	$title =~ s{^(\&nbsp\;|\s)+}{};
 	
 	$title = HTML::Entities::decode_entities ($title) if $title =~ /\&/;
+	$title =~ s{\"}{\&quot\;}g;
 
 	$options -> {attributes} -> {title} = $title;
 
@@ -865,7 +866,7 @@ sub draw_form_field {
 			delete $field -> {values};
 
 			while (my $value = shift @$values) {
-                                $value -> {label} = "&nbsp; " x (2 * (@spaces - 1)) . $value -> {label};
+				$value -> {label} = "&nbsp; " x (2 * (@spaces - 1)) . $value -> {label};
 
 				if ($value -> {items}) {
 					unshift @spaces, @{$value -> {items}} + 0;
@@ -1014,7 +1015,7 @@ sub adjust_form_field_options {
 
 sub js_detail {
 
-	return &{"$_SKIN::js_detail"} ($options);
+	return &{$_SKIN . '::js_detail'} (@_);
 
 }
 
@@ -1462,7 +1463,7 @@ sub draw_cells {
 		if ($options -> {href}) {
 
 			$cell -> {a_class} ||= $options -> {a_class};
-			$cell -> {target}  ||= $options -> {target};
+			$cell -> {target}  ||= $options -> {target} || '_self';
 
 			unless (exists $cell -> {href}) {
 				$cell -> {href} = $options -> {href};
@@ -1475,16 +1476,14 @@ sub draw_cells {
 		}
 
 		$options -> {__fixed_cols} ++ if $cell -> {no_scroll};
-		
-		$cell -> {type}   = 'text' if $cell -> {off} || $cell -> {read_only};
+
+		$cell -> {type}   = 'text' if ($cell -> {off} || $cell -> {read_only}) && !$cell -> {icon};
 
 		$cell -> {type} ||= 
 		
 			$cell -> {icon}           ? 'button'   :
 			exists $cell -> {checked} ? 'checkbox' :
 						    'text'     ;
-			
-		$result .= call_from_file ("Eludia/Presentation/TableCells/$cell->{type}.pm", "draw_$cell->{type}_cell", $cell, $options);
 
 	}
 	
@@ -1501,6 +1500,8 @@ sub draw_cells {
 		}
 
 	}
+	
+	$result .= call_from_file ("Eludia/Presentation/TableCells/$_->{type}.pm", "draw_$_->{type}_cell", $_, $options) foreach @cells;
 
 	if ($options -> {gantt}) {
 
@@ -2063,7 +2064,9 @@ sub draw_node {
 	my $options = shift;
 	
 	my $result = '';
-	
+
+	$options -> {label} =~ s/[\r\n]+/ /g;
+
 	if ($options -> {href}) {
 
 		my $__last_query_string = $_REQUEST {__last_query_string};
@@ -2258,7 +2261,7 @@ sub draw_page {
 	our $lpt                   = 0;
 
 	$_REQUEST {__script}      .= "; the_page_title = '$_REQUEST{__page_title}';";
-	$_REQUEST {__on_load}     .= "; if (!window.top.title_set) window.top.document.title = the_page_title;";
+	$_REQUEST {__on_load}     .= "; try {if (!window.top.title_set) window.top.document.title = the_page_title;} catch(e) {}";
 
 	$_REQUEST {__invisibles}   = ['invisible'];
 
@@ -2464,7 +2467,7 @@ sub gzip_if_it_is_needed (\$) {
 	
 	my $time = time;
 
-	$$ref_html = gzip_in_memory ($$ref_html);
+	eval {$$ref_html = gzip_in_memory ($$ref_html)};
 			
 	my $new_size = length $$ref_html;
 
@@ -2491,6 +2494,8 @@ sub out_json ($) {
 sub out_script {
 
 	my $html = '<html><head><script>';
+	
+	setup_json ();
 
 	$html .= 'var data = ' . $_JSON -> encode ($_[1]) . ';' if $_[1];
 
@@ -2518,9 +2523,14 @@ sub out_html {
 
 	$_REQUEST {__out_html_time} = my $time = time;  
 
+	if ($conf -> {core_sweep_spaces}) {
+		$html =~ s{^\s+}{}gsm;
+		$html =~ s{[ \t]+}{ }g;
+	}
+
 	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
 
-	$i18n -> {_charset} eq 'windows-1252' or $html = Encode::encode ('windows-1252', $html);
+	$html = Encode::encode ('windows-1252', $html);
 
 	return print $html if $_REQUEST {__response_started};
 

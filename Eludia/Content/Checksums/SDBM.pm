@@ -40,7 +40,7 @@ sub checksum_init {
 
 	my $filename = "$preconf->{_}->{docroot}dbm/$kind.sdbm";
 
-	print STDERR "   $filename... ";
+	loading_log "   $filename... ";
 	
 	open (LOCK, ">$filename.lock") or die "Can't write to $filename.lock: $!\n";
 	print LOCK 1;
@@ -53,7 +53,7 @@ sub checksum_init {
 
 	$preconf -> {_} -> {checksums} -> {$kind} = \%h;
 		
-	print STDERR "ok.\n";
+	loading_log "ok.\n";
 
 }
 
@@ -65,7 +65,7 @@ BEGIN {
 	
 		$preconf -> {_} -> {checksums} = {};
 		
-		print STDERR "SDBM, ok.\n";
+		loading_log "SDBM, ok.\n";
 	
 	}
 

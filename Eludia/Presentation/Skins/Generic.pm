@@ -135,6 +135,20 @@ sub __adjust_form_field_select {
 
 ################################################################################
 
+sub __adjust_form_field_text {
+
+	my ($options) = @_;
+
+	$options -> {value} =~ s/\"/\&quot\;/gsm; #";
+
+	my $attributes = ($options -> {attributes} ||= {});
+
+	$attributes -> {readonly} = 1 if $_REQUEST {__read_only} or $options -> {read_only};	
+
+}
+
+################################################################################
+
 sub js_detail {
 
 	my ($options) = @_;
@@ -499,7 +513,7 @@ sub draw_page__only_field {
 
 	my ($_SKIN, $page) = @_;
 
-	$_REQUEST {__content_type} ||= 'text/plain; charset=' . $i18n -> {_charset};
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
 						
 	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="$_REQUEST{__on_load}"></body><html>};
 

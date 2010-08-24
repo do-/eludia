@@ -192,11 +192,13 @@ sub do_update_DEFAULT { # запись карточки
 	
 	@fields > 0 or return;
 
-	sql_do_update ($type, \@fields, {id => $_[1] || $_REQUEST {id}});
+	my $id = $_[2] || 'id';
+
+	sql_do_update ($type, \@fields, {$id => $_[1] || $_REQUEST {id}});
 
 	foreach my $key (keys %_REQUEST) {
 	
-		$key =~ /^__checkboxes_/ or next;			
+		$key =~ /^__checkboxes_/ or next;
 
 		sql_store_ids ($_REQUEST {$key} => $');
 	

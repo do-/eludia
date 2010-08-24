@@ -255,7 +255,7 @@ EOH
 		$header_height = 90;
 	}
 	return <<EOH;
-		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="$_REQUEST{__static_site}/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
+		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 class="tbbga" background="$_REQUEST{__static_site}/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
 			<tr>
 			<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
 			<td width=1><table border=0 valign="middle" border=0><tr>
@@ -291,7 +291,7 @@ EOJ
 	} else {
 	 
 		return <<EOH
-			<table cellspacing=0 cellpadding=0 width="100%"><tr><td bgcolor="#edf1f5" class="header_3"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr><tr><td bgcolor="#e4e9ee"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=1></td></tr></table>
+			<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="header_3"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr><tr><td class="#tbbgb"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=1></td></tr></table>
 EOH
 
 	}
@@ -323,14 +323,14 @@ EOH
 		if ($item -> {is_active}) {
 			$html .= <<EOH;
 				<td width=5><img src="$_REQUEST{__static_url}/tab_l_1.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
-				<td bgcolor="#ffffff"><a id="$item" href="$$item{href}" class="tab-1"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>
+				<td bgcolor="#ffffff"><a id="$item" href="$$item{href}" class="tab-1" target="$item->{target}"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>
 				<td width=5><img src="$_REQUEST{__static_url}/tab_r_1.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
 				<td width=4><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=22 border=0></td>
 EOH
 		} else {
 			$html .= <<EOH;
 				<td width=5><img src="$_REQUEST{__static_url}/tab_l_0.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
-				<td background="$_REQUEST{__static_url}/tab_bg_0.gif?$_REQUEST{__static_salt}"><a id="$item" href="$$item{href}" class="tab-0"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>
+				<td background="$_REQUEST{__static_url}/tab_bg_0.gif?$_REQUEST{__static_salt}"><a id="$item" href="$$item{href}" class="tab-0" target="$item->{target}"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>
 				<td width=5><img src="$_REQUEST{__static_url}/tab_r_0.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
 				<td width=4><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=22 border=0></td>
 EOH
@@ -506,7 +506,7 @@ EOH
 &nbsp;</td>
 						</tr>
 						<tr>
-							<td bgcolor="#e4e9ee" colspan=2><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+							<td class="tbbgb" colspan=2><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 						</tr>
 					</table>
 				</td>
@@ -633,7 +633,7 @@ sub draw_form_field_suggest {
 		if (window.event.keyCode == 40 && s.style.display == 'block') {
 			s.focus ();
 		}
-   
+
 EOH
 	
 	
@@ -642,22 +642,32 @@ EOH
 			suggest_clicked = 0;
 		}
 		else {
-			var f = this.form;
-			f.elements ['_$options->{name}__label'].value = '';
-			f.elements ['_$options->{name}__id'].value = '';
-			var s = f.elements ['__suggest'];
-			document.getElementById ('_$options->{name}__suggest').style.display = 'none';
-			if (this.value.length > 0) {
-				s.value = '$options->{name}';
-				document.getElementById ('_$options->{name}__label').value = this.value;
-				f.submit ();
-				s.value = '';
-			}
+			var SUGGEST_DELAY = 500;
+			clearTimeout(typingIdleTimer);
+			typingIdleTimer = setTimeout('lookup_$options->{name}()', SUGGEST_DELAY);
 		}
 EOH
 
 	my $id = '' . $options;
-	
+
+	$_REQUEST {__script} .= qq{;
+		var typingIdleTimer;
+		function lookup_$options->{name}() {
+			var suggest_label = document.getElementById ('$id');
+			var f = suggest_label.form;
+			f.elements ['_$options->{name}__label'].value = '';
+			f.elements ['_$options->{name}__id'].value = '';
+			var s = f.elements ['__suggest'];
+			document.getElementById ('_$options->{name}__suggest').style.display = 'none';
+			if (suggest_label.value.length > 0) {
+				s.value = '$options->{name}';
+				document.getElementById ('_$options->{name}__label').value = suggest_label.value;
+				f.submit ();
+				s.value = '';
+			}
+		};
+	};
+
 	$options -> {attributes} -> {id}           = $id;
 	$options -> {attributes} -> {autocomplete} = 'off';
 	$options -> {attributes} -> {type}         = 'text';
@@ -1476,7 +1486,7 @@ sub draw_toolbar {
 	}
 
 	my $html = <<EOH;
-		<table bgcolor="b9c5d7" cellspacing=0 cellpadding=0 width="100%" border=0>
+		<table class="tbbg0" cellspacing=0 cellpadding=0 width="100%" border=0>
 			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
 EOH
 	
@@ -1489,13 +1499,13 @@ EOH
 
 	$html .= <<EOH;
 				<tr>
-					<td bgcolor="#6f7681" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg1" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#949eac" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg2" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#adb8c9" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg3" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
 					<td class="bgr0" width=30><img height=30 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 border=0></td>
@@ -1507,10 +1517,10 @@ EOH
 					<td class="bgr0" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#c5d2df" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg4" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#8c9ab1" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg5" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 			</form>
 		</table>
@@ -1530,26 +1540,26 @@ sub draw_toolbar_break {
 					<td class="bgr0" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#c5d2df" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg4" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#8c9ab1" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg5" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 EOH
 	
 	if ($options -> {break_table}) {		
-		$html .= '</table><table bgcolor="b9c5d7" cellspacing=0 cellpadding=0 width="100%" border=0>';		
+		$html .= '</table><table class="tbbg6" cellspacing=0 cellpadding=0 width="100%" border=0>';
 	}
 
 	$html .= <<EOH;
 				<tr>
-					<td bgcolor="#6f7681" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg1" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#949eac" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg2" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td bgcolor="#adb8c9" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="tbbg3" colspan=20><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
 					<td class="bgr0" width=30><img height=30 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 border=0></td>
@@ -1676,7 +1686,7 @@ sub draw_toolbar_input_tree {
 							document.write ($name);
 							for (var n = 0; n < $name.checkedNodes.length; n++) {
 								$name.openTo ($name.checkedNodes [n], true, true);
-							}							
+							}
 						</script>
 					</td>
 				</tr>
@@ -1696,7 +1706,7 @@ sub draw_toolbar_input_tree {
 						blockEvent ();
 						
 					"
-														
+
 					onMouseDown="
 
 						var select_1 = \$('#${id}_select_1');
@@ -1710,7 +1720,7 @@ sub draw_toolbar_input_tree {
 			
 							div.css  (css);
 							div.show ();
-													
+
 							select_1.hide ();
 							select_2.show ();
 
@@ -1727,7 +1737,7 @@ sub draw_toolbar_input_tree {
 					<option>$options->{label}</option>
 				</select>
 				<select id="${id}_select_2" style="display:none"
-																				
+
 					onDblClick="
 						
 						var select_1 = \$('#${id}_select_1');
@@ -1752,7 +1762,7 @@ sub draw_toolbar_input_tree {
 
 							div.css (css);
 							div.toggle();
-													
+
 							select_2.hide ();
 							select_1.show ();
 							
@@ -1762,7 +1772,7 @@ sub draw_toolbar_input_tree {
 							select_2.get (0).form.submit ()
 						
 						}
-																	
+
 					"
 
 				>
@@ -1794,7 +1804,7 @@ sub draw_toolbar_input_select {
 
 	my $name = $$options{name};
 
-	my $read_only = $options -> {read_only} ? 'disabled' : ''; 
+	my $read_only = $options -> {read_only} ? 'disabled' : '';
 
 	if (defined $options -> {other}) {
 
@@ -1829,8 +1839,8 @@ sub draw_toolbar_input_select {
 					}
 					
 				} else {
-  				submit ();
-        }
+					submit ();
+				}
 EOJS
 		} else {
 
@@ -1865,8 +1875,8 @@ EOJS
 
 					}
 				} else {
-  				submit ();
-        }
+					submit ();
+				}
 EOJS
 		}
 	}
@@ -2247,7 +2257,7 @@ sub draw_vert_menu {
 		
 	my $html = <<EOH;
 		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:100">
-			<table id="vert_menu_table_$name" width=1 bgcolor=#454a7c cellspacing=0 cellpadding=0 border=0 border=1>
+			<table id="vert_menu_table_$name" width=1 class="tbbg7" cellspacing=0 cellpadding=0 border=0 border=1>
 EOH
 
 
@@ -2258,12 +2268,12 @@ EOH
 			$html .= <<EOH;
 				<tr height=2>
 
-					<td bgcolor=#5d6496 width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
-					<td bgcolor=#5d6496 width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
+					<td class="tbbg8" width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
+					<td class="tbbg8" width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
 
 					<td>
 						<table width=90% border=0 cellspacing=0 cellpadding=0 align=center minheight=2>
-							<tr height=1><td bgcolor="#888888"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
+							<tr height=1><td class="tbbg9"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
 							<tr height=1><td bgcolor="#ffffff"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
 						</table>
 					</td>
@@ -2284,8 +2294,8 @@ EOH
 EOH
 			$html .= <<EOH;
 					<tr>
-						<td width=1 bgcolor=#5d6496><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
-						<td width=1 bgcolor=#5d6496><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
+						<td width=1 class="tbbg8"><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
+						<td width=1 class="tbbg8"><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
 					$td
 				</tr>
 EOH
@@ -2323,8 +2333,12 @@ sub js_set_select_option {
 	
 	$item -> {question} ||= "$i18n->{confirm_close_vocabulary} \"$item->{label}\"?" unless $conf -> {core_no_confirm_other};
 
-	my $a = $_JSON -> encode ($item);
-	
+	my $a = $_JSON -> encode ({
+		id       => $item -> {id},
+		label    => $item -> {label},
+		question => $item -> {question},
+	});
+
 	return $_SO_VARIABLES -> {$a}
 		if $_SO_VARIABLES -> {$a};
 
@@ -2355,7 +2369,7 @@ sub draw_text_cell {
 		$data -> {attributes} -> {style} = 'padding-left:' . ($data -> {level} * 15 + 3);
 	
 	}
-		
+
 	my $html = dump_tag ('td', $data -> {attributes});
 	
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
@@ -2972,9 +2986,14 @@ sub draw_page {
 		
 		delete $_REQUEST {__invisibles};
 		
-		$_REQUEST {__on_load}  = "window.focus (); setInterval (UpdateClock, 500); nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
-		
-		$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive};
+		$_REQUEST {__on_load} = '';
+
+		$_REQUEST {__on_load}  .= "window.focus (); setInterval (UpdateClock, 500);" 
+			if !$_REQUEST {__tree};
+
+		$_REQUEST {__on_load} .= "nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
+
+		$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive} && $_REQUEST {sid};
 
 #				<tr height=48><td height=48>$page->{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>
 		$body = qq {
@@ -3009,7 +3028,7 @@ sub draw_page {
 			
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 	
-	$_REQUEST {__head_links} .= "<link  href='$_REQUEST{__static_site}/i/$_.css' type=text/css rel=stylesheet>"         foreach (@{$_REQUEST {__include_css}});
+	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">}         foreach (@{$_REQUEST {__include_css}});
 
 	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}'>\n</script>" foreach (@{$_REQUEST {__include_js}});
 
@@ -3043,9 +3062,9 @@ sub draw_page {
 		<title>$$i18n{_page_title}</title>
 						
 		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
-		<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
+		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 						
-		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET>
+		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="STYLESHEET" />
 		<style>
 			v\\:*           { behavior: url(#default#VML); }
 			#admin          { width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
@@ -3190,7 +3209,7 @@ sub lrt_start {
 	$r -> send_http_header ();
 	
 	$_SKIN -> lrt_print (<<EOH);
-		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type=text/css rel=STYLESHEET><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
+		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="STYLESHEET"><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
 			<iframe name=invisible src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes">
 			</iframe>
 EOH
@@ -3248,35 +3267,6 @@ sub draw_logon_form {
 
 	my ($_SKIN, $options) = @_;
 
-	if ($options -> {hta}) {
-	
-		$_REQUEST {__on_load} .= <<EOH;
-		
-			if (window.name != 'application_frame' && confirm ('$i18n->{hta_confirm}')) {
-											
-				var _hta = hta ();
-			
-				SetupHTA (
-					_hta.code, 
-					_hta.title, 
-					_hta.url, 
-					_hta.content, 
-					_hta.icon, 
-					_hta.hotkey
-				);
-			
-			}
-		
-EOH
-		
-		
-	
-	}
-
-
-
-
-
 	my $focused_field = $_COOKIE {user_login} ? 'password' : 'login';
 
 	$_REQUEST {__on_load} .= qq {document.forms[0].elements["$focused_field"].focus ();};
@@ -3293,6 +3283,10 @@ EOH
 		[tz_offset       => ''],
 	);
 
+	my $auth_toolbar = &{$_PACKAGE . 'draw_auth_toolbar'} ({
+		top_banner => ($conf -> {top_banner} ? interpolate ($conf -> {top_banner}) : ''),
+	});
+
 	return <<EOH;
 
 <table border="0" cellpadding="0" cellspacing="0" align=center height=100% width=100%>
@@ -3300,19 +3294,7 @@ EOH
 	<tr>
 
 		<td valign=top height=90>
-			<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 bgcolor="#e5e5e5" background="$_REQUEST{__static_site}/i/bg_logo_out.gif" style="background-repeat: repeat-x" height=90>
-				<tr>
-				<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=90 border=0></td>
-				<td width=1><table border=0 valign="middle" border=0><tr>
-					<td valign="top" width=1><img src="$_REQUEST{__static_site}/i/logo_out.gif" border="0"></td>
-					<td width=1><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 height=1 border=0></td>
-					<td width=1 valign="bottom" style='padding-bottom: 5px;'><img src="$_REQUEST{__static_url}/gsep.gif?$_REQUEST{__static_salt}" width="4" height="21"></td>
-					<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
-				</tr></table></td>				
-				
-				<td width="20px" align="right">&nbsp;</td></tr>
-			</table>
-
+$auth_toolbar
 		</td>
 
 	</tr>
@@ -3321,7 +3303,7 @@ EOH
 	
 		<td align=center valign=middle>
 
-			<table border="0" cellpadding="4" cellspacing="1" width="470" height="225" bgcolor="#EAEAF0" class="logon">
+			<table border="0" cellpadding="4" cellspacing="1" width="470" height="225" class="logon">
 				<tr><td class="login-head">$i18n->{authorization}</td></tr>
 				<tr>
 					<td bgcolor="#F9F9FF" align="center" style="border-bottom:solid 1px #9AA0A3; height:150px;">
@@ -3345,7 +3327,7 @@ EOH
 					</td>
 				</tr>
 				<tr>
-					<td class="submit-area">						
+					<td class="submit-area">
 						<div class="grey-submit">
 							<div style="float:left;margin-top:5px;"><a href="#"><img src="$_REQUEST{__static_url}/i_logon.gif?$_REQUEST{__static_salt}" border="0" align="left" hspace="5"></a><a href="javascript:document.forms['form'].submit()">$i18n->{execute_logon}</a></div>
 							<div style="float:right;"><img src="$_REQUEST{__static_url}/grey_ear_right.gif?$_REQUEST{__static_salt}" border="0"></div>
@@ -3403,7 +3385,7 @@ sub draw_tree {
 				-value	=> $node -> {id},
 			);
 		}
-       		
+
 		$idx {$node -> {id}} = $node;
 		$lch {$node -> {pid}} = $node if $node -> {pid};
 		$menus .= $i -> {__menu};
@@ -3411,9 +3393,9 @@ sub draw_tree {
 	}
 	
 	unless ($selected_node_url) {
-    		$options -> {selected_node} = $root_id;
-    		$selected_node_url = $options -> {url_base} . $root_url;             	 
-  	}
+		$options -> {selected_node} = $root_id;
+		$selected_node_url = $options -> {url_base} . $root_url;             	 
+	}
 	
 	while (my ($k, $v) = each %lch) {
 		$idx {$k} -> {_hc} = 1;
@@ -3439,10 +3421,10 @@ sub draw_tree {
 			function load () {
 			
 				var new_nodes = $nodes;
-				for (i = 0; i < new_nodes.length; i++) {		
-					var node = new_nodes [i];		
-					if (node.title) continue;			
-					node.title = node.label;		
+				for (i = 0; i < new_nodes.length; i++) {
+					var node = new_nodes [i];
+					if (node.title) continue;
+					node.title = node.label;
 				}
 				var m = $m;
 				var f = window.parent.parent.document.getElementById ('__tree_iframe');
@@ -3465,7 +3447,7 @@ sub draw_tree {
 				};
 
 				var k = 0;
-				var nodes = [];			
+				var nodes = [];
 
 				for (i = 0;     i <= n;               i ++) nodes [k++] = old_nodes [i];
 				for (i = 0;     i < new_nodes.length; i ++) nodes [k++] = new_nodes [i];
@@ -3495,11 +3477,12 @@ EOH
 	$menus =~ s/\"/\\"/gsm;  #"
 	
 	$options -> {active} += 0;
+	$options -> {name} ||= '_content_iframe';
 	
 	if ($_COOKIE {"co_$_REQUEST{type}"}) {
 
 		&{$_PACKAGE . 'set_cookie_for_root'} ("co_$_REQUEST{type}" => $_COOKIE {"co_$_REQUEST{type}"});
-		
+
 	}
 
 	$_REQUEST {__only_tree_frameset} = 1;
@@ -3511,17 +3494,17 @@ EOH
 		win.d._cookie_name = '$_REQUEST{type}';
 		var c = win.d.config;
 		c.iconPath = '$_REQUEST{__static_url}/tree_';
-		c.target = '_content_iframe';
+		c.target = '$options->{name}';
 		c.useStatusText = true;
 		c.useCookies = true;
 		win.d.icon.node = 'folderopen.gif';
 		
 		var nodes = $nodes;
 		
-		for (i = 0; i < nodes.length; i++) {		
-			var node = nodes [i];		
-			if (node.title) continue;			
-			node.title = node.label;		
+		for (i = 0; i < nodes.length; i++) {
+			var node = nodes [i];
+			if (node.title) continue;
+			node.title = node.label;
 		}
 		
 		win.d.aNodes = nodes;
@@ -3530,25 +3513,38 @@ EOH
 		win.d._href = '$options->{href}';
 		$selected_code
 		var styleNode = win.document.createElement("STYLE");
-    		styleNode.type = "text/css";
-	        win.document.body.appendChild(styleNode);
-    		win.document.styleSheets[0].addRule('td.vert-menu', "background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;");
+		styleNode.type = "text/css";
+		win.document.body.appendChild(styleNode);
+		win.document.styleSheets[0].addRule('td.vert-menu', "background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;");
 
 		win.document.body.innerHTML = "<table class=dtree width=100% height=100% celspacing=0 cellpadding=0 border=0><tr><td id='dtree_td' valign=top>" + win.d + "</td></tr></table><div id='dtree_menus'>$menus</div>";
-@{[ $options->{selected_node} ? <<EOO : '' ]}		
+@{[ $options->{selected_node} ? <<EOO : '' ]}
 		if (win.d.selectedNode == null || win.d.selectedFound) {
 			win.d.openTo ($options->{selected_node}, true);
 		}
 EOO
 EOH
 
-	return qq {<frameset cols="$options->{width},*">
+	my $frameset = qq {<frameset cols="$options->{width},*">
 		<frame src="$ENV{SCRIPT_URI}/i/_skins/TurboMilk/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
 		</frame>
-		<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="_content_iframe" id="__content_iframe" application="yes" scroll=no>
+		<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="$options->{name}" id="__content_iframe" application="yes" scroll=no>
 		</frame>
 	</frameset>};
 
+	if ($options -> {top}) {
+
+		$frameset = <<EOH;
+			<frameset rows="$options->{top}->{height},*">
+				<frame src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" application="yes" noresize scrolling=no>
+				</frame>
+				$frameset
+			</frameset>
+EOH
+
+	}
+
+	return $frameset;
 }
 
 ################################################################################
@@ -3560,10 +3556,10 @@ sub draw_node {
 	$options -> {label} =~ s{\"}{\&quot;}gsm; #"
 
 	my $node = {
-		id   => $options -> {id}, 
-		pid  => $options -> {parent}, 
-		name => $options -> {label}, 
-		url  => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
+		id      => $options -> {id},
+		pid     => $options -> {parent},
+		name    => $options -> {label}, 
+		url     => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
 		title   => $options -> {title} || $options -> {label},
 	};
 	
@@ -3574,7 +3570,7 @@ sub draw_node {
 	}
 
 	if ($i -> {cnt_children} > 0) {
-		$node -> {_hc}  = 1;	
+		$node -> {_hc}  = 1;
 		$node -> {_hac} = 0 + $i -> {cnt_actual_children};	
 		$node -> {_io}  = $i -> {id} == $_REQUEST {__parent} ? 1 : 0;
 	}
@@ -3609,7 +3605,7 @@ sub dialog_close {
 			function load () {
 				var a = $a;
 				if (a.alert) alert (a.alert);
-				var w = window.parent.parent;		
+				var w = window.parent.parent;
 				w.returnValue = a.result;
 				w.close ();
 			}

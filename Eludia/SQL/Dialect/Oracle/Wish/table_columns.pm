@@ -69,6 +69,8 @@ sub wish_to_clarify_demands_for_table_columns {
 	
 		$i -> {COLUMN_SIZE}    ||= 22;
 		
+		$i -> {COLUMN_SIZE_}   = $i -> {COLUMN_SIZE};
+		
 		$i -> {DECIMAL_DIGITS} ||= 0;
 				
 	}
@@ -106,7 +108,6 @@ sub wish_to_clarify_demands_for_table_columns {
 
 	exists $i -> {COLUMN_DEF} or $i -> {COLUMN_DEF} = undef;
 	
-
 }
 
 ################################################################################
@@ -134,18 +135,22 @@ sub wish_to_explore_existing_table_columns {
 		}, 
 		
 		sub {
-		
+
 			my $name = lc $i -> {column_name};
-
-			$i -> {data_default} =~ s{\s+$}{}gsm;
-
-			if ($i -> {data_default} =~ /\'(.*)\'/sm) {
 			
-				$i -> {data_default} = $1;				
+			if (defined $i -> {data_default}) { 
+
+				$i -> {data_default} =~ s{\s+$}{}gsm;
+
+				if ($i -> {data_default} =~ /\'(.*)\'/sm) {
+
+					$i -> {data_default} = $1;				
+
+				}
+
+				$i -> {data_default} = undef if $i -> {data_default} eq 'NULL';
 			
 			}
-			
-			$i -> {data_default} = undef if $i -> {data_default} eq 'NULL';
 			
 			$existing -> {$name} = my $def = {
 			
@@ -164,7 +169,13 @@ sub wish_to_explore_existing_table_columns {
 			if ($i -> {data_type} eq 'NUMBER') {
 			
 				$def -> {COLUMN_SIZE}    = $i -> {data_precision} || 22;
+				$def -> {COLUMN_SIZE_}   = $i -> {data_precision};
 				$def -> {DECIMAL_DIGITS} = $i -> {data_scale}     || 0;
+			
+			}
+			elsif ($i -> {data_type} eq 'RAW') {
+			
+				$def -> {COLUMN_SIZE}    = $i -> {data_length};
 			
 			}
 			elsif ($i -> {data_type} =~ /VARCHAR2$/) {
@@ -234,13 +245,13 @@ sub __genereate_sql_fragment_for_column {
 		$i -> {SQL} .= " DEFAULT $i->{COLUMN_DEF}";
 	
 	}
-	else {
+	elsif ($i -> {NULLABLE}) {
 
 		$i -> {SQL} .= " DEFAULT NULL";
 
 	}
 	
-	%$i = map {$_ => $i -> {$_}} qw (name SQL REMARKS NULLABLE TYPE_NAME);
+	%$i = map {$_ => $i -> {$_}} qw (name SQL REMARKS NULLABLE TYPE_NAME COLUMN_SIZE_);
 
 }
 
@@ -270,6 +281,15 @@ sub wish_to_update_demands_for_table_columns {
 
 	}
 
+	if ($old -> {TYPE_NAME} eq 'NUMBER' && $new -> {TYPE_NAME} eq 'NUMBER') {
+
+		$new -> {COLUMN_SIZE_} = $new -> {COLUMN_SIZE};
+
+		$old -> {COLUMN_SIZE_} = $old -> {COLUMN_SIZE}
+			unless $new -> {NULLABLE};
+
+	}
+
 	__genereate_sql_fragment_for_column ($_) foreach ($old, $new);
 
 }
@@ -292,7 +312,11 @@ sub wish_to_schedule_modifications_for_table_columns {
 	
 	if (
 
-		($old -> {TYPE_NAME} ne $new -> {TYPE_NAME}) and ($old -> {TYPE_NAME} . $new -> {TYPE_NAME} =~ /(CHAR|LOB)/)
+		(($old -> {TYPE_NAME} ne $new -> {TYPE_NAME}) and ($old -> {TYPE_NAME} . $new -> {TYPE_NAME} =~ /(CHAR|LOB)/))
+		
+		||
+		
+		($old -> {TYPE_NAME} eq 'NUMBER' && $new -> {TYPE_NAME} eq 'NUMBER' && !$old -> {COLUMN_SIZE_})
 
 	) {
 	

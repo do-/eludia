@@ -110,6 +110,11 @@ sub wish_to_explore_existing_table_columns {
 				$def -> {DECIMAL_DIGITS} = $i -> {numeric_scale};
 			
 			}
+			elsif ($def -> {TYPE_NAME} eq 'VARBINARY') {
+			
+				$def -> {COLUMN_DEF}     = $i -> {character_maximum_length};
+			
+			}
 			elsif ($def -> {TYPE_NAME} =~ /CHAR$/) {
 			
 				$def -> {COLUMN_SIZE}    = $i -> {character_maximum_length};
