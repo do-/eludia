@@ -26,7 +26,7 @@ sub js_im {
 	
 	if ($options -> {session}) {
 	
-		$options -> {session} = Digest::MD5::md5_hex (sql_select_scalar ('SELECT id FROM sessions WHERE id_user = ?', $id_user));
+		$options -> {session} = Digest::MD5::md5_hex (sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE id_user = ?", $id_user));
 	
 	}
 	

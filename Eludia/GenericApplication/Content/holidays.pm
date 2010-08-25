@@ -2,7 +2,7 @@
 
 sub do_switch_holidays {
 
-	my $is_holiday = sql_select_scalar ('SELECT id FROM holidays WHERE dt = ? AND fake = 0', $_REQUEST {dt}) ? 1 : 0;
+	my $is_holiday = sql_select_scalar ("SELECT id FROM $conf -> {systables} -> {holidays} WHERE dt = ? AND fake = 0", $_REQUEST {dt}) ? 1 : 0;
 
 	sql_do (
 			
