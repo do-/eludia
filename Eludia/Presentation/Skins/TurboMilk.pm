@@ -1079,6 +1079,11 @@ sub draw_form_field_select {
 	$options -> {attributes} ||= {};
 	$options -> {id}         ||= "_$options->{name}_select";
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
+	
+	if ($options -> {mandatory} && @{$options -> {values}} == 0 && defined ($options -> {empty}) && defined ($options -> {other})) {
+		$options -> {attributes} -> {onClick} .= ";if (this.length == 2) {this.selectedIndex=1; this.onchange();}";
+	}
+	
 	my $attributes = dump_attributes ($options -> {attributes});
 	
 	if (defined $options -> {other}) {
@@ -1093,6 +1098,9 @@ sub draw_form_field_select {
 			$options -> {onChange} .= <<EOJS;
 
 				if (this.options[this.selectedIndex].value == -1) {
+
+					if (\$.browser.webkit || \$.browser.safari)
+						\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
 
 					var dialog_width = $options->{other}->{width};
 					var dialog_height = $options->{other}->{height};
@@ -1118,7 +1126,9 @@ sub draw_form_field_select {
 						this.selectedIndex = 0;
 						
 					}
-					
+
+					if (\$.browser.webkit || \$.browser.safari)
+						\$.unblockUI ();
 					
 				}
 EOJS
@@ -1130,11 +1140,14 @@ EOJS
 
 					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
 
+						if (\$.browser.webkit || \$.browser.safari)
+							\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
+
 						var dialog_width = $options->{other}->{width};
 						var dialog_height = $options->{other}->{height};
 
 						try {
-	
+
 							var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 						
 							focus ();
@@ -1154,6 +1167,9 @@ EOJS
 							this.selectedIndex = 0;
 							
 						}
+
+						if (\$.browser.webkit || \$.browser.safari)
+							\$.unblockUI ();
 					}
 				}
 EOJS
@@ -1165,9 +1181,10 @@ EOJS
 			name="_$$options{name}"
 			id="$$options{id}"
 			$attributes
-			onKeyDown="tabOnEnter()"
+			onKeyDown="tabOnEnter();"
 			onChange="is_dirty=true; $$options{onChange}" 
-			onKeyPress="typeAhead(0)" 
+			onKeyPress="typeAhead(0);" 
+			onKeyUp="var keyCode = event.keyCode || event.which; if (keyCode == 38 || keyCode == 40) this.onchange();"
 		>
 EOH
 		
@@ -1230,8 +1247,14 @@ sub draw_form_field_string_voc {
 
 			var q = encode1251(document.getElementById('${options}_label').value);
 
+			if (\$.browser.webkit || \$.browser.safari)
+				\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
+
 			var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&$options->{other}->{param}=' + q + '&select=$options->{name}&$options->{other}->{cgi_tail}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-			
+
+			if (\$.browser.webkit || \$.browser.safari)
+				\$.unblockUI ();
+
 			focus ();
 			
 			if (result.result == 'ok') {
@@ -1469,7 +1492,11 @@ EOH
 	
 		$html .= <<EOH;
 			onClick="
+				if (\$.browser.webkit || \$.browser.safari)
+					\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
 				var color = showModalDialog('$_REQUEST{__static_url}/colors.html?$_REQUEST{__static_salt}', window, 'dialogWidth:600px;dialogHeight:400px;help:no;scroll:no;status:no');
+				if (\$.browser.webkit || \$.browser.safari)
+					\$.unblockUI ();
 				getElementById('td_color_$$options{name}').style.background = color;
 				getElementById('input_color_$$options{name}').value = color.substr (1);
 			"
@@ -1872,7 +1899,10 @@ sub draw_toolbar_input_select {
 
 				if (this.options[this.selectedIndex].value == -1) {
 
-					var dialog_width = $options->{other}->{width};
+					if (\$.browser.webkit || \$.browser.safari)
+						\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
+
+							var dialog_width = $options->{other}->{width};
 					var dialog_height = $options->{other}->{height};
 
 					try {
@@ -1890,7 +1920,10 @@ sub draw_toolbar_input_select {
 					} catch (e) {
 							this.selectedIndex = 0;
 					}
-					
+
+					if (\$.browser.webkit || \$.browser.safari)
+						\$.unblockUI ();
+
 				} else {
   				submit ();
         }
@@ -1902,6 +1935,9 @@ EOJS
 				if (this.options[this.selectedIndex].value == -1) {
 
 					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+
+						if (\$.browser.webkit || \$.browser.safari)
+							\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
 
 						try {
 
@@ -1921,7 +1957,10 @@ EOJS
 						} catch (e) {
 							this.selectedIndex = 0;
 						}
-					
+
+						if (\$.browser.webkit || \$.browser.safari)
+							\$.unblockUI ();
+
 					} else {
 
 						this.selectedIndex = 0;
@@ -2566,8 +2605,14 @@ sub draw_string_voc_cell {
 			
 			var q = encode1251(document.getElementById('$$data{name}_label').value);
 			
+			if (\$.browser.webkit || \$.browser.safari)
+				\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
+
 			var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$data->{other}->{href}&$data->{other}->{param}=' + q + '&select=$data->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-			
+
+			if (\$.browser.webkit || \$.browser.safari)
+				\$.unblockUI ();
+
 			focus ();
 			
 			if (result.result == 'ok') {						
@@ -2967,6 +3012,9 @@ sub draw_page {
 
 	} 
 	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
+
+		$_REQUEST {__head_links} .= qq |<script src="$_REQUEST{__static_url}/jquery.blockUI.js?$_REQUEST{__static_salt}"></script>|
+			if $r -> headers_in -> {'User-Agent'} =~ /webkit/i;
 
 		$body .= qq {
 			<div style='display:none'>$_REQUEST{__menu_links}</div>
@@ -3666,7 +3714,7 @@ sub dialog_open {
 	my $url = $ENV{SCRIPT_URI} . '/i/_skins/TurboMilk/dialog.html?';
 	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
 	
-	return "javaScript:dialog_open_$options->{id}.href = dialog_open_$options->{id}.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, ''); dialog_open_$options->{id}.href += '&_salt=' + Math.random (); var result=window.showModalDialog('$url' + Math.random (), dialog_open_$options->{id}, '$o' + ';dialogWidth=' + dialog_open_$options->{id}_width + 'px;dialogHeight=' + dialog_open_$options->{id}_height + 'px');document.body.style.cursor='default';void(0);";
+	return "javaScript:dialog_open_$options->{id}.href = dialog_open_$options->{id}.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, ''); dialog_open_$options->{id}.href += '&_salt=' + Math.random (); if (\$.browser.webkit || \$.browser.safari) \$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'}); var result=window.showModalDialog('$url' + Math.random (), dialog_open_$options->{id}, '$o' + ';dialogWidth=' + dialog_open_$options->{id}_width + 'px;dialogHeight=' + dialog_open_$options->{id}_height + 'px'); if (\$.browser.webkit || \$.browser.safari) \$.unblockUI ();document.body.style.cursor='default';void(0);";
 
 }
 
