@@ -1057,7 +1057,7 @@ sub sql {
 
 				$sql_cnt = mysql_to_oracle ($sql_cnt) if $conf -> {core_auto_oracle};
 
-				my $st = sql_execute ($sql_cnt, @params);
+				$st = sql_execute ($sql_cnt, @params);
 
 				my ($cnt) = $st -> fetchrow_array;
 				

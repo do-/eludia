@@ -755,12 +755,48 @@ sub sql_do_update {
 sub sql_increment_sequence {
 
 	my ($seq_name, $step) = @_;
-	
-	sql_do            ("ALTER SEQUENCE $seq_name INCREMENT BY $step");
+
+	sql_do            ("ALTER SEQUENCE $seq_name NOCACHE INCREMENT BY $step");
 	my $id = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
-	sql_do            ("ALTER SEQUENCE $seq_name INCREMENT BY 1");
-	
+	sql_do            ("ALTER SEQUENCE $seq_name NOCACHE INCREMENT BY 1");
+
 	return $id;
+
+}
+
+################################################################################
+
+sub sql_seq_name_nextval {
+
+	my ($table_name) = @_;
+
+	my $table_name_safe = sql_table_name ($table_name);
+
+	my $seq_name = $_SEQUENCE_NAMES -> {$table_name} ||= sql_select_scalar (q {
+	
+		SELECT 
+			trigger_body 
+		FROM 
+			user_triggers 
+		WHERE 
+			table_name = ? 
+			AND triggering_event like '%INSERT%'
+			
+	}, uc_table_name ($table_name)) =~ /(\S+)\.nextval/ism ? $1 : undef;
+	
+	my $nextval = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
+		
+	while (1) {
+	
+		my $max = sql_select_scalar ("SELECT MAX(id) FROM $table_name_safe");
+		
+		last if $nextval > $max;
+		
+		$nextval = sql_increment_sequence ($seq_name, $max + 1 - $nextval);
+	
+	}
+
+	return ($seq_name, $nextval);
 
 }
 
@@ -807,29 +843,7 @@ EOS
 
 	}
 	
-	my $seq_name = $_SEQUENCE_NAMES -> {$table_name} ||= sql_select_scalar (q {
-	
-		SELECT 
-			trigger_body 
-		FROM 
-			user_triggers 
-		WHERE 
-			table_name = ? 
-			AND triggering_event like '%INSERT%'
-			
-	}, uc_table_name ($table_name)) =~ /(\S+)\.nextval/ism ? $1 : undef;
-	
-	my $nextval = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
-		
-	while (1) {
-	
-		my $max = sql_select_scalar ("SELECT MAX(id) FROM $table_name_safe");
-		
-		last if $nextval > $max;
-		
-		$nextval = sql_increment_sequence ($seq_name, $max + 1 - $nextval);
-	
-	}
+	my ($seq_name, $nextval) = sql_seq_name_nextval ($table_name);
 
 	if ($pairs -> {id}) {
 		

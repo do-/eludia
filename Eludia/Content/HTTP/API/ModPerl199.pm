@@ -55,7 +55,7 @@ BEGIN {
 
 	$ENV {PERL_JSON_BACKEND} = 'JSON::PP';		
 
-	print STDERR "Apache::RequestRec $Apache::RequestRec::VERSION, ok.\n";
+	loading_log "Apache::RequestRec $Apache::RequestRec::VERSION, ok.\n";
 
 }
 

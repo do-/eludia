@@ -135,18 +135,22 @@ sub wish_to_explore_existing_table_columns {
 		}, 
 		
 		sub {
-		
+
 			my $name = lc $i -> {column_name};
-
-			$i -> {data_default} =~ s{\s+$}{}gsm;
-
-			if ($i -> {data_default} =~ /\'(.*)\'/sm) {
 			
-				$i -> {data_default} = $1;				
+			if (defined $i -> {data_default}) { 
+
+				$i -> {data_default} =~ s{\s+$}{}gsm;
+
+				if ($i -> {data_default} =~ /\'(.*)\'/sm) {
+
+					$i -> {data_default} = $1;				
+
+				}
+
+				$i -> {data_default} = undef if $i -> {data_default} eq 'NULL';
 			
 			}
-			
-			$i -> {data_default} = undef if $i -> {data_default} eq 'NULL';
 			
 			$existing -> {$name} = my $def = {
 			
