@@ -8,7 +8,7 @@ BODY {
 }
 
 FORM {
-	margin-bottom: 0px;
+	margin: 0px;
 }
 
 .tbbg0 {background-color: #b9c5d7;}
