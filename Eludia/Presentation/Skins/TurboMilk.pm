@@ -367,6 +367,8 @@ sub _draw_input_datetime {
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
 	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
+
+	$options -> {attributes} -> {class} ||= 'form-active-inputs';
 	
 	my $attributes = dump_attributes ($options -> {attributes});
 			
