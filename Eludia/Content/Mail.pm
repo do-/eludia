@@ -216,7 +216,19 @@ sub send_mail {
 	$time = __log ($time, " $signature: connected to $preconf->{mail}->{host}, ready to send mail");
 
 	$smtp -> mail ($options -> {from} -> {address});
-	$smtp -> to (@to, {Notify => ['NEVER'], SkipBad => 1});
+	
+	foreach my $to (@to) {
+			
+		next if $smtp -> recipient ($to, {Notify => ['FAILURE', 'DELAY'], SkipBad => 0});
+		
+		$smtp -> quit;
+		
+		$SIG {__DIE__} = 'DEFAULT';
+		
+		die ("The mail address '$to' is rejected by the SMTP server $preconf->{mail}->{host}\n");
+	
+	}
+
 	$smtp -> data ();
 
 		##### sending main message

@@ -69,7 +69,7 @@ warn "NTLM user is '$m->{user}->{data_oem}'\n";
 
 		$f =~ /[À-ß¨]/ or next;
 
-		$id_user ||= sql_select_scalar ('SELECT users.id FROM nt_logins LEFT JOIN users ON nt_logins.id_user = users.id WHERE nt_logins.label = ?', $entry -> get_value ('uid'));
+		$id_user ||= sql_select_scalar ("SELECT $conf->{systables}->{users}.id FROM nt_logins LEFT JOIN $conf->{systables}->{users} ON nt_logins.id_user = $conf->{systables}->{users}.id WHERE nt_logins.label = ?", $entry -> get_value ('uid'));
 
 	}
 	

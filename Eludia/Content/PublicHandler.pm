@@ -79,7 +79,7 @@ sub pub_handler {
 		my $use_gzip = $preconf -> {core_gzip} && ($r -> headers_in -> {'Accept-Encoding'} =~ /gzip/);
 
 #		my $field = $use_gzip ? 'gzipped' : 'html';
-#		my $html = sql_select_scalar ("SELECT $field FROM cache_html WHERE uri = ?", $cache_key);
+#		my $html = sql_select_scalar ("SELECT $field FROM $conf->{systables}->{cache_html} WHERE uri = ?", $cache_key);
 
 		my $cache_fn_to_read = $cache_fn;
 		if ($use_gzip) {
