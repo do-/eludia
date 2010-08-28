@@ -2897,11 +2897,8 @@ Calendar.prototype.hideShowCovered = function () {
 			var value = obj.style.visibility;
 			if (!value) {
 				if (document.defaultView && typeof (document.defaultView.getComputedStyle) == "function") { // Gecko, W3C
-					if (!Calendar.is_khtml)
-						value = document.defaultView.
-							getComputedStyle(obj, "").getPropertyValue("visibility");
-					else
-						value = '';
+					value = document.defaultView.
+						getComputedStyle(obj, "").getPropertyValue("visibility");
 				} else if (obj.currentStyle) { // IE
 					value = obj.currentStyle.visibility;
 				} else

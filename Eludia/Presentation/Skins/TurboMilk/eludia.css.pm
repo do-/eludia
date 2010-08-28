@@ -8,7 +8,7 @@ BODY {
 }
 
 FORM {
-	margin-bottom: 0px;
+	margin: 0px;
 }
 
 .tbbg0 {background-color: #b9c5d7;}
@@ -904,11 +904,7 @@ INPUT {
 	FONT-SIZE: 8pt; 
 	COLOR: #000000; 
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';  
-	border-bottom: 2px ridge; 
-	border-right: 2px ridge; 
-	border-top: 2px inset; 
-	border-left: 2px inset;
-	padding-left: 1px;
+	border: solid 1px #d6d3ce;
 }
 
 .cbx {
