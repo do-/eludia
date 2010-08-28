@@ -59,7 +59,23 @@ sub sql_version {
 
 ################################################################################
 
-sub sql_ping { 1 }
+sub sql_ping {
+
+	my $r;
+
+	eval {
+	
+		my $st = $db -> prepare ('SELECT 1 FROM DUAL');
+		
+		$st -> execute;
+		
+		$r = $st -> fetchrow_arrayref;
+	
+	};
+	
+	return @$r == 1 && $r -> [0] == 1 ? 1 : 0;
+
+}
 
 ################################################################################
 
@@ -1233,6 +1249,7 @@ for(my $i = $#items; $i >= 1; $i--) {
 	$items[$i] =~ s/\bIFNULL(\(.*?\))/NVL\1/igsm;
 	$items[$i] =~ s/\bFLOOR(\(.*?\))/CEIL\1/igsm;
 	$items[$i] =~ s/\bCONCAT\((.*?)\)/join('||',split(',',$1))/iegsm;
+	$items[$i] =~ s/\bSUBSTRING(\(.*?\))/SUBSTR\1/igsm;
 	$items[$i] =~ s/\bLEFT\((.+?),(.+?)\)/SUBSTR\(\1,1,\2\)/igsm;
 	$items[$i] =~ s/\bRIGHT\((.+?),(.+?)\)/SUBSTR\(\1,LENGTH\(\1\)-\(\2\)+1,LENGTH\(\1\)\)/igsm;
 	if ($model_update -> {characterset} =~ /UTF/i) {

@@ -32,7 +32,7 @@ sub session_access_logs_purge {
 	
 	closedir (DIR);
 	
-	sql_select_loop ('SELECT id FROM sessions', sub {
+	sql_select_loop ("SELECT id FROM $conf->{systables}->{sessions}", sub {
 	
 		delete $session {$i -> {id}};
 		

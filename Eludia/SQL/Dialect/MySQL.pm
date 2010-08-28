@@ -452,6 +452,8 @@ sub sql_select_scalar {
 			
 	}
 
+	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
+
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
 	my @result = $st -> fetchrow_array ();
@@ -813,6 +815,8 @@ sub sql_select_loop {
 
 	my ($sql, $coderef, @params) = @_;
 	$sql =~ s{^\s+}{};
+
+	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);

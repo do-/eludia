@@ -56,9 +56,9 @@ sub db_require_configuration {
 
 sub db_load {
 
-	db_require_configuration ();
-	
-	sql_import_json (STDIN);
+	my $p = db_require_configuration ();	
+
+	&{"${p}::sql_import_json"} (STDIN);
 
 }
 
@@ -66,8 +66,8 @@ sub db_load {
 
 sub db_dump {
 
-	db_require_configuration ();
-	
+	my $p = db_require_configuration ();
+
 	my %needed = ();
 	
 	my %banned = ();
@@ -113,9 +113,9 @@ sub db_dump {
 	
 	foreach my $table (sort keys %needed) { 
 	
-		sql_export_json ("DESCRIBE $table",      STDOUT);
+		&{"${p}::sql_export_json"} ("DESCRIBE $table",      STDOUT);
 
-		sql_export_json ("SELECT * FROM $table", STDOUT);
+		&{"${p}::sql_export_json"} ("SELECT * FROM $table", STDOUT);
 	
 	}
 
