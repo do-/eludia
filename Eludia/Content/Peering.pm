@@ -15,7 +15,7 @@ sub check_peer_server {
 
 	my $local_sid = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE peer_id = ? AND peer_server = ?", $_REQUEST {sid}, $peer_server);
 	if ($local_sid) {
-		sql_do ("UPDATE sessions SET peer_id = ? WHERE id = ?", $_REQUEST {sid}, $local_sid);
+		sql_do ("UPDATE $conf->{systables}->{sessions} SET peer_id = ? WHERE id = ?", $_REQUEST {sid}, $local_sid);
 		$_REQUEST {sid} = $local_sid;
 	        return $peer_server;
 	}

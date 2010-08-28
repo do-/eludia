@@ -1249,6 +1249,7 @@ for(my $i = $#items; $i >= 1; $i--) {
 	$items[$i] =~ s/\bIFNULL(\(.*?\))/NVL\1/igsm;
 	$items[$i] =~ s/\bFLOOR(\(.*?\))/CEIL\1/igsm;
 	$items[$i] =~ s/\bCONCAT\((.*?)\)/join('||',split(',',$1))/iegsm;
+	$items[$i] =~ s/\bSUBSTRING(\(.*?\))/SUBSTR\1/igsm;
 	$items[$i] =~ s/\bLEFT\((.+?),(.+?)\)/SUBSTR\(\1,1,\2\)/igsm;
 	$items[$i] =~ s/\bRIGHT\((.+?),(.+?)\)/SUBSTR\(\1,LENGTH\(\1\)-\(\2\)+1,LENGTH\(\1\)\)/igsm;
 	if ($model_update -> {characterset} =~ /UTF/i) {
