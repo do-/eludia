@@ -230,32 +230,41 @@ sub decode_entities {
 	require File::Copy;
 	
 	my $encoding = $ARGV [1] || 'cp1251';
+	
+	my $fn = ($^O eq 'MSWin32' ? 'c:' : '/tmp') . '/decode_entities';
+	
+	-f $ARGV [0] or die "File not found: $ARGV[0]\n";
 
 	open (I, $ARGV [0]) or die ("Can't open $ARGV[0]:$!\n");
-	open (O, '>/tmp/decode_entities') or die ("Can't write to /tmp/decode_entities:$!\n");
+	open (O, ">$fn") or die ("Can't write to $fn:$!\n");
 
 	binmode (I, ":encoding($encoding)");
 	binmode (O, ":encoding($encoding)");
 
 	my $s = '';
-
+		
 	while (my $line = <I>) {
 
-	    if ($line =~ s{\=[\r\n]*$}{}) {
-		$s .= $line;
-		next;
-	    }
+		if ($line =~ s{\=[\r\n]*$}{}) {
+			$s .= $line;
+			next;
+		}
+	    
+		$line = HTML::Entities::decode_entities ($s . $line);
+	    
+		$line =~ s{\$([A-Z]{1,2})\$(\d{1,5})}{&#36;$1&#36;$2}g;
+		$line =~ s{\$(\d{1,5})}{&#36;$1}g;
 
-	    print O decode_entities ($s . $line);
+		print O $line;
 
-	    $s = '';
+		$s = '';
 
 	}
 
 	close (O);
 	close (I);
 
-	move ('/tmp/decode_entities', $ARGV [0]);
+	move ($fn, $ARGV [0]);
 
 }
 
