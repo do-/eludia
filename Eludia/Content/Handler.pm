@@ -741,7 +741,7 @@ sub recalculate_logon {
 	
 		set_cookie_for_root (user_login => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}));
 
-		my ($fieds, @params);
+		my ($fields, @params);
 
 		$fields = 'ip = ?, ip_fw = ?';
 		push (@params, $ENV {REMOTE_ADDR}, $ENV {HTTP_X_FORWARDED_FOR});
@@ -761,7 +761,7 @@ sub recalculate_logon {
 			push (@params, $_COOKIE {client_cookie});
 		}
 
-		sql_do ("UPDATE sessions SET $fields WHERE id = ?", @params, $_REQUEST {sid});
+		sql_do ("UPDATE $conf->{systables}->{sessions} SET $fields WHERE id = ?", @params, $_REQUEST {sid});
 
 		session_access_logs_purge ();
 		
