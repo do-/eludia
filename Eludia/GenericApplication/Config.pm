@@ -5,10 +5,12 @@ sub get_page {}
 #############################################################################
 
 sub fake_select {
-	
+
+	my ($options) = @_;
+
 	return {
 		type    => 'input_select',
-		name    => 'fake',
+		name    => $options -> {name} || 'fake',
 		values  => [
 			{id => '0,-1', label => 'Все'},
 			{id => '-1', label => 'Удалённые'},
