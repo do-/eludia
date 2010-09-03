@@ -1372,11 +1372,36 @@ while ($sql =~ m/\bCASE\s+(.*?WHEN\s+.*?THEN\s+.*?ELSE\s+.*?END)/ism) {
 $new_sql .= $sql;
 $sql = $new_sql;
 
+if ($conf -> {core_auto_oracle_split_ids}) {
+	# Режем длинные списки IN по 999 штук 
+	$sql =~ s/([\w\.]+)\s+(N?O?T?)\s*IN\s*\(([\d\,\-\s]+)\)/@{[ split_ids ($1, $3, $2) ]}/igsm;
+}
+
 #warn "ORACLE OUT: <$sql>\n";
 
 $mysql_to_oracle_cache -> {$src_sql} = $sql if ($src_sql !~ /\bIF\((.+?),(.+?),(.+?)\)/igsm);
 
-return $sql;	
+return $sql;
+
+}
+
+################################################################################
+
+sub split_ids {
+
+	my ($field, $ids, $not) = @_;
+
+	my @ids = split /,/, $ids;
+
+	my $sql = '';
+
+	while (@ids) {
+		my $ids1 = join ',', grep {$_ != 0} map {$_ += 0} (splice (@ids, 0, 999));
+		$sql .= $not ? ' AND ' : ' OR ' if ($sql);
+		$sql .= "$field $not IN ($ids1)";
+	}
+
+	return "($sql)";
 
 }
 
