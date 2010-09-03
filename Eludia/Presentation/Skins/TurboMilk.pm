@@ -2705,7 +2705,7 @@ sub draw_table_header_cell {
 	if (($cell -> {order} || $cell -> {href} =~ /\border=/) && !$conf -> {core_no_order_arrows}) {
 		$cell -> {label} = "<nobr><img src='$_REQUEST{__static_url}/order.gif' border=0 hspace=1 vspace=0 align=absmiddle>" . $cell -> {label} . "</nobr>";
 	}	
-	else {
+	elsif (!$cell -> {no_nbsp}) {
 		$cell -> {label} = '&nbsp;' . $cell -> {label};
 	}
 
@@ -2713,11 +2713,11 @@ sub draw_table_header_cell {
 		$cell -> {label} = "<a class=row-cell-header-a href=\"$$cell{href}\"><b>" . $cell -> {label} . "</b></a>";
 	}	
 
-	my $attributes = dump_attributes ($cell -> {attributes});
+	$cell -> {no_nbsp} or $cell -> {label} .= '&nbsp;';
 	
-	my $z_index = $cell -> {no_scroll} ? 'style="z-index:110"' : 'style="z-index:100"';
-
-	return "<th $attributes $$cell{title} $z_index>$$cell{label}\&nbsp;</th>";
+	$cell -> {attributes} -> {style} = 'z-index:' . ($cell -> {no_scroll} ? 110 : 100) . ';' . $cell -> {attributes} -> {style};
+	
+	dump_tag (th => $cell -> {attributes}, $cell -> {label});
 
 }
 

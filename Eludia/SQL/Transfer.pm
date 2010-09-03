@@ -229,6 +229,14 @@ sub sql_import_json {
 		
 		if (ref $r eq HASH) {
 		
+			foreach my $c (values %{$r -> {columns}}) {
+
+				exists $c -> {REMARKS} and $c -> {REMARKS} or next;
+
+				$c -> {REMARKS} = Encode::encode ('windows-1252', $c -> {REMARKS});
+
+			}
+		
 			$model_update -> assert (
 				
 				tables => {($table = $r -> {name}) => $r}, 

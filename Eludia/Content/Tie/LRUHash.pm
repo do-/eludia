@@ -46,7 +46,7 @@ sub STORE {
 	
 	$value or return undef;
 
-	if (%{$self -> {body}} >= $self -> {size}) {
+	if (keys %{$self -> {body}} >= $self -> {size}) {
 	
 		my $time = Time::HiRes::time ();
 	
