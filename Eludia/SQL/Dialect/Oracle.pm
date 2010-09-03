@@ -1412,7 +1412,7 @@ sub split_ids {
 	my $sql = '';
 
 	while (@ids) {
-		my $ids1 = join ',', grep {$_ != 0} map {$_ += 0} (splice (@ids, 0, 999));
+		my $ids1 = join ',', (splice (@ids, 0, 999));
 		$sql .= $not ? ' AND ' : ' OR ' if ($sql);
 		$sql .= "$field $not IN ($ids1)";
 	}
