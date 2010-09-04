@@ -115,6 +115,7 @@ function clone_form_tr_for_this_plus_icon (i) {
 	$(':input', tr_new).each (function () {
 
 		this.name += ('_' + n);
+		this.value = '';
 	
 	});
 
