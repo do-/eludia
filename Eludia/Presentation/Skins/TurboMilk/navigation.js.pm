@@ -75,7 +75,7 @@ function drop_form_tr_for_this_minus_icon (i) {
 function clone_form_tr_for_this_plus_icon (i) {
 
 	var tr_old = $(i).parent ().parent ();
-	
+
 	if (i.src.indexOf ('minus.gif') > -1) {
 	
 		tr_old.remove ();
@@ -102,6 +102,14 @@ function clone_form_tr_for_this_plus_icon (i) {
 
 	var tr_new = tr_old.clone ();
 	
+	$('img', tr_new).each (function () {
+	
+		var oldId = this.id;
+
+		this.id   += ('_' + n);
+
+	});
+
 	tr_new.attr ('id', id + '_' + n);
 	
 	var img = $('img:last', tr_new);
@@ -114,7 +122,9 @@ function clone_form_tr_for_this_plus_icon (i) {
 
 	$(':input', tr_new).each (function () {
 
+		this.id   += ('_' + n);
 		this.name += ('_' + n);
+		this.value = '';
 	
 	});
 
@@ -3077,8 +3087,10 @@ Calendar.setup = function (params) {
 	}
 
 	var triggerEl = params.button || params.displayArea || params.inputField;
-	triggerEl["on" + params.eventName] = function() {
-		var dateEl = params.inputField || params.displayArea;
+
+	$('img[id^=' + triggerEl.id + ']').live (params.eventName, function (event) {
+
+		var dateEl = event.target.previousSibling.previousSibling;
 		var dateFmt = params.inputField ? params.ifFormat : params.daFormat;
 		var mustCreate = false;
 		var cal = window.calendar;
@@ -3096,16 +3108,17 @@ Calendar.setup = function (params) {
 		}
 		cal.setRange(params.range[0], params.range[1]);
 		cal.params = params;
+		cal.params.inputField = dateEl;
 		cal.setDateStatusHandler(params.dateStatusFunc);
 		cal.setDateFormat(dateFmt);
 		if (mustCreate)
 			cal.create();
 		cal.parseDate(dateEl.value || dateEl.innerHTML);
 		cal.refresh();
-		cal.showAtElement(params.displayArea || params.inputField, params.align);
+		cal.showAtElement(dateEl, params.align);
 		return false;
-	};
-	
+	});
+
 };
 
 
