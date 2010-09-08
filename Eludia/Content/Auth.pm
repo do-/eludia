@@ -111,7 +111,7 @@ sub get_user_with_fixed_session {
 	
 	}
 	
-	if ($user -> {ip}) {
+	if ($user -> {ip} && !$preconf -> {core_no_ip_check}) {
 	
 		$user -> {ip}    eq $ENV {REMOTE_ADDR}          or return undef;
 		$user -> {ip_fw} eq $ENV {HTTP_X_FORWARDED_FOR} or return undef;
