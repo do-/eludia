@@ -105,7 +105,7 @@ sub stop_unix {
 
 	$options {-pid_to_stop} = pid_unix (%options);
 
-	if (!$pid) {
+	if (!$options {-pid_to_stop}) {
 
 		print STDERR "Can't open $options{-pidfile}.\n";
 
