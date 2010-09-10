@@ -10,13 +10,40 @@ sub draw_form_field_multi_select {
 	$label =~ s/<br>/ /g;
 	$label =~ s/\s+/ /g;
 
+	my $onChangeEvent = exists ($options -> {onChange}) && length ($options->{onChange}) > 0;
+	js <<EOJS if $_REQUEST {__script} !~ /function stringSetsEqual\s+/;
+		function stringSetsEqual (set1, set2) { // сравнивает множества id, представленные в виде строк через запятую
+			function IsID (input){
+				return (input - 0) == input && input.length > 0 && input != -1;
+			}
+			var set1Values = jQuery.grep (set1.split(','), IsID).sort ();
+			var set2Values = jQuery.grep (set2.split(','), IsID).sort ();
+			
+			var setsEqual = set1Values.length == set2Values.length;
+			for (var i = 0; set1Values[i] && setsEqual; i++) {
+				setsEqual = set1Values[i] === set2Values[i];
+			}
+			return setsEqual;
+		}
+EOJS
+	
 	my $url = dialog_open ({
 		href	=> $options -> {href} . '&multi_select=1',
 		title	=> $label,
 	}, {
 		dialogHeight	=> 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)',
 		dialogWidth	=> 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)',
-	}) . "if (result.result == 'ok') {document.getElementById ('ms_$options').innerHTML=result.label; document.form._$options->{name}.value=result.ids;";
+	}) . <<EOJS;
+		if (result.result == 'ok') {
+			document.getElementById ('ms_$options').innerHTML=result.label; 
+			var oldIds = document.form._$options->{name}.value;
+			document.form._$options->{name}.value = result.ids;
+		
+			debugger;
+			if ($onChangeEvent && !stringSetsEqual (oldIds, result.ids)) {
+				$options->{onChange};
+			}
+EOJS
 	
 	my $js_detail;
 	
@@ -91,7 +118,15 @@ EOJS
 				{
 					type	=> 'button',
 					value	=> 'Очистить',
-					onclick => "document.getElementById ('ms_$options').innerHTML=''; document.form._$options->{name}.value='';" . $js_detail,
+					onclick => <<EOJS,
+						document.getElementById ('ms_$options').innerHTML = ''; 
+						var oldValue = document.form._$options->{name}.value;
+						document.form._$options->{name}.value = '';
+						if ($onChangeEvent && oldValue != '') {
+							$options->{onChange};
+						}
+						$js_detail
+EOJS
 					off	=> $_REQUEST {__read_only},
 				},
 #				{
