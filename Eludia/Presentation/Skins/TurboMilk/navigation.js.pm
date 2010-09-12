@@ -118,7 +118,7 @@ function clone_form_tr_for_this_plus_icon (i) {
 	
 	var td = $('td:first', tr_new);
 	
-	td.text (img.attr ('lowsrc') + ' ' + n + ':');
+	td.text (img.attr ('lowsrc') + ' ' + (parseInt (img.attr ('name')) + n) + ':');
 
 	$(':input', tr_new).each (function () {
 
