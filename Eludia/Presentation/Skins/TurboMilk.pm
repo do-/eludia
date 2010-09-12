@@ -540,9 +540,30 @@ sub draw_form_field {
 	}
 	
 	if ($field -> {plus}) {
+					
+		my $a = {
+		
+			height  => 18, 
+			src     => "$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}",
+			width   => 18,
+			border  => 0, 
+			align   => 'absmiddle', 
+			onClick => "clone_form_tr_for_this_plus_icon(this)", 
+			name    => 1,
+		
+		};
 
-		$field -> {html} .= qq{<img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle onClick="clone_form_tr_for_this_plus_icon(this)" lowsrc="$field->{plus}">};
 
+		if ($field -> {plus} =~ s{ (\d+)$}{}) {
+		
+			$a -> {name} = $1 - 1;
+		
+		}
+		
+		$a     -> {lowsrc} = $field -> {plus};
+
+		$field -> {html } .= dump_tag (img => $a);
+		
 	}
 	
 	my $html = '';
