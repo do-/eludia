@@ -3206,7 +3206,7 @@ sub draw_page {
 			.calendar .nav  { background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
 			td.main-menu    { padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
 			td.vert-menu    { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
-			td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
+			td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1; background-color: #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
 		</style>
 
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
