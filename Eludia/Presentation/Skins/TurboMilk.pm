@@ -3327,8 +3327,7 @@ $auth_toolbar
 			<table border="0" cellpadding="4" cellspacing="1" width="470" height="225" class="logon">
 				<tr><td class="login-head">$i18n->{authorization}</td></tr>
 				<tr>
-					<td bgcolor="#F9F9FF" align="center" style="border-bottom:solid 1px #9AA0A3; height:150px;">
-						
+					<td align="center" style="border:solid 1px #B9C5D7; height:150px;">
 					
 						<table border="0" cellpadding="8" cellspacing="0">
 						<form action="$_REQUEST{__uri}" method=post autocomplete="off" name=form target="$options->{target}">
