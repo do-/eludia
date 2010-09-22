@@ -1006,7 +1006,6 @@ a.grey-submit:hover {color:#222323;text-decoration:underline;FONT-SIZE: 8pt;}
 	font-weight: normal;
 	color:#414141;
 	text-decoration: none;
-	background-color: #eaeaf0;
 }
 
 
