@@ -3581,7 +3581,9 @@ EOH
 	$_REQUEST {__script} .= <<EOH;
 
 	\$(window).load (function () {
-		var win = document.getElementById ('__tree_iframe').contentWindow;
+		var ifr = document.getElementById ('__tree_iframe');
+		if (ifr == null) return;
+		var win = ifr.contentWindow;
 		win.d = new win.dTree ('d');
 		win.d._url_base = '$options->{url_base}';
 		win.d._cookie_name = '$_REQUEST{type}';
