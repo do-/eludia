@@ -10,7 +10,7 @@ sub draw_form_field_multi_select {
 	$label =~ s/<br>/ /g;
 	$label =~ s/\s+/ /g;
 
-	my $onChangeEvent = exists ($options -> {onChange}) && length ($options->{onChange}) > 0;
+	my $onChangeEvent = 0 + exists ($options -> {onChange}) && length ($options->{onChange}) > 0;
 	js <<EOJS if $_REQUEST {__script} !~ /function stringSetsEqual\s+/;
 		function stringSetsEqual (set1, set2) { // сравнивает множества id, представленные в виде строк через запятую
 			function IsID (input){
@@ -39,7 +39,6 @@ EOJS
 			var oldIds = document.form._$options->{name}.value;
 			document.form._$options->{name}.value = result.ids;
 		
-			debugger;
 			if ($onChangeEvent && !stringSetsEqual (oldIds, result.ids)) {
 				$options->{onChange};
 			}
