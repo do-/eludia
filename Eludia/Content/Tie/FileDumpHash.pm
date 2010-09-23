@@ -56,7 +56,7 @@ sub FETCH_ {
 	
 	my $sql_types = $options -> {conf} -> {sql_types};
 	
-	my @dirs = reverse &{$options -> {path}} ($key);
+	my @dirs = reverse &{$options -> {path}} ();
 
 	my $__the_dir = ${"$options->{package}::__the_dir"} || '';
 	
@@ -101,12 +101,10 @@ sub FETCH_ {
 			}
 		
 		}
-		
+
 		eval qq{package $options->{package};\n# line 0 "$path"\n \$VAR = {$src}}; die $@ if $@;
 		close I;
-		
-#		next if exists $VAR -> {off} && $VAR -> {off};
-		
+
 		foreach my $column (values %{$VAR -> {columns}}) {
 		
 			ref $column or $column = {TYPE => $column};
