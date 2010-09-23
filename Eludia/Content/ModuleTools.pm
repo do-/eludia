@@ -324,24 +324,35 @@ sub _INC {
 	
 	foreach my $dir (reverse @$PACKAGE_ROOT) {
 	
-		my $default = $dir . '/_';
-	
-		if (-d $default) {
-					
-			push @result, $default;
-			
-			if ($prefix) {
-
-				my $specific = $dir . '/_' . $prefix;
-
-				-d $specific and push @result, $specific;
-
-			}
-		
-		}
-		
 		push @result, $dir;
 	
+		if (-d (my $default = $dir . '/_')) {
+		
+			if ($prefix eq '*') {
+			
+				opendir (DIR, $dir) || die "can't opendir $dir: $!";
+								
+				push @result, grep {-d && !/\.$/} map {"$dir/$_"} readdir (DIR);
+								
+				closedir DIR;			
+			
+			}
+			else {
+
+				push @result, $default;
+
+				if ($prefix) {
+
+					my $specific = $dir . '/_' . $prefix;
+
+					-d $specific and push @result, $specific;
+
+				}
+
+			}
+							
+		}
+			
 	}
 
 	return @result;
