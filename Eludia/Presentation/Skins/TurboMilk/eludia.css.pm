@@ -1002,7 +1002,6 @@ div.grey-submit a:hover {color:#222323;text-decoration:underline;}
 	font-weight: normal;
 	color:#414141;
 	text-decoration: none;
-	background-color: #eaeaf0;
 }
 
 

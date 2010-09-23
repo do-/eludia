@@ -537,9 +537,30 @@ sub draw_form_field {
 	}
 	
 	if ($field -> {plus}) {
+					
+		my $a = {
+		
+			height  => 18, 
+			src     => "$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}",
+			width   => 18,
+			border  => 0, 
+			align   => 'absmiddle', 
+			onClick => "clone_form_tr_for_this_plus_icon(this)", 
+			name    => 1,
+		
+		};
 
-		$field -> {html} .= qq{<img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle onClick="clone_form_tr_for_this_plus_icon(this)" lowsrc="$field->{plus}">};
 
+		if ($field -> {plus} =~ s{ (\d+)$}{}) {
+		
+			$a -> {name} = $1 - 1;
+		
+		}
+		
+		$a     -> {lowsrc} = $field -> {plus};
+
+		$field -> {html } .= dump_tag (img => $a);
+		
 	}
 	
 	my $html = '';
@@ -3306,8 +3327,7 @@ $auth_toolbar
 			<table border="0" cellpadding="4" cellspacing="1" width="470" height="225" class="logon">
 				<tr><td class="login-head">$i18n->{authorization}</td></tr>
 				<tr>
-					<td bgcolor="#F9F9FF" align="center" style="border-bottom:solid 1px #9AA0A3; height:150px;">
-						
+					<td align="center" style="border:solid 1px #B9C5D7; height:150px;">
 					
 						<table border="0" cellpadding="8" cellspacing="0">
 						<form action="$_REQUEST{__uri}" method=post autocomplete="off" name=form target="$options->{target}">
@@ -3528,7 +3548,7 @@ EOH
 	my $frameset = qq {<frameset cols="$options->{width},*">
 		<frame src="$ENV{SCRIPT_URI}/i/_skins/TurboMilk/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
 		</frame>
-		<frame src="${\($selected_node_url ? $selected_node_url : '$_REQUEST{__static_url}/0.html')}" name="$options->{name}" id="__content_iframe" application="yes" scroll=no>
+		<frame src="${\($selected_node_url ? $selected_node_url : "$_REQUEST{__static_url}/0.html")}" name="$options->{name}" id="__content_iframe" application="yes" scroll=no>
 		</frame>
 	</frameset>};
 
