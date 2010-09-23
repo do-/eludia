@@ -59,8 +59,11 @@ sub wish_to_update_demands_for_table_data {
 
 	my ($old, $new, $options) = @_;
 
-	foreach (keys %$old) {exists  $new -> {$_} or $new -> {$_} = $old -> {$_}};
-
+	foreach (keys %$old) {
+		exists  $new -> {$_} && !$DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$_} -> {__no_update}
+			or $new -> {$_} = $old -> {$_};
+	};
+	
 	foreach (keys %$new) {defined $new -> {$_} and $new -> {$_} .= ''};
 
 }
