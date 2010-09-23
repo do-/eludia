@@ -10,14 +10,16 @@ sub draw_form_field_multi_select {
 	$label =~ s/<br>/ /g;
 	$label =~ s/\s+/ /g;
 
-	my $onChangeEvent = 0 + exists ($options -> {onChange}) && length ($options->{onChange}) > 0;
-	js <<EOJS if $_REQUEST {__script} !~ /function stringSetsEqual\s+/;
-		function stringSetsEqual (set1, set2) { // сравнивает множества id, представленные в виде строк через запятую
-			function IsID (input){
-				return (input - 0) == input && input.length > 0 && input != -1;
-			}
-			var set1Values = jQuery.grep (set1.split(','), IsID).sort ();
-			var set2Values = jQuery.grep (set2.split(','), IsID).sort ();
+	my $hasOnChangeEvent = 0 + (exists ($options -> {onChange}) && length ($options->{onChange}) > 0);
+	js <<EOJS if $hasOnChangeEvent && $_REQUEST {__script} !~ /function stringSetsEqual\s+/;
+		function IsID (input){
+			return (input - 0) == input && input.length > 0 && input != -1;
+		}
+		
+		function stringSetsEqual (set1, set2) {
+		
+			var set1Values = \$.grep (set1.split(','), IsID).sort ();
+			var set2Values = \$.grep (set2.split(','), IsID).sort ();
 			
 			var setsEqual = set1Values.length == set2Values.length;
 			for (var i = 0; set1Values[i] && setsEqual; i++) {
@@ -26,6 +28,8 @@ sub draw_form_field_multi_select {
 			return setsEqual;
 		}
 EOJS
+
+
 	
 	my $url = dialog_open ({
 		href	=> $options -> {href} . '&multi_select=1',
@@ -38,11 +42,9 @@ EOJS
 			document.getElementById ('ms_$options').innerHTML=result.label; 
 			var oldIds = document.form._$options->{name}.value;
 			document.form._$options->{name}.value = result.ids;
-		
-			if ($onChangeEvent && !stringSetsEqual (oldIds, result.ids)) {
-				$options->{onChange};
-			}
 EOJS
+	$url .= "if (!stringSetsEqual (oldIds, result.ids)) {$options->{onChange}}" 
+		if $hasOnChangeEvent;
 	
 	my $js_detail;
 	
@@ -74,7 +76,12 @@ EOJS
 EOJS
 		}
 	}
-
+	
+	my $onclear_js = "document.getElementById ('ms_$options').innerHTML = '';var oldValue = document.form._$options->{name}.value;document.form._$options->{name}.value = '';";
+	$onclear_js .= "if (oldValue != '') {$options->{onChange}}"
+		if $hasOnChangeEvent;
+	$onclear_js .= $js_detail; 
+	
 	return draw_form_field_of_type (
 		{
 			label	=> $options -> {label},
@@ -115,18 +122,10 @@ EOJS
 					off	=> $_REQUEST {__read_only},
 				},
 				{
-					type	=> 'button',
-					value	=> 'Очистить',
-					onclick => <<EOJS,
-						document.getElementById ('ms_$options').innerHTML = ''; 
-						var oldValue = document.form._$options->{name}.value;
-						document.form._$options->{name}.value = '';
-						if ($onChangeEvent && oldValue != '') {
-							$options->{onChange};
-						}
-						$js_detail
-EOJS
-					off	=> $_REQUEST {__read_only},
+					type    => 'button',
+					value   => 'Очистить',
+					onclick => $onclear_js,
+					off     => $_REQUEST {__read_only},
 				},
 #				{
 #					type	=> 'static',
