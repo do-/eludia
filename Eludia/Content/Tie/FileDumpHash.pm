@@ -16,6 +16,38 @@ sub FETCH {
 
 }
 
+sub FIRSTKEY {
+
+	my ($options) = @_;
+	
+	$options -> {LIST} = {};
+
+	foreach my $dir (reverse grep {-d} map {"$_/Model"} &{$options -> {path}} ()) {
+	
+		opendir (DIR, $dir) || die "can't opendir $dir: $!";
+								
+		foreach (readdir (DIR)) {
+		
+			/\.pm$/ or next;
+			
+			$options -> {LIST} -> {$`} = 1;
+		
+		}
+								
+		closedir DIR;			
+	
+	}
+	
+	each %{$options -> {LIST}};
+
+}
+
+sub NEXTKEY {
+		
+	each %{$_ [0] -> {LIST}};
+
+}
+
 sub FETCH_ {
 
 	my ($options, $key) = @_;
