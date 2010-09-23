@@ -102,7 +102,7 @@ sub FETCH_ {
 		
 		}
 		
-		eval "package $options->{package};\n \$VAR = {$src}"; die $@ if $@;
+		eval qq{package $options->{package};\n# line 0 "$path"\n \$VAR = {$src}}; die $@ if $@;
 		close I;
 		
 #		next if exists $VAR -> {off} && $VAR -> {off};
