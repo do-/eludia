@@ -846,6 +846,9 @@ warn "undo relink $table_name: $old_id";
 		
 		foreach my $column_def (@{$DB_MODEL -> {aliases} -> {$table_name} -> {references}}) {
 
+			next
+				if $DB_MODEL -> {tables} -> {$column_def -> {table_name}} -> {sql};
+
 			my $from = <<EOS;
 				FROM
 					$moved_links_table
