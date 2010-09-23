@@ -328,11 +328,15 @@ sub _INC {
 	
 		if (-d $default) {
 					
-			my $specific = $dir . '/_' . $prefix;
-			
-			-d $specific and push @result, $specific;
-
 			push @result, $default;
+			
+			if ($prefix) {
+
+				my $specific = $dir . '/_' . $prefix;
+
+				-d $specific and push @result, $specific;
+
+			}
 		
 		}
 		
