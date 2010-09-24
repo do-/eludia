@@ -318,42 +318,52 @@ sub localtime_to_iso {
 
 sub _INC {
 
-	my ($prefix) = split /_/, ($_[0] || $_REQUEST {type} || $_SUBSET -> {name});
+	my $type_prefix = $_REQUEST {type} =~ /^(\w+?)_/ ? $1 : '';
+	
+	my %prefixes = $_SUBSET -> {name} eq '*' ? ('*' => 1) : (map {$_ => 1} ('', $_[0], $_SUBSET -> {name}, $type_prefix));
 
-	my @result = ();
+	my @prefixes = sort keys %prefixes;
+	
+	my $cache_key = join ',', @prefixes;
+	
+	my $cache = $preconf -> {_} -> {inc} ||= {};
+	
+	$cache -> {$cache_key} and return @{$cache -> {$cache_key}};
+
+	my %result = ();
 	
 	foreach my $dir (reverse @$PACKAGE_ROOT) {
 	
-		push @result, $dir;
+		$result {$dir} ||= 1;
+		
+		-d ($dir . '/_') or next;
 	
-		if (-d (my $default = $dir . '/_')) {
+		foreach my $prefix (@prefixes) {
 		
 			if ($prefix eq '*') {
 			
-				opendir (DIR, $dir) || die "can't opendir $dir: $!";
+				opendir (DIR, $dir) || die "Can't opendir $dir: $!";
 								
-				push @result, grep {-d && !/\.$/} map {"$dir/$_"} readdir (DIR);
+				$result {$_} ||= 1 foreach grep {-d && !/\.$/} map {"${dir}/${_}/"} readdir (DIR);
 								
 				closedir DIR;			
 			
 			}
 			else {
 
-				push @result, $default;
+				my $specific = "${dir}/_${prefix}";
 
-				if ($prefix) {
-
-					my $specific = $dir . '/_' . $prefix;
-
-					-d $specific and push @result, $specific;
-
-				}
+				-d $specific and $result {$specific} ||= 1;
 
 			}
 							
 		}
 			
 	}
+	
+	my @result = keys %result;
+	
+	$cache -> {$cache_key} = \@result;
 
 	return @result;
 
