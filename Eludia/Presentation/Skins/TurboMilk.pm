@@ -2715,29 +2715,37 @@ sub draw_table_header_row {
 ####################################################################
 
 sub draw_table_header_cell {
-	
+
 	my ($_SKIN, $cell) = @_;
-	
+
 	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);
 
 	$cell -> {label} .= "\&nbsp;\&nbsp;<a class=row-cell-header-a href=\"$$cell{href_asc}\"><b>\&uarr;</b></a>"  if $cell -> {href_asc};
 	$cell -> {label} .= "\&nbsp;\&nbsp;<a class=row-cell-header-a href=\"$$cell{href_desc}\"><b>\&darr;</b></a>" if $cell -> {href_desc};
 
 	if (($cell -> {order} || $cell -> {href} =~ /\border=/) && !$conf -> {core_no_order_arrows}) {
-		$cell -> {label} = "<nobr><img src='$_REQUEST{__static_url}/order.gif' border=0 hspace=1 vspace=0 align=absmiddle>" . $cell -> {label} . "</nobr>";
-	}	
+		my $label = $cell -> {label};
+		$cell -> {label} = '';
+		if ($cell -> {nobr} || !($conf -> {core_no_nobr_table_header_cell} || $cell -> {no_nobr})) {
+			$cell -> {label} .= "<nobr>";
+		}
+		$cell -> {label} .= "<img src='$_REQUEST{__static_url}/order.gif' border=0 hspace=1 vspace=0 align=absmiddle>" . $label;
+		if ($cell -> {nobr} || !($conf -> {core_no_nobr_table_header_cell} || $cell -> {no_nobr})) {
+			$cell -> {label} .= "</nobr>";
+		}
+	}
 	elsif (!$cell -> {no_nbsp}) {
 		$cell -> {label} = '&nbsp;' . $cell -> {label};
 	}
 
 	if ($cell -> {href}) {
 		$cell -> {label} = "<a class=row-cell-header-a href=\"$$cell{href}\"><b>" . $cell -> {label} . "</b></a>";
-	}	
+	}
 
 	$cell -> {no_nbsp} or $cell -> {label} .= '&nbsp;';
-	
+
 	$cell -> {attributes} -> {style} = 'z-index:' . ($cell -> {no_scroll} ? 110 : 100) . ';' . $cell -> {attributes} -> {style};
-	
+
 	dump_tag (th => $cell -> {attributes}, $cell -> {label});
 
 }
