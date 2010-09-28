@@ -39,9 +39,10 @@ EOJS
 		dialogWidth	=> 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)',
 	}) . <<EOJS;
 		if (result.result == 'ok') {
-			document.getElementById ('ms_$options').innerHTML=result.label; 
-			var oldIds = document.form._$options->{name}.value;
-			document.form._$options->{name}.value = result.ids;
+			document.getElementById ('ms_$options').innerHTML=result.label;
+			var el_ids = document.getElementsByName ('_$options->{name}') [0];
+			var oldIds = el_ids.value;
+			el_ids.value = result.ids;
 EOJS
 	$url .= "if (!stringSetsEqual (oldIds, result.ids)) {$options->{onChange}}" 
 		if $hasOnChangeEvent;
@@ -50,7 +51,7 @@ EOJS
 	
 	if (defined $options -> {detail}) {
 
-		$options -> {value_src} = "this.form.elements['_$options->{name}'].value";
+		$options -> {value_src} = "document.getElementsByName ('_$options->{name}') [0].value";
 		$js_detail = js_detail ($options);
 
 		$url .= $js_detail;
@@ -77,7 +78,7 @@ EOJS
 		}
 	}
 	
-	my $onclear_js = "document.getElementById ('ms_$options').innerHTML = '';var oldValue = document.form._$options->{name}.value;document.form._$options->{name}.value = '';";
+	my $onclear_js = "document.getElementById ('ms_$options').innerHTML = '';var oldValue = document.getElementsByName ('_$options->{name}') [0].value; document.getElementsByName ('_$options->{name}') [0].value = '';";
 	$onclear_js .= "if (oldValue != '') {$options->{onChange}}"
 		if $hasOnChangeEvent;
 	$onclear_js .= $js_detail; 
