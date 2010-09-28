@@ -18,7 +18,7 @@ sub draw_form_field_hgroup {
 				$item -> {value} = $data -> {$item -> {name}} || $item -> {checked} ? $i18n -> {yes} : $i18n -> {no};
 			}
 			if ($item -> {type} eq 'hgroup') {
-				$item -> {value} = draw_form_field_hgroup ($item, $data);
+				$item -> {value} = draw_form_field_of_type ($item, $data);
 			}
 			
 			$item -> {type}   = 'static';

@@ -10,7 +10,10 @@ sub draw_form_field_date {
 
 	$options -> {size}   ||= 11;
 
-	return draw_form_field_string ($options, $data) if $r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/;
+	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/) {
+		$options -> {type} = 'string';
+		return draw_form_field_of_type ($options, $data);
+	}
 	
 	adjust_form_field_options ($options);
 

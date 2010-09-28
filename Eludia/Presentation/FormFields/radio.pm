@@ -18,14 +18,11 @@ sub draw_form_field_radio {
 		$value -> {type} ||= 'select' if $value -> {values};		
 		$value -> {type} or next;
 			
-		my $renderrer = "draw_form_field_$$value{type}";
-		
 		local $value -> {attributes};
 		$value -> {html} = call_from_file ("Eludia/Presentation/FormFields/$value->{type}.pm", "draw_form_field_$value->{type}", $value, $data);
 		delete $value -> {attributes} -> {class};
 						
 	}
-
 
 	return $_SKIN -> draw_form_field_radio (@_);
 	

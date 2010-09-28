@@ -38,9 +38,7 @@ sub draw_form_field_checkboxes {
 
 		$value -> {attributes} -> {tabindex} = ++ $_REQUEST {__tabindex};
 
-		my $renderrer = "draw_form_field_$$value{type}";
-		
-		$value -> {html} = &$renderrer ($value, $data);
+		$value -> {html} = draw_form_field_of_type ($value, $data);
 		$value -> {html} =~ s/\<input/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\<input/g if ($value -> {type} eq 'checkboxes');
 		
 		delete $value -> {attributes} -> {class};
