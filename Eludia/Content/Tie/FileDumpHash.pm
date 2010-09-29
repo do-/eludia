@@ -58,11 +58,6 @@ sub FETCH_ {
 	
 	my @dirs = reverse &{$options -> {path}} ();
 
-	my $__the_dir = ${"$options->{package}::__the_dir"} || '';
-	
-	push @dirs, $__the_dir
-		unless grep {$_ eq $__the_dir} @dirs;
-
 	foreach my $dir (@dirs) {
 	
 		$dir .= '/Model';
