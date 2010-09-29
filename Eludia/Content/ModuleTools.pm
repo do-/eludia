@@ -329,40 +329,42 @@ sub _INC {
 	my $cache = $preconf -> {_} -> {inc} ||= {};
 	
 	$cache -> {$cache_key} and return @{$cache -> {$cache_key}};
-
-	my %result = ();
+	
+	my @result = ();
 	
 	foreach my $dir (reverse @$PACKAGE_ROOT) {
+
+		my %result = ($dir => 1);
+
+		if (-d ($dir . '/_')) {
 	
-		$result {$dir} ||= 1;
-		
-		-d ($dir . '/_') or next;
-	
-		foreach my $prefix (@prefixes) {
-		
-			if ($prefix eq '*') {
-			
-				opendir (DIR, $dir) || die "Can't opendir $dir: $!";
-								
-				$result {$_} ||= 1 foreach grep {-d && !/\.$/} map {"${dir}/${_}/"} readdir (DIR);
-								
-				closedir DIR;			
-			
-			}
-			else {
+			foreach my $prefix (@prefixes) {
 
-				my $specific = "${dir}/_${prefix}";
+				if ($prefix eq '*') {
 
-				-d $specific and $result {$specific} ||= 1;
+					opendir (DIR, $dir) || die "Can't opendir $dir: $!";
+
+					$result {$_} ||= 1 foreach grep {-d && !/\.$/} map {"${dir}/${_}"} readdir (DIR);
+
+					closedir DIR;			
+
+				}
+				else {
+
+					my $specific = "${dir}/_${prefix}";
+
+					-d $specific and $result {$specific} ||= 1;
+
+				}
 
 			}
-							
+		
 		}
-			
+		
+		push @result, sort {length $b <=> length $a} keys %result;
+
 	}
-	
-	my @result = keys %result;
-	
+
 	$cache -> {$cache_key} = \@result;
 
 	return @result;
