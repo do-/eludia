@@ -16,6 +16,38 @@ sub FETCH {
 
 }
 
+sub FIRSTKEY {
+
+	my ($options) = @_;
+	
+	$options -> {LIST} = {};
+
+	foreach my $dir (reverse grep {-d} map {"$_/Model"} &{$options -> {path}} ()) {
+	
+		opendir (DIR, $dir) || die "can't opendir $dir: $!";
+								
+		foreach (readdir (DIR)) {
+		
+			/\.pm$/ or next;
+			
+			$options -> {LIST} -> {$`} = 1;
+		
+		}
+								
+		closedir DIR;			
+	
+	}
+	
+	each %{$options -> {LIST}};
+
+}
+
+sub NEXTKEY {
+		
+	each %{$_ [0] -> {LIST}};
+
+}
+
 sub FETCH_ {
 
 	my ($options, $key) = @_;
@@ -24,12 +56,7 @@ sub FETCH_ {
 	
 	my $sql_types = $options -> {conf} -> {sql_types};
 	
-	my @dirs = reverse &{$options -> {path}} ($key);
-
-	my $__the_dir = ${"$options->{package}::__the_dir"} || '';
-	
-	push @dirs, $__the_dir
-		unless grep {$_ eq $__the_dir} @dirs;
+	my @dirs = reverse &{$options -> {path}} ();
 
 	foreach my $dir (@dirs) {
 	
@@ -69,12 +96,10 @@ sub FETCH_ {
 			}
 		
 		}
-		
-		eval "package $options->{package};\n \$VAR = {$src}"; die $@ if $@;
+
+		eval qq{package $options->{package};\n# line 0 "$path"\n \$VAR = {$src}}; die $@ if $@;
 		close I;
-		
-#		next if exists $VAR -> {off} && $VAR -> {off};
-		
+
 		foreach my $column (values %{$VAR -> {columns}}) {
 		
 			ref $column or $column = {TYPE => $column};
