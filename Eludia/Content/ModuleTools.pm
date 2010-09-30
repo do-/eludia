@@ -124,9 +124,7 @@ sub require_scripts_of_type ($) {
 	my $__last_update = get_last_update ();
 	
 	my $__time = 0;
-	
-	my $is_updated;
-	
+		
 	foreach my $the_path (_INC ()) {
 
 		my $time = time;
@@ -242,9 +240,7 @@ sub require_scripts_of_type ($) {
 			eval $src; 
 			
 			die $@ if $@;
-			
-			$is_updated = 1;
-			
+
 		}
 				
 		checksum_write ($checksum_kind, $new_checksums);
