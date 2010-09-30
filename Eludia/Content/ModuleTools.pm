@@ -117,6 +117,20 @@ sub reverse_systables {
 
 ################################################################################
 
+sub list_of_files_in_the_directory ($) {
+
+	opendir (DIR, $_[0]) or die "Ñan't opendir $_[0]: $!";
+	
+	my @file_names = readdir (DIR);
+	
+	closedir DIR;
+	
+	return @file_names;
+
+}
+
+################################################################################
+
 sub require_scripts_of_type ($) {
 
 	my ($script_type) = @_;
@@ -124,31 +138,17 @@ sub require_scripts_of_type ($) {
 	my $__last_update = get_last_update ();
 	
 	my $__time = 0;
+	
+	my $postfix = '/' . ucfirst $script_type;
 		
-	foreach my $the_path (_INC ()) {
+	foreach my $dir (grep {-d} map {$_ . $postfix} _INC ()) {
 
 		my $time = time;
-	
-		my $dir = $the_path . '/' . ucfirst $script_type;
-	
-		-d $dir or next;
-
-		opendir (DIR, $dir) or die "can't opendir $dir: $!";
-		my @file_names = readdir (DIR);
-		closedir DIR;
-
-		if (@file_names == 0) {
-		
-			__log_profilinig ($time, "   require_scripts_of_type $script_type: $dir is empty") ;
-			
-			next;
-			
-		}
 		
 		my @scripts = ();
 		my $name2def = {};
 
-		foreach my $file_name (@file_names) {
+		foreach my $file_name (list_of_files_in_the_directory $dir) {
 				
 			$file_name =~ /\.p[lm]$/ or next;
 			
@@ -196,55 +196,37 @@ sub require_scripts_of_type ($) {
 			
 		}
 
-		@scripts = 
-			
-			sort {$a -> {last_modified} <=> $b -> {last_modified}} 
-			
-			grep {$needed_scripts -> {$_ -> {path}}} 
-					
-			@scripts;
-
-		my @src = ();
-
-		foreach my $script (@scripts) {
+		foreach my $script (sort {$a -> {last_modified} <=> $b -> {last_modified}} grep {$needed_scripts -> {$_ -> {path}}} @scripts) {
 		
-			my $src = '';
-			
+			my $time = time ();
+					
 			if ($script_type eq 'model') {
 
-				$src = Dumper ($DB_MODEL -> {tables} -> {$script -> {name}});
-				$src =~ s{^\$VAR1 =}{$script->{name} =>};
-				$src =~ s{;\s*$}{}smg;
-
+				$model_update -> assert (
+					
+					prefix => 'application model#',
+						
+					default_columns => $DB_MODEL -> {default_columns},
+						
+					tables => {$script -> {name} => $DB_MODEL -> {tables} -> {$script -> {name}}},
+						
+				);
+						
 			}
 			else {
+			
+				do $script -> {path};
 
-				open  (SCRIPT, $script -> {path}) or die "Can't open $script->{path}:$!\n";
-				while (<SCRIPT>) { $src .= $_; };
-				close (SCRIPT);
+				die $@ if $@;
 
 			}
 
-			push @src, $src;
-									
+			$time = __log_profilinig ($time, "     $script->{path} fired");
+											
 		}
 
-		@src = ("\$model_update -> assert (prefix => 'application model#', default_columns => \$DB_MODEL -> {default_columns}, tables => {@{[ join ',', @src]}})") if $script_type eq 'model';
-			
-		foreach my $src (@src) { 
-			
-			warn "# { script start #################################################################\n\n";
-			warn $src . "\n\n";
-			warn "# } script finish ################################################################\n";
-
-			eval $src; 
-			
-			die $@ if $@;
-
-		}
-				
 		checksum_write ($checksum_kind, $new_checksums);
-			
+
 		__log_profilinig ($time, "   require_scripts_of_type $script_type done in $dir");
 
 	}
@@ -256,6 +238,8 @@ sub require_scripts_of_type ($) {
 ################################################################################
 
 sub require_scripts {
+
+	return if $_REQUEST {__don_t_require_scripts};
 	
 	my $time = time;
 	
@@ -294,6 +278,8 @@ sub require_scripts {
 	close (CONFIG);
 
 	__log_profilinig ($time, "  require_scripts done");
+	
+	$_REQUEST {__don_t_require_scripts} = 1;
 
 }
 
@@ -335,11 +321,7 @@ sub _INC {
 
 				if ($prefix eq '*') {
 
-					opendir (DIR, $dir) || die "Can't opendir $dir: $!";
-
-					$result {$_} ||= 1 foreach grep {-d && !/\.$/} map {"${dir}/${_}"} readdir (DIR);
-
-					closedir DIR;			
+					$result {$_} ||= 1 foreach grep {-d && !/\.$/} map {"${dir}/${_}"} list_of_files_in_the_directory $dir;
 
 				}
 				else {
