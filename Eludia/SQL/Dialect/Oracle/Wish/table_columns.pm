@@ -289,8 +289,14 @@ sub wish_to_update_demands_for_table_columns {
 			unless $new -> {NULLABLE};
 
 	}
+	
+	foreach my $i ($old, $new) {
+	
+		$i -> {COLUMN_SIZE_} += 0;
 
-	__genereate_sql_fragment_for_column ($_) foreach ($old, $new);
+		__genereate_sql_fragment_for_column ($i);
+
+	}
 
 }
 

@@ -12,7 +12,10 @@ sub draw_form_field_datetime {
 
 	$options -> {size}   ||= length ($options -> {format}) + 3 - ($options -> {format} =~ y{ }{ });
 
-	return draw_form_field_string ($options, $data) if $r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/;
+	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/) {
+		$options -> {type} = 'string';
+		return draw_form_field_of_type ($options, $data);
+	}
 	
 	adjust_form_field_options ($options);
 

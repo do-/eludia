@@ -59,8 +59,8 @@ sub draw_form_field_static {
 
 				$item -> {read_only} = 1;
 
-				$static_value .= $item -> {type} eq 'hgroup' ? draw_form_field_hgroup ($item, $data)
-					: $item -> {type} eq 'multi_select' ? draw_form_field_multi_select ($item, $data)
+				$static_value .= $item -> {type} =~ /^(hgroup|multi_select)$/ ?
+					draw_form_field_of_type ($item, $data)
 					: draw_form_field_static ($item, $data);
 			
 			}
@@ -141,16 +141,17 @@ sub draw_form_field_static {
 			if (($item -> {type} ||= '') eq 'hgroup') {
 				$item -> {read_only} = 1;
 				$static_value .= ' ';
-				$static_value .= draw_form_field_hgroup ($item, $data);
+				$static_value .= draw_form_field_of_type ($item, $data);
 			}
 			elsif ($item -> {type} eq 'multi_select') {
 				$item -> {read_only} = 1;
 				$static_value .= ' ';
-				$static_value .= draw_form_field_multi_select ($item, $data);
+				$static_value .= draw_form_field_of_type ($item, $data);
 			}
 			elsif ($item -> {type} || $item -> {name}) {
 				$static_value .= ' ';
-				$static_value .= draw_form_field_static ($item, $data);
+				$item -> {type} = 'static';
+				$static_value .= draw_form_field_of_type ($item, $data);
 			}
 
 		}
