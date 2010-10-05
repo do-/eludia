@@ -442,6 +442,8 @@ sub require_fresh {
 
 		while (my $line = <S>) {
 
+$line = Encode::decode ('windows-1251', $line);
+
 			if ($_OLD_PACKAGE) {
 				$line =~ s{package\s+$_OLD_PACKAGE}{package $_NEW_PACKAGE}g;
 				$line =~ s{$_OLD_PACKAGE\:\:}{$_NEW_PACKAGE\:\:}g;

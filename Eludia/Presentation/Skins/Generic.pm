@@ -447,7 +447,7 @@ sub draw_error_page {
 
 	my ($_SKIN, $page) = @_;
 
-	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+	$_REQUEST {__content_type} ||= 'text/html; charset=utf-8';
 
 	my $data = $_JSON -> encode ([$_REQUEST {error}]);
 
@@ -513,7 +513,7 @@ sub draw_page__only_field {
 
 	my ($_SKIN, $page) = @_;
 
-	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+	$_REQUEST {__content_type} ||= 'text/html; charset=utf-8';
 						
 	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="$_REQUEST{__on_load}"></body><html>};
 

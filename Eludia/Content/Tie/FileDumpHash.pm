@@ -86,6 +86,8 @@ sub FETCH_ {
 		my $src = '';
 		
 		while (my $line = <I>) {
+
+$line = Encode::decode ('windows-1251', $line);
 		
 			$src .= $line;
 			

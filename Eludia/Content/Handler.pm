@@ -143,13 +143,17 @@ sub setup_request_params {
 
 	get_request (@_);
 	
-	my $charset = $r -> header_in ('Content-Type-Charset');
+	Encode::_utf8_on ($_) foreach (values %_REQUEST);
+
+#darn [$_, $_REQUEST {$_}, Encode::is_utf8 ($_REQUEST {$_})] foreach (keys %_REQUEST);
 	
-	if ($charset && $r -> header_in ('Content-Type') =~ /UTF\-?8/i) {
+#	my $charset = $r -> header_in ('Content-Type-Charset');
+	
+#	if ($charset && $r -> header_in ('Content-Type') =~ /UTF\-?8/i) {
 
-		Encode::from_to ($_, 'utf8', $charset) foreach (values %_REQUEST);
+#		Encode::from_to ($_, 'utf8', $charset) foreach (values %_REQUEST);
 
-	}
+#	}
 
 	our %_REQUEST_VERBATIM = %_REQUEST;
 
@@ -285,12 +289,12 @@ sub setup_request_params_for_action {
 		$_REQUEST {$key} =~ s{^\s+}{};
 		$_REQUEST {$key} =~ s{\s+$}{};
 		
-		my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
+#		my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
 		
-		if ($_REQUEST {$key} ne $encoded) {
-			$_REQUEST {$key} = $encoded;
-			next;
-		}
+#		if ($_REQUEST {$key} ne $encoded) {
+#			$_REQUEST {$key} = $encoded;
+#			next;
+#		}
 		
 		next if $key =~ /^_dt/;
 		next if $key =~ /^_label/;
