@@ -151,7 +151,7 @@ sub send_mail {
 		$options -> {text} .= "\n\n" . $options -> {href};
 	}
 	
-	my $text = encode_base64 ($options -> {text} . "\n" . $original_to);
+	my $text = encode_base64 (Encode::encode ($options -> {body_charset}, $options -> {text}) . "\n" . $original_to);
 	
 	my $is_child = 0;
 	
@@ -335,7 +335,7 @@ sub encode_mail_header {
 		$charset = 'koi8-r';
 	}
 
-	$s = '=?' . $charset . '?B?' . encode_base64 ($s) . '?=';
+	$s = '=?' . $charset . '?B?' . encode_base64 (Encode::encode ($charset, $s)) . '?=';
 	$s =~ s{[\n\r]}{}g;
 	return $s;	
 	

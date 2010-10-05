@@ -27,8 +27,8 @@ sub send_http_header {
 
 sub set_cookie {
 
-	my $cookie = CGI::Simple::Cookie -> new (@_);
-	
+	my $cookie = CGI::Simple::Cookie -> new (@_) or return;
+
 	push @{$r -> {_headers} -> {'Set-Cookie'}}, $cookie -> as_string;
 
 }

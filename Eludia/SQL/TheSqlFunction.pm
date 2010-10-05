@@ -318,7 +318,7 @@ sub _sql_filters {
 			
 			foreach my $token (@tokens) {
 			
-				if ($token =~ /LIKE\s+(\%?)\?(\%)/) {
+				if ($token =~ /LIKE\s+(\%?)\?(\%?)/) {
 
 					$$buffer .= ' LIKE ?';
 					my $v = shift @$values;

@@ -3163,7 +3163,7 @@ sub draw_page {
 	;
 
 	my $js_var = $_REQUEST {__js_var};
-			
+warn "$_ = $js_var->{$_}->{edit_mode_args}" foreach keys %{$js_var -> {edit_mode_args}};
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 	
 	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">}         foreach (@{$_REQUEST {__include_css}});
@@ -3205,7 +3205,7 @@ sub draw_page {
 		<title>$$i18n{_page_title}</title>
 						
 		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
-		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 						
 		<LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="STYLESHEET" />
 		<style>

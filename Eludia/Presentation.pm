@@ -165,11 +165,11 @@ sub trunc_string {
 	
 	return $s if $length <= $len;
 	
-	my $has_ext_chars = $s =~ y/\200-¿/\200-¿/;
+#	my $has_ext_chars = $s =~ y/\200-¿/\200-¿/;
 	
-	$s = decode_entities ($s) if $has_ext_chars;
-	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-	$s = encode_entities ($s, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars;
+#	$s = decode_entities ($s) if $has_ext_chars;
+#	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
+#	$s = encode_entities ($s, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars;
 	
 	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
 
@@ -2531,11 +2531,13 @@ sub out_html {
 
 	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
 
-	$html = Encode::encode ('windows-1252', $html);
+#	$html = Encode::encode ('windows-1252', $html);
+	$html = Encode::encode ('utf-8', $html);
 
 	return print $html if $_REQUEST {__response_started};
 
-	$r -> content_type ($_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset});
+	$r -> content_type ($_REQUEST {__content_type} ||= 'text/html; charset=utf-8');
+#	$r -> content_type ($_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset});
 	
 	gzip_if_it_is_needed ($html);
 

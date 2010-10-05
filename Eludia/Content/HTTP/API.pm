@@ -64,7 +64,7 @@ sub check_configuration_for_application {
 
 	close C;
 	
-	$cnf_src =~ m{\<perl\>(.*)\</perl\>}ism;
+	$cnf_src =~ m{\<[Pp]erl\s*\>(.*)\</[Pp]erl\s*\>}ism;
 	
 	delete $INC {'Eludia.pm'};
 			

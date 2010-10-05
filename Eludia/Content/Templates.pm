@@ -60,8 +60,10 @@ sub load_template {
 	else {
 
 		while (<T>) {
+			Encode::from_to ($_, 'windows-1251', 'utf-8');
 			s{\\}{\\\\}g;
 			s{\@([^\{])}{\\\@$1}g;
+			s{windows-1251}{utf-8}g;
 			$template .= $_;
 		}
 
@@ -80,6 +82,12 @@ sub fill_in_template {
 	return if $_REQUEST {__response_sent};
 
 	my ($template_name, $file_name, $options) = @_;
+	
+	if (user_agent () -> {msie}) {
+
+		$file_name = uri_escape ($file_name, '^ ');
+
+	}	
 	
 	$options -> {no_print} ||= $_REQUEST {no_print};
 	
