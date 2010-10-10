@@ -421,7 +421,7 @@ sub check_module_uri_escape {
 
 	if ($@) {
 	
-		eval 'use URI::Escape qw(uri_escape uri_unescape)';
+		eval 'use URI::Escape qw(uri_escape uri_unescape); sub uri_escape {URI::Escape::uri_escape_utf8 (@_)}';
 		
 		die $@ if $@;
 
