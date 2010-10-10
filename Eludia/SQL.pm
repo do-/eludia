@@ -332,6 +332,9 @@ $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
 
 	}
 	
+	local $ENV {MOD_PERL} = undef;
+	local $ENV {GATEWAY_INTERFACE} = undef;
+	
 	$db = DBI -> connect ($preconf -> {db_dsn}, $preconf -> {db_user}, $preconf -> {db_password}, {
 		PrintError  => 0, 
 		RaiseError  => 1, 
@@ -339,8 +342,9 @@ $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
 		LongReadLen => 1000000,
 		LongTruncOk => 1,
 		InactiveDestroy => 0,
+		mysql_enable_utf8 => 1,
 	});
-
+	
 	if ($preconf -> {db_cache_statements}) {
 
 		require Eludia::Content::Tie::LRUHash;

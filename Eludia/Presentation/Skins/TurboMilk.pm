@@ -3163,7 +3163,7 @@ sub draw_page {
 	;
 
 	my $js_var = $_REQUEST {__js_var};
-warn "$_ = $js_var->{$_}->{edit_mode_args}" foreach keys %{$js_var -> {edit_mode_args}};
+
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 	
 	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">}         foreach (@{$_REQUEST {__include_css}});

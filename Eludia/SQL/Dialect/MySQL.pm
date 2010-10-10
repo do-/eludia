@@ -7,8 +7,6 @@ sub sql_version {
 	
 	$db -> {mysql_auto_reconnect} = 0;
 	
-	$db -> {mysql_enable_utf8} = 1;
-
 	$preconf -> {db_charset} ||= 'utf8';
 	
 	$db -> do ("SET names $preconf->{db_charset}");
