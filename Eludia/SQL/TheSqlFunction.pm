@@ -312,7 +312,7 @@ sub _sql_filters {
 			
 			}
 			
-			my @tokens = split /(LIKE\s+\%?\?\%)/, $field;
+			my @tokens = split /(LIKE\s+\%?\?\%?)/, $field;
 			
 			$$buffer .= "\n AND (";
 			
