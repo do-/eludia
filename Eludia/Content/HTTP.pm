@@ -39,6 +39,12 @@ sub redirect {
 	if (ref $url eq HASH) {
 		$url = create_url (%$url);
 	}
+	
+	if ($options -> {keep_esc}) {
+		$url =~ s{[\&\?]__last_query_string=\d*}{};
+		$url =~ s{[\&\?]__last_scrollable_table_row=\d*}{};
+		$url .= "&__last_query_string=$_REQUEST{__last_last_query_string}&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}";
+	}
 
 	if ($_REQUEST {__uri} ne '/' && $url =~ m{^\/\?}) {
 		$url =~ s{^\/\?}{$_REQUEST{__uri}\?};
