@@ -442,11 +442,6 @@ sub require_fresh {
 
 		while (my $line = <S>) {
 
-			if ($_OLD_PACKAGE) {
-				$line =~ s{package\s+$_OLD_PACKAGE}{package $_NEW_PACKAGE}g;
-				$line =~ s{$_OLD_PACKAGE\:\:}{$_NEW_PACKAGE\:\:}g;
-			}
-
 			$src .= $line;
 
 			$line =~ /^sub (\w+)_$type \{ # / or next;
