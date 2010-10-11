@@ -1,24 +1,20 @@
 package Eludia::Loader;
+use Time::HiRes 'time';
 
 ################################################################################
 
 sub import {
 
 	my ($dummy, $root, $package, $preconf) = @_;
-
+	
+	$preconf -> {_} -> {site_conf} -> {timestamp} = time;
+	
 	$Eludia::last_loaded_package = $package;
 	
 	ref $root eq ARRAY or $root = [$root];	
-		
-	$root -> [0] =~ /[A-Z0-9_]+$/;
-	my $old_package = $& || '';
-	
+			
 	eval "use lib '$$root[0]'";
-	
-	if ($old_package ne $package) {
-		${$package . '::_OLD_PACKAGE'} = $old_package;
-	}
-	
+		
 	${$package . '::_NEW_PACKAGE'} = $package;
 	${$package . '::_PACKAGE'}     = $package . '::';
 	${$package . '::PACKAGE_ROOT'} = $root;
