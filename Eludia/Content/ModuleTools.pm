@@ -47,6 +47,56 @@ sub require_both ($) {
 ################################################################################
 
 sub require_config {
+
+	unless ($preconf -> {_} -> {site_conf} -> {path}) {
+	
+		$preconf -> {_} -> {site_conf} -> {path} = $preconf -> {_} -> {docroot};
+		
+		$preconf -> {_} -> {site_conf} -> {path} =~ s{docroot/?$}{conf/httpd.conf};
+	
+	}
+	
+	-f $preconf -> {_} -> {site_conf} -> {path} or die "Site configuration file not found at '$preconf->{_}->{site_conf}->{path}': $!\n";
+	
+	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $last_modified, $ctime, $blksize, $blocks) = stat ($preconf -> {_} -> {site_conf} -> {path});
+
+	if ($last_modified > $preconf -> {_} -> {site_conf} -> {timestamp}) {
+	
+		open (I, $preconf -> {_} -> {site_conf} -> {path}) or die "Can't open $preconf->{_}->{site_conf}->{path}: $!\n";
+	
+		my $httpd_conf = join '', (<I>);				
+		
+		close (I);
+		
+		$httpd_conf =~ m{\<perl\s*\>(.*?)\</perl\s*\>}gism or die "<Perl> section is not found at $preconf->{_}->{site_conf}->{path}";
+		
+		my $perl_section = $1;
+		
+		$perl_section =~ s{use\s+Eludia::Loader(.*?)\{}{\$preconf_override = \{}sm;
+		
+		local $preconf_override = {};
+
+		warn $perl_section;
+				
+		eval $perl_section;
+		
+		if ($@) {
+		
+			warn $@;
+		
+		}
+		else {
+		
+			$preconf = {%$preconf, %$preconf_override};
+			
+			sql_disconnect ();
+			sql_reconnect ();
+			
+			$preconf -> {_} -> {site_conf} -> {timestamp} = $last_modified;
+		
+		}
+	
+	}
 	
 	require_fresh ($_PACKAGE . 'Config');
 		
