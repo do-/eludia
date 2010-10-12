@@ -320,6 +320,13 @@ sub setup_page {
 	
 	$page -> {type} = $_REQUEST {type};
 
+	if ($ENV {FCGI_ROLE}) {
+		my $process = $0;
+		$process =~ s#(.*/)?([\w\.]+).*#$2#;
+		$process .= " $ENV{SERVER_NAME}: type=$_REQUEST{type}, id=$_REQUEST{id}, action=$_REQUEST{action}";
+		$0 = $process;
+	}
+
 	call_for_role ('get_page');
 
 	eval { require_both $page -> {type} };
