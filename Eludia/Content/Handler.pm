@@ -413,8 +413,10 @@ sub handle_request_of_type_kickout {
 	
 	redirect (
 		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),
-		kind => 'js', 
-		target => '_top'
+		{
+			kind => 'js', 
+			target => '_top'
+		},
 	);
 
 	return handler_finish ();
