@@ -1043,11 +1043,17 @@ sub draw_form_field_radio {
 sub draw_form_field_select {
 
 	my ($_SKIN, $options, $data) = @_;
-	
+
 	$options -> {attributes} ||= {};
+	my $id = $options -> {id} || "_$options->{name}_select";
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
+
+	if (@{$options -> {values}} == 0 && defined ($options -> {empty}) && defined ($options -> {other})) {
+		$options -> {attributes} -> {onClick} .= ";if (this.length == 2) {this.selectedIndex=1; this.onchange();}";
+	}
+
 	my $attributes = dump_attributes ($options -> {attributes});
-	
+
 	if (defined $options -> {other}) {
 
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
@@ -1055,86 +1061,59 @@ sub draw_form_field_select {
 
 		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
-		if ($options -> {no_confirm}) {
+		my ($confirm_js_if, $confirm_js_else) = $options -> {no_confirm} ? ('', '')
+			: (
+				"if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {",
+				"} else {this.selectedIndex = 0}"
+			);
 
-			$options -> {onChange} .= <<EOJS;
+		$options -> {onChange} .= <<EOJS;
 
-				if (this.options[this.selectedIndex].value == -1) {
+			if (this.options[this.selectedIndex].value == -1) {
 
-					var dialog_width = $options->{other}->{width};
+				$confirm_js_if
+
+					var dialog_width  = $options->{other}->{width};
 					var dialog_height = $options->{other}->{height};
-					
+
 					try {
 
 						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random()}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-					
+
 						focus ();
-						
+
 						if (result.result == 'ok') {
-						
+
 							setSelectOption (this, result.id, result.label);
-							
+
 						} else {
-						
+
 							this.selectedIndex = 0;
-						
-						} 					
+
+						}
 
 					} catch (e) {
-					
+
 						this.selectedIndex = 0;
-						
+
 					}
-					
-					
-				}
+
+				$confirm_js_else
+
+			}
 EOJS
-		} else {
 
-			$options -> {onChange} .= <<EOJS;
-	
-				if (this.options[this.selectedIndex].value == -1) {
-
-					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-
-						var dialog_width = $options->{other}->{width};
-						var dialog_height = $options->{other}->{height};
-
-						try {
-	
-							var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-						
-							focus ();
-							
-							if (result.result == 'ok') {
-							
-								setSelectOption (this, result.id, result.label);
-								
-							} else {
-							
-								this.selectedIndex = 0;
-							
-							} 					
-	
-						} catch (e) {
-						
-							this.selectedIndex = 0;
-							
-						}
-					}
-				}
-EOJS
-		}
 	}
 
 	my $html = <<EOH;
 		<select 
 			name="_$$options{name}"
-			id="_$$options{name}_select"
+			id="$id"
 			$attributes
-			onKeyDown="tabOnEnter()"
-			onChange="is_dirty=true; $$options{onChange}" 
-			onKeyPress="typeAhead(0)" 
+			onKeyDown="tabOnEnter();"
+			onChange="is_dirty=true; $$options{onChange}"
+			onKeyPress="typeAhead(0);"
+			onKeyUp="var keyCode = event.keyCode || event.which; if (keyCode == 38 || keyCode == 40) this.onchange();"
 		>
 EOH
 		
