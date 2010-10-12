@@ -475,10 +475,13 @@ sub draw_text_cell {
 	unless ($data -> {off}) {
 
 		$txt = $data -> {label};
+		
 		$txt =~ s{^\s+}{};
 		$txt =~ s{\s+$}{};
 
-		unless ($data -> {no_nobr}) {
+		if ($data -> {no_nobr}) {
+			$txt =~ s{\n}{<br/>}gsm;
+		} else {
 			$txt = '<nobr>' . $txt . '</nobr>';
 		}
 
