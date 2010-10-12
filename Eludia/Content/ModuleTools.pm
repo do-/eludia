@@ -510,7 +510,7 @@ $line = Encode::decode ('windows-1251', $line);
 
 		close (S);
 
-		eval qq{# line 1 "$file_name"\n $src \n; 1;\n};
+		eval qq{# line 1 "$file_name"\n use utf8; $src \n; 1;\n};
 
 		die "$module_name: " . $@ if $@;
 
