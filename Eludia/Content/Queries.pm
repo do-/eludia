@@ -302,13 +302,13 @@ sub do_drop_filters___queries {
 
 	foreach my $key (keys %_REQUEST) {
 	
-		$key =~ /^_filter_(\w+)$/ or next;
+		$key =~ /^_filter_(.+)$/ or next;
 		
 		my $filter = $1;
 
 		$filter =~ s/_\d+//;
 
-		$esc_href =~ s/([\?\&]$filter=)[^\&]*//;                
+		$esc_href =~ s/([\?\&]$filter=)[^\&]*//;
 	
 	}
 
@@ -330,7 +330,7 @@ sub do_update___queries {
 
 	foreach my $key (keys %_REQUEST) {
 	
-		$key =~ /^_(\w+)_desc$/ or next;
+		$key =~ /^_(.+)_desc$/ or next;
 		
 		my $order = $1;
 		
@@ -352,32 +352,23 @@ sub do_update___queries {
 	$content -> {order} = join ', ', grep { $_ } @order;
 
 	foreach my $cbx (split /,/, $_REQUEST {__form_checkboxes_custom}) {
-		if ($cbx =~ /(\d+)_(\d+)/) {
+		if ($cbx =~ /(\d+)_(\d+)$/) {
 			$content -> {filters} -> {$1} .= '';
 		}
 	}
 	
 	foreach my $key (keys %_REQUEST) {
-	
-		$key =~ /^_filter_(\w+)$/ or next;
-		
+
+		$key =~ /^_filter_(.+)$/ or next;
+
 		my $filter = $1;
-		
-		if ($filter =~ /(\d+)_(\d+)/) {
-		
-			$content -> {filters} -> {$1} .= ','
-				if $content -> {filters} -> {$1};
-				
-			$content -> {filters} -> {$1} .= $2;
-				
-		} else {
-		
-			$content -> {filters} -> {$filter} = $_REQUEST {$key} || '';
-			
-		}
+
+		$_REQUEST {$key} = join ',', -1, @{$_REQUEST {$key}} if (ref $_REQUEST {$key} eq ARRAY);
+
+		$content -> {filters} -> {$filter} = $_REQUEST {$key} || '';
 	
 	}
-	
+
 	sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", Dumper ($content), $_REQUEST {id});
 
 	my $esc_href = esc_href ();
@@ -404,7 +395,7 @@ sub draw_item_of___queries {
 	
 		{
 			type  => 'banner',
-			label => 'Столбцы и фильтры',
+			label => 'СТОЛБЦЫ И ФИЛЬТРЫ',
 		},
 		
 	);
