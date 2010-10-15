@@ -47,6 +47,56 @@ sub require_both ($) {
 ################################################################################
 
 sub require_config {
+
+	unless ($preconf -> {_} -> {site_conf} -> {path}) {
+	
+		$preconf -> {_} -> {site_conf} -> {path} = $preconf -> {_} -> {docroot};
+		
+		$preconf -> {_} -> {site_conf} -> {path} =~ s{docroot/?$}{conf/httpd.conf};
+	
+	}
+	
+	-f $preconf -> {_} -> {site_conf} -> {path} or die "Site configuration file not found at '$preconf->{_}->{site_conf}->{path}': $!\n";
+	
+	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $last_modified, $ctime, $blksize, $blocks) = stat ($preconf -> {_} -> {site_conf} -> {path});
+
+	if ($last_modified > $preconf -> {_} -> {site_conf} -> {timestamp}) {
+	
+		open (I, $preconf -> {_} -> {site_conf} -> {path}) or die "Can't open $preconf->{_}->{site_conf}->{path}: $!\n";
+	
+		my $httpd_conf = join '', (<I>);				
+		
+		close (I);
+		
+		$httpd_conf =~ m{\<perl\s*\>(.*?)\</perl\s*\>}gism or die "<Perl> section is not found at $preconf->{_}->{site_conf}->{path}";
+		
+		my $perl_section = $1;
+		
+		$perl_section =~ s{use\s+Eludia::Loader(.*?)\{}{\$preconf_override = \{}sm;
+		
+		local $preconf_override = {};
+
+		warn $perl_section;
+				
+		eval $perl_section;
+		
+		if ($@) {
+		
+			warn $@;
+		
+		}
+		else {
+		
+			$preconf = {%$preconf, %$preconf_override};
+			
+			sql_disconnect ();
+			sql_reconnect ();
+			
+			$preconf -> {_} -> {site_conf} -> {timestamp} = $last_modified;
+		
+		}
+	
+	}
 	
 	require_fresh ($_PACKAGE . 'Config');
 		
@@ -117,6 +167,20 @@ sub reverse_systables {
 
 ################################################################################
 
+sub list_of_files_in_the_directory ($) {
+
+	opendir (DIR, $_[0]) or die "Ñan't opendir $_[0]: $!";
+	
+	my @file_names = readdir (DIR);
+	
+	closedir DIR;
+	
+	return @file_names;
+
+}
+
+################################################################################
+
 sub require_scripts_of_type ($) {
 
 	my ($script_type) = @_;
@@ -125,32 +189,16 @@ sub require_scripts_of_type ($) {
 	
 	my $__time = 0;
 	
-	my $is_updated;
-	
-	foreach my $the_path (_INC ()) {
+	my $postfix = '/' . ucfirst $script_type;
+		
+	foreach my $dir (grep {-d} map {$_ . $postfix} _INC ()) {
 
 		my $time = time;
-	
-		my $dir = $the_path . '/' . ucfirst $script_type;
-	
-		-d $dir or next;
-
-		opendir (DIR, $dir) or die "can't opendir $dir: $!";
-		my @file_names = readdir (DIR);
-		closedir DIR;
-
-		if (@file_names == 0) {
-		
-			__log_profilinig ($time, "   require_scripts_of_type $script_type: $dir is empty") ;
-			
-			next;
-			
-		}
 		
 		my @scripts = ();
 		my $name2def = {};
 
-		foreach my $file_name (@file_names) {
+		foreach my $file_name (list_of_files_in_the_directory $dir) {
 				
 			$file_name =~ /\.p[lm]$/ or next;
 			
@@ -198,60 +246,37 @@ sub require_scripts_of_type ($) {
 			
 		}
 
-		@scripts = 
-			
-			sort {$a -> {last_modified} <=> $b -> {last_modified}} 
-			
-			grep {$needed_scripts -> {$_ -> {path}}} 
-					
-			@scripts;
-
-		my @src = ();
-
-		foreach my $script (@scripts) {
+		foreach my $script (sort {$a -> {last_modified} <=> $b -> {last_modified}} grep {$needed_scripts -> {$_ -> {path}}} @scripts) {
 		
-			my $src = '';
-			
+			my $time = time ();
+					
 			if ($script_type eq 'model') {
-			
-				local $__the_dir = $dir;				
-				$__the_dir =~ s{/Model$}{};
 
-				$src = Dumper ($DB_MODEL -> {tables} -> {$script -> {name}});
-				$src =~ s{^\$VAR1 =}{$script->{name} =>};
-				$src =~ s{;\s*$}{}smg;
-
+				$model_update -> assert (
+					
+					prefix => 'application model#',
+						
+					default_columns => $DB_MODEL -> {default_columns},
+						
+					tables => {$script -> {name} => $DB_MODEL -> {tables} -> {$script -> {name}}},
+						
+				);
+						
 			}
 			else {
+			
+				do $script -> {path};
 
-				open  (SCRIPT, $script -> {path}) or die "Can't open $script->{path}:$!\n";
-				while (<SCRIPT>) { $src .= $_; };
-				close (SCRIPT);
+				die $@ if $@;
 
 			}
 
-			push @src, $src;
-									
+			$time = __log_profilinig ($time, "     $script->{path} fired");
+											
 		}
 
-		@src = ("\$model_update -> assert (prefix => 'application model#', default_columns => \$DB_MODEL -> {default_columns}, tables => {@{[ join ',', @src]}})") if $script_type eq 'model';
-			
-		foreach my $src (@src) { 
-			
-			warn "# { script start #################################################################\n\n";
-			warn $src . "\n\n";
-			warn "# } script finish ################################################################\n";
-
-			eval $src; 
-			
-			die $@ if $@;
-			
-			$is_updated = 1;
-			
-		}
-				
 		checksum_write ($checksum_kind, $new_checksums);
-			
+
 		__log_profilinig ($time, "   require_scripts_of_type $script_type done in $dir");
 
 	}
@@ -263,6 +288,8 @@ sub require_scripts_of_type ($) {
 ################################################################################
 
 sub require_scripts {
+
+	return if $_REQUEST {__don_t_require_scripts};
 	
 	my $time = time;
 	
@@ -301,6 +328,8 @@ sub require_scripts {
 	close (CONFIG);
 
 	__log_profilinig ($time, "  require_scripts done");
+	
+	$_REQUEST {__don_t_require_scripts} = 1;
 
 }
 
@@ -318,27 +347,50 @@ sub localtime_to_iso {
 
 sub _INC {
 
-	my ($prefix) = split /_/, ($_[0] || $_REQUEST {type} || $_SUBSET -> {name});
+	my $type_prefix = $_REQUEST {type} =~ /^(\w+?)_/ ? $1 : '';
+	
+	my %prefixes = $_SUBSET -> {name} eq '*' ? ('*' => 1) : (map {$_ => 1} ('', $_[0], $_SUBSET -> {name}, $type_prefix));
 
+	my @prefixes = sort keys %prefixes;
+	
+	my $cache_key = join ',', @prefixes;
+	
+	my $cache = $preconf -> {_} -> {inc} ||= {};
+	
+	$cache -> {$cache_key} and return @{$cache -> {$cache_key}};
+	
 	my @result = ();
 	
 	foreach my $dir (reverse @$PACKAGE_ROOT) {
-	
-		my $default = $dir . '/_';
-	
-		if (-d $default) {
-					
-			my $specific = $dir . '/_' . $prefix;
-			
-			-d $specific and push @result, $specific;
 
-			push @result, $default;
+		my %result = ($dir => 1);
+
+		if (-d ($dir . '/_')) {
+	
+			foreach my $prefix (@prefixes) {
+
+				if ($prefix eq '*') {
+
+					$result {$_} ||= 1 foreach grep {-d && !/\.$/} map {"${dir}/${_}"} list_of_files_in_the_directory $dir;
+
+				}
+				else {
+
+					my $specific = "${dir}/_${prefix}";
+
+					-d $specific and $result {$specific} ||= 1;
+
+				}
+
+			}
 		
 		}
 		
-		push @result, $dir;
-	
+		push @result, sort {length $b <=> length $a} keys %result;
+
 	}
+
+	$cache -> {$cache_key} = \@result;
 
 	return @result;
 
@@ -439,11 +491,6 @@ sub require_fresh {
 		open (S, $file_name);
 
 		while (my $line = <S>) {
-
-			if ($_OLD_PACKAGE) {
-				$line =~ s{package\s+$_OLD_PACKAGE}{package $_NEW_PACKAGE}g;
-				$line =~ s{$_OLD_PACKAGE\:\:}{$_NEW_PACKAGE\:\:}g;
-			}
 
 			$src .= $line;
 
