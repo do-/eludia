@@ -324,6 +324,13 @@ sub setup_page {
 	
 	$page -> {type} = $_REQUEST {type};
 
+	if ($ENV {FCGI_ROLE}) {
+		my $process = $0;
+		$process =~ s#(.*/)?([\w\.]+).*#$2#;
+		$process .= " $ENV{SERVER_NAME}: type=$_REQUEST{type}, id=$_REQUEST{id}, action=$_REQUEST{action}";
+		$0 = $process;
+	}
+
 	call_for_role ('get_page');
 
 	require_both $page -> {type};
@@ -415,8 +422,10 @@ sub handle_request_of_type_kickout {
 	
 	redirect (
 		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),
-		kind => 'js', 
-		target => '_top'
+		{
+			kind => 'js', 
+			target => '_top'
+		},
 	);
 
 	return handler_finish ();

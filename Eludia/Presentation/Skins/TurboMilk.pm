@@ -124,7 +124,7 @@ sub draw_gantt_bars {
 				left: expression(getElementById('gantt_$pf[0]_$pf[1]').offsetLeft + $dpf * getElementById('gantt_$pf[0]_$pf[1]').offsetWidth);
 				width:expression(getElementById('gantt_$pt[0]_$pt[1]').offsetLeft + $dpt * getElementById('gantt_$pt[0]_$pt[1]').offsetWidth - getElementById('gantt_$pf[0]_$pf[1]').offsetLeft - $dpf * getElementById('gantt_$pf[0]_$pf[1]').offsetWidth);
 				background-color:$bar->{color}
-			" title="$bar->{title}"><img src='/0.gif' width=1 height=1></td>
+			" title="$bar->{title}"><img src='$_REQUEST{__static_url}/0.gif' width=1 height=1></td>
 EOH
 
 		$top = 6;
@@ -1098,7 +1098,7 @@ sub draw_form_field_radio {
 sub draw_form_field_select {
 
 	my ($_SKIN, $options, $data) = @_;
-	
+
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= ($options -> {id} ||= "_$options->{name}_select");
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
@@ -1108,7 +1108,7 @@ sub draw_form_field_select {
 	}
 	
 	my $attributes = dump_attributes ($options -> {attributes});
-	
+
 	if (defined $options -> {other}) {
 
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
@@ -1116,7 +1116,11 @@ sub draw_form_field_select {
 
 		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
-		if ($options -> {no_confirm}) {
+		my ($confirm_js_if, $confirm_js_else) = $options -> {no_confirm} ? ('', '')
+			: (
+				"if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {",
+				"} else {this.selectedIndex = 0}"
+			);
 
 			$options -> {onChange} .= <<EOJS;
 
@@ -1127,41 +1131,33 @@ sub draw_form_field_select {
 
 					var dialog_width = $options->{other}->{width};
 					var dialog_height = $options->{other}->{height};
-					
+
 					try {
 
 						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random()}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-					
-						focus ();
-						
-						if (result.result == 'ok') {
-						
-							setSelectOption (this, result.id, result.label);
-							
-						} else {
-						
-							this.selectedIndex = 0;
-						
-						} 					
 
-					} catch (e) {
-					
+						focus ();
+
+						if (result.result == 'ok') {
+
+							setSelectOption (this, result.id, result.label);
+
+						} else {
+
 						this.selectedIndex = 0;
-						
+
 					}
 
 					if (\$.browser.webkit || \$.browser.safari)
 						\$.unblockUI ();
 					
 				}
-EOJS
+
 		} else {
 
-			$options -> {onChange} .= <<EOJS;
-	
-				if (this.options[this.selectedIndex].value == -1) {
+					} catch (e) {
 
-					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
+						this.selectedIndex = 0;
 
 						if (\$.browser.webkit || \$.browser.safari)
 							\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
@@ -1196,8 +1192,8 @@ EOJS
 					}
 				}
 EOJS
+
 		}
-	}
 
 	my $html = <<EOH;
 		<select 

@@ -572,7 +572,7 @@ function UpdateClock () {
 
 	var tDate = new Date ();
 
-	$('#clock_d').text (tDate.getDate () + ' ' + __month_names [tDate.getMonth ()] + ' ' + tDate.getFullYear ());
+	$('#clock_d').text (tDate.getDate () + ' ' + window.__month_names [tDate.getMonth ()] + ' ' + tDate.getFullYear ());
 	$('#clock_h').text (twoDigits (tDate.getHours ()));
 	$('#clock_s').css({visibility : tDate.getSeconds () % 2 ? 'hidden' : 'visible'});
 	$('#clock_m').text (twoDigits (tDate.getMinutes ()));
@@ -1192,7 +1192,7 @@ TableSlider.prototype.set_row = function (row) {
 
 	if (row < this.cnt) {
 		this.row = row;
-		if ($('form').size() < 3) {
+		if ($('.table-container,.table-container-x').size() < 2) {
 			this.rows [row].scrollIntoView(false);
 		}
 	}
