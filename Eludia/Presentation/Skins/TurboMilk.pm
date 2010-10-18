@@ -1235,11 +1235,66 @@ sub draw_form_field_tree {
 		$v -> {_ls} = 1;
 	}
 	
+	$options -> {active} += 0;
+	
 	my $name = $options -> {name} || 'd';
 	$options->{height} ||= 200;
 	
 	my $nodes = $_JSON -> encode (\@nodes);
+		
+	if ($options -> {active} && $_REQUEST {__parent}) {
+	
+		return out_html ({}, <<EOH);
+<html>
+	<head>
+		<script>
+			
+			function load () {
+			
+				var new_nodes = $nodes;
+				
+				for (i = 0; i < new_nodes.length; i++) {
+					var node = new_nodes [i];
+					if (node.title) continue;
+					node.title = node.label;
+				}
+				
+				var f = window.parent;
+				var d = f.$name;
+				var old_nodes = d.aNodes;
+				var n = -1;
 
+				for (i = 0; i < old_nodes.length; i ++) {
+					var cn = old_nodes [i];
+					if (cn.id != $_REQUEST{__parent}) continue;	
+					n = i;
+					cn._hac += new_nodes.length;
+					cn._io = true;
+					break;
+				};
+
+				var k = 0;
+				var nodes = [];
+
+				for (i = 0;     i <= n;               i ++) nodes [k++] = old_nodes [i];
+				for (i = 0;     i < new_nodes.length; i ++) nodes [k++] = new_nodes [i];
+				for (i = n + 1; i < old_nodes.length; i ++) nodes [k++] = old_nodes [i];
+
+				d.aNodes = nodes;
+				
+				f.document.getElementById ("${name}_td").innerHTML = d.toString ();
+				f.setCursor ();
+				
+			}
+			
+		</script>
+	</head>
+	<body onLoad="load ()"></body>
+</html>
+EOH
+	
+	}
+	
 	return <<EOH;
 <table 
 	width=100% 
@@ -1249,9 +1304,11 @@ sub draw_form_field_tree {
 	class='dtree'
 >	
 	<tr>
-		<td valign=top height="$options->{height}">
+		<td valign=top height="$options->{height}" id="${name}_td">
 		<script type="text/javascript">
 			var $name = new dTree ('$name');
+			$name._active = $options->{active};
+			$name._href = '$options->{href}';
 			$name._url_base = '';
 			var c = $name.config;
 			c.iconPath = '$_REQUEST{__static_url}/tree_';
@@ -3559,7 +3616,7 @@ EOH
 sub draw_node {
 
 	my ($_SKIN, $options, $i) = @_;
-	
+
 	$options -> {label} =~ s{\"}{\&quot;}gsm; #"
 
 	my $node = {
@@ -3579,7 +3636,7 @@ sub draw_node {
 	if ($i -> {cnt_children} > 0) {
 		$node -> {_hc}  = 1;
 		$node -> {_hac} = 0 + $i -> {cnt_actual_children};	
-		$node -> {_io}  = $i -> {id} == $_REQUEST {__parent} ? 1 : 0;
+		$node -> {_io}  = $i -> {is_open} || ($i -> {id} == $_REQUEST {__parent} ? 1 : 0);
 	}
 	else {
 		$node -> {_hc} = 0;	

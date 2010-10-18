@@ -782,13 +782,13 @@ sub sql_increment_sequence {
 
 ################################################################################
 
-sub sql_seq_name_nextval {
+sub sql_seq_name {
 
 	my ($table_name) = @_;
 
 	my $table_name_safe = sql_table_name ($table_name);
-
-	my $seq_name = $_SEQUENCE_NAMES -> {$table_name} ||= sql_select_scalar (q {
+	
+	my $triggers = sql_select_all (q {
 	
 		SELECT 
 			trigger_body 
@@ -798,12 +798,32 @@ sub sql_seq_name_nextval {
 			table_name = ? 
 			AND triggering_event like '%INSERT%'
 			
-	}, uc_table_name ($table_name)) =~ /(\S+)\.nextval/ism ? $1 : undef;
+	}, uc_table_name ($table_name));
 	
+	foreach my $i (@$triggers) {
+	
+		$i -> {trigger_body} =~ /(\S+)\.nextval/ism and return $1;
+	
+	}
+	
+	die "No sequence found for $table_name\n";
+
+}
+
+################################################################################
+
+sub sql_seq_name_nextval {
+
+	my ($table_name) = @_;
+
+	my $table_name_safe = sql_table_name ($table_name);
+
+	my $seq_name = $_SEQUENCE_NAMES -> {$table_name} ||= sql_seq_name ($table_name);
+		
 	my $nextval = sql_select_scalar ("SELECT $seq_name.nextval FROM DUAL");
 		
 	while (1) {
-	
+
 		my $max = sql_select_scalar ("SELECT MAX(id) FROM $table_name_safe");
 		
 		last if $nextval > $max;
