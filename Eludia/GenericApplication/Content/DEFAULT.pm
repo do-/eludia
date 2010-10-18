@@ -190,17 +190,33 @@ sub do_update_DEFAULT { # запись карточки
 		push @fields, $';
 	}
 	
-	@fields > 0 or return;
+	if (@fields > 0) {
 
-	my $id = $_[2] || 'id';
+		my $id = $_[2] || 'id';
 
-	sql_do_update ($type, \@fields, {$id => $_[1] || $_REQUEST {id}});
+		sql_do_update ($type, \@fields, {$id => $_[1] || $_REQUEST {id}});
+	
+	}
 
 	foreach my $key (keys %_REQUEST) {
 	
 		$key =~ /^__checkboxes_/ or next;
+		
+		my $table_from = $_REQUEST {$key};
+		
+		my ($table, $from) = split /\./, $table_from;
+		
+		$from ||= 'id_' . en_unplural ($_REQUEST {type});
 
-		sql_store_ids ($_REQUEST {$key} => $');
+		my $options = {
+		
+			table => $table,
+			key   => $',
+			root  => {$from => $_REQUEST {id}},
+			
+		};
+
+		sql_store_ids (darn $options);
 	
 	}
 
