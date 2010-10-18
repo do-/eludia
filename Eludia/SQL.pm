@@ -67,7 +67,7 @@ sub add_vocabularies {
 			
 			$options -> {ids} -> {name}  ||= $options -> {ids} -> {to};
 			
-			$_REQUEST {"__checkboxes_$options->{ids}->{to}"} = $options -> {ids} -> {table};
+			$_REQUEST {"__checkboxes_$options->{ids}->{to}"} = "$options->{ids}->{table}.$options->{ids}->{from}";
 		
 			$item -> {$options -> {ids} -> {name}} = [sql_select_col ("SELECT $options->{ids}->{to} FROM $options->{ids}->{table} WHERE fake = 0 AND $options->{ids}->{from} = ?", $item -> {id})];
 		
@@ -1461,6 +1461,7 @@ sub wish {
 	}
 	
 	my $is_virgin = 1;
+	@layers > 0 or @layers = ({});
 
 	foreach my $layer (@layers) {
 	
