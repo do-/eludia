@@ -459,7 +459,9 @@ EOH
 	$html .=  '</form></table>';
 	
 	$html .= $options -> {bottom_toolbar};
-	
+
+	$_REQUEST {__on_load} .= ';numerofforms++;';	
+
 	return $html;	
 
 }
@@ -3008,6 +3010,8 @@ EOH
 	
 	my $enctype = $html =~ /\btype\=[\'\"]?file\b/ ? 
 		'enctype="multipart/form-data"' : '';
+
+	$_REQUEST {__on_load} .= ';numeroftables++;';	
 
 	return <<EOH . $html;
 	
