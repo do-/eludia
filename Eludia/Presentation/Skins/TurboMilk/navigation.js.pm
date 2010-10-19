@@ -34,6 +34,8 @@ var suggest_clicked = 0;
 var suggest_is_visible = 0;
 var lastClientHeight = 0;
 var lastClientWidth = 0;
+var numerofforms = 0;
+var numeroftables = 0;
 var typeAheadInfo = {last:0, 
 	accumString:"", 
 	delay:500,
@@ -1100,7 +1102,7 @@ TableSlider.prototype.set_row = function (row) {
 
 	if (row < this.cnt) {
 		this.row = row;
-		if ($('.table-container,.table-container-x').size() < 2) {
+		if (numeroftables == 1 && numerofforms == 0) {
 			this.rows [row].scrollIntoView(false);
 		}
 	}
