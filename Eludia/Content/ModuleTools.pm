@@ -422,36 +422,6 @@ sub require_fresh_message {
 
 ################################################################################
 
-sub last_modified_time_if_refresh_is_needed {
-
-	my ($file_name) = @_;
-	
-	my $last_recorded_time = $INC_FRESH_BY_PATH {$file_name};
-	
-	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat ($file_name);
-	
-	return $mtime if $mtime > $last_recorded_time;
-	
-	if ($preconf -> {core_debug_profiling}) {
-
-		my $last_modified_iso = localtime_to_iso ($mtime);
-	
-		my $message = require_fresh_message ($file_name) .
-
-			($last_recorded_time == $mtime ? " ==" : 
-			
-				' : ' . localtime_to_iso ($last_recorded_time) . " >");
-
-		$time = __log_profilinig ($time, "   $message $last_modified_iso");
-
-	}
-	
-	return undef;
-
-}
-
-################################################################################
-
 sub require_fresh {
 
 	my ($module_name) = @_;	

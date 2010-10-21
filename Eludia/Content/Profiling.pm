@@ -1,51 +1,47 @@
 ################################################################################
 
-sub __profile_in {
+sub __profile_print_tree {
 
-	ref $preconf -> {core_debug_profiling} eq HASH or $preconf -> {core_debug_profiling} = {
+	my ($old_options, $new_options) = @_;
+	
+	my $now = $new_options -> {__time};
 
-		in  => sub {},
-
-		out => sub {
-
-			my ($old_options, $new_options) = @_;
-			
-			my $now = $new_options -> {__time};
-
-			my ($sec, $min, $hour, $day, $mon, $year) = localtime ($now);
-						
-			my $message = sprintf ("[%04d-%02d-%02d %02d:%02d:%02d:%03d $$] ", $year + 1900, $mon + 1, $day, $hour, $min, $sec, int (1000 * ($now - int $now)));
-			
-			$message .= '       ' x $old_options -> {__level};
-			
-			$message .= sprintf ('%6.1f ms ', $new_options -> {__duration});
-
-			$message .= '       ' x (7 - $old_options -> {__level});
-
-			$message .= sprintf ("%-30s ", $old_options -> {__type});
-						
-			if ($new_options -> {__type} ne $old_options -> {__type}) {
-			
-				$message .= '[ABORT]';
-			
-			}
-			else {
-
-				my $comment = $new_options -> {label} || $old_options -> {label};
+	my ($sec, $min, $hour, $day, $mon, $year) = localtime ($now);
 				
-				$comment =~ s{\s+}{ }gsm;
+	my $message = sprintf ("[%04d-%02d-%02d %02d:%02d:%02d:%03d $$] ", $year + 1900, $mon + 1, $day, $hour, $min, $sec, int (1000 * ($now - int $now)));
+	
+	$message .= '       ' x $old_options -> {__level};
+	
+	$message .= sprintf ('%6.1f ms ', $new_options -> {__duration});
 
-				$message .= $comment;
+	$message .= '       ' x (7 - $old_options -> {__level});
 
-			}
-			
-			$message .= "\n";
+	$message .= sprintf ("%-30s ", $old_options -> {__type});
+				
+	if ($new_options -> {__type} ne $old_options -> {__type}) {
+	
+		$message .= '[ABORT]';
+	
+	}
+	else {
 
-			warn $message;
+		my $comment = $new_options -> {label} || $old_options -> {label};
+		
+		$comment =~ s{\s+}{ }gsm;
 
-		},
+		$message .= $comment;
 
-	};
+	}
+	
+	$message .= "\n";
+
+	warn $message;
+
+}
+
+################################################################################
+
+sub __profile_in {
 
 	my ($type, $options) = @_;
 
@@ -55,8 +51,53 @@ sub __profile_in {
 	push @_PROFILING_STACK, $options;
 
 	$options -> {__level} = @_PROFILING_STACK - 1;
+		
+	__profile_handle_event ($type, 0, $options);
 
-	&{$preconf -> {core_debug_profiling} -> {in}} ($options);
+}
+
+################################################################################
+
+sub __profile_handle_event {
+
+	my $type = shift;
+	my $kind = shift;
+	
+	ref $preconf -> {core_debug_profiling} eq HASH or $preconf -> {core_debug_profiling} = {};
+	
+	my $core_debug_profiling = $preconf -> {core_debug_profiling};
+
+	$core_debug_profiling -> {''} ||= ['', 'print_tree'];
+
+	my $type_config;
+	
+	my $type_verbatim = $type;
+
+	foreach (1 .. 10) {
+
+		$type_config = $core_debug_profiling -> {$type};
+
+		if (!$type_config) {
+		
+			$type =~ s{\.?\w+$}{};
+			
+			next;
+		
+		}
+
+		$core_debug_profiling -> {$type_verbatim} ||= $type_config;
+
+	}
+	
+	my $name = $type_config -> [$kind] or return;
+	
+	eval {
+	
+		&{"__profile_$name"} (@_);
+	
+	};
+	
+	warn $@ if $@;
 
 }
 
@@ -77,8 +118,8 @@ sub __profile_out {
 		$new_options -> {__type}     = $type;
 		
 		$new_options -> {__duration} = 1000 * ($new_options -> {__time} - $old_options -> {__time});
-
-		&{$preconf -> {core_debug_profiling} -> {out}} ($old_options, $new_options);
+				
+		__profile_handle_event ($type, 1, $old_options, $new_options);
 		
 		last if $old_options -> {__type} eq $type;
 	
@@ -110,59 +151,6 @@ sub __log_profilinig {
 		if $preconf -> {core_debug_profiling} > 0 && !$ENV {ELUDIA_SILENT};
 	
 	return $now;
-
-}
-
-################################################################################
-
-sub __log_request_profilinig {
-
-	my ($request_time) = @_;
-
-	return unless ($preconf -> {core_debug_profiling} > 2 && $model_update -> {core_ok});
-
-	my $c = $r -> connection; 
-
-	$_REQUEST {_id_request_log} = sql_do_insert ($conf -> {systables} -> {__request_benchmarks}, {
-		id_user	=> $_USER -> {id}, 
-		ip	=> $ENV {REMOTE_ADDR}, 
-		ip_fw	=> $ENV {HTTP_X_FORWARDED_FOR},
-		fake	=> 0,
-		type	=> $_REQUEST {type},
-		mac	=> get_mac (),
-		request_time	=> int ($request_time),
-		connection_id	=> $c -> id (),
-		connection_no	=> $c -> keepalives (),
-	});
-	
-	my $request_benchmarks_table = sql_table_name ($conf -> {systables} -> {__request_benchmarks});
-
-	sql_do ("UPDATE $request_benchmarks_table SET params = ? WHERE id = ?",
-		Data::Dumper -> Dump ([\%_REQUEST], ['_REQUEST']), $_REQUEST {_id_request_log}); 
-
-}
-
-################################################################################
-	
-sub __log_request_finish_profilinig {
-
-	my ($options) = @_;
-
-	return 
-		unless ($preconf -> {core_debug_profiling} > 2 && $model_update -> {core_ok}); 
-
-	my $time = time;
-
-	my $request_benchmarks_table = sql_table_name ($conf -> {systables} -> {__request_benchmarks});
-
-	sql_do ("UPDATE $request_benchmarks_table SET application_time = ?, sql_time = ?, response_time = ?, bytes_sent = ?, is_gzipped = ? WHERE id = ?",
-		int ($options -> {application_time}), 
-		int ($options -> {sql_time}), 
-		$options -> {out_html_time} ? int (1000 * (time - $options -> {out_html_time})) : 0, 
-		$r -> bytes_sent,
-		$options -> {is_gzipped},		 
-		$options -> {id_request_log},
-	);
 
 }
 

@@ -1944,7 +1944,7 @@ sub draw_tree {
 	
 	return '' if $options -> {off};
 	
-	my $time = time;
+	__profile_in ('draw.tree');
 	
 	$options -> {width} ||= 250;
 		
@@ -2063,7 +2063,7 @@ sub draw_tree {
 	
 	my $html = $_SKIN -> draw_tree ($node_callback, $list, $options);
 
-	__log_profilinig ($time, sprintf ("  draw_tree"));
+	__profile_out ('draw.tree');
 
 	return $html;
 
@@ -2778,8 +2778,6 @@ sub check_static_files {
 				binmode (OUT);	
 				print OUT gzip_in_memory ($js);
 				close OUT;
-
-				__log_profilinig ($time, "  	$fn gzipped");
 
 			}
 		}

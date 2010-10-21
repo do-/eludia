@@ -22,15 +22,13 @@ sub handler {
 
 			my $page = setup_page ();
 			
-			my $callee = "handle_request_of_type_$page->{request_type}";
-
 			__profile_out ('handler.setup_page'); 
 
-			__profile_in ($callee); 
+			__profile_in ("handler.$page->{request_type}"); 
 
-			my $code = &$callee ($page);
+			my $code = &{"handle_request_of_type_$page->{request_type}"} ($page);
 			
-			__profile_out ($callee);
+			__profile_out ("handler.$page->{request_type}");
 
 			return $code;
 
