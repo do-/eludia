@@ -48,6 +48,8 @@ sub require_both ($) {
 
 sub require_config {
 
+	__profile_in ('require.config');
+
 	unless ($preconf -> {_} -> {site_conf} -> {path}) {
 	
 		$preconf -> {_} -> {site_conf} -> {path} = $preconf -> {_} -> {docroot};
@@ -102,6 +104,8 @@ sub require_config {
 		
 	fill_in ();
 
+	__profile_out ('require.config');
+
 }
 
 ################################################################################
@@ -119,6 +123,8 @@ sub get_item_of_ ($) {
 ################################################################################
 
 sub require_model {
+
+	__profile_in ('require.model');
 
 	my $core_was_ok = $model_update -> {core_ok};
 
@@ -144,6 +150,8 @@ sub require_model {
 	}
 	
 	$core_was_ok or require_scripts ();
+
+	__profile_out ('require.model');
 
 }
 
@@ -193,7 +201,7 @@ sub require_scripts_of_type ($) {
 		
 	foreach my $dir (grep {-d} map {$_ . $postfix} _INC ()) {
 
-		my $time = time;
+		__profile_in ("require.scripts.$script_type" => {label => $dir}); 
 		
 		my @scripts = ();
 		my $name2def = {};
@@ -228,7 +236,7 @@ sub require_scripts_of_type ($) {
 		
 		if (@scripts == 0) {
 		
-			__log_profilinig ($time, "   $dir/.* <= " . localtime_to_iso ($__last_update));
+			__profile_out ("require.scripts.$script_type");
 			
 			next;
 			
@@ -240,7 +248,7 @@ sub require_scripts_of_type ($) {
 	
 		if (%$needed_scripts == 0) {
 		
-			__log_profilinig ($time, "   require_scripts_of_type $script_type: all scripts in $dir are filtered by 'checksums' (which are, in fact, timestamps).");
+			__profile_out ("require.scripts.$script_type");
 			
 			next;
 			
@@ -248,7 +256,7 @@ sub require_scripts_of_type ($) {
 
 		foreach my $script (sort {$a -> {last_modified} <=> $b -> {last_modified}} grep {$needed_scripts -> {$_ -> {path}}} @scripts) {
 		
-			my $time = time ();
+			__profile_in ("require.scripts.$script_type.file", {label => $script -> {path}});
 					
 			if ($script_type eq 'model') {
 
@@ -271,13 +279,13 @@ sub require_scripts_of_type ($) {
 
 			}
 
-			$time = __log_profilinig ($time, "     $script->{path} fired");
+			__profile_out ("require.scripts.$script_type.file");
 											
 		}
 
 		checksum_write ($checksum_kind, $new_checksums);
 
-		__log_profilinig ($time, "   require_scripts_of_type $script_type done in $dir");
+		__profile_out ("require.scripts.$script_type");
 
 	}
 	
@@ -291,7 +299,7 @@ sub require_scripts {
 
 	return if $_REQUEST {__don_t_require_scripts};
 	
-	my $time = time;
+	__profile_in ('require.scripts'); 
 	
 	my $file_name;
 	
@@ -327,7 +335,7 @@ sub require_scripts {
 
 	close (CONFIG);
 
-	__log_profilinig ($time, "  require_scripts done");
+	__profile_out ('require.scripts'); 
 	
 	$_REQUEST {__don_t_require_scripts} = 1;
 
@@ -446,9 +454,9 @@ sub last_modified_time_if_refresh_is_needed {
 
 sub require_fresh {
 
-	local $time = time;
-
 	my ($module_name) = @_;	
+
+	__profile_in ('require.module' => {label => $module_name}); 
 
 	my $local_file_name = $module_name;
 
@@ -468,15 +476,33 @@ sub require_fresh {
 
 	my @file_names = grep {-f} map {"${_}$local_file_name.pm"} @inc;
 
-	@file_names > 0 or return "Module $module_name not found in " . (join '; ', @inc) . "\n";
+	if (@file_names == 0) {
+	
+		__profile_out ('require.module');
+		
+		return;
 
-	(grep {last_modified_time_if_refresh_is_needed ($_)} @file_names) > 0 or return;
+	}
 
 	foreach my $file_name (reverse @file_names) {
 
-		delete $INC_FRESH_BY_PATH {$file_name};
+		__profile_in ('require.file'); 
+			
+		my $last_recorded_time = $INC_FRESH_BY_PATH {$file_name};
 
-		my $last_modified = last_modified_time_if_refresh_is_needed ($file_name);
+		my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat ($file_name);
+		
+		my $last_modified_iso = localtime_to_iso ($mtime);
+		
+		if ($mtime <= $last_recorded_time) {
+		
+			__profile_out ('require.file' => {label => "$file_name = $last_modified_iso"});
+			
+			next;
+		
+		}
+
+		delete $INC_FRESH_BY_PATH {$file_name};
 
 		if ($type eq 'menu') {
 
@@ -512,17 +538,13 @@ sub require_fresh {
 
 		die "$module_name: " . $@ if $@;
 
-		$INC_FRESH {$module_name} = $INC_FRESH_BY_PATH {$file_name} = $last_modified;
+		$INC_FRESH {$module_name} = $INC_FRESH_BY_PATH {$file_name} = $mtime;
 
-		if ($preconf -> {core_debug_profiling}) {
-
-			my $message = require_fresh_message ($file_name);
-
-			$time = __log_profilinig ($time, "   $message -> " . localtime_to_iso ($last_modified));
-
-		}
+		__profile_out ('require.file' => {label => "$file_name -> $last_modified_iso"});
 	
 	}
+	
+	__profile_out ('require.module'); 
         	
 }
 
@@ -577,36 +599,14 @@ sub call_for_role {
 
 	if ($name_to_call) {
 	
-		$_REQUEST {__benchmarks_selected} = 0;
-	
+		__profile_in ("call.$name_to_call");
+		
 		my $result = &$name_to_call (@_);
-
-		if ($preconf -> {core_debug_profiling} > 1) {
-
-			my $id = sql_select_id ($conf->{systables}->{__benchmarks} => {fake => 0, label => $sub_name});
-
-			my $benchmarks_table = sql_table_name ($conf->{systables}->{__benchmarks});
-
-			sql_do (
-				"UPDATE $benchmarks_table SET cnt = cnt + 1, ms = ms + ?, selected = selected + ?  WHERE id = ?",
-				int(1000 * (time - $time)),
-				$_REQUEST {__benchmarks_selected},
-				$id,
-			);
-
-			
-			sql_do (
-				"UPDATE $benchmarks_table SET  mean = ms / cnt, mean_selected = selected / cnt WHERE id = ?",
-				$id,
-			);
-			
-		}
-		elsif ($preconf -> {core_debug_profiling} == 1) {
-			__log_profilinig ($time, ' ' . $name_to_call);
-		}
+	
+		__profile_out ("call.$name_to_call");
 		
 		return $result;
-		
+
 	}
 	else {
 		

@@ -9,6 +9,7 @@ use Eludia::Content::HTTP;
 use Eludia::Content::Validators;
 use Eludia::Content::Templates;
 use Eludia::Content::Tie;
+use Eludia::Content::Profiling;
 
 #############################################################################
 
@@ -171,33 +172,6 @@ sub add_totals {
 	
 	return $inserted;
 	
-}
-
-################################################################################
-
-sub __log_profilinig {
-
-	my $now = time ();
-	
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($now);
-	$year += 1900;
-	$mon ++; 
-
-	printf STDERR "[%04d-%02d-%02d %02d:%02d:%02d:%03d $$] %7.2f ms %s\n", 
-		$year,
-		$mon,
-		$mday,
-		$hour,
-		$min,
-		$sec,
-		int (1000 * ($now - int $now)),
-		1000 * ($now - $_[0]), 
-		$_[1] 
-		
-		if $preconf -> {core_debug_profiling} > 0 && !$ENV {ELUDIA_SILENT};
-	
-	return $now;
-
 }
 
 ################################################################################

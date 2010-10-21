@@ -187,7 +187,7 @@ sub sql_assert_core_tables {
 
 	return if $model_update -> {core_ok};
 
-my $time = time;
+	__profile_in ('sql.assert_core_tables'); 
 
 	$model_update -> assert (
 	
@@ -215,7 +215,7 @@ my $time = time;
 
 	$model_update -> {core_ok} = 1;
 		
-__log_profilinig ($time, ' <sql_assert_core_tables>');
+	__profile_out ('sql.assert_core_tables'); 
 	
 }
 
@@ -320,18 +320,24 @@ sub sql_ping {
 
 sub sql_reconnect {
 
-my $time = time;
+	__profile_in ('core.sql.reconnect');
 
 	our $db, $model_update, $SQL_VERSION;
 
 	if ($db && ($preconf -> {no_model_update} || ($model_update && $model_update -> {core_ok}))) {
 
-		sql_ping () and return
+		if (sql_ping ()) {
 		
-$time = __log_profilinig ($time, '  sql_reconnect: ping OK');
-
+			__profile_out ('core.sql.reconnect', {label => 'ping OK'});
+		
+			return;
+		
+		}
+		
 	}
 	
+	__profile_in ('core.sql.connect', {label => $preconf -> {db_dsn}});
+
 	$db = DBI -> connect ($preconf -> {db_dsn}, $preconf -> {db_user}, $preconf -> {db_password}, {
 		PrintError  => 0, 
 		RaiseError  => 1, 
@@ -353,9 +359,11 @@ $time = __log_profilinig ($time, '  sql_reconnect: ping OK');
 
 	}
 
-$time = __log_profilinig ($time, "  sql_reconnect: connected to $preconf->{db_dsn}");
+	__profile_out ('core.sql.connect');
 
 	unless ($INC_FRESH {db_driver}) {
+
+		__profile_in ('core.sql.driver');
 
 		my $driver_name = $db -> get_info ($GetInfoType {SQL_DBMS_NAME});
 	
@@ -373,15 +381,13 @@ $time = __log_profilinig ($time, "  sql_reconnect: connected to $preconf->{db_ds
 
 		$SQL_VERSION = {driver => $driver_name};
 
-$time = __log_profilinig ($time, "  sql_reconnect: $driver_name is loaded");
+		__profile_out ('core.sql.driver', {label => $driver_name});
 
 	}
 	
 	delete $SQL_VERSION -> {_};
 	
 	sql_version ();
-
-$time = __log_profilinig ($time, "  sql_reconnect: driver version is $SQL_VERSION->{string}");
 
 	unless ($preconf -> {no_model_update}) {
 		
@@ -398,11 +404,11 @@ $time = __log_profilinig ($time, "  sql_reconnect: driver version is $SQL_VERSIO
 				schema			=> $preconf -> {db_schema},
 			);
 
-$time = __log_profilinig ($time, '  sql_reconnect: $model_update created');
-
 		}
-	
+
 	}
+
+	__profile_out ('core.sql.reconnect', {label => $SQL_VERSION -> {string}});
 
 }   	
 
@@ -949,16 +955,6 @@ EOS
 }
 
 ################################################################################
-	
-sub __log_sql_profilinig {
-	
-	my ($options) = @_;
-
-	$_REQUEST {__sql_time} += 1000 * (time - $options -> {time});
-	 
-}
-
-################################################################################
 
 sub sql_extract_params {
 
@@ -1091,59 +1087,6 @@ sub sql_adjust_fake_filter {
 	$sql =~ s{where}{$where}i;
 	
 	return $sql;
-
-}
-
-################################################################################
-
-sub __log_request_profilinig {
-
-	my ($request_time) = @_;
-
-	return unless ($preconf -> {core_debug_profiling} > 2 && $model_update -> {core_ok});
-
-	my $c = $r -> connection; 
-
-	$_REQUEST {_id_request_log} = sql_do_insert ($conf -> {systables} -> {__request_benchmarks}, {
-		id_user	=> $_USER -> {id}, 
-		ip	=> $ENV {REMOTE_ADDR}, 
-		ip_fw	=> $ENV {HTTP_X_FORWARDED_FOR},
-		fake	=> 0,
-		type	=> $_REQUEST {type},
-		mac	=> get_mac (),
-		request_time	=> int ($request_time),
-		connection_id	=> $c -> id (),
-		connection_no	=> $c -> keepalives (),
-	});
-	
-	my $request_benchmarks_table = sql_table_name ($conf -> {systables} -> {__request_benchmarks});
-
-	sql_do ("UPDATE $request_benchmarks_table SET params = ? WHERE id = ?",
-		Data::Dumper -> Dump ([\%_REQUEST], ['_REQUEST']), $_REQUEST {_id_request_log}); 
-
-}
-
-################################################################################
-	
-sub __log_request_finish_profilinig {
-
-	my ($options) = @_;
-
-	return 
-		unless ($preconf -> {core_debug_profiling} > 2 && $model_update -> {core_ok}); 
-
-	my $time = time;
-
-	my $request_benchmarks_table = sql_table_name ($conf -> {systables} -> {__request_benchmarks});
-
-	sql_do ("UPDATE $request_benchmarks_table SET application_time = ?, sql_time = ?, response_time = ?, bytes_sent = ?, is_gzipped = ? WHERE id = ?",
-		int ($options -> {application_time}), 
-		int ($options -> {sql_time}), 
-		$options -> {out_html_time} ? int (1000 * (time - $options -> {out_html_time})) : 0, 
-		$r -> bytes_sent,
-		$options -> {is_gzipped},		 
-		$options -> {id_request_log},
-	);
 
 }
 
