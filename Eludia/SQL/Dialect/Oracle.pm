@@ -452,10 +452,14 @@ sub sql_select_all_hash {
 
 	my $st = sql_execute ($sql, @params);
 
+	__profile_in ('sql.fetch');
+
 	while (my $r = $st -> fetchrow_hashref) {
 		lc_hashref ($r);		                       	
 		$result -> {$r -> {id}} = $r;
 	}
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 	
 	$st -> finish;
 
@@ -488,6 +492,8 @@ sub sql_select_col {
 
 		my $cnt = 0;	
  	
+		__profile_in ('sql.fetch');
+
 		while (my @r = $st -> fetchrow_array ()) {
 	
 			$cnt++;
@@ -499,15 +505,21 @@ sub sql_select_col {
 	
 		}
 	
+		__profile_out ('sql.fetch', {label => $st -> rows});
+
 		$st -> finish;
 
 	} else {
 
 		my $st = sql_execute ($sql, @params);
 
+		__profile_in ('sql.fetch');
+
 		while (my @r = $st -> fetchrow_array ()) {
 			push @result, @r;
 		}
+
+		__profile_out ('sql.fetch', {label => $st -> rows});
 
 		$st -> finish;
 
@@ -595,7 +607,11 @@ sub sql_select_hash {
 
 	my $st = sql_execute ($sql_or_table_name, @params);
 
+	__profile_in ('sql.fetch');
+
 	my $result = $st -> fetchrow_hashref ();
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 
 	$st -> finish;		
 	
@@ -615,7 +631,11 @@ sub sql_select_array {
 
 	my $st = sql_execute ($sql, @params);
 
+	__profile_in ('sql.fetch');
+
 	my @result = $st -> fetchrow_array ();
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 
 	$st -> finish;
 	
@@ -647,6 +667,8 @@ sub sql_select_scalar {
 
 		my $cnt = 0;	
 	
+		__profile_in ('sql.fetch');
+
 		while (my @r = $st -> fetchrow_array ()) {
 	
 			$cnt++;
@@ -659,6 +681,8 @@ sub sql_select_scalar {
 	
 		}
 	
+		__profile_out ('sql.fetch', {label => $st -> rows});
+
 		$st -> finish;
 
 	} 
@@ -666,7 +690,11 @@ sub sql_select_scalar {
 
 		my $st = sql_execute ($sql, @params);
 
+		__profile_in ('sql.fetch');
+
 		@result = $st -> fetchrow_array ();
+
+		__profile_out ('sql.fetch', {label => $st -> rows});
 
 		$st -> finish;
 
@@ -1008,8 +1036,21 @@ sub sql_download_file {
 		my $time = time;
 		
 		my $sql = "SELECT $options->{body_column} FROM $options->{table} WHERE id = ?";
+		
+		__profile_in ('sql.prepare', {label => $sql});
+
 		my $st = $db -> prepare ($sql, {ora_auto_lob => 0});
+		
+		__profile_out ('sql.prepare', {label => $sql});
+
+		__profile_in ('sql.execute', {label => "$sql $_REQUEST{id}"});
+
 		$st -> execute ($_REQUEST {id});
+
+		__profile_out ('sql.execute');
+
+		__profile_in ('sql.fetch', {label => $st -> rows});
+
 		(my $lob_locator) = $st -> fetchrow_array ();
 
 		my $chunk_size = 1034;
@@ -1021,6 +1062,8 @@ sub sql_download_file {
 		}
 
 		$st -> finish ();
+
+		__profile_out ('sql.fetch', {label => $st -> rows});
 
 	}
 	else {
@@ -1134,10 +1177,14 @@ sub sql_select_loop {
 	
 	local $i;
 	
+	__profile_in ('sql.fetch');
+
 	while ($i = $st -> fetchrow_hashref) {
 		lc_hashref ($i);
 		&$coderef ();
 	}
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 	
 	$st -> finish ();
 
