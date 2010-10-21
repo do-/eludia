@@ -1,5 +1,46 @@
 ################################################################################
 
+sub __profile_print_details {
+
+	my ($old_options, $new_options) = @_;
+		
+	my $details    = $old_options -> {__details};
+		
+	my @details = 
+	
+		sort {$a -> {value} <=> $b -> {value}} 
+		
+			map {{label => $_, value => $details -> {$_} - $subdetails -> {$_}}} 
+			
+				keys %$details;
+				
+	my $sum   = 0;
+	my $total = $new_options -> {__duration};
+	
+	my $format = "%50s %8.1f ms %3d \%\n";
+	my $bar    = ('-' x 68) . "\n";
+	
+	warn $bar;
+
+	foreach my $i (@details) {
+	
+		$sum += $i -> {value};
+		
+		warn sprintf ($format, $i -> {label}, $i -> {value}, 100 * $i -> {value} / $total);
+	
+	}
+	
+	my $other = $total - $sum;
+	
+	warn sprintf ($format, 'OTHER', $other, 100 * $other / $total);
+	warn $bar;
+	warn sprintf ($format, 'TOTAL', $total, 100);
+	warn $bar;
+	
+}
+
+################################################################################
+
 sub __profile_print_tree {
 
 	my ($old_options, $new_options) = @_;
@@ -89,14 +130,16 @@ sub __profile_handle_event {
 
 	}
 	
-	my $name = $type_config -> [$kind] or return;
+	my $names = $type_config -> [$kind] or return;
 	
-	eval {
-	
-		&{"__profile_$name"} (@_);
-	
-	};
-	
+	ref $names eq ARRAY or $names = [$names];
+
+	foreach my $name (@$names) {
+
+		eval { &{"__profile_$name"} (@_) };
+
+	}
+
 	warn $@ if $@;
 
 }
@@ -105,19 +148,35 @@ sub __profile_handle_event {
 
 sub __profile_out {
 
-	my ($type, $new_options) = @_;
+	my ($type, $new_options)     = @_;
 
-	$new_options -> {__time} = time ();
+	$new_options -> {__time}     = time ();
 	
+	$new_options -> {__type}     = $type;
+		
 	@_PROFILING_STACK > 0 or warn "Profiling skewed: stack is empty\n";
 	
 	while (@_PROFILING_STACK) {
 	
 		my $old_options = pop @_PROFILING_STACK;
 
-		$new_options -> {__type}     = $type;
-		
 		$new_options -> {__duration} = 1000 * ($new_options -> {__time} - $old_options -> {__time});
+		
+		if (@_PROFILING_STACK > 0) {
+		
+			my $net = $new_options -> {__duration};
+						
+			while (my ($k, $v) = each %{$old_options -> {__details}}) {
+			
+				$net -= $v;
+			
+				$_PROFILING_STACK [-1] -> {__details} -> {$k} += $v;
+			
+			}
+			
+			$_PROFILING_STACK [-1] -> {__details} -> {$type} += $net;
+					
+		}
 				
 		__profile_handle_event ($type, 1, $old_options, $new_options);
 		
