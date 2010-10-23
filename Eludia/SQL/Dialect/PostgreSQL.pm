@@ -105,8 +105,6 @@ sub sql_do {
 	(my $st, $affected) = sql_execute ($sql, @params);
 
 	$st -> finish;	
-
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => $affected});	
 	
 }
 
@@ -149,8 +147,6 @@ sub sql_do {
 #	}
 
 #	$st -> finish;	
-
-#	__log_sql_profilinig ({time => $time, sql => $sql, selected => 0});	
 	
 #}
 
@@ -188,8 +184,6 @@ sub sql_select_all_cnt {
 	}
 	
 	$st -> finish;
-
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => @result + 0});	
 
 	$sql =~ s{ORDER BY.*}{}ism;
 	$sql =~ s/SELECT.*?[\n\s]+FROM[\n\s]+/SELECT COUNT(*) FROM /ism;
@@ -229,8 +223,6 @@ sub sql_select_all {
 
 	$st -> finish;
 	
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => @$result + 0});	
-
 	$_REQUEST {__benchmarks_selected} += @result;
 	
 	return \@result;
@@ -263,8 +255,6 @@ sub sql_select_all_hash {
 	
 	$st -> finish;
 
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => (keys %$result) + 0});	
-
 	return $result;
 
 }
@@ -288,8 +278,6 @@ sub sql_select_col {
 	}
 
 	$st -> finish;
-
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => @result + 0});
 	
 	return @result;
 
@@ -369,8 +357,6 @@ sub sql_select_hash {
 	my $result = $st -> fetchrow_hashref ();
 
 	$st -> finish;		
-
-	__log_sql_profilinig ({time => $time, sql => $sql_or_table_name, selected => 1});	
 	
 	return lc_hashref ($result);
 
@@ -391,8 +377,6 @@ sub sql_select_array {
 	my @result = $st -> fetchrow_array ();
 
 	$st -> finish;
-
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
 	
 	return wantarray ? @result : $result [0];
 
@@ -416,8 +400,6 @@ sub sql_select_scalar {
 
 	$st -> finish;
 	
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
-
 	return $result [0];
 
 }
@@ -644,16 +626,12 @@ EOS
 	
 		sql_do ("INSERT INTO $table_name ($fields) VALUES ($args)", @params);
 	
-		__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
-
 		return $pairs -> {id};
 
 	}
 	else {
 
 		my $id = sql_select_scalar ("INSERT INTO $table_name ($fields) VALUES ($args) RETURNING id", @params);
-
-		__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
 
 		return $id;
 
@@ -740,8 +718,6 @@ sub sql_download_file {
 #		}
 
 #		$st -> finish ();
-
-#		__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
 
 #	}
 #	else {
@@ -859,8 +835,6 @@ sub sql_select_loop {
 	}
 	
 	$st -> finish ();
-
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
 
 }
 

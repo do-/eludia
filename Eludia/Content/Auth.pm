@@ -73,17 +73,19 @@ sub get_user_with_fixed_session {
 	
 	$_REQUEST {sid} or return undef;
 
-	my $time = time ();				
+#	__profile_in ('auth.get_user'); 
 
 	unless ($_REQUEST {__suggest}) {
 
+#		__profile_in ('auth.refresh_sessions'); 
+		
 		sql_do_refresh_sessions ();
 
-		$time = __log_profilinig ($time, ' <refresh_sessions>');
+#		__profile_out ('auth.refresh_sessions'); 
 
 	}
 	
-	my $st = ($SQL_VERSION -> {_} -> {st_select_user} ||= $db -> prepare_cached (get_user_sql (), {}, 3));					
+	my $st = ($SQL_VERSION -> {_} -> {st_select_user} ||= $db -> prepare_cached (get_user_sql (), {}, 3));
 	
 	$st -> execute ($_REQUEST {sid});
 	
@@ -93,7 +95,7 @@ sub get_user_with_fixed_session {
 	
 	lc_hashref ($user);
 
-	__log_profilinig ($time, ' <get_user>');
+#	__profile_out ('auth.get_user', {label => "$user->{id} ($user->{label})"});
 	
 	$user -> {id} or return undef;
 	

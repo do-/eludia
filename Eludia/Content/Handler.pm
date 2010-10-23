@@ -4,38 +4,63 @@ no warnings;
 
 sub handler {
 
-	my $time = time ();
+	our @_PROFILING_STACK = ();
+
+	__profile_in ('handler.request'); 
 	
-	our $i18n = i18n ();
-
-	return _ok () if eval { page_is_not_needed (\$time, @_) };
+	my $code;
 	
-	my $code = $@ ? 500 : eval {
-
-		my $page = setup_page    (  );				$time = __log_profilinig ($time, '<setup_page>');
-
-		return &{"handle_request_of_type_$page->{request_type}"} ($page);
-
-	};
+	eval {
 	
-	if ($@) {
-
-		warn "$@\n";
-
-		out_script (q {
-	
-			var d = window.top.document;
-
-			d.write ('<pre>' + data + '</pre>');
-
-			d.close ();
-
-		}, $@);
+		my $page_is_not_needed = eval { page_is_not_needed (@_) };
 		
-		return _ok ();
+		return _ok () if $page_is_not_needed;
+
+		$code = $@ ? 500 : eval {
+
+			__profile_in ('handler.setup_page'); 
+
+			my $page = setup_page ();
+			
+			__profile_out ('handler.setup_page'); 
+
+			__profile_in ("handler.$page->{request_type}"); 
+
+			my $code = &{"handle_request_of_type_$page->{request_type}"} ($page);
+			
+			__profile_out ("handler.$page->{request_type}");
+
+			return $code;
+
+		};
+
+		if ($@) {
+
+			warn "$@\n";
+
+			out_script (q {
+
+				var d = window.top.document;
+
+				d.write ('<pre>' + data + '</pre>');
+
+				d.close ();
+
+			}, $@);
+
+			return _ok ();
+
+		}
+
+	}; 
 	
+	__profile_out ('handler.request' => {label => "type='$_REQUEST_VERBATIM{type}' id='$_REQUEST_VERBATIM{id}' action='$_REQUEST_VERBATIM{action}' id_user='$_USER->{id}'"}); warn "\n";
+	
+	if ($_REQUEST {__suicide}) {
+		$r -> print (' ' x 8192);
+		CORE::exit (0);
 	}
-	
+
 	return $code;
 
 }
@@ -44,41 +69,33 @@ sub handler {
 
 sub page_is_not_needed {
 
-	my $ptime = shift;
+	__profile_in ('handler.prelude'); 
 
-	setup_request_params     (@_);				$$ptime = __log_profilinig ($$ptime, '<setup_request_params>');	my $request_time = 1000 * (time - $first_time);
+	our $i18n = i18n ();
 
-	require_config           (  );				$$ptime = __log_profilinig ($$ptime, '<require_config>');
+	setup_request_params     (@_);
 
-	sql_reconnect            (  );				$$ptime = __log_profilinig ($$ptime, '<sql_reconnect>');
+	require_config           (  );
 
-	require_model            (  );				$$ptime = __log_profilinig ($$ptime, '<require_model>');		__log_request_profilinig ($request_time);
+	sql_reconnect            (  );
 
-	authentication_is_needed (  ) or return 1;		$$ptime = __log_profilinig ($$ptime, '<authentication_is_needed>');
-
-	setup_user               (  ) or return 1;		$$ptime = __log_profilinig ($$ptime, '<setup_user>');
+	require_model            (  );
 	
-	return 0;
+	__profile_in ('handler.setup_user'); 
+
+	my $u = setup_user ();
+	
+	__profile_out ('handler.setup_user'); 
+
+	__profile_out ('handler.prelude'); 
+
+	return $u ? 0 : 1;
 
 }
 
 ################################################################################
 
 sub setup_user {
-
-	our $_USER = get_user ();
-	
-	return 1 if $_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/;
-	
-	handle_request_of_type_kickout ();
-	
-	return 0;	
-
-}
-
-################################################################################
-
-sub authentication_is_needed {
 
 	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
 
@@ -120,8 +137,14 @@ sub authentication_is_needed {
 		return 0;
 
 	}
+
+	our $_USER = get_user ();
 	
-	return 1;
+	return 1 if $_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/;
+	
+	handle_request_of_type_kickout ();
+	
+	return 0;	
 
 }
 
@@ -129,7 +152,7 @@ sub authentication_is_needed {
 
 sub setup_request_params {
 
-	my $handler_time = time ();
+	__profile_in ('handler.setup_request_params'); 
 
 	$ENV {REMOTE_ADDR} = $ENV {HTTP_X_REAL_IP} if $ENV {HTTP_X_REAL_IP};
 
@@ -156,14 +179,6 @@ sub setup_request_params {
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 	
 	set_cookie_for_root (client_cookie => $_COOKIE {client_cookie} || Digest::MD5::md5_hex (rand ()));
-
-	my $time = $r -> request_time ();
-
-	$time = __log_profilinig ($handler_time, '<get_request>');
-
-	our $first_time = $time;
-
-	$_REQUEST {__sql_time} = 0;
 	
 	foreach my $k (keys %_REQUEST) {
 
@@ -226,7 +241,7 @@ sub setup_request_params {
 
 	setup_request_params_for_action () if $_REQUEST {action};
 	
-	return $time;
+	__profile_out ('handler.setup_request_params'); 
 	
 }
 
@@ -546,62 +561,48 @@ sub handle_request_of_type_showing {
 
 sub handler_finish {
 
-	$r -> pool -> cleanup_register (\&__log_request_finish_profilinig, {
-	
-		id_request_log		=> $_REQUEST {_id_request_log}, 
-		out_html_time		=> $_REQUEST {__out_html_time},
-		application_time	=> 1000 * (time - $first_time) - $_REQUEST {__sql_time}, 
-		sql_time		=> $_REQUEST {__sql_time},
-		is_gzipped		=> $_REQUEST {__is_gzipped},
-		
-	}) if $preconf -> {core_debug_profiling} > 2;
-	
 	sql_disconnect () if $ENV {SCRIPT_NAME} eq '/__try__and__disconnect';
 	
-	my $time = __log_profilinig ($first_time, "<TOTAL>\n");
-
+	__profile_in ('core.memory');
+	
 	if (my $memory_usage = memory_usage ()) {
 	
 		if (exists $preconf -> {core_memory_limit} && $memory_usage >> 20 > $preconf -> {core_memory_limit}) {
-		
-			__log_profilinig ($time, sprintf ("<P. S. Memory limit of %s MiB exceeded: have %s MiB. This was the suicide note.>\n", $preconf -> {core_memory_limit}, $memory_usage >> 20));
-			
+
+			__profile_out ('core.memory', {label => sprintf ("Memory limit of %s MiB exceeded: have %s MiB. This was the suicide note.", $preconf -> {core_memory_limit}, $memory_usage >> 20)});
+
 			$_REQUEST {__suicide} = 1;
-		
+
 		}		
 		else {
-		
+
 			$preconf -> {_} -> {memory} -> {last} ||= $preconf -> {_} -> {memory} -> {first};
 
-			if ($preconf -> {core_debug_profiling}) {
+			__profile_out ('core.memory', {label => sprintf (
 
-				__log_profilinig ($time, sprintf (
+				"%s MiB (%s B: first + %s B; last + %s B)", 
 
-					"<P. S. %s MiB (%s B: first + %s B; last + %s B)>\n", 
+				$memory_usage >> 20,
 
-					$memory_usage >> 20,
+				$memory_usage,
 
-					$memory_usage,
+				$memory_usage - $preconf -> {_} -> {memory} -> {first},
 
-					$memory_usage - $preconf -> {_} -> {memory} -> {first},
+				$memory_usage - $preconf -> {_} -> {memory} -> {last},
 
-					$memory_usage - $preconf -> {_} -> {memory} -> {last},
-
-				));
-
-			}
+			)});
 
 			$preconf -> {_} -> {memory} -> {last} = $memory_usage;
 		
 		}
 
 	}
+	else {
 	
-	if ($_REQUEST {__suicide}) {
-		$r -> print (' ' x 8192);
-		CORE::exit (0);
+		__profile_out ('core.memory', {label => 'disabled'});
+		
 	}
-
+	
 	return _ok ();
 
 }

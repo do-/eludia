@@ -598,10 +598,12 @@ sub adjust_esc {
 sub draw_form {
 
 	my ($options, $data, $fields) = @_;
-	
-	my $time = time;
-	
+		
 	return '' if $options -> {off} && $data;
+
+	$options -> {path} ||= $data -> {path};
+
+	__profile_in ('draw.form' => {label => ref $options -> {path} eq ARRAY ? $options -> {path} -> [0] -> {name} : undef}); 
 
 	$options -> {hr} = defined $options -> {hr} ? $options -> {hr} : 10;
 	$options -> {hr} = $_REQUEST {__tree} ? '' : draw_hr (height => $options -> {hr});
@@ -614,7 +616,13 @@ sub draw_form {
 	
 	$options -> {name}    ||= 'form';
 	
-	!$_REQUEST {__only_form} or $_REQUEST {__only_form} eq $options -> {name} or return '';
+	unless (!$_REQUEST {__only_form} or $_REQUEST {__only_form} eq $options -> {name}) {
+	
+		__profile_out ('draw.form'); 
+	
+		return '';
+		
+	}
 
 	$options -> {no_esc}    = 1 if $apr -> param ('__last_query_string') < 0 && !$_REQUEST {__edit};
 	$options -> {target}  ||= 'invisible';	
@@ -682,9 +690,7 @@ sub draw_form {
 	}
 	
 	$options -> {rows} = \@rows;
-	
-	$options -> {path} ||= $data -> {path};
-				
+					
 	$options -> {path} = ($options -> {path} && !$_REQUEST{__no_navigation}) ? draw_path ($options, $options -> {path}) : '';
 	
 	delete $options -> {menu} if $_REQUEST {__edit};
@@ -766,7 +772,7 @@ sub draw_form {
 	
 	my $html = $_SKIN -> draw_form ($options);
 		
-	__log_profilinig ($time, sprintf ("  draw_form"));
+	__profile_out ('draw.form'); 
 
 	return $html;
 
@@ -1678,8 +1684,6 @@ sub draw_table_header_cell {
 
 sub draw_table {
 
-	my $time = time;
-
 	return '' if $_REQUEST {__only_form};
 
 	my $headers = [];
@@ -1689,6 +1693,8 @@ sub draw_table {
 	}
 
 	my ($tr_callback, $list, $options) = @_;
+	
+	__profile_in ('draw.table' => {label => $options -> {title} -> {label}});
 	
 	if ($options -> {no_order}) {
 		$_REQUEST {__no_order} = 1;
@@ -1754,7 +1760,13 @@ sub draw_table {
 	$options -> {name}   ||= 'form';
 	$options -> {target} ||= 'invisible';
 
-	return '' if $options -> {off};		
+	if ($options -> {off}) {
+	
+		__profile_out ('draw.table' => {label => "[OFF] $options->{title}->{label}"});
+		
+		return '';
+
+	}
 
 	$_REQUEST {__salt} ||= rand () * time ();
 	$_REQUEST {__uri_root_common} ||=  $_REQUEST {__uri} . '?salt=' . $_REQUEST {__salt} . '&sid=' . $_REQUEST {sid};
@@ -1917,8 +1929,8 @@ sub draw_table {
 	
 	delete $_REQUEST {__gantt_from_year};
 	delete $_REQUEST {__gantt_to_year};
-	
-	__log_profilinig ($time, sprintf ("  draw_table"));
+
+	__profile_out ('draw.table');
 
 	return $html;
 
@@ -1932,7 +1944,7 @@ sub draw_tree {
 	
 	return '' if $options -> {off};
 	
-	my $time = time;
+	__profile_in ('draw.tree');
 	
 	$options -> {width} ||= 250;
 		
@@ -2051,7 +2063,7 @@ sub draw_tree {
 	
 	my $html = $_SKIN -> draw_tree ($node_callback, $list, $options);
 
-	__log_profilinig ($time, sprintf ("  draw_tree"));
+	__profile_out ('draw.tree');
 
 	return $html;
 
@@ -2287,15 +2299,18 @@ sub draw_error_page {
 	my $page = $_[0];
 	
 	$_REQUEST {error} ||= $_[1];
-	
-	Carp::cluck ($_REQUEST {error});
-	
+		
 	if ($_REQUEST {error} =~ s{^\#(\w+)\#\:}{}) {
 	
 		$page -> {error_field} = $1;
 	
 		($_REQUEST {error}) = split / at/sm, $_REQUEST {error}; 
 	
+	}
+	else {
+
+		Carp::cluck ($_REQUEST {error});
+
 	}
 
 	setup_skin ();
@@ -2465,7 +2480,7 @@ sub gzip_if_it_is_needed (\$) {
 			
 		or return;
 	
-	my $time = time;
+	__profile_in ('core.gzip'); 
 
 	eval {$$ref_html = gzip_in_memory ($$ref_html)};
 			
@@ -2473,7 +2488,7 @@ sub gzip_if_it_is_needed (\$) {
 
 	my $ratio = int (10000 * ($old_size - $new_size) / $old_size) / 100;
 			
-	__log_profilinig ($time, sprintf (" <gzip: %d -> %d, %.2f\%>", $old_size, $new_size, 100 * ($old_size - $new_size) / $old_size));
+	__profile_out ('core.gzip' => {label => sprintf ("%d -> %d, %.2f\%", $old_size, $new_size, 100 * ($old_size - $new_size) / $old_size)});
 
 	$r -> content_encoding ('gzip');
 
@@ -2521,7 +2536,7 @@ sub out_html {
 
 	$html and !$_REQUEST {__response_sent} or return;
 
-	$_REQUEST {__out_html_time} = my $time = time;  
+	__profile_in ('core.out_html'); 
 
 	if ($conf -> {core_sweep_spaces}) {
 		$html =~ s{^\s+}{}gsm;
@@ -2550,7 +2565,7 @@ sub out_html {
 	
 	$_REQUEST {__response_sent} = 1;
 
-	__log_profilinig ($time, " <out_html: $length bytes>");
+	__profile_out ('core.out_html' => {label => "$length bytes"});
 
 }
 
@@ -2682,7 +2697,7 @@ sub check_static_files {
 	return if $_SKIN -> {options} -> {no_static};
 	$r or return;
 	
-	my $time = time;
+	__profile_in ('core.check_static_files'); 
 	
 	my $skin_root = $r -> document_root () . $_REQUEST {__static_url};
 		
@@ -2698,7 +2713,7 @@ sub check_static_files {
 		
 			$_SKIN -> {static_ok} -> {$_NEW_PACKAGE} = 1;
 
-			__log_profilinig ($time, " check_static_files: at $version");
+			__profile_out ('core.check_static_files' => {label => "= $version"});
 			
 			return;
 		
@@ -2764,8 +2779,6 @@ sub check_static_files {
 				print OUT gzip_in_memory ($js);
 				close OUT;
 
-				__log_profilinig ($time, "  	$fn gzipped");
-
 			}
 		}
 	}
@@ -2784,7 +2797,7 @@ sub check_static_files {
 	
 	}
 
-	__log_profilinig ($time, ' check_static_files');
+	__profile_out ('core.check_static_files' => {label => "-> $Eludia::VERSION"});
 
 }
 

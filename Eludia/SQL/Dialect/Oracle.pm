@@ -109,6 +109,8 @@ sub sql_execute {
 
 	my ($st, @params) = sql_prepare (@_);
 	
+	__profile_in ('sql.execute');
+
 	my $affected;
 	
 	my $last_i = -1;	
@@ -138,6 +140,8 @@ sub sql_execute {
 
 	}
 	
+	__profile_out ('sql.execute', {label => $st -> {Statement} . ' ' . (join ', ', map {$db -> quote ($_)} @params)});
+
 	return wantarray ? ($st, $affected) : $st;
 
 }
@@ -146,13 +150,13 @@ sub sql_execute {
 
 sub sql_prepare {
 
+	__profile_in ('sql.prepare');
+	
 	my ($sql, @params) = @_;
 
 	$sql =~ s{^\s+}{};
 	$sql =~ s{[\015\012]+}{$/}gs;
-	
-#print STDERR "sql_prepare (pid=$$): $sql\n";
-	
+		
 	my $qoute = '"';
 
 	if ($sql =~ /^(\s*SELECT.*FROM\s+)(.*)$/is) {
@@ -162,7 +166,7 @@ sub sql_prepare {
 		if ($tables_reference =~ /^(.*)((WHERE|GROUP|ORDER).*)$/is) {
 			($tables_reference, $tail) = ($1, $2);
 		}
-#		print "head: $head\ntables_reference: $tables_reference\ntail: $tail\n\n";
+
 		my @table_names;
 		if ($tables_reference =~ s/^(_\w+)/$qoute$1$qoute/) {
 			push (@table_names, $1);
@@ -171,7 +175,6 @@ sub sql_prepare {
 		push (@table_names, $1) while ($tables_reference =~ s/JOIN\s*(_\w+)/JOIN $qoute$1$qoute/ig);
 		$sql = $head . $tables_reference . $tail;
 		foreach my $table_name (@table_names) {
-#			print "table_name: $table_name\n";
 			$sql =~ s/(\W)($table_name)\./$1$qoute$2$qoute\./g;
 		}
 	} 
@@ -223,6 +226,8 @@ sub sql_prepare {
 
 	}
 
+	__profile_out ('sql.prepare', {label => $sql});
+
 	return ($st, @params);
 
 }
@@ -240,8 +245,6 @@ sub sql_do {
 	(my $st, $affected) = sql_execute ($sql, @params);
 
 	$st -> finish;	
-
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => $affected});	
 	
 }
 
@@ -284,8 +287,6 @@ sub sql_execute_procedure {
 	}
 
 	$st -> finish;	
-
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => 0});	
 	
 }
 
@@ -326,6 +327,8 @@ sub sql_select_all_cnt {
 	my $cnt = 0;	
 	my @result = ();
 	
+	__profile_in ('sql.fetch');
+
 	while (my $i = $st -> fetchrow_hashref ()) {
 	
 		$cnt++;
@@ -336,14 +339,12 @@ sub sql_select_all_cnt {
 		push @result, lc_hashref ($i);
 	
 	}
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 	
 	$st -> finish;
 
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => @result + 0});	
-
-
 	$sql =~ s{ORDER BY.*}{}ism;
-
 
 	my $cnt = 0;
 
@@ -390,6 +391,8 @@ sub sql_select_all {
 		my $st = sql_execute ($sql, @params);
 		my $cnt = 0;	
  	
+		__profile_in ('sql.fetch');
+
 		while (my $r = $st -> fetchrow_hashref) {
 	
 			$cnt++;
@@ -401,6 +404,8 @@ sub sql_select_all {
 	
 		}
 		
+		__profile_out ('sql.fetch', {label => $st -> rows});
+
 		$result = \@temp_result;
 	
 		$st -> finish;
@@ -411,19 +416,19 @@ sub sql_select_all {
 
 		return $st if $options -> {no_buffering};
 
+		__profile_in ('sql.fetch');
+
 		$result = $st -> fetchall_arrayref ({});	
+
+		__profile_out ('sql.fetch', {label => 0 + @$result});
 
 		$st -> finish;
 
         }
 	
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => @$result + 0});	
-
 	foreach my $i (@$result) {
 		lc_hashref ($i);
 	}
-
-	$_REQUEST {__benchmarks_selected} += @$result;
 	
 	return $result;
 
@@ -447,13 +452,16 @@ sub sql_select_all_hash {
 
 	my $st = sql_execute ($sql, @params);
 
+	__profile_in ('sql.fetch');
+
 	while (my $r = $st -> fetchrow_hashref) {
 		lc_hashref ($r);		                       	
 		$result -> {$r -> {id}} = $r;
 	}
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 	
 	$st -> finish;
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => (keys %$result) + 0});	
 
 	return $result;
 
@@ -484,6 +492,8 @@ sub sql_select_col {
 
 		my $cnt = 0;	
  	
+		__profile_in ('sql.fetch');
+
 		while (my @r = $st -> fetchrow_array ()) {
 	
 			$cnt++;
@@ -495,21 +505,25 @@ sub sql_select_col {
 	
 		}
 	
+		__profile_out ('sql.fetch', {label => $st -> rows});
+
 		$st -> finish;
 
 	} else {
 
 		my $st = sql_execute ($sql, @params);
 
+		__profile_in ('sql.fetch');
+
 		while (my @r = $st -> fetchrow_array ()) {
 			push @result, @r;
 		}
 
+		__profile_out ('sql.fetch', {label => $st -> rows});
+
 		$st -> finish;
 
 	}
-
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => @result + 0});	
 	
 	return @result;
 
@@ -593,11 +607,13 @@ sub sql_select_hash {
 
 	my $st = sql_execute ($sql_or_table_name, @params);
 
+	__profile_in ('sql.fetch');
+
 	my $result = $st -> fetchrow_hashref ();
 
-	$st -> finish;		
+	__profile_out ('sql.fetch', {label => $st -> rows});
 
-	__log_sql_profilinig ({time => $time, sql => $sql_or_table_name, selected => 1});	
+	$st -> finish;		
 	
 	return lc_hashref ($result);
 
@@ -615,11 +631,13 @@ sub sql_select_array {
 
 	my $st = sql_execute ($sql, @params);
 
+	__profile_in ('sql.fetch');
+
 	my @result = $st -> fetchrow_array ();
 
-	$st -> finish;
+	__profile_out ('sql.fetch', {label => $st -> rows});
 
-	__log_sql_profilinig ({time => $time, sql => $sql_or_table_name, selected => 1});	
+	$st -> finish;
 	
 	return wantarray ? @result : $result [0];
 
@@ -649,6 +667,8 @@ sub sql_select_scalar {
 
 		my $cnt = 0;	
 	
+		__profile_in ('sql.fetch');
+
 		while (my @r = $st -> fetchrow_array ()) {
 	
 			$cnt++;
@@ -661,6 +681,8 @@ sub sql_select_scalar {
 	
 		}
 	
+		__profile_out ('sql.fetch', {label => $st -> rows});
+
 		$st -> finish;
 
 	} 
@@ -668,14 +690,16 @@ sub sql_select_scalar {
 
 		my $st = sql_execute ($sql, @params);
 
+		__profile_in ('sql.fetch');
+
 		@result = $st -> fetchrow_array ();
+
+		__profile_out ('sql.fetch', {label => $st -> rows});
 
 		$st -> finish;
 
 	}
 	
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
-
 	return $result [0];
 
 }
@@ -922,8 +946,6 @@ EOS
 
 		sql_do ($sql, @params);
 	
-		__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
-
 		return $pairs -> {id};
 
 	}
@@ -941,8 +963,6 @@ EOS
 
 		$st -> execute;
 		$st -> finish;	
-
-		__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
 
 		return $id;
 
@@ -1016,8 +1036,21 @@ sub sql_download_file {
 		my $time = time;
 		
 		my $sql = "SELECT $options->{body_column} FROM $options->{table} WHERE id = ?";
+		
+		__profile_in ('sql.prepare', {label => $sql});
+
 		my $st = $db -> prepare ($sql, {ora_auto_lob => 0});
+		
+		__profile_out ('sql.prepare', {label => $sql});
+
+		__profile_in ('sql.execute', {label => "$sql $_REQUEST{id}"});
+
 		$st -> execute ($_REQUEST {id});
+
+		__profile_out ('sql.execute');
+
+		__profile_in ('sql.fetch', {label => $st -> rows});
+
 		(my $lob_locator) = $st -> fetchrow_array ();
 
 		my $chunk_size = 1034;
@@ -1030,7 +1063,7 @@ sub sql_download_file {
 
 		$st -> finish ();
 
-		__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
+		__profile_out ('sql.fetch', {label => $st -> rows});
 
 	}
 	else {
@@ -1144,14 +1177,16 @@ sub sql_select_loop {
 	
 	local $i;
 	
+	__profile_in ('sql.fetch');
+
 	while ($i = $st -> fetchrow_hashref) {
 		lc_hashref ($i);
 		&$coderef ();
 	}
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 	
 	$st -> finish ();
-
-	__log_sql_profilinig ({time => $time, sql => $sql, selected => 1});	
 
 }
 
