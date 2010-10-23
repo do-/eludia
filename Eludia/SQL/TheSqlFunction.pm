@@ -1029,6 +1029,8 @@ sub sql {
 				
 				my $n = 0;
 				
+				__profile_in ('sql.fetch');
+
 				while (my $r = $st -> fetchrow_hashref) {
 				
 					$n ++;
@@ -1045,6 +1047,8 @@ sub sql {
 				
 				}
 				
+				__profile_out ('sql.fetch', {label => $st -> rows});
+
 				$st -> finish;
 
 				my $sql_cnt = "SELECT COUNT(*)\n "
@@ -1059,8 +1063,12 @@ sub sql {
 
 				$st = sql_execute ($sql_cnt, @params);
 
+				__profile_in ('sql.fetch');
+
 				my ($cnt) = $st -> fetchrow_array;
 				
+				__profile_out ('sql.fetch', {label => $st -> rows});
+
 				$st -> finish;
 
 				@result = ($records, $cnt, $limit -> [1]);

@@ -47,9 +47,7 @@ sub STORE {
 	$value or return undef;
 
 	if (keys %{$self -> {body}} >= $self -> {size}) {
-	
-		my $time = Time::HiRes::time ();
-	
+		
 		foreach my $i (values %{$self -> {body}}) {
 								
 			$i -> {freq} = $i -> {hits} / (($time - $i -> {time}) || 1)
@@ -63,8 +61,6 @@ sub STORE {
 			delete $self -> {body} -> {$i};
 		
 		}
-		
-		&{"$self->{package}::__log_profilinig"} ($time, "     <st cache downsized>");
 
 	}
 	
