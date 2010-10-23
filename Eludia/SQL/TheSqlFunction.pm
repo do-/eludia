@@ -356,7 +356,7 @@ sub _sql_filters {
 		
 		if ($limit -> [0] =~ /^[a-z]\w*$/) {
 		
-			$limit -> [0] = 0 + $_REQUEST {$limit -> [0]};
+			$limit -> [0] = 0 + ($_REQUEST {$limit -> [0]} || 0);
 		
 		}
 	
