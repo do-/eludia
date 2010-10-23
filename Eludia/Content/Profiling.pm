@@ -8,16 +8,16 @@ sub __profile_print_details {
 		
 	my @details = 
 	
-		sort {$a -> {value} <=> $b -> {value}} 
+		sort {($a -> {value} ||= 0) <=> ($b -> {value} ||= 0)} 
 		
-			map {{label => $_, value => $details -> {$_} - $subdetails -> {$_}}} 
+			map {{label => $_, value => $details -> {$_} - ($subdetails -> {$_} || 0)}} 
 			
 				keys %$details;
 				
 	my $sum   = 0;
 	my $total = $new_options -> {__duration};
 	
-	my $format = "%50s %8.1f ms %3d \%\n";
+	my $format = '%50s %8.1f ms %3d %%';
 	my $bar    = ('-' x 68) . "\n";
 	
 	warn $bar;
@@ -26,15 +26,15 @@ sub __profile_print_details {
 	
 		$sum += $i -> {value};
 		
-		warn sprintf ($format, $i -> {label}, $i -> {value}, 100 * $i -> {value} / $total);
+		warn sprintf ($format, $i -> {label}, $i -> {value}, 100 * $i -> {value} / $total) . "\n";
 	
 	}
 	
 	my $other = $total - $sum;
 	
-	warn sprintf ($format, 'OTHER', $other, 100 * $other / $total);
+	warn sprintf ($format, 'OTHER', $other, 100 * $other / $total) . "\n";
 	warn $bar;
-	warn sprintf ($format, 'TOTAL', $total, 100);
+	warn sprintf ($format, 'TOTAL', $total, 100) . "\n";
 	warn $bar;
 	
 }
