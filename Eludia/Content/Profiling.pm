@@ -66,7 +66,7 @@ sub __profile_print_tree {
 	}
 	else {
 
-		my $comment = $new_options -> {label} || $old_options -> {label};
+		my $comment = $new_options -> {label} || $old_options -> {label} || '';
 		
 		$comment =~ s{\s+}{ }gsm;
 
