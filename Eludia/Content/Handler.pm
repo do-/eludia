@@ -342,7 +342,7 @@ sub setup_page {
 		$0 = $process;
 	}
 
-	call_for_role ('get_page');
+	call_for_role ('get_page', $page);
 
 	require_both $page -> {type};
 			
