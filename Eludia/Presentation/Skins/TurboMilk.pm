@@ -3329,7 +3329,7 @@ sub lrt_println {
 sub lrt_ok {
 	my $_SKIN = shift;
 	my $color = $_[1] ? 'red' : 'yellow';
-	my $label = $_[1] ? 'Îøèáêà' : 'ÎÊ';
+	my $label = $_[1] ? 'Îøèáêà' : 'OK';
 	$_SKIN -> lrt_println ("$_[0] <font color='$color'><b>[$label]</b></font>");
 }
 
@@ -3341,11 +3341,11 @@ sub lrt_start {
 
 	$|=1;
 	
-	$r -> content_type ('text/html; charset=windows-1251');
+	$r -> content_type ('text/html; charset=utf-8');
 	$r -> send_http_header ();
 	
 	$_SKIN -> lrt_print (<<EOH);
-		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="STYLESHEET"><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
+		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="STYLESHEET"><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier'>
 			<iframe name=invisible src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes">
 			</iframe>
 EOH
