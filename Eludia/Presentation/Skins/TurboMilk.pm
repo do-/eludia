@@ -457,6 +457,8 @@ EOH
 	
 	$html .= $options -> {bottom_toolbar};
 	
+#	$_REQUEST {__on_load} .= '$(document.forms["' . $options -> {name} . '"]).submit (function () {checkMultipleInputs (this)});';
+	
 	return $html;	
 
 }
