@@ -105,10 +105,20 @@ sub wish_to_actually_create_table_data {
 	
 	}
 		
-	my $sth = $db -> prepare ("INSERT INTO $options->{table} (" . (join ', ', @cols) . ") VALUES (" . (join ', ', map {'?'} @cols) . ")");
+	my $sql = "INSERT INTO $options->{table} (" . (join ', ', @cols) . ") VALUES (" . (join ', ', map {'?'} @cols) . ")";
+
+	__profile_in ('sql.prepare');
+
+	my $sth = $db -> prepare ($sql);
+
+	__profile_out ('sql.prepare', {label => $sql});
+
+	__profile_in ('sql.execute');
 
 	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
 	
+	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms)});
+
 	$sth -> finish;
 	
 }
@@ -132,11 +142,21 @@ sub wish_to_actually_update_table_data {
 	}
 	
 	push @prms, [ map {$_ -> {id}} @$items];
+	
+	my $sql = "UPDATE $options->{table} SET " . (join ', ', @cols) . " WHERE id = ?";
 		
-	my $sth = $db -> prepare ("UPDATE $options->{table} SET " . (join ', ', @cols) . " WHERE id = ?");
+	__profile_in ('sql.prepare');
+
+	my $sth = $db -> prepare ($sql);
+
+	__profile_out ('sql.prepare', {label => $sql});
+
+	__profile_in ('sql.execute');
 
 	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
 	
+	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms)});
+
 	$sth -> finish;
 
 }
@@ -149,18 +169,26 @@ sub wish_to_actually_delete_table_data {
 	
 	@$items > 0 or return;
 	
-	my $sth = $db -> prepare (
-	
-		$options -> {soft_delete} ? 
+	my $sql = $options -> {soft_delete} ? 
 
-			"UPDATE $options->{table} SET fake = -1 WHERE id = ?" :
+		"UPDATE $options->{table} SET fake = -1 WHERE id = ?" :
 	
-			"DELETE FROM $options->{table} WHERE id = ?"
-		
-	);
+		"DELETE FROM $options->{table} WHERE id = ?";
+
+	__profile_in ('sql.prepare');
+
+	my $sth = $db -> prepare ($sql);
 	
-	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, [map {$_ -> {id}} @$items]);
+	__profile_out ('sql.prepare', {label => $sql});
 	
+	my $p = [map {$_ -> {id}} @$items];
+
+	__profile_in ('sql.execute');
+
+	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, $p);
+	
+	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper ($p)});
+
 	$sth -> finish;
 
 }
