@@ -838,14 +838,14 @@ sub draw_form_field {
 
 	if (
 		($_REQUEST {__read_only} or $field -> {read_only})
-	 	 &&  $field -> {type} ne 'hgroup'
-	 	 &&  $field -> {type} ne 'banner'
-	 	 &&  $field -> {type} ne 'button'
-	 	 &&  $field -> {type} ne 'article'
-	 	 &&  $field -> {type} ne 'iframe'
-	 	 &&  $field -> {type} ne 'color'
-	 	 &&  $field -> {type} ne 'multi_select'
-	 	 &&  $field -> {type} ne 'dir'
+		 &&  $field -> {type} ne 'hgroup'
+		 &&  $field -> {type} ne 'banner'
+		 &&  $field -> {type} ne 'button'
+		 &&  $field -> {type} ne 'article'
+		 &&  $field -> {type} ne 'iframe'
+		 &&  $field -> {type} ne 'color'
+		 &&  $field -> {type} ne 'multi_select'
+		 &&  $field -> {type} ne 'dir'
 		 && ($field -> {type} ne 'text'    || !$conf -> {core_keep_textarea})
 		 && ($field -> {type} ne 'suggest' || !$_REQUEST {__suggest})
 	)
@@ -1489,7 +1489,7 @@ sub draw_cells {
 		
 			$cell -> {icon}           ? 'button'   :
 			exists $cell -> {checked} ? 'checkbox' :
-						    'text'     ;
+			'text';
 
 	}
 	
@@ -1685,7 +1685,7 @@ sub draw_table_header_cell {
 sub draw_table {
 
 	return '' if $_REQUEST {__only_form};
-
+	
 	my $headers = [];
 
 	unless (ref $_[0] eq CODE or (ref $_[0] eq ARRAY and ref $_[0] -> [0] eq CODE)) {
@@ -1694,7 +1694,7 @@ sub draw_table {
 
 	my ($tr_callback, $list, $options) = @_;
 	
-	__profile_in ('draw.table' => {label => $options -> {title} -> {label}});
+	__profile_in ('draw.table' => {label => exists $options -> {title} && $options -> {title} ? $options -> {title} -> {label} : $options -> {name}});
 	
 	if ($options -> {no_order}) {
 		$_REQUEST {__no_order} = 1;
@@ -1785,7 +1785,7 @@ sub draw_table {
 			
 		}
 		else {
-			$options -> {title} = draw_window_title ($options -> {title}) 
+			$options -> {title} = draw_window_title ($options -> {title})
 				if $options -> {title} -> {label};
 		}
 		
@@ -2763,7 +2763,7 @@ sub check_static_files {
 
 	}
 		
- 	if ($preconf -> {core_gzip}) {
+	if ($preconf -> {core_gzip}) {
 
 		foreach my $fn ('navigation.js', 'eludia.css') {
 		

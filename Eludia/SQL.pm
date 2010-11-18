@@ -113,10 +113,10 @@ sub sql_weave_model {
 		foreach my $column_name (keys %{$def -> {columns}}) {
 
 			my $column_def = $def -> {columns} -> {$column_name};
-				
-			$column_name =~ /^ids?_(.*)/ or next;
 			
-			my $target2 = $1;
+			$column_name =~ /^ids?_(.*)/ || $column_name eq 'parent' or next;
+			
+			my $target2 = $column_name eq 'parent' ? $def -> {name} : $1;
 			my $target1 = $target2;
 		
 			if ($target2 =~ /y$/) {
