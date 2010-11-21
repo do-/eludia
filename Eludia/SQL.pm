@@ -113,10 +113,10 @@ sub sql_weave_model {
 		foreach my $column_name (keys %{$def -> {columns}}) {
 
 			my $column_def = $def -> {columns} -> {$column_name};
-				
-			$column_name =~ /^ids?_(.*)/ or next;
 			
-			my $target2 = $1;
+			$column_name =~ /^ids?_(.*)/ || $column_name eq 'parent' or next;
+			
+			my $target2 = $column_name eq 'parent' ? $def -> {name} : $1;
 			my $target1 = $target2;
 		
 			if ($target2 =~ /y$/) {
@@ -1283,30 +1283,38 @@ sub assert {
 		push @{$objects -> [$object -> {sql} ? 1 : 0]}, $object;
 
 	}
+	
+	if (@tables > 0) {
 
-	wish (tables => Storable::dclone \@tables, {});
+		wish (tables => Storable::dclone \@tables, {});
 
-	foreach my $table (@tables) {
+		foreach my $table (@tables) {
 
-		wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], {table => $table -> {name}}) if exists $table -> {columns};
+			wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], {table => $table -> {name}}) if exists $table -> {columns};
 
-		wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})],    {table => $table -> {name}, table_def => $table}) if exists $table -> {keys};
-		
-		if (exists $table -> {data} && ref $table -> {data} eq ARRAY && @{$table -> {data}} > 0) {
-				
-			wish (table_data => $table -> {data}, {
-			
-				table => $table -> {name},
-				
-				key   => exists $table -> {data} -> [0] -> {id} ? 'id' : 'name',
-				
-			});
-		
+			wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})],    {table => $table -> {name}, table_def => $table}) if exists $table -> {keys};
+
+			if (exists $table -> {data} && ref $table -> {data} eq ARRAY && @{$table -> {data}} > 0) {
+
+				wish (table_data => $table -> {data}, {
+
+					table => $table -> {name},
+
+					key   => exists $table -> {data} -> [0] -> {id} ? 'id' : 'name',
+
+				});
+
+			}
+
 		}
-
+	
 	}
 	
-	wish (views => \@views, {});
+	if (@views > 0) {
+
+		wish (views => \@views, {});
+	
+	}
 
 	checksum_write ('db_model', $new_checksums);
 

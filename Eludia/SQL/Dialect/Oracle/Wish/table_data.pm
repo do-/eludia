@@ -25,9 +25,17 @@ sub wish_to_actually_create_table_data {
 		
 		my $sql = "INSERT INTO $options->{table} (" . (join ', ', @cols) . ") VALUES (" . (join ', ', map {'?'} @cols) . ")";
 
+		__profile_in ('sql.prepare');
+
 		my $sth = $db -> prepare ($sql);
 
+		__profile_out ('sql.prepare', {label => $sql});
+
+		__profile_in ('sql.execute');
+
 		$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
+
+		__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms)});
 
 		$sth -> finish;
 

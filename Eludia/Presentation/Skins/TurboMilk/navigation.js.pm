@@ -887,6 +887,45 @@ function setAndSubmit (name, values) {
 	
 }
 
+function checkMultipleInputs (f) {
+
+	var e = f.elements;
+	
+	var formName = f.name;
+
+	for (var j = 0; j < e.length; j ++) {
+	
+		var name = e [j].name;
+
+		var inputs = document.getElementsByName (name);
+								
+		for (var i = 0; i < inputs.length; i++) {
+		
+			var input = inputs [i];
+
+			var n = input.name;
+			
+			if (n.charAt (0) != '_') continue;
+
+			var h = e [n];
+
+			if (!h) {
+
+				h = document.createElement('<input type="hidden" name="' + n + '">');
+
+				f.appendChild (h);
+
+			}
+
+			h.value = input.value;
+
+		}
+	
+	}
+
+};
+
+
 function setFormCheckboxes (form, checked) {
 
 	$('input:checkbox:visible', $(document.forms [form])).each (

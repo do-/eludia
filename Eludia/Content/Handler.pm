@@ -230,7 +230,9 @@ sub setup_request_params {
 	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;
 	
 	if ($_REQUEST {fake}) {
-    	    $_REQUEST {fake} =~ s/\%(25)*2c/,/ig;
+		$_REQUEST {fake} =~ s/\%(25)*2c/,/ig;
+		$_REQUEST {fake} = join ',', map {0 + $_} split /,/, $_REQUEST {fake};
+		$_REQUEST {q}    =~ s/(^\s+)|(\s+$)//g;
 	}
 
 	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
@@ -346,7 +348,7 @@ sub setup_page {
 		$0 = $process;
 	}
 
-	call_for_role ('get_page');
+	call_for_role ('get_page', $page);
 
 	require_both $page -> {type};
 			
