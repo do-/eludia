@@ -586,9 +586,10 @@ sub draw_table_header_cell {
 	my ($_SKIN, $cell) = @_;
 	
 	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);	
-	my $attributes = dump_attributes ($cell -> {attributes});
+
+	$cell -> {no_nbsp} or $cell -> {label} = "&nbsp;$cell->{label}&nbsp;";
 	
-	return "<th $attributes>\&nbsp;$$cell{label}\&nbsp;</th>";
+	dump_tag (th => $cell -> {attributes}, $cell -> {label});
 
 }
 
