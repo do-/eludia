@@ -3351,7 +3351,6 @@ sub draw_logon_form {
 	my $hiddens = dump_hiddens (
 		[type            => 'logon'],
 		[action          => 'execute'],
-		[redirect_params => $_REQUEST {redirect_params}],
 		[tz_offset       => ''],
 	);
 
