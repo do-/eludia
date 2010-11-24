@@ -84,8 +84,8 @@ sub page_is_not_needed {
 	__profile_in ('handler.setup_user'); 
 
 	my $u = setup_user ();
-	
-	__profile_out ('handler.setup_user'); 
+
+	__profile_out ('handler.setup_user', {label => "id_user=$_USER->{id}, ip=$_USER->{ip}, ip_fw=$_USER->{ip_fw}, sid=$_REQUEST{sid}"});
 
 	__profile_out ('handler.prelude'); 
 
@@ -241,7 +241,7 @@ sub setup_request_params {
 
 	setup_request_params_for_action () if $_REQUEST {action};
 	
-	__profile_out ('handler.setup_request_params'); 
+	__profile_out ('handler.setup_request_params', {label => "type='$_REQUEST_VERBATIM{type}' id='$_REQUEST_VERBATIM{id}' action='$_REQUEST_VERBATIM{action}'"}); 
 	
 }
 
