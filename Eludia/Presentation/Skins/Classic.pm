@@ -2590,7 +2590,6 @@ sub draw_logon_form {
 	my $hiddens = dump_hiddens (
 		[type            => 'logon'],
 		[action          => 'execute'],
-		[redirect_params => $_REQUEST {redirect_params}],
 		[_url            => $_REQUEST{_url}],
 	);
 		

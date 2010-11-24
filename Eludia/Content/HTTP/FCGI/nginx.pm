@@ -51,7 +51,7 @@ sub options_unix {
 	$options {-address}      ||= '/tmp/elud';
 	$options {-pidfile}      ||= '/var/run/elud.pid';
 	$options {-backlog}      ||= 1024;
-	$options {-processes}    ||= 2;
+	$options {-processes}    ||= 20;
 	$options {-timeout}      ||= 1;
 	$options {-kill_timeout} ||= 1;
 	$options {-signal}       ||= 15;

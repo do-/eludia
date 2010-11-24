@@ -457,8 +457,10 @@ EOH
 	
 	$html .= $options -> {bottom_toolbar};
 
-	$_REQUEST {__on_load} .= ';numerofforms++;';	
-
+	$_REQUEST {__on_load} .= ';numerofforms++;';
+	
+#	$_REQUEST {__on_load} .= '$(document.forms["' . $options -> {name} . '"]).submit (function () {checkMultipleInputs (this)});';
+	
 	return $html;	
 
 }
@@ -1297,37 +1299,38 @@ EOH
 	
 	}
 	
-	return <<EOH;
-<table 
-	width=100% 
-	height="$options->{height}" 
-	celspacing=0 
-	cellpadding=0 
-	class='dtree'
->	
-	<tr>
-		<td valign=top height="$options->{height}" id="${name}_td">
-		<script type="text/javascript">
-			var $name = new dTree ('$name');
-			$name._active = $options->{active};
-			$name._href = '$options->{href}';
-			$name._url_base = '';
-			var c = $name.config;
-			c.iconPath = '$_REQUEST{__static_url}/tree_';
-			c.useStatusText = false;
-			c.useSelection = false;
-			$name.icon.node = 'folderopen.gif';
-			$name.aNodes = $nodes;
-			document.write($name);
-			for (var n = 0; n < $name.checkedNodes.length; n++) {
-				$name.openTo ($name.checkedNodes [n], true, true);
-			}
-			
-		</script>
-</td></tr></table>
-EOH
-	
+	$_REQUEST {__script} .= qq {
 
+		var $name = new dTree ('$name');
+
+	};
+
+	$_REQUEST {__on_load} .= qq {
+
+		$name._active = $options->{active};
+		$name._href = '$options->{href}';
+		$name._url_base = '';
+		var c = $name.config;
+		c.iconPath = '$_REQUEST{__static_url}/tree_';
+		c.useStatusText = false;
+		c.useSelection = false;
+		$name.icon.node = 'folderopen.gif';
+		$name.aNodes = $nodes;
+		document.getElementById ("${name}_td").innerHTML = $name.toString ();
+		for (var n = 0; n < $name.checkedNodes.length; n++) {
+			$name.openTo ($name.checkedNodes [n], true, true);
+		}
+
+	};
+	
+	return qq {
+	
+		<table width=100% height="$options->{height}" celspacing=0 cellpadding=0 class='dtree'>
+			<tr><td valign=top height="$options->{height}" id="${name}_td"> </td></tr>
+		</table>
+
+	};
+	
 }
 
 ################################################################################
@@ -3348,7 +3351,6 @@ sub draw_logon_form {
 	my $hiddens = dump_hiddens (
 		[type            => 'logon'],
 		[action          => 'execute'],
-		[redirect_params => $_REQUEST {redirect_params}],
 		[tz_offset       => ''],
 	);
 

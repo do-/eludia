@@ -52,7 +52,7 @@ sub draw__boot {
 			
 		}					
 						
-		setTimeout ("nope ('$_REQUEST{__uri}?type=logon&redirect_params=$_REQUEST{redirect_params}', '_top')", $delay);
+		setTimeout ("nope ('$_REQUEST{__uri}?type=logon', '_top')", $delay);
 
 		setTimeout ("document.getElementById ('splash').style.display = 'none'; document.getElementById ('abuse_1').style.display = 'block'", 10000);
 		
