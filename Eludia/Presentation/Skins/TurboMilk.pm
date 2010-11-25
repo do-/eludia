@@ -1028,7 +1028,7 @@ sub draw_form_field_radio {
 
 		$html .= qq {\n<td class="form-inner" width=1 nowrap="1"><input class=cbx $attributes id="$value" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false" type="radio" name="_$$options{name}" value="$$value{id}" onClick="is_dirty=true;$$value{onclick};" onKeyDown="tabOnEnter()">};
 
-		$html .= qq {\n</td><td class="form-inner" width=1><nobr>&nbsp;$$value{label}</nobr>};
+		$html .= qq {\n</td><td class="form-inner" width=1><nobr>&nbsp;<label for="$value">$$value{label}</label></nobr>};
 									
 		$html .= qq {\n\t\t<td class="form-inner"><div style="display:expression(getElementById('$value').checked ? 'block' : 'none')">$$value{html}</div>} if $value -> {html};
 		
@@ -1980,11 +1980,11 @@ sub draw_toolbar_input_checkbox {
 	my $html = '<td class="toolbar" nowrap>';
 		
 	if ($options -> {label}) {
-		$html .= $options -> {label};
+		$html .= qq {<label for="$options">$$options{label}</label>};
 		$html .= ': ';
 	}
 
-	$html .= qq {<input class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
+	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
 
 	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
 	
