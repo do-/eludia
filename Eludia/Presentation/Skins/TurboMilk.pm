@@ -456,7 +456,6 @@ EOH
 	$html .=  '</form></table>';
 	
 	$html .= $options -> {bottom_toolbar};
-
 	$_REQUEST {__on_load} .= ';numerofforms++;';
 	
 #	$_REQUEST {__on_load} .= '$(document.forms["' . $options -> {name} . '"]).submit (function () {checkMultipleInputs (this)});';
@@ -801,6 +800,13 @@ sub draw_form_field_files {
 	$tail =~ y{'}{"}; #"'
 	$tail =~ s{[\n\r\t]+}{ }gsm;
 	
+	my $head_file_html = <<EOH;
+		<a href="javaScript:file_field_clear_$options->{name}();void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>&nbsp;
+		<input name="_$$options{name}_1" $tail>&nbsp;
+		<a href="javaScript:file_field_add_$options->{name}();void(0);"><img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle></a>
+EOH
+	$head_file_html =~ s{[\n\r\t]+}{}gsm;
+	
 	$_REQUEST {__script} .= <<EOH;
 	
 		var file_field_$options->{name}_cnt = 1;
@@ -809,12 +815,37 @@ sub draw_form_field_files {
 		
 			setCursor ();
 
-			var d = document.getElementById ('file_field_$options->{name}');
-
 			file_field_$options->{name}_cnt ++;
 
-			d.insertAdjacentHTML ('beforeEnd', '<br><input name="_$$options{name}_' + file_field_$options->{name}_cnt  + '" $tail>');
+			var file_field_id = 'file_field_$options->{name}' + file_field_$options->{name}_cnt;
+			
+			var remove_button_html = '<a href="javaScript:file_field_remove_$options->{name}(' + file_field_id + ');void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>&nbsp;';
+			
+			var input_html = '<input name="_$$options{name}_' + file_field_$options->{name}_cnt  + '" $tail>';
+
+			\$(file_field_$options->{name}).append('<span id="' + file_field_id + '"><br>' + remove_button_html + input_html + '</span>');
 		
+		}
+		
+		function file_field_remove_$options->{name} (id_file_field) {
+		
+			setCursor ();
+
+			file_field_$options->{name}_cnt --;
+
+			\$(id_file_field).empty();
+		
+		}
+		
+		function file_field_clear_$options->{name} () {
+			
+			setCursor ();
+			
+			\$(file_field_$options->{name}_head).empty();
+			
+			var d = document.getElementById ('file_field_$options->{name}');
+			
+			\$(file_field_$options->{name}_head).append('$head_file_html');
 		}
 	
 EOH
@@ -827,7 +858,9 @@ EOH
 			value="$options->{field}"
 		>
 		
-		<span id="file_field_$options->{name}"><input name="_$$options{name}_1" $tail>&nbsp;<a href="javaScript:file_field_add_$options->{name}();void(0);"><img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle></a></span>
+		<span id="file_field_$options->{name}">
+			<span id="file_field_$options->{name}_head">$head_file_html</span>
+		</span>
 
 EOH
 
