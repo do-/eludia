@@ -446,7 +446,23 @@ sub require_fresh {
 
 	my @file_names = grep {-f} map {"${_}$local_file_name.pm"} @inc;
 
-	if (@file_names == 0) {
+	my $is_need_reload_module;
+
+	@file_names = map {
+	
+		my $last_recorded_time = $INC_FRESH_BY_PATH {$_};
+
+		my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat ($_);
+		
+		my $last_modified_iso = localtime_to_iso ($mtime);
+
+		$is_need_reload_module ||= $mtime > $last_recorded_time;
+
+		{file_name => $_, mtime => $mtime, last_modified_iso => $last_modified_iso};
+
+	} @file_names;
+
+	unless ($is_need_reload_module) {
 	
 		__profile_out ('require.module');
 		
@@ -454,23 +470,11 @@ sub require_fresh {
 
 	}
 
-	foreach my $file_name (reverse @file_names) {
-
+	foreach my $file (reverse @file_names) {
+	
 		__profile_in ('require.file'); 
 			
-		my $last_recorded_time = $INC_FRESH_BY_PATH {$file_name};
-
-		my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat ($file_name);
-		
-		my $last_modified_iso = localtime_to_iso ($mtime);
-		
-		if ($mtime <= $last_recorded_time) {
-		
-			__profile_out ('require.file' => {label => "$file_name = $last_modified_iso"});
-			
-			next;
-		
-		}
+		my ($file_name, $mtime, $last_modified_iso) = ($file -> {file_name}, $file -> {mtime}, $file -> {last_modified_iso});
 
 		delete $INC_FRESH_BY_PATH {$file_name};
 
