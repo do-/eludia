@@ -84,8 +84,8 @@ sub page_is_not_needed {
 	__profile_in ('handler.setup_user'); 
 
 	my $u = setup_user ();
-	
-	__profile_out ('handler.setup_user'); 
+
+	__profile_out ('handler.setup_user', {label => "id_user=$_USER->{id}, ip=$_USER->{ip}, ip_fw=$_USER->{ip_fw}, sid=$_REQUEST{sid}"});
 
 	__profile_out ('handler.prelude'); 
 
@@ -247,7 +247,7 @@ sub setup_request_params {
 
 	setup_request_params_for_action () if $_REQUEST {action};
 	
-	__profile_out ('handler.setup_request_params'); 
+	__profile_out ('handler.setup_request_params', {label => "type='$_REQUEST_VERBATIM{type}' id='$_REQUEST_VERBATIM{id}' action='$_REQUEST_VERBATIM{action}'"}); 
 	
 }
 
@@ -435,7 +435,8 @@ sub handle_request_of_type_kickout {
 
 	foreach (qw(sid salt _salt __last_query_string __last_scrollable_table_row)) {delete $_REQUEST {$_}}
 	
-	set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode (Dumper (\%_REQUEST)), -path => '/');
+	setup_json ();
+	set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode ($_JSON -> encode (\%_REQUEST)), -path => '/');
 	
 	redirect (
 		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),
@@ -785,9 +786,7 @@ sub recalculate_logon {
 
 	if ($_COOKIE {redirect_params}) {
 		
-		my $VAR1; eval '$VAR1 = ' . MIME::Base64::decode ($_COOKIE {redirect_params});
-
-		$@ and warn "[$src] thaw error: $@\n" and return;
+		my $VAR1 = $_JSON -> decode (MIME::Base64::decode ($_COOKIE {redirect_params}));
 
 		foreach my $key (keys %$VAR1) { $_REQUEST {$key} = $VAR1 -> {$key} }
 

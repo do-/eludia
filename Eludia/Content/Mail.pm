@@ -77,12 +77,6 @@ sub send_mail {
 	foreach my $i (@to_char) {
 
 		ref $i eq HASH or $i = {mail => $i};
-		
-		if ($preconf -> {mail} -> {to}) {
-
-			$i -> {mail} = ref $preconf -> {mail} -> {to} ? $preconf -> {mail} -> {to} -> {mail} : $preconf -> {mail} -> {to};
-
-		}
 
 		if ($i -> {mail} eq '') {
 			$time = __log ($time, " $signature: empty mail address for $i->{label}, skipping");
@@ -100,13 +94,7 @@ sub send_mail {
 		$time = __log ($time, " $signature: no valid mail addresses found, returning");
 		return;	
 	}
-	
-	if ($preconf -> {mail} -> {to}) {
-	
-		$options -> {text} .= "\n\nTo: " . (join ', ', @to);
-			
-	}
-	
+
 	$time = __log ($time, " $signature: thus, our address list is " . join (', ', @to));
 
 		##### Deferred delivery
@@ -216,8 +204,20 @@ sub send_mail {
 	$time = __log ($time, " $signature: connected to $preconf->{mail}->{host}, ready to send mail");
 
 	$smtp -> mail ($options -> {from} -> {address});
+
+	my @real_to = @to;
+
+	if ($preconf -> {mail} -> {to}) {
+
+		my $mail_to = $preconf -> {mail} -> {to};
+
+		ref $mail_to eq ARRAY or $mail_to = [$mail_to];
+
+		@real_to = map {ref $_ eq HASH ? ($_ -> {mail} || $_ -> {address}) : $_} @$mail_to;
+
+	}
 	
-	foreach my $to (@to) {
+	foreach my $to (@real_to) {
 			
 		next if $smtp -> recipient ($to, {Notify => ['FAILURE', 'DELAY'], SkipBad => 0});
 		
