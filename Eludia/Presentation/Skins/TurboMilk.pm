@@ -2458,7 +2458,7 @@ EOH
 				<td nowrap onclick="$$type{onclick}" class="vert-menu" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}">
 						<table width="100%" cellspacing=0 cellpadding=0 border=0><tr>
 							<td align="left" nowrap style="font-family: Tahoma, 'MS Sans Serif'; font-weight: normal; font-size: 8pt; color: #ffffff;">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
-							<td align="right" style="font-family: Marlett; font-weight: normal; font-size: 8pt; color: #ffffff;">8</td>
+							<td align="right" style='font-family:Lucida Sans Unicode; font-weight: normal; font-size: 8pt; color: #ffffff;'>&#9654;</td>
 						</tr></table>
 				</td>
 EOH
