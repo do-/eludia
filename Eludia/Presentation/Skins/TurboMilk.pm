@@ -3118,19 +3118,38 @@ sub draw_page {
 
 		$_REQUEST {__on_load} .= q {
 					
-			$(window).resize (function() {
+			function checkTableContainers () {
 			
+				if (
+					window.wh
+					&& window.wh.w == $(window).width ()
+					&& window.wh.h == $(window).height ()
+				
+				) return;
+
 				$('div.table-container').each (function () {
 				
-					this.style.width = $(window).width () - (window.name == '_content_iframe' ? 16 : 0);
+					this.style.width = $(window).width ();
 
 				});
 				
-				tableSlider.scrollCellToVisibleTop ();
+				window.wh = {w: $(window).width (), h: $(window).height ()};
+				
+				tableSlider.scrollCellToVisibleTop ();				
+			
+			}
+
+			$(window).resize (function() {
+						
+				if (window.resizeTimer) clearTimeout (window.resizeTimer);
+
+				window.resizeTimer = setTimeout (checkTableContainers, 100);
 			
 			});
 			
 			$(window).resize ();
+			
+			tableSlider.scrollCellToVisibleTop ();				
 		
 		};
 		
@@ -3176,8 +3195,6 @@ sub draw_page {
 		$_REQUEST {__on_keydown}      .= " if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
 
 		$_REQUEST {__on_help}          = " nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes'); blockEvent ();" if $_REQUEST {__help_url};
-
-		$_REQUEST {__on_resize}       .= " refresh_table_slider_on_resize ();";
 
 		$_REQUEST {__on_beforeunload} .= " setCursor (window, 'wait'); try {top.setCursor (top, 'wait')} catch (e) {};";
 
