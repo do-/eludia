@@ -3091,7 +3091,7 @@ sub draw_page {
 		rightMargin  => 0,
 		marginwidth  => 0,
 		marginheight => 0,
-		scroll       => 'yes',
+#		scroll       => 'yes',
 		name         => 'body', 
 		id           => 'body',
 	};
@@ -3124,16 +3124,61 @@ sub draw_page {
 					window.wh
 					&& window.wh.w == $(window).width ()
 					&& window.wh.h == $(window).height ()
+					&& window.wh.l == $(window).scrollLeft ()
+					&& window.wh.t == $(window).scrollTop ()
 				
 				) return;
 
-				$('div.table-container').each (function () {
+				var tables = $('div.table-container');
 				
-					this.style.width = $(window).width ();
+				
+				tables.each (function () {
+				
+					this.style.width = $(window).width () + $(window).scrollLeft ();
 
 				});
+
+				if (tables.length == 1) {
+
+					tables.each (function () {
+
+						var body = $(window);
+
+						var offset = $(this).offset (body);
+
+						var h = Math.max (1, body.height () - offset.top - 20);
+
+						this.style.height = h;
+						
+						try {
+					
+							this.style.overflowY = 'scroll';
+							
+						} catch (e) {}
+
+					});
 				
-				window.wh = {w: $(window).width (), h: $(window).height ()};
+				}
+				else {
+
+					tables.each (function () {
+					
+						try {
+					
+							this.style.overflowY = 'visible';
+							
+						} catch (e) {}
+
+					});
+
+				}
+				
+				window.wh = {
+					w: $(window).width (), 
+					h: $(window).height (),
+					l: $(window).scrollLeft (), 
+					t: $(window).scrollTop ()
+				};
 				
 				tableSlider.scrollCellToVisibleTop ();				
 			
@@ -3146,6 +3191,8 @@ sub draw_page {
 				window.resizeTimer = setTimeout (checkTableContainers, 100);
 			
 			});
+
+			$(window).scroll (checkTableContainers);
 			
 			$(window).resize ();
 			
