@@ -1373,7 +1373,7 @@ for(my $i = $#items; $i >= 1; $i--) {
 	# Просматриваем поля и заменяем если в них есть текущий шаблон (для дальнейшей замены GROUP BY 1,2,3 ...)
 	if ($need_group_by) {
 		for (my $x = 0; $x <= $#group_by_fields_ref; $x++) {
-			for (my $y = 0; $y <= $#{@{$group_by_fields_ref[$x]}}; $y++) {
+			for (my $y = 0; $y < scalar (@{$group_by_fields_ref[$x]}); $y++) {
 				$group_by_fields_ref [$x] -> [$y] =~ s/NJNJNjgyyuypoht$i/$items[$i]/gsm;
 			}
 		}  
@@ -1386,7 +1386,7 @@ if ($need_group_by) {
 	my (@result,$group_by);
 
 	for (my $x = 0; $x <= $#group_by_values_ref; $x++) {
-		for (my $y = 0; $y <= $#{@{group_by_values_ref[$x]}}; $y++) {
+		for (my $y = 0; $y < scalar (@{$group_by_values_ref[$x]}); $y++) {
 			my $index = $group_by_values_ref [$x] -> [$y];
 			# Если в GROUP BY стояла цифра - заменяем на значение
 			if ($index =~ m/\b\d+\b/igsm) {
