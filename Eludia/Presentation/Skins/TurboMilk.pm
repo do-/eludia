@@ -762,8 +762,20 @@ sub draw_form_field_file {
 	my ($_SKIN, $options, $data) = @_;	
 		
 	my $attributes = dump_attributes ($options -> {attributes});
-
+	
+	$_REQUEST {__script} .= <<EOH if $_REQUEST {__script} !~ /function form_field_file_clear\s+/;
+		
+		function form_field_file_clear (id) {
+			
+			setCursor ();
+			
+			var form_field_file = \$('#' + id);
+			
+			form_field_file.replaceWith(form_field_file.clone(true));
+		}
+EOH
 	return <<EOH;
+	<span id='form_field_file_head_$options->{name}'>
 		<input 
 			type="file"
 			name="_$$options{name}"
@@ -774,7 +786,9 @@ sub draw_form_field_file {
 			onChange="is_dirty=true; $$options{onChange}"
 			onKeyDown="if (event.keyCode != 9) return false;"
 			tabindex=-1
-		>
+		/>
+		<a href="javaScript:form_field_file_clear('form_field_file_head_$options->{name}');void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>
+	</span>
 EOH
 
 }
@@ -842,8 +856,6 @@ EOH
 			setCursor ();
 			
 			\$(file_field_$options->{name}_head).empty();
-			
-			var d = document.getElementById ('file_field_$options->{name}');
 			
 			\$(file_field_$options->{name}_head).append('$head_file_html');
 		}
