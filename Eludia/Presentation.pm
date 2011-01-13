@@ -603,7 +603,7 @@ sub draw_form {
 
 	$options -> {path} ||= $data -> {path};
 
-	__profile_in ('draw.form' => {label => ref $options -> {path} eq ARRAY ? $options -> {path} -> [0] -> {name} : undef}); 
+	__profile_in ('draw.form' => {label => ref $options -> {path} eq ARRAY && @{$options -> {path}} > 0 ? $options -> {path} -> [0] -> {name} : undef}); 
 
 	$options -> {hr} = defined $options -> {hr} ? $options -> {hr} : 10;
 	$options -> {hr} = $_REQUEST {__tree} ? '' : draw_hr (height => $options -> {hr});
