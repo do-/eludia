@@ -534,19 +534,15 @@ function typeAhead (noChange) { // borrowed from http://www.oreillynet.com/javas
 		var txt;
 		
 		var len = typeAheadInfo.accumString.length;
-		
+
 		for (var i = 0; i < selectOptions.length; i++) {
 
-			txt = selectOptions [i].text.toUpperCase ();
-
-			if (typeAheadInfo.accumString > txt.substr (0, len)) continue;
+			if (typeAheadInfo.accumString !== selectOptions [i].text.substr (0, len).toUpperCase ()) continue;
 			
 			if (selectElem.selectedIndex == i) break;
 			
 			selectElem.selectedIndex = i;
-									
-			if (txt.indexOf (typeAheadInfo.accumString) != 0) break;
-	
+										
 			if (noChange) {
 
 				selectElem.onclick = selectElem.onblur = function () {this.form.submit ()}
