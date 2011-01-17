@@ -1001,21 +1001,16 @@ function setSelectOption (select, id, label) {
 	}	
 	
 	var option = document.createElement ("OPTION");
-
-	try {
-		option.innerText = label;
-	}
-	catch (e) {
-	}
-
-	try {
+	select.options.add (option);
+	option.value = id;
+	
+	if ($.browser.mozilla) {
 		option.textContent = label;
 	}
-	catch (e) {
+	else {
+		option.innerText = label;
 	}
 
-	option.value = id;
-	select.options.add (option);
 	select.selectedIndex = select.options.length - 1;
 	window.focus ();
 	select.focus ();

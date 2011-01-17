@@ -1125,6 +1125,8 @@ sub draw_form_field_select {
 				"if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {",
 				"} else {this.selectedIndex = 0}"
 			);
+			
+		if ($options -> {no_confirm}) {
 
 			$options -> {onChange} .= <<EOJS;
 
@@ -1212,7 +1214,9 @@ EOJS
 EOJS
 
 		}
-
+	
+	}
+	
 	my $html = <<EOH;
 		<select 
 			name="_$$options{name}"
