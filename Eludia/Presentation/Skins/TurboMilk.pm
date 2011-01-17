@@ -1148,20 +1148,32 @@ sub draw_form_field_select {
 
 						} else {
 
+							this.selectedIndex = 0;
+
+						}
+						
+						
+					} catch (e) {
+						
 						this.selectedIndex = 0;
-
+						
 					}
-
+						
 					if (\$.browser.webkit || \$.browser.safari)
 						\$.unblockUI ();
 					
 				}
 
+EOJS
+
 		} else {
 
-					} catch (e) {
 
-						this.selectedIndex = 0;
+			$options -> {onChange} .= <<EOJS;
+
+				if (this.options[this.selectedIndex].value == -1) {
+
+					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
 
 						if (\$.browser.webkit || \$.browser.safari)
 							\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
@@ -1193,7 +1205,9 @@ sub draw_form_field_select {
 
 						if (\$.browser.webkit || \$.browser.safari)
 							\$.unblockUI ();
+												
 					}
+							
 				}
 EOJS
 
