@@ -1,6 +1,7 @@
 <html>
 	<head>
-		<title>Справочник</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>РЎРїСЂР°РІРѕС‡РЅРёРє</title>
 		<script>
 			var title_set = 0;
 			function _setSelectOption (id, label) {
