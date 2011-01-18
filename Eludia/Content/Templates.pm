@@ -82,13 +82,7 @@ sub fill_in_template {
 	return if $_REQUEST {__response_sent};
 
 	my ($template_name, $file_name, $options) = @_;
-	
-	if (user_agent () -> {msie}) {
-
-		$file_name = uri_escape ($file_name, '^ ');
-
-	}	
-	
+		
 	$options -> {no_print} ||= $_REQUEST {no_print};
 	
 	my $template = load_template (@_);
@@ -100,6 +94,11 @@ sub fill_in_template {
 	return $result if ($options -> {no_print});	
 
 	$r -> status (200);
+	
+	$file_name = Encode::encode ("windows-1251", $file_name);
+	
+	$file_name =~ y{¨¸}{Åå};
+	$file_name =~ s{[^0-9A-za-zÀ-ßà-ÿ\.]+}{_}g;
 	
 	unless ($options -> {skip_headers}) {
 	
