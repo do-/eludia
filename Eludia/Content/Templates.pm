@@ -6,7 +6,7 @@ sub interpolate {
 
 	my $result = '';
 
-	my $code = "\$result = <<EOINTERPOLATION\n$template\nEOINTERPOLATION";
+	my $code = "use utf8; \$result = <<EOINTERPOLATION\n$template\nEOINTERPOLATION";
 
 	eval $code;
 
@@ -70,7 +70,7 @@ sub load_template {
 	}
 
 	close (T);
-	
+		
 	return $template;
 
 }
