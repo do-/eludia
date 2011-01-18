@@ -683,7 +683,7 @@ sub start_page {
 	my $page_title = $_REQUEST {__page_title};
 	$page_title =~ s/[\"\?\:\s\\\/]+/_/gs;
 	$r -> header_out ('P3P' => 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
-	$r -> header_out ('Content-Disposition' => "attachment;filename=$page_title.xls"); 	
+	$r -> header_out ('Content-Disposition' => "attachment;filename=" . Encode::encode ('windows-1251', "$page_title.xls")); 	
 	$r -> send_http_header ();
 
 	$_REQUEST {__response_sent} = 1;
@@ -695,7 +695,7 @@ sub start_page {
 		<html xmlns:x="urn:schemas-microsoft-com:office/excel" xmlns:o="urn:schemas-microsoft-com:office:office">
 			<head>
 				<title>$$i18n{_page_title}</title>
-				<meta http-equiv=Content-Type content="text/html; charset=$$i18n{_charset}">
+				<meta http-equiv=Content-Type content="text/html; charset=utf-8">
 				$_REQUEST{_style}
 				$_REQUEST{_xml}
 			</head>
