@@ -785,12 +785,16 @@ sub recalculate_logon {
 	}
 
 	if ($_COOKIE {redirect_params}) {
-		
-		my $VAR1 = $_JSON -> decode (MIME::Base64::decode ($_COOKIE {redirect_params}));
+	
+		eval {
 
-		foreach my $key (keys %$VAR1) { $_REQUEST {$key} = $VAR1 -> {$key} }
+			my $VAR1 = $_JSON -> decode (MIME::Base64::decode ($_COOKIE {redirect_params}));
 
-		set_cookie_for_root (redirect_params => '');
+			foreach my $key (keys %$VAR1) { $_REQUEST {$key} = $VAR1 -> {$key} }
+
+			set_cookie_for_root (redirect_params => '');
+
+		}
 
 	}
 
