@@ -102,7 +102,7 @@ sub fill_in_template {
 	
 	unless ($options -> {skip_headers}) {
 	
-		gzip_if_it_is_needed ($result);
+#		gzip_if_it_is_needed ($result);
 	
 		$r -> header_out ('Content-Disposition' => "attachment;filename=$file_name");
 
