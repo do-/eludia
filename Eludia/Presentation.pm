@@ -165,7 +165,7 @@ sub trunc_string {
 	
 	return $s if $length <= $len;
 	
-	my $has_ext_chars = $s =~ y/\200-¿/\200-¿/;
+	my $has_ext_chars = $s =~ /(\&[a-z]+)|(\&#\d+)/;
 	
 	$s = decode_entities ($s) if $has_ext_chars;
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
