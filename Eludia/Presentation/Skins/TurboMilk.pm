@@ -2179,6 +2179,26 @@ sub draw_centered_toolbar_button {
 		$img_path = _icon_path ($options -> {icon});
 	}
 	
+	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
+
+		unless ($options -> {href} =~ /^javaScript\:/i) {
+		
+			$options -> {target} ||= '_self';
+			
+			$options -> {href} =~ s{\%}{\%25}g;
+			
+			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
+
+			$options -> {target} = '_self';
+			
+		}
+		
+		my $code = "\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\\'$_REQUEST{__static_url}/busy.gif\\'> $i18n->{request_sent}</h2>'})";
+
+		$options -> {href} =~ s/\bnope\b/$code;nope/;
+
+	}
+
 	my $nbsp = $options -> {label} ? '&nbsp;' : '';
 
 	return <<EOH;
@@ -3044,6 +3064,32 @@ sub draw_page {
 		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');"                                   if   $_REQUEST {__focused_input};
 
 		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " try {top.edit_mode = 1} catch (e) {};" : " try {top.edit_mode = 0} catch (e) {};"                 if ! $_REQUEST {select};
+
+		if ($preconf -> {core_blockui_on_submit}) {
+		
+			$_REQUEST {__head_links} .= qq |<script src="$_REQUEST{__static_url}/jquery.blockUI.js?$_REQUEST{__static_salt}"></script>|;
+
+			$_REQUEST {__on_load} .= "\$('form').submit (function () {\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\"$_REQUEST{__static_url}/busy.gif\"> $i18n->{request_sent}</h2>'}); return true;});";
+			
+			$_REQUEST {__script} .= <<'EOJS';
+function poll_invisibles () {
+	var has_loading_iframes;
+	$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
+	if (!has_loading_iframes) {
+		window.clearInterval(poll_invisibles);
+		$.unblockUI ();
+		is_interface_is_locked = false;
+		setCursor ();
+	}
+}
+EOJS
+
+			$_REQUEST {__on_load} .= <<'EOJS';
+$('form[target^="invisible"]').submit (function () {
+	window.setInterval(poll_invisibles, 100);
+});
+EOJS
+		}
 
 		if ($_REQUEST {__im_delay}) {
 		

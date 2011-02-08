@@ -23,6 +23,7 @@ var is_dirty = false;
 var scrollable_table_is_blocked = false;
 var tableSlider = new TableSlider ();
 var q_is_focused = false;					
+var is_interface_is_locked = false;
 var left_right_blocked = false;					
 var last_vert_menu = [];
 var subsets_are_visible = 0;
@@ -341,7 +342,7 @@ function focus_on_input (__focused_input) {
 	}
 
 	var forms = document.forms;
-	
+
 	if (forms != null) {
 
 		var done = 0;
@@ -957,6 +958,9 @@ function handle_basic_navigation_keys () {
 		return blockEvent ();
 
 	}
+
+	if (is_interface_is_locked)
+		return;
 
 	var e = window.event;
 	var keyCode = e.keyCode;

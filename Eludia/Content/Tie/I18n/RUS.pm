@@ -36,6 +36,7 @@
 	today                    => 'Сегодня', 
 	confirm_open_vocabulary  => 'Открыть окно редактирования справочника?',
 	confirm_close_vocabulary => 'Вы выбрали',
+	request_sent             => 'Запрос отправлен на сервер',
 	session_terminated       => 'Сессия завершена',
 	save_or_cancel           => 'Пожалуйста, сначала сохраните данные (Ctrl-Enter) или отмените ввод (Esc)',
 	infty                    => '&infin;', 
