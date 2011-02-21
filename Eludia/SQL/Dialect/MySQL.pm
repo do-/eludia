@@ -836,7 +836,16 @@ sub sql_select_loop {
 
 sub sql_lock {
 
-	sql_do ("LOCK TABLES $_[0] WRITE, $conf->{systables}->{sessions} WRITE");
+	if ($preconf -> {db_default_storage_engine} eq 'InnoDB' && $db -> {AutoCommit} == 0) {
+		
+		sql_do ("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+
+	} else {
+	
+		sql_do ("LOCK TABLES $_[0] WRITE, $conf->{systables}->{sessions} WRITE");
+		
+	}
+
 
 }
 
@@ -844,7 +853,19 @@ sub sql_lock {
 
 sub sql_unlock {
 
-	sql_do ("UNLOCK TABLES");
+	if ($preconf -> {db_default_storage_engine} eq 'InnoDB' && $db -> {AutoCommit} == 0) {
+	
+		my $global_isolation_level = sql_select_scalar ('SELECT @@GLOBAL.tx_isolation');
+		
+		$global_isolation_level =~ s/-/ /g;
+		
+		sql_do ("SET SESSION TRANSACTION ISOLATION LEVEL " . $global_isolation_level);
+		
+	} else {
+	
+		sql_do ("UNLOCK TABLES");
+		
+	}
 
 }
 
