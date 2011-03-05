@@ -193,11 +193,13 @@ function set_suggest_result (sel, id) {
 }
 
 function dialog_open (href, arg, options) {
-						
+
+	arg.parent = window;
+
 	var result = window.showModalDialog (href, arg, options);
 
 	document.body.style.cursor = 'default';
-	
+
 	return result;
 
 }
