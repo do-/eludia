@@ -338,7 +338,7 @@ function focus_on_input (__focused_input) {
 
 	if (focused_inputs != null && focused_inputs.length > 0) {
 		var focused_input = focused_inputs [0];
-		focused_input.focus ();
+		try {focused_input.focus ();} catch (e) {}
 		if (focused_input.type == 'radio') focused_input.select ();
 		return;
 	}
@@ -365,7 +365,7 @@ function focus_on_input (__focused_input) {
 						   (element.tagName == 'INPUT'  && (element.type == 'text' || element.type == 'checkbox' || element.type == 'radio'))
 						||  element.tagName == 'TEXTAREA') 
 					{
-						element.focus ();
+						try {element.focus ();} catch (e) { continue; }
 						done = 1;
 						break;
 					}										
