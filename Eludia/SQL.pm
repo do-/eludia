@@ -712,6 +712,9 @@ sub sql_select_id {
 	
 	};
 
+	die $@
+		if $@;
+
 	sql_unlock ($table);
 	
 	if ($auto_commit) {

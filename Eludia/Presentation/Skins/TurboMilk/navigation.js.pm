@@ -193,11 +193,13 @@ function set_suggest_result (sel, id) {
 }
 
 function dialog_open (href, arg, options) {
-						
+
+	arg.parent = window;
+
 	var result = window.showModalDialog (href, arg, options);
 
 	document.body.style.cursor = 'default';
-	
+
 	return result;
 
 }
@@ -336,7 +338,7 @@ function focus_on_input (__focused_input) {
 
 	if (focused_inputs != null && focused_inputs.length > 0) {
 		var focused_input = focused_inputs [0];
-		focused_input.focus ();
+		try {focused_input.focus ();} catch (e) {}
 		if (focused_input.type == 'radio') focused_input.select ();
 		return;
 	}
@@ -363,7 +365,7 @@ function focus_on_input (__focused_input) {
 						   (element.tagName == 'INPUT'  && (element.type == 'text' || element.type == 'checkbox' || element.type == 'radio'))
 						||  element.tagName == 'TEXTAREA') 
 					{
-						element.focus ();
+						try {element.focus ();} catch (e) { continue; }
 						done = 1;
 						break;
 					}										
