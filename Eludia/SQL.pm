@@ -143,7 +143,7 @@ sub sql_weave_model {
 			$referenced_table_def or next;
 			$referenced_table_def -> {references} ||= [];
 			push @{$referenced_table_def -> {references}}, $column_def
-				unless grep {$column_def == $_} @{$referenced_table_def -> {references}};
+				unless grep {$column_def == $_ || $column_def -> {name} eq $_ -> {name} && $column_def -> {table_name} eq $_ -> {table_name}} @{$referenced_table_def -> {references}};
 
 		}		
 	
