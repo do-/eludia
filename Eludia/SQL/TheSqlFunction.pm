@@ -1009,7 +1009,7 @@ sub sql {
 	}
 	else {
 	
-		if ($limit) {
+		if ($limit && !$_REQUEST {xls}) {
 		
 			if ($SQL_VERSION -> {driver} eq 'Oracle') {
 
