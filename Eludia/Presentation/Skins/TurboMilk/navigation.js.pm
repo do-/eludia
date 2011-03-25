@@ -1143,7 +1143,7 @@ TableSlider.prototype.set_row = function (row) {
 
 	if (row < this.cnt) {
 		this.row = row;
-		if (numeroftables == 1 && numerofforms == 0) {
+		if (numeroftables == 1) {
 			this.rows [row].scrollIntoView(false);
 		}
 	}

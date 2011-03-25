@@ -3055,7 +3055,10 @@ sub draw_page {
 		
 		$_REQUEST {__script}  .= '; check_top_window (); ';
 
-		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
+		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {};";
+		
+		$_REQUEST {__on_load} .= "tableSlider.set_row ($_REQUEST{__scrollable_table_row});"
+			if $_REQUEST {__scrollable_table_row} > 0;
 		
 		$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 		
