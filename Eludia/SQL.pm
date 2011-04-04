@@ -709,16 +709,17 @@ sub sql_select_id {
 	
 	}
 
-	
 	};
 
-	die $@
-		if $@;
+	my $error = $@;
 
 	sql_unlock ($table);
-	
+
+	die $error
+		if $error;
+
 	if ($auto_commit) {
-	
+
 		eval { 
 			$db -> commit;
 			$db -> {AutoCommit} = 1; 
