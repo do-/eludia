@@ -67,7 +67,7 @@ sub log_action_start {
 		
 	};
 
-	$r -> {mac} = get_mac () if $conf -> {core_log} -> {log_mac};
+	$r -> {mac} = get_mac () if $preconf -> {_} -> {core_log} -> {log_mac};
 
 	$_REQUEST {_id_log} = sql_do_insert ($conf -> {systables} -> {log}, $r);
 
