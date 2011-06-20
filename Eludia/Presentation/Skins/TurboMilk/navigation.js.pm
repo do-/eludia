@@ -37,6 +37,7 @@ var lastClientHeight = 0;
 var lastClientWidth = 0;
 var numerofforms = 0;
 var numeroftables = 0;
+var minutesLastChecked = -1;
 var typeAheadInfo = {last:0, 
 	accumString:"", 
 	delay:500,
@@ -464,11 +465,18 @@ function check_edit_mode (a, fallback_href) {
 function UpdateClock () {
 
 	var tDate = new Date ();
-
+	
+	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
+	
+	var currentMinutes = tDate.getMinutes ();
+	if (currentMinutes === minutesLastChecked) {
+		return
+	}
+	minutesLastChecked = currentMinutes;
+	
 	$('#clock_d').text (tDate.getDate () + ' ' + window.__month_names [tDate.getMonth ()] + ' ' + tDate.getFullYear ());
 	$('#clock_h').text (twoDigits (tDate.getHours ()));
-	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
-	$('#clock_m').text (twoDigits (tDate.getMinutes ()));
+	$('#clock_m').text (twoDigits (currentMinutes));
 
 }
 
