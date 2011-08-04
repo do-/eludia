@@ -146,8 +146,13 @@ sub upload_file {
 	$upload or return undef;
 
 	my ($fh, $filename, $file_size, $file_type) = upload_file_dimensions ($upload);
-	
-	$file_size > 0 or return undef;
+
+	unless ($file_size > 0) {
+		
+		die "#_$$options{name}#: $i18n->{empty_file}" if $filename;
+		
+		return undef;
+	}
 	
 	my ($path, $real_path) = upload_path ($filename, $options);
 
