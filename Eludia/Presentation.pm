@@ -1229,7 +1229,11 @@ sub draw_ok_esc_toolbar {
 		{
 			preset => 'choose',
 			label => $options -> {label_choose},
-			href  => js_set_select_option ('', $data),
+			href  => js_set_select_option ('', {
+				id       => $data -> {id}, 
+				label    => $options -> {choose_select_label} || $data -> {label},
+				question => $data -> {question},
+			}),
 			off   => (!$_REQUEST {__read_only} || !$_REQUEST {select}),
 		},
 		@{$options -> {additional_buttons}},
