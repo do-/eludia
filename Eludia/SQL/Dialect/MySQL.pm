@@ -126,7 +126,7 @@ sub sql_do {
 #	}
 
 	for (my $i = 0; $i < @params; $i ++) {
-		$params [$i] =~ /^\d+(\.\d+)?$/ ?
+		$params [$i] =~ /^-?\d+(\.\d+)?$/ && $params [$i] !~ /^-?0[^\.]/?
 			$st -> bind_param ($i + 1, $params [$i] . '', DBI::SQL_DECIMAL)
 			:
 			$st -> bind_param ($i + 1, $params [$i]);
