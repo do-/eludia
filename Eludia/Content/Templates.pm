@@ -94,9 +94,15 @@ sub fill_in_template {
 	$r -> status (200);
 	
 	unless ($options -> {skip_headers}) {
+		
+		if ($conf -> {report_date_in_filename}) {
+			my $generation_date = sprintf ("%04d-%02d-%02d_%02d-%02d", Date::Calc::Today_and_Now);
+			my ($name, @extensions) = split /\./, $file_name;
+			$file_name = join '.', ($name . "_($generation_date)", @extensions);
+		}
 	
 		gzip_if_it_is_needed ($result);
-	
+		
 		$r -> header_out ('Content-Disposition' => "attachment;filename=$file_name");
 
 		$r -> send_http_header ('application/octet-stream');
