@@ -75,6 +75,21 @@ sub load_template {
 
 ################################################################################
 
+sub adjust_template_filename {
+	
+	my ($file_name ) = @_;
+	
+	return $file_name if !$conf -> {report_date_in_filename};
+		
+	my $generation_date = sprintf ("%04d-%02d-%02d_%02d-%02d", Date::Calc::Today_and_Now);
+	my ($name, @extensions) = split /\./, $file_name;
+	$file_name = join '.', ($name . "_($generation_date)", @extensions);
+	
+	return $file_name;
+}
+
+################################################################################
+
 sub fill_in_template {
 
 	return if $_REQUEST {__response_sent};
@@ -94,9 +109,11 @@ sub fill_in_template {
 	$r -> status (200);
 	
 	unless ($options -> {skip_headers}) {
-	
+		
 		gzip_if_it_is_needed ($result);
-	
+		
+		$file_name = adjust_template_filename ($file_name);
+		
 		$r -> header_out ('Content-Disposition' => "attachment;filename=$file_name");
 
 		$r -> send_http_header ('application/octet-stream');
