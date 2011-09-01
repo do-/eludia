@@ -45,6 +45,7 @@
 	wrong_hour               => 'Invalid hours',
 	wrong_min                => 'Invalid minutes',
 	wrong_sec                => 'Invalid seconds',
+	empty_file               => q[Cannot upload empty file],
 	authorization		 => 'Authorization',
 	login			 => 'login',
 	execute_logon		 => 'enter',	
