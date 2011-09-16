@@ -11,6 +11,7 @@ sub i18n {
 	$conf -> {i18n} -> {$_REQUEST {lang}} -> {_page_title} ||= $conf -> {page_title};
 	
 	our $_ACTIONS ||= {_actions => {}};
+	our $_I18N_TYPES ||= {};
 
 	my %i18n = ();
 	
@@ -18,7 +19,7 @@ sub i18n {
 	
 		lang => $_REQUEST {lang},
 		
-		over => [$_ACTIONS, $conf -> {i18n} -> {$_REQUEST {lang}}],
+		over => [$_ACTIONS, $_I18N_TYPES, $conf -> {i18n} -> {$_REQUEST {lang}}],
 		
 	};
 	
