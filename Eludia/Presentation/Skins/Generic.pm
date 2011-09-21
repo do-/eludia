@@ -469,6 +469,7 @@ EOJ
 			alert (data [0]);
 			try {window.parent.setCursor ()} catch (e) {}
 			window.parent.document.body.style.cursor = 'default';
+			try {window.parent.poll_invisibles ()} catch (e) {}
 		}
 EOJ
 
