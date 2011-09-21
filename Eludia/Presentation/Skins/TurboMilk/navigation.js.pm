@@ -3610,6 +3610,8 @@ dTree.prototype.o = function(id) {
 
 		cn._io = !cn._io;
 
+		setCursor ();
+
 	}
 
 	if (this.config.closeSameLevel) this.closeLevel(cn);
@@ -3637,6 +3639,8 @@ dTree.prototype.oAll = function(status) {
 	}
 
 	if (this.config.useCookies) this.updateCookie();
+
+	setCursor ();
 
 };
 

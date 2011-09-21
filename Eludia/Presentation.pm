@@ -546,7 +546,10 @@ sub draw_window_title {
 	my ($options) = @_;
 	
 	return '' if $options -> {off};
-	
+
+	$options -> {label} = $i18n -> {$options -> {label}}
+		if $options -> {label};
+
 	our $__last_window_title = $options -> {label};
 		
 	return $_SKIN -> draw_window_title (@_);
@@ -811,6 +814,9 @@ sub _adjust_field {
 		}
 	
 	}
+
+	$field -> {label} = $i18n -> {$field -> {label}}
+		if $field -> {label};
 
 	$field -> {data_source} and $field -> {values} ||= ($data -> {$field -> {data_source}} ||= sql_select_vocabulary ($field -> {data_source}));
 	
@@ -1645,6 +1651,10 @@ sub draw_table_header_cell {
 	my ($cell) = @_;
 	
 	ref $cell eq HASH or $cell = {label => $cell};
+
+	$cell -> {label} = $i18n -> {$cell -> {label}}
+		if $cell -> {label};
+
 
 	check_title ($cell);
 	

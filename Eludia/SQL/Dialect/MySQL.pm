@@ -125,7 +125,13 @@ sub sql_do {
 #		}
 #	}
 
-	$st -> execute (@params);
+	for (my $i = 0; $i < @params; $i ++) {
+		$params [$i] =~ /^-?\d+(\.\d+)?$/ && $params [$i] !~ /^-?0[^\.]/?
+			$st -> bind_param ($i + 1, $params [$i] . '', DBI::SQL_DECIMAL)
+			:
+			$st -> bind_param ($i + 1, $params [$i]);
+	}
+	$st -> execute ();
 	$st -> finish;	
 	
 	if ($conf -> {'db_temporality'} && $_REQUEST {_id_log}) {

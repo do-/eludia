@@ -673,18 +673,31 @@ sub dialog_open {
 
 ################################################################################
 
-sub start_page {
+sub xls_filename {
+	
+	my $filename = $_REQUEST {__page_title};
+	$filename =~ s/[\"\?\:\s\\\/]+/_/gs;
+	
+	if ($conf -> {report_date_in_filename}) {
+		my $generation_date = sprintf ("%04d-%02d-%02d_%02d-%02d", Date::Calc::Today_and_Now);
+		$filename .= "_($generation_date)";
+	}
+	
+	return "$filename.xls";
+}
 
+################################################################################
+
+sub start_page {
+	
 	$_REQUEST {__no_default_after_xls} or $_REQUEST {__after_xls} .= qq {
 		<p>$_USER->{label}</p>
 		<p>@{[ sprintf ('%02d.%02d.%04d %02d:%02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4,5]) ]}</p>
 	};
 
 	$r -> content_type ('application/octet-stream');
-	my $page_title = $_REQUEST {__page_title};
-	$page_title =~ s/[\"\?\:\s\\\/]+/_/gs;
 	$r -> header_out ('P3P' => 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
-	$r -> header_out ('Content-Disposition' => "attachment;filename=$page_title.xls"); 	
+	$r -> header_out ('Content-Disposition' => "attachment;filename=@{[xls_filename ()]}"); 	
 	$r -> send_http_header ();
 
 	$_REQUEST {__response_sent} = 1;
