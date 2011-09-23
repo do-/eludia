@@ -492,7 +492,7 @@ sub require_fresh {
 
 		while (my $line = <S>) {
 
-$line = Encode::decode ('windows-1251', $line);
+$line = Encode::decode ($preconf -> {core_src_charset} ||= 'windows-1251', $line);
 
 			$src .= $line;
 

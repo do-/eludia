@@ -1,32 +1,34 @@
+ï»¿use utf8;
+
 {
 	_charset                 => 'windows-1252',
 	_calendar_lang           => 'fr',
 	_format_d		 => '%d/%m/%Y',
 	_format_dt		 => '%d/%m/%Y  %k:%M',
-	_lc			 => 'a-zà-öø-ÿ',
-	_uc			 => 'A-ZÀ-ÖØ-ß',
-	Exit                     => 'Déconnexion',
+	_lc			 => 'a-zÐ°-Ñ†Ñˆ-Ñ',
+	_uc			 => 'A-ZÐ-Ð¦Ð¨-Ð¯',
+	Exit                     => 'DÃ©connexion',
 	toolbar_pager_empty_list => 'liste vide',
 	toolbar_pager_of         => ' de ',
 	confirm_ok               => 'Sauver des changements?',
 	confirm_esc              => 'Quitter sans sauvegarde?',
-	confirm_delete           => 'Supprimer cette fiche, vous êtes sûr(e) ?',
-	confirm_undelete         => 'Restaurer cette fiche, vous êtes sûr(e) ?',
+	confirm_delete           => 'Supprimer cette fiche, vous Ãªtes sÃ»r(e) ?',
+	confirm_undelete         => 'Restaurer cette fiche, vous Ãªtes sÃ»r(e) ?',
 	confirm_session_term     => 'Voulez-vous vraiment terminer la session ?',
 	ok                       => 'appliquer', 
 	cancel                   => 'annuler', 
 	choose                   => 'choisir', 
 	delete                   => 'supprimer', 
-	download                 => 'télécharger', 
+	download                 => 'tÃ©lÃ©charger', 
 	edit                     => 'rediger', 
 	'close'                  => 'fermer',
-	back                     => '&lt;&lt; pas précédent',
+	back                     => '&lt;&lt; pas prÃ©cÃ©dent',
 	'next'                   => 'suite &gt;&gt;',
 	User                     => 'Utilisateur',
-	not_logged_in		 => 'indéfini',
+	not_logged_in		 => 'indÃ©fini',
 	Print                    => 'Imprimer',
 	F1                       => 'F1: Aide',
-	Select                   => 'Sélection',
+	Select                   => 'SÃ©lection',
 	yes                      => 'Oui', 
 	no                       => 'Non', 
 	name                     => 'nom', 
@@ -34,8 +36,8 @@
 	log_on                   => 'connecter', 
 	confirm_open_vocabulary  => 'Ouvrir le vocabulaire?',
 	confirm_close_vocabulary => 'Vous avez choisi',
-	session_terminated       => 'Déconnecté',
-	save_or_cancel           => "Veuillez sauvegarder vos données (Ctrl-Enter) ou bien annuler l\\'opération (Esc)",
+	session_terminated       => 'DÃ©connectÃ©',
+	save_or_cancel           => "Veuillez sauvegarder vos donnÃ©es (Ctrl-Enter) ou bien annuler l\\'opÃ©ration (Esc)",
 	infty                    => '&infin;', 
 	voc                      => ' vocabulaire...',
 	today                    => "Aujourd'hui", 
@@ -49,31 +51,31 @@
 	execute_logon		 => 'se connecter',	
 	months			 => [qw(
 		janvier
-		février
+		fÃ©vrier
 		mars
 		avril
 		mai
 		juin
 		juillet
-		août
-		séptembre
+		aoÑ‹t
+		sÃ©ptembre
 		octobre
 		novembre
-		décembre
+		dÃ©cembre
 	)],
 	month_names_1		 => [qw(
 		Janvier
-		Février
+		FÃ©vrier
 		Mars
 		Avril
 		Mai
 		Juin
 		Juillet
-		Août
-		Séptembre
+		AoÃ»t
+		SÃ©ptembre
 		Octobre
 		Novembre
-		Décembre
+		DÃ©cembre
 	)],
 	wd			=> [qw(
 		lu
