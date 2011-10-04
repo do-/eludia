@@ -845,8 +845,6 @@ EOH
 		
 			setCursor ();
 
-			file_field_$options->{name}_cnt --;
-
 			\$(id_file_field).empty();
 		
 		}
