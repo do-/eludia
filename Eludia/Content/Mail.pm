@@ -139,6 +139,12 @@ sub send_mail {
 		$options -> {text} .= "\n\n" . $options -> {href};
 	}
 	
+	if ($options -> {signature}) {
+		
+		$options -> {signature} = '<br><br>' . $options -> {signature} if $options -> {content_type} eq 'text/html';
+		$options -> {text} .= "\n\n" . $options -> {signature};
+	}
+	
 	my $text = encode_base64 ($options -> {text} . "\n" . $original_to);
 	
 	my $is_child = 0;
