@@ -402,9 +402,18 @@ sub _sql_unwrap_record {
 		if ($key =~ /^gfcrelf(\d+)$/) {
 				
 			my $def = $cols -> [$1];
-				
-			$record -> {$def -> [0]} -> {$def -> [1]} = delete $record -> {$key};
-					
+			
+			if ($conf -> {core_sql_flat}) {
+
+				$record -> {"$def->[0].$def->[1]"} = delete $record -> {$key};
+
+			}
+			else {
+
+				$record -> {$def -> [0]} -> {$def -> [1]} = delete $record -> {$key};
+
+			}
+									
 		}
 		elsif ($key =~ /(\w+)\!(\w+)/) {
 
