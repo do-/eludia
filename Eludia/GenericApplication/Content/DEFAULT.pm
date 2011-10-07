@@ -1,5 +1,19 @@
 ################################################################################
 
+sub do_merge_DEFAULT { # Слияние дубликатов, размеченных в таблице
+
+	my @ids = get_ids ($_REQUEST {type});
+	
+	@ids > 1 or return;
+	
+	my $id = shift @ids;
+	
+	sql_do_relink ($_REQUEST {type}, \@ids => $id);
+
+}
+
+################################################################################
+
 sub do_add_DEFAULT { # Слияние дубликатов
 	
 	sql_do_relink ($_REQUEST {type}, [get_ids ('clone')] => $_REQUEST {id});
