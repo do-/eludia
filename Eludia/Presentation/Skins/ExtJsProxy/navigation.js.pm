@@ -51,47 +51,6 @@ function form_failure (form, action) {
 
 }
 
-function ajax (url, handler, form) {
-
-	if (/type=_boot/.test (url)) return alert ('Session expired');
-	
-	if (url.charAt (0) === '/') url = url.substr (1);
-
-	if (sid && !/\bsid=[0-9]/.test (url)) url += ('&sid=' + sid);
-
-	Ext.Ajax.request ({
-
-		url: '/handler' + url,
-		
-		scope: {handler: handler, form: form},
-
-		callback: function (options, success, response) {
-
-			if (!success) return ajax_failure (response, options);
-			
-			try {
-
-				var data = Ext.decode (response.responseText, true);
-				
-				if (data.success === 'redirect') return ajax (data.url, this.handler, this.form);
-
-				if (!data.success) return ajax_failure (response, options);
-								
-			}
-			catch (e) {
-			
-				return ajax_failure (response, options);
-			
-			}
-				
-			return this.handler (data, form);
-
-		}
-		
-	});
-
-}
-
 function submit (form, handler) {
 
  	form.submit ({
@@ -117,14 +76,15 @@ function store (options) {
 
 	return new Ext.data.Store ({
 	    model: 'UI.model.' + options.type,
-	    proxy: {
+		remoteSort : true,
+		proxy: {
 		type: 'ajax',
 		url: '/handler',
 		extraParams: options,
 		reader: {
 		    type: 'json',
 		    root: 'content.' + options.type,
-		    totalProperty: 'content.cnt',
+		    totalProperty: 'content.cnt'
 		}
 	    }
 	});	
