@@ -179,6 +179,16 @@ sub setup_request_params {
 #	}
 
 	our %_REQUEST_VERBATIM = %_REQUEST;
+	
+	if ($_REQUEST {sort} =~ /\[\{\"property\"\:\"(\w+)\"\,\"direction\"\:\"(ASC|DESC)\"\}\]/) {
+	
+		delete $_REQUEST {sort};
+		
+		$_REQUEST {order} = $1;
+		
+		$_REQUEST {desc} = ($2 eq 'DESC');
+	
+	}
 
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 	
