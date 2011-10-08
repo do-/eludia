@@ -10,7 +10,7 @@ sub start_session {
 
 	while (1) {
 
-		$_REQUEST {sid} = int (rand () * time ()) . int (rand () * time ());
+		$_REQUEST {sid} = substr (int (rand () * time ()) . int (rand () * time ()), 0, 18);
 		
 		sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE id = ?", $_REQUEST {sid}) or last;
 		
