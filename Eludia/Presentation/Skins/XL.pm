@@ -9,6 +9,14 @@ BEGIN {
 
 ################################################################################
 
+sub pr {
+	
+	$r -> print (Encode::encode ('utf-8', $_[0]));
+
+}
+
+################################################################################
+
 sub options {
 
 	return {
@@ -36,7 +44,7 @@ sub draw_hr {
 
 	return '' if ($_REQUEST {__no_draw_hr});
 
-	$r -> print ('<p>&nbsp;</p>');
+	pr ('<p>&nbsp;</p>');
 	return '';
 }
 
@@ -55,7 +63,7 @@ sub draw_window_title {
 
 	return '' if ($_REQUEST {__no_draw_window_title});
 
-	$r -> print (<<EOH);
+	pr (<<EOH);
 		<p style="font-family:Arial;font-size:12pt"><b><i>$$options{label}</i></b></p>
 EOH
 
@@ -70,24 +78,24 @@ EOH
 sub start_form {
 
 	my ($_SKIN, $options) = @_;
-	$r -> print ($options -> {hr});
-	$r -> print ($options -> {path});
-	$r -> print (qq{<table border=1>});
+	pr ($options -> {hr});
+	pr ($options -> {path});
+	pr (qq{<table border=1>});
 
 }
 
 ################################################################################
 
 sub start_form_row {
-	$r -> print (qq{<tr>});
+	pr (qq{<tr>});
 }
 
 ################################################################################
 
 sub draw_form_row {
 	my ($_SKIN, $row) = @_;
-	foreach (@$row) {$r -> print ($_ -> {html})}
-	$r -> print (qq{</tr>});
+	foreach (@$row) {pr ($_ -> {html})}
+	pr (qq{</tr>});
 }
 
 ################################################################################
@@ -95,8 +103,8 @@ sub draw_form_row {
 sub draw_form {
 
 	my ($_SKIN, $options) = @_;
-	$r -> print ('</table>');
-	$r -> print ($options -> {bottom_toolbar});
+	pr ('</table>');
+	pr ($options -> {bottom_toolbar});
 
 	return '';
 
@@ -499,7 +507,7 @@ sub draw_text_cell {
 		
 	}
 			
-	$r -> print (qq {\n\t<td $attributes>$txt</td>});
+	pr (qq {\n\t<td $attributes>$txt</td>});
 	return '';
 
 }
@@ -508,7 +516,7 @@ sub draw_text_cell {
 
 sub draw_radio_cell {
 	my ($_SKIN, $data, $options) = @_;
-	$r -> print ('<td>&nbsp;</td>');
+	pr ('<td>&nbsp;</td>');
 	return '';
 }
 
@@ -516,7 +524,7 @@ sub draw_radio_cell {
 
 sub draw_checkbox_cell {
 	my ($_SKIN, $data, $options) = @_;
-	$r -> print ('<td>&nbsp;</td>');
+	pr ('<td>&nbsp;</td>');
 	return '';
 }
 
@@ -524,7 +532,7 @@ sub draw_checkbox_cell {
 
 sub draw_select_cell {
 	my ($_SKIN, $data, $options) = @_;
-	$r -> print ('<td>&nbsp;</td>');
+	pr ('<td>&nbsp;</td>');
 	return '';
 }
 
@@ -547,7 +555,7 @@ sub draw_dump_button {
 sub draw_row_button {
 	my ($_SKIN, $options) = @_;
 	return '' if $conf -> {core_hide_row_buttons} == 2;	
-	$r -> print ('<td nowrap width="1%">&nbsp;</td>');
+	pr ('<td nowrap width="1%">&nbsp;</td>');
 	return '';
 }
 
@@ -599,10 +607,10 @@ sub start_table {
 
 	my ($_SKIN, $options) = @_;
 
-	$r -> print ($options -> {title});
-	$r -> print (qq {<table border=1>\n});
-	$r -> print ($options -> {header}) if $options -> {header};
-	$r -> print (qq {<tbody>\n});
+	pr ($options -> {title});
+	pr (qq {<table border=1>\n});
+	pr ($options -> {header}) if $options -> {header};
+	pr (qq {<tbody>\n});
 	
 	return '';
 
@@ -612,7 +620,7 @@ sub start_table {
 
 sub start_table_row {
 	my ($_SKIN) = @_;
-	$r -> print ('<tr>');
+	pr ('<tr>');
 	return '';
 }
 
@@ -620,7 +628,7 @@ sub start_table_row {
 
 sub draw_table_row {
 	my ($_SKIN, $row) = @_;
-	$r -> print ('</tr>');
+	pr ('</tr>');
 	return '';
 }
 
@@ -630,7 +638,7 @@ sub draw_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
 	
-	$r -> print ('</tbody></table>');
+	pr ('</tbody></table>');
 
 	return '';
 
@@ -691,7 +699,7 @@ sub start_page {
 	$_REQUEST {_xml}   = "<xml>$_REQUEST{_xml}</xml>" if $_REQUEST {_xml};
 	$_REQUEST {_style} = "<style><!--$_REQUEST{_style}</style>" if $_REQUEST {_style};
 
-	$r -> print (<<EOH);
+	pr (<<EOH);
 		<html xmlns:x="urn:schemas-microsoft-com:office/excel" xmlns:o="urn:schemas-microsoft-com:office:office">
 			<head>
 				<title>$$i18n{_page_title}</title>
@@ -710,7 +718,7 @@ EOH
 sub draw_page {
 
 	my ($_SKIN, $page) = @_;
-	$r -> print (<<EOH);
+	pr (<<EOH);
 $_REQUEST{__after_xls}
 </body></html>
 EOH
