@@ -36,7 +36,7 @@ sub check_peer_server {
 		
 		sql_do_insert ($conf->{systables}->{users}, {
 			fake        => -128,
-			peer_id     => $user -> {id},
+			peer_id     => 0 + $user -> {id},
 			peer_server => $peer_server,
 		});
 		
