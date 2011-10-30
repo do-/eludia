@@ -1504,4 +1504,24 @@ sub get_keys {
 
 sub sql_table_name {$_[0]}
 
+#############################################################################
+
+sub sql_voc_static {
+
+	$ENV {DOCUMENT_ROOT} or return;
+
+	setup_json ();
+
+	my $root = $ENV {DOCUMENT_ROOT} . '/voc/';
+
+	-d $root or mkdir ($root);	
+
+	my $data = add_vocabularies ({}, @_);	
+
+	while (my ($k, $v) = each %$data) {
+		print_file ("${root}${k}.json" => $_JSON -> encode ({success => \1, content => [map {[$_ -> {id}, $_ -> {label}]} @$v]}));
+	}
+
+}
+
 1;

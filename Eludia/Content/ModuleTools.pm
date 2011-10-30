@@ -139,17 +139,37 @@ sub require_model {
 
 	};
 	
-	if (!exists $DB_MODEL -> {tables}) {
+	my $was_virgin = 0;
+	
+	my %tables = ();
 
-		my %tables = ();
+	if (!exists $DB_MODEL -> {tables}) {
 
 		tie %tables, Eludia::Tie::FileDumpHash, {conf => $conf, path => \&_INC, package => current_package ()};
 
 		$DB_MODEL -> {tables} = \%tables;
+		
+		$was_virgin = 1;		
 
 	}
-	
+
 	$core_was_ok or require_scripts ();
+	
+	if ($was_virgin) {
+
+		__profile_in ('require.model_static');
+
+		while (my ($name, $table) = each %tables) {
+			my $options = $table -> {static} or next;
+			ref $options eq HASH or $options = {};
+			push @params, $name, $options;	
+		}
+
+		sql_voc_static (@params);
+
+		__profile_out ('require.model_static');
+
+	}
 
 	__profile_out ('require.model');
 
@@ -259,6 +279,8 @@ sub require_scripts_of_type ($) {
 			__profile_in ("require.scripts.$script_type.file", {label => $script -> {path}});
 					
 			if ($script_type eq 'model') {
+			
+				my $table = $DB_MODEL -> {tables} -> {$script -> {name}};
 
 				$model_update -> assert (
 					
@@ -266,10 +288,16 @@ sub require_scripts_of_type ($) {
 						
 					default_columns => $DB_MODEL -> {default_columns},
 						
-					tables => {$script -> {name} => $DB_MODEL -> {tables} -> {$script -> {name}}},
-						
+					tables => {$script -> {name} => $table},
+
 				);
-						
+				
+				if (my $s = $table -> {static}) {
+					
+					sql_voc_static ($script -> {name}, ref $s ? $s : ());
+					
+				}				
+
 			}
 			else {
 			

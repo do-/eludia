@@ -459,4 +459,16 @@ sub get_user_subset_menu {
 
 }
 
+################################################################################
+
+sub print_file {
+	my ($fn, $s) = @_;
+	open (F, ">$fn") or die "Can't write to $fn: $!\n";
+	flock (F, LOCK_EX);	
+	eval {print F $s};
+	flock (F, LOCK_UN);
+	close (F);
+	die $@ if $@;
+}
+
 1;

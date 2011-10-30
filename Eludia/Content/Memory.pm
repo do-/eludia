@@ -8,7 +8,7 @@ BEGIN {
 	
 		if (!$ENV {MOD_PERL}) {
 
-			eval "require Eludia::Content::Memory::MSWin32OLE";
+#			eval "require Eludia::Content::Memory::MSWin32OLE";
 
 		}	
 

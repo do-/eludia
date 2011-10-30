@@ -209,6 +209,12 @@ sub do_update_DEFAULT { # запись карточки
 		my $id = $_[2] || 'id';
 
 		sql_do_update ($type, \@fields, {$id => $_[1] || $_REQUEST {id}});
+		
+		if (my $static = $DB_MODEL -> {tables} -> {$type} -> {static}) {
+		
+			sql_voc_static ($type => ref $static ? $static : ());
+		
+		}
 	
 	}
 
