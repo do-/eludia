@@ -210,7 +210,8 @@ sub _sql_filters {
 			next;
 		}
 		
-		my $was_array = ref $values eq ARRAY or $values = [$values];
+		my $was_array = ref $values eq ARRAY;
+		$values = $was_array? Storable::dclone ($values) : [$values];
 
 		my $first_value = $values -> [0];
 		
