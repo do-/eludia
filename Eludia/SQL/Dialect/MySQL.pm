@@ -9,7 +9,7 @@ sub sql_version {
 	
 	$preconf -> {db_charset} ||= 'utf8';
 	
-	$db -> do ("SET names $preconf->{db_charset}");
+	$db -> do ("SET CHARACTER SET $preconf->{db_charset}");
 
 	my $version = $SQL_VERSION;
 	
