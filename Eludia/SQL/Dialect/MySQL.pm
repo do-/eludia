@@ -7,9 +7,15 @@ sub sql_version {
 	
 	$db -> {mysql_auto_reconnect} = 0;
 	
-	$preconf -> {db_charset} ||= 'utf8';
+	$preconf -> {db_charset}       ||= 'utf8';		
 	
 	$db -> do ("SET CHARACTER SET $preconf->{db_charset}");
+	
+	my $character_set_connection = ($preconf -> {core_src_charset} ||= 'windows-1251');
+	
+	$character_set_connection =~ s{windows-}{cp};
+
+	$db -> do ("SET character_set_connection = '$character_set_connection'");
 
 	my $version = $SQL_VERSION;
 	
