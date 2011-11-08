@@ -797,6 +797,8 @@ sub recalculate_logon {
 	if ($_COOKIE {redirect_params}) {
 	
 		eval {
+		
+			setup_json ();
 
 			my $VAR1 = $_JSON -> decode (MIME::Base64::decode ($_COOKIE {redirect_params}));
 
