@@ -413,6 +413,7 @@ sub check_href {
 
 			foreach my $k (keys %_REQUEST) {
 
+				next if $k =~ /\[\]$/;
 				next if $k =~ /^_/ && !$_INHERITABLE_PARAMETER_NAMES -> {$k};
 				next if             $_NONINHERITABLE_PARAMETER_NAMES -> {$k};
 				$h {$k} = uri_escape ($_REQUEST {$k});
@@ -475,13 +476,15 @@ sub check_href {
 	my $url = $_REQUEST {__uri_root};
 				
 	foreach my $k (keys %h) {
+	
+		next if $k eq 'sid' or $k =~ /^_*salt$/;
 
 		defined (my $v = $h {$k || next}) or next;
 
 		next if !$v and $_NON_VOID_PARAMETER_NAMES -> {$k};
-		
+
 		$url .= "&$k=$v";
-		
+
 	}
 
 	if ($h {action} eq 'download' || $h {xls}) {
