@@ -1579,23 +1579,20 @@ sub draw_form_field_color {
 	my ($_SKIN, $options, $data) = @_;
 	
 	my $html = <<EOH;
-		<table 
+		<table
+			id="td_color_$$options{name}"
 			align="absmiddle" 
 			cellspacing=0
 			cellpadding=0
-			style="height:20px;width:40px;border:solid black 1px;background:#$$options{value}"
+			style="height:20px;width:40px;border:solid black 1px;background-color:#$$options{value}"
 EOH
 	
 	if (!$_REQUEST {__read_only}) {
 	
 		$html .= <<EOH;
 			onClick="
-				if (\$.browser.webkit || \$.browser.safari)
-					\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
 				var color = showModalDialog('$_REQUEST{__static_url}/colors.html?$_REQUEST{__static_salt}', window, 'dialogWidth:600px;dialogHeight:400px;help:no;scroll:no;status:no');
-				if (\$.browser.webkit || \$.browser.safari)
-					\$.unblockUI ();
-				getElementById('td_color_$$options{name}').style.background = color;
+				getElementById('td_color_$$options{name}').style.backgroundColor = color;
 				getElementById('input_color_$$options{name}').value = color.substr (1);
 			"
 EOH
@@ -1605,7 +1602,7 @@ EOH
 	$html .= <<EOH;
 		>
 			<tr height=20>
-				<td id="td_color_$$options{name}" >
+				<td>
 					<input id="input_color_$$options{name}" type="hidden" name="_$$options{name}" value="$$options{value}">
 				</td>
 			</tr>
