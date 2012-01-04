@@ -2441,7 +2441,7 @@ sub draw_vert_menu {
 	my ($_SKIN, $name, $types, $level, $is_main) = @_;
 		
 	my $html = <<EOH;
-		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:100">
+		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:110">
 			<table id="vert_menu_table_$name" width=1 class="tbbg7" cellspacing=0 cellpadding=0 border=0 border=1>
 EOH
 
@@ -3123,7 +3123,15 @@ sub draw_page {
 
 		$body .= qq {
 			<div style='display:none'>$_REQUEST{__menu_links}</div>
-			<div style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:100; visibility:hidden; border: solid #888888 2px;' id="slider"></div>
+			<div style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:100; visibility:hidden; border: solid #888888 2px;' id="slider" onContextMenu="
+				var c = tableSlider.get_cell ();
+				if (!c) return;
+				var tr = c.parentNode;
+				if (!tr) return;
+				var h = tr.oncontextmenu;
+				if (!h) return;
+				return h(event);
+			"></div>
 			<div style='position:absolute; left:200px; top:300px; height:4px; width:4px; z-index:101; visibility:hidden; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
 		};
 		

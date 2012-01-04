@@ -1284,7 +1284,9 @@ TableSlider.prototype.cell_on = function () {
 	var cell         = this.get_cell ();
 
 	if (!cell) return;
-	
+		
+	hideSubMenus (0);
+		
 	var c            = $(cell);
 	var a            = $('a', c).get (0);
 		
