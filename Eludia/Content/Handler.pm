@@ -293,6 +293,8 @@ sub setup_request_params_for_action {
 	
 	foreach my $key (@get_ids) {
 	
+		next if $key =~ /\[/;
+	
 		my @ids = ();
 		
 		foreach my $name (@names) {
