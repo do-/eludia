@@ -199,9 +199,9 @@ sub upload_path {
 
 	}
 
-	$filename =~ /[A-Za-z0-9]+$/;
+	my $ext = $filename =~ /[A-Za-z0-9]+$/ ? ".$&" : '';
 	
-	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . '-' . (++ $_REQUEST {__files_cnt}) . "-$$.$&";
+	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . '-' . (++ $_REQUEST {__files_cnt}) . "-$$" . $ext;
 	
 	return ($path, $r -> document_root . $path);
 
