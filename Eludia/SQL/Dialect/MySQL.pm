@@ -15,7 +15,7 @@ sub sql_version {
 	
 	$character_set_connection =~ s{windows-}{cp};
 
-	$db -> do ("SET character_set_connection = '$character_set_connection'");
+	eval {$db -> do ("SET character_set_connection = '$character_set_connection'")} if $character_set_connection eq 'cp1251';
 
 	my $version = $SQL_VERSION;
 	
