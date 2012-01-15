@@ -877,7 +877,7 @@ sub check_module_queries {
 	} 
 	else { 
 		
-		eval 'sub fix___query {}; sub check___query {}';
+		eval 'sub Content::Queries::fix___query {}; sub Content::Queries::check___query {}';
 	
 		loading_log "no stored queries, ok.\n";
 
