@@ -280,7 +280,7 @@ sub order {
 	my $name_desc  = $options -> {suffix} ? "desc_$$options{suffix}"  : 'desc';
 	
 	my @default_order;
-	check___query ();
+	Content::Queries::check___query ();
 
 	while (@_) {
 		my $name  = shift;
@@ -1811,7 +1811,7 @@ sub draw_table {
 	}
 
 	if ($conf -> {core_store_table_order} && !$options -> {no_order}) {
-		fix___query ();
+		Content::Queries::fix___query ();
 	}
 	
 	if (ref $options -> {path} eq ARRAY) {

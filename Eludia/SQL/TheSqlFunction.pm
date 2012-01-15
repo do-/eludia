@@ -472,7 +472,7 @@ sub sql {
 	
 	}
 	
-	check___query ();
+	Content::Queries::check___query ();
 	
 	my $_args = $preconf -> {core_debug_sql} ? [(), @_] : undef;
 
