@@ -185,7 +185,7 @@ sub get_ids {
 	my @ids = ();
 	
 	while (my ($key, $value) = each %_REQUEST) {
-		$key =~ /$name(\d+)/ or next;
+		$key =~ /$name(\d+)$/ or next;
 		push @ids, $1;
 	}
 	
