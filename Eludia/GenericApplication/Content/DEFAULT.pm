@@ -220,6 +220,8 @@ sub do_update_DEFAULT { # запись карточки
 
 	foreach my $key (keys %_REQUEST) {
 	
+		next if $key =~ /\[/;
+
 		$key =~ /^__checkboxes_/ or next;
 		
 		my $table_from = $_REQUEST {$key};
