@@ -391,7 +391,9 @@ sub sql_select_hash {
 		
 		$_REQUEST {__the_table} ||= $sql_or_table_name;
 		
-		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE id = ?", $id);
+		my $for_update = $sql_or_table_name =~ s/\s+FOR UPDATE//i ? 'FOR UPDATE' : '';
+
+		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE id = ? $for_update", $id);
 		
 	}	
 
