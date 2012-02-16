@@ -278,7 +278,7 @@ sub check_application_directory {
 		
 		close (IN);
 		
-		if ($httpd_conf =~ /^\s*DocumentRoot\s+([\"\'\\\/\w\.\:\- ]+)/gism) {
+		if ($httpd_conf =~ /^\s*DocumentRoot\s+([\"\'\\\/\w\.\:\-\(\) ]+)/gism) {
 		
 			$docroot = $1;
 			
