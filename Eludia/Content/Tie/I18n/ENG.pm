@@ -34,6 +34,7 @@
 	log_on                   => 'log on', 
 	confirm_open_vocabulary  => 'Open the vocabulary window?',
 	confirm_close_vocabulary => 'Your choice is',
+	choose_open_vocabulary   => 'Open the vocabulary window',
 	request_sent             => 'Request sent',
 	session_terminated       => 'Logged off',
 	save_or_cancel           => 'Please save your data (Ctrl-Enter) or cancel pending input (Esc)',

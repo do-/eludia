@@ -344,10 +344,12 @@ sub setup_page {
 		$0 = $process;
 	}
 
+	setup_json ();
+
 	call_for_role ('get_page', $page);
 
 	require_both $page -> {type};
-			
+
 	$page -> {request_type} = 
 
 		$_REQUEST {__suggest} ? 'suggest' :
@@ -418,9 +420,9 @@ sub setup_menu {
 sub handle_error {
 
 	my ($page) = @_;
-	
+
 	out_html ({}, draw_error_page ($page));
-	
+
 	return action_finish ();
 
 }
@@ -466,9 +468,9 @@ sub handle_request_of_type_action {
 	eval { $db -> {AutoCommit} = 0; };
 
 	eval { $_REQUEST {error} = call_for_role ("validate_${action}_$$page{type}"); };
-	
+
 	$_REQUEST {error} ||= $@ if $@;
-	
+
 	return handle_error ($page) if $_REQUEST {error};
 
 	return action_finish () if $_REQUEST {__response_sent} || $_REQUEST {__peer_server};
@@ -550,9 +552,9 @@ sub handle_request_of_type_showing {
 	foreach (qw (js css)) { push @{$_REQUEST {"__include_$_"}}, @{$conf -> {"include_$_"}}}
 
 	adjust_last_query_string ();
-	
+
 	setup_page_content ($page) unless $_REQUEST {__only_menu};
-	
+
 	return handler_finish () if $_REQUEST {__response_sent} && !$_REQUEST {error};
 
 	out_html ({}, draw_page ($page));

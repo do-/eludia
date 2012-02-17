@@ -506,7 +506,7 @@ sub draw_item_of___queries {
 				{
 					icon	=> 'delete',
 					label	=> 'Очистить фильтры',
-					href	=> "javaScript:document.form.action.value='drop_filters'; document.form.fireEvent('onsubmit'); document.form.submit()",
+					href	=> "javaScript:document.form.action.value='drop_filters'; \$(document.form).submit()",
 					target	=> 'invisible',
 					keep_esc	=> 1,
 					off		=> $_REQUEST {__read_only},

@@ -21,7 +21,7 @@ sub __submit_href {
 
 	my ($_SKIN, $name) = @_;
 
-	"javaScript:var f = document.$name; f.fireEvent ('onsubmit'); f.submit()";
+	"javaScript:\$(document.$name).submit(); void(0);";
 
 }
 
@@ -59,7 +59,7 @@ sub __adjust_form_field_string {
 	
 	$attributes -> {autocomplete} = 'off' unless exists $attributes -> {autocomplete};
 		
-	$attributes -> {id}           = 'input_' . $options -> {name};
+	$attributes -> {id}         ||= 'input_' . $options -> {name};
 
 }
 

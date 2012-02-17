@@ -1,4 +1,14 @@
 
+BODY {
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	FONT-WEIGHT: normal; 
+	FONT-SIZE: 8pt; 
+	COLOR: #000000; 
+	background-color: #FFFFFF
+}
+FORM {
+	margin: 0px;
+}
 .tbbg0 {background-color: #b9c5d7;}
 .tbbg1 {background-color: #6f7681;}
 .tbbg2 {background-color: #949eac;}
@@ -47,7 +57,6 @@ div.table-container {
       	OVERFLOW-X: auto;
       	PADDING-BOTTOM: 0px;
       	MARGIN: 0px;
-      	WIDTH: expression(document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 18));
       	PADDING-TOP: 0px;      	
       	
 	scrollbar-base-color:#d6d3ce;
@@ -92,7 +101,8 @@ div.checkboxes {
 /* The main calendar widget.  DIV containing a table. */
 
 .calendar {
-  position: relative;
+  position: absolute;
+  z-index: 200;
   display: none;
   border-top: 2px solid #fff;
   border-right: 2px solid #000;
@@ -350,13 +360,6 @@ div.checkboxes {
 
 
 
-BODY {
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
-	FONT-WEIGHT: normal; 
-	FONT-SIZE: 8pt; 
-	COLOR: #000000; 
-	background-color: #FFFFFF
-}
 
 .header_0 {
 	FONT-WEIGHT: bold; 
@@ -986,7 +989,7 @@ a.hint {
 
 #admin a {color:#000000;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 
-#Menu {position:absolute;top:expression(document.getElementById('admin').offsetTop+25);left:expression(document.getElementById('admin').offsetLeft + document.getElementById('admin').offsetParent.offsetLeft);visibility:expression(subsets_are_visible ? 'visible' : 'hidden');z-index:100;}
+#Menu {position:absolute;top:0;left:0;z-index:100;display:none}
 #Menu .mm {background-color:#C4C7C9;padding:6px 5px 6px 9px;border-bottom:solid 1px #E2E3E4;}
 #Menu .mm0 {background-color:#C4C7C9;padding:6px 5px 0px 9px;}
 #Menu a {color:#23385A;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
@@ -994,6 +997,9 @@ a.hint {
 
 div.grey-submit a {color:#222323;text-decoration:none;}
 div.grey-submit a:hover {color:#222323;text-decoration:underline;}
+
+a.grey-submit {color:#222323;text-decoration:none;FONT-SIZE: 8pt;}
+a.grey-submit:hover {color:#222323;text-decoration:underline;FONT-SIZE: 8pt;}
 
 .logon {
 	font-family: Tahoma, Verdana, sans-serif;
