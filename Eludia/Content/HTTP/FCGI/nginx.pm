@@ -437,6 +437,7 @@ sub options_win32 {
 	$options {-backlog}      ||= 1024;
 	$options {-processes}    ||= 2;
 	$options {-timeout}      ||= 1;
+	$options {-nginx_conf}   ||= 'c:/nginx/conf/nginx.conf';
 
 	return %options;
 
@@ -448,26 +449,9 @@ sub start_win32 {
 
 	my %options = options_win32 (@_);
 
-	require Win32::Pipe;
-
 	$options {-address} =~ /\d+/;
-
-	my $pipe_out = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.out.Eludia_$&");
-	my $pipe_in  = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.in.Eludia_$&");
-
-	if ($pipe_in) {
-
-		threads -> create (sub {
-
-			$pipe_in -> Read ();
-
-			exit;
-
-		}, @_) -> detach;
 	
-	}
-	
-	my $nginx = {conf => 'c:/nginx/conf/nginx.conf'};
+	my $nginx = {conf => $options {-nginx_conf}};
 
 	if ($nginx -> {conf} and open (N, $nginx -> {conf})) {
 
