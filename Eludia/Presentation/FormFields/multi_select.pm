@@ -4,6 +4,9 @@ sub draw_form_field_multi_select {
 
 	my ($options, $data) = @_;
 
+	local $_REQUEST {select} = undef
+		if $options -> {href} =~ m/\bmulti_select=1\b/;
+
 	check_href ($options);
 
 	my $label = $options -> {label};
