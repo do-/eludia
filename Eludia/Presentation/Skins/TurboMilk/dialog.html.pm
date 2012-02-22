@@ -4,8 +4,8 @@
 		<script>
 			var title_set = 0;
 			function _setSelectOption (id, label) {
-				window.returnValue.result = 'ok';				
-				window.returnValue.id = id;				
+				window.returnValue.result = 'ok';
+				window.returnValue.id = id;
 				window.returnValue.label = label;
 				window.close ();
 			}
@@ -29,7 +29,7 @@
 			open(dialogArguments.href, '_body_iframe');
 		"
 	>
-		<iframe name='_body_iframe' id='__body_iframe' src="0.html" width=100% height=100% scrolling=no application=yes>
+		<iframe name='_body_iframe' id='__body_iframe' src="0.html" width=100% height=100% scrolling=yes application=yes style="border: 0">
 		</iframe>
 	</body>
 </html>

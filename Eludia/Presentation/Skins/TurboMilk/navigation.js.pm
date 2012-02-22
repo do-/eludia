@@ -1207,6 +1207,75 @@ function refresh_table_slider_on_resize () {
 
 }
 
+function checkTableContainers () {
+	if (
+		window.wh
+		&& window.wh.w == $(window).width ()
+		&& window.wh.h == $(window).height ()
+		&& window.wh.l == $(window).scrollLeft ()
+		&& window.wh.t == $(window).scrollTop ()
+	) return;
+
+	var tables = $('div.table-container');
+
+	tables.each (function () {
+
+		this.style.width = $(window).width () + $(window).scrollLeft ();
+
+	});
+
+	if (tables.length == 1) {
+
+		tables.each (function () {
+
+			var body = $(window);
+
+			var offset = $(this).offset (body);
+
+			var bottom_elements_height = 0;
+			$(this).nextAll().each(function () {bottom_elements_height += $(this).height ()});
+
+			if (body.height () < offset.top + $(this).height() + 20 + bottom_elements_height) {
+				var h = Math.max (200, body.height () - offset.top - 20 - bottom_elements_height);
+
+				this.style.height = h;
+
+				try {
+
+					this.style.overflowY = 'scroll';
+
+				} catch (e) {}
+			}
+
+		});
+
+	}
+	else {
+
+		tables.each (function () {
+
+			try {
+
+				this.style.overflowY = 'visible';
+
+			} catch (e) {}
+
+		});
+
+	}
+
+	window.wh = {
+		w: $(window).width (),
+		h: $(window).height (),
+		l: $(window).scrollLeft (),
+		t: $(window).scrollTop ()
+	};
+
+	tableSlider.scrollCellToVisibleTop ();
+
+}
+
+
 function TableSlider (initial_row) {
 
 	this.rows = [];

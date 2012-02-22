@@ -198,14 +198,12 @@ EOH
 EOH
 
 				}
-#				else {
 
-					my $class = $i == @{$_SKIN -> {subset} -> {items}} - 1 ? 'mm0' : 'mm';
+				my $class = $i == @{$_SKIN -> {subset} -> {items}} - 1 ? 'mm0' : 'mm';
 
-					$subset_div .= <<EOH;
-						<tr @{[$item -> {name} eq $_SKIN -> {subset} -> {name} ? 'style="display: none"' : '']} id="_subset_tr_$$item{name}"><td class="$class"><a id="_subset_a_$$item{name}" onClick="subset_on_change('$$item{name}', '$href&__subset=$$item{name}')" href="#">$$item{label}</a></td></tr>
+				$subset_div .= <<EOH;
+					<tr @{[$item -> {name} eq $_SKIN -> {subset} -> {name} ? 'style="display: none"' : '']} id="_subset_tr_$$item{name}"><td class="$class"><a id="_subset_a_$$item{name}" onClick="subset_on_change('$$item{name}', '$href&__subset=$$item{name}')" href="#">$$item{label}</a></td></tr>
 EOH
-#				}
 
 			}
 
@@ -2295,14 +2293,12 @@ EOH
 	}
 
 	$html .= <<EOH;
-									<td width="45%">
-										<table cellspacing=0 cellpadding=0 width="100%" border=0>
-											<tr>
-												<td background="$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}"><img height=40 hspace=0 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
-											</tr>
-										</table>
-									</td>
-								</tr>
+							<td width="45%">
+								<table cellspacing=0 cellpadding=0 width="100%" border=0>
+									<tr>
+										<td background="$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}"><img height=40 hspace=0 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+									</tr>
+								</table>
 							</td>
 						</tr>
 					</table>
@@ -3122,72 +3118,6 @@ sub draw_page {
 
 		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
 		$_REQUEST {__on_load} .= q {
-			function checkTableContainers () {
-				if (
-					window.wh
-					&& window.wh.w == $(window).width ()
-					&& window.wh.h == $(window).height ()
-					&& window.wh.l == $(window).scrollLeft ()
-					&& window.wh.t == $(window).scrollTop ()
-				) return;
-
-				var tables = $('div.table-container');
-
-				tables.each (function () {
-
-					this.style.width = $(window).width () + $(window).scrollLeft ();
-
-				});
-
-				if (tables.length == 1) {
-
-					tables.each (function () {
-
-						var body = $(window);
-
-						var offset = $(this).offset (body);
-
-						var bottom_elements_height = 0;
-						$(this).nextAll().each(function () {bottom_elements_height += $(this).height ()});
-
-						var h = Math.max (1, body.height () - offset.top - 20 - bottom_elements_height);
-
-						this.style.height = h;
-
-						try {
-
-							this.style.overflowY = 'scroll';
-
-						} catch (e) {}
-
-					});
-
-				}
-				else {
-
-					tables.each (function () {
-
-						try {
-
-							this.style.overflowY = 'visible';
-
-						} catch (e) {}
-
-					});
-
-				}
-
-				window.wh = {
-					w: $(window).width (),
-					h: $(window).height (),
-					l: $(window).scrollLeft (),
-					t: $(window).scrollTop ()
-				};
-
-				tableSlider.scrollCellToVisibleTop ();
-
-			}
-
 			$(window).resize (function() {
 
 				if (window.resizeTimer) clearTimeout (window.resizeTimer);
