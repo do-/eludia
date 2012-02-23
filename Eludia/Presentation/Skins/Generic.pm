@@ -312,7 +312,7 @@ sub __adjust_button_href {
 
 		}
 
-		$options -> {href} = qq {javascript:if($condition){$cursor_state$js_action}else{${js_restore_cursor}nop()}};
+		$options -> {href} = qq |javascript:if($condition){$cursor_state$js_action}else{${js_restore_cursor}} nop();|;
 		
 	} 
 	elsif ($options -> {no_wait_cursor}) {
