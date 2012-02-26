@@ -521,7 +521,7 @@ sub start_win32 {
 		
 		if ($app =~ /^"(.*)"$/) {$app = $1}
 
-		$app =~ s{/docroot/?}{};
+		$app =~ s{/docroot/?.*}{};
 		
 		print STDERR "Found some document root at $app...";
 		
