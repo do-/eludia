@@ -2959,12 +2959,12 @@ sub draw_table {
 
 	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="$options->{id}">\n};
 
-	$_REQUEST {__on_load} .= ";
-\$('#$options->{id}').parent().each(function(index) {
-	\$(this).height(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));
-	\$(this).width(document.body.offsetWidth - (\$.browser.msie ? (window.name == '_content_iframe' ? 32 : 18) : 18));
-  });
-;";
+#	$_REQUEST {__on_load} .= ";
+#\$('#$options->{id}').parent().each(function(index) {
+#	\$(this).height(actual_table_height(this,$$options{min_height},$$options{height},'$__last_centered_toolbar_id'));
+#	\$(this).width(document.body.offsetWidth - (\$.browser.msie ? (window.name == '_content_iframe' ? 32 : 18) : 18));
+#  });
+#;";
 
 	$html .= $options -> {header} if $options -> {header};
 

@@ -1108,7 +1108,7 @@ function actual_table_height (table, min_height, height, id_toolbar) {
 
 	var real_height       = $(table.firstChild).height ();
 
-	real_height += 18;
+//	real_height += 18;
 
 	var offset = $(table).offset();
 	var max_screen_height = $(window).height () - offset.top;
@@ -1217,10 +1217,12 @@ function checkTableContainers () {
 	) return;
 
 	var tables = $('div.table-container');
+	var table_width = $(window).width () + $(window).scrollLeft ();
 
 	tables.each (function () {
 
-		this.style.width = $(window).width () + $(window).scrollLeft ();
+		if (table_width != $(this).width())
+			$(this).width (table_width);
 
 	});
 
@@ -1229,14 +1231,19 @@ function checkTableContainers () {
 		tables.each (function () {
 
 			var body = $(window);
+			var table = this.children [0];
 
 			var offset = $(this).offset (body);
 
 			var bottom_elements_height = 0;
 			$(this).nextAll().each(function () {bottom_elements_height += $(this).height ()});
 
-			if (body.height () < offset.top + $(this).height() + 20 + bottom_elements_height) {
-				var h = Math.max (200, body.height () - offset.top - 20 - bottom_elements_height);
+			var div_height = $(this).height ();
+			if (browser_is_msie && div_height - $(table).height() < 18)
+				$(this).height (div_height + 18);
+
+			if (body.height () < offset.top + $(table).height() + bottom_elements_height + 1) {
+				var h = Math.max (200, body.height () - offset.top - bottom_elements_height - 1);
 
 				this.style.height = h;
 
@@ -1560,7 +1567,7 @@ TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 	else {
 		delta -= div.offsetHeight;
 		delta += td.offsetHeight;
-		if (div.scrollWidth > div.offsetWidth - 12) delta += 18;
+//		if (div.scrollWidth > div.offsetWidth - 12) delta += 18;
 	}
 	if (delta > 0) div.scrollTop += delta;
 
@@ -1574,7 +1581,7 @@ TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 	var delta = td.offsetLeft - div.scrollLeft;
 	delta -= div.offsetWidth;
 	delta += td.offsetWidth;
-	if (div.scrollHeight > div.offsetHeight - 12) delta += 18;
+//	if (div.scrollHeight > div.offsetHeight - 12) delta += 18;
 	if (delta > 0) div.scrollLeft += delta;
 
 	// showing the slider
