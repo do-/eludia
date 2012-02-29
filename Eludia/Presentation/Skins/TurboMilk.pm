@@ -1185,7 +1185,6 @@ EOJS
 	my $html = <<EOH;
 		<select
 			name="_$$options{name}"
-			id="$id"
 			$attributes
 			onKeyDown="tabOnEnter();"
 			onChange="is_dirty=true; $$options{onChange}"
