@@ -3116,22 +3116,41 @@ sub draw_page {
 		$_REQUEST {__script}  .= '; check_top_window (); ';
 
 		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
-		$_REQUEST {__on_load} .= q {
-			$(window).resize (function() {
 
-				if (window.resizeTimer) clearTimeout (window.resizeTimer);
+		if ($r -> headers_in -> {'User-Agent'} =~ /mobile/i) {
 
-				window.resizeTimer = setTimeout (checkTableContainers, 100);
+			$_REQUEST {__on_load} .= q {
+					function translate_event (e) {
+						parent.window.document.getElementById ('_body_iframe').dispatchEvent(e);
+					}
 
-			});
+					if (window.name == '_body_iframe') {
+						document.addEventListener("touchstart", translate_event);
+						document.addEventListener("touchmove", translate_event);
+						document.addEventListener("touchend", translate_event);
+						document.addEventListener("touchcancel", translate_event);
+					}
+			}
 
-			$(window).scroll (checkTableContainers);
+		} else {
+			$_REQUEST {__on_load} .= q {
 
-			$(window).resize ();
+				$(window).resize (function() {
 
-			tableSlider.scrollCellToVisibleTop ();
+					if (window.resizeTimer) clearTimeout (window.resizeTimer);
 
-		};
+					window.resizeTimer = setTimeout (checkTableContainers, 100);
+
+				});
+
+				$(window).scroll (checkTableContainers);
+
+				$(window).resize ();
+
+				tableSlider.scrollCellToVisibleTop ();
+
+			}
+		}
 
 		$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 
@@ -3233,15 +3252,24 @@ EOJS
 
 		$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive} && $_REQUEST {sid};
 
-#				<tr height=48><td height=48>$page->{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>
+		if ($r -> headers_in -> {'User-Agent'} =~ /mobile/i) {
+			$body = <<EOH;
+				<div width="100%" height="100%" id="_outer_body_iframe" style="overflow: scroll">
+					<iframe name='_body_iframe' id='_body_iframe' src="$_REQUEST{__static_url}/0.html" width=100% height=100% border=0 frameborder=0 marginheight=0 marginwidth=0 application=yes>
+					</iframe>
+				</div>
+EOH
+		} else {
+			$body = <<EOH;
+				<iframe name='_body_iframe' id='_body_iframe' src="$_REQUEST{__static_url}/0.html" width=100% height=100% border=0 frameborder=0 marginheight=0 marginwidth=0 application=yes>
+				</iframe>
+EOH
+		}
 		$body = qq {
 
 			<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
 				<tr><td>$page->{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>
-				<tr><td valign=top height=100%>
-					<iframe name='_body_iframe' id='_body_iframe' src="$_REQUEST{__static_url}/0.html" width=100% height=100% border=0 frameborder=0 marginheight=0 marginwidth=0 application=yes>
-					</iframe>
-				</td></tr>
+				<tr><td valign=top height=100%>$body</td></tr>
 			</table>
 
 		};
