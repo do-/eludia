@@ -1289,6 +1289,7 @@ TableSlider.prototype.cell_on = function () {
 		
 	var c            = $(cell);
 	var a            = $('a', c).get (0);
+	var checkbox     = $('input:checkbox', c).get (0);
 		
 	var table        = c.parents ('table').eq (0);
 	var div          = table.parents ('div').eq (0);
@@ -1315,16 +1316,40 @@ TableSlider.prototype.cell_on = function () {
 	
 	css.height       = c.outerHeight ();
 	css.cursor       = a == null ? 'default' : 'pointer';
+	
+	var me = this;
 
-	$('#slider').click (a == null ? null : function (event) {
+	$('#slider').click (
+	
+		checkbox != null ? function (event) {
 		
-		$('a', tableSlider.get_cell ()).each ( function () { 
+			if (me.lastClick == event) return;
 			
-			a_click (this, event) 
-				
-		})
+			me.lastClick = event;
 		
-	})
+			$('input:checkbox', tableSlider.get_cell ()).each ( function () {
+
+				blockEvent (event);
+				this.click ();
+				this.focus ();
+
+			})
+		
+		} :
+
+		a != null ? function (event) {
+		
+			$('a', tableSlider.get_cell ()).each ( function () { 
+
+				a_click (this, event); 
+
+			})
+		
+		} :
+		
+		null
+	
+	)
 
 	$('#slider').dblclick (function (event) {
 		
