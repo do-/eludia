@@ -3409,7 +3409,7 @@ sub lrt_print {
 
 	my $id = int (time * rand);
 	$r -> print ("<span id='$id'><font color=white>");
-	$r -> print (@_);
+	$r -> print (join '', map {Encode::encode ('utf-8', $_)} @_);
 	$r -> print ("</span>");
 	$r -> print ($lrt_bar);	
 	$r -> print (<<EOH);
