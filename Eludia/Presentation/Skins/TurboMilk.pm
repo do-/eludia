@@ -3408,17 +3408,25 @@ sub lrt_print {
 	my $_SKIN = shift;
 
 	my $id = int (time * rand);
-	$r -> print ("<span id='$id'><font color=white>");
-	$r -> print (join '', map {Encode::encode ('utf-8', $_)} @_);
-	$r -> print ("</span>");
-	$r -> print ($lrt_bar);	
-	$r -> print (<<EOH);
-	<script>
-		document.getElementById ('$id').scrollIntoView (false);
-	</script>
-	</body></html>
-EOH
+	my $s = join '', map {Encode::encode ('utf-8', $_)} @_;
+	
+	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE (\d)/) {
+	
+		$r -> print (qq {
+			<span id='$id'><font color=white>$s</span>
+			<script language="javaScript">
+				document.getElementById ('$id').scrollIntoView (false);
+			</script>
+		});
+		
+	}
+	else {
+	
+		$r -> print ($s);
+		
+	}
 
+	$r -> print (' ' x 4096);
 
 }
 
@@ -3428,7 +3436,16 @@ sub lrt_println {
 
 	my $_SKIN = shift;
 
-	$_SKIN -> lrt_print (@_, '<br>');
+	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE (\d)/) {
+
+		$_SKIN -> lrt_print (@_, '<br>');
+	
+	}
+	else {
+	
+		$_SKIN -> lrt_print (@_, '</td></tr><tr><td><font face="Courier" color="white">');
+	
+	}
 	
 }
 
@@ -3452,11 +3469,25 @@ sub lrt_start {
 	$r -> content_type ('text/html; charset=utf-8');
 	$r -> send_http_header ();
 	
-	$_SKIN -> lrt_print (<<EOH);
-		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="STYLESHEET"><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier'>
-			<iframe name=invisible src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes">
-			</iframe>
-EOH
+	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE (\d)/) {
+
+		$_SKIN -> lrt_print (qq {
+			<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="STYLESHEET"><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier'>
+				<iframe name=invisible src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes">
+				</iframe>
+		});
+
+	}
+	else {
+
+		$_SKIN -> lrt_print (qq {
+			<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="STYLESHEET"><style>BODY {background-color: black}</style><script> window.setInterval (function () {window.scrollTo(0,document.body.scrollHeight);}, 100); </script></head><BODY BGCOLOR='#000000' TEXT='#dddddd'>
+				<iframe name=invisible src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes">
+				</iframe>
+				<table><tr><td><font face='Courier' color='white'>
+		});
+
+	}
 
 }
 
