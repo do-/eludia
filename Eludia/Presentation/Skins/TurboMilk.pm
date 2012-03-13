@@ -1118,7 +1118,7 @@ sub draw_form_field_select {
 	my ($_SKIN, $options, $data) = @_;
 
 	$options -> {attributes} ||= {};
-	$options -> {attributes} -> {id}    ||= ($options -> {id} ||= "_$options->{name}_select");
+	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
 	if (@{$options -> {values}} == 0 && defined ($options -> {empty}) && defined ($options -> {other})) {
