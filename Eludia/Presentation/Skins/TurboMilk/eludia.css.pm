@@ -52,8 +52,7 @@ FORM {
 div.table-container {
 
 	PADDING: 0;
-	OVERFLOW-Y: scroll;
-	OVERFLOW-X: auto;
+	OVERFLOW: auto;
 	MARGIN: 0px;
 	position: relative;
 

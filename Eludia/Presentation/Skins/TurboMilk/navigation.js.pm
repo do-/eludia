@@ -1221,8 +1221,11 @@ function checkTableContainers () {
 
 	tables.each (function () {
 
-		if (table_width != $(this).width())
+		if (table_width != $(this).width()) {
 			$(this).width (table_width);
+			if ($.browser.msie)
+				$(this).height ($(this).height() + 18);
+		}
 
 	});
 
@@ -1253,19 +1256,6 @@ function checkTableContainers () {
 
 				} catch (e) {}
 			}
-
-		});
-
-	}
-	else {
-
-		tables.each (function () {
-
-			try {
-
-				this.style.overflowY = 'visible';
-
-			} catch (e) {}
 
 		});
 
@@ -1431,7 +1421,7 @@ TableSlider.prototype.cell_on = function () {
 	$('#slider').css (css);
 	if (this.last_cell_id != cell) focus_on_first_input (cell);
 
-	last_cell_id = cell;
+	this.last_cell_id = cell;
 
 	return cell;
 
