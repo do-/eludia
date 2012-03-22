@@ -110,7 +110,7 @@ sub fill_in_template {
 	
 	unless ($options -> {skip_headers}) {
 		
-		gzip_if_it_is_needed ($result);
+		gzip_if_it_is_needed (\$result);
 		
 		$file_name = adjust_template_filename ($file_name);
 		
