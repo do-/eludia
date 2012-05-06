@@ -5,6 +5,8 @@ no warnings;
 
 sub sql_version {
 
+	$db -> {pg_enable_utf8} = 1;
+
 	my $version = $SQL_VERSION;
 	
 	$version -> {strings} = [ sql_select_col ('SELECT version()') ];
@@ -15,7 +17,7 @@ sub sql_version {
 	
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
 	
-	$model_update -> {schema} = sql_select_scalar ('SELECT current_schema()');
+	$preconf -> {db_schema} = sql_select_scalar ('SELECT current_schema()');
 
 	return $version;
 	
