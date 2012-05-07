@@ -714,6 +714,8 @@ sub sql_select_id {
 
 	
 	};
+	
+	warn $@ if $@;
 
 	sql_unlock ($table);
 	
