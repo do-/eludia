@@ -563,22 +563,6 @@ EOS
 	
 	eval {$nextval = sql_select_scalar ("SELECT nextval('$seq_name')")};
 	
-#	if ($@) {
-	
-#		if (sql_select_scalar ("SELECT trigger_body FROM user_triggers WHERE table_name = ? AND triggering_event like '%INSERT%'", uc $table_name) =~ /(\S+)\.nextval/ism) {
-		
-#			$seq_name = $1;
-			
-#			$nextval = sql_select_scalar ("SELECT $seq_name.nextval");
-		
-#		}
-		
-#		else {
-#			die $@;
-#		}
-	
-#	}
-	
 	while (1) {
 	
 		my $max = sql_select_scalar ("SELECT MAX(id) FROM $table_name");
@@ -608,22 +592,19 @@ EOS
 	
 	foreach my $field (keys %$pairs) { 
 	
-		my $comma = @params ? ', ' : '';	
+		defined $pairs -> {$field} or next;
 		
-		$fields .= "$comma $field";
-		$args   .= "$comma ?";
-
-		if (exists($DB_MODEL->{tables}->{$table_name}->{columns}->{$field}->{COLUMN_DEF}) && !($pairs -> {$field})) {
-			push @params, $DB_MODEL->{tables}->{$table_name}->{columns}->{$field}->{COLUMN_DEF};
+		if (@params) {
+			$fields .= ', ';
+			$args   .= ', ';
 		}
-		else {
-			push @params, $pairs -> {$field};	
-		}
- 		
+		
+		$fields .= $field;
+		$args   .= '?';
+		push @params, $pairs -> {$field};
+ 
 	}
 
-	my $time = time;
-	
 	if ($pairs -> {id}) {
 	
 		sql_do ("INSERT INTO $table_name ($fields) VALUES ($args)", @params);
