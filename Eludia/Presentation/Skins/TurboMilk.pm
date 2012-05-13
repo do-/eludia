@@ -828,6 +828,8 @@ sub draw_form_field_files {
 	$tail =~ y{'}{"}; #"'
 	$tail =~ s{[\n\r\t]+}{ }gsm;
 	
+	my $limit = $options -> {limit} > 0 ? " if (file_field_$options->{name}_cnt == $options->{limit}) \$('img', d).hide()" : '';
+	
 	$_REQUEST {__script} .= <<EOH;
 	
 		var file_field_$options->{name}_cnt = 1;
@@ -841,6 +843,8 @@ sub draw_form_field_files {
 			file_field_$options->{name}_cnt ++;
 
 			d.insertAdjacentHTML ('beforeEnd', '<br><input name="_$$options{name}_' + file_field_$options->{name}_cnt  + '" $tail>');
+			
+			$limit
 		
 		}
 	
