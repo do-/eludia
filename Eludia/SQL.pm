@@ -1155,8 +1155,8 @@ sub sql_upload_files {
 	
 	$options -> {id} ||= $_REQUEST {id};
 	
-	sql_do ("UPDATE $table SET fake = -1 WHERE $field = ?", $options -> {id});
-	
+	sql_do ("UPDATE $table SET fake = -1 WHERE $field = ?", $options -> {id}) unless $_REQUEST {"__$options->{name}_file_no_del"};
+
 	my $name = $options -> {name};
 	
 	my $id = $options -> {id};

@@ -857,6 +857,12 @@ EOH
 			name="__$$options{name}_file_field"
 			value="$options->{field}"
 		>
+
+		<input 
+			type="hidden"
+			name="__$$options{name}_file_no_del"
+			value="$options->{no_del}"
+		>
 		
 		<span id="file_field_$options->{name}"><input name="_$$options{name}_1" $tail>&nbsp;<a href="javaScript:file_field_add_$options->{name}();void(0);"><img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle></a></span>
 
