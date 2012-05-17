@@ -168,7 +168,7 @@ sub trunc_string {
 #	my $has_ext_chars = $s =~ y/\200-¿/\200-¿/;
 	
 #	$s = decode_entities ($s) if $has_ext_chars;
-#	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
+	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
 #	$s = encode_entities ($s, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars;
 	
 	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
