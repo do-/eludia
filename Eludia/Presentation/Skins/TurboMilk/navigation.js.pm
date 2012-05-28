@@ -3604,7 +3604,10 @@ dTree.prototype.node = function(node, nodeId) {
 
 		if (node.context_menu) str += ' oncontextmenu="' + this.obj + '.s(' + nodeId + '); open_popup_menu(event, \'' + node.context_menu + '\'); return blockEvent ();"';
 		
-		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc)) str += ' onclick="javascript: ' + this.obj + '.s(' + nodeId + '); "';
+		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc))
+			str += ' onclick="javascript: if (' + this.obj + '.selectedNode == ' + nodeId + ') return false;'
+				+ this.obj + '.s(' + nodeId + '); "';
+
 		if (node._hc && node.pid != this.root.id) str += ' onDblClick="' + this.obj + '.o(' + nodeId + '); "';
 		
 		str += '>';
