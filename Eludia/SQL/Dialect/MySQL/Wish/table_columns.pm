@@ -236,7 +236,7 @@ sub wish_to_actually_create_table_columns {
 	
 		__genereate_sql_fragment_for_column ($i);
 		
-		$sql .= ', ' . ($i -> {verb} || 'ADD') . ' ' . $i -> {name} . ' ' . $i -> {SQL};
+		$sql .= ', ' . ($i -> {verb} || 'ADD') . ' `' . $i -> {name} . '` ' . $i -> {SQL};
 	
 	}
 
