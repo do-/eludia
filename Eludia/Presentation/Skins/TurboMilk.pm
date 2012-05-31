@@ -2930,7 +2930,7 @@ sub draw_table {
 			
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
 				$menus .= $i -> {__menu};
-				$html  .= qq{ oncontextmenu="open_popup_menu('$i'); blockEvent ();"};
+				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent ();"};
 			}
 
 			$html .= '>';
