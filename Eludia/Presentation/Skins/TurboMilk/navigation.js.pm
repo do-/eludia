@@ -726,7 +726,7 @@ function menuItemOut () {
 	timer = setTimeout('hideSubMenus(0)',delay);
 }
 
-function open_popup_menu (type, level) {
+function open_popup_menu (event, type, level) {
 
 	clearTimeout(timer);
 
@@ -3497,7 +3497,7 @@ dTree.prototype.node = function(node, nodeId) {
 
 		if (this.config.useStatusText) str += ' onmouseover="window.status=\'' + node.name + '\';return true;" onmouseout="window.status=\'\';return true;" ';
 
-		if (node.context_menu) str += ' oncontextmenu="' + this.obj + '.s(' + nodeId + '); open_popup_menu(\'' + node.context_menu + '\'); blockEvent ();"';
+		if (node.context_menu) str += ' oncontextmenu="' + this.obj + '.s(' + nodeId + '); open_popup_menu(event, \'' + node.context_menu + '\'); blockEvent ();"';
 		
 		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc)) str += ' onclick="javascript: ' + this.obj + '.s(' + nodeId + '); "';
 		if (node._hc && node.pid != this.root.id) str += ' onDblClick="' + this.obj + '.o(' + nodeId + '); "';
