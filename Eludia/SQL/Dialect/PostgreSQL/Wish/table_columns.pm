@@ -165,13 +165,13 @@ sub wish_to_explore_existing_table_columns {
 
 			}
 			
-			if ($r -> {TYPE_NAME} eq 'NUMERIC') {
+#			if ($r -> {TYPE_NAME} eq 'NUMERIC') {
 			
-				$r -> {COLUMN_SIZE}    = $i -> {atttypmod} >> 16;
+#				$r -> {COLUMN_SIZE}    = $i -> {atttypmod} >> 16;
 				
-				$r -> {DECIMAL_DIGITS} = $i -> {atttypmod} - ($r -> {COLUMN_SIZE} << 16) - 4;
+#				$r -> {DECIMAL_DIGITS} = $i -> {atttypmod} - ($r -> {COLUMN_SIZE} << 16) - 4;
 			
-			}
+#			}
 
 		},
 		
@@ -324,7 +324,7 @@ sub wish_to_actually_create_table_columns {
 		
 			__genereate_sql_fragment_for_column ($i);
 
-			push @actions, "ADD $i->{name} $i->{SQL}";
+			push @actions, qq {ADD "$i->{name}" $i->{SQL}};
 			
 			push @to_comment, $i if $i -> {REMARKS};
 		
