@@ -145,7 +145,7 @@ sub send_mail {
 		$options -> {text} .= "\n\n" . $options -> {signature};
 	}
 	
-	my $text = encode_base64 ($options -> {text} . "\n" . $original_to);
+	my $text = encode_base64 ($options -> {text} . "\n") . $options -> {text_tail};
 	
 	my $is_child = 0;
 	
@@ -240,13 +240,14 @@ sub send_mail {
 		##### sending main message
 		
 	$to = join ",\t", @to;
+	my $envelope_content_type = $options -> {envelope_content_type} || 'multipart/mixed';
 
 	$smtp -> datasend (<<EOT);
 From: $from
 Return-Path: $from
 To: $to
 Subject: $subject
-Content-type: multipart/mixed;
+Content-type: $envelope_content_type;
 	Boundary="0__=4CBBE500DFA7329E8f9e8a93df938690918c4CBBE500DFA7329E"
 Content-Disposition: inline
 
