@@ -118,11 +118,13 @@ sub wish_to_actually_create_table_data {
 
 	__profile_in ('sql.execute');
 
-	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
+	eval {$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms)};
 	
 	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms)});
 
 	$sth -> finish;
+	
+	die $@ if $@;
 	
 }
 
