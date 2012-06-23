@@ -412,16 +412,24 @@ sub sql_select_path {
 	
 	my ($table_name, $id, $options) = @_;
 	
-	$options -> {name} ||= 'name';
-	$options -> {type} ||= $table_name;
+	$id or return [];
+	
+	my $columns = $DB_MODEL -> {tables} -> {$table_name} -> {columns};
+	
+	$options -> {name}     ||= $columns -> {name} ? 'name' : 'label';
+	$options -> {type}     ||= $table_name;
 	$options -> {id_param} ||= 'id';
 
-	my ($parent) = $id;
+	my $parent = $id;
 
 	my @path = ();
+	
+	my $st = $db -> prepare ("SELECT id, parent, $$options{name}, $$options{name} as name, '$$options{type}' as type, '$$options{id_param}' as id_param FROM $table_name WHERE id = ?");
 
 	while ($parent) {	
-		my $r = sql_select_hash ("SELECT id, parent, $$options{name} as name, '$$options{type}' as type, '$$options{id_param}' as id_param FROM $table_name WHERE id = ?", $parent);
+		$st -> execute ($parent);
+		my ($r) = $st -> fetchrow_hashref ();
+		$st -> finish ();
 		$r -> {cgi_tail} = $options -> {cgi_tail},
 		unshift @path, $r;		
 		$parent = $r -> {parent};	
