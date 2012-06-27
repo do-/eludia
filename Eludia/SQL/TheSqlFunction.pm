@@ -937,7 +937,7 @@ sub sql {
 	
 		. (join "\n, ", 
 		
-			map {"$_->{src} $model_update->{quote}$_->{alias}$model_update->{quote}"} (
+			map {"$_->{src} AS $model_update->{quote}$_->{alias}$model_update->{quote}"} (
 				@{$columns_by_grouping -> [0]}, 
 				@{$columns_by_grouping -> [1]},
 			)
