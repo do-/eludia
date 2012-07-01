@@ -47,7 +47,11 @@ sub sql_execute {
 	
 	my ($st, @params) = sql_prepare (@_);
 
+	__profile_in ('sql.execute');
+
 	my $affected = $st -> execute (@params);
+
+	__profile_out ('sql.execute', {label => $st -> {Statement} . ' ' . (join ', ', map {$db -> quote ($_)} @params)});
 
 	return wantarray ? ($st, $affected) : $st;
 
@@ -58,6 +62,8 @@ sub sql_execute {
 sub sql_prepare {
 
 	my ($sql, @params) = @_;
+
+	__profile_in ('sql.prepare');
 
 	$sql =~ s{^\s+}{};
 
@@ -90,6 +96,8 @@ sub sql_prepare {
 		die $msg;
 	}
 		
+	__profile_out ('sql.prepare', {label => $sql});
+
 	return ($st, @params);
 
 }
@@ -180,11 +188,15 @@ sub sql_select_all_cnt {
 	my $st = sql_execute ($sql, @params);
 	
 	my @result = ();
+
+	__profile_in ('sql.fetch');
 	
 	while (my $i = $st -> fetchrow_hashref ()) {			
 		push @result, lc_hashref ($i);	
 	}
 	
+	__profile_out ('sql.fetch', {label => $st -> rows});
+
 	$st -> finish;
 
 	$sql =~ s{ORDER BY.*}{}ism;
@@ -219,9 +231,13 @@ sub sql_select_all {
 
 	my @result = ();
 	
+	__profile_in ('sql.fetch');
+
 	while (my $i = $st -> fetchrow_hashref ()) {			
 		push @result, lc_hashref ($i);	
 	}
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 
 	$st -> finish;
 	
@@ -250,10 +266,14 @@ sub sql_select_all_hash {
 
 	my $st = sql_execute ($sql, @params);
 
+	__profile_in ('sql.fetch');
+
 	while (my $r = $st -> fetchrow_hashref) {
 		lc_hashref ($r);		                       	
 		$result -> {$r -> {id}} = $r;
 	}
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 	
 	$st -> finish;
 
@@ -275,9 +295,13 @@ sub sql_select_col {
 
 	my $st = sql_execute ($sql, @params);
 
+	__profile_in ('sql.fetch');
+
 	while (my @r = $st -> fetchrow_array ()) {
 		push @result, @r;
 	}
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 
 	$st -> finish;
 	
@@ -356,7 +380,11 @@ sub sql_select_hash {
 
 	my $st = sql_execute ($sql_or_table_name, @params);
 
+	__profile_in ('sql.fetch');
+
 	my $result = $st -> fetchrow_hashref ();
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 
 	$st -> finish;		
 	
@@ -376,7 +404,11 @@ sub sql_select_array {
 
 	my $st = sql_execute ($sql, @params);
 
+	__profile_in ('sql.fetch');
+
 	my @result = $st -> fetchrow_array ();
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 
 	$st -> finish;
 	
@@ -398,7 +430,11 @@ sub sql_select_scalar {
 
 	my $st = sql_execute ($sql, @params);
 
+	__profile_in ('sql.fetch');
+
 	@result = $st -> fetchrow_array ();
+
+	__profile_out ('sql.fetch', {label => $st -> rows});
 
 	$st -> finish;
 	
@@ -426,6 +462,8 @@ sub sql_select_path {
 	
 	my $st = $db -> prepare ("SELECT id, parent, $$options{name}, $$options{name} as name, '$$options{type}' as type, '$$options{id_param}' as id_param FROM $table_name WHERE id = ?");
 
+	__profile_in ('sql.fetch');
+
 	while ($parent) {	
 		$st -> execute ($parent);
 		my ($r) = $st -> fetchrow_hashref ();
@@ -435,6 +473,8 @@ sub sql_select_path {
 		$parent = $r -> {parent};	
 	}
 	
+	__profile_out ('sql.fetch', {label => 0 + @path});
+
 	if ($options -> {root}) {
 		unshift @path, {
 			id => 0, 
@@ -820,11 +860,15 @@ sub sql_select_loop {
 	
 	our $i;
 	
+	__profile_in ('sql.fetch');
+
 	while ($i = $st -> fetchrow_hashref) {
 		lc_hashref ($i);
 		&$coderef ();
 	}
 	
+	__profile_out ('sql.fetch', {label => $st -> rows});
+
 	$st -> finish ();
 
 }
