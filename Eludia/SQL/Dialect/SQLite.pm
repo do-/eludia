@@ -22,6 +22,8 @@ sub _sqlite_parse_datetime {
 
 sub sql_version {
 
+	$db -> {sqlite_unicode} = 1;
+
 	$db -> func ('REPLACE', 3, sub { my ($s, $from, $to) = @_; $s =~ s{$from}{$to}g; return $s }, 'create_function');
 	$db -> func ('CONCAT',  2, sub { return $_[0] . $_[1] }, 'create_function');
 	$db -> func ('CONCAT',  3, sub { return $_[0] . $_[1] . $_[2] }, 'create_function');

@@ -3464,8 +3464,8 @@ sub lrt_println {
 sub lrt_ok {
 	my $_SKIN = shift;
 	my $color = $_[1] ? 'red' : 'yellow';
-	my $label = $_[1] ? 'Îøèáêà' : 'OK';
-	$_SKIN -> lrt_println ("$_[0] <font color='$color'><b>[$label]</b></font>");
+	my $label = $_[1] ? 'not ok' : 'ok';
+	$_SKIN -> lrt_println (Encode::encode ('utf-8', "$_[0] <font color='$color'><b>[$label]</b></font>"));
 }
 
 ################################################################################

@@ -109,8 +109,8 @@ sub fill_in_template {
 		$r -> send_http_header ('application/octet-stream');
 
 	}
-	
-	$r -> print ($result);
+
+	$r -> print (Encode::encode_utf8($result));
 
 	$_REQUEST {__response_sent} = 1;
 	
