@@ -20,14 +20,14 @@ sub cmd_unix {
 
 	if ($command eq 'start') {
 
-		start (
+		start (@_,
 			-daemonize => 1 - $single_task,
 		);
 
 	}
 	elsif ($command eq 'stop') {
 
-		stop (
+		stop (@_,
 			-signal => $signal,
 		);
 
