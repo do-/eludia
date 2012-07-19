@@ -416,7 +416,7 @@ sub check_href {
 				next if $k =~ /^_/ && !$_INHERITABLE_PARAMETER_NAMES -> {$k};
 				next if             $_NONINHERITABLE_PARAMETER_NAMES -> {$k};
 				$h {$k} = uri_escape ($_REQUEST {$k});
-				$h {$k} = encode_entities ($_REQUEST {$k}, '"');
+				$h {$k} = encode_entities ($h {$k}, '"');
 
 			}
 			
