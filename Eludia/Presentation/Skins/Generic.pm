@@ -524,17 +524,20 @@ sub draw_page__only_field {
 sub draw_form_field__only_field {
 
 	my ($_SKIN, $field, $data) = @_;
-	
 
 	if ($_REQUEST {__only_form}) {
 		my $js;
 		my @fields = split (',', $_REQUEST {__only_field});
 		my @tabs = split (',', $_REQUEST {__only_tabindex});
-		my $i;
-		for ($i = 0; $i < @fields; $i ++) {
-			last if $fields [$i] eq $field -> {name};
+
+		my $i = -1;
+		for (my $j = 0; $j < @fields; $j ++) {
+			$fields [$j] eq $field -> {name} or next;
+			$i = $j;
+			last;
 		}
-		
+		return if $i < 0;
+
 		if ($field -> {type} eq 'date' || $field -> {type} eq 'datetime') {
 
 			$_REQUEST{__on_load} .= " load_$field->{name} (); ";
