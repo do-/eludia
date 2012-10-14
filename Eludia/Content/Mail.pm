@@ -50,7 +50,7 @@ sub send_mail {
 	
 	foreach my $i (@$to) {
 	
-		if (!ref $i && $i =~ /^[1-9]\d*$/) {
+		if (!ref $i && $i =~ /^\-?[1-9]\d*$/) {
 			push @to_num, $i;
 		}
 		else {
