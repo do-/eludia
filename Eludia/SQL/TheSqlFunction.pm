@@ -137,6 +137,7 @@ sub _sql_filters {
 	my ($root, $filters) = @_;
 
 	my $have_id_filter = 0;
+	my $have_fake_filter = 0;
 	my $cnt_filters    = 0;
 	my $where          = '';
 	my $having         = '';
@@ -246,6 +247,7 @@ sub _sql_filters {
 		$cnt_filters ++;
 
 		$have_id_filter = 1 if $field eq 'id';
+		$have_fake_filter = 1 if $field =~ /^\s*($root\.)?fake\b/ && $field !~ /\sOR\s/si;
 		
 		my @fields = _sql_list_fields ($field, $root);
 		
@@ -378,6 +380,7 @@ sub _sql_filters {
 
 	return {
 		have_id_filter => $have_id_filter,
+		have_fake_filter => $have_fake_filter,
 		cnt_filters    => $cnt_filters,
 		delete         => $delete,
 		update         => $update,
@@ -559,7 +562,9 @@ sub sql {
 		
 		$default_columns = 'id, fake';
 
-		$where .= ($_REQUEST {fake} || '') =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
+		$where .= $sql_filters -> {have_fake_filter} ? ''
+			: ($_REQUEST {fake} || '') =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" 
+			: "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
 
 	}	
 		
@@ -1018,7 +1023,7 @@ sub sql {
 	}
 	else {
 	
-		if ($limit) {
+		if ($limit && !$_REQUEST {xls}) {
 		
 			if ($SQL_VERSION -> {driver} eq 'Oracle') {
 

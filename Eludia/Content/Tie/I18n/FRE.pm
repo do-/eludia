@@ -46,6 +46,7 @@
 	wrong_hour               => 'Format de date inconnu',
 	wrong_min                => 'Format de date inconnu',
 	wrong_sec                => 'Format de date inconnu',
+	empty_file               => q[Ne pouvez pas telecharger des fichiers vides],
 	authorization		 => 'Connexion',
 	login			 => 'login',
 	execute_logon		 => 'se connecter',	

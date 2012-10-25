@@ -138,11 +138,20 @@ sub send_mail {
 		$options -> {href} = "<br><br><a href='$$options{href}'>$$options{href}</a>" if $options -> {content_type} eq 'text/html';
 		$options -> {text} .= "\n\n" . $options -> {href};
 	}
-	
-	my $text = encode_base64 (Encode::encode ($options -> {body_charset}, $options -> {text}) . "\n" . $original_to);
-	
+
+	if ($options -> {signature}) {
+
+		$options -> {signature} = '<br><br>' . $options -> {signature} if $options -> {content_type} eq 'text/html';
+		$options -> {text} .= "\n\n" . $options -> {signature};
+	}
+
+	my $text = encode_base64 (Encode::encode ($options -> {body_charset}, $options -> {text})
+		. "\n"
+		. $options -> {text_tail}
+	);
+
 	my $is_child = 0;
-	
+
 	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'} || $_REQUEST {__skin} eq 'STDERR') {
 
 		$SIG {'CHLD'} = "IGNORE";
@@ -234,13 +243,14 @@ sub send_mail {
 		##### sending main message
 		
 	$to = join ",\t", @to;
+	my $envelope_content_type = $options -> {envelope_content_type} || 'multipart/mixed';
 
 	$smtp -> datasend (<<EOT);
 From: $from
 Return-Path: $from
 To: $to
 Subject: $subject
-Content-type: multipart/mixed;
+Content-type: $envelope_content_type;
 	Boundary="0__=4CBBE500DFA7329E8f9e8a93df938690918c4CBBE500DFA7329E"
 Content-Disposition: inline
 

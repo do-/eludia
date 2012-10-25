@@ -131,7 +131,13 @@ sub sql_do {
 #		}
 #	}
 
-	$st -> execute (@params);
+	for (my $i = 0; $i < @params; $i ++) {
+		$params [$i] =~ /^-?\d+(\.\d+)?$/ && $params [$i] !~ /^-?0[^\.]/?
+			$st -> bind_param ($i + 1, $params [$i] . '', DBI::SQL_DECIMAL)
+			:
+			$st -> bind_param ($i + 1, $params [$i]);
+	}
+	$st -> execute ();
 	$st -> finish;	
 	
 	if ($conf -> {'db_temporality'} && $_REQUEST {_id_log}) {
@@ -391,7 +397,9 @@ sub sql_select_hash {
 		
 		$_REQUEST {__the_table} ||= $sql_or_table_name;
 		
-		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE id = ?", $id);
+		my $for_update = $sql_or_table_name =~ s/\s+FOR UPDATE//i ? 'FOR UPDATE' : '';
+
+		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE id = ? $for_update", $id);
 		
 	}	
 
@@ -842,7 +850,16 @@ sub sql_select_loop {
 
 sub sql_lock {
 
-	sql_do ("LOCK TABLES $_[0] WRITE, $conf->{systables}->{sessions} WRITE");
+	if ($preconf -> {db_default_storage_engine} eq 'InnoDB' && $db -> {AutoCommit} == 0) {
+		
+		sql_do ("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+
+	} else {
+	
+		sql_do ("LOCK TABLES $_[0] WRITE, $conf->{systables}->{sessions} WRITE");
+		
+	}
+
 
 }
 
@@ -850,7 +867,19 @@ sub sql_lock {
 
 sub sql_unlock {
 
-	sql_do ("UNLOCK TABLES");
+	if ($preconf -> {db_default_storage_engine} eq 'InnoDB' && $db -> {AutoCommit} == 0) {
+	
+		my $global_isolation_level = sql_select_scalar ('SELECT @@GLOBAL.tx_isolation');
+		
+		$global_isolation_level =~ s/-/ /g;
+		
+		sql_do ("SET SESSION TRANSACTION ISOLATION LEVEL " . $global_isolation_level);
+		
+	} else {
+	
+		sql_do ("UNLOCK TABLES");
+		
+	}
 
 }
 

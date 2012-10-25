@@ -9,6 +9,7 @@ BEGIN {
 
 	require Eludia::Presentation::Skins::Generic;
 	delete $INC {"Eludia/Presentation/Skins/Generic.pm"};
+	our $lrt_bar = '<!-- L' . ('o' x 8500) . "ong comment -->\n";
 
 	our $replacement = {
 		error    => 'JS',
@@ -459,7 +460,6 @@ EOH
 	$html .=  '</form></table>';
 	
 	$html .= $options -> {bottom_toolbar};
-
 	$_REQUEST {__on_load} .= ';numerofforms++;';
 	
 #	$_REQUEST {__on_load} .= '$(document.forms["' . $options -> {name} . '"]).submit (function () {checkMultipleInputs (this)});';
@@ -790,8 +790,20 @@ sub draw_form_field_file {
 	my ($_SKIN, $options, $data) = @_;	
 		
 	my $attributes = dump_attributes ($options -> {attributes});
-
+	
+	$_REQUEST {__script} .= <<EOH if $_REQUEST {__script} !~ /function form_field_file_clear\s+/;
+		
+		function form_field_file_clear (id) {
+			
+			setCursor ();
+			
+			var form_field_file = \$('#' + id);
+			
+			form_field_file.replaceWith(form_field_file.clone(true));
+		}
+EOH
 	return <<EOH;
+	<span id='form_field_file_head_$options->{name}'>
 		<input 
 			type="file"
 			name="_$$options{name}"
@@ -802,7 +814,9 @@ sub draw_form_field_file {
 			onChange="is_dirty=true; $$options{onChange}"
 			onKeyDown="if (event.keyCode != 9) return false;"
 			tabindex=-1
-		>
+		/>
+		<a href="javaScript:form_field_file_clear('form_field_file_head_$options->{name}');void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>
+	</span>
 EOH
 
 }
@@ -827,9 +841,15 @@ sub draw_form_field_files {
 	
 	$tail =~ y{'}{"}; #"'
 	$tail =~ s{[\n\r\t]+}{ }gsm;
-	
+
 	my $limit = $options -> {limit} > 0 ? " if (file_field_$options->{name}_cnt == $options->{limit}) \$('img', d).hide()" : '';
-	
+	my $head_file_html = <<EOH;
+		<a href="javaScript:file_field_clear_$options->{name}();void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>&nbsp;
+		<input name="_$$options{name}_1" $tail>&nbsp;
+		<a href="javaScript:file_field_add_$options->{name}();void(0);"><img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle></a>
+EOH
+	$head_file_html =~ s{[\n\r\t]+}{}gsm;
+
 	$_REQUEST {__script} .= <<EOH;
 	
 		var file_field_$options->{name}_cnt = 1;
@@ -838,14 +858,34 @@ sub draw_form_field_files {
 		
 			setCursor ();
 
-			var d = document.getElementById ('file_field_$options->{name}');
-
 			file_field_$options->{name}_cnt ++;
 
-			d.insertAdjacentHTML ('beforeEnd', '<br><input name="_$$options{name}_' + file_field_$options->{name}_cnt  + '" $tail>');
-			
+			var file_field_id = 'file_field_$options->{name}' + file_field_$options->{name}_cnt;
+
+			var remove_button_html = '<a href="javaScript:file_field_remove_$options->{name}(' + file_field_id + ');void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>&nbsp;';
+
+			var input_html = '<input name="_$$options{name}_' + file_field_$options->{name}_cnt  + '" $tail>';
+
+			\$(file_field_$options->{name}).append('<span id="' + file_field_id + '"><br>' + remove_button_html + input_html + '</span>');
 			$limit
 		
+		}
+		
+		function file_field_remove_$options->{name} (id_file_field) {
+		
+			setCursor ();
+
+			\$(id_file_field).empty();
+		
+		}
+		
+		function file_field_clear_$options->{name} () {
+			
+			setCursor ();
+			
+			\$(file_field_$options->{name}_head).empty();
+			
+			\$(file_field_$options->{name}_head).append('$head_file_html');
 		}
 	
 EOH
@@ -864,7 +904,9 @@ EOH
 			value="$options->{no_del}"
 		>
 		
-		<span id="file_field_$options->{name}"><input name="_$$options{name}_1" $tail>&nbsp;<a href="javaScript:file_field_add_$options->{name}();void(0);"><img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle></a></span>
+		<span id="file_field_$options->{name}">
+			<span id="file_field_$options->{name}_head">$head_file_html</span>
+		</span>
 
 EOH
 
@@ -1096,9 +1138,9 @@ sub draw_form_field_radio {
 			$html .= qq {<td class="form-inner"><div id="radio_div_$value" style="display:$bn">$$value{html}</div>};
 
 		}
-											
+
 		$options -> {no_br} or ++ $n == @{$options -> {values}} or $html .= qq {<td class="form-inner"><div>&nbsp;</div><tr>};
-				
+
 	}
 	
 	$html .= '<td class="form-inner"><div>&nbsp;</div></table>';
@@ -1150,7 +1192,7 @@ sub draw_form_field_select {
 
 					try {
 
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random()}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(), parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 
 						focus ();
 
@@ -1498,7 +1540,7 @@ sub draw_form_field_checkboxes {
 					
 					$tabindex++;
 					
-					$subhtml .= $subvalue -> {no_checkbox} ? qq{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$$subvalue{label} <br>} : qq {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input class=cbx type="checkbox" name="_$$options{name}_$$subvalue{id}" value="1" $subchecked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;$$subvalue{label} <br>};
+					$subhtml .= $subvalue -> {no_checkbox} ? qq{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$$subvalue{label} <br>} : qq {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id="$subvalue" class=cbx type="checkbox" name="_$$options{name}_$$subvalue{id}" value="1" $subchecked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;<label for="$subvalue">$$subvalue{label}</label><br>};
 				
 				}
 
@@ -1516,7 +1558,7 @@ EOH
 			$tabindex ++;
 			$n ++;
 
-			$html .= qq {<td class="form-inner"><input $subattr class=cbx type="checkbox" name="_$$options{name}_$$value{id}" value="1" $checked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;$$value{label} $subhtml</td>};
+			$html .= qq {<td class="form-inner"><input id="$value" $subattr class=cbx type="checkbox" name="_$$options{name}_$$value{id}" value="1" $checked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;<label for="$value">$$value{label}</value> $subhtml</td>};
 			$html .= '</tr><tr>' unless $n % $options -> {cols};
 			
 		}
@@ -2012,7 +2054,7 @@ sub draw_toolbar_input_select {
 
 					try {
 
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 						
 						focus ();
 						
@@ -2049,7 +2091,7 @@ EOJS
 							var dialog_width = $options->{other}->{width};
 							var dialog_height = $options->{other}->{height};
 
-							var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name'}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+							var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 							
 							focus ();
 							
@@ -2115,11 +2157,11 @@ sub draw_toolbar_input_checkbox {
 	my $html = '<td class="toolbar" nowrap>';
 		
 	if ($options -> {label}) {
-		$html .= $options -> {label};
+		$html .= qq {<label for="$options">$$options{label}</label>};
 		$html .= ': ';
 	}
 
-	$html .= qq {<input class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
+	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
 
 	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
 	
@@ -2269,6 +2311,28 @@ sub draw_centered_toolbar_button {
 		$img_path = _icon_path ($options -> {icon});
 	}
 	
+	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
+
+		unless ($options -> {href} =~ /^javaScript\:/i) {
+		
+			$options -> {target} ||= '_self';
+			
+			$options -> {href} =~ s{\%}{\%25}g;
+			
+			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
+
+			$options -> {target} = '_self';
+			
+		}
+		
+		my $code = "\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\\'$_REQUEST{__static_url}/busy.gif\\'> $i18n->{request_sent}</h2>'})";
+
+		$options -> {href} =~ s/\bnope\b/$code;nope/;
+
+	}
+
+	my $nbsp = $options -> {label} ? '&nbsp;' : '';
+
 	return <<EOH;
 		<td nowrap background="$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}">
 			<table cellspacing=0 cellpadding=0 border=0>
@@ -3232,14 +3296,41 @@ sub draw_page {
 			tableSlider.scrollCellToVisibleTop ();				
 		
 		};
+
 		
 		$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 		
 		$_REQUEST {__on_load} .= 'window.focus ();'                                                                 if ! $_REQUEST {__no_focus};
 
-		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');"                                   if   $_REQUEST {__focused_input};
+		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');";
 
 		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " try {top.edit_mode = 1} catch (e) {};" : " try {top.edit_mode = 0} catch (e) {};"                 if ! $_REQUEST {select};
+
+		if ($preconf -> {core_blockui_on_submit}) {
+		
+			$_REQUEST {__head_links} .= qq |<script src="$_REQUEST{__static_url}/jquery.blockUI.js?$_REQUEST{__static_salt}"></script>|;
+
+			$_REQUEST {__on_load} .= "\$('form').submit (function () {\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\"$_REQUEST{__static_url}/busy.gif\"> $i18n->{request_sent}</h2>'}); return true;});";
+			
+			$_REQUEST {__script} .= <<'EOJS';
+function poll_invisibles () {
+	var has_loading_iframes;
+	$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
+	if (!has_loading_iframes) {
+		window.clearInterval(poll_invisibles);
+		$.unblockUI ();
+		is_interface_is_locked = false;
+		setCursor ();
+	}
+}
+EOJS
+
+			$_REQUEST {__on_load} .= <<'EOJS';
+$('form[target^="invisible"]').submit (function () {
+	window.setInterval(poll_invisibles, 100);
+});
+EOJS
+		}
 
 		if ($_REQUEST {__im_delay}) {
 		
@@ -3869,6 +3960,7 @@ sub draw_node {
 	my ($_SKIN, $options, $i) = @_;
 
 	$options -> {label} =~ s{\"}{\&quot;}gsm; #"
+	$options -> {label} =~ s{\'}{\&rsquo;}gsm; #"
 
 	my $node = {
 		id      => $options -> {id},
@@ -3951,7 +4043,6 @@ sub dialog_open {
 	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
 	
 	return "javaScript:dialog_open_$options->{id}.href = dialog_open_$options->{id}.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, ''); dialog_open_$options->{id}.href += '&_salt=' + Math.random (); if (\$.browser.webkit || \$.browser.safari) \$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'}); var result=window.showModalDialog('$url' + Math.random (), dialog_open_$options->{id}, '$o' + ';dialogWidth=' + dialog_open_$options->{id}_width + 'px;dialogHeight=' + dialog_open_$options->{id}_height + 'px'); if (\$.browser.webkit || \$.browser.safari) \$.unblockUI ();document.body.style.cursor='default';void(0);";
-
 }
 
 ################################################################################

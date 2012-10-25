@@ -24,6 +24,7 @@ var is_dirty = false;
 var scrollable_table_is_blocked = false;
 var tableSlider = new TableSlider ();
 var q_is_focused = false;					
+var is_interface_is_locked = false;
 var left_right_blocked = false;					
 var last_vert_menu = [];
 var subsets_are_visible = 0;
@@ -39,6 +40,7 @@ var lastKeyDownEvent = {};
 
 var numerofforms = 0;
 var numeroftables = 0;
+var minutesLastChecked = -1;
 var typeAheadInfo = {last:0, 
 	accumString:"", 
 	delay:500,
@@ -230,11 +232,13 @@ function set_suggest_result (sel, id) {
 }
 
 function dialog_open (href, arg, options) {
-						
+
+	arg.parent = window;
+
 	var result = window.showModalDialog (href, arg, options);
 
 	document.body.style.cursor = 'default';
-	
+
 	return result;
 
 }
@@ -449,13 +453,13 @@ function focus_on_input (__focused_input) {
 
 	if (focused_inputs != null && focused_inputs.length > 0) {
 		var focused_input = focused_inputs [0];
-		focused_input.focus ();
+		try {focused_input.focus ();} catch (e) {}
 		if (focused_input.type == 'radio') focused_input.select ();
 		return;
 	}
 
 	var forms = document.forms;
-	
+
 	if (forms != null) {
 
 		var done = 0;
@@ -476,7 +480,7 @@ function focus_on_input (__focused_input) {
 						   (element.tagName == 'INPUT'  && (element.type == 'text' || element.type == 'checkbox' || element.type == 'radio'))
 						||  element.tagName == 'TEXTAREA') 
 					{
-						element.focus ();
+						try {element.focus ();} catch (e) { continue; }
 						done = 1;
 						break;
 					}										
@@ -575,12 +579,19 @@ function check_edit_mode (a, fallback_href) {
 function UpdateClock () {
 
 	var tDate = new Date ();
-
+	
+	$('#clock_s').text (clockSeparators [tDate.getSeconds () % 2]);
+	
+	var currentMinutes = tDate.getMinutes ();
+	if (currentMinutes === minutesLastChecked) {
+		return
+	}
+	minutesLastChecked = currentMinutes;
+	
 	$('#clock_d').text (tDate.getDate () + ' ' + window.__month_names [tDate.getMonth ()] + ' ' + tDate.getFullYear ());
 	$('#clock_h').text (twoDigits (tDate.getHours ()));
 	$('#clock_s').css({visibility : tDate.getSeconds () % 2 ? 'hidden' : 'visible'});
-	$('#clock_m').text (twoDigits (tDate.getMinutes ()));
-
+	$('#clock_m').text (twoDigits (currentMinutes));
 }
 
 function twoDigits (n) {
@@ -650,19 +661,15 @@ function typeAhead (noChange) { // borrowed from http://www.oreillynet.com/javas
 		var txt;
 		
 		var len = typeAheadInfo.accumString.length;
-		
+
 		for (var i = 0; i < selectOptions.length; i++) {
 
-			txt = selectOptions [i].text.toUpperCase ();
-
-			if (typeAheadInfo.accumString > txt.substr (0, len)) continue;
+			if (typeAheadInfo.accumString !== selectOptions [i].text.substr (0, len).toUpperCase ()) continue;
 			
 			if (selectElem.selectedIndex == i) break;
 			
 			selectElem.selectedIndex = i;
-									
-			if (txt.indexOf (typeAheadInfo.accumString) != 0) break;
-	
+										
 			if (noChange) {
 
 				selectElem.onclick = selectElem.onblur = function () {this.form.submit ()}
@@ -1086,6 +1093,9 @@ function handle_basic_navigation_keys () {
 	}
 
 	var e = get_event (lastKeyDownEvent);
+	if (is_interface_is_locked)
+		return;
+
 	var keyCode = e.keyCode;
 	var i = 0;
 	
@@ -1242,11 +1252,11 @@ TableSlider.prototype.set_row = function (row) {
 
 	if (row < this.cnt) {
 		this.row = row;
-		if (numeroftables == 1 && numerofforms == 0) {
+		if (numeroftables == 1) {
 			this.rows [row].scrollIntoView(false);
 		}
 	}
-	
+	
 	this.cell_on ();
 
 }
@@ -1349,7 +1359,7 @@ TableSlider.prototype.cell_on = function () {
 		
 		null
 	
-	)
+	)
 
 	$('#slider').dblclick (function (event) {
 		
@@ -3324,7 +3334,50 @@ Calendar.setup = function (params) {
 
 
 
+function number_format( number, decimals, dec_point, thousands_sep ) {	// Format a number with grouped thousands
+	//
+	// +   original by: Jonas Raoni Soares Silva (http://www.jsfromhell.com)
+	// +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+	// +	 bugfix by: Michael White (http://crestidg.com)
 
+	var i, j, kw, kd, km, sign = '';
+
+	// input sanitation & defaults
+	if( isNaN(decimals = Math.abs(decimals)) ){
+		decimals = 2;
+	}
+	if( dec_point == undefined ){
+		dec_point = ",";
+	}
+	if( thousands_sep == undefined ){
+		thousands_sep = " ";
+	}
+	if (number < 0) {
+		sign = '-';
+		number = -number;
+	}
+
+	i = parseInt(number = (+number || 0).toFixed(decimals)) + "";
+
+	if( (j = i.length) > 3 ){
+		j = j % 3;
+	} else{
+		j = 0;
+	}
+
+	km = (j ? i.substr(0, j) + thousands_sep : "");
+	kw = i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands_sep);
+	//kd = (decimals ? dec_point + Math.abs(number - i).toFixed(decimals).slice(2) : "");
+	kd = (decimals ? dec_point + Math.abs(number - i).toFixed(decimals).replace(/-/, 0).slice(2) : "");
+
+
+	return sign + km + kw + kd;
+}
+
+function number_clean (number) {
+	var result = Number ((number || "").replace(/\s+/g, '').replace(/\,/, '.'));
+	return isNaN (result) ? 0 : result;
+}
 
 
 
@@ -3603,7 +3656,7 @@ dTree.prototype.node = function(node, nodeId) {
 		if (this.config.useStatusText) str += ' onmouseover="window.status=\'' + node.name + '\';return true;" onmouseout="window.status=\'\';return true;" ';
 
 		if (node.context_menu) str += ' oncontextmenu="' + this.obj + '.s(' + nodeId + '); open_popup_menu(event, \'' + node.context_menu + '\'); return blockEvent ();"';
-		
+
 		if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc))
 			str += ' onclick="javascript: if (' + this.obj + '.selectedNode == ' + nodeId + ') return false;'
 				+ this.obj + '.s(' + nodeId + '); "';
@@ -3769,6 +3822,8 @@ dTree.prototype.o = function(id) {
 
 		cn._io = !cn._io;
 
+		setCursor ();
+
 	}
 
 	if (this.config.closeSameLevel) this.closeLevel(cn);
@@ -3796,6 +3851,8 @@ dTree.prototype.oAll = function(status) {
 	}
 
 	if (this.config.useCookies) this.updateCookie();
+
+	setCursor ();
 
 };
 

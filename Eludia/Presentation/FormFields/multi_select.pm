@@ -4,6 +4,9 @@ sub draw_form_field_multi_select {
 
 	my ($options, $data) = @_;
 
+	local $_REQUEST {select} = undef
+		if $options -> {href} =~ m/\bmulti_select=1\b/;
+
 	check_href ($options);
 
 	my $label = $options -> {label};
@@ -100,7 +103,7 @@ EOJS
 					type	=> 'hidden',
 					name	=> $options->{name},
 					value	=> join (',', map {$_ -> {id}} @{$options -> {values}}),
-					off		=> $_REQUEST {__read_only},
+					off		=> $_REQUEST {__read_only} || $options -> {read_only},
 					label_off => 1,
 				},
 				{
@@ -120,13 +123,13 @@ EOJS
 						$url
 EOJS
 
-					off	=> $_REQUEST {__read_only},
+					off	=> $_REQUEST {__read_only} || $options -> {read_only},
 				},
 				{
 					type    => 'button',
 					value   => 'Очистить',
 					onclick => $onclear_js,
-					off     => $_REQUEST {__read_only},
+					off     => $_REQUEST {__read_only} || $options -> {read_only},
 				},
 #				{
 #					type	=> 'static',

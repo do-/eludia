@@ -1,7 +1,7 @@
 no warnings;
 
 use Eludia::SQL::Transfer;
-use Eludia::SQL::TheSqlFunction;
+use Eludia::SQL::TheSqlFunction;
 
 ################################################################################
 
@@ -142,8 +142,9 @@ sub sql_weave_model {
 
 			$referenced_table_def or next;
 			$referenced_table_def -> {references} ||= [];
-			push @{$referenced_table_def -> {references}}, $column_def;
-						
+			push @{$referenced_table_def -> {references}}, $column_def
+				unless grep {$column_def == $_ || $column_def -> {name} eq $_ -> {name} && $column_def -> {table_name} eq $_ -> {table_name}} @{$referenced_table_def -> {references}};
+
 		}		
 	
 	}
@@ -411,7 +412,7 @@ sub sql_reconnect {
 		}
 
 	}
-
+
 	__profile_out ('core.sql.reconnect', {label => $SQL_VERSION -> {string}});
 
 }   	
@@ -712,15 +713,17 @@ sub sql_select_id {
 	
 	}
 
-	
 	};
-	
-	warn $@ if $@;
+
+	my $error = $@;
 
 	sql_unlock ($table);
-	
+
+	die $error
+		if $error;
+
 	if ($auto_commit) {
-	
+
 		eval { 
 			$db -> commit;
 			$db -> {AutoCommit} = 1; 
@@ -1400,7 +1403,7 @@ sub wish {
 	foreach my $i (@$items) { &{"wish_to_clarify_demands_for_$type"} ($i, $options) }
 	
 	my @key = @{$options -> {key}};
-	
+	
 	my @layers = ();
 	
 	my %key_cnt = ();

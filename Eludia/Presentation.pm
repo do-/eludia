@@ -164,13 +164,13 @@ sub trunc_string {
 	my $length = length $s;
 	
 	return $s if $length <= $len;
-	
-#	my $has_ext_chars = $s =~ y/\200-¿/\200-¿/;
-	
-#	$s = decode_entities ($s) if $has_ext_chars;
+
+	my $has_ext_chars = $s =~ /(\&[a-z]+)|(\&#\d+)/;
+
+	$s = decode_entities ($s) if $has_ext_chars;
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-#	$s = encode_entities ($s, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars;
-	
+	$s = encode_entities ($s, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars;
+
 	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
 
 	return $s;
@@ -417,6 +417,7 @@ sub check_href {
 				next if $k =~ /^_/ && !$_INHERITABLE_PARAMETER_NAMES -> {$k};
 				next if             $_NONINHERITABLE_PARAMETER_NAMES -> {$k};
 				$h {$k} = uri_escape ($_REQUEST {$k});
+				$h {$k} = encode_entities ($h {$k}, '"');
 
 			}
 			
@@ -549,7 +550,10 @@ sub draw_window_title {
 	my ($options) = @_;
 	
 	return '' if $options -> {off};
-	
+
+	$options -> {label} = $i18n -> {$options -> {label}}
+		if $options -> {label};
+
 	our $__last_window_title = $options -> {label};
 		
 	return $_SKIN -> draw_window_title (@_);
@@ -606,7 +610,7 @@ sub draw_form {
 
 	$options -> {path} ||= $data -> {path};
 
-	__profile_in ('draw.form' => {label => ref $options -> {path} eq ARRAY ? $options -> {path} -> [0] -> {name} : undef}); 
+	__profile_in ('draw.form' => {label => ref $options -> {path} eq ARRAY && @{$options -> {path}} > 0 ? $options -> {path} -> [0] -> {name} : undef}); 
 
 	$options -> {hr} = defined $options -> {hr} ? $options -> {hr} : 10;
 	$options -> {hr} = $_REQUEST {__tree} ? '' : draw_hr (height => $options -> {hr});
@@ -814,6 +818,9 @@ sub _adjust_field {
 		}
 	
 	}
+
+	$field -> {label} = $i18n -> {$field -> {label}}
+		if $field -> {label};
 
 	$field -> {data_source} and $field -> {values} ||= ($data -> {$field -> {data_source}} ||= sql_select_vocabulary ($field -> {data_source}));
 	
@@ -1232,7 +1239,11 @@ sub draw_ok_esc_toolbar {
 		{
 			preset => 'choose',
 			label => $options -> {label_choose},
-			href  => js_set_select_option ('', $data),
+			href  => js_set_select_option ('', {
+				id       => $data -> {id}, 
+				label    => $options -> {choose_select_label} || $data -> {label},
+				question => $data -> {question},
+			}),
 			off   => (!$_REQUEST {__read_only} || !$_REQUEST {select}),
 		},
 		@{$options -> {additional_buttons}},
@@ -1644,6 +1655,10 @@ sub draw_table_header_cell {
 	my ($cell) = @_;
 	
 	ref $cell eq HASH or $cell = {label => $cell};
+
+	$cell -> {label} = $i18n -> {$cell -> {label}}
+		if $cell -> {label};
+
 
 	check_title ($cell);
 	

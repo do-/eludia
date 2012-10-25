@@ -454,7 +454,7 @@ sub draw_text_cell {
 	if ($data -> {picture}) {
 		my $picture = $_SKIN -> _picture ($data -> {picture});
 		$data -> {attributes} -> {style} .= "mso-number-format:$picture;";
-		$data -> {attributes} -> {'x:num'} = delete $data -> {attributes} -> {title};
+		$data -> {attributes} -> {'x:num'} = $data -> {attributes} -> {title};
 	}
 	elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
 		$data -> {attributes} -> {style} .= "mso-number-format:'Short date';";
@@ -465,6 +465,7 @@ sub draw_text_cell {
 	elsif (!$data -> {no_nobr}) {
 		$data -> {attributes} -> {style} .= "mso-number-format:\\\@;";
 	}
+	delete $data -> {attributes} -> {title};
 
 	if ($data -> {bgcolor} ||= $data -> {attributes} -> {bgcolor}) {
 		$data -> {attributes} -> {style} .= "background:$data->{bgcolor};";
@@ -680,18 +681,31 @@ sub dialog_open {
 
 ################################################################################
 
-sub start_page {
+sub xls_filename {
+	
+	my $filename = $_REQUEST {__page_title};
+	$filename =~ s/[\"\?\:\s\\\/]+/_/gs;
+	
+	if ($conf -> {report_date_in_filename}) {
+		my $generation_date = sprintf ("%04d-%02d-%02d_%02d-%02d", Date::Calc::Today_and_Now);
+		$filename .= "_($generation_date)";
+	}
+	
+	return "$filename.xls";
+}
 
+################################################################################
+
+sub start_page {
+	
 	$_REQUEST {__no_default_after_xls} or $_REQUEST {__after_xls} .= qq {
 		<p>$_USER->{label}</p>
 		<p>@{[ sprintf ('%02d.%02d.%04d %02d:%02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4,5]) ]}</p>
 	};
 
 	$r -> content_type ('application/octet-stream');
-	my $page_title = $_REQUEST {__page_title};
-	$page_title =~ s/[\"\?\:\s\\\/]+/_/gs;
 	$r -> header_out ('P3P' => 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
-	$r -> header_out ('Content-Disposition' => "attachment;filename=" . Encode::encode ('windows-1251', "$page_title.xls")); 	
+	$r -> header_out ('Content-Disposition' => "attachment;filename=" . Encode::encode ('windows-1251', xls_filename ()));
 	$r -> send_http_header ();
 
 	$_REQUEST {__response_sent} = 1;

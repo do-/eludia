@@ -130,7 +130,7 @@ sub setup_user {
 
 	elsif ($_REQUEST {__whois}) {
 	
-		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
+		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id LEFT JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
 		
 		out_html ({}, Dumper ({data => $user}));
 		
@@ -446,10 +446,16 @@ sub handle_error {
 sub handle_request_of_type_kickout {
 
 	foreach (qw(sid salt _salt __last_query_string __last_scrollable_table_row)) {delete $_REQUEST {$_}}
-	
+
 	setup_json ();
-	set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode (Encode::encode ('utf-8', $_JSON -> encode (\%_REQUEST))), -path => '/');
-	
+
+	my %_R = map {$_ => $_REQUEST {$_}} grep {!ref $_REQUEST {$_}} keys %_REQUEST;
+	set_cookie (
+		-name => 'redirect_params',
+		-value => MIME::Base64::encode (Encode::encode ('utf-8', $_JSON -> encode (\%_R))),
+		-path => '/'
+	);
+
 	redirect (
 		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),
 		{
