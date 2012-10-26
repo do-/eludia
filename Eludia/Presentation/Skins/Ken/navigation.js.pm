@@ -741,7 +741,7 @@ function hideSubMenus (level) {
 	if (level == 0) {
 		level = 1;
 		if (last_vert_menu [0]) {
-			last_vert_menu [0].style.backgroundImage='url(/i/_skins/Ken/menu_bg.gif)';
+			last_vert_menu [0].style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg.gif)';
 			last_vert_menu [0] = null;
 		}
 	}
@@ -749,7 +749,7 @@ function hideSubMenus (level) {
 	for (var i = last_vert_menu.length - 1; i >= level; i--) {
 		if (last_vert_menu [i]) {
 			if (last_vert_menu [i].td) 
-				last_vert_menu [i].td.style.backgroundImage='url(/i/_skins/Ken/menu_bg.gif)';
+				last_vert_menu [i].td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg.gif)';
 			last_vert_menu [i].div.style.display = 'none';
 			last_vert_menu [i] = null;
 		}
@@ -772,7 +772,7 @@ function menuItemOver (td, child, div, level) {
 				last_vert_menu [level].div = current_submenu;
 			} else {
 				if (last_vert_menu [level].td && last_vert_menu [level].td != td) {
-					last_vert_menu [level].td.style.backgroundImage='url(/i/_skins/Ken/menu_bg.gif)';
+					last_vert_menu [level].td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg.gif)';
 
 					hideSubMenus (level + 1);
 
@@ -783,14 +783,14 @@ function menuItemOver (td, child, div, level) {
 
 		for (var i = last_vert_menu.length - 1; i >= level; i--) {
 			if (last_vert_menu [i] && last_vert_menu [i].td) 
-				last_vert_menu [i].td.style.backgroundImage='url(/i/_skins/Ken/menu_bg.gif)';
+				last_vert_menu [i].td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg.gif)';
 
 		}
 
 		if (last_vert_menu [level]) {
 
 			last_vert_menu [level].td = td;
-			td.style.backgroundImage='url(/i/_skins/Ken/menu_bg_s.gif)';
+			td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg_s.gif)';
 		
 		}
 
@@ -809,14 +809,14 @@ function menuItemOver (td, child, div, level) {
 
 		}
 	} else {
-		td.style.backgroundImage='url(/i/_skins/Ken/menu_bg_s.gif)';
+		td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg_s.gif)';
 
 		if (last_vert_menu [0] != td) {
 			hideSubMenus (0);
 			last_vert_menu [0] = td;
 		} else {
 			if (last_vert_menu [1] && last_vert_menu [1].td)
-				last_vert_menu [1].td.style.backgroundImage='url(/i/_skins/Ken/menu_bg.gif)';
+				last_vert_menu [1].td.style.backgroundImage='url(/i/_skins/TurboMilk/menu_bg.gif)';
 		}
 
 		if (child) {
