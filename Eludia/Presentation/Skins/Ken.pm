@@ -3146,18 +3146,101 @@ sub start_page {
 sub draw_page_just_to_reload_menu {
 
 	my ($_SKIN, $page) = @_;
+		
+	my $fl = sub {
+		my ($a) = @_;
+		@$a > 0 or return;
+		foreach my $i (@$a) {
+			$i -> {label} =~ s{^\&}{};
+			$i -> {__tb} = 'mid';
+			if ($i -> {no_page} || $i -> {items}) {
+				$i -> {href} ||= "undefined";
+			}
+			else {
+				$i -> {href} ||= "/?type=$i->{name}";
+				$i -> {href}  .= "&sid=$_REQUEST{sid}";
+			}
+		}
+		$a -> [0]  -> {__fl} = 'k-first';
+		$a -> [-1] -> {__fl} = 'k-last';
+		$a -> [0]  -> {__tb} = 'k-top';
+		$a -> [-1] -> {__tb} = 'k-bot';
+	};
 	
-	my $a = $_JSON -> encode ([$page -> {menu}]);
-
-	my $md5 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
+	my $sub_menu_items = sub {};
+	$sub_menu_items = sub {
 	
-	qq {
-		var wm = ancestor_window_with_child ('main_menu');
-		var a = $a;
-		\$(wm.child).html (a[0]);
-		wm.window.menu_md5 = '$md5';
-	}; 
+		my ($items) = @_;
+		
+		&$fl ($items);
+		
+		my $html = '';
 
+		foreach my $j (grep {ref} @$items) {
+		
+			my $jtems = $j -> {items};
+
+			$html .= qq {
+				<li class="k-item $j->{__fl}">
+				<div class="$j->{__tb}">
+			};
+
+			$html .= q {<span class="k-icon k-plus"></span>} if $jtems;
+
+			$html .= qq {
+				<span class="k-in"><span rel="$j->{href}|page_white|$j->{label}">$j->{label}</span></span>
+			};
+			
+			$html .= '</div>';
+
+			$jtems  or next;
+
+			$html .= '<ul class="k-group" style="display:none">';			
+			$html .= &$sub_menu_items ($jtems);			
+			$html .= '</ul>';
+
+		}
+		continue {$html .= q {</li>}}
+
+		return $html;
+	
+	};
+
+	my $menu = $page -> {menu_data};
+	
+	my $html = q {
+		<ul class="panelbar k-widget k-reset k-header k-panelbar">
+	};
+	
+	&$fl ($menu);
+	
+	$menu -> [0] -> {__ss} = 'k-state-selected';
+
+	foreach my $i (@$menu) {
+				
+		$html .= qq {
+			<li class="k-item k-state-default $i->{__fl}">
+			<span class="k-link k-header $i->{__ss}">$i->{label}</span>
+		};
+		
+		my $items = $i -> {items} or next;
+		
+		$html .= qq {
+			<div id="m_$i->{name}" class="block k-content k-widget k-treeview k-reset -allmenu">
+			<ul class="k-group k-treeview-lines">
+		};
+
+		$html .= &$sub_menu_items ($items);
+
+		$html .= q {</ul></div>};
+
+	}
+	continue {$html .= q {</li>}}
+
+	$html .= q {</ul>};
+	
+	return $html;
+	
 }
 
 ################################################################################
