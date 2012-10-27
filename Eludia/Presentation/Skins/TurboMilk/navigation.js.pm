@@ -1290,6 +1290,7 @@ TableSlider.prototype.cell_on = function () {
 	var c            = $(cell);
 	var a            = $('a', c).get (0);
 	var checkbox     = $('input:checkbox', c).get (0);
+	var input_text   = $('input:text', c).get (0);
 		
 	var table        = c.parents ('table').eq (0);
 	var div          = table.parents ('div').eq (0);
@@ -1328,6 +1329,22 @@ TableSlider.prototype.cell_on = function () {
 			me.lastClick = event;
 		
 			$('input:checkbox', tableSlider.get_cell ()).each ( function () {
+
+				blockEvent (event);
+				this.click ();
+				this.focus ();
+
+			})
+		
+		} :
+
+		input_text != null ? function (event) {
+		
+			if (me.lastClick == event) return;
+			
+			me.lastClick = event;
+		
+			$('input:text', tableSlider.get_cell ()).each ( function () {
 
 				blockEvent (event);
 				this.click ();
