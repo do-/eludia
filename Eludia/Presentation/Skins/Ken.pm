@@ -3209,7 +3209,7 @@ sub draw_page {
 			<div style='position:absolute; left:200px; top:300px; height:4px; width:4px; z-index:101; visibility:hidden; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
 		};
 		
-		$_REQUEST {__script}  .= '; check_top_window (); ';
+#		$_REQUEST {__script}  .= '; check_top_window (); ';
 
 		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
 
