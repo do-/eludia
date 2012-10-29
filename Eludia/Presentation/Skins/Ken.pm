@@ -3143,23 +3143,130 @@ sub start_page {
 
 ################################################################################
 
+sub _menu_item {
+
+	my ($i) = @_;
+
+	$i -> {label} =~ s{^\&}{};
+
+	if ($i -> {no_page} || $i -> {items}) {
+		$i -> {href} ||= "undefined";
+	}
+	else {
+		$i -> {href} ||= "/?type=$i->{name}";
+		$i -> {href}  .= "&sid=$_REQUEST{sid}";
+	}
+
+	$i -> {id} ||= $i -> {href};
+	
+	$i -> {id} =~ s{[\&\?]?sid\=\d+}{};
+	
+}
+
+################################################################################
+
+sub menu_item_2_json {
+
+	my ($i) = @_;
+		
+	ref $i eq HASH or return ();	
+
+	_menu_item ($i);
+	
+	{
+		id        => $i -> {id},
+		rel       => $i -> {href},
+		favorites => \$i -> {is_favorite},
+		popular   => \1,
+		text      => $i -> {label},
+		(!$i -> {items} ? () : (items => [map {menu_item_2_json ($_)} @{$i -> {items}}])),
+	};
+
+}
+
+################################################################################
+
+sub menu_add_fav {
+
+	my ($menu, $fav) = @_;
+	
+	foreach my $i (@$menu) {
+	
+		_menu_item ($i);
+	
+		$i -> {is_favorite} = 0 + $fav -> {$i -> {id}};
+		
+		menu_add_fav ($i -> {items}, $fav) if $i -> {items};
+
+	}
+
+}
+
+################################################################################
+
+sub menu_filtered {
+
+	my ($menu) = @_;
+	
+	my @result = ();
+	
+	foreach my $i (@$menu) {
+	
+		ref $i eq HASH or next;	
+
+		next if $i -> {off};
+			
+		$i -> {items} = menu_filtered ($i -> {items}) if $i -> {items};
+		
+		@{$i -> {items}} > 0 or delete $i -> {items};
+		
+		!$_REQUEST {__only_favorites} or $i -> {is_favorite} or $i -> {items} or next;
+
+		push @result, $i;
+
+	}
+	
+	\@result;
+
+}
+
+################################################################################
+
 sub draw_page_just_to_reload_menu {
 
 	my ($_SKIN, $page) = @_;
+	
+	my $menu = $page -> {menu_data};
 		
+	my %fav = ();
+	
+	&{$_PACKAGE . 'sql_select_loop'} ('SELECT name FROM __menu WHERE fake = 0 AND is_favorite = 1 AND id_user = ?', sub {
+		$fav {${$_PACKAGE . 'i'} -> {name}} = 1;
+	}, $_USER -> {id});
+
+	menu_add_fav ($menu, \%fav);
+	
+	$menu = menu_filtered ($menu);
+
+	$_REQUEST {__json} and return 
+	
+		q {
+			<form action="menu.php" method="POST" id="menu_form"><div id="treeview" class="demo-section"></div></form>
+			<script>
+			var $treeviewdataSource = 
+		}
+	
+		. $_JSON -> encode ([map {menu_item_2_json ($_)} @$menu]) .
+				
+		q {
+			</script>
+		};
+
 	my $fl = sub {
 		my ($a) = @_;
 		@$a > 0 or return;
 		foreach my $i (@$a) {
-			$i -> {label} =~ s{^\&}{};
 			$i -> {__tb} = 'mid';
-			if ($i -> {no_page} || $i -> {items}) {
-				$i -> {href} ||= "undefined";
-			}
-			else {
-				$i -> {href} ||= "/?type=$i->{name}";
-				$i -> {href}  .= "&sid=$_REQUEST{sid}";
-			}
 		}
 		$a -> [0]  -> {__fl} = 'k-first';
 		$a -> [-1] -> {__fl} = 'k-last';
@@ -3205,8 +3312,6 @@ sub draw_page_just_to_reload_menu {
 		return $html;
 	
 	};
-
-	my $menu = $page -> {menu_data};
 	
 	my $html = q {
 		<ul class="panelbar k-widget k-reset k-header k-panelbar">
