@@ -203,7 +203,7 @@ sub send_mail {
 
 	$time = __log ($time, " $signature: connected to $preconf->{mail}->{host}, ready to send mail");
 
-	$smtp -> mail ($options -> {from} -> {address});
+	$smtp -> mail ($options -> {from} -> {mail});
 
 	my @real_to = @to;
 
