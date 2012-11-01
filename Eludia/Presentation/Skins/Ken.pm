@@ -3275,7 +3275,10 @@ sub draw_page_just_to_reload_menu {
 				
 		}, 
 		
-		sub {$pop {${$_PACKAGE . 'i'} -> {name}} = 1}, 
+		sub {
+			return if %pop >= 15;
+			$pop {${$_PACKAGE . 'i'} -> {name}} = 1;
+		}, 
 		
 		$_USER -> {id},
 		
