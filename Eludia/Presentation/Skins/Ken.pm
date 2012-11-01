@@ -3161,6 +3161,8 @@ sub _menu_item {
 	
 	$i -> {id} =~ s{[\&\?]?sid\=\d+}{};
 	
+	$i -> {icon} ||= 'page_white';
+
 }
 
 ################################################################################
@@ -3295,7 +3297,7 @@ sub draw_page_just_to_reload_menu {
 			$html .= q {<span class="k-icon k-plus"></span>} if $jtems;
 
 			$html .= qq {
-				<span class="k-in"><span rel="$j->{href}|page_white|$j->{label}">$j->{label}</span></span>
+				<span class="k-in"><span rel="$j->{href}|$j->{icon}|$j->{label}">$j->{label}</span></span>
 			};
 			
 			$html .= '</div>';
