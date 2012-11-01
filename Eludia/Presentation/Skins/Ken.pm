@@ -3179,7 +3179,7 @@ sub menu_item_2_json {
 		id        => $i -> {id},
 		rel       => $i -> {href},
 		favorites => \$i -> {is_favorite},
-		popular   => \1,
+		popular   => \$i -> {is_popular},
 		text      => $i -> {label},
 		(!$i -> {items} ? () : (items => [map {menu_item_2_json ($_)} @{$i -> {items}}])),
 	};
@@ -3190,15 +3190,15 @@ sub menu_item_2_json {
 
 sub menu_add_fav {
 
-	my ($menu, $fav) = @_;
+	my ($menu, $fav, $key) = @_;
 	
 	foreach my $i (@$menu) {
 	
 		_menu_item ($i);
 	
-		$i -> {is_favorite} = 0 + $fav -> {$i -> {id}};
+		$i -> {$key} = 0 + $fav -> {$i -> {id}};
 		
-		menu_add_fav ($i -> {items}, $fav) if $i -> {items};
+		menu_add_fav ($i -> {items}, $fav, $key) if $i -> {items};
 
 	}
 
@@ -3223,6 +3223,7 @@ sub menu_filtered {
 		@{$i -> {items}} > 0 or delete $i -> {items};
 		
 		!$_REQUEST {__only_favorites} or $i -> {is_favorite} or $i -> {items} or next;
+		!$_REQUEST {__only_popular}   or $i -> {is_popular}  or $i -> {items} or next;
 
 		push @result, $i;
 
@@ -3242,11 +3243,49 @@ sub draw_page_just_to_reload_menu {
 		
 	my %fav = ();
 	
-	&{$_PACKAGE . 'sql_select_loop'} ('SELECT name FROM __menu WHERE fake = 0 AND is_favorite = 1 AND id_user = ?', sub {
-		$fav {${$_PACKAGE . 'i'} -> {name}} = 1;
-	}, $_USER -> {id});
+	&{$_PACKAGE . 'sql_select_loop'} (
+	
+		'SELECT name FROM __menu WHERE fake = 0 AND is_favorite = 1 AND id_user = ?', 
 
-	menu_add_fav ($menu, \%fav);
+		sub {$fav {${$_PACKAGE . 'i'} -> {name}} = 1}, 
+
+		$_USER -> {id}
+
+	);
+	
+	menu_add_fav ($menu, \%fav, 'is_favorite');
+
+	my %pop = ();
+	my $dt = &{$_PACKAGE . 'dt_iso'} (Date::Calc::Add_Delta_YM (Date::Calc::Today (), 0, -3));
+	
+	&{$_PACKAGE . 'sql_select_loop'} (q {
+	
+			SELECT
+				name
+			FROM
+				__menu_clicks
+			WHERE
+				id_user = ?
+				AND dt >= ?
+				AND name <> ?
+			GROUP BY
+				name
+			ORDER BY
+				SUM(cnt) DESC
+				
+		}, 
+		
+		sub {$pop {${$_PACKAGE . 'i'} -> {name}} = 1}, 
+		
+		$_USER -> {id},
+		
+		$dt,
+		
+		'undefined',
+
+	);
+	
+	menu_add_fav ($menu, \%pop, 'is_popular');
 	
 	$menu = menu_filtered ($menu);
 
@@ -3297,7 +3336,7 @@ sub draw_page_just_to_reload_menu {
 			$html .= q {<span class="k-icon k-plus"></span>} if $jtems;
 
 			$html .= qq {
-				<span class="k-in"><span rel="$j->{href}|$j->{icon}|$j->{label}">$j->{label}</span></span>
+				<span class="k-in"><span rel="$j->{href}|$j->{icon}|$j->{label}|$j->{id}">$j->{label}</span></span>
 			};
 			
 			$html .= '</div>';
