@@ -417,15 +417,15 @@ sub _picture {
 		my $point = $conf -> {number_format} -> {-decimal_point};
 		my $sep   = $conf -> {number_format} -> {-thousands_sep};
 
-		my @picture = split /$point/, $picture;
-		
-		$picture [0] =~ s{\#$}{0}; #
-		$picture [0] =~ s{\#}{\\\#}g; 
-		$picture [0] =~ s{$sep}{\\\,}g; 
-		
-		$picture [1] =~ y{#}{0}; #
-		
-		$_SKIN -> {pictures} -> {$picture} = join '\.', grep {/0/} @picture;
+		my ($integer, $fraction) = split /$point/, $picture;
+
+		$integer =~ s{(.*)\#}{${1}0}; #
+		$integer =~ s{\#}{\\\#}g;
+		$integer =~ s{$sep}{\\\,}g;
+
+		$fraction =~ y{#}{0}; #
+
+		$_SKIN -> {pictures} -> {$picture} = join '\.', grep {/0/} ($integer, $fraction);
 
 	}
 
