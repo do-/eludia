@@ -2599,9 +2599,9 @@ sub setup_skin {
 
 	unless ($_REQUEST {__skin}) {
 
-		if ($_COOKIE {ExtJs}) {
-		
-			$_REQUEST {__skin} = 'ExtJs';
+		if ($r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest') {
+
+			$_REQUEST {__skin} = 'JSONDumper';
 			
 		}
 		elsif ($_REQUEST {xls}) {
@@ -2614,16 +2614,11 @@ sub setup_skin {
 			$_REQUEST {__skin} = 'Dumper';
 			
 		}
-		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON') {
-		
-			$_REQUEST {__skin} = 'JSONDumper';
-			
-		}
 		else {
 
 			$_REQUEST {__skin} = ($preconf -> {core_skin} ||= 'TurboMilk');
 
-	}
+		}
 
 	}
 
