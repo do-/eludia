@@ -3720,6 +3720,21 @@ EOJS
 		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
 		</script>
 
+
+	<link rel="stylesheet" type="text/css" href="/i/ken/css/normalize.css">
+	<link rel="stylesheet" type="text/css" href="http://cdn.kendostatic.com/2012.3.1114/styles/kendo.common.min.css">
+	<link rel="stylesheet" type="text/css" href="http://cdn.kendostatic.com/2012.3.1114/styles/kendo.default.min.css">
+	<link rel="stylesheet" type="text/css" href="/i/ken/css/icons.css">
+	<link rel="stylesheet" type="text/css" href="/i/ken/css/templates.css">
+
+
+	<script type='text/javascript' src='http://code.jquery.com/jquery-1.8.2.js'></script>
+	<script type='text/javascript' src="http://cdn.kendostatic.com/2012.3.1114/js/kendo.all.min.js"></script>
+	<script type="text/javascript" src="/i/ken/js/jquery.disable.text.select.js"></script>
+	<script src="/i/ken/js/jquery.ui.position.js" type="text/javascript"></script>
+    	<script src="/i/ken/js/jquery.contextMenu.js" type="text/javascript"></script>
+	<script src="/i/ken/js/cultures/kendo.culture.ru-RU.js"></script>
+
 	} . $_REQUEST {__head_links};
 	
 	if ($body !~ /^\s*\<frameset/ism) {
@@ -3983,7 +3998,7 @@ EOH
 
 ################################################################################
 
-sub draw_tree {
+sub _____draw_tree {
 
 	my ($_SKIN, $node_callback, $list, $options) = @_;
 	
@@ -4183,6 +4198,109 @@ EOH
 	}
 
 	return $frameset;
+}
+
+################################################################################
+
+sub draw_tree {
+
+	my ($_SKIN, $node_callback, $list, $options) = @_;
+	
+	$options -> {name} ||= '_content_iframe';
+	
+	my $id = int (time() * rand ());
+	
+	my $html = qq {
+	
+		<div id="splitted_tree_window_$id" style="height:100%">
+			<div id="splitted_tree_window_left_$id">
+			</div>
+			<div id="splitted_tree_window_right_$id">
+			</div>
+		</div>
+			
+	};
+
+	my $js = qq {
+
+		\$("#splitted_tree_window_$id").kendoSplitter ({
+			panes: [
+				{ collapsible: false, size: "220px" },
+				{ collapsible: false }
+			]
+		});
+               	
+	};
+	
+	if (!$options -> {active}) {
+	
+		my %p2n = ();
+		my %i2n = ();
+		
+		foreach my $i (@$list) {
+		
+			my $n = $i -> {__node};
+			
+			my $nn = {
+				id   => $i -> {id},
+				text => $n -> {name},
+				href => $n -> {url},
+			};
+		
+			push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
+		
+			$i2n {$i -> {id}} = $nn;
+		
+		}
+
+		foreach my $nn (values %i2n) {
+
+			my $items = $p2n {$nn -> {id}} or next;
+
+			$nn -> {items} = $items;
+
+		}
+
+		my $data = $_JSON -> encode ($p2n {0} ||= []);
+
+		$js .= qq {
+
+			var inline = new kendo.data.HierarchicalDataSource({
+			    data: $data
+			});
+				
+			function onSelectNode (node) {
+				var treeview = \$("#splitted_tree_window_left_$id").data ("kendoTreeView");
+			    	var href = treeview.dataItem (node).href;
+			    	if (!href) return; 
+			    	\$("#splitted_tree_window_right_$id").html ("<iframe width=100% height=100% src='" + href + "' name='$options->{name}' id='__content_iframe' application=yes scroll=no>");
+			}
+
+			\$("#splitted_tree_window_left_$id").kendoTreeView({
+				dataSource: inline,
+				select: function (e) {	
+			    	onSelectNode (e.node);
+			    }
+			});
+				 
+		};
+
+	}
+
+	if ($options -> {selected_node}) {
+	
+		$js .= qq {
+			var treeview = \$("#splitted_tree_window_left_$id").data ("kendoTreeView");
+			var item = treeview.dataSource.get ($options->{selected_node});
+			var node = treeview.findByUid (item.uid);
+			treeview.select (node); 
+			onSelectNode (node);
+		};
+
+	}
+	
+	$html . "<script>\$(document).ready (function () {$js})</script>";
+
 }
 
 ################################################################################
