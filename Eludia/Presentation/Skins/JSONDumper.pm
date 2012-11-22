@@ -221,4 +221,69 @@ sub draw_page_just_to_reload_menu {
 				
 }
 
+################################################################################
+
+sub draw_node {
+
+	my ($_SKIN, $options, $i) = @_;
+
+	my $node = {
+		id      => $options -> {id},
+		text    => $options -> {label}, 
+		href    => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
+#		title   => $options -> {title} || $options -> {label},
+	};
+
+#	map {$node -> {$_} = $options -> {$_} if $options -> {$_}} qw (target icon iconOpen is_checkbox is_radio);
+
+#	if ($options -> {title} && $options -> {title} ne $options -> {label}) {
+#		$node -> {title} = $options -> {title};
+#	}
+	
+	$i -> {hasChildren} = $i -> {cnt_children} ? \1 : \0;
+	
+	$node -> {context_menu} = $i . '' if $i -> {__menu};
+
+	return $node;
+
+}
+
+################################################################################
+
+sub draw_tree {
+
+	my ($_SKIN, $node_callback, $list, $options) = @_;
+		
+	my %p2n = ();
+	my %i2n = ();
+	
+	foreach my $i (@$list) {
+	
+		my $n = $i -> {__node};
+		
+		my $nn = {
+			id          => $i -> {id},
+			text        => $n -> {text},
+			href        => $n -> {href},
+			hasChildren => $n -> {hasChildren},
+		};
+	
+		push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
+	
+		$i2n {$i -> {id}} = $nn;
+	
+	}
+
+	foreach my $nn (values %i2n) {
+
+		my $items = $p2n {$nn -> {id}} or next;
+
+		$nn -> {items} = $items;
+
+	}
+
+	my $data = $_JSON -> encode ($p2n {$_REQUEST {__parent} || 0} ||= []);
+
+}
+
 1;

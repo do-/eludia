@@ -4229,6 +4229,13 @@ sub draw_tree {
 				{ collapsible: false }
 			]
 		});
+		
+		function onSelectNode (node) {
+			var treeview = \$("#splitted_tree_window_left_$id").data ("kendoTreeView");
+			var href = treeview.dataItem (node).href;
+			if (!href) return; 
+			\$("#splitted_tree_window_right_$id").html ("<iframe width=100% height=100% src='" + href + "' name='$options->{name}' id='__content_iframe' application=yes scroll=no>");
+		}
                	
 	};
 	
@@ -4265,27 +4272,40 @@ sub draw_tree {
 
 		$js .= qq {
 
-			var inline = new kendo.data.HierarchicalDataSource({
+			var dataSource = new kendo.data.HierarchicalDataSource({
 			    data: $data
-			});
-				
-			function onSelectNode (node) {
-				var treeview = \$("#splitted_tree_window_left_$id").data ("kendoTreeView");
-			    	var href = treeview.dataItem (node).href;
-			    	if (!href) return; 
-			    	\$("#splitted_tree_window_right_$id").html ("<iframe width=100% height=100% src='" + href + "' name='$options->{name}' id='__content_iframe' application=yes scroll=no>");
-			}
-
-			\$("#splitted_tree_window_left_$id").kendoTreeView({
-				dataSource: inline,
-				select: function (e) {	
-			    	onSelectNode (e.node);
-			    }
 			});
 				 
 		};
 
 	}
+	elsif ($options -> {active} == 2) {
+	
+		$js .= qq {
+
+			var dataSource = new kendo.data.HierarchicalDataSource({
+				transport: {
+				    read: {
+					url: "/?sid=$_REQUEST{sid}&type=$_REQUEST{type}",
+					dataType: "json"
+				    }
+				}
+			});
+				 
+		};
+
+	}
+
+	$js .= qq {
+
+		\$("#splitted_tree_window_left_$id").kendoTreeView({
+			dataSource: dataSource,
+			select: function (e) {	
+		    	onSelectNode (e.node);
+		    }
+		});
+				 
+	};
 
 	if ($options -> {selected_node}) {
 	
