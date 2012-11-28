@@ -4292,9 +4292,11 @@ sub draw_tree {
 		$js .= qq {
 			var treeview = \$("#splitted_tree_window_left_$id").data ("kendoTreeView");
 			var item = treeview.dataSource.get ($options->{selected_node});
-			var node = treeview.findByUid (item.uid);
-			treeview.select (node); 
-			onSelectNode (node);
+			if (item !== undefined) {
+				var node = treeview.findByUid (item.uid);
+				treeview.select (node);
+				onSelectNode (node);
+			}
 		};
 
 	}
