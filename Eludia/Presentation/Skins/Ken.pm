@@ -4244,7 +4244,7 @@ sub draw_tree {
 			my $nn = {
 				id   => $i -> {id},
 				text => $n -> {name},
-				href => $n -> {url},
+				href => $options -> {url_base} . $n -> {url},
 			};
 		
 			push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
