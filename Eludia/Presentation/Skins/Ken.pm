@@ -4498,4 +4498,38 @@ sub draw_form_field_article {
 	
 }
 
+################################################################################
+
+sub draw_error_page {
+
+	my ($_SKIN, $page) = @_;
+
+	$_REQUEST {__content_type} ||= 'text/html; charset=utf-8';
+
+	my $data = $_JSON -> encode ([$_REQUEST {error}]);
+
+	$_REQUEST {__script} = <<EOJ;
+		function on_load () {
+EOJ
+
+	if ($page -> {error_field}) {
+		$_REQUEST{__script} .= <<EOJ;
+			var e = window.parent.document.getElementsByName('$page->{error_field}'); 
+			if (e && e[0]) { try {e[0].focus ()} catch (e) {} }				
+EOJ
+	}
+									
+	$_REQUEST {__script} .= <<EOJ;
+			var data = $data;
+			alert (data [0]);
+			try {window.parent.setCursor ()} catch (e) {}
+			window.parent.document.body.style.cursor = 'default';
+			try {window.parent.poll_invisibles ()} catch (e) {}
+		}
+EOJ
+
+	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};
+
+}
+
 1;
