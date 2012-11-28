@@ -3297,7 +3297,7 @@ Calendar.setup = function (params) {
 
 	var triggerEl = params.button || params.displayArea || params.inputField;
 
-	$('img[id^=' + triggerEl.id + ']').live (params.eventName, function (event) {
+	$('img[id^=\'' + triggerEl.id + '\']').live (params.eventName, function (event) {
 
 		var dateEl = event.target.previousSibling.previousSibling;
 		var dateFmt = params.inputField ? params.ifFormat : params.daFormat;
