@@ -4232,7 +4232,7 @@ sub draw_tree {
                	
 	};
 	
-	if (!$options -> {active}) {
+	if (1) { # !$options -> {active}
 	
 		my %p2n = ();
 		my %i2n = ();
