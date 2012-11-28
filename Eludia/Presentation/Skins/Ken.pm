@@ -4239,7 +4239,7 @@ sub draw_tree {
                	
 	};
 	
-	if (!$options -> {active}) {
+	if (1) { # !$options -> {active}
 	
 		my %p2n = ();
 		my %i2n = ();
@@ -4251,7 +4251,7 @@ sub draw_tree {
 			my $nn = {
 				id   => $i -> {id},
 				text => $n -> {name},
-				href => $n -> {url},
+				href => $options -> {url_base} . $n -> {url},
 			};
 		
 			push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
@@ -4312,9 +4312,11 @@ sub draw_tree {
 		$js .= qq {
 			var treeview = \$("#splitted_tree_window_left_$id").data ("kendoTreeView");
 			var item = treeview.dataSource.get ($options->{selected_node});
-			var node = treeview.findByUid (item.uid);
-			treeview.select (node); 
-			onSelectNode (node);
+			if (item !== undefined) {
+				var node = treeview.findByUid (item.uid);
+				treeview.select (node);
+				onSelectNode (node);
+			}
 		};
 
 	}
