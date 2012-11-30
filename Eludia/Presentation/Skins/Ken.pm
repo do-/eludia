@@ -4330,10 +4330,7 @@ sub draw_tree {
 sub draw_node {
 
 	my ($_SKIN, $options, $i) = @_;
-
-	$options -> {label} =~ s{\"}{\&quot;}gsm; #"
-	$options -> {label} =~ s{\'}{\&rsquo;}gsm; #"
-
+	
 	my $node = {
 		id      => $options -> {id},
 		pid     => $options -> {parent},
