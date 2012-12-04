@@ -3051,8 +3051,8 @@ sub draw_table {
 	$html .= $options -> {container} ?
 		$options -> {container} :
 			$options -> {no_scroll} ?
-			qq {<div class="table-container-x" onScroll="tableSlider.cell_on()">} : 
-			qq {<div class="table-container" onScroll="tableSlider.cell_on()">};
+			qq {<div class="table-container-x" ooonScroll="tableSlider.cell_on()">} : 
+			qq {<div class="table-container" ooonScroll="tableSlider.cell_on()">};
 
 	$html .= qq {<table cellspacing=1 cellpadding=0 width="100%" id="$options->{id}">\n};
 
@@ -3443,7 +3443,7 @@ sub draw_page {
 		
 #		$_REQUEST {__script}  .= '; check_top_window (); ';
 
-		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
+#		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
 
 		$_REQUEST {__on_load} .= q {
 					
@@ -3512,7 +3512,7 @@ sub draw_page {
 				tableSlider.scrollCellToVisibleTop ();				
 			
 			}
-
+/*
 			$(window).resize (function() {
 						
 				if (window.resizeTimer) clearTimeout (window.resizeTimer);
@@ -3524,8 +3524,9 @@ sub draw_page {
 			$(window).scroll (checkTableContainers);
 			
 			$(window).resize ();
-			
+
 			tableSlider.scrollCellToVisibleTop ();				
+*/			
 		
 		};
 
