@@ -4234,8 +4234,10 @@ sub draw_tree {
 		function onSelectNode (node) {
 			var treeview = \$("#splitted_tree_window_left_$id").data ("kendoTreeView");
 			var href = treeview.dataItem (node).href;
-			if (!href) return; 
-			\$("#splitted_tree_window_right_$id").html ("<iframe width=100% height=100% src='" + href + "' name='$options->{name}' id='__content_iframe' application=yes scroll=no>");
+			if (!href) return;
+			var right = \$("#splitted_tree_window_right_$id");
+			right.html ("");
+			right.html ("<iframe width=100% height=100% src='" + href + "' name='$options->{name}_$id' id='__content_iframe_$id' application=yes scroll=no>");
 		}
                	
 	};
@@ -4250,9 +4252,10 @@ sub draw_tree {
 			my $n = $i -> {__node};
 			
 			my $nn = {
-				id   => $i -> {id},
-				text => $n -> {name},
-				href => $options -> {url_base} . $n -> {url},
+				id     => $i -> {id},
+				parent => $i -> {parent},
+				text   => $n -> {name},
+				href   => $options -> {url_base} . $n -> {url},
 			};
 		
 			push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
@@ -4260,9 +4263,16 @@ sub draw_tree {
 			$i2n {$i -> {id}} = $nn;
 		
 		}
-
+		
+		my $id = $options -> {selected_node};
+			
+		while (my $nn = $i2n {$id}) {			
+			$nn -> {expanded} = \1;
+			$id = $nn -> {parent};
+		}
+		
 		foreach my $nn (values %i2n) {
-
+		
 			my $items = $p2n {$nn -> {id}} or next;
 
 			$nn -> {items} = $items;
@@ -4313,7 +4323,7 @@ sub draw_tree {
 		$js .= qq {
 			var treeview = \$("#splitted_tree_window_left_$id").data ("kendoTreeView");
 			var item = treeview.dataSource.get ($options->{selected_node});
-			if (item !== undefined) {
+			if (item) {
 				var node = treeview.findByUid (item.uid);
 				treeview.select (node);
 				onSelectNode (node);
