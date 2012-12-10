@@ -1129,7 +1129,7 @@ sub draw_form_field_radio {
 		
 		$html .= dump_tag (input => $a);
 
-		$html .= qq {</td><td class="form-inner" width=1><nobr>&nbsp;$$value{label}</nobr>};
+		$html .= qq {</td><td class="form-inner" width=1><nobr>&nbsp;<label for="$value">$$value{label}</label></nobr>};
 		
 		if ($value -> {html}) {
 		
