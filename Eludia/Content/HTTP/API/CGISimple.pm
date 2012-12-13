@@ -258,7 +258,7 @@ sub parms {
 	foreach my $name (@names) {
 		my @v = $self -> {Q} -> param ($name);
 		$vars {$name}        = $v [-1];
-		$vars {$name . '[]'} = \@v;
+#		$vars {$name . '[]'} = \@v;
 	}
 	
 	return \%vars;	
