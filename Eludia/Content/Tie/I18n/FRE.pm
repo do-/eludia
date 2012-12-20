@@ -49,7 +49,9 @@
 	empty_file               => q[Ne pouvez pas telecharger des fichiers vides],
 	authorization		 => 'Connexion',
 	login			 => 'login',
-	execute_logon		 => 'se connecter',	
+	execute_logon		 => 'se connecter',
+	Change			 => 'Changer',
+	Clear			 => 'Vider',	
 	months			 => [qw(
 		janvier
 		février

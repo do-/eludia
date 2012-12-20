@@ -108,7 +108,7 @@ EOJS
 				},
 				{
 					type	=> 'button',
-					value	=> 'Изменить',
+					value	=> $i18n -> {Change},
 					onclick	=> <<EOJS,
 						re = /&_?salt=[\\d\\.]*/g;
 						dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
@@ -127,7 +127,7 @@ EOJS
 				},
 				{
 					type    => 'button',
-					value   => 'Очистить',
+					value   => $i18n -> {Clear},
 					onclick => $onclear_js,
 					off     => $_REQUEST {__read_only} || $options -> {read_only},
 				},

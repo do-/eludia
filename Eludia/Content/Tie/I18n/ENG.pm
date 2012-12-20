@@ -49,6 +49,8 @@
 	authorization		 => 'Authorization',
 	login			 => 'login',
 	execute_logon		 => 'enter',	
+	Change			 => 'Change',
+	Clear			 => 'Clear',
 	months			 => [qw(
 		january
 		february

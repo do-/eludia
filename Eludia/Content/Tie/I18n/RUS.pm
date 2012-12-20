@@ -53,6 +53,8 @@ use utf8;
 	authorization		 => 'Авторизация',
 	login			 => 'логин',
 	execute_logon		 => 'Войти в систему',
+	Change			 => 'Изменить',
+	Clear			 => 'Очистить',
 
 	months			 => [qw(
 		января
