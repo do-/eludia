@@ -106,6 +106,7 @@ sub menu_item_2_json {
 		favorites => \$i -> {is_favorite},
 		popular   => \$i -> {is_popular},
 		text      => $i -> {label},
+		classicon => $i -> {icon},
 		(!$i -> {items} ? () : (items => [map {menu_item_2_json ($_)} @{$i -> {items}}])),
 	};
 
