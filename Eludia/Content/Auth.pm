@@ -67,11 +67,31 @@ EOS
 
 ################################################################################
 
+sub get_opened_session {
+
+	return undef
+		if $preconf -> {core_no_cookie_check} || !$_REQUEST {id};
+
+
+	my $sql = "SELECT id FROM $conf->{systables}->{sessions} WHERE client_cookie = ?";
+	my @params = ($_COOKIE {client_cookie});
+
+	my $st = ($SQL_VERSION -> {_} -> {st_select_user_session} ||= $db -> prepare_cached ($sql, {}, 3));
+	$st -> execute (@params);
+	my @result = $st -> fetchrow_array ();
+	$st -> finish;
+
+	my $sid = $result [0];
+
+	return $sid;
+}
+
+################################################################################
+
 sub get_user_with_fixed_session {
 
 	my ($peer_server) = @_;
 	
-	$_REQUEST {sid} or return undef;
 
 #	__profile_in ('auth.get_user'); 
 
@@ -84,7 +104,13 @@ sub get_user_with_fixed_session {
 #		__profile_out ('auth.refresh_sessions'); 
 
 	}
-	
+
+	if (!$peer_server) {
+		$_REQUEST {sid} ||= get_opened_session ();
+	}
+
+	$_REQUEST {sid} or return undef;
+
 	my $st = ($SQL_VERSION -> {_} -> {st_select_user} ||= $db -> prepare_cached (get_user_sql (), {}, 3));
 	
 	$st -> execute ($_REQUEST {sid});
