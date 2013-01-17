@@ -70,7 +70,7 @@ EOS
 sub get_opened_session {
 
 	return undef
-		if $preconf -> {core_no_cookie_check} || !$_REQUEST {id};
+		if $preconf -> {core_no_cookie_check};
 
 
 	my $sql = "SELECT id FROM $conf->{systables}->{sessions} WHERE client_cookie = ?";
