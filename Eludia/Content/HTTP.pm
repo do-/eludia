@@ -5,17 +5,21 @@ use Eludia::Content::HTTP::FileTools;
 sub set_cookie_for_root {
 
 	my ($name, $value, $expires) = @_;
-	
+
+
 	if ($value) {
-
 		$expires ||= '+1M';
-
-		set_cookie (-name => $name, -value => $value, -expires => $expires, -path => '/');
-
 	} else {
-		set_cookie (-name => $name, -value => '1', -expires => '-1M', -path => '/');
+		$value = '1';
+		$expires = '-1M';
 	}
 
+	my @expires = (-expires => $expires);
+	if ($expires eq 'session') {
+		@expires = ();
+	}
+
+	set_cookie (-name => $name, -value => $value, -path => '/', @expires);
 }
 
 ################################################################################
