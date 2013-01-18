@@ -11,6 +11,7 @@ sub set_cookie_for_root {
 		$expires ||= '+1M';
 	} else {
 		$value = '1';
+		$expires = '-1M';
 	}
 
 	my @expires = (-expires => $expires);

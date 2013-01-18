@@ -105,7 +105,7 @@ sub get_user_with_fixed_session {
 
 	}
 
-	if (!$peer_server) {
+	if (!$peer_server && $preconf -> {core_auth_join_session}) {
 		$_REQUEST {sid} ||= get_opened_session ();
 	}
 
