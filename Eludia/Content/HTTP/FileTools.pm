@@ -189,7 +189,7 @@ sub upload_path {
 
 	$options -> {dir} ||= 'upload/images';
 
-	my $dir = $r -> document_root . "/i/$$options{dir}";
+	my $dir = $preconf -> {_} -> {docroot} . "/i/$$options{dir}";
 
 	foreach my $subdir ('', $y, $m, $d) {
 
@@ -203,7 +203,7 @@ sub upload_path {
 	
 	my $path = "/i/$$options{dir}/$y/$m/$d/" . time . '-' . (++ $_REQUEST {__files_cnt}) . "-$$" . $ext;
 	
-	return ($path, $r -> document_root . $path);
+	return ($path, $preconf -> {_} -> {docroot} . $path);
 
 }
 
