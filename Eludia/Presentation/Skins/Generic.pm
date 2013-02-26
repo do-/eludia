@@ -245,16 +245,17 @@ EOJS
 		
 			if (document.getElementById('_' + codetails[i] + '_select')) {
 				codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementById('_' + codetails[i] + '_select').value;
-
 				continue; 
-			} 
-			
+			}
+
+			if (document.getElementById('input_' + codetails[i])) {
+				codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementById('input_' + codetails[i]).value;
+				continue; 
+			}
+
 			if (document.getElementsByName('_' + codetails[i]).length > 1) {
-
-				for (j=0; j < document.getElementsByName('_' + codetails[i]).length; j ++) {
-				
+				for (j=0; j < document.getElementsByName('_' + codetails[i]).length; j ++) {				
 					r = document.getElementsByName('_' + codetails[i]) [j];
-
 					if (r.checked) {
 						codetails_url += '&' + '_' + codetails[i] + '=' + r.value;
 						break;
