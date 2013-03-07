@@ -103,7 +103,7 @@ sub wish_to_actually_create_table_data {
 	
 	foreach my $col (keys %{$items -> [0]}) {
 
-		push @cols, $col;
+		push @cols, "$model_update->{quote}$col$model_update->{quote}";
 		push @prms, [ map {$_ -> {$col}} @$items];
 	
 	}
@@ -118,9 +118,11 @@ sub wish_to_actually_create_table_data {
 
 	__profile_in ('sql.execute');
 
-	eval {$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms)};
+	my @tuple_status;
 	
-	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms)});
+	$sth -> execute_array ({ArrayTupleStatus => \@tuple_status}, @prms);
+	
+	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms) . ' ' . Dumper (\@tuple_status)});
 
 	$sth -> finish;
 	
@@ -141,7 +143,7 @@ sub wish_to_actually_update_table_data {
 	
 	foreach my $col (grep {$_ ne 'id'} keys %{$items -> [0]}) {
 		
-		push @cols, "$col = ?";
+		push @cols, "$model_update->{quote}$col$model_update->{quote} = ?";
 		push @prms, [ map {$_ -> {$col}} @$items];
 	
 	}
