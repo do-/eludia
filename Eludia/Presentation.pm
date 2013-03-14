@@ -851,6 +851,7 @@ sub draw_form_field {
 		 &&  $field -> {type} ne 'article'
 		 &&  $field -> {type} ne 'iframe'
 		 &&  $field -> {type} ne 'color'
+		 &&  $field -> {type} ne 'color_excel'
 		 &&  $field -> {type} ne 'multi_select'
 		 &&  $field -> {type} ne 'dir'
 		 && ($field -> {type} ne 'text'    || !$conf -> {core_keep_textarea})

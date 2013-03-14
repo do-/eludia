@@ -1516,17 +1516,35 @@ sub draw_form_field_color {
 			cellpadding=0
 			style="height:20px;width:40px;border:solid black 1px;background:#$$options{value}"
 EOH
-	
+
+	# Стандартная палитра
+
+	my $palette_file = 'colors.html';
+	my $dialog_width = '600px';
+	my $dialog_height = '400px';
+
+	# Палитра Excel 2010
+
+	if ($options -> {palette} eq 'excel2010') {
+
+		$palette_file = 'excel_colors.html';
+		$dialog_width = '300px';
+		$dialog_height = '250px';
+
+	}
+
 	if (!$_REQUEST {__read_only}) {
-	
+
 		$html .= <<EOH;
 			onClick="
-				var color = showModalDialog('$_REQUEST{__static_url}/colors.html?$_REQUEST{__static_salt}', window, 'dialogWidth:600px;dialogHeight:400px;help:no;scroll:no;status:no');
-				getElementById('td_color_$$options{name}').style.background = color;
-				getElementById('input_color_$$options{name}').value = color.substr (1);
+				var color = showModalDialog('$_REQUEST{__static_url}/$palette_file?$_REQUEST{__static_salt}', window, 'dialogWidth:$dialog_width;dialogHeight:$dialog_height;help:no;scroll:no;status:no');
+				if (color !== undefined) {
+					getElementById('td_color_$$options{name}').style.backgroundColor = '#' + color;
+					getElementById('input_color_$$options{name}').value = color;
+				}
 			"
 EOH
-	
+
 	}
 	
 	$html .= <<EOH;
