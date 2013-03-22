@@ -602,7 +602,7 @@ sub adjust_esc {
 sub draw_form {
 
 	my ($options, $data, $fields) = @_;
-		
+
 	return '' if $options -> {off} && $data;
 
 	$options -> {path} ||= $data -> {path};
@@ -818,6 +818,8 @@ sub _adjust_field {
 
 	$field -> {label} = $i18n -> {$field -> {label}}
 		if $field -> {label};
+	$field -> {empty} = $i18n -> {$field -> {empty}}
+		if $field -> {empty};
 
 	$field -> {data_source} and $field -> {values} ||= ($data -> {$field -> {data_source}} ||= sql_select_vocabulary ($field -> {data_source}));
 	
@@ -1701,7 +1703,7 @@ sub draw_table_header_cell {
 sub draw_table {
 
 	return '' if $_REQUEST {__only_form};
-	
+
 	my $headers = [];
 
 	unless (ref $_[0] eq CODE or (ref $_[0] eq ARRAY and ref $_[0] -> [0] eq CODE)) {
