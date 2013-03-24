@@ -456,7 +456,7 @@ EOH
 		$html .= qq{</tr>};
 	}
 
-	$html .=  '</form></table>';
+	$html .=  '</table></form>';
 	
 	$html .= $options -> {bottom_toolbar};
 
