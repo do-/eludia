@@ -2328,6 +2328,9 @@ sub draw_error_page {
 
 	}
 
+	$_REQUEST {error} = $i18n -> {$_REQUEST {error}}
+		if $_REQUEST {error};
+
 	setup_skin ();
 		
 	$_REQUEST {__response_started} and $_REQUEST {error} =~ s{\n}{<br>}gsm and return $_REQUEST {error};
