@@ -1,5 +1,6 @@
 <html>
 	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=5">
 		<title>Справочник</title>
 		<script>
 			var title_set = 0;
