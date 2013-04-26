@@ -1865,19 +1865,13 @@ sub draw_table {
 
 		}
 
-		my $i = 0;
-
 		foreach my $h (@header_cells) {
-
-			$i ++;
 
 			push @_COLUMNS, $h;
 
 			if ($_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
-				my $ord = $i;
 				if ($cells_cnt && ($h -> {order} || $h -> {no_order}) && exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}) {
 					if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} == 0) {
-						$ord = 0;
 						my $p = $h -> {parent};
 						while ($p -> {label}) {
 							$p -> {colspan} --;
@@ -1885,10 +1879,9 @@ sub draw_table {
 							$p = $p -> {parent};
 						}
 					} else {
-						$ord = ($h -> {parent} -> {ord}) * 1000 + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
+						$h -> {ord} = ($h -> {parent} -> {ord}) * 1000 + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
 					}
 				}
-				$h -> {ord}      = $ord;
 				$h -> {__hidden} = $h -> {hidden};
 				$h -> {hidden}   = 1 if ($h -> {ord} == 0 || defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0);
 			}
