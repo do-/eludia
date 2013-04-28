@@ -35,8 +35,7 @@ var suggest_is_visible = 0;
 var lastClientHeight = 0;
 var lastClientWidth = 0;
 var lastKeyDownEvent = {};
-
-
+var typingIdleTimer;
 var numerofforms = 0;
 var numeroftables = 0;
 var typeAheadInfo = {last:0, 
@@ -46,6 +45,7 @@ var typeAheadInfo = {last:0,
 	reset:function () {this.last=0; this.accumString=""}
 };
 var kb_hooks = [{}, {}, {}, {}];
+var SUGGEST_DELAY = 500;
 
 var max_len = 50;
 
@@ -70,7 +70,49 @@ window.confirm = function (s) {
 	return r;
 
 };
+
+var current_suggest_select = null;
+var current_suggest_input_root = null;
+var current_suggest_input_id = null;
+var current_suggest_input_label = null;
 
+function lookup_suggest_field (that) {
+
+	var v = that.val ();
+	var root = that.attr ('id');
+	
+	current_suggest_input_root = that;
+
+	current_suggest_input_id    = $("#" + root.replace ('__root', '__root_id'   ));	
+	current_suggest_input_id.val ('');
+	
+	current_suggest_input_label = $("#" + root.replace ('__root', '__root_label'));
+	current_suggest_input_label.val (v);
+
+	if ('' + v == '') return;
+
+	var f = that.closest ('form');
+	$("input[name='__suggest_string']", f).val (v);
+
+	var s = $("input[name='__suggest']", f);
+		
+	s.val (root.replace ('__root', '').substr (1));
+	current_suggest_select_ = $("#" + root.replace ('__root', '__suggest'));
+	
+	var table = current_suggest_select_.closest ('table');
+	var offset = that.offset (table);
+
+	current_suggest_select_.css ({
+		top:   offset.top + that.outerHeight () + 2,
+		left:  offset.left,
+		width: offset.width
+	});
+
+	current_suggest_select = current_suggest_select_.get (0);
+
+	f.get (0).submit ();
+	
+};
 
 function drop_form_tr_for_this_minus_icon (i) {
 
@@ -126,13 +168,27 @@ function clone_form_tr_for_this_plus_icon (i) {
 	
 	td.text (img.attr ('lowsrc') + ' ' + (parseInt (img.attr ('name')) + n) + ':');
 
+	var names = [];
+	
 	$(':input', tr_new).each (function () {
+	
+		names.push (this.name);
 
-		this.id   += ('_' + n);
-		this.name += ('_' + n);
-		this.value = '';
+//		this.id   += ('_' + n);
+//		this.name += ('_' + n);
+//		this.value = '';
 	
 	});
+	
+//	var h = tr_new.html ().replace (/__suggest\\b/g, '__suggest_' + n);
+
+	var h = tr_new.html ();
+	for (var i = 0; i < names.length; i ++) {
+		var name = names [i];
+		h = h.replace (new RegExp ("\\b" + name + "\\b", 'g'), name + '_' + n);
+	}
+
+	tr_new.html (h);
 
 	tr_new.insertAfter (last);
 
@@ -213,14 +269,14 @@ function set_suggest_result (sel, id) {
 	}
 	
 	try {
-	document.getElementById (id + '__id').value    = o.value;
-	document.getElementById (id + '__label').value = o.text;
+
+		current_suggest_input_id.val     (o.value);
+		current_suggest_input_label.val  (o.text);
+		current_suggest_input_root.val   (o.text);
+		current_suggest_input_root.focus ();
+
 	} catch (e) {}
-	
-	var i = document.getElementById (id);
-	i.value = o.text;
-	i.focus ();
-	
+			
 	sel.style.display = 'none';
 	
 	suggest_is_visible = 0;

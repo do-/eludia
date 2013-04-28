@@ -436,6 +436,7 @@ sub draw_form {
 				action="$_REQUEST{__uri}"
 			>
 			<input type=hidden name="__suggest" value="">
+			<input type=hidden name="__suggest_string" value="">
 EOH
 
 	$html .= dump_hiddens (
@@ -643,10 +644,10 @@ sub draw_form_field_suggest {
 
 	$_REQUEST {__script} .= qq{; 	
 
-		function off_suggest_$options->{name} () {
-			var s = document.getElementById ('_$options->{name}__suggest'); 
-			s.style.display = 'none';
-		}; 
+		function off_suggest_$options->{name} () {		
+			\$("select[name^='_$options->{name}__suggest']").hide ();
+			\$("input[name='__suggest']").val ('');
+		};
 		
 	};
 	
@@ -662,7 +663,7 @@ sub draw_form_field_suggest {
 	
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
-	$options -> {attributes} -> {onBlur}     .= qq {;
+	$options -> {attributes} -> {onBlur}     .= qq {
 		scrollable_table_is_blocked = false; 
 		q_is_focused = false; 
 		this.form.elements ['_$options->{name}__label'].value = this.value; 
@@ -680,11 +681,10 @@ sub draw_form_field_suggest {
 
 EOH
 	
-	
-	$options -> {attributes} -> {onKeyUp} .= <<EOH;
+	$options -> {attributes} -> {onKeyUp} .= qq {
 
 		if (event.keyCode == 13) {
-			getElementById('_$options->{name}__suggest').style.display = 'none';
+			off_suggest_$options->{name} ();
 			return blockEvent (event);
 		}
 
@@ -692,32 +692,18 @@ EOH
 			suggest_clicked = 0;
 		}
 		else {
-			var SUGGEST_DELAY = 500;
 			clearTimeout(typingIdleTimer);
-			typingIdleTimer = setTimeout('lookup_$options->{name}()', SUGGEST_DELAY);
+			var that = \$(this);
+			typingIdleTimer = setTimeout (
+				function () {
+					lookup_suggest_field (that);
+				}
+				, 500
+			);
 		}
-EOH
-
-	my $id = '' . $options;
-
-	$_REQUEST {__script} .= qq{;
-		var typingIdleTimer;
-		function lookup_$options->{name}() {
-			var suggest_label = document.getElementById ('$id');
-			var f = suggest_label.form;
-			var e = f.elements;
-			e ['_$options->{name}__label'].value = '';
-			e ['_$options->{name}__id'].value = '';
-			var s = e ['__suggest'];
-			\$('#_$options->{name}__suggest').hide ();
-			if (suggest_label.value.length > 0) {
-				s.value = '$options->{name}';
-				e ['_$options->{name}__label'].value = suggest_label.value;
-				f.submit ();
-				s.value = '';
-			}
-		};
 	};
+
+	my $id = "_$options->{name}__root";
 
 	$options -> {attributes} -> {id}           = $id;
 	$options -> {attributes} -> {autocomplete} = 'off';
@@ -3974,7 +3960,7 @@ sub draw_suggest_page {
 			
 				var a = $a;
 								
-				var s = parent.document.getElementById ('_$_REQUEST{__suggest}__suggest');
+				var s = parent.current_suggest_select;
 				if (!s) {
 					s = parent.document.getElementById ('$_REQUEST{__suggest}__suggest');
 					var t = parent.document.getElementById ('$_REQUEST{__suggest}');
@@ -3984,14 +3970,6 @@ sub draw_suggest_page {
 						left : 0,
 						width : t.offsetWidth,
 						position : 'relative'
-					});
-				} else {
-					var t = s.form.elements ['_$_REQUEST{__suggest}'];
-					var o = parent.\$(t).offset (parent.\$(parent.document.body));
-				
-					parent.\$(s).css ({
-						top   : o.top + 18,
-						width : t.offsetWidth
 					});
 				}
 				
