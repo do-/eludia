@@ -106,11 +106,12 @@ sub fix___query {
 	
 		my $content = {filters => {}, columns => {}};
 		
-		my $n = 1;
+		my %n;
 
 		foreach my $o (@_ORDER) {
 		
-			$content -> {columns} -> {$o -> {order}} = {ord => $n ++};
+			my $parent = exists $o -> {parent} ? $o -> {parent} -> {order} : '';
+			$content -> {columns} -> {$o -> {order}} = {ord => ++ $n {$parent}};
 
 			foreach my $filter (@{$o -> {filters}}) {
 			
@@ -330,7 +331,7 @@ sub do_update___queries {
 
 	foreach my $key (keys %_REQUEST) {
 	
-		$key =~ /^_(.+)_desc$/ or next;
+		$key =~ /^_(.+)_ord$/ or next;
 		
 		my $order = $1;
 		
@@ -402,10 +403,29 @@ sub draw_item_of___queries {
 
 	$_REQUEST {__form_checkboxes_custom} = '';
 
-	foreach my $o (@_ORDER) {
-	
+	my $cells_cnt = [];
+	my $composite_columns_cnt = -1;
+
+	for (my $i = 0; $i < @_ORDER; $i++) {
+
+		my $o = @_ORDER -> [$i];
+
+		$o -> {order} ||= $o -> {no_order};
+
 		next
-			if $o -> {__hidden};
+			if $o -> {__hidden} || $o -> {hidden};
+
+		if (@_ORDER -> [$i - 1] -> {colspan}) {
+
+			push @$cells_cnt, @_ORDER -> [$i - 1] -> {colspan};
+
+			if ($cells_cnt -> [$composite_columns_cnt + 1]) {
+
+				$composite_columns_cnt++;
+
+			}
+
+		}
 
 		my @f;
 
@@ -420,7 +440,29 @@ sub draw_item_of___queries {
 
 		} else {
 
-			@f = (
+			if ($cells_cnt -> [$composite_columns_cnt]) {
+
+				for (my $j = 0; $j <= $composite_columns_cnt; $j++) {
+					push @f, {
+						type => 'static',
+						label_off => 1,
+					};
+				}
+
+				unless ($o -> {colspan}) {
+					for (my $i = 0; $i < @$cells_cnt; $i++) {
+						$cells_cnt -> [$i]--;
+					}
+				}
+
+				while ($cells_cnt -> [$composite_columns_cnt] == 0 && $composite_columns_cnt >= 0) {
+					$composite_columns_cnt--;
+					pop @$cells_cnt;
+				}
+
+			}
+
+			push @f, (
 				{
 					label 		=> $o -> {title} || $o -> {label},
 					type  		=> 'hgroup',
@@ -439,7 +481,7 @@ sub draw_item_of___queries {
 							size  => 2,
 							name  => $o -> {order} . '_sort',
 							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {sort},
-							off   => $o -> {no_column},
+							off   => $o -> {no_column} || $o -> {no_order},
 						},
 						{
 							name  => $o -> {order} . '_desc',
@@ -447,7 +489,7 @@ sub draw_item_of___queries {
 							values => [{id => 1, label => 'убывание'}],
 							empty => 'возрастание',
 							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {desc},
-							off   => $o -> {no_column},
+							off   => $o -> {no_column} || $o -> {no_order},
 						},
 						{
 							type  => 'static',
