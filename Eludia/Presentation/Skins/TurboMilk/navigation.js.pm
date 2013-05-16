@@ -3883,6 +3883,10 @@ dTree.prototype.getCookie = function(cookieName) {
 
 };
 
+function enableDropDownList(name, enable){
+	document.getElementById(name).value = 0;
+	document.getElementById(name).disabled = !enable;
+}
 
 
 // [Cookie] Returns ids of open nodes as a string
