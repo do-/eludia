@@ -2608,6 +2608,64 @@ sub draw_select_cell {
 
 	$data -> {onChange} ||= $options -> {onChange};
 
+	if (defined $data -> {other}) {
+
+		$data -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
+		$data -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+
+		$data -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+
+		my ($confirm_js_if, $confirm_js_else) = $data -> {no_confirm} ? ('', '')
+			: (
+				"if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {",
+				"} else {this.selectedIndex = 0}"
+			);
+
+		$data -> {onChange} .= <<EOJS;
+
+			if (this.options[this.selectedIndex].value == -1) {
+
+				$confirm_js_if
+
+				if (\$.browser.webkit || \$.browser.safari)
+					\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
+
+				var dialog_width = $data->{other}->{width};
+				var dialog_height = $data->{other}->{height};
+
+				try {
+
+					var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$data->{other}->{href}&select=$data->{name}&salt=' + Math.random(), parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+
+					focus ();
+
+					if (result.result == 'ok') {
+
+						setSelectOption (this, result.id, result.label);
+
+					} else {
+
+						this.selectedIndex = 0;
+
+					}
+
+				} catch (e) {
+
+					this.selectedIndex = 0;
+
+				}
+
+				if (\$.browser.webkit || \$.browser.safari)
+					\$.unblockUI ();
+
+				$confirm_js_else
+
+			}
+
+EOJS
+
+	}
+
 	my $html = qq {<td $attributes><select
 		name="$$data{name}"
 		onChange="is_dirty=true; $$data{onChange}"
@@ -2623,10 +2681,20 @@ sub draw_select_cell {
 
 	$html .= '>';
 
-	$html .= qq {<option value="0">$$data{empty}</option>\n} if defined $data -> {empty};
+	if (defined $data -> {empty}) {
+		$html .= qq {<option value="0">$$data{empty}</option>\n};
+	}
+
+	if (defined $data -> {other} && $data -> {other} -> {on_top}) {
+		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
+	}
 
 	foreach my $value (@{$data -> {values}}) {
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
+	}
+
+	if (defined $data -> {other} && !$data -> {other} -> {on_top}) {
+		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
 	}
 
 	$html .= qq {</select></td>};
