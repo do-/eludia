@@ -556,12 +556,13 @@ sub draw_redirect_page {
 
 	$options -> {$_} ||= '' foreach qw (before window_options);
 
+	my $salt = $options -> {no_check_url}? "''" : "'&salt=' + Math.random ()";
 	return <<EOH;
 <html>
 	<script for=window event=onload>
 		$options->{before};
 		var w = window;
-		w.open ('$options->{url}&salt=' + Math.random (), $target, '$options->{window_options}');
+		w.open ('$options->{url}' + $salt, $target, '$options->{window_options}');
 	</script>
 	<body>
 	</body>
