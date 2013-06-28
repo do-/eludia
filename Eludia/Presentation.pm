@@ -1453,26 +1453,47 @@ sub draw_cells {
 
 	if ($conf -> {core_store_table_order} && !$_REQUEST {__no_order}) {
 
-		for (my $i = 0; $i < @_COLUMNS; $i ++) {
-		
-			my $h = $_COLUMNS [$i];
-	
-			ref $h eq HASH or next;
-			
-			last if $i >= @{$_ [0]};
-			
-			$_ [0] [$i] = {label => $_ [0] [$i]} unless ref $_ [0] [$i] eq HASH; 
+		my $max_ord = 0;
+		foreach my $i (@_COLUMNS) {
+			$max_ord = $i -> {ord} if $max_ord < $i -> {ord} && !$i -> {hidden};
+		}
+		my $power = length ($max_ord) - 1;
+		my @__COLUMNS;
+		foreach my $i (@_COLUMNS) {
+			if ($i -> {has_child}) {
+				push @__COLUMNS, {has_child => 1};
+				next;
+			}
+			my $i_power = length ($i -> {ord}) - 1;
+			$i_power = int ($i_power / 3)
+				if $i_power % 3;
+			my $ii = {%$i};
+			$ii -> {ord} *= 1 . (0 x ($power - $i_power))
+				unless $i_power == $power;
+			push @__COLUMNS, $ii;
+		}
 
-			$_ [0] [$i] -> {ord} ||= $_COLUMNS [$i] -> {ord}; 
+		for (my ($i, $j) = 0; $i < @__COLUMNS; $i ++) {
 
-			$_ [0] [$i] -> {hidden} ||= $_COLUMNS [$i] -> {hidden}; 
-	
+			my $h = $__COLUMNS [$i];
+
+			ref $h eq HASH && !$h -> {has_child} or next;
+
+			last if $j >= @{$_ [0]};
+			
+			$_ [0] [$j] = {label => $_ [0] [$j]} unless ref $_ [0] [$j] eq HASH;
+
+			$_ [0] [$j] -> {ord} ||= $__COLUMNS [$i] -> {ord};
+
+			$_ [0] [$j] -> {hidden} ||= $__COLUMNS [$i] -> {hidden};
+
+			$j++;
 		}
 
 	}
 
 	my @cells = order_cells (@{$_[0]});
-	
+
 	$options -> {target} ||= '_self';
 	
 	foreach my $cell (@cells) {
@@ -1604,7 +1625,7 @@ sub order_cells {
 	my @result = ();
 	
 	foreach my $c (@_) {
-		next if ref $c eq HASH && ($c -> {hidden} || $c -> {ord} < 0);
+		next if ref $c eq HASH && $c -> {hidden};
 		my $cell = ref $c eq HASH ? {%$c} : {label => $c};
 		$ord {$cell -> {ord}} ++ if $cell -> {ord};
 		push @result, $cell;
@@ -1624,13 +1645,13 @@ sub order_cells {
 		else {
 		
 			$n++ while $ord {$n};
-						
+
 			$result [$i] -> {ord}  = $n;
 		
 		}
 	
 	}
-	
+
 	return sort {$a -> {ord} <=> $b -> {ord}} @result;
 
 }
@@ -1640,7 +1661,7 @@ sub order_cells {
 sub draw_table_header_row {
 
 	my ($cells) = @_;
-		
+
 	return $_SKIN -> draw_table_header_row ($rows, [map {
 		ref $_ eq ARRAY ? (join map {draw_table_header_cell ($_)} order_cells (@$_)) : draw_table_header_cell ($_)
 	} order_cells (@$cells)]);
@@ -1697,6 +1718,101 @@ sub draw_table_header_cell {
 
 }
 
+###############################################################################
+
+sub get_table_header_field {
+
+	my ($headers) = @_;
+
+	my $result_headers = [];
+
+	if (ref $headers -> [0] eq ARRAY) {
+
+		my $result_headers = get_composite_table_headers ({headers => $headers});
+
+		return $result_headers -> {headers};
+	}
+
+	for (my $i = 0; $i < @$headers; $i++) {
+
+		push @$result_headers, $headers -> [$i];
+
+	}
+
+	return $result_headers;
+}
+
+
+###############################################################################
+
+sub get_composite_table_headers {
+
+	my ($options) = @_;
+
+	my $headers = $options -> {headers};
+	my $i       = $options -> {i} + 0;
+	my $first   = $options -> {first} + 0;
+	my $colspan = $options -> {colspan} || 65535;
+
+	my $result_headers = [];
+
+	my $cnt = @{$headers -> [$i]};
+
+	my $f = $first;
+	my $colspan1 = $colspan;
+
+	my $j = $f;
+
+	for (; $j < $cnt && $j < $colspan + $f && $colspan1 > 0; $j++) {
+
+		push @$result_headers, $headers -> [$i] -> [$j];
+
+		if ($headers -> [$i] -> [$j] -> {colspan}) {
+
+			my $result = get_composite_table_headers ({
+				headers => $headers,
+				i       => $i + 1,
+				first   => $first,
+				colspan => $headers -> [$i] -> [$j] -> {colspan},
+			});
+
+			for (my $k = 0; $k < @{$result -> {headers}}; $k++) {
+
+				$result -> {headers} -> [$k] -> {parent} = $headers -> [$i] -> [$j];
+				$headers -> [$i] -> [$j] -> {has_child} ++;
+
+				push @$result_headers, $result -> {headers} -> [$k];
+			}
+
+			$first += $result -> {count};
+
+			$colspan1 -= $headers -> [$i] -> [$j] -> {colspan};
+
+		}
+
+	}
+
+	return {headers => $result_headers, count => ($j - $f)};
+
+}
+
+################################################################################
+
+sub is_not_possible_order {
+
+	my ($headers) = @_;
+
+	foreach my $h (@{$headers}) {
+		if (ref $h eq ARRAY) {
+			return 1 if is_not_possible_order ($h);
+		} else {
+			return 1 unless ref $h eq HASH && ($h -> {order} || $h -> {no_order});
+		}
+	}
+
+	return 0;
+
+}
 ################################################################################
 
 sub draw_table {
@@ -1710,67 +1826,85 @@ sub draw_table {
 	}
 
 	my ($tr_callback, $list, $options) = @_;
-	
+
 	__profile_in ('draw.table' => {label => exists $options -> {title} && $options -> {title} ? $options -> {title} -> {label} : $options -> {name}});
-	
+
+	my $__edit_query = 0;
+	foreach my $top_toolbar_field (@{$options -> {top_toolbar}}) {
+		$__edit_query = 1 if ($top_toolbar_field eq HASH && exists $top_toolbar_field -> {href} && ($top_toolbar_field -> {href} eq HASH && $top_toolbar_field -> {href} -> {__edit_query} == 1 || $top_toolbar_field -> {href} =~ /\b__edit_query\b/));
+	}
+
+	$options -> {no_order} = !$__edit_query && is_not_possible_order ($headers) unless (exists $options -> {no_order});
+
 	if ($options -> {no_order}) {
 		$_REQUEST {__no_order} = 1;
 	} else {
 		delete $_REQUEST {__no_order};
 	}
-	
+
+	my @old_headers = @$headers;
+
 	if ($conf -> {core_store_table_order} && !$options -> {no_order}) {
 
 		our @_ORDER = ();
 		our @_COLUMNS = ();
 		our %_ORDER = ();
-	
+
 		my @header_cells = ();
 		
 		my $is_exists_subheaders;
 		my $cells_cnt;
 
+		$headers = get_table_header_field ($headers);
+
 		foreach my $h (@$headers) {
-		
-			if (ref $h eq ARRAY) {
-				$is_exists_subheaders = 1; last;
-			};
-			 
+
 			ref $h eq HASH or ($h = {label => $h});
-			 
+
 			push @header_cells, $h;
-			
+
 			$cells_cnt += 1
-				if $h -> {order} && exists $_QUERY -> {content} -> {columns} -> {$h -> {order}} && $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord};
-				
-		}		
-	
-		if (!$is_exists_subheaders) {
+				if (($h -> {order} || $h -> {no_order})
+					&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}
+					&& $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord});
 
-			my $i = 0;
-			foreach my $h (@header_cells) {
-			
-				$i ++;
-		
-				push @_COLUMNS, $h;
-			
-				if ($_REQUEST {id___query} && !$_REQUEST {__edit__query}) {
-					$h -> {ord}    = $cells_cnt && $h -> {order} && exists $_QUERY -> {content} -> {columns} -> {$h -> {order}} ? $_QUERY -> {content} -> {columns} -> {$h -> {order}} -> {ord} : $i;
-					$h -> {__hidden} = $h -> {hidden};
-					$h -> {hidden} = 1 if $h -> {ord} == 0;
+		}
+
+		foreach my $h (@header_cells) {
+
+			push @_COLUMNS, $h;
+
+			if ($_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
+				if ($cells_cnt && ($h -> {order} || $h -> {no_order}) && exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}) {
+					if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} == 0) {
+						my $p = $h -> {parent};
+						while ($p -> {label}) {
+							$p -> {colspan} --;
+							$p -> {hidden} = 1 if $p -> {colspan} == 0;
+							$p = $p -> {parent};
+						}
+					} else {
+						$h -> {ord} = ($h -> {parent} -> {ord}) * 1000 + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
+					}
 				}
-				
-				$h -> {filters} = [];
 
-				push @_ORDER, $h;
+				$h -> {__hidden} = $h -> {hidden};
 
-				$_ORDER {$h -> {order}} = $h
-					if $h -> {order};
-		
+				$h -> {parent} -> {ord} ||= 0 if (defined $h -> {parent} -> {order} || defined $h -> {parent} -> {no_order});
+
+				$h -> {hidden}   = 1 if ($h -> {ord} == 0 || defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0);
 			}
+
+			$h -> {filters} = [];
+
+			push @_ORDER, $h;
+
+			$_ORDER {$h -> {order} || $h -> {no_order}} = $h
+				if ($h -> {order} || $h -> {no_order});
+
 		}
 	}
-		
+
 	$options -> {type}   ||= $_REQUEST{type};
 	
 	$options -> {action} ||= 'add';
@@ -1846,8 +1980,10 @@ sub draw_table {
 
 	}
 
+	$headers = \@old_headers;
+
 	$options -> {header}   = draw_table_header ($headers) if @$headers > 0 && $_REQUEST {xls};
-	
+
 	$_REQUEST {__get_ids} = {};
 	
 	$_SKIN -> start_table ($options) if $_SKIN -> {options} -> {no_buffering};
