@@ -3609,7 +3609,11 @@ dTree.prototype.s = function(id) {
 
 	if (!this.config.useSelection) return;
 
+	for (var i = 0; i < this.aNodes.length; i++) this.aNodes[i]._is = 0;
+
 	var cn = this.aNodes[id];
+	
+	cn._is = 1;
 
 	if (cn._hc && !this.config.folderLinks) return;
 
@@ -3622,6 +3626,8 @@ dTree.prototype.s = function(id) {
 			if (eOld) eOld.className = "node";
 
 		}
+
+		$("a.nodeSel").attr ("class", "node");
 
 		eNew = document.getElementById("s" + this.obj + id);
 
@@ -3642,13 +3648,15 @@ dTree.prototype.s = function(id) {
 dTree.prototype.o = function(id) {
 
 	var cn = this.aNodes[id];
-	
+
 	if (this._active && !cn._io && cn._hac == 0) {
-	
+
 		document.body.style.cursor = 'wait';
-	
-		nope (this._href + '&__parent=' + cn.id, 'invisible');
-	
+		
+		var href = this._href + '&__parent=' + cn.id;
+
+		nope (href, 'invisible');
+
 	}
 	else {
 
@@ -3808,8 +3816,6 @@ dTree.prototype.nodeStatus = function(status, id, bottom) {
 	eDiv.style.display = (status) ? 'block': 'none';
 
 	document.body.style.cursor = 'default';
-
-//	_content_iframe.body.style.cursor = 'default';
 
 };
 

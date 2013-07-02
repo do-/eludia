@@ -6,8 +6,10 @@ sub draw_form_field_static {
 		
 	if ($options -> {add_hidden}) {
 		$options -> {hidden_name}  ||= '_' . $options -> {name};
-		$options -> {hidden_value} ||= $data    -> {$options -> {name}};
-		$options -> {hidden_value} ||= $options -> {value};
+		$options -> {hidden_value} = $data -> {$options -> {name}}
+			if !defined $options -> {hidden_value} && defined $data -> {$options -> {name}};
+		$options -> {hidden_value} = $options -> {value}
+			if !defined $options -> {hidden_value} && defined $options -> {value};
 		$options -> {hidden_value} =~ s/\"/\&quot\;/gsm; #";
 	}	
 
