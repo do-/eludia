@@ -1830,7 +1830,12 @@ sub draw_table {
 
 	__profile_in ('draw.table' => {label => exists $options -> {title} && $options -> {title} ? $options -> {title} -> {label} : $options -> {name}});
 
-	$options -> {no_order} = is_not_possible_order ($headers) unless (exists $options -> {no_order});
+	my $__edit_query = 0;
+	foreach my $top_toolbar_field (@{$options -> {top_toolbar}}) {
+		$__edit_query = 1 if ($top_toolbar_field eq HASH && exists $top_toolbar_field -> {href} && ($top_toolbar_field -> {href} eq HASH && $top_toolbar_field -> {href} -> {__edit_query} == 1 || $top_toolbar_field -> {href} =~ /\b__edit_query\b/));
+	}
+
+	$options -> {no_order} = !$__edit_query && is_not_possible_order ($headers) unless (exists $options -> {no_order});
 
 	if ($options -> {no_order}) {
 		$_REQUEST {__no_order} = 1;
@@ -1883,7 +1888,11 @@ sub draw_table {
 						$h -> {ord} = ($h -> {parent} -> {ord}) * 1000 + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
 					}
 				}
+
 				$h -> {__hidden} = $h -> {hidden};
+
+				$h -> {parent} -> {ord} ||= 0 if (defined $h -> {parent} -> {order} || defined $h -> {parent} -> {no_order});
+
 				$h -> {hidden}   = 1 if ($h -> {ord} == 0 || defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0);
 			}
 
