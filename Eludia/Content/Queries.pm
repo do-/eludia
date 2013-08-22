@@ -551,7 +551,7 @@ sub draw_item_of___queries {
 					href	=> "javaScript:document.form.action.value='drop_filters'; document.form.fireEvent('onsubmit'); document.form.submit()",
 					target	=> 'invisible',
 					keep_esc	=> 1,
-					off		=> $_REQUEST {__read_only},
+					off		=> $_REQUEST {__read_only} || !keys %{$_QUERY -> {content} -> {filters}},
 				},
 			],
 			no_edit => $_REQUEST {'__page_content'} -> {no_del},
