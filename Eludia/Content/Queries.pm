@@ -376,12 +376,19 @@ sub do_update___queries {
 
 	foreach my $filter (keys (%{$content -> {filters}})) {
 
+		next
+			if $filter =~ /^.+\[\]$/;
+
 		unless ($esc_href =~ s/([\?\&]$filter=)[^\&]*/$1$content->{filters}->{$filter}/) {
+
 			$esc_href .= "&$filter=$content->{filters}->{$filter}";
+
 		};
+
 	} 
+
 	$esc_href =~ s/\bstart=\d+\&?//;
-	
+
 	redirect ($esc_href, {kind => 'js'});
 
 }
