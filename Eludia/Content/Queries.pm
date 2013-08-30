@@ -415,16 +415,16 @@ sub draw_item_of___queries {
 
 	for (my $i = 0; $i < @_ORDER; $i++) {
 
-		my $o = @_ORDER -> [$i];
+		my $o = $_ORDER [$i];
 
 		$o -> {order} ||= $o -> {no_order};
 
 		next
 			if $o -> {__hidden} || $o -> {hidden};
 
-		if (@_ORDER -> [$i - 1] -> {colspan}) {
+		if ($_ORDER [$i - 1] -> {colspan}) {
 
-			push @$cells_cnt, @_ORDER -> [$i - 1] -> {colspan};
+			push @$cells_cnt, $_ORDER [$i - 1] -> {colspan};
 
 			if ($cells_cnt -> [$composite_columns_cnt + 1]) {
 
