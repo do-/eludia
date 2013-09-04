@@ -719,7 +719,7 @@ sub draw_form {
 
 			if (!exists $item -> {keep_esc}) {
 						
-				$item -> {href} =~ s{\&?__last_query_string=\d*}{}gsm;
+				$item -> {href} =~ s{\&?__last_query_string=-?\d*}{}gsm;
 				$item -> {href} .= "&__last_query_string=$_REQUEST{__last_last_query_string}";
 
 				$item -> {href} =~ s{\&?__last_scrollable_table_row=\d*}{}gsm;
