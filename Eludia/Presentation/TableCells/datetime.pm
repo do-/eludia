@@ -10,24 +10,26 @@ sub draw_datetime_cell {
 		return draw_input_cell ($options, $data);
 	}
 
-	unless ($options -> {format}) {
+	$data -> {format} ||= $options -> {format};
 
-		if ($options -> {no_time}) {
-			$options -> {format}  ||= $i18n -> {_format_d} || '%d.%m.%Y';
-			$options -> {attributes} -> {size}    ||= 11;
+	unless ($data -> {format}) {
+
+		if ($data -> {no_time}) {
+			$data -> {format} ||= $i18n -> {_format_d} || '%d.%m.%Y';
+			$data -> {attributes} -> {size} ||= 11;
 		}
 		else {
-			$options -> {format}  ||= $i18n -> {_format_dt} || '%d.%m.%Y %k:%M';
-			$options -> {attributes} -> {size}    ||= 16;
+			$data -> {format} ||= $i18n -> {_format_dt} || '%d.%m.%Y %k:%M';
+			$data -> {attributes} -> {size} ||= 16;
 		}
 
 	}
 
-	$options -> {attributes} -> {id} = 'input' . $data -> {name};
+	$data -> {attributes} -> {id} = 'input' . $data -> {name};
 
-	$options -> {attributes} -> {class} ||= $data -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';
+	$data -> {attributes} -> {class} ||= $data -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';
 
-	$options -> {attributes} -> {value}   ||= $data -> {label};
+	$data -> {attributes} -> {value} ||= $data -> {label};
 
 	_adjust_row_cell_style ($data, $options);
 

@@ -2578,7 +2578,7 @@ sub draw_datetime_cell {
 
 	local $options -> {name} = $data -> {name};
 
-	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($options) . "</td>";
+	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "</td>";
 
 }
 
