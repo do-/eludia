@@ -376,12 +376,19 @@ sub do_update___queries {
 
 	foreach my $filter (keys (%{$content -> {filters}})) {
 
+		next
+			if $filter =~ /^.+\[\]$/;
+
 		unless ($esc_href =~ s/([\?\&]$filter=)[^\&]*/$1$content->{filters}->{$filter}/) {
+
 			$esc_href .= "&$filter=$content->{filters}->{$filter}";
+
 		};
+
 	} 
+
 	$esc_href =~ s/\bstart=\d+\&?//;
-	
+
 	redirect ($esc_href, {kind => 'js'});
 
 }
@@ -408,16 +415,16 @@ sub draw_item_of___queries {
 
 	for (my $i = 0; $i < @_ORDER; $i++) {
 
-		my $o = @_ORDER -> [$i];
+		my $o = $_ORDER [$i];
 
 		$o -> {order} ||= $o -> {no_order};
 
 		next
 			if $o -> {__hidden} || $o -> {hidden};
 
-		if (@_ORDER -> [$i - 1] -> {colspan}) {
+		if ($_ORDER [$i - 1] -> {colspan}) {
 
-			push @$cells_cnt, @_ORDER -> [$i - 1] -> {colspan};
+			push @$cells_cnt, $_ORDER [$i - 1] -> {colspan};
 
 			if ($cells_cnt -> [$composite_columns_cnt + 1]) {
 
@@ -551,7 +558,7 @@ sub draw_item_of___queries {
 					href	=> "javaScript:document.form.action.value='drop_filters'; document.form.fireEvent('onsubmit'); document.form.submit()",
 					target	=> 'invisible',
 					keep_esc	=> 1,
-					off		=> $_REQUEST {__read_only},
+					off		=> $_REQUEST {__read_only} || !keys %{$_QUERY -> {content} -> {filters}},
 				},
 			],
 			no_edit => $_REQUEST {'__page_content'} -> {no_del},
