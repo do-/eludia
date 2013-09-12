@@ -1786,7 +1786,7 @@ sub draw_toolbar_input_tree {
 				background-color:white;
 				position:absolute;
 				display:none;
-				z-index:100;
+				z-index:200;
 				width:$options->{width}px;
 				height:$options->{height}px;
 				left:500;
