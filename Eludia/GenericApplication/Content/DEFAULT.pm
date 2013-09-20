@@ -166,6 +166,14 @@ sub do_update_DEFAULT { # запись карточки
 
 	my $columns = $model_update -> get_columns ($type);
 
+	if ($_REQUEST {_file_clear_flag_for_file} && !$_REQUEST {_file}) {
+
+		sql_delete_file ({path_column => 'file_path', table => $type});
+
+		sql_do ("UPDATE $type SET file_name = NULL, file_size = NULL, file_type = NULL, file_path = NULL WHERE id = ?", $_REQUEST {id});
+
+	}
+
 	my $options = {
 		name => 'file',
 		dir => 'upload/images',
@@ -175,11 +183,11 @@ sub do_update_DEFAULT { # запись карточки
 		type_column => 'file_type',
 		path_column => 'file_path',
 	};
-	
+
 	$options -> {body_column} = 'file_body' if $columns -> {file_body};
-	
+
 	sql_upload_file ($options);
-			
+
 	sql_upload_files ({name => 'file'});
 
 	my @fields = ();

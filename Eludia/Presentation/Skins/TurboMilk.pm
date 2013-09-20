@@ -775,22 +775,51 @@ sub draw_form_field_file {
 			form_field_file.replaceWith(form_field_file.clone(true));
 		}
 EOH
-	return <<EOH;
-	<span id='form_field_file_head_$options->{name}'>
-		<input
-			type="file"
-			name="_$$options{name}"
-			size=$$options{size}
-			$attributes
-			onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
-			onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
-			onChange="is_dirty=true; $$options{onChange}"
-			onKeyDown="if (event.keyCode != 9) return false;"
-			tabindex=-1
-		/>
-		<a href="javaScript:form_field_file_clear('form_field_file_head_$options->{name}');void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>
-	</span>
+
+	my $html = "<span id='form_field_file_head_$options->{name}'>";
+
+	$$options{value} ||= $data -> {file_name};
+
+	if ($options -> {can_edit}) {
+		if ($options -> {value} || ($data -> {file_name} && $data -> {file_path})) {
+			$_REQUEST {__on_load} .= "\$('#file_input_$$options{name}').hide();";
+		} else {
+			$_REQUEST {__on_load} .= "\$('#file_name_$$options{name}').hide();";
+		}
+
+		$html .= <<EOH;
+			<span id='file_name_$$options{name}'>
+				$$options{value}
+				<img id='img_$$options{name}' height=12 src='$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}' width=12 border=0 align=absmiddle'
+					onclick="javascript: \$('#file_input_$$options{name}').show(); \$('#file_name_$$options{name}').hide(); \$('#_file_clear_flag_for_$$options{name}').val(1);">
+			</span>
+			<span id='file_input_$$options{name}'>
 EOH
+	}
+
+	$html .= <<EOH;
+			<input
+				type="file"
+				name="_$$options{name}"
+				size=$$options{size}
+				$attributes
+				onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
+				onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
+				onChange="is_dirty=true; $$options{onChange}"
+				onKeyDown="if (event.keyCode != 9) return false;"
+				tabindex=-1
+			/>
+			<a href="javaScript:form_field_file_clear('form_field_file_head_$options->{name}');void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>
+EOH
+
+	$html .= <<EOH if ($options -> {can_edit});
+		</span>
+		<input type='hidden' name='_file_clear_flag_for_$$options{name}' id='_file_clear_flag_for_$$options{name}'>
+EOH
+
+	$html .= "</span>";
+
+	return $html;
 
 }
 
