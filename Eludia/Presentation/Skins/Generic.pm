@@ -19,10 +19,15 @@ sub draw_gantt_bars {}
 
 sub __submit_href {
 
-	my ($_SKIN, $name) = @_;
+	my ($_SKIN, $name, $options) = @_;
 
-	"javaScript:var f = document.$name; f.fireEvent ('onsubmit'); f.submit()";
+	my $js = "javaScript:var f = document.$name;";
 
+	map {$js .= "f.elements['$_'].value='$$options{$_}';" } (keys %$options);
+
+	$js .= "f.fireEvent ('onsubmit'); f.submit()";
+
+	return $js;
 }
 
 ################################################################################
