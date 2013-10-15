@@ -2454,8 +2454,8 @@ sub draw_error_page {
 	
 	$_REQUEST {error} ||= $_[1];
 		
-	if ($_REQUEST {error} =~ s{^\#(\w+)\#\:}{}) {
-	
+	if ($_REQUEST {error} =~ s{^\#([\w-]+)\#\:}{}) {
+
 		$page -> {error_field} = $1;
 	
 		($_REQUEST {error}) = split / at/sm, $_REQUEST {error}; 
