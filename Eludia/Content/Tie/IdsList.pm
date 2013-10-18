@@ -48,7 +48,7 @@ sub _check {
 
 	my $st = $self -> {db} -> prepare_cached ($sql, {}, 3);
 	
-	$st -> execute (@{$self -> {params}});
+	&{"$self->{package}::sql_safe_execute"} ($st, $self -> {params}, self -> {db});
 	
 	while (my @a = $st -> fetchrow_array) {
 		foreach my $id (@a) {

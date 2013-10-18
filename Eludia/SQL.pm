@@ -1130,6 +1130,64 @@ sub sql_select_ids {
 
 }
 
+
+################################################################################
+
+sub sql_safe_execute {
+
+	my ($st, $params, $dbh) = @_;
+
+	if (!$preconf -> {core_log_sql_fail}) {
+		$st -> execute (@$params);
+		return;
+	}
+
+	eval {$st -> execute (@$params)};
+
+	my $error = $@;
+	$error or return;
+
+	$dbh ||= $db;
+
+	my $now = time;
+	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($now);
+	$year += 1900;
+	$mon ++;
+
+	my $id_error = sprintf ("[%s%04d-%02d-%02d %02d:%02d:%02d:%03d %s%s]"
+		, ($preconf->{about_name}? "$preconf->{about_name} " : "")
+		, $year
+		, $mon
+		, $mday
+		, $hour
+		, $min
+		, $sec
+		, int (1000 * ($now - int $now))
+		, "process=$$"
+		, ($_REQUEST {_id_log}? " id_log=$_REQUEST{_id_log}" : "")
+	);
+
+	my $delimiter = "\n" . ('=' x 80) . "\n";
+	my $error_details = $delimiter . "$id_error sql error:\n" . $dbh -> {Statement} . "\n";
+	if (@$params) {
+		$error_details .= "params:\n(" . join (", ", @$params) . ")\n";
+	}
+
+	print STDERR $error_details;
+
+	if ($preconf -> {mail} -> {admin}) {
+
+		my $now = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', Today_and_Now ());
+		send_mail ({
+			to      => $preconf -> {mail} -> {admin},
+			subject => "$id_error sql query FAILED",
+			text    => $error_details . $error,
+		});
+	}
+
+	die "#_#:" . $id_error . "\n" . $i18n -> {internal_error};
+}
+
 ################################################################################
 
 sub sql_upload_files {

@@ -131,9 +131,11 @@ sub sql_do {
 			:
 			$st -> bind_param ($i + 1, $params [$i]);
 	}
-	$st -> execute ();
-	$st -> finish;	
-	
+
+	sql_safe_execute ($st);
+
+	$st -> finish ();
+
 	if ($conf -> {'db_temporality'} && $_REQUEST {_id_log}) {
 			
 		my $insert_sql = '';
@@ -223,7 +225,7 @@ sub sql_select_all_cnt {
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
-	$st -> execute (@params);
+	sql_safe_execute ($st, \@params);
 	
 	return $st if $options -> {no_buffering};
 	
@@ -247,7 +249,7 @@ sub sql_select_all_cnt {
 		$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 		$st = $db -> prepare ($sql);
-		$st -> execute (@params);
+		sql_safe_execute ($st, \@params);
 
 		if ($sql =~ /GROUP\s+BY/i) {
 			$cnt++ while $st -> fetch ();
@@ -292,7 +294,7 @@ sub sql_select_all {
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
-	$st -> execute (@params);
+	sql_safe_execute ($st, \@params);
 
 	return $st if $options -> {no_buffering};
 
@@ -339,7 +341,7 @@ sub sql_select_all_hash {
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
-	$st -> execute (@params);
+	sql_safe_execute ($st, \@params);
 	
 	while (my $r = $st -> fetchrow_hashref) {
 		$result -> {$r -> {id}} = $r;
@@ -363,7 +365,7 @@ sub sql_select_col {
 
 	my @result = ();
 	my $st = $db -> prepare ($sql);
-	$st -> execute (@params);
+	sql_safe_execute ($st, \@params);
 	while (my @r = $st -> fetchrow_array ()) {
 		push @result, @r;
 	}
@@ -408,7 +410,7 @@ sub sql_select_hash {
 	$sql_or_table_name .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql_or_table_name);
-	$st -> execute (@params);
+	sql_safe_execute ($st, \@params);
 	my $result = $st -> fetchrow_hashref ();
 	$st -> finish;
 
@@ -426,7 +428,7 @@ sub sql_select_array {
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
-	$st -> execute (@params);
+	sql_safe_execute ($st, \@params);
 	my @result = $st -> fetchrow_array ();
 	$st -> finish;
 
@@ -463,7 +465,7 @@ sub sql_select_scalar {
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
-	$st -> execute (@params);
+	sql_safe_execute ($st, \@params);
 	my @result = $st -> fetchrow_array ();
 	$st -> finish;
 	
@@ -827,7 +829,7 @@ sub sql_select_loop {
 	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}, process=$$";
 
 	my $st = $db -> prepare ($sql);
-	$st -> execute (@params);
+	sql_safe_execute ($st, \@params);
 	
 	local $i;
 	while ($i = $st -> fetchrow_hashref) {
