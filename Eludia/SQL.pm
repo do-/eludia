@@ -1137,11 +1137,6 @@ sub sql_safe_execute {
 
 	my ($st, $params, $dbh) = @_;
 
-	if (!$preconf -> {core_log_sql_fail}) {
-		$st -> execute (@$params);
-		return;
-	}
-
 	eval {$st -> execute (@$params)};
 
 	my $error = $@;
