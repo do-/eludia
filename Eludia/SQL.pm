@@ -1168,7 +1168,12 @@ sub sql_safe_execute {
 		$error_details .= "params:\n(" . join (", ", @$params) . ")\n";
 	}
 
-	print STDERR $error_details;
+	my $is_lock_error = 0 + ($error =~ /failed:\s*(dead)?lock/i);
+	if ($is_lock_error) {
+		$error_details .= sql_engine_status ();
+	}
+
+	print STDERR $error_details . $error;
 
 	if ($preconf -> {mail} -> {admin}) {
 
