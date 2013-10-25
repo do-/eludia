@@ -46,6 +46,7 @@
 	wrong_min                => 'Invalid minutes',
 	wrong_sec                => 'Invalid seconds',
 	empty_file               => q[Cannot upload empty file],
+	internal_error           => "An internal error occurred.\nPlease contact technical support.",
 	authorization		 => 'Authorization',
 	login			 => 'login',
 	execute_logon		 => 'enter',	
