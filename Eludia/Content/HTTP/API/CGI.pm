@@ -77,6 +77,16 @@ sub args {
 
 ################################################################################
 
+sub post_data {
+
+	my $self = shift;
+	
+	return $self -> {Q} -> param ('POSTDATA');
+	
+}
+
+################################################################################
+
 sub header_in {
 
 	my $self = shift;
@@ -324,6 +334,7 @@ sub new {
 
 			open (STDIN, "$fn");
 			$self -> {Q} = new CGI ();
+			$self -> {Q} -> parse_params ($ENV {QUERY_STRING});
 			open (STDIN, $^X);
 			unlink $fn;
 
@@ -336,6 +347,7 @@ sub new {
 	else {		# conventional CGI STDIN/STDOUT environment
 	
 		$self -> {Q} = new CGI;
+		$self -> {Q} -> parse_params ($ENV {QUERY_STRING});
 
 		foreach ($self -> {Q} -> http) {
 

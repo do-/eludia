@@ -78,6 +78,16 @@ sub args {
 
 ################################################################################
 
+sub post_data {
+
+	my $self = shift;
+	
+	return $self -> {Q} -> param ('POSTDATA');
+	
+}
+
+################################################################################
+
 sub header_in {
 
 	my $self = shift;
@@ -355,6 +365,7 @@ sub new {
 
 			open (STDIN, "$fn");
 			$self -> {Q} = new CGI::Simple ();
+			$self -> {Q} -> parse_query_string ();
 			open (STDIN, $^X);
 			unlink $fn;
 
@@ -367,6 +378,7 @@ sub new {
 	else {								# conventional CGI STDIN/STDOUT environment
 	
 		$self -> {Q} = new CGI::Simple;
+		$self -> {Q} -> parse_query_string ();
 		
 		$ENV {HTTP_COOKIE}  =~ /\w/;				# PerlEx specific
 		$ENV {HTTP_ACCEPT_ENCODING} =~ /\w/;			# PerlEx specific
