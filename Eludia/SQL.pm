@@ -1137,11 +1137,6 @@ sub sql_safe_execute {
 
 	my ($st, $params, $dbh) = @_;
 
-	if (!$preconf -> {core_log_sql_fail}) {
-		$st -> execute (@$params);
-		return;
-	}
-
 	eval {$st -> execute (@$params)};
 
 	my $error = $@;
@@ -1173,7 +1168,15 @@ sub sql_safe_execute {
 		$error_details .= "params:\n(" . join (", ", @$params) . ")\n";
 	}
 
-	print STDERR $error_details;
+	my $subdelimiter = "\n" . ('-' x 80) . "\n";
+	my $is_lock_error = 0 + ($error =~ /failed:\s*(dead)?lock/i);
+	if ($is_lock_error) {
+		$error_details .= $subdelimiter . sql_engine_status ();
+	}
+
+	$error = $error_details . $subdelimiter . $error;
+
+	print STDERR $error;
 
 	if ($preconf -> {mail} -> {admin}) {
 
@@ -1181,7 +1184,7 @@ sub sql_safe_execute {
 		send_mail ({
 			to      => $preconf -> {mail} -> {admin},
 			subject => "$id_error sql query FAILED",
-			text    => $error_details . $error,
+			text    => $error,
 		});
 	}
 
