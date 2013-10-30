@@ -53,6 +53,25 @@ sub sql_version {
 
 ################################################################################
 
+sub sql_engine_status {
+
+	return ''
+		unless $preconf -> {db_default_storage_engine} =~ /innodb/i;
+
+	my ($type, $name, $status);
+
+	eval {
+		my $st = $db -> prepare ('SHOW ENGINE INNODB STATUS');
+		$st -> execute ();
+		($type, $name, $status) = $st -> fetchrow_array ();
+		$st -> finish ();
+	};
+
+	return $status;
+}
+
+################################################################################
+
 sub sql_do_refresh_sessions {
 
 	my $timeout = sql_sessions_timeout_in_minutes ();
