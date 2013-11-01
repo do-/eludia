@@ -2514,6 +2514,11 @@ sub draw_text_cell {
 
 	}
 
+	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
+	my $fgcolor_style = "style=color:$fgcolor;"  if $fgcolor;
+
+	$data -> {attributes} -> {style} = join ';', $data -> {attributes} -> {style}, "color:$fgcolor"  if $fgcolor;
+
 	my $html = dump_tag ('td', $data -> {attributes});
 
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
@@ -2530,7 +2535,7 @@ sub draw_text_cell {
 
 	if ($data -> {href}) {
 
-		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
+		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()" $fgcolor_style>};
 
 	}
 
