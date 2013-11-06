@@ -1149,8 +1149,7 @@ sub sql_safe_execute {
 	$year += 1900;
 	$mon ++;
 
-	my $id_error = sprintf ("[%s%04d-%02d-%02d %02d:%02d:%02d:%03d %s%s]"
-		, ($preconf->{about_name}? "$preconf->{about_name} " : "")
+	my $id_error = sprintf ("[$_NEW_PACKAGE %04d-%02d-%02d %02d:%02d:%02d:%03d %s%s]"
 		, $year
 		, $mon
 		, $mday
