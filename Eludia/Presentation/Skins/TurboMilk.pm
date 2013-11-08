@@ -2543,6 +2543,10 @@ sub draw_text_cell {
 
 	}
 
+	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
+
+	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor;
+
 	my $html = dump_tag ('td', $data -> {attributes});
 
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
@@ -2559,7 +2563,16 @@ sub draw_text_cell {
 
 	if ($data -> {href}) {
 
-		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
+		$a_attributes_html = dump_attributes ({
+			id      => $data -> {a_id},
+			class   => $data -> {a_class},
+			target  => $data -> {target},
+			href    => $data -> {href},
+			onFocus => "blur()",
+			style   => $fgcolor ? "color:$fgcolor;" : undef,
+		});
+
+		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a $a_attributes_html $$data{onclick}>};
 
 	}
 
