@@ -1,3 +1,4 @@
+use POSIX qw(setuid setgid getuid getgid);
 no warnings;
 
 ################################################################################
@@ -24,19 +25,74 @@ sub lock_file_name () {
 
 	$fn =~ y{\\/.\: }{___};
 	
-	return $^O eq 'MSWin32' ? "C:/$fn.lock" : "/var/run/$fn.lock";
+	return $^O eq 'MSWin32' ? "C:/$fn.lock" : "$fn.lock";
 
 }
 
 ################################################################################
 
-sub initialize_offline_script_execution () {
+sub initialize_offline_script_execution {
+
+	my $user = $_[0];
+
+	my $current_uid = getuid();
+
+	my $new_uid,$new_gid;
+	
+	if ($user && $^O ne 'MSWin32') {
+	
+		my ($pwName, $pwCode, $pwUid, $pwGid, $pwQuota, $pwComment, $pwGcos, $pwHome, $pwLogprog) = getpwnam($user);
+		
+		if ($pwUid != $current_uid && $current_uid != 0) {
+		
+			warn "Can't change uid to '$user', cos you are not root user.";
+			exit;
+		
+		} 
+		
+		$new_uid = $pwUid;
+		$new_gid = $pwGid;
+	
+	}
+
+	our $lock_file_dir = $^O eq 'MSWin32' ? "" : "/var/run/eludia_" . ($user ? $user : getpwuid($<)) . "/";
 
 	$ENV {ELUDIA_SILENT} or warn "\n" . offline_script_log_signature . " starting...\n";
 
 	eval 'require LockFile::Simple';
 	
 	if ($LockFile::Simple::VERSION) {
+
+		if ($^O ne 'MSWin32') {
+		
+			unless ( -d $lock_file_dir ) {
+			
+				unless ( mkdir $lock_file_dir ) {
+				
+					warn "Can't create directory $lock_file_dir. Quit.\n";
+					
+					exit;
+				
+				}
+
+			}
+
+			if ( $new_uid ) {
+			
+				unless (chown ($new_uid, $new_gid, $lock_file_dir)) {
+				
+					warn "Can't change owner to $lock_file_dir. Quit.\n";
+					
+					exit;
+				
+				}
+				
+				setgid ($new_gid);
+				setuid ($new_uid);
+			
+			}
+		
+		}
 
 		our $LOCK_MANAGER = LockFile::Simple -> make (
 		
@@ -46,10 +102,10 @@ sub initialize_offline_script_execution () {
 			
 		);
 		
-		my $fn = lock_file_name;
+		my $fn = $lock_file_dir . lock_file_name;
 
 		unless ($LOCK_MANAGER -> trylock ($fn)) {
-		
+
 			warn offline_script_log_signature . "Can't acquire a lock $fn. Quit.\n";
 
 			exit;
@@ -66,7 +122,7 @@ sub finalize_offline_script_execution () {
 
 	if ($LOCK_MANAGER) {
 	
-		$LOCK_MANAGER -> unlock (lock_file_name);
+		$LOCK_MANAGER -> unlock ($lock_file_dir . lock_file_name);
 	
 	}
 
@@ -149,8 +205,6 @@ BEGIN {
 
 	$| = 1;
 	
-	initialize_offline_script_execution;	
-	
 	my $code = perl_section_from config_file;
 	
 	eval $code; die "$code\n\n$@" if $@;
@@ -158,6 +212,10 @@ BEGIN {
 	my $package = __PACKAGE__;
 
 	$package = $Eludia::last_loaded_package if $package eq 'main';
+
+	my $user = ${$package . '::preconf'}->{user};
+
+	initialize_offline_script_execution ($user);
 
 	$code = qq {
 	
