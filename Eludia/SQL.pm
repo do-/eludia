@@ -1140,17 +1140,32 @@ sub sql_safe_execute {
 	eval {$st -> execute (@$params)};
 
 	my $error = $@;
+
 	$error or return;
 
 	$dbh ||= $db;
+
+	my $sql = $dbh -> {Statement};
+
+	if (!sql_error_is_duplicate ($error)) {
+
+		sql_error_handler ($error, $sql, $params);
+
+	};
+
+	die "#_#:" . sql_error_id () . "\n" . $i18n -> {internal_error};
+}
+
+################################################################################
+
+sub sql_error_id {
 
 	my $now = time;
 	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($now);
 	$year += 1900;
 	$mon ++;
 
-	my $id_error = sprintf ("[%s%04d-%02d-%02d %02d:%02d:%02d:%03d %s%s]"
-		, ($preconf->{about_name}? "$preconf->{about_name} " : "")
+	return sprintf ("[$_NEW_PACKAGE %04d-%02d-%02d %02d:%02d:%02d:%03d %s%s]"
 		, $year
 		, $mon
 		, $mday
@@ -1161,9 +1176,18 @@ sub sql_safe_execute {
 		, "process=$$"
 		, ($_REQUEST {_id_log}? " id_log=$_REQUEST{_id_log}" : "")
 	);
+}
+
+################################################################################
+
+sub sql_error_handler {
+
+	my ($error, $sql, $params) = @_;
+
+	my $id_error = sql_error_id ();
 
 	my $delimiter = "\n" . ('=' x 80) . "\n";
-	my $error_details = $delimiter . "$id_error sql error:\n" . $dbh -> {Statement} . "\n";
+	my $error_details = $delimiter . "$id_error sql error:\n" . $sql . "\n";
 	if (@$params) {
 		$error_details .= "params:\n(" . join (", ", @$params) . ")\n";
 	}
@@ -1187,8 +1211,62 @@ sub sql_safe_execute {
 			text    => $error,
 		});
 	}
+}
 
-	die "#_#:" . $id_error . "\n" . $i18n -> {internal_error};
+################################################################################
+
+sub sql_error_is_duplicate {
+
+	my ($error)  = @_;
+
+	$error =~ s/\(0x\w{7}\)/\(0x0000000\)/g;
+	$error =~ s/\s+//g;
+
+	my $error_md5 = Digest::MD5::md5_hex ($error);
+
+	checksum_lock ('sql_error_repeats');
+	$preconf -> {_} -> {checksums} -> {sql_error} ||= {};
+	if ($preconf -> {_} -> {checksums} -> {sql_error} -> {$error_md5}) {
+		$preconf -> {_} -> {checksums} -> {sql_error} -> {$error_md5} -> {hits}++;
+		checksum_unlock ('sql_error_repeats');
+		return 1;
+	}
+
+	my $max_size = $preconf -> {db_sql_error_duplicate_cache_size} || 10;
+
+	my $time = time;
+
+	my $delta = $max_size - keys %{$preconf -> {_} -> {checksums} -> {sql_error}};
+
+	if ($delta <= 0) {
+
+		foreach my $i (values %{$preconf -> {_} -> {checksums} -> {sql_error}}) {
+
+			$i -> {freq} = $i -> {hits} / (($time - $i -> {time}) || 1)
+
+		}
+
+		my @keys = sort {$a -> {freq} <=> $b -> {freq}} values %{$preconf -> {_} -> {checksums} -> {sql_error}};
+
+		foreach my $i (@keys [0 .. $delta + 1]) {
+
+			delete $preconf -> {_} -> {checksums} -> {sql_error} -> {$i};
+
+		}
+
+	}
+
+	$preconf -> {_} -> {checksums} -> {sql_error} -> {$error_md5} = {
+
+		time  => $time,
+
+		hits  => 1,
+
+	};
+
+	checksum_unlock ('sql_error_repeats');
+
+	return 0;
 }
 
 ################################################################################
