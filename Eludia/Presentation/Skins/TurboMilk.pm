@@ -2327,7 +2327,7 @@ sub draw_dump_button {
 	return {
 		label  => 'Dump',
 		name   => '_dump',
-		href   => "javascript:_dumper_href('&__dump=1', '_blank');",
+		href   => "javascript:_dumper_href('&__dump=1', 'invisible');",
 		side   => 'right_items',
 		no_off => 1,
 
@@ -3168,7 +3168,8 @@ EOJS
 
 		$_REQUEST {__on_mouseover}    .= "window.parent.subsets_are_visible = 0; subsets_are_visible = 0;";
 
-		$_REQUEST {__on_mousedown}    .= "if (window.event.button == 2 && window.event.ctrlKey && !window.event.altKey && !window.event.shiftKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
+		$_REQUEST {__on_mousedown}    .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) activate_link (window.location.href + '&__dump=1', 'invisible');\n" if $preconf -> {core_show_dump};
+		$_REQUEST {__on_contextmenu}  .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) return blockEvent();\n" if $preconf -> {core_show_dump};
 
 		$_REQUEST {__on_keydown}      .= " handle_basic_navigation_keys ();";
 
