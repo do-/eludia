@@ -151,7 +151,7 @@ sub sql_do {
 			$st -> bind_param ($i + 1, $params [$i]);
 	}
 
-	sql_safe_execute ($st);
+	sql_safe_execute ($st, \@params);
 
 	$st -> finish ();
 
