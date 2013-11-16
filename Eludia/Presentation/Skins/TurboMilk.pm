@@ -3861,18 +3861,7 @@ sub dialog_open {
 
 	my ($_SKIN, $arg, $options) = @_;
 
-	foreach (qw(status resizable help)) {$options -> {$_} ||= 'no'}
-
-#	$options -> {dialogHeight} ||= '150px';
-#	$options -> {dialogWidth}  ||= '600px';
-	delete $options -> {dialogHeight};
-	delete $options -> {dialogWidth};
-
-
-	my $url = $ENV{SCRIPT_URI} . '/i/_skins/TurboMilk/dialog.html?';
-	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
-
-	return "javaScript:dialog_open_$options->{id}.href = dialog_open_$options->{id}.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, ''); dialog_open_$options->{id}.href += '&_salt=' + Math.random (); dialog_open_$options->{id}.parent = window; var result=window.showModalDialog('$url' + Math.random (), dialog_open_$options->{id}, '$o' + ';dialogWidth=' + dialog_open_$options->{id}_width + 'px;dialogHeight=' + dialog_open_$options->{id}_height + 'px');document.body.style.cursor='default';void(0);";
+	return "javaScript: $arg->{before} dialog_open ($options->{id}); $arg->{after} void(0);";
 
 }
 
