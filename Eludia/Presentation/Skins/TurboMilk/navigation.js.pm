@@ -281,7 +281,7 @@ function _dumper_href (tail, target) {
 
 	var href = content_iframe ? content_iframe.contentWindow.location.href : body_iframe.location.href;
 
-	nope (href + tail, target, 'statusbar,scrollbars');
+	activate_link (href + tail, target);
 
 }
 
