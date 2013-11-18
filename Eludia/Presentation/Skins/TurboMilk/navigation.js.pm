@@ -3887,6 +3887,20 @@ function enableDropDownList(name, enable){
 	document.getElementById(name).disabled = !enable;
 }
 
+function toggle_field (name, is_visible, is_clear_field) {
+
+	is_visible = is_visible > 0;
+
+	var field = $('[name=_' + name + ']');
+	var td_field = field.closest('td');
+
+	td_field.toggle(is_visible);
+	td_field.prev().toggle(is_visible);
+
+	if (is_clear_field) {
+		field.val(0);
+	}
+}
 
 // [Cookie] Returns ids of open nodes as a string
 
