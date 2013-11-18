@@ -22,11 +22,13 @@ sub draw__boot {
 
 	$_REQUEST {__on_load} = <<EOJS;
 	
-		
-		if (navigator.appVersion.indexOf ("MSIE") != -1 && navigator.appVersion.indexOf ("Opera") == -1) {
+		if (/Trident\\/\\d\\./i.test(navigator.userAgent)) {
 
 			var version=0;
 			var temp = navigator.appVersion.split ("MSIE");
+			if (temp.length == 0) { // ie11
+				temp = navigator.appVersion.split ("rv:");
+			}
 			version  = parseFloat (temp [1]);
 
 			if (version < 5.5) {

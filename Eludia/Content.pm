@@ -398,6 +398,12 @@ sub user_agent {
 	
 	}
 
+	if ($src =~ /Trident\/\d\..*rv:(\d+\.\d+)/) {
+
+		$result -> {msie} = $1;
+
+	}
+
 	if ($src =~ /Windows NT (\d+\.\d+)/) {
 	
 		$result -> {nt} = $1;

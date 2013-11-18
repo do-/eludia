@@ -3308,7 +3308,7 @@ EOJS
 
 	} . $_REQUEST {__head_links};
 
-	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE (\d+)/ && $1 > 9) {
+	if (user_agent () -> {msie} > 9) {
 		$_REQUEST {__head_links}  = qq|<meta http-equiv="X-UA-Compatible" content="IE=5">\n| . $_REQUEST {__head_links};
 	}
 
