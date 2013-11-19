@@ -32,18 +32,20 @@ sub draw_form_field_multi_select {
 		}
 EOJS
 
-	my $url = dialog_open ({
-		href  => $options -> {href} . '&multi_select=1',
-		title => $label,
-	}) . <<EOJS;
-		if (typeof result !== 'undefined' && result.result == 'ok') {
+
+
+	my $after = <<EOJS;
+		if (result.result == 'ok') {
 			document.getElementById ('ms_$options').innerHTML=result.label;
 			var el_ids = document.getElementsByName ('_$options->{name}') [0];
 			var oldIds = el_ids.value;
 			el_ids.value = result.ids;
 EOJS
-	$url .= "if (!stringSetsEqual (oldIds, result.ids)) {$options->{onChange}}"
+
+	$after .= "if (!stringSetsEqual (oldIds, result.ids)) {$options->{onChange}}"
 		if $hasOnChangeEvent;
+
+
 
 	my $js_detail;
 
@@ -52,11 +54,17 @@ EOJS
 		$options -> {value_src} = "document.getElementsByName ('_$options->{name}') [0].value";
 		$js_detail = js_detail ($options);
 
-		$url .= $js_detail;
+		$after .= $js_detail;
 
 	}
 
-	$url .= "} void (0);";
+	$after .= "} void (0);";
+
+	my $url = dialog_open ({
+		href	=> $options -> {href} . '&multi_select=1',
+		title	=> $label,
+		after   => $after,
+	});
 
 	$url =~ s/^javascript://i;
 
