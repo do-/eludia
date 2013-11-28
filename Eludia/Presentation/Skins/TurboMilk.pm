@@ -3168,8 +3168,8 @@ EOJS
 
 		$_REQUEST {__on_mouseover}    .= "window.parent.subsets_are_visible = 0; subsets_are_visible = 0;";
 
-		$_REQUEST {__on_mousedown}    .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) activate_link (window.location.href + '&__dump=1', 'invisible');\n" if $preconf -> {core_show_dump};
-		$_REQUEST {__on_contextmenu}  .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) return blockEvent();\n" if $preconf -> {core_show_dump};
+		$_REQUEST {__on_mousedown}    .= "if (window.event.button == 2 && window.event.ctrlKey && !window.event.altKey && !window.event.shiftKey) activate_link (window.location.href + '&__dump=1', 'invisible');\n" if $preconf -> {core_show_dump};
+		$_REQUEST {__on_contextmenu}  .= "if (window.event.ctrlKey && !window.event.altKey && !window.event.shiftKey) return blockEvent()\n" if $preconf -> {core_show_dump};
 
 		$_REQUEST {__on_keydown}      .= " handle_basic_navigation_keys ();";
 
