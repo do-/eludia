@@ -485,6 +485,9 @@ sub check_href {
 
 	}
 
+	$url .= "&__salt=$_REQUEST{__salt}"
+		if $h {action};
+
 	if ($h {action} eq 'download' || $h {xls}) {
 		$options -> {no_wait_cursor} = 1;
 	}

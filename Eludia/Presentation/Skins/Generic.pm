@@ -465,12 +465,25 @@ EOJ
 
 	if ($preconf -> {core_dbl_click_protection}) {
 		$_REQUEST{__script} .= <<EOJ;
+			var __salt = Math.random ();
 			var salt_elements = window.parent.document.getElementsByName('__salt');
 			try {
 				for (var i=0; i < salt_elements.length; i ++) {
-					salt_elements [i].value = Math.random ();
+					salt_elements [i].value = __salt;
 				}
 			} catch (e) {}
+
+			var anchor_elements = window.parent.document.getElementsByTagName('a');
+
+			for (var i=0; i < anchor_elements.length; i ++) {
+
+				try {
+					if (anchor_elements [i].href.indexOf('__salt=') != -1)
+						anchor_elements [i].href = anchor_elements [i].href.replace (/__salt=([\\d\\.]+)/, '__salt=' + __salt);
+				} catch (e) {}
+
+			}
+
 EOJ
 
 	}
