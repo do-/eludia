@@ -1221,11 +1221,16 @@ sub draw_form_field_string_voc {
 
 			var dialog_width = $options->{other}->{width};
 			var dialog_height = $options->{other}->{height};
-
+EOJS
+		if ($options -> {other} -> {no_param}) {
+			$options -> {other} -> {onChange} .= "var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}' + '&select=$options->{name}&$options->{other}->{cgi_tail}', parent:window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');"		
+		} else {
+		$options -> {other} -> {onChange} .= <<EOJS;
 			var q = encode1251(document.getElementById('${options}_label').value);
-
 			var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&$options->{other}->{param}=' + q + '&select=$options->{name}&$options->{other}->{cgi_tail}', parent:window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-
+EOJS
+		}
+		$options -> {other} -> {onChange} .= <<EOJS;
 			focus ();
 
 			if (result.result == 'ok') {
