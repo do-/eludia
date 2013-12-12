@@ -713,11 +713,12 @@ sub adjust_last_query_string {
 	$_REQUEST {sid} && !$_REQUEST {__top} && !$_REQUEST {__only_menu} && $_REQUEST {type} ne '__query' or return;
 					
 	my $_PREVIOUS_REQUEST = parse_query_string_to_hashref ($r -> headers_in -> {Referer});
-	
-	$_PREVIOUS_REQUEST -> {action} 
-		or $_REQUEST {__last_query_string} != $_PREVIOUS_REQUEST -> {__last_query_string} 
-		or $_REQUEST {type}                ne $_PREVIOUS_REQUEST -> {type} 
-		or $_REQUEST {__next_query_string} 
+
+	$_PREVIOUS_REQUEST -> {action}
+		or $_REQUEST {__last_query_string} != $_PREVIOUS_REQUEST -> {__last_query_string}
+		or $_REQUEST {type}                ne $_PREVIOUS_REQUEST -> {type}
+		or $_REQUEST {__next_query_string}
+		or $_PREVIOUS_REQUEST -> {__edit}
 		or return;
 
 	my ($method, $url) = split /\s+/, $r -> the_request;
