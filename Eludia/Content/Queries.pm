@@ -562,6 +562,7 @@ sub draw_item_of___queries {
 				},
 			],
 			no_edit => $_REQUEST {'__page_content'} -> {no_del},
+			confirm_ok => undef,
 		}, 
 		
 		$data, 
