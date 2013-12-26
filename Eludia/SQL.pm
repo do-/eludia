@@ -1219,7 +1219,8 @@ sub sql_error_is_duplicate {
 
 	my ($error)  = @_;
 
-	$error =~ s/\(0x\w{7}\)/\(0x0000000\)/g;
+	$error =~ s/\(0x\w{7}\)/\(HxHHHHHHH\)/g;
+	$error =~ s/\d+/digits/g;
 	$error =~ s/\s+//g;
 
 	my $error_md5 = Digest::MD5::md5_hex ($error);
