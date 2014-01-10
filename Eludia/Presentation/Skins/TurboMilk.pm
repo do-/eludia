@@ -2080,7 +2080,7 @@ sub draw_toolbar_input_checkbox {
 		$html .= ': ';
 	}
 
-	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
+	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} $$options{disabled} name="$$options{name}" onClick="$$options{onClick}">};
 
 	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
 
