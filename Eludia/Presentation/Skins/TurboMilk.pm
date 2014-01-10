@@ -2080,7 +2080,7 @@ sub draw_toolbar_input_checkbox {
 		$html .= ': ';
 	}
 
-	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
+	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} $$options{disabled} name="$$options{name}" onClick="$$options{onClick}">};
 
 	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
 
@@ -2744,6 +2744,7 @@ sub draw_input_cell {
 	if ($data -> {autocomplete}) {
 		my $id = '' . $data -> {autocomplete};
 		$_REQUEST {__script} .= qq{;
+			var _suggest_timer$data->{name} = null;
 			function off_suggest$data->{name} () {
 				var s = document.getElementById ('$data->{name}__suggest');
 				s.style.display = 'none';
@@ -2752,9 +2753,9 @@ sub draw_input_cell {
 		};
 
 		$attr_input -> {autocomplete} = 'off';
-		$attr_input -> {onBlur}     .= qq{; _suggest_timer$data->{name} = setTimeout (off_suggest$data->{name}, 100);};
-		$attr_input -> {onChange}   .= "$data->{autocomplete}{after};";
-		$attr_input -> {onKeyDown}  .= <<EOH;
+		$attr_input -> {onBlur}      .= qq{; _suggest_timer$data->{name} = setTimeout (off_suggest$data->{name}, 100);};
+		$attr_input -> {onChange}    .= "$data->{autocomplete}{after};";
+		$attr_input -> {onKeyDown}   .= <<EOH;
 			var s = getElementById('$data->{name}__suggest');
 
 			if (window.event.keyCode == 40 && s.style.display == 'block') {
@@ -2779,10 +2780,12 @@ EOH
 		$data -> {autocomplete} -> {after} .= ';try {tableSlider.cell_on ();} catch(e) {};';
 		$data -> {autocomplete} -> {lines} ||= 10;
 
+		my $option;
+		if ($data -> {value} && $data -> {label}) {
+			$option = "<option selected value=$data->{value}>$data->{label}</option>";
+		}
+
 		$autocomplete = qq {
-			<script>
-				var _suggest_timer$data->{name} = null;
-			</script>
 			<select
 				id="$data->{name}__suggest"
 				name="$data->{name}__suggest"
@@ -2802,7 +2805,7 @@ EOH
 				onBlur="this.style.display='none'; $data->{autocomplete}{after}"
 				onDblClick="set_suggest_result (this, '$$data{name}'); $data->{autocomplete}{after}"
 				onKeyPress="set_suggest_result (this, '$$data{name}'); $data->{autocomplete}{after}; suggest_clicked = 1"
-			>
+			>$option
 			</select>
 		};
 	}
