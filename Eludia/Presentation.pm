@@ -3026,7 +3026,9 @@ sub setup_skin {
 			$_REQUEST {__skin} = 'Dumper';
 
 		}
-		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON') {
+		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON'
+			|| $r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest')
+		{
 
 			$_REQUEST {__skin} = 'JSONDumper';
 
