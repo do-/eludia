@@ -2463,8 +2463,9 @@ sub draw_error_page {
 	}
 	else {
 
-		Carp::cluck ($_REQUEST {error});
+		notify_about_error ($_REQUEST {error});
 
+		$_REQUEST {error} = "[" . internal_error_id () . "]\n" . $i18n -> {internal_error};
 	}
 
 	$_REQUEST {error} = $i18n -> {$_REQUEST {error}}

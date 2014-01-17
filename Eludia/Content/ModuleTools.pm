@@ -510,7 +510,12 @@ sub require_fresh {
 
 		eval qq{# line 1 "$file_name"\n $src \n; 1;\n};
 
-		die "$module_name: " . $@ if $@;
+		if ($@) {
+
+			$@ =~ s/eval \'.*\'/eval \' \'/s;
+
+			die "$module_name: " . $@;
+		}
 
 		$INC_FRESH {$module_name} = $INC_FRESH_BY_PATH {$file_name} = $mtime;
 

@@ -10,6 +10,7 @@ use Eludia::Content::Validators;
 use Eludia::Content::Templates;
 use Eludia::Content::Tie;
 use Eludia::Content::Profiling;
+use Eludia::Content::Watchdog;
 
 #############################################################################
 

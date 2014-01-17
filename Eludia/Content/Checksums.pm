@@ -189,7 +189,7 @@ BEGIN {
 			last_update 
 			model_scripts 
 			updates_scripts
-			sql_error_repeats
+			internal_error_repeats
 			
 		)) { 
 		
