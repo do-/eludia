@@ -2461,11 +2461,15 @@ sub draw_error_page {
 		($_REQUEST {error}) = split / at/sm, $_REQUEST {error}; 
 	
 	}
-	else {
+	elsif ($_REQUEST {error} =~ /called at/) {
 
 		notify_about_error ($_REQUEST {error});
 
 		$_REQUEST {error} = "[" . internal_error_id () . "]\n" . $i18n -> {internal_error};
+	} else {
+
+		Carp::cluck ($_REQUEST {error});
+
 	}
 
 	$_REQUEST {error} = $i18n -> {$_REQUEST {error}}
