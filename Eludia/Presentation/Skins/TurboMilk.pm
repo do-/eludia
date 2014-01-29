@@ -2691,7 +2691,8 @@ sub draw_input_cell {
 	my $autocomplete;
 	my $attr_input = {
 		onBlur => 'q_is_focused = false; left_right_blocked = false;',
-		onKeyDown => 'tabOnEnter();'
+		onKeyDown => 'tabOnEnter();',
+		class  => $data -> {mandatory} ? "table-mandatory-inputs" : undef,
 	};
 
 	if ($data -> {autocomplete}) {
