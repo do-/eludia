@@ -179,7 +179,7 @@ sub check___query {
 		
 	}
 	
-	our $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => , $_REQUEST {id___query});
+	our $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id___query});
 	
 	if ($_QUERY -> {label}) {
 	
