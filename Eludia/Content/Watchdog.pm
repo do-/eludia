@@ -49,6 +49,10 @@ sub notify_about_error {
 			text    => $error_details . $options -> {error},
 		});
 	}
+
+	my $msg = $options -> {error_kind} eq 'sql lock error'? $i18n -> {try_again} : $i18n -> {internal_error};
+
+	return "[" . internal_error_id () . "]\n" . $msg;
 }
 
 ################################################################################

@@ -1147,9 +1147,7 @@ sub sql_safe_execute {
 
 	my $sql = $dbh -> {Statement};
 
-	notify_about_error ({error => $error, sql => $sql, params => $params});
-
-	die "#_#:[" . internal_error_id () . "]\n" . $i18n -> {internal_error};
+	die "#_#:" . notify_about_error ({error => $error, sql => $sql, params => $params});
 }
 
 ################################################################################
