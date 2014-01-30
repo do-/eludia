@@ -14,13 +14,13 @@ sub draw_form_field_static {
 	}	
 
 
-	if ($options -> {href} && (!$_REQUEST {__edit} || $options -> {active_href}) && !$_REQUEST {xls} && !$_REQUEST {__only_field}) {
+	if ($options -> {href} && ((!$_REQUEST {__edit} && !$_REQUEST {__edit_table})  || $options -> {active_href}) && !$_REQUEST {xls} && !$_REQUEST {__only_field}) {
 		check_href ($options);
 	}
 	else {
 		delete $options -> {href};
 	}
-	
+
 	my $value = defined $options -> {value} ? $options -> {value} : $data -> {$options -> {name}};
 
 	my $static_value = '';

@@ -21,12 +21,16 @@ sub draw__boot {
 	}
 
 	$_REQUEST {__on_load} = <<EOJS;
-	
-		
-		if (navigator.appVersion.indexOf ("MSIE") != -1 && navigator.appVersion.indexOf ("Opera") == -1) {
+		var is_opera = navigator.appVersion.indexOf ("Opera") > -1;
+		var is_old_ie = navigator.appVersion.indexOf ("MSIE") > -1 && !is_opera;
+		var is_new_ie = /Trident\\/\\d\\./i.test(navigator.userAgent);
+		if (is_new_ie || is_old_ie) {
 
 			var version=0;
 			var temp = navigator.appVersion.split ("MSIE");
+			if (temp.length == 0) { // ie11
+				temp = navigator.appVersion.split ("rv:");
+			}
 			version  = parseFloat (temp [1]);
 
 			if (version < 5.5) {
@@ -44,7 +48,7 @@ sub draw__boot {
 		
 			var brand = navigator.appName;
 		
-			if (navigator.appVersion.indexOf ("Opera") > -1) {
+			if (is_opera) {
 				brand = 'Opera';
 			}
 

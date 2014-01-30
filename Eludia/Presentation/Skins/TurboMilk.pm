@@ -1250,11 +1250,16 @@ sub draw_form_field_string_voc {
 
 			var dialog_width = $options->{other}->{width};
 			var dialog_height = $options->{other}->{height};
-
+EOJS
+		if ($options -> {other} -> {no_param}) {
+			$options -> {other} -> {onChange} .= "var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}' + '&select=$options->{name}&$options->{other}->{cgi_tail}', parent:window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');"		
+		} else {
+		$options -> {other} -> {onChange} .= <<EOJS;
 			var q = encode1251(document.getElementById('${options}_label').value);
-
 			var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&$options->{other}->{param}=' + q + '&select=$options->{name}&$options->{other}->{cgi_tail}', parent:window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-
+EOJS
+		}
+		$options -> {other} -> {onChange} .= <<EOJS;
 			focus ();
 
 			if (result.result == 'ok') {
@@ -2075,7 +2080,7 @@ sub draw_toolbar_input_checkbox {
 		$html .= ': ';
 	}
 
-	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
+	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} $$options{disabled} name="$$options{name}" onClick="$$options{onClick}">};
 
 	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
 
@@ -2327,7 +2332,7 @@ sub draw_dump_button {
 	return {
 		label  => 'Dump',
 		name   => '_dump',
-		href   => "javascript:_dumper_href('&__dump=1', '_blank');",
+		href   => "javascript:_dumper_href('&__dump=1', 'invisible');",
 		side   => 'right_items',
 		no_off => 1,
 
@@ -2543,6 +2548,10 @@ sub draw_text_cell {
 
 	}
 
+	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
+
+	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor;
+
 	my $html = dump_tag ('td', $data -> {attributes});
 
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
@@ -2559,7 +2568,16 @@ sub draw_text_cell {
 
 	if ($data -> {href}) {
 
-		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a id="$$data{a_id}" class=$$data{a_class} $$data{onclick} target="$$data{target}" href="$$data{href}" onFocus="blur()">};
+		$a_attributes_html = dump_attributes ({
+			id      => $data -> {a_id},
+			class   => $data -> {a_class},
+			target  => $data -> {target},
+			href    => $data -> {href},
+			onFocus => "blur()",
+			style   => $fgcolor ? "color:$fgcolor;" : undef,
+		});
+
+		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a $a_attributes_html $$data{onclick}>};
 
 	}
 
@@ -2720,12 +2738,14 @@ sub draw_input_cell {
 	my $autocomplete;
 	my $attr_input = {
 		onBlur => 'q_is_focused = false; left_right_blocked = false;',
-		onKeyDown => 'tabOnEnter();'
+		onKeyDown => 'tabOnEnter();',
+		class  => $data -> {mandatory} ? "table-mandatory-inputs" : undef,
 	};
 
 	if ($data -> {autocomplete}) {
 		my $id = '' . $data -> {autocomplete};
 		$_REQUEST {__script} .= qq{;
+			var _suggest_timer$data->{name} = null;
 			function off_suggest$data->{name} () {
 				var s = document.getElementById ('$data->{name}__suggest');
 				s.style.display = 'none';
@@ -2734,9 +2754,9 @@ sub draw_input_cell {
 		};
 
 		$attr_input -> {autocomplete} = 'off';
-		$attr_input -> {onBlur}     .= qq{; _suggest_timer$data->{name} = setTimeout (off_suggest$data->{name}, 100);};
-		$attr_input -> {onChange}   .= "$data->{autocomplete}{after};";
-		$attr_input -> {onKeyDown}  .= <<EOH;
+		$attr_input -> {onBlur}      .= qq{; _suggest_timer$data->{name} = setTimeout (off_suggest$data->{name}, 100);};
+		$attr_input -> {onChange}    .= "$data->{autocomplete}{after};";
+		$attr_input -> {onKeyDown}   .= <<EOH;
 			var s = getElementById('$data->{name}__suggest');
 
 			if (window.event.keyCode == 40 && s.style.display == 'block') {
@@ -2761,10 +2781,12 @@ EOH
 		$data -> {autocomplete} -> {after} .= ';try {tableSlider.cell_on ();} catch(e) {};';
 		$data -> {autocomplete} -> {lines} ||= 10;
 
+		my $option;
+		if ($data -> {value} && $data -> {label}) {
+			$option = "<option selected value=$data->{value}>$data->{label}</option>";
+		}
+
 		$autocomplete = qq {
-			<script>
-				var _suggest_timer$data->{name} = null;
-			</script>
 			<select
 				id="$data->{name}__suggest"
 				name="$data->{name}__suggest"
@@ -2784,7 +2806,7 @@ EOH
 				onBlur="this.style.display='none'; $data->{autocomplete}{after}"
 				onDblClick="set_suggest_result (this, '$$data{name}'); $data->{autocomplete}{after}"
 				onKeyPress="set_suggest_result (this, '$$data{name}'); $data->{autocomplete}{after}; suggest_clicked = 1"
-			>
+			>$option
 			</select>
 		};
 	}
@@ -2926,7 +2948,7 @@ sub draw_table {
 	$hidden {$_} = $_REQUEST {$_} foreach (
 		'__tree',
 		'__last_scrollable_table_row',
-		grep {/^[^_]/ or /^__get_ids_/} keys %_REQUEST
+		grep {/^[^_]/ or /^__get_ids_/ or $_ eq '__salt'} keys %_REQUEST
 	);
 
 	$hidden {$_} = $options -> {$_} foreach (
@@ -3155,7 +3177,8 @@ EOJS
 
 		$_REQUEST {__on_mouseover}    .= "window.parent.subsets_are_visible = 0; subsets_are_visible = 0;";
 
-		$_REQUEST {__on_mousedown}    .= "if (window.event.button == 2 && window.event.ctrlKey && !window.event.altKey && !window.event.shiftKey) nope (window.location.href + '&__dump=1', '_blank', 'toolbar=no,resizable=yes,scrollbars=yes');\n" if $preconf -> {core_show_dump};
+		$_REQUEST {__on_mousedown}    .= "if (window.event.button == 2 && window.event.ctrlKey && !window.event.altKey && !window.event.shiftKey) activate_link (window.location.href + '&__dump=1', 'invisible');\n" if $preconf -> {core_show_dump};
+		$_REQUEST {__on_contextmenu}  .= "if (window.event.ctrlKey && !window.event.altKey && !window.event.shiftKey) return blockEvent()\n" if $preconf -> {core_show_dump};
 
 		$_REQUEST {__on_keydown}      .= " handle_basic_navigation_keys ();";
 
@@ -3295,7 +3318,7 @@ EOJS
 
 	} . $_REQUEST {__head_links};
 
-	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE (\d+)/ && $1 > 9) {
+	if (user_agent () -> {msie} > 9) {
 		$_REQUEST {__head_links}  = qq|<meta http-equiv="X-UA-Compatible" content="IE=5">\n| . $_REQUEST {__head_links};
 	}
 

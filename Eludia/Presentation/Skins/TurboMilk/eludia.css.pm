@@ -959,6 +959,16 @@ input.form-mandatory-deleted, select.form-mandatory-deleted, textarea.form-manda
 	padding-right: 3px;
 }
 
+input.table-mandatory-inputs {
+	FONT-SIZE: 8pt;
+	COLOR: #000000;
+	background-color: #f4ff00;
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	border: 2px solid black;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
 td.toolbar {
 	FONT-SIZE: 8pt;
 	COLOR: #000000;

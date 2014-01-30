@@ -4,6 +4,8 @@ sub draw_toolbar_input_checkbox {
 	
 	$options -> {checked} = (exists $options -> {checked} ? $options -> {checked} : $_REQUEST {$options -> {name}}) ? 'checked' : '';
 
+	$options -> {disabled} = 'disabled' if $options -> {disabled};
+
 	$options -> {onClick} ||= 'submit();';
 	
 
