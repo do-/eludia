@@ -2738,7 +2738,8 @@ sub draw_input_cell {
 	my $autocomplete;
 	my $attr_input = {
 		onBlur => 'q_is_focused = false; left_right_blocked = false;',
-		onKeyDown => 'tabOnEnter();'
+		onKeyDown => 'tabOnEnter();',
+		class  => $data -> {mandatory} ? "table-mandatory-inputs" : undef,
 	};
 
 	if ($data -> {autocomplete}) {
@@ -2947,7 +2948,7 @@ sub draw_table {
 	$hidden {$_} = $_REQUEST {$_} foreach (
 		'__tree',
 		'__last_scrollable_table_row',
-		grep {/^[^_]/ or /^__get_ids_/} keys %_REQUEST
+		grep {/^[^_]/ or /^__get_ids_/ or $_ eq '__salt'} keys %_REQUEST
 	);
 
 	$hidden {$_} = $options -> {$_} foreach (
