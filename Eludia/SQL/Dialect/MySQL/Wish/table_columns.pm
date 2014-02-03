@@ -201,13 +201,6 @@ sub wish_to_update_demands_for_table_columns {
 	
 	}
 
-	if (exists $old -> {_EXTRA} && exists $new -> {_EXTRA} && $old -> {_EXTRA} eq $new -> {_EXTRA}) {
-	
-		delete $old -> {_EXTRA};
-		delete $new -> {_EXTRA};
-	
-	}
-	
 	__genereate_sql_fragment_for_column ($_) foreach ($old, $new);
 
 }
