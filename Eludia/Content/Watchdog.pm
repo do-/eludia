@@ -40,19 +40,76 @@ sub notify_about_error {
 
 	print STDERR $error_details . $options -> {error};
 
+	my $blame;
+
 	if ($preconf -> {mail} -> {admin}) {
 
-		my $now = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', Today_and_Now ());
+		my %unique_recipients;
+		my @guessed_causers = guess_error_author_mail ($options);
+		foreach (@{$preconf -> {mail} -> {admin}}, map {$_ -> {mail}} @guessed_causers) {
+			$unique_recipients {$_} = 1;
+		}
+
+		my $location = join "\n", map {$_ -> {file} . ':' . $_ -> {line}} @guessed_causers;
+		$error_details = $location . $error_details;
+
+		$blame = !@guessed_causers? ""
+			: "blame " . join (', ', map {$_ -> {label}} @guessed_causers);
+
+		my $subject = "[watchdog][$_NEW_PACKAGE][$options->{error_kind}]";
+
+		!$blame or $subject .= " $blame";
+
 		send_mail ({
-			to      => $preconf -> {mail} -> {admin},
-			subject => "[watchdog][$id_error][$options->{error_kind}]",
+			to      => [keys %unique_recipients],
+			subject => $subject,
 			text    => $error_details . $options -> {error},
 		}) if !internal_error_is_duplicate ($options -> {error});
 	}
 
-	my $msg = $options -> {error_kind} eq 'sql lock error'? $i18n -> {try_again} : $i18n -> {internal_error};
+	my @msg = ("[$id_error]");
 
-	return "[" . internal_error_id () . "]\n" . $msg;
+	!$preconf -> {testing} or !$blame or push @msg, "[$blame]";
+
+	push @msg, ($options -> {error_kind} eq 'sql lock error'?
+		$i18n -> {try_again} : $i18n -> {internal_error});
+
+	return join ("\n", @msg);
+}
+
+################################################################################
+
+sub guess_error_author_mail { # error author = last file commiter
+
+	my ($options) = @_;
+
+	$options -> {error_kind} eq 'sql error'
+		or $options -> {error_kind} eq 'code error'
+		or return ();
+
+	my ($file, $line) = $options -> {error} =~ /called at (\/.*lib\/.*\.pm) line (\d+)/;
+	if (!$file) {
+		($file, $line) = $options -> {error} =~ /require (\/.*lib\/.*\.p[lm]) called at.*line (\d+)/;
+	}
+
+	$file && $line or return ();
+
+	my ($module_root) = split /lib\/\w+\//, $file;
+	my $git_dir = $module_root . '.git';
+
+	local $SIG {'CHLD'} = 'DEFAULT';
+	my $command = "git --git-dir $git_dir --work-tree=$module_root log -1 --format='%aN:%aE' $file";
+
+	my $result = `$command`;
+	if ($?) {
+		warn "guess_error_author_mail '$command'\nerror: $?";
+		return ();
+	}
+	chomp $result;
+
+	my ($label, $mail) = split /:/, $result;
+
+	return ({label => $label, mail => $mail, file => $file, line => $line});
 }
 
 ################################################################################
