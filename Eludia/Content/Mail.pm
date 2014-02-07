@@ -322,9 +322,11 @@ EOT
 sub encode_mail_address {
 
 	my ($s, $options) = @_;
-	
+
 	ref $s or return $s;
-	
+
+	$s -> {label} ||= $s -> {mail};
+
 	return encode_mail_header ($s -> {label}, $options -> {header_charset}) . " <$s->{mail}>";
 
 }
@@ -336,16 +338,12 @@ sub encode_mail_header {
 	my ($s, $charset) = @_;
 
 	$charset ||= 'windows-1251';
-	
-	if ($charset eq 'windows-1251') {
-		$s =~ y{ÀÁÂÃÄÅ¨ÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäå¸æçèéêëìíîïğñòóôõö÷øùúûüışÿ}{áâ÷çäå³öúéêëìíîïğòóôõæèãşûıÿùøüàñÁÂ×ÇÄÅ£ÖÚÉÊËÌÍÎÏĞÒÓÔÕÆÈÃŞÛİßÙØÜÀÑ};
-		$charset = 'koi8-r';
-	}
 
 	$s = '=?' . $charset . '?B?' . encode_base64 ($s) . '?=';
 	$s =~ s{[\n\r]}{}g;
-	return $s;	
-	
+
+	return $s;
+
 }
 
 1;
