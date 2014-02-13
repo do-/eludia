@@ -867,7 +867,7 @@ sub sql_select_loop {
 
 sub sql_lock {
 
-	if ($preconf -> {db_default_storage_engine} eq 'InnoDB' && $db -> {AutoCommit} == 0) {
+	if ($preconf -> {db_default_storage_engine} eq 'InnoDB') {
 
 		sql_do ("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE");
 
