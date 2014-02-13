@@ -10,5 +10,5 @@ columns => {
 },
 
 keys => {
-	ix => 'id_user,type,label',
+	ix => 'id_user,type,label,order_context',
 },
