@@ -141,7 +141,7 @@ sub valuable_modules () {
 		'LockFile::Simple',
 		'Math::FixedPrecision',
 		'MIME::Base64',
-		'Net::SMTP',
+		'Net::SMTPS',
 		'Number::Format',
 		'Time::HiRes',
 		'Storable',

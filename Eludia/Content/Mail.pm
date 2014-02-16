@@ -1,4 +1,4 @@
-use Net::SMTP;
+use Net::SMTPS;
 
 ################################################################################
 
@@ -172,7 +172,7 @@ sub send_mail {
 
 		$repeat--;
 
-		$smtp = Net::SMTP -> new ($preconf -> {mail} -> {host}, %{$preconf -> {mail} -> {options}});
+		$smtp = Net::SMTPS -> new ($preconf -> {mail} -> {host}, %{$preconf -> {mail} -> {options}});
 
 		$smtp or next;
 		
