@@ -47,11 +47,41 @@ sub upload_file_dimensions {
 sub _ok {200};
 
 ################################################################################
+# HACK: CGI::Simple garbles binary PUTDATA
+# http://www.perlmonks.org/?node_id=609632
+*{CGI::Simple::_add_param} = sub {
+  my ( $self, $param, $value, $overwrite ) = @_;
+  return () unless defined $param and defined $value;
+  $param =~ tr/\000//d if $self->{'.globals'}->{'NO_NULL'};
+  @{ $self->{$param} } = () if $overwrite;
+  @{ $self->{$param} } = () unless exists $self->{$param};
+  my @values = ref $value ? @{$value} : ( $value );
+  for my $value ( @values ) {
+    next
+     if $value eq ''
+       and $self->{'.globals'}->{'NO_UNDEF_PARAMS'};
+    $value =~ tr/\000//d if $self->{'.globals'}->{'NO_NULL'};
+
+    # DO NOT DECODE BINARY PUTDATA!
+    $value = Encode::decode( utf8 => $value )
+     if $self->{'.globals'}->{PARAM_UTF8} && $param ne "PUTDATA";
+
+    push @{ $self->{$param} }, $value;
+    unless ( $self->{'.fieldnames'}->{$param} ) {
+      push @{ $self->{'.parameters'} }, $param;
+      $self->{'.fieldnames'}->{$param}++;
+    }
+  }
+  return scalar @values;    # for compatibility with CGI.pm request.t
+}
+
+################################################################################
 
 BEGIN {
 
 	require CGI::Simple;
 	require CGI::Simple::Cookie;
+
 
 	loading_log "CGI::Simple, ok.\n";
 
@@ -245,6 +275,7 @@ sub request_time {
 	shift; return time 
 	
 }
+
 ################################################################################
 
 sub parms {
