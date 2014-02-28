@@ -47,7 +47,7 @@ sub notify_about_error {
 			to      => $preconf -> {mail} -> {admin},
 			subject => "[watchdog][$id_error][$options->{error_kind}]",
 			text    => $error_details . $options -> {error},
-		});
+		}) if !internal_error_is_duplicate ($options -> {error});
 	}
 
 	my $msg = $options -> {error_kind} eq 'sql lock error'? $i18n -> {try_again} : $i18n -> {internal_error};
