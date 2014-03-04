@@ -427,6 +427,7 @@ sub en_unplural {
 
 	my ($s) = @_;
 
+	if ($s =~ /voc_nds$/)               { return $s }
 	if ($s =~ /status$/)                { return $s }
 	if ($s =~ /goods$/)                 { return $s }
 	if ($s =~ s{tives$}{tive})          { return $s }
