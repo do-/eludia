@@ -2465,7 +2465,11 @@ sub draw_error_page {
 		($_REQUEST {error}) = split / at/sm, $_REQUEST {error};
 
 	}
-	else {
+	elsif ($_REQUEST {error} =~ /called at/) {
+
+		$_REQUEST {error} = notify_about_error ($_REQUEST {error});
+
+	} else {
 
 		Carp::cluck ($_REQUEST {error});
 

@@ -34,7 +34,7 @@ sub setup_page_content {
 			type        => $_REQUEST {type},
 			label       => '',
 			order_context		=> $_REQUEST {__order_context} || '',
-		}, ['id_user', 'type', 'label'],
+		}, ['id_user', 'type', 'label', 'order_context'],
 
 	);
 
