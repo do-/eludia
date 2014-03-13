@@ -380,11 +380,9 @@ sub check_title {
 
 	my ($data, $options) = @_;
 
-	my $title = exists $data -> {title} ?
-		$data -> {title}
-		: exists $options -> {title} ?
-			$options -> {title}
-			: '' . $data -> {label};
+	my $title = (exists $data -> {title} ? $data -> {title} : undef)
+		|| (exists $options -> {title} ? $options -> {title} : undef)
+		|| '' . $data -> {label};
 
 	$title =~ s{\<.*?\>}{}g;
 	$title =~ s{^(\&nbsp\;|\s)+}{};
