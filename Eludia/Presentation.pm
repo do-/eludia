@@ -378,9 +378,13 @@ sub order {
 
 sub check_title {
 
-	my ($options) = @_;
+	my ($data, $options) = @_;
 
-	my $title = exists $options -> {title} ? $options -> {title} : '' . $options -> {label};
+	my $title = exists $data -> {title} ?
+		$data -> {title}
+		: exists $options -> {title} ?
+			$options -> {title}
+			: '' . $data -> {label};
 
 	$title =~ s{\<.*?\>}{}g;
 	$title =~ s{^(\&nbsp\;|\s)+}{};
@@ -388,7 +392,7 @@ sub check_title {
 	$title = HTML::Entities::decode_entities ($title) if $title =~ /\&/;
 	$title =~ s{\"}{\&quot\;}g;
 
-	$options -> {attributes} -> {title} = $title;
+	$data -> {attributes} -> {title} = $title ;
 
 }
 
