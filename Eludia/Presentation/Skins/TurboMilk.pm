@@ -1053,10 +1053,14 @@ sub draw_form_field_static {
 
 	}
 	else {
-		$html .= $options -> {value};
+		if ($options -> {value} =~ m/<span.*>.*/) {
+			$html .= $options -> {value};
+		} else {
+			$html .= qq{<span title = "$$options{title}" style = "$$options{style}">$$options{value}</span>};
+		}
+
 		$html .= '&nbsp;' if $options -> {value} eq '';
 	}
-
 
 	if ($options -> {href}) {
 		$html .= '</a>';
