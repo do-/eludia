@@ -2838,11 +2838,17 @@ sub out_html {
 
 	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
 
-	$html = Encode::encode ('windows-1252', $html);
+	if ($_REQUEST {__charset}) {
+		$html = Encode::decode ($i18n -> {_charset}, $html);
+	}
+
+	$html = Encode::encode ($_REQUEST {__charset} || 'windows-1252', $html);
 
 	return print $html if $_REQUEST {__response_started};
 
-	$r -> content_type ($_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset});
+	my $charset = $_REQUEST {__charset} || $i18n -> {_charset};
+
+	$r -> content_type ($_REQUEST {__content_type} ||= 'text/html; charset=' . $charset);
 
 	gzip_if_it_is_needed ($html);
 
