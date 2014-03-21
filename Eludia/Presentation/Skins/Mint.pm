@@ -3137,6 +3137,7 @@ sub draw_super_table {
 	$options -> {id_table} ||= 'table_' . $_REQUEST {__tables_cnt};
 
 	if ($_REQUEST {__only_table}) {
+		$_REQUEST {__doctype_html5} = 1;
 		return draw_super_table__only_table ($_SKIN, $tr_callback, $list, $options);
 	}
 
