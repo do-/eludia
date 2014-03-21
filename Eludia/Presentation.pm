@@ -1935,6 +1935,8 @@ sub draw_table {
 
 	my ($tr_callback, $list, $options) = @_;
 
+	$options -> {super_table} ||= $preconf -> {super_table};
+
 	__profile_in ('draw.table' => {label => exists $options -> {title} && $options -> {title} ? $options -> {title} -> {label} : $options -> {name}});
 
 	my $__edit_query = 0;
@@ -2051,6 +2053,15 @@ sub draw_table {
 	}
 
 	if (ref $options -> {top_toolbar} eq ARRAY) {
+
+		if ($options -> {super_table} && !$options -> {pager}) {
+			my ($pager_button) = grep {$_ -> {type} eq 'pager'} @{ $options -> {top_toolbar} };
+			$options -> {pager} -> {total}   = 0 + $pager_button -> {total};
+			$options -> {pager} -> {cnt}     = 0 + $pager_button -> {cnt};
+			$options -> {pager} -> {portion} = 0 + $pager_button -> {portion};
+			$pager_button -> {off} = 1;
+		}
+
 		$options -> {top_toolbar} -> [0] -> {_list} = $list;
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
