@@ -497,6 +497,7 @@ sub handle_request_of_type_action {
 		my $redirect_url = $action eq 'delete' && !$_REQUEST {__refresh_tree}? esc_href () :
 			create_url (
 				action => '',
+				id     => $_REQUEST {id},
 				__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
 				__refresh_tree => $_REQUEST {__refresh_tree},
 			);
