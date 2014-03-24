@@ -3131,6 +3131,7 @@ sub draw_super_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
 
+	$_REQUEST {__doctype_html5} = 1;
 	$_REQUEST {__super_table} = 1;
 
 	$_REQUEST {__tables_cnt}++;
@@ -3159,7 +3160,7 @@ sub draw_super_table {
 
 			var options = {
 				tableUrl: '/\?$ENV{QUERY_STRING}&__only_table=' + this.id,
-				el: this
+				el: \$(this)
 			};
 			window.SuperTable.initialize(options);
 		});
