@@ -2570,8 +2570,11 @@ sub draw_super_table_text_cell {
 
 	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor;
 
-	#my $html = dump_tag ('td', $data -> {attributes});
-	my $html = '<td>';
+	$data -> {attributes} -> {"data-href"} = $data -> {href};
+
+	$data -> {attributes} -> {"data-href-target"} = $data -> {target};
+
+	my $html = dump_tag ('td', $data -> {attributes});
 
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
 
@@ -3093,12 +3096,20 @@ sub draw_super_table__only_table {
 
 		foreach my $tr (@{$i -> {__trs}}) {
 
-			#$html .= "<tr id='$$i{__tr_id}'";
-			$html .= "<tr";
+			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 
+			$html .= "<tr id='$$i{__tr_id}'";
+
+			# if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
+			# 	$menus .= $i -> {__menu};
+			# 	$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent ();"};
+			# }
+
+			$html .= qq {data-target="$$i{__target}" data-href="$$i{__href}"} if $has_href;
 			$html .= '>';
 			$html .= $tr;
 			$html .= '</tr>';
+
 		}
 	}
 
