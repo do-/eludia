@@ -1987,6 +1987,9 @@ EOS
 			$fixed_cols_cnt ++ if $cell -> {no_scroll};
 
 			$cell -> {id} ||= $_SKIN -> get_super_table_cell_id ($cell);
+			$cell -> {order}
+				or $cell -> {no_order} && $cell -> {no_order} != 1
+				or $cell -> {no_order} = $cell -> {id};
 
 			my $cell_dimensions = $column_dimensions -> {$cell -> {id}};
 			$cell_dimensions or next;
