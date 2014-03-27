@@ -1973,12 +1973,18 @@ EOS
 		, $_USER -> {id}
 	);
 
+	my $max_fixed_cols_cnt = 0;
+
 	foreach my $h (@$headers) {
 
 		my $row = $h;
 		ref $row eq ARRAY or $row = [$row];
 
+		my $fixed_cols_cnt = 0;
+
 		foreach my $cell (@$row) {
+
+			$fixed_cols_cnt ++ if $cell -> {no_scroll};
 
 			$cell -> {id} ||= $_SKIN -> get_super_table_cell_id ($cell);
 
@@ -1988,7 +1994,11 @@ EOS
 			$cell -> {width} = $cell_dimensions -> {width};
 			$cell -> {height} = $cell_dimensions -> {height};
 		}
+
+		$fixed_cols_cnt <= $max_fixed_cols_cnt or $max_fixed_cols_cnt = $fixed_cols_cnt;
 	}
+
+	$options -> {fix_columns} ||= $max_fixed_cols_cnt;
 
 }
 
