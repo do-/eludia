@@ -3018,11 +3018,28 @@ sub draw_table_header_row {
 
 ####################################################################
 
+sub get_super_table_cell_id {
+
+	my ($_SKIN, $cell) = @_;
+
+	return $cell -> {order}
+		|| $cell -> {no_order}
+		|| Digest::MD5::md5_hex ($cell -> {label});
+}
+
+####################################################################
+
 sub draw_super_table_header_cell {
 
 	my ($_SKIN, $cell) = @_;
 
 	$cell -> {attributes} -> {style} = 'z-index:' . ($cell -> {no_scroll} ? 110 : 100) . ';' . $cell -> {attributes} -> {style};
+
+	!$cell -> {width} or $cell -> {attributes} -> {style} .= " width: $$cell{width}px;";
+	!$cell -> {height} or $cell -> {attributes} -> {style} .= " height: $$cell{height}px;";
+
+	$cell -> {id} ||= $_SKIN -> get_super_table_cell_id ($cell);
+	$cell -> {attributes} -> {id} ||= $cell -> {id};
 
 	dump_tag (th => $cell -> {attributes}, $cell -> {label});
 }
@@ -3144,9 +3161,6 @@ sub draw_super_table {
 
 	$_REQUEST {__doctype_html5} = 1;
 	$_REQUEST {__super_table} = 1;
-
-	$_REQUEST {__tables_cnt}++;
-	$options -> {id_table} ||= 'table_' . $_REQUEST {__tables_cnt};
 
 	if ($_REQUEST {__only_table}) {
 		$_REQUEST {__doctype_html5} = 1;

@@ -277,3 +277,31 @@ sub do_undelete_DEFAULT { # восстановление
 	sql_undo_relink ($table_name, $id);
 
 }
+
+################################################################################
+
+sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
+
+	my $columns = $_JSON -> decode ($_REQUEST {columns});
+
+	foreach my $column (@$columns) {
+
+		sql_select_id ($conf -> {systables} -> {__column_dimensions} => {
+			id_user => $_USER -> {id},
+			type => $_REQUEST {type},
+			id_table => $_REQUEST {__only_table},
+			id_col   => $column -> {id},
+			-width   => $column -> {width},
+			-height  => $column -> {height},
+		}, [qw(id_user type id_table id_col)]);
+	}
+}
+
+################################################################################
+
+sub do_update_columns_DEFAULT { # переставили колонки
+
+	my $columns = $_JSON -> decode ($_REQUEST {columns});
+}
+
+1;

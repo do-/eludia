@@ -1921,6 +1921,70 @@ sub is_not_possible_order {
 	return 0;
 
 }
+
+################################################################################
+
+sub _adjust_super_table_options {
+
+	my ($options) = @_;
+
+	$options -> {id_table} ||= $_REQUEST {type} . '_' . $options -> {name}
+		if $options -> {name};
+
+	if (exists $options -> {title} -> {label}) {
+
+		$options -> {id_table} ||=
+			Digest::MD5::md5_hex ($_REQUEST {type} . '_' . $options -> {title} -> {label});
+
+	}
+}
+
+################################################################################
+
+sub _load_super_table_dimensions {
+
+	my ($options, $headers, $list) = @_;
+
+	my $column_dimensions = &{"${_PACKAGE}sql_select_all_hash"} (<<EOS
+		SELECT
+			id_col AS id
+			, width
+			, height
+		FROM
+			$conf->{systables}->{__column_settings}
+		WHERE
+			fake = 0
+		AND
+			type = ?
+		AND
+			id_table = ?
+		AND
+			id_user = ?
+EOS
+		, $_REQUEST {type}
+		, $options -> {id_table}
+		, $_USER -> {id}
+	);
+
+	foreach my $h (@$headers) {
+
+		my $row = $h;
+		ref $row eq ARRAY or $row = [$row];
+
+		foreach my $cell (@$row) {
+
+			$cell -> {id} ||= $_SKIN -> get_super_table_cell_id ($cell);
+
+			my $cell_dimensions = $column_dimensions -> {$cell -> {id}};
+			$cell_dimensions or next;
+
+			$cell -> {width} = $cell_dimensions -> {width};
+			$cell -> {height} = $cell_dimensions -> {height};
+		}
+	}
+
+}
+
 ################################################################################
 
 sub draw_table {
@@ -1936,6 +2000,13 @@ sub draw_table {
 	my ($tr_callback, $list, $options) = @_;
 
 	$options -> {super_table} ||= $preconf -> {super_table};
+
+	if ($options -> {super_table}) {
+
+		_adjust_super_table_options ($options);
+
+		_load_super_table_dimensions ($options, $headers, $list);
+	}
 
 	__profile_in ('draw.table' => {label => exists $options -> {title} && $options -> {title} ? $options -> {title} -> {label} : $options -> {name}});
 
