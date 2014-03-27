@@ -3136,7 +3136,7 @@ sub draw_page {
 
 		$_REQUEST {__on_load} .= 'window.focus ();'                                                                 if ! $_REQUEST {__no_focus};
 
-		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');";
+		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');"                                   if $_REQUEST {__focused_input};
 
 		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " try {top.edit_mode = 1} catch (e) {};" : " try {top.edit_mode = 0} catch (e) {};"                 if ! $_REQUEST {select};
 
