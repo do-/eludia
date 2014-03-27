@@ -303,6 +303,8 @@ sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
 			height   => $column -> {height},
 		});
 	}
+
+	out_json ({});
 }
 
 ################################################################################
@@ -310,6 +312,18 @@ sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
 sub do_update_columns_DEFAULT { # переставили колонки
 
 	my $columns = $_JSON -> decode ($_REQUEST {columns});
+
+	check___query ();
+
+	my $ord = 1;
+	foreach my $column (@$columns) {
+		set_column_ord ($_REQUEST {id___query}, $column -> {id}, $ord);
+		$ord++;
+	}
+
+	my $page = setup_page ();
+
+	handle_request_of_type_showing ($page);
 }
 
 1;

@@ -3184,7 +3184,7 @@ sub draw_super_table {
 		\$('.eludia-table-container').each(function() {
 
 			var options = {
-				tableUrl: '/\?$ENV{QUERY_STRING}&__only_table=' + this.id,
+				tableUrl: '/\?$ENV{QUERY_STRING}&id___query=$_REQUEST{id___query}&__only_table=' + this.id,
 				el: \$(this)
 			};
 			window.SuperTable.initialize(options);

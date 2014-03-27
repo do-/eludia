@@ -395,6 +395,50 @@ sub do_update___queries {
 
 ################################################################################
 
+sub get___query_settings {
+
+	my ($id_query) = @_;
+
+	my $query = sql_select_hash ($conf -> {systables} -> {__queries} => $id_query);
+
+	my $VAR1;
+	eval $query -> {dump};
+
+	return $VAR1;
+}
+
+################################################################################
+
+sub set___query_settings {
+
+	my ($id_query, $settings) = @_;
+
+	$id_query or return;
+
+	sql_do (
+		"UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?"
+		, Dumper ($settings)
+		, $id_query
+	);
+}
+
+################################################################################
+
+sub set_column_ord {
+
+	my ($id_query, $id_column, $ord) = @_;
+
+	$id_query or return;
+
+	my $settings = get___query_settings ($id_query);
+
+	$settings -> {columns} -> {$id_column} -> {ord} = $ord;
+
+	set___query_settings ($id_query, $settings);
+}
+
+################################################################################
+
 sub draw_item_of___queries {
 
 	my ($data) = @_;
