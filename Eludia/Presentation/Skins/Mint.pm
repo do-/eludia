@@ -3177,7 +3177,7 @@ sub draw_super_table {
 	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
 
 	#push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/supertable";
-	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8' />";
+	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
 
 	$_REQUEST {__on_load} .= qq{;
 
@@ -3506,7 +3506,7 @@ sub draw_page {
 	}
 	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
 
-		$_REQUEST {__head_links} .= qq |<script src="$_REQUEST{__static_url}/jquery.blockUI.js?$_REQUEST{__static_salt}"></script>|
+		$_REQUEST {__head_links} .= qq |<script src='$_REQUEST{__static_url}/jquery.blockUI.js?$_REQUEST{__static_salt}'></script>|
 			if $preconf -> {core_blockui_on_submit} || $r -> headers_in -> {'User-Agent'} =~ /webkit/i;
 		$body .= qq {
 
