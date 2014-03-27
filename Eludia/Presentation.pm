@@ -1937,6 +1937,13 @@ sub _adjust_super_table_options {
 			Digest::MD5::md5_hex ($_REQUEST {type} . '_' . $options -> {title} -> {label});
 
 	}
+
+	return
+		if $options -> {id_table};
+
+
+	$_REQUEST {__super_table_cnt} ++;
+	$options -> {id_table} ||= $_REQUEST {type} . '_' . $_REQUEST {__super_table_cnt};
 }
 
 ################################################################################
