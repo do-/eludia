@@ -424,17 +424,20 @@ sub set___query_settings {
 
 ################################################################################
 
-sub set_column_ord {
+sub set_column_props {
 
-	my ($id_query, $id_column, $ord) = @_;
+	my ($options) = @_;
 
-	$id_query or return;
+	$options -> {id_query} or return;
 
-	my $settings = get___query_settings ($id_query);
+	my $settings = get___query_settings ($options -> {id_query});
 
-	$settings -> {columns} -> {$id_column} -> {ord} = $ord;
+	foreach my $key (keys %$options) {
+		next if $key =~ /^id/;
+		$settings -> {columns} -> {$options -> {id}} -> {$key} = $options -> {$key};
+	}
 
-	set___query_settings ($id_query, $settings);
+	set___query_settings ($options -> {id_query}, $settings);
 }
 
 ################################################################################

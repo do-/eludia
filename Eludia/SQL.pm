@@ -160,7 +160,6 @@ sub check_systables {
 		__access_log
 		__action_log
 		__queries
-		__column_settings
 		__defaults
 		__benchmarks
 		__request_benchmarks

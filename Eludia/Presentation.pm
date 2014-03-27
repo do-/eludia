@@ -1952,26 +1952,11 @@ sub _load_super_table_dimensions {
 
 	my ($options, $headers, $list) = @_;
 
-	my $column_dimensions = &{"${_PACKAGE}sql_select_all_hash"} (<<EOS
-		SELECT
-			id_col AS id
-			, width
-			, height
-		FROM
-			$conf->{systables}->{__column_settings}
-		WHERE
-			fake = 0
-		AND
-			type = ?
-		AND
-			id_table = ?
-		AND
-			id_user = ?
-EOS
-		, $_REQUEST {type}
-		, $options -> {id_table}
-		, $_USER -> {id}
-	);
+	check___query ();
+
+	my $settings = get___query_settings ($_REQUEST {id___query});
+
+	my $column_dimensions = $settings -> {columns};
 
 	my $max_fixed_cols_cnt = 0;
 

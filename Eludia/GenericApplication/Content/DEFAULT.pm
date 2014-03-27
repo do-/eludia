@@ -284,24 +284,10 @@ sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
 
 	my $columns = $_JSON -> decode ($_REQUEST {columns});
 
-	sql_do (
-		"DELETE FROM $conf->{systables}->{__column_settings} WHERE id_user = ? AND type = ? AND id_table = ?"
-		, $_USER -> {id}
-		, $_REQUEST {type}
-		, $_REQUEST {__only_table}
-	);
-
 	foreach my $column (@$columns) {
 
-		sql_do_insert ($conf -> {systables} -> {__column_settings} => {
-			fake     => 0,
-			id_user  => $_USER -> {id},
-			type     => $_REQUEST {type},
-			id_table => $_REQUEST {__only_table},
-			id_col   => $column -> {id},
-			width    => $column -> {width},
-			height   => $column -> {height},
-		});
+		$column -> {id_query} = $_REQUEST {id___query};
+		set_column_props ($column);
 	}
 
 	out_json ({});
@@ -317,7 +303,11 @@ sub do_update_columns_DEFAULT { # переставили колонки
 
 	my $ord = 1;
 	foreach my $column (@$columns) {
-		set_column_ord ($_REQUEST {id___query}, $column -> {id}, $ord);
+		set_column_props ({
+			id_query => $_REQUEST {id___query},
+			id       => $column -> {id},
+			ord      => $ord,
+		});
 		$ord++;
 	}
 
