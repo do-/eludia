@@ -1711,13 +1711,13 @@ EOH
 	$html .= <<EOH;
 		<table class="tbbg0" cellspacing=0 cellpadding=0 width="100%" border=0>
 				<tr>
-					<td class="tbbg1" colspan=20>&nbsp;</td>
+					<td class="tbbg1" colspan="20" height="1px" ></td>
 				</tr>
 				<tr>
-					<td class="tbbg2" colspan=20>&nbsp;</td>
+					<td class="tbbg2" colspan="20" height="1px" ></td>
 				</tr>
 				<tr>
-					<td class="tbbg3" colspan=20>&nbsp;</td>
+					<td class="tbbg3" colspan="20" height="1px" ></td>
 				</tr>
 				<tr>
 					<td class="bgr0" width=30><img height=30 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 border=0></td>
@@ -1726,13 +1726,13 @@ EOH
 	foreach (@{$options -> {buttons}}) {	$html .= $_ -> {html};	}
 
 	$html .= <<EOH;
-					<td class="bgr0" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+					<td class="bgr0" width=100%><img height="1px" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width="1px" border="0px"></td>
 				</tr>
 				<tr>
-					<td class="tbbg4" colspan=20>&nbsp;</td>
+					<td class="tbbg4" colspan="20" height="1px" ></td>
 				</tr>
 				<tr>
-					<td class="tbbg5" colspan=20>&nbsp;</td>
+					<td class="tbbg5" colspan="20" height="1px" ></td>
 				</tr>
 		</table></form>
 EOH
@@ -1751,26 +1751,26 @@ sub draw_toolbar_break {
 					<td class="bgr0" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 				</tr>
 				<tr>
-					<td class="tbbg4" colspan=20>&nbsp;</td>
+					<td class="tbbg4" colspan="20" height="1px" ></td>
 				</tr>
 				<tr>
-					<td class="tbbg5" colspan=20>&nbsp;</td>
+					<td class="tbbg5" colspan="20" height="1px" ></td>
 				</tr>
 EOH
 
 	if ($options -> {break_table}) {
-		$html .= '</table><table class="tbbg6" cellspacing=0 cellpadding=0 width="100%" border=0>';
+		$html .= '</table><table class="tbbg6" cellspacing=0 cellpadding=0 dialog_widthth="100%" border=0>';
 	}
 
 	$html .= <<EOH;
 				<tr>
-					<td class="tbbg1" colspan=20>&nbsp;</td>
+					<td class="tbbg1" colspan="20" height="1px" ></td>
 				</tr>
 				<tr>
-					<td class="tbbg2" colspan=20>&nbsp;</td>
+					<td class="tbbg2" colspan="20" height="1px" ></td>
 				</tr>
 				<tr>
-					<td class="tbbg3" colspan=20>&nbsp;</td>
+					<td class="tbbg3" colspan="20" height="1px" ></td>
 				</tr>
 				<tr>
 					<td class="bgr0" width=30><img height=30 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 border=0></td>
