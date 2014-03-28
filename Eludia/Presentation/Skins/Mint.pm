@@ -3179,7 +3179,7 @@ sub draw_super_table {
 	#push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/supertable";
 	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
 
-	$_REQUEST {__on_load} .= qq{;
+	@$list and $_REQUEST {__on_load} .= qq{;
 
 		\$('.eludia-table-container').each(function() {
 
