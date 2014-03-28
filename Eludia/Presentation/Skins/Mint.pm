@@ -3169,7 +3169,7 @@ sub draw_super_table {
 
 
 
-	my $html = qq {<div class="eludia-table-container" id="$$options{id_table}" style="height:1000px;width:2000px;"></div>\n};
+	my $html = qq {<div class="eludia-table-container" id="$$options{id_table}" style="height:1000px;width:100%;"></div>\n};
 
 	$_REQUEST {__scrollable_table_row} ||= 0;
 
