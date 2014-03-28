@@ -2653,13 +2653,17 @@ sub draw_select_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	my $s_attributes -> {class} = "form-mandatory-inputs" if $data -> {mandatory};
+
 	my $attributes = dump_attributes ($data -> {attributes});
+	$s_attributes = dump_attributes ($s_attributes);
 
 	my $multiple = $data -> {rows} > 1 ? "multiple size=$$data{rows}" : '';
 
 	$data -> {onChange} ||= $options -> {onChange};
 
 	my $html = qq {<td $attributes><select
+		$s_attributes
 		name="$$data{name}"
 		onChange="is_dirty=true; $$data{onChange}"
 		onkeypress='typeAhead();'
