@@ -1969,6 +1969,8 @@ sub _load_super_table_dimensions {
 
 		foreach my $cell (@$row) {
 
+			next if $cell -> {off};
+
 			$fixed_cols_cnt ++ if $cell -> {no_scroll};
 
 			$cell -> {id} ||= $_SKIN -> get_super_table_cell_id ($cell);
