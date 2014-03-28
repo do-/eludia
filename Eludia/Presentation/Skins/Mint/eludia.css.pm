@@ -54,37 +54,6 @@ FORM {
 	background-color: #ffffff;
 }
 
-div.table-container {
-
-	PADDING: 0;
-	OVERFLOW: auto;
-	MARGIN: 0px;
-	position: relative;
-
-	scrollbar-base-color:#d6d3ce;
-	scrollbar-arrow-color:#485f70;
-	scrollbar-3dlight-color: #efefef;
-	scrollbar-darkshadow-color:#b0b0b0;
-
-}
-
-div.table-container-x {
-
-	PADDING-RIGHT: 0px;
-	OVERFLOW-Y: visible;
-	PADDING-LEFT: 0px;
-	OVERFLOW-X: auto;
-	PADDING-BOTTOM: 0px;
-	MARGIN: 0px;
-	PADDING-TOP: 0px;
-
-	scrollbar-base-color:#d6d3ce;
-	scrollbar-arrow-color:#485f70;
-	scrollbar-3dlight-color: #efefef;
-	scrollbar-darkshadow-color:#b0b0b0;
-
-}
-
 div.checkboxes {
 
       	OVERFLOW: auto;
