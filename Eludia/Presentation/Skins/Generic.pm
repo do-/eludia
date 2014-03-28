@@ -25,7 +25,7 @@ sub __submit_href {
 
 	map {$js .= "f.elements['$_'].value='$$options{$_}';" } (keys %$options);
 
-	$js .= "f.fireEvent ('onsubmit'); f.submit()";
+	$js .= "\$(document.$name).submit(); void(0);";
 
 	return $js;
 }
