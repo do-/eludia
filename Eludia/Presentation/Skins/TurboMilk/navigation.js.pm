@@ -205,6 +205,18 @@ function dialog_open (href, arg, options) {
 
 }
 
+function close_multi_select_window (ret) {
+    var w = window, i = 0;
+    for (;i < 5 && w.name != '_modal_iframe'; i ++)
+	w = w.parent;
+    if (w.name == '_modal_iframe') {
+	w.returnValue = ret;
+	w.close ();
+    } else {
+	top.returnValue = ret;
+	top.close ();
+    }
+}
 function encode1251 (str) {
 
 //	var r = /[à-ÿÀ-ß]/g;
