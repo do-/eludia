@@ -1926,7 +1926,7 @@ sub is_not_possible_order {
 
 sub _adjust_super_table_options {
 
-	my ($options) = @_;
+	my ($options, $list) = @_;
 
 	$options -> {id_table} ||= $_REQUEST {type} . '_' . $options -> {name}
 		if $options -> {name};
@@ -1936,6 +1936,20 @@ sub _adjust_super_table_options {
 		$options -> {id_table} ||=
 			Digest::MD5::md5_hex ($_REQUEST {type} . '_' . $options -> {title} -> {label});
 
+	}
+
+	if ($options -> {super_table} && !$options -> {pager}) {
+
+		if (ref $options -> {top_toolbar} eq 'ARRAY') {
+			my ($pager_button) = grep {$_ -> {type} eq 'pager'} @{ $options -> {top_toolbar} };
+			$options -> {pager} -> {total}   = 0 + $pager_button -> {total};
+			$options -> {pager} -> {cnt}     = 0 + $pager_button -> {cnt};
+			$options -> {pager} -> {portion} = 0 + $pager_button -> {portion};
+			$pager_button -> {off} = 1;
+		}
+
+		$options -> {pager} -> {cnt} ||= @$list;
+		$options -> {pager} -> {total} ||= @$list;
 	}
 
 	return
@@ -2010,7 +2024,7 @@ sub draw_table {
 
 	if ($options -> {super_table}) {
 
-		_adjust_super_table_options ($options);
+		_adjust_super_table_options ($options, $list);
 
 		_load_super_table_dimensions ($options, $headers, $list);
 	}
@@ -2131,14 +2145,6 @@ sub draw_table {
 	}
 
 	if (ref $options -> {top_toolbar} eq ARRAY) {
-
-		if ($options -> {super_table} && !$options -> {pager}) {
-			my ($pager_button) = grep {$_ -> {type} eq 'pager'} @{ $options -> {top_toolbar} };
-			$options -> {pager} -> {total}   = 0 + $pager_button -> {total};
-			$options -> {pager} -> {cnt}     = 0 + $pager_button -> {cnt};
-			$options -> {pager} -> {portion} = 0 + $pager_button -> {portion};
-			$pager_button -> {off} = 1;
-		}
 
 		$options -> {top_toolbar} -> [0] -> {_list} = $list;
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
