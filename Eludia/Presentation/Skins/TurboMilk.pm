@@ -1730,6 +1730,7 @@ EOH
 		<td class="bgr0" style="background-repeat:repeat-x" background="$_REQUEST{__static_url}/btn2_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><nobr>&nbsp;<a TABINDEX=-1 class=button href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}">
 EOH
 
+
 	if ($options -> {icon}) {
 		my $img_path = _icon_path ($options -> {icon});
 		$html .= qq {<img src="$img_path" alt="$label" border=0 hspace=0 align=absmiddle>&nbsp;};
@@ -2308,19 +2309,23 @@ sub draw_centered_toolbar_button {
 		$html .= <<EOH;
 			$$options{__menu}
 			<table id='tbl_$$options{id}' cellspacing="0" cellpadding="0" border="0" onmouseout="menuItemOutForToolbarBtn()" onclick="open_popup_menu_for_toolbar_btn(event, '$$options{items}', 'tbl_$$options{id}'); blockEvent ();">
+				<tr>
+					<td width=6><img src="$_REQUEST{__static_url}/btn_l.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
+					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap>
+						<a class="button" href="#" id="$$options{id}" target="$$options{target}">
 EOH
 	} else {
 
 		$html .= <<EOH;
 			<table cellspacing="0" cellpadding="0" border="0">
+				<tr>
+					<td width=6><img src="$_REQUEST{__static_url}/btn_l.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
+					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap>
+						<a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}">
 EOH
 	}
 
 	$html .= <<EOH;
-				<tr>
-					<td width=6><img src="$_REQUEST{__static_url}/btn_l.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
-					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap>
-						<a class="button" href="#" id="$$options{id}" target="$$options{target}">
 							<img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=1 align=absmiddle>
 							${nbsp}
 						</a>
