@@ -2576,6 +2576,10 @@ sub draw_super_table_text_cell {
 
 	my $html = dump_tag ('td', $data -> {attributes});
 
+	if ($data -> {__is_first_not_fixed_cell}) {
+		$html = dump_tag ('td', {class => 'freezebar-cell'}) . $html;
+	}
+
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
 
 		return $html . '&nbsp;</td>';
@@ -3040,8 +3044,15 @@ sub draw_super_table_header_cell {
 
 	$cell -> {id} ||= $_SKIN -> get_super_table_cell_id ($cell);
 	$cell -> {attributes} -> {id} ||= $cell -> {id};
+	$cell -> {attributes} -> {class} ||= $cell -> {class};
 
-	dump_tag (th => $cell -> {attributes}, $cell -> {label});
+	my $html = dump_tag (th => $cell -> {attributes}, $cell -> {label});
+
+	if ($cell -> {__is_first_not_fixed_cell}) {
+		$html = dump_tag ('th', {class => 'freezebar-cell'}) . $html;
+	}
+
+	return $html;
 }
 
 ####################################################################
@@ -3136,7 +3147,7 @@ sub draw_super_table__only_table {
 
 	my $table = {
 		id          => $options -> {id_table},
-		fix_columns => $options -> {fix_columns} + 0,
+		fix_columns => $options -> {__fixed_cols} + 0,
 		fix_rows    => $options -> {fix_rows} + 0,
 		total       => 0 + $options -> {pager} -> {total},
 		cnt         => 0 + $options -> {pager} -> {cnt},

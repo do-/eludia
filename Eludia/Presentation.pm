@@ -1649,6 +1649,10 @@ sub draw_cells {
 
 	}
 
+
+	!$options -> {__fixed_cols}
+		or $cells [$options -> {__fixed_cols}] -> {__is_first_not_fixed_cell} = 1;
+
 	$result .= call_from_file ("Eludia/Presentation/TableCells/$_->{type}.pm", "draw_$_->{type}_cell", $_, $options) foreach @cells;
 
 	if ($options -> {gantt}) {
@@ -1983,9 +1987,9 @@ sub _load_super_table_dimensions {
 
 		foreach my $cell (@$row) {
 
-			next if $cell -> {off};
-
 			$fixed_cols_cnt ++ if $cell -> {no_scroll};
+
+			next if $cell -> {off};
 
 			$cell -> {id} ||= $_SKIN -> get_super_table_cell_id ($cell);
 			$cell -> {order}
@@ -2002,8 +2006,32 @@ sub _load_super_table_dimensions {
 		$fixed_cols_cnt <= $max_fixed_cols_cnt or $max_fixed_cols_cnt = $fixed_cols_cnt;
 	}
 
-	$options -> {fix_columns} ||= $max_fixed_cols_cnt;
+	$options -> {__fixed_cols} ||= $max_fixed_cols_cnt;
+}
 
+################################################################################
+
+sub _adjust_super_table_headers {
+
+	my ($options, $cells) = @_;
+
+	return
+		unless $options -> {__fixed_cols};
+
+	my $row_idx = 0;
+
+	foreach my $h (@$cells) {
+
+		my $row = $h;
+
+		ref $row eq ARRAY or $row = [$row];
+
+		my $first_not_fixed_idx = $row_idx? 0 : $options -> {__fixed_cols};
+
+		$row -> [$first_not_fixed_idx] -> {__is_first_not_fixed_cell} = 1;
+
+		$row_idx++;
+	}
 }
 
 ################################################################################
@@ -2027,6 +2055,8 @@ sub draw_table {
 		_adjust_super_table_options ($options, $list);
 
 		_load_super_table_dimensions ($options, $headers, $list);
+
+		_adjust_super_table_headers ($options, $headers);
 	}
 
 	__profile_in ('draw.table' => {label => exists $options -> {title} && $options -> {title} ? $options -> {title} -> {label} : $options -> {name}});
