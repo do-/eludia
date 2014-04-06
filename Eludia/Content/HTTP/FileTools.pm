@@ -52,9 +52,12 @@ sub download_file_header {
 	}
 
 	$r -> content_type ($type);
-	$options -> {file_name} =~ s/\?/_/g unless ($ENV {HTTP_USER_AGENT} =~ /MSIE 7/);
-	$options -> {no_force_download} or $r -> headers_out -> {'Content-Disposition'} = "attachment;filename=" . uri_escape ($options -> {file_name}); 
 	
+	if ($options -> {file_name} && !$options -> {no_force_download}) {
+		$options -> {file_name} =~ s/\?/_/g unless ($ENV {HTTP_USER_AGENT} =~ /MSIE 7/);
+		$r -> headers_out -> {'Content-Disposition'} = "attachment;filename=" . uri_escape ($options -> {file_name});
+	}
+
 	if ($content_length > 0) {
 		$r -> headers_out -> {'Content-Length'} = $content_length;
 		$r -> headers_out -> {'Accept-Ranges'} = 'bytes';
