@@ -790,13 +790,7 @@ sub sql_store_file {
 	defined $ofd or die "Can't get file descritor for OID $oid";
 		
 	while (my $read = read (F, $buffer, $options -> {chunk_size})) {
-		my $written = $db -> pg_lo_write ($ofd, $buffer, $read);
-		if ($written) {
-			warn "$read bytes from '$buffer' written to OFD $ofd (OID $oid)\n";
-		}
-		else {
-			die "Cannot wite to OFD $ofd (OID $oid)";
-		}
+		my $written = $db -> pg_lo_write ($ofd, $buffer, $read) or die "Cannot wite to OFD $ofd (OID $oid)";
 	}
 
 	close F;
