@@ -106,7 +106,7 @@ sub sql_prepare {
 
 sub sql_do {
 
-	darn \@_ if $preconf -> {core_debug_sql_do};
+#	darn \@_ if $preconf -> {core_debug_sql_do};
 
 	my ($sql, @params) = @_;
 	
@@ -730,67 +730,88 @@ sub sql_download_file {
 	$options -> {path} = $item -> {$options -> {path_column}};
 	$options -> {type} = $item -> {$options -> {type_column}};
 	$options -> {file_name} = $item -> {$options -> {file_name_column}};	
+
+	if ($options -> {body_column}) {
 	
-#	if ($options -> {body_column}) {
+		my $auto_commit = $db -> {AutoCommit};
+		$db -> {AutoCommit} = 0;
+				
+		$oid = $item -> {$options -> {body_column}};
 
-#		my $time = time;
+		my $ofd = $db -> pg_lo_open ($oid, $db -> {pg_INV_READ});
+		defined $ofd or die "Can't get file descritor for OID $oid";
+
+		my $chunk_size = 1034;
+		my $buffer;
 		
-#		my $sql = "SELECT $options->{body_column} FROM $options->{table} WHERE id = ?";
-#		my $st = $db -> prepare ($sql, {ora_auto_lob => 0});
-#		$st -> execute ($_REQUEST {id});
-#		(my $lob_locator) = $st -> fetchrow_array ();
+		download_file_header (@_);
+		while (my $read = $db -> pg_lo_read ($ofd, $buffer, $chunk_size)) {
+			$r -> print (substr ($buffer, 0, $read));
+		}
 
-#		my $chunk_size = 1034;
-#		my $offset = 1 + download_file_header (@_);
+		$db -> pg_lo_close ($ofd) or die "Cannot close OFD $ofd (OID $oid)";
 		
-#		while (my $data = $db -> ora_lob_read ($lob_locator, $offset, $chunk_size)) {
-#		      $r -> print ($data);
-#		      $offset += $chunk_size;
-#		}
+		$db -> {AutoCommit} = $auto_commit;
 
-#		$st -> finish ();
-
-#	}
-#	else {
+	}
+	else {
 		download_file ($options);
-#	}
+	}
 
 }
 
 ################################################################################
 
-#sub sql_store_file {
+sub sql_store_file {
 
-#	my ($options) = @_;
+	my ($options) = @_;
 
-#	my $st = $db -> prepare ("SELECT $options->{body_column} FROM $options->{table} WHERE id = ? FOR UPDATE", {ora_auto_lob => 0});
-
-#	$st -> execute ($options -> {id});
-#	(my $lob_locator) = $st -> fetchrow_array ();
-#	$st -> finish ();
+	open F, $options -> {real_path} or die "Can't open $options->{real_path}: $!\n";
 	
-#	$db -> ora_lob_trim ($lob_locator, 0);
+	$db -> {AutoCommit} = 0;
 
-#	$options -> {chunk_size} ||= 4096; 
-#	my $buffer = '';		
+	my $st = $db -> prepare ("SELECT $options->{body_column} FROM $options->{table} WHERE id = ?");
+
+	$st -> execute ($options -> {id});
+	(my $oid) = $st -> fetchrow_array ();
+	$st -> finish ();
+
+	if ($oid) {
+		$db -> pg_lo_unlink ($oid) or die "Cannot unlink OID $oid";
+	}
+	
+	$oid = $db -> pg_lo_creat ($db -> {pg_INV_WRITE}) or die "Cannot create an OID to store a LOB";		
+	
+	$options -> {chunk_size} ||= 4096; 
+	my $buffer = '';		
 		
-#	open F, $options -> {real_path} or die "Can't open $options->{real_path}: $!\n";
+	my $ofd = $db -> pg_lo_open ($oid, $db -> {pg_INV_WRITE});	
+	defined $ofd or die "Can't get file descritor for OID $oid";
 		
-#	while (read (F, $buffer, $options -> {chunk_size})) {
-#		$db -> ora_lob_append ($lob_locator, $buffer);
-#	}
+	while (my $read = read (F, $buffer, $options -> {chunk_size})) {
+		my $written = $db -> pg_lo_write ($ofd, $buffer, $read);
+		if ($written) {
+			warn "$read bytes from '$buffer' written to OFD $ofd (OID $oid)\n";
+		}
+		else {
+			die "Cannot wite to OFD $ofd (OID $oid)";
+		}
+	}
 
-#	sql_do (
-#		"UPDATE $$options{table} SET $options->{size_column} = ?, $options->{type_column} = ?, $options->{file_name_column} = ? WHERE id = ?",
-#		-s $options -> {real_path},
-#		$options -> {type},
-#		$options -> {file_name},
-#		$options -> {id},
-#	);
+	close F;
+	
+	$db -> pg_lo_close ($ofd) or die "Cannot close OFD $ofd (OID $oid)";
 
-#	close F;
+	sql_do (
+		"UPDATE $$options{table} SET $options->{body_column} = ?, $options->{size_column} = ?, $options->{type_column} = ?, $options->{file_name_column} = ? WHERE id = ?",
+		$oid,
+		-s $options -> {real_path},
+		$options -> {type},
+		$options -> {file_name},
+		$options -> {id},
+	);
 
-#}
+}
 
 ################################################################################
 
@@ -804,17 +825,17 @@ sub sql_upload_file {
 	
 	$options -> {body_column} or sql_delete_file ($options);
 						
-#	if ($options -> {body_column}) {
+	if ($options -> {body_column}) {
 	
-#		$options -> {real_path} = $uploaded -> {real_path};
+		$options -> {real_path} = $uploaded -> {real_path};
 		
-#		sql_store_file ($options);
+		sql_store_file ($options);
 	
-#		unlink $uploaded -> {real_path};
+		unlink $uploaded -> {real_path};
 
-#		delete $uploaded -> {real_path};
+		delete $uploaded -> {real_path};
 
-#	}
+	}
 	
 	my (@fields, @params) = ();
 	
