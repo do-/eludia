@@ -2577,7 +2577,7 @@ sub draw_super_table_text_cell {
 	my $html = dump_tag ('td', $data -> {attributes});
 
 	if ($data -> {__is_first_not_fixed_cell}) {
-		$html = dump_tag ('td', {class => 'freezebar-cell'}) . $html;
+		$html = dump_tag ('td', {class => 'freezbar-cell'}) . $html;
 	}
 
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
@@ -3049,7 +3049,7 @@ sub draw_super_table_header_cell {
 	my $html = dump_tag (th => $cell -> {attributes}, $cell -> {label});
 
 	if ($cell -> {__is_first_not_fixed_cell}) {
-		$html = dump_tag ('th', {class => 'freezebar-cell'}) . $html;
+		$html = dump_tag ('th', {class => 'freezbar-cell'}) . $html;
 	}
 
 	return $html;
