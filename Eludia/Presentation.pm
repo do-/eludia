@@ -2583,26 +2583,6 @@ sub dialog_close {
 
 ################################################################################
 
-sub _add_dialog_open_function_to_script {
-
-	my $url = $ENV{SCRIPT_URI} . '/i/_skins/TurboMilk/dialog.html?';
-
-	$_REQUEST {__script} .= <<EOJS unless $_REQUEST {__script} =~ /function dialog_open/;
-function dialog_open (id) {
-	dialogs[id].href   = dialogs[id].href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, '');
-	dialogs[id].href  += '&_salt=' + Math.random ();
-	dialogs[id].parent = window;
-	var width  = dialogs[id].width  || (screen.availWidth - (screen.availWidth <= 800 ? 50 : 100));
-	var height = dialogs[id].height || (screen.availHeight - (screen.availHeight <= 600 ? 50 : 100));
-	result = window.showModalDialog('$url' + Math.random (), dialogs[id], dialogs[id].options + ';dialogWidth=' + width + 'px;dialogHeight=' + height + 'px');
-	document.body.style.cursor='default';
-}
-EOJS
-
-}
-
-################################################################################
-
 sub dialog_open {
 
 	my ($arg, $options) = @_;
@@ -2626,20 +2606,17 @@ sub dialog_open {
 	$_REQUEST {__script} .= 'var results; var dialogs = {};'
 		unless $_REQUEST {__script} =~ /var dialogs/;
 
-	_add_dialog_open_function_to_script();
-
-	my $before = delete $arg -> {before};
-	my $after  = delete $arg -> {after};
-
 	$_REQUEST {__script} .= <<EOJS;
 dialogs[$options->{id}] = @{[ $_JSON -> encode ($arg) ]};
 EOJS
 
-	$before .= ';' if $before && $before !~ /;\s*$/;
-	$after  .= ';' if $after  && $after  !~ /;\s*$/;
+	if ($arg -> {before}) {
+		$_REQUEST {__script} .= "\ndialogs[$options->{id}].before = function() {$arg->{before}};"
+	}
 
-	$arg -> {before} = $before if $before;
-	$arg -> {after}  = $after  if $after;
+	if ($arg -> {after}) {
+		$_REQUEST {__script} .= "\ndialogs[$options->{id}].after = function(result) {$arg->{after}};"
+	}
 
 	return $_SKIN -> dialog_open ($arg, $options);
 
