@@ -34,7 +34,7 @@ sub setup_page_content {
 			type        => $_REQUEST {type},
 			label       => '',
 			order_context		=> $_REQUEST {__order_context} || '',
-		}, ['id_user', 'type', 'label'],
+		}, ['id_user', 'type', 'label', 'order_context'],
 
 	);
 
@@ -179,7 +179,7 @@ sub check___query {
 		
 	}
 	
-	our $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => , $_REQUEST {id___query});
+	our $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id___query});
 	
 	if ($_QUERY -> {label}) {
 	
@@ -562,6 +562,7 @@ sub draw_item_of___queries {
 				},
 			],
 			no_edit => $_REQUEST {'__page_content'} -> {no_del},
+			confirm_ok => undef,
 		}, 
 		
 		$data, 

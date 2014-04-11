@@ -189,6 +189,7 @@ BEGIN {
 			last_update 
 			model_scripts 
 			updates_scripts
+			internal_error_repeats
 			
 		)) { 
 		
