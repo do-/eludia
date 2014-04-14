@@ -1973,8 +1973,8 @@ EOH
 					onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
 					onChange="is_dirty=true; $$options{onChange}"
 					style="visibility:hidden; width: 1px"
-					multiple="true"
-					is-native="true"
+					multiple="multiple"
+					data-ken-multiple="true"
 				/>
 EOH
 

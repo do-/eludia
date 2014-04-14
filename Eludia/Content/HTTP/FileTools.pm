@@ -134,6 +134,17 @@ sub upload_files {
 
 		$options -> {name} = "${name}_${no}";
 
+		my $is_multiple_file_field = 1 < 0 + @{$_REQUEST {"_" . $options -> {name} . "[]"}};
+
+		if ($is_multiple_file_field) {
+
+			my $files = upload_file_multiple ($options);
+
+			push @result, @$files;
+
+			next;
+		}
+
 		push @result, upload_file ($options);
 
 	}
@@ -144,11 +155,32 @@ sub upload_files {
 
 ################################################################################
 
+sub upload_file_multiple {
+
+	my ($options) = @_;
+
+	my $uploads = $apr -> upload_multiple ('_' . $options -> {name});
+
+	$uploads or return undef;
+
+	my @files;
+	foreach my $upload (@$uploads) {
+
+		$options -> {upload} = $upload;
+
+		push @files, upload_file ($options);
+	}
+
+	return \@files;
+}
+
+################################################################################
+
 sub upload_file {
 
 	my ($options) = @_;
 
-	my $upload = $apr -> upload ('_' . $options -> {name});
+	my $upload = $options -> {upload} || $apr -> upload ('_' . $options -> {name});
 
 	$upload or return undef;
 
