@@ -100,10 +100,18 @@ sub wish_to_actually_create_table_data {
 
 	my @cols = ();
 	my @prms = ();
-	
-	foreach my $col (keys %{$items -> [0]}) {
 
-		push @cols, $col;
+	my $uniq_cols;
+	foreach my $record (@$items) {
+		foreach my $column (keys %$record) {
+			$uniq_cols -> {$column} = 1;
+		}
+	}
+
+	my @cols = keys %$uniq_cols;
+
+	foreach my $col (@cols) {
+
 		push @prms, [ map {$_ -> {$col}} @$items];
 	
 	}

@@ -32,8 +32,15 @@ sub wish_to_actually_modify_table_data {
 
 	@$items > 0 or return;
 
-	my @cols = keys %{$items -> [0]};
-	
+	my $uniq_cols;
+	foreach my $record (@$items) {
+		foreach my $column (keys %$record) {
+			$uniq_cols -> {$column} = 1;
+		}
+	}
+
+	my @cols = keys %$uniq_cols;
+
 	$statement .= ' DELAYED' if $options -> {delayed};
 	
 	my $sql = "$statement $options->{table} (" . (join ',', @cols) . ")VALUES";
