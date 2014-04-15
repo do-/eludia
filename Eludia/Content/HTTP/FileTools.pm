@@ -171,6 +171,8 @@ sub upload_file_multiple {
 		push @files, upload_file ($options);
 	}
 
+	delete $options -> {upload};
+
 	return \@files;
 }
 
@@ -179,6 +181,13 @@ sub upload_file_multiple {
 sub upload_file {
 
 	my ($options) = @_;
+
+	my $is_multiple_file_field = !$options -> {upload}
+		&& 1 < 0 + @{$_REQUEST {"_" . $options -> {name} . "[]"}};
+
+
+	return undef
+		if $is_multiple_file_field;
 
 	my $upload = $options -> {upload} || $apr -> upload ('_' . $options -> {name});
 
