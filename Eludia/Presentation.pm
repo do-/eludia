@@ -494,20 +494,16 @@ sub check_href {
 
 	if ($options -> {dialog}) {
 
-		$url =
-			dialog_open ({
-
-				title => $options -> {dialog} -> {title},
-
-				href => $url . '#',
-
-			}, $options -> {dialog} -> {options}) .
-			$options -> {dialog} -> {after} .
-			';setCursor (); try {top.setCursor (top)} catch (e) {}; void (0)';
-
-		if ($options -> {dialog} -> {before}) {
-			$url =~ s/^javascript:/javascript: $options->{dialog}->{before};/i;
-		}
+		$url = dialog_open (
+			{
+				title  => $options -> {dialog} -> {title},
+				href   => $url . '#',
+				after  => $options -> {dialog} -> {after} . ';setCursor (); try {top.setCursor (top)} catch (e) {}; void (0)',
+				before => $options -> {dialog} -> {before},
+				off    => $options -> {dialog} -> {off},
+			},
+			$options -> {dialog} -> {options}
+		);
 
 	}
 
@@ -2606,16 +2602,28 @@ sub dialog_open {
 	$_REQUEST {__script} .= 'var results; var dialogs = {};'
 		unless $_REQUEST {__script} =~ /var dialogs/;
 
+	my ($before, $after, $off) = (delete $arg -> {before}, delete $arg -> {after}, delete $arg -> {off});
+
 	$_REQUEST {__script} .= <<EOJS;
 dialogs[$options->{id}] = @{[ $_JSON -> encode ($arg) ]};
 EOJS
 
-	if ($arg -> {before}) {
-		$_REQUEST {__script} .= "\ndialogs[$options->{id}].before = function() {$arg->{before}};"
+	if ($before) {
+		$before = "function() {$before}"
+			unless ($before =~ /^\s+function\b/);
+		$_REQUEST {__cript} .= "\ndialogs[$options->{id}].before = $before;"
 	}
 
-	if ($arg -> {after}) {
-		$_REQUEST {__script} .= "\ndialogs[$options->{id}].after = function(result) {$arg->{after}};"
+	if ($after) {
+		$after = "function(result) {$after}"
+			unless ($after =~ /^\s+function\b/);
+		$_REQUEST {__script} .= "\ndialogs[$options->{id}].after = $after;"
+	}
+
+	if ($off) {
+		$off = "function() {$off}"
+			unless ($off =~ /^\s+function\b/);
+		$_REQUEST {__script} .= "\ndialogs[$options->{id}].off = $off;"
 	}
 
 	return $_SKIN -> dialog_open ($arg, $options);

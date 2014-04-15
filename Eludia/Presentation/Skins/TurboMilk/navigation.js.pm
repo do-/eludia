@@ -69,7 +69,7 @@ window.confirm = function (s) {
 	return r;
 
 };
-
+
 function drop_form_tr_for_this_minus_icon (i) {
 
 	$(i).parent ().parent ().remove ();
@@ -198,6 +198,10 @@ function dialog_open (options) {
 	if (typeof (options) === 'number') {
 		options = dialogs[options];
 	}
+
+	options.off = options.off || function (){return false};
+
+	if (options.off()) return;
 
 	options.before = options.before || function (){};
 	options.before();
@@ -1169,7 +1173,7 @@ TableSlider.prototype.set_row = function (row) {
 			this.rows [row].scrollIntoView(false);
 		}
 	}
-	
+	
 	if (row) this.cell_on ();
 
 }
