@@ -1184,15 +1184,17 @@ sub sql_upload_files {
 
 	my ($options) = @_;
 
+	my ($table, $field) = split /\./, $_REQUEST {"__$options->{name}_file_field"};
+
+	my $no_del = $_REQUEST {"__$options->{name}_file_no_del"};
+
 	my $uploaded_files = upload_files ($options);
 
 	@$uploaded_files > 0 or return;
 
-	my ($table, $field) = split /\./, $_REQUEST {"__$options->{name}_file_field"};
-
 	$options -> {id} ||= $_REQUEST {id};
 
-	sql_do ("UPDATE $table SET fake = -1 WHERE $field = ?", $options -> {id});
+	sql_do ("UPDATE $table SET fake = -1 WHERE $field = ?", $options -> {id}) unless $no_del;
 
 	my $name = $options -> {name};
 
