@@ -2652,6 +2652,10 @@ sub draw_text_cell {
 
 	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor;
 
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
+
 	my $html = dump_tag ('td', $data -> {attributes});
 
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
@@ -2686,6 +2690,7 @@ sub draw_text_cell {
 	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
 
 	$html .= $data -> {label};
+	$html .= $label_tail;
 
 	if ($data -> {href}) {
 
@@ -2709,9 +2714,13 @@ sub draw_radio_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
+
 	my $attributes = dump_attributes ($data -> {attributes});
 
-	return qq {<td $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'></td>};
+	return qq {<td $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'>$label_tail</td>};
 
 }
 
@@ -2721,11 +2730,15 @@ sub draw_datetime_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
+
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	local $options -> {name} = $data -> {name};
 
-	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "</td>";
+	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "$label_tail</td>";
 
 }
 
@@ -2735,11 +2748,15 @@ sub draw_checkbox_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
+
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	my $label = $data -> {label} ? '&nbsp;' . $data -> {label} : '';
 
-	return qq {<td $$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label</td>};
+	return qq {<td $$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label$label_tail</td>};
 
 }
 
@@ -2750,6 +2767,10 @@ sub draw_select_cell {
 	my ($_SKIN, $data, $options) = @_;
 
 	my $s_attributes -> {class} = "form-mandatory-inputs" if $data -> {mandatory};
+
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
 
 	my $attributes = dump_attributes ($data -> {attributes});
 	$s_attributes = dump_attributes ($s_attributes);
@@ -2780,7 +2801,7 @@ sub draw_select_cell {
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
 	}
 
-	$html .= qq {</select></td>};
+	$html .= qq {</select>$label_tail</td>};
 
 	return $html;
 
@@ -2792,6 +2813,10 @@ sub draw_select_cell {
 sub draw_string_voc_cell {
 
 	my ($_SKIN, $data, $options) = @_;
+
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
@@ -2827,7 +2852,7 @@ EOJS
 			id    => "$data->{name}_id",
 
 		})
-		. '</span></nobr></td>';
+		. "</span></nobr>$label_tail</td>";
 
 	return $html;
 
@@ -2915,6 +2940,10 @@ EOH
 		};
 	}
 
+	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
+
+	$data -> {attributes} -> {title} .= $label_tail;
+
 	my $attributes = dump_attributes ($data -> {attributes});
 	$attr_input = dump_attributes ($attr_input);
 
@@ -2922,7 +2951,7 @@ EOH
 
 	my $tabindex = 'tabindex=' . (++ $_REQUEST {__tabindex});
 
-	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" $attr_input name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex>$autocomplete</nobr></td>};
+	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" $attr_input name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex>$autocomplete</nobr>$label_tail</td>};
 
 }
 
