@@ -3964,9 +3964,52 @@ dTree.prototype.nodeStatus = function(status, id, bottom) {
 
 };
 
+// Open or close sublevel
 
+dTree.prototype.oLevel = function(status, id) {
+	for (var n=0; n<this.aNodes.length; n++) {
+		if (this.aNodes[n].id == id) {
+			if (status) {
+				this.openLevelMy(this.aNodes[n]);
+			} else {
+				this.closeLevelMy(this.aNodes[n]);
+			}
+		}
+	}
+	if (this.config.useCookies) this.updateCookie();
+	setCursor ();
+}
 
+// Open sublevel
 
+dTree.prototype.openLevelMy = function(node) {
+	for (var n=0; n<this.aNodes.length; n++) {
+		if ((this.aNodes[n].pid == node.id || this.aNodes[n].id == node.id) && this.aNodes[n]._hc) {
+			this.oNode (true, n, this.aNodes[n]);
+			if (this.aNodes[n].id != node.id) this.openLevelMy(this.aNodes[n]);
+		}
+	}
+};
+
+// Close sublevel
+
+dTree.prototype.closeLevelMy = function (node) {
+	for (var n=0; n<this.aNodes.length; n++) {
+		if ((this.aNodes[n].pid == node.id || this.aNodes[n].id == node.id) && this.aNodes[n]._io) {
+			this.oNode (false, n, this.aNodes[n]);
+			if (this.aNodes[n].id != node.id) this.closeLevelMy(this.aNodes[n]);
+		}
+	}
+};
+
+// Open or close one node
+
+dTree.prototype.oNode = function(status, n, node) {
+	if (status && node._hc || !status && node._io) {
+		this.nodeStatus(status, n, node._ls);
+	}
+	node._io = status;
+}
 
 // [Cookie] Clears a cookie
 

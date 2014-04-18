@@ -2366,7 +2366,7 @@ sub draw_node {
 
 		next if $button -> {off};
 
-		$button -> {href} .= '&__tree=1';
+		$button -> {href} .= '&__tree=1' if (!$button -> {no_tree} && $button -> {href} !~ /^javascript:/i);
 		check_href ($button);
 
 		$button -> {target} ||= '_content_iframe';
