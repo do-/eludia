@@ -2546,7 +2546,7 @@ sub draw_page {
 		$_SKIN -> {subset}       = $_SUBSET;
 		$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
 		$page  -> {auth_toolbar} = draw_auth_toolbar ();
-		$page  -> {body} 	 = call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content}) unless $_REQUEST {__only_menu};
+		$page  -> {body} 	 = call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content}) unless $_REQUEST {__only_menu} || !$_REQUEST_VERBATIM {type} && !$_REQUEST_VERBATIM {__subset};
 		$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
 		$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
 	};
