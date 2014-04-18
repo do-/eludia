@@ -378,9 +378,11 @@ sub order {
 
 sub check_title {
 
-	my ($options) = @_;
+	my ($data, $options) = @_;
 
-	my $title = exists $options -> {title} ? $options -> {title} : '' . $options -> {label};
+	my $title = (exists $data -> {title} ? $data -> {title} : undef)
+		|| (exists $options -> {title} ? $options -> {title} : undef)
+		|| '' . $data -> {label};
 
 	$title =~ s{\<.*?\>}{}g;
 	$title =~ s{^(\&nbsp\;|\s)+}{};
@@ -388,7 +390,7 @@ sub check_title {
 	$title = HTML::Entities::decode_entities ($title) if $title =~ /\&/;
 	$title =~ s{\"}{\&quot\;}g;
 
-	$options -> {attributes} -> {title} = $title;
+	$data -> {attributes} -> {title} = $title ;
 
 }
 
@@ -1076,6 +1078,35 @@ sub draw_toolbar {
 
 			next if $button -> {off};
 
+			if (@{$button -> {items}}) {
+
+				my $items;
+
+				foreach my $item (@{$button -> {items}}) {
+
+					next if ($item -> {off});
+
+					check_href ($item);
+
+					if (
+						!(
+							$item -> {keep_esc} ||
+							(!exists $item -> {keep_esc} && $item -> {icon} eq 'cancel')
+						)
+					) {
+						$item -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
+					}
+
+					$item -> {confirm} = js_escape ($item -> {confirm}) if ($item -> {confirm});
+
+					push @$items, $item;
+				}
+
+				$button -> {items} = $items;
+
+				$button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items});
+			}
+
 			if ($button -> {hidden} && !$_REQUEST {__edit_query}) {
 
 				push @{$_ORDER {$button -> {order}} -> {filters}}, $button if $conf -> {core_store_table_order} && $button -> {order};
@@ -1119,9 +1150,82 @@ sub draw_toolbar {
 
 ################################################################################
 
+sub draw_toolbar_button_vert_menu {
+
+	my ($name, $types, $level, $is_main) = @_;
+
+	$level ||= 1;
+
+	$types = [grep {!$_ -> {off}} @$types];
+
+	my @types = ();
+
+	foreach my $type (@$types) {
+
+		next if $type -> {off};
+
+		if (ref $type -> {items} eq ARRAY && !$_REQUEST {__edit}) {
+
+			$type -> {name}     ||= '' . $type if $type -> {items};
+
+			$type -> {vert_menu}  = draw_toolbar_button_vert_menu ($type -> {name}, $type -> {items}, $level + 1, $is_main);
+
+		}
+		else {
+
+			$type -> {href}     ||= "/?type=$$type{name}";
+
+			$type -> {href}      .= "&role=$$type{role}" if $type -> {role};
+
+			check_href ($type);
+
+			$type -> {target}   ||= "_self";
+
+		}
+
+		$_SKIN -> {options} -> {no_server_html} or $_SKIN -> __adjust_toolbar_btn_vert_menu_item ($type, $name, $types, $level, $is_main);
+
+		push @types, $type;
+
+	}
+
+	return $_SKIN -> draw_toolbar_button_vert_menu ($name, \@types, $level);
+}
+
+################################################################################
+
 sub draw_centered_toolbar_button {
 
 	my ($options) = @_;
+
+	if (@{$options -> {items}}) {
+
+		my $items;
+
+		foreach my $item (@{$options -> {items}}) {
+
+			next if ($item -> {off});
+
+			check_href ($item);
+
+			if (
+				!(
+					$item -> {keep_esc} ||
+					(!exists $item -> {keep_esc} && $item -> {icon} eq 'cancel')
+				)
+			) {
+				$item -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
+			}
+
+			$item -> {confirm} = js_escape ($item -> {confirm}) if ($item -> {confirm});
+
+			push @$items, $item;
+		}
+
+		$options -> {items} = $items;
+
+		$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});
+	}
 
 	if ($options -> {preset}) {
 		my $preset = $conf -> {button_presets} -> {$options -> {preset}};
@@ -1169,7 +1273,10 @@ sub draw_centered_toolbar {
 	foreach my $i (@$list) {
 		next if $i -> {off};
 		$i -> {target} ||= $options -> {buttons_target};
+
 		$i -> {html} = draw_centered_toolbar_button ($i);
+
+
 		$options -> {cnt} ++;
 	}
 

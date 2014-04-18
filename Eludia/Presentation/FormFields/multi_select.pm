@@ -74,7 +74,7 @@ EOJS
 		}
 		foreach my $field (@{$options -> {detail_from}}) {
 			$detail_from .= <<EOJS;
-			re = /&$field=[\\d]*/;
+			re = /&$field=[\\d,-]*/;
 			dialog_open_$url_dialog_id.href = dialog_open_$url_dialog_id.href.replace(re, '');
 			dialog_open_$url_dialog_id.href += '&$field=' + document.getElementsByName ('_$field') [0].value;
 EOJS

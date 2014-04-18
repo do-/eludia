@@ -11,6 +11,7 @@
 .tbbg9 {background-color: #888888;}
 .tbbga {background-color: #e5e5e5;}
 .tbbgb {background-color: #e4e9ee;}
+.tbbgc {background-color: #a6a8ab;}
 
 .form-article {
 

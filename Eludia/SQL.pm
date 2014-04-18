@@ -1436,6 +1436,8 @@ sub wish {
 	my $is_virgin = 1;
 	@layers > 0 or @layers = ({});
 
+	my $original = &{"wish_to_explore_existing_$type"} ($options);
+
 	foreach my $layer (@layers) {
 
 		my $existing = &{"wish_to_explore_existing_$type"} ($options);
@@ -1446,7 +1448,7 @@ sub wish {
 
 			my $old = delete $existing -> {$key} or (push @{$todo -> {create}}, $new) and next;
 
-			&{"wish_to_update_demands_for_$type"} ($old, $new, $options);
+			&{"wish_to_update_demands_for_$type"} ($old, $new, $options, $original -> {$key});
 
 			next if Dumper ($new) eq Dumper ($old);
 
