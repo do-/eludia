@@ -3942,6 +3942,7 @@ sub draw_node {
 		name    => $options -> {label},
 		url     => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
 		title   => $options -> {title} || $options -> {label},
+		color   => $options -> {color},
 	};
 
 	map {$node -> {$_} = $options -> {$_} if $options -> {$_}} qw (target icon iconOpen is_checkbox is_radio);

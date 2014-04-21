@@ -3638,6 +3638,8 @@ dTree.prototype.node = function(node, nodeId) {
 
 		if (node.title) str += ' title="' + node.title + '"';
 
+		if (node.color) str += ' style="color:' + node.color + '"';
+
 		if (node.target) str += ' target="' + node.target + '"';
 
 		if (this.config.useStatusText) str += ' onmouseover="window.status=\'' + node.name + '\';return true;" onmouseout="window.status=\'\';return true;" ';
@@ -3654,7 +3656,13 @@ dTree.prototype.node = function(node, nodeId) {
 
 	}
 
-	else if ((!this.config.folderLinks || !node.url) && node._hc && node.pid != this.root.id) str += '<a href="javascript: ' + this.obj + '.o(' + nodeId + ');" class="node">';
+	else {
+		if ((!this.config.folderLinks || !node.url) && node._hc && node.pid != this.root.id) {
+			str += '<a href="javascript: ' + this.obj + '.o(' + nodeId + ');" class="node"';
+			if (node.color) str += ' style="color:' + node.color + '"';
+			str += '>';
+		}
+	}
 
 	str += node.name;
 
@@ -3946,7 +3954,7 @@ dTree.prototype.nodeStatus = function(status, id, bottom) {
 
 		eIcon	= document.getElementById('i' + this.obj + id);
 
-		eIcon.src = this.config.iconPath + ((status) ? this.aNodes[id].iconOpen : this.aNodes[id].icon);
+		try { eIcon.src = this.config.iconPath + ((status) ? this.aNodes[id].iconOpen : this.aNodes[id].icon) } catch (e) {};
 
 	}
 
@@ -3956,9 +3964,9 @@ dTree.prototype.nodeStatus = function(status, id, bottom) {
 
 	((status)?this.icon.nlMinus:this.icon.nlPlus);
 
-	eJoin.src = this.config.iconPath + src
+	try { eJoin.src = this.config.iconPath + src } catch (e) {};
 
-	eDiv.style.display = (status) ? 'block': 'none';
+	try { eDiv.style.display = (status) ? 'block': 'none' } catch (e) {};
 
 	document.body.style.cursor = 'default';
 
