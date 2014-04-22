@@ -3871,7 +3871,7 @@ sub dialog_open {
 
 	my ($_SKIN, $arg, $options) = @_;
 
-	return "javaScript: dialog_open (dialogs[$options->{id}]);";
+	return "javaScript: dialog_open ($options->{id});";
 
 }
 

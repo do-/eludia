@@ -2611,7 +2611,7 @@ EOJS
 	if ($before) {
 		$before = "function() {$before}"
 			unless ($before =~ /^\s+function\b/);
-		$_REQUEST {__cript} .= "\ndialogs[$options->{id}].before = $before;"
+		$_REQUEST {__script} .= "\ndialogs[$options->{id}].before = $before;"
 	}
 
 	if ($after) {
