@@ -566,7 +566,8 @@ sub handle_request_of_type_showing {
 
 	adjust_last_query_string ();
 
-	setup_page_content ($page) unless $_REQUEST {__only_menu};
+	setup_page_content ($page)
+		unless ($_REQUEST {__only_menu} || !$_REQUEST_VERBATIM {type} && !$_REQUEST_VERBATIM {__subset});
 
 	return handler_finish () if $_REQUEST {__response_sent} && !$_REQUEST {error};
 
