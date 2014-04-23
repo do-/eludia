@@ -417,6 +417,36 @@ sub __adjust_menu_item {
 
 ################################################################################
 
+sub __adjust_toolbar_btn_vert_menu_item {
+
+	my ($_SKIN, $type, $name, $types, $level, $is_main) = @_;
+
+	$type -> {onmouseout} = "menuItemOutForToolbarBtn ()";
+
+	if (ref $type -> {items} eq ARRAY && !$_REQUEST {__edit}) {
+
+		$type -> {onhover}    = "menuItemOverForToolbarBtn (this, '$$type{name}', '$name', $level)";
+
+	}
+	else {
+
+		$type -> {onhover}    = "menuItemOverForToolbarBtn (this, null, '$name', $level)";
+
+		$type -> {onclick}    =
+
+			$type  -> {href} =~ /^javascript\:/i ? $' :
+
+			$_SKIN -> {options} -> {core_unblock_navigation} ? "hideSubMenusForToolbarBtn(0); if (!check_edit_mode (this, '$$type{href}')) activate_link('$$type{href}', '$$type{target}')" :
+
+			"hideSubMenusForToolbarBtn(0); activate_link('$$type{href}', '$$type{target}')";
+
+		$type -> {onclick} =~ s{[\n\r]}{}gsm;
+
+	}
+}
+
+################################################################################
+
 sub __adjust_vert_menu_item {
 
 	my ($_SKIN, $type, $name, $types, $level, $is_main) = @_;

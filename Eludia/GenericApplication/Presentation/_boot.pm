@@ -44,7 +44,7 @@ sub draw__boot {
 
 
 		}
-		else {
+		else if (navigator.userAgent != "unitech mobile") {
 		
 			var brand = navigator.appName;
 		

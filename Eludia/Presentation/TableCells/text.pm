@@ -39,7 +39,7 @@ sub draw_text_cell {
 		
 		$data -> {attributes} -> {align} ||= 'right' if $options -> {is_total};
 
-		check_title ($data);	
+		check_title ($data, $options);
 
 		if ($_REQUEST {select}) {
 

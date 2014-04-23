@@ -57,11 +57,21 @@ sub wish_to_explore_existing_table_data {
 
 sub wish_to_update_demands_for_table_data {
 
-	my ($old, $new, $options) = @_;
+	my ($old, $new, $options, $original) = @_;
 
-	foreach (keys %$old) {
-		exists  $new -> {$_} && (!exists ($DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$_}) || !$DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$_} -> {__no_update})
-			or $new -> {$_} = $old -> {$_};
+	foreach my $column (keys %$old) {
+
+		next # no such column by model
+			if exists $new -> {$column}
+				&& !exists ($DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$column});
+
+
+		next # column not updatable and exists previous value
+			if exists $new -> {$column}
+				&& $DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$column} -> {__no_update}
+				&& defined $original -> {$column};
+
+		$new -> {$column} = $old -> {$column};
 	};
 	
 	foreach (keys %$new) {defined $new -> {$_} and $new -> {$_} .= ''};
@@ -100,10 +110,18 @@ sub wish_to_actually_create_table_data {
 
 	my @cols = ();
 	my @prms = ();
-	
-	foreach my $col (keys %{$items -> [0]}) {
 
-		push @cols, $col;
+	my $uniq_cols;
+	foreach my $record (@$items) {
+		foreach my $column (keys %$record) {
+			$uniq_cols -> {$column} = 1;
+		}
+	}
+
+	my @cols = keys %$uniq_cols;
+
+	foreach my $col (@cols) {
+
 		push @prms, [ map {$_ -> {$col}} @$items];
 	
 	}
