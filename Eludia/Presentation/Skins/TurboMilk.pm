@@ -2211,6 +2211,7 @@ sub draw_centered_toolbar_button {
 		}
 
 		my $code = "\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\\'$_REQUEST{__static_url}/busy.gif\\'> $i18n->{request_sent}</h2>'})";
+		$code .= ";window.setInterval(poll_invisibles, 100);" if $options -> {target} == 'invisible';
 
 		$options -> {href} =~ s/\bnope\b/$code;nope/;
 
