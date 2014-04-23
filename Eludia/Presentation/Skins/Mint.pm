@@ -3180,7 +3180,7 @@ sub draw_super_table {
 
 
 
-	my $html = qq {<div class="eludia-table-container" id="$$options{id_table}" style="height:1000px;width:100%;"></div>\n};
+	my $html = qq {<div class="eludia-table-container" id="$$options{id_table}" style="height:90%; width:100%;"></div>\n};
 
 	$_REQUEST {__scrollable_table_row} ||= 0;
 
@@ -3209,7 +3209,8 @@ sub draw_super_table {
 		$$options{path}
 		$$options{top_toolbar}
 
-		<form name=$$options{name} action=$_REQUEST{__uri} method=post target=invisible $enctype>
+		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible" $enctype
+		style="height: 100%;">
 		<input type=hidden name="__suggest" value="">
 		$hiddens_html
 EOH
