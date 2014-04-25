@@ -62,7 +62,7 @@ window.__original_confirm = window.confirm;
 window.confirm = function (s) {
 
 	var r = window.__original_confirm (s);
-	
+
 	window.setCursor (top);
 	window.setCursor (window);
 
@@ -193,16 +193,34 @@ function set_suggest_result (sel, id) {
 	
 }
 
-function dialog_open (href, arg, options) {
+function dialog_open (options) {
 
-	arg.parent = window;
+	if (typeof (options) === 'number') {
+		options = dialogs[options];
+	}
 
-	var result = window.showModalDialog (href, arg, options);
+	options.off = options.off || function (){return false};
 
-	document.body.style.cursor = 'default';
+	if (options.off()) return;
 
-	return result;
+	options.before = options.before || function (){};
+	options.before();
 
+	options.href   = options.href.replace(/\#?\&_salt=[\d\.]+$/, '');
+	options.href  += '&_salt=' + Math.random ();
+	options.parent = window;
+
+	var width  = options.width  || (screen.availWidth - (screen.availWidth <= 800 ? 50 : 100));
+	var height = options.height || (screen.availHeight - (screen.availHeight <= 600 ? 50 : 100));
+
+	var url = 'http://' + window.location.host + '/i/_skins/TurboMilk/dialog.html?' + Math.random ();
+	var result = window.showModalDialog(url, options, options.options + ';dialogWidth=' + width + 'px;dialogHeight=' + height + 'px');
+	result = result || {result : 'esc'};
+
+	options.after = options.after || function (result){};
+	options.after(result);
+
+	document.body.style.cursor='default';
 }
 
 function close_multi_select_window (ret) {

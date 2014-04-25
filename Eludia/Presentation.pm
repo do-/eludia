@@ -496,20 +496,16 @@ sub check_href {
 
 	if ($options -> {dialog}) {
 
-		$url =
-			dialog_open ({
-
-				title => $options -> {dialog} -> {title},
-
-				href => $url . '#',
-
-			}, $options -> {dialog} -> {options}) .
-			$options -> {dialog} -> {after} .
-			';setCursor (); try {top.setCursor (top)} catch (e) {}; void (0)';
-
-		if ($options -> {dialog} -> {before}) {
-			$url =~ s/^javascript:/javascript: $options->{dialog}->{before};/i;
-		}
+		$url = dialog_open (
+			{
+				title  => $options -> {dialog} -> {title},
+				href   => $url . '#',
+				after  => $options -> {dialog} -> {after} . ';setCursor (); try {top.setCursor (top)} catch (e) {}; void (0)',
+				before => $options -> {dialog} -> {before},
+				off    => $options -> {dialog} -> {off},
+			},
+			$options -> {dialog} -> {options}
+		);
 
 	}
 
@@ -2696,21 +2692,46 @@ sub dialog_open {
 
 	$options -> {id} = ++ $_REQUEST {__dialog_cnt};
 
-	$options -> {dialogHeight} ||= $options -> {height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
-	$options -> {dialogWidth}  ||= $options -> {width}  || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
-
 	$arg ||= {};
 
 	check_href ($arg);
 
+	$arg -> {height} ||= $options -> {height} || delete $options -> {dialogHeight};
+	$arg -> {width}  ||= $options -> {width}  || delete $options -> {dialogWidth};
+
+	delete $arg -> {height} unless $arg -> {height};
+	delete $arg -> {width}  unless $arg -> {width};
+
+	foreach (qw(status resizable help)) {$options -> {$_} ||= 'no'}
+
+	$arg -> {options} = join ';', map {"$_:$options->{$_}"} keys %$options;
+
+	$_REQUEST {__script} .= 'var results; var dialogs = {};'
+		unless $_REQUEST {__script} =~ /var dialogs/;
+
+	my ($before, $after, $off) = (delete $arg -> {before}, delete $arg -> {after}, delete $arg -> {off});
+
 	$_REQUEST {__script} .= <<EOJS;
-		var dialog_open_$options->{id} = @{[ $_JSON -> encode ($arg) ]};
-		var dialog_open_$options->{id}_width = $options->{dialogWidth};
-		var dialog_open_$options->{id}_height = $options->{dialogHeight};
+dialogs[$options->{id}] = @{[ $_JSON -> encode ($arg) ]};
 EOJS
 
-	$options -> {dialogHeight} .= 'px';
-	$options -> {dialogWidth} .= 'px';
+	if ($before) {
+		$before = "function() {$before}"
+			unless ($before =~ /^\s+function\b/);
+		$_REQUEST {__script} .= "\ndialogs[$options->{id}].before = $before;"
+	}
+
+	if ($after) {
+		$after = "function(result) {$after}"
+			unless ($after =~ /^\s+function\b/);
+		$_REQUEST {__script} .= "\ndialogs[$options->{id}].after = $after;"
+	}
+
+	if ($off) {
+		$off = "function() {$off}"
+			unless ($off =~ /^\s+function\b/);
+		$_REQUEST {__script} .= "\ndialogs[$options->{id}].off = $off;"
+	}
 
 	return $_SKIN -> dialog_open ($arg, $options);
 
