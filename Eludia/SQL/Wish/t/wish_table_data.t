@@ -1,4 +1,4 @@
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 my $table = 'testtesttesttable1';
 
@@ -142,6 +142,26 @@ is_stored ('Duplicated items', [
 	{id => 4, fake => 0, name => 'pair',   label => 'The Four'},
 	{id => 5, fake => 0, name => 'impair', label => 'The Five'},
 	{id => 6, fake => 0, name => 'pair',   label => 'The Six'},
+
+]);
+
+################################################################################
+
+local $DB_MODEL -> {tables} -> {$table} -> {columns} -> {label} -> {__no_update} = 0;
+
+wish (table_data => [
+
+	{id => 6, fake => 0, label => 'The Six Updated'},
+
+], {table => $table, key => 'id'});
+
+is_stored ('Update by id', [
+
+	{id => 1, fake => 0, name => 'impair', label => 'The One'},
+	{id => 3, fake => 0, name => 'impair', label => 'The Three'},
+	{id => 4, fake => 0, name => 'pair',   label => 'The Four'},
+	{id => 5, fake => 0, name => 'impair', label => 'The Five'},
+	{id => 6, fake => 0, name => 'pair',   label => 'The Six Updated'},
 
 ]);
 
