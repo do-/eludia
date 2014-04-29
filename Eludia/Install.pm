@@ -1712,9 +1712,10 @@ sub test {
 
 	$ENV {ELUDIA_SILENT} = 1;
 
-	require Test::Harness::Util;
+	require Test::Harness;
 
-	my @core_tests = Test::Harness::Util::all_in ({start => $core_path});
+	use File::Find::Rule;
+	my @core_tests = File::Find::Rule -> name ('*.t')-> in ($core_path);
 
 	mkdir 't';
 
@@ -1732,7 +1733,7 @@ sub test {
 
 	}
 
-	my $cmd = qq {perl -I"$core_path" -MTest::Harness -MTest::Harness::Util -e"runtests (Test::Harness::Util::all_in({start => 't'}))"};
+	my $cmd = qq {perl -I"$core_path" -MTest::Harness -MFile::Find::Rule -MTest::Harness -e"runtests (File::Find::Rule->name('*.t')->in('.'))"};
 
 	use IPC::Open3;
 

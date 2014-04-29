@@ -161,8 +161,6 @@ sub is_stored {
 
 sub cleanup {
 
-	eval {sql_do ('DROP SEQUENCE   "OOC_aXe1X8jLRbZrxPDakPPnvw"')};
-	eval {sql_do ('DROP CONSTRAINT "OOC_U827OA4bdWC6DX6NSDReww"')};
 	eval {sql_do ("DROP TABLE $table")};
 
 }
