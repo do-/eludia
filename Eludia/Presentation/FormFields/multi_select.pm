@@ -32,11 +32,14 @@ sub draw_form_field_multi_select {
 		}
 EOJS
 
+	$options -> {delimeter} ||= $conf -> {multi_select_delimeter} || '<br>';
 
+	my $replace_delimeter = $options -> {delimeter} eq '<br>' ? ''
+		:".replace(/<br>/g, \"$options->{delimeter}\");";
 
 	my $after = <<EOJS;
-		if (result.result == 'ok') {
-			document.getElementById ('ms_$options').innerHTML=result.label;
+		if (typeof result !== 'undefined' && result.result == 'ok') {
+			document.getElementById ('ms_$options').innerHTML=result.label$replace_delimeter;
 			var el_ids = document.getElementsByName ('_$options->{name}') [0];
 			var oldIds = el_ids.value;
 			el_ids.value = result.ids;
@@ -44,8 +47,6 @@ EOJS
 
 	$after .= "if (!stringSetsEqual (oldIds, result.ids)) {$options->{onChange}}"
 		if $hasOnChangeEvent;
-
-
 
 	my $js_detail;
 
@@ -61,9 +62,9 @@ EOJS
 	$after .= "} void (0);";
 
 	my $url = dialog_open ({
-		href	=> $options -> {href} . '&multi_select=1',
-		title	=> $label,
-		after   => $after,
+		href  => $options -> {href} . '&multi_select=1',
+		title => $label,
+		after => $after,
 	});
 
 	$url =~ s/^javascript://i;
@@ -92,7 +93,7 @@ EOJS
 			items => [
 				{
 					type  => 'static',
-					value => qq[<span id="ms_$options">] . join ('<br>', map {$_ -> {label}} @{$options -> {values}}) . '</span>',
+					value => qq[<span id="ms_$options">] . join ($options -> {delimeter}, map {$_ -> {label}} @{$options -> {values}}) . '</span>',
 				},
 				{
 					type      => 'hidden',
@@ -105,16 +106,15 @@ EOJS
 					type    => 'button',
 					value   => 'Изменить',
 					onclick => <<EOJS,
-						re = /&_?salt=[\\d\\.]*/g; dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, ''); dialogs[$url_dialog_id].href += '&salt=' + Math.random (); re = /&ids=[^&]*/i; dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, ''); dialogs[$url_dialog_id].href += '&ids=' + document.getElementsByName ('_$options->{name}') [0].value;
+						re = /&_?salt=[\\d\\.]*/g; dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, ''); re = /&ids=[^&]*/i; dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, ''); dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&ids=' + document.getElementsByName ('_$options->{name}') [0].value;
 						$detail_from
 						$url
 EOJS
-
 					off     => $_REQUEST {__read_only} || $options -> {read_only},
 				},
 				{
 					type    => 'button',
-					value   => 'Очистить',
+					value   => $i18n -> {Clear},
 					onclick => $onclear_js,
 					off     => $_REQUEST {__read_only} || $options -> {read_only},
 				},
