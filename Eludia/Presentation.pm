@@ -2048,7 +2048,7 @@ sub draw_table {
 
 	my ($tr_callback, $list, $options) = @_;
 
-	$options -> {super_table} ||= $preconf -> {super_table};
+	$options -> {super_table} ||= $_REQUEST {__skin} eq 'Mint';
 
 	if ($options -> {super_table}) {
 
