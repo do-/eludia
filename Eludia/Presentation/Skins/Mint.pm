@@ -3114,6 +3114,10 @@ sub draw_super_table__only_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
 
+	if ($_REQUEST {__only_table} ne $options -> {id_table}) {
+		return '';
+	}
+
 	my $html = "<table id='$$options{id_table}'>";
 
 	$html .= $options -> {header} if $options -> {header};
