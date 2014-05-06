@@ -318,22 +318,50 @@ EOH
 	}
 
 	my $html = '';
+
 	my $items = $options -> {menu};
 
+	my $tab_bg = "tab_bg";
+
 	foreach my $item (@$items) {
-		if ($item -> {is_active}) {
+
+		if ($item -> {type} eq 'break') {
+
+			$html =~ s/tab_bg_3/tab_bg_1/g;
+
 			$html .= <<EOH;
+						$items_html</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+		<table border=0 cellspacing=0 cellpadding=0 width=100%>
+			<tr>
+				<td background="$_REQUEST{__static_url}/tab_bg_3.gif?$_REQUEST{__static_salt}" width=10><img height="0" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
+				<td background="$_REQUEST{__static_url}/tab_bg_3.gif?$_REQUEST{__static_salt}" valign="bottom" align="right">
+					<table border=0 cellspacing=0 cellpadding=0>
+						<tr>
+EOH
+			$items_html = '';
+
+			$tab_bg = "tab_bg_2";
+
+			next;
+		}
+
+		if ($item -> {is_active}) {
+			$items_html .= <<EOH;
 				<td width=5><img src="$_REQUEST{__static_url}/tab_l_1.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
 				<td bgcolor="#ffffff"><a id="$item" href="$$item{href}" class="tab-1" target="$item->{target}"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>
 				<td width=5><img src="$_REQUEST{__static_url}/tab_r_1.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
-				<td width=4><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=22 border=0></td>
+				<td width=2><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=2 height=22 border=0></td>
 EOH
 		} else {
-			$html .= <<EOH;
+			$items_html .= <<EOH;
 				<td width=5><img src="$_REQUEST{__static_url}/tab_l_0.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
 				<td background="$_REQUEST{__static_url}/tab_bg_0.gif?$_REQUEST{__static_salt}"><a id="$item" href="$$item{href}" class="tab-0" target="$item->{target}"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>
 				<td width=5><img src="$_REQUEST{__static_url}/tab_r_0.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
-				<td width=4><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=22 border=0></td>
+				<td width=2><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=2 height=22 border=0></td>
 EOH
 		}
 
@@ -342,9 +370,11 @@ EOH
 	return <<EOH;
 		<table border=0 cellspacing=0 cellpadding=0 width=100%>
 			<tr>
-				<td background="$_REQUEST{__static_url}/tab_bg.gif?$_REQUEST{__static_salt}" width=10><img height="33" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
-				<td background="$_REQUEST{__static_url}/tab_bg.gif?$_REQUEST{__static_salt}" valign="bottom" align="right"><table border=0 cellspacing=0 cellpadding=0>
-					<tr>$html</tr></table>
+				<td background="$_REQUEST{__static_url}/$tab_bg.gif?$_REQUEST{__static_salt}" width=10><img height="33" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
+				<td background="$_REQUEST{__static_url}/$tab_bg.gif?$_REQUEST{__static_salt}" valign="bottom" align="right">
+					<table border=0 cellspacing=0 cellpadding=0>
+						<tr>$html$items_html</tr>
+					</table>
 				</td>
 			</tr>
 			<tr>
