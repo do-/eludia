@@ -319,6 +319,8 @@ EOH
 
 	my $html = '';
 
+	my $items_html = '';
+
 	my $items = $options -> {menu};
 
 	my $tab_bg = "tab_bg";
