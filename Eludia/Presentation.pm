@@ -1970,6 +1970,10 @@ sub _load_super_table_dimensions {
 
 	my ($options, $headers, $list) = @_;
 
+	if ($options -> {no_resize}) {
+		return;
+	}
+
 	check___query ();
 
 	my $settings = get___query_settings ($_REQUEST {id___query});
