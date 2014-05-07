@@ -225,12 +225,14 @@ sub hrefs {
 		$options -> {kind} == 1 ?
 			(
 				href      => create_url ($name_order => $order, $name_desc => $order eq $_REQUEST {$name_order} ? 1 - $_REQUEST {$name_desc} : 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+				order     => $order,
 			)
 		:
 			(
 				href      => create_url ($name_order => $order, $name_desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
 				href_asc  => create_url ($name_order => $order, $name_desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
 				href_desc => create_url ($name_order => $order, $name_desc => 1, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+				order     => $order,
 			)
 	:
 		();
