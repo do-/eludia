@@ -61,19 +61,17 @@ sub wish_to_update_demands_for_table_data {
 
 	foreach my $column (keys %$old) {
 
-		next # no such column by model
-			if exists $new -> {$column}
-				&& !exists ($DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$column});
+		next if exists $new -> {$column}
+			&& !exists ($DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$column});
 
+		my $is_updatable = !defined $original -> {$column}?
+			1 : !$DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$column} -> {__no_update};
 
-		next # column not updatable and exists previous value
-			if exists $new -> {$column}
-				&& $DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$column} -> {__no_update}
-				&& defined $original -> {$column};
+		next if exists $new -> {$column} && $is_updatable;
 
 		$new -> {$column} = $old -> {$column};
 	};
-	
+
 	foreach (keys %$new) {defined $new -> {$_} and $new -> {$_} .= ''};
 
 }
@@ -108,9 +106,6 @@ sub wish_to_actually_create_table_data {
 
 	@$items > 0 or return;
 
-	my @cols = ();
-	my @prms = ();
-
 	my $uniq_cols;
 	foreach my $record (@$items) {
 		foreach my $column (keys %$record) {
@@ -119,6 +114,7 @@ sub wish_to_actually_create_table_data {
 	}
 
 	my @cols = keys %$uniq_cols;
+	my @prms = ();
 
 	foreach my $col (@cols) {
 
