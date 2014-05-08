@@ -217,10 +217,13 @@ function dialog_open (options) {
 	var result = window.showModalDialog(url, options, options.options + ';dialogWidth=' + width + 'px;dialogHeight=' + height + 'px');
 	result = result || {result : 'esc'};
 
+	$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
+
 	options.after = options.after || function (result){};
 	options.after(result);
 
-	document.body.style.cursor='default';
+	setCursor ();
+
 }
 
 function close_multi_select_window (ret) {
