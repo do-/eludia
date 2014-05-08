@@ -771,9 +771,16 @@ function open_popup_menu (event, type, level) {
 		hideSubMenus (level);
 	}
 
-	div.style.top  = event.clientY - 5 + document.body.scrollTop;
-	div.style.left = event.clientX - 5 + document.body.scrollLeft;
-	
+	var menu_top  = event.clientY - 5 + document.body.scrollTop;
+	var menu_left = event.clientX - 5 + document.body.scrollLeft;
+
+	var is_offscreen = menu_top + $(div).height() > $(window).height();
+	if (is_offscreen) {
+		menu_top = menu_top - $(div).height();
+	}
+
+	div.style.top  = menu_top;
+	div.style.left = menu_left;
 
 	last_vert_menu [level] = {
 		div:	div,
