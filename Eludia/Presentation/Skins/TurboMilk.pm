@@ -1100,6 +1100,8 @@ sub draw_form_field_select {
 		$options -> {attributes} -> {onClick} .= ";if (this.length == 2) {this.selectedIndex=1; this.onchange();}";
 	}
 
+	$options -> {attributes} -> {max_len} = $options -> {max_len};
+
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	if (defined $options -> {other}) {
