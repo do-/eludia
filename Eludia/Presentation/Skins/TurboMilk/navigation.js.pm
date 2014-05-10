@@ -217,7 +217,8 @@ function dialog_open (options) {
 	var result = window.showModalDialog(url, options, options.options + ';dialogWidth=' + width + 'px;dialogHeight=' + height + 'px');
 	result = result || {result : 'esc'};
 
-	$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
+	if (result.result == 'ok')
+		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
 
 	options.after = options.after || function (result){};
 	options.after(result);
