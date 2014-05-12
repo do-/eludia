@@ -303,10 +303,20 @@ sub do_update_columns_DEFAULT { # переставили колонки
 
 	my $ord = 1;
 	foreach my $column (@$columns) {
+
+		$column -> {sortable} = $column -> {asc} || $column -> {desc};
+
+		if ($_REQUEST {sort} && !$_REQUEST {order} && $column -> {sortable}) {
+			$_REQUEST {order} = $column -> {id};
+			$_REQUEST {desc} = $column -> {desc} || 0;
+		}
+
 		set_column_props ({
 			id_query => $_REQUEST {id___query},
 			id       => $column -> {id},
 			ord      => $ord,
+			sort     => $column -> {sortable}? ($column -> {sort} || 1) : 0,
+			desc     => $column -> {sortable}? ($column -> {desc} || 0) : 0,
 		});
 		$ord++;
 	}

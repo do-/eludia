@@ -2063,6 +2063,8 @@ sub draw_table {
 		_load_super_table_dimensions ($options, $headers, $list);
 
 		_adjust_super_table_headers ($options, $headers);
+
+		$options -> {headers} = $headers;
 	}
 
 	__profile_in ('draw.table' => {label => exists $options -> {title} && $options -> {title} ? $options -> {title} -> {label} : $options -> {name}});

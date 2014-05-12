@@ -3046,6 +3046,10 @@ sub draw_super_table_header_cell {
 	$cell -> {attributes} -> {id} ||= $cell -> {id};
 	$cell -> {attributes} -> {class} ||= $cell -> {class};
 
+	if ($cell -> {order}) {
+		$cell -> {attributes} -> {class} .= " sortable";
+	}
+
 	my $html = dump_tag (th => $cell -> {attributes}, $cell -> {label});
 
 	if ($cell -> {__is_first_not_fixed_cell}) {
@@ -3149,10 +3153,28 @@ sub draw_super_table__only_table {
 
 	#return draw_super_table_from_static_json ();
 
+	my $columns = [];
+
+	foreach my $column (@{$options -> {headers}}) {
+
+		$column -> {id} ||= $column -> {order} || $column -> {no_order},
+
+		$column -> {sortable} = $column -> {order} && $_REQUEST {order} eq $column -> {id};
+
+		my $sort_direction = $_QUERY -> {content} -> {columns} -> {$column -> {id}} -> {desc}? "desc" : "asc";
+
+		push @$columns, {
+			id   => $column -> {id},
+			($column -> {sortable}? (sort => "1") : ()),
+			($column -> {sortable}? ($sort_direction => "1") : ()),
+		};
+	}
+
 	my $table = {
 		id          => $options -> {id_table},
 		fix_columns => $options -> {__fixed_cols} + 0,
 		fix_rows    => $options -> {fix_rows} + 0,
+		columns     => $columns,
 		total       => 0 + $options -> {pager} -> {total},
 		cnt         => 0 + $options -> {pager} -> {cnt},
 		portion     => 0 + $options -> {pager} -> {portion},
