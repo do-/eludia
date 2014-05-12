@@ -15,6 +15,19 @@ sub draw_select_cell {
 		$value -> {id} =~ s{\"}{\&quot;}g; #"
 	}
 
+	if (defined $data -> {other}) {
+
+		ref $data -> {other} or $data -> {other} = {href => $data -> {other}};
+
+		$data -> {other} -> {label} ||= $i18n -> {voc};
+
+		check_href ($data -> {other});
+
+		$data -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
+		$data -> {other} -> {href} =~ s{([\&\?])__tree\=\w+}{$1};
+
+	}
+
 	return $_SKIN -> draw_select_cell ($data, $options);
 
 }
