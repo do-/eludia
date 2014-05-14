@@ -499,7 +499,7 @@ sub handle_request_of_type_action {
 				action => '',
 				id     => $_REQUEST {id},
 				__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
-				__refresh_tree => $_REQUEST {__refresh_tree},
+				__refresh_tree => uri_escape ($_REQUEST {__refresh_tree}),
 			);
 
 		check_dbl_click_finish ($redirect_url);
