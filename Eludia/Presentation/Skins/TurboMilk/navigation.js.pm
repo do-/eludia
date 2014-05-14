@@ -1053,8 +1053,9 @@ function invoke_setSelectOption (a) {
 
 }
 
-function setSelectOption (select, id, label) { 
+function setSelectOption (select, id, label) {
 
+	max_len = $(select).attr('max_len');
 	label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...');
 
 	for (var i = 0; i < select.options.length; i++) {
@@ -1066,8 +1067,8 @@ function setSelectOption (select, id, label) {
 			if( select.onchange() ) select.onchange();
 			return;
 		}
-	}	
-	
+	}
+
 	var option = document.createElement ("OPTION");
 	select.options.add (option);
 	option.innerText = label;
@@ -1086,9 +1087,9 @@ function blur_all_inputs () {
 		}
 		catch (e) {}
 	});
-	
+
 	return 0;
-	
+
 }
 
 function focus_on_first_input (td) {
