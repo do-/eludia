@@ -3542,7 +3542,7 @@ sub draw_page {
 
 		$_REQUEST {__head_links} .= qq |<script src='$_REQUEST{__static_url}/jquery.blockUI.js?$_REQUEST{__static_salt}'></script>|
 			if $preconf -> {core_blockui_on_submit} || $r -> headers_in -> {'User-Agent'} =~ /webkit/i;
-		$body .= qq {
+		1 or $body .= qq {
 
 			<div style='display:none'>$_REQUEST{__menu_links}</div>
 
@@ -3559,9 +3559,9 @@ sub draw_page {
 
 		};
 
-		$_REQUEST {__script}  .= '; check_top_window (); ';
+		1 or $_REQUEST {__script}  .= '; check_top_window (); ';
 
-		$_REQUEST {__on_load} .= "try {top.hideSubMenus(0); top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
+		1 or $_REQUEST {__on_load} .= "try {top.hideSubMenus(0); top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
 
 		if (is_ua_mobile ()) {
 
