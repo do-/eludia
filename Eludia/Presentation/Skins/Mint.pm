@@ -3206,8 +3206,17 @@ sub draw_super_table {
 
 
 
-	my $height = $options -> {__height} || '90%';
-	my $html = qq {<div class="eludia-table-container" id="$$options{id_table}" style="height:$height; width:100%;"></div>\n};
+	my $height = $options -> {__height} || $options -> {min_height} || 150; # px
+
+	$options -> {attributes} = {
+		class               => "eludia-table-container",
+		id                  => $options -> {id_table},
+		style               => "height:$height px; width:100%;",
+		"eludia-min-height" => $height,
+	};
+
+	my $attributes = dump_attributes ($options -> {attributes});
+	my $html = qq {<div $attributes></div>\n};
 
 	$_REQUEST {__scrollable_table_row} ||= 0;
 
@@ -3217,29 +3226,13 @@ sub draw_super_table {
 	#push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/supertable";
 	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
 
-	$_REQUEST {__on_load} .= qq{;
-
-		\$('.eludia-table-container').each(function() {
-
-			var options = {
-				tableUrl: '/\?$ENV{QUERY_STRING}&id___query=$_REQUEST{id___query}&__only_table=' + this.id,
-				el: \$(this)
-			};
-			window.SuperTable.initialize(options);
-		});
-
-	;};
-
-	my $height = $options -> {__height}? '300px' : '100%';
-
 	return <<EOH . $html;
 
 		$$options{title}
 		$$options{path}
 		$$options{top_toolbar}
 
-		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible" $enctype
-		style="height:$height;">
+		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible" $enctype>
 		<input type=hidden name="__suggest" value="">
 		$hiddens_html
 EOH
@@ -3587,9 +3580,9 @@ sub draw_page {
 
 		} else {
 
-			$_REQUEST {__super_table} or $_REQUEST {__on_load} .= q {
+			1 or $_REQUEST {__on_load} .= q {
 
-				if ($.browser.msie && window.dialogArguments) {
+				if (0 && $.browser.msie && window.dialogArguments) {
 
 					$(top).on('resize', function () {
 
@@ -3766,6 +3759,8 @@ EOH
 
 	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}'>\n</script>" foreach (@{$_REQUEST {__include_js}});
 
+	load_ui_elements ();
+
 	foreach (keys %_REQUEST) {
 
 		/^__on_(\w+)$/ or next;
@@ -3844,6 +3839,73 @@ EOS
 	}
 
 	return qq {$doctype<head>$_REQUEST{__head_links}</head>$body</html>};
+
+}
+
+################################################################################
+
+sub load_ui_elements {
+
+	my ($options) = @_;
+
+	$_REQUEST {__on_load} .= qq{;
+
+		var calculate_eludia_table_height = function(table_container) {
+
+			var \$table_container = \$(table_container);
+
+			var table_container_height = \$table_container.height();
+
+			var header_height  = \$table_container.find('.st-table-header-right-pane').height();
+
+			var body_height = \$table_container.find('.st-table-right-viewport').children().height();
+
+			var pane_height = \$table_container.find('.table-header').height();
+
+			var expanded_table_height  = header_height + body_height + pane_height + 300;
+
+			var rest_to_page_end = \$(window).height() - \$table_container.position().top;
+
+			var min_height = parseInt(\$(table_container).attr('eludia-min-height'));
+
+console.log('min ' + min_height + '; rest_to_page_end ' + rest_to_page_end );
+
+			if (rest_to_page_end < min_height) {
+				return expanded_table_height;
+			}
+
+			return rest_to_page_end;
+		}
+
+		var adjust_super_table_dimensions = function (table_container) {
+		\$(table_container).height(calculate_eludia_table_height(table_container));
+			\$(table_container).trigger('setPanesSize');
+		}
+
+		var checkSuperTableContainers = function(){
+			\$('.eludia-table-container').each(function() {
+				adjust_super_table_dimensions(this);
+			});
+		}
+
+		\$(window).resize(function(e){
+			checkSuperTableContainers();
+		});
+
+		\$('.eludia-table-container').each(function() {
+
+			var that = this;
+			var options = {
+				tableUrl: '/\?$ENV{QUERY_STRING}&id___query=$_REQUEST{id___query}&__only_table=' + this.id,
+				pageLoaded: function() {
+					adjust_super_table_dimensions(that);
+				},
+				el: \$(that)
+			};
+			window.SuperTable.initialize(options);
+		});
+
+	;};
 
 }
 
