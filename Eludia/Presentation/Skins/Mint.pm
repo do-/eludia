@@ -3223,8 +3223,8 @@ sub draw_super_table {
 	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr";
 	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
 
-	#push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/supertable";
-	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
+	$_REQUEST {__head_links} =~ /supertable\.js/
+		or $_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
 
 	return <<EOH . $html;
 
@@ -3902,7 +3902,7 @@ console.log('min ' + min_height + '; rest_to_page_end ' + rest_to_page_end );
 				},
 				el: \$(that)
 			};
-			window.SuperTable.initialize(options);
+			new window.SuperTable(options);
 		});
 
 	;};
