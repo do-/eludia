@@ -1258,12 +1258,9 @@ function show_size(obj) {
 
 }
 
-
-
-
-
-
-
+function closeTab () {
+	top.close();
+}
 
 function span_on_click () {
 
