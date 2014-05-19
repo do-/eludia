@@ -3398,6 +3398,32 @@ $('form[target^="invisible"]').submit (function () {
 EOJS
 		}
 
+		if ($_REQUEST {__refresh_tree}) {
+
+			return <<EOH;
+				<html>
+					<script for="window" event="onload">
+						var w = window, re = /_body_iframe_\\d/;
+						for (i = 0; i < 7 && !re.test (w.name) && w.name != '_body_iframe'; i ++) {
+							if (w.parent && w.parent.name) {
+								w = w.parent;
+							} else {
+								w = w.top;
+							}
+						}
+						if (re.test (w.name) || w.name == '_body_iframe') {
+							w.location.href = '$_REQUEST{__refresh_tree}&salt=' + Math.random ();
+						}
+						else {
+							w.open ('$_REQUEST{__refresh_tree}&salt=' + Math.random (), w.name);
+						}
+					</script>
+					<body>
+					</body>
+				</html>
+EOH
+		}
+
 		if ($_REQUEST {__im_delay}) {
 
 			$_REQUEST {__js_var} -> {__im} = {
