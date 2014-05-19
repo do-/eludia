@@ -1358,7 +1358,7 @@ sub draw_form_field_tree {
 	$options -> {active} += 0;
 
 	my $name = $options -> {name} || 'd';
-	$options->{height} ||= 200;
+	$options->{height} ||= 20;
 
 	my $nodes = $_JSON -> encode (\@nodes);
 
