@@ -1948,9 +1948,9 @@ sub _adjust_super_table_options {
 
 		if (ref $options -> {top_toolbar} eq 'ARRAY') {
 			my ($pager_button) = grep {$_ -> {type} eq 'pager'} @{ $options -> {top_toolbar} };
-			$options -> {pager} -> {total}   = 0 + $pager_button -> {total};
+			$options -> {pager} -> {total}   = 0 + $pager_button -> {total} || $_REQUEST {__page_content} -> {cnt};
 			$options -> {pager} -> {cnt}     = 0 + $pager_button -> {cnt};
-			$options -> {pager} -> {portion} = 0 + $pager_button -> {portion};
+			$options -> {pager} -> {portion} = 0 + $pager_button -> {portion} || $_REQUEST {__page_content} -> {portion} || $conf -> {portion};;
 			$pager_button -> {off} = 1;
 		}
 

@@ -3206,7 +3206,7 @@ sub draw_super_table {
 
 
 
-	my $height = $options -> {__height} || $options -> {min_height} || 150; # px
+	my $height = $options -> {__height} || $options -> {min_height} || 100; # px
 
 	$options -> {attributes} = {
 		class               => "eludia-table-container",
@@ -3854,27 +3854,35 @@ sub load_ui_elements {
 
 			var \$table_container = \$(table_container);
 
-			var table_container_height = \$table_container.height();
-
 			var header_height  = \$table_container.find('.st-table-header-right-pane').height();
 
 			var body_height = \$table_container.find('.st-table-right-viewport').children().height();
 
-			var pane_height = \$table_container.find('.table-header').height();
+			var panes_height = \$table_container.height() - \$table_container.find('.st-table-container').height();
 
-			var expanded_table_height  = header_height + body_height + pane_height + 300;
+			var expanded_table_height  = header_height + body_height + panes_height;
 
 			var rest_to_page_end = \$(window).height() - \$table_container.position().top;
 
 			var min_height = parseInt(\$(table_container).attr('eludia-min-height'));
+debugger;
+			if (expanded_table_height < min_height) {
+				return min_height;
+			}
 
-console.log('min ' + min_height + '; rest_to_page_end ' + rest_to_page_end );
-
-			if (rest_to_page_end < min_height) {
+			// long table fits page
+			if (expanded_table_height < rest_to_page_end) {
 				return expanded_table_height;
 			}
 
-			return rest_to_page_end;
+
+			// long table fits page with scrollbar
+			if (rest_to_page_end > min_height) {
+				return rest_to_page_end;
+			}
+
+			// long table out of page
+			return expanded_table_height;
 		}
 
 		var adjust_super_table_dimensions = function (table_container) {
@@ -3897,7 +3905,7 @@ console.log('min ' + min_height + '; rest_to_page_end ' + rest_to_page_end );
 			var that = this;
 			var options = {
 				tableUrl: '/\?$ENV{QUERY_STRING}&id___query=$_REQUEST{id___query}&__only_table=' + this.id,
-				pageLoaded: function() {
+				pageRender: function() {
 					adjust_super_table_dimensions(that);
 				},
 				el: \$(that)
