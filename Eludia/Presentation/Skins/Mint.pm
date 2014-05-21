@@ -3860,7 +3860,7 @@ sub load_ui_elements {
 
 			var panes_height = \$table_container.height() - \$table_container.find('.st-table-container').height();
 
-			var expanded_table_height  = header_height + body_height + panes_height;
+			var expanded_table_height  = header_height + body_height + panes_height + 45;
 
 			var rest_to_page_end = \$(window).height() - \$table_container.position().top;
 
@@ -3905,7 +3905,7 @@ debugger;
 			var that = this;
 			var options = {
 				tableUrl: '/\?$ENV{QUERY_STRING}&id___query=$_REQUEST{id___query}&__only_table=' + this.id,
-				pageRender: function() {
+				pageLoaded: function() {
 					adjust_super_table_dimensions(that);
 				},
 				el: \$(that)
