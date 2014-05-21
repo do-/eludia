@@ -52,15 +52,15 @@ sub _ok {200};
 *{CGI::Simple::_add_param} = sub {
   my ( $self, $param, $value, $overwrite ) = @_;
   return () unless defined $param and defined $value;
-  $param =~ tr/\000//d if $self->{'.globals'}->{'NO_NULL'};
+  $param =~ tr/\000//d if $self->{'.globals'}->{'NO_NULL'} && $param ne "PUTDATA";
   @{ $self->{$param} } = () if $overwrite;
   @{ $self->{$param} } = () unless exists $self->{$param};
   my @values = ref $value ? @{$value} : ( $value );
   for my $value ( @values ) {
     next
      if $value eq ''
-       and $self->{'.globals'}->{'NO_UNDEF_PARAMS'};
-    $value =~ tr/\000//d if $self->{'.globals'}->{'NO_NULL'};
+       and $self->{'.globals'}->{'NO_UNDEF_PARAMS'} && $param ne "PUTDATA";
+    $value =~ tr/\000//d if $self->{'.globals'}->{'NO_NULL'} && $param ne "PUTDATA";
 
     # DO NOT DECODE BINARY PUTDATA!
     $value = Encode::decode( utf8 => $value )
@@ -73,7 +73,7 @@ sub _ok {200};
     }
   }
   return scalar @values;    # for compatibility with CGI.pm request.t
-}
+};
 
 ################################################################################
 
