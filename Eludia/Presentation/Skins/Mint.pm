@@ -3848,6 +3848,16 @@ sub load_ui_elements {
 
 	my ($options) = @_;
 
+	my @keep_params = ('id___query', '__last_query_string');
+
+	my $keep_params = join '&', map {"$_=$_REQUEST{$_}"} @keep_params;
+
+	my $table_url = $ENV {QUERY_STRING};
+
+	$table_url =~ s/__last_query_string=-?\d+//;
+
+	$table_url .= '&' . $keep_params;
+
 	$_REQUEST {__on_load} .= qq{;
 
 		var calculate_eludia_table_height = function(table_container) {
@@ -3865,7 +3875,7 @@ sub load_ui_elements {
 			var rest_to_page_end = \$(window).height() - \$table_container.position().top;
 
 			var min_height = parseInt(\$(table_container).attr('eludia-min-height'));
-debugger;
+
 			if (expanded_table_height < min_height) {
 				return min_height;
 			}
@@ -3904,7 +3914,7 @@ debugger;
 
 			var that = this;
 			var options = {
-				tableUrl: '/\?$ENV{QUERY_STRING}&id___query=$_REQUEST{id___query}&__only_table=' + this.id,
+				tableUrl: '/\?${table_url}&__only_table=' + this.id,
 				pageLoaded: function() {
 					adjust_super_table_dimensions(that);
 				},
