@@ -4,7 +4,7 @@
 }
 
 .st-sort-block .active{
-	color:#b9c5d7;
+	color: black;
 }
 
 .table-container {
