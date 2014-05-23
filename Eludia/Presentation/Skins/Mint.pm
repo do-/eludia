@@ -299,7 +299,7 @@ EOJ
 	} else {
 
 		return <<EOH
-			<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="header_3"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr><tr><td class="tbbgb">&nbsp;</td></tr></table>
+			<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="header_3"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
 EOH
 
 	}
