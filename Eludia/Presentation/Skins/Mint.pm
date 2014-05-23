@@ -2560,7 +2560,7 @@ sub draw_super_table_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-		if (defined $data -> {level}) {
+	if (defined $data -> {level}) {
 
 		$data -> {attributes} -> {style} = 'padding-left:' . ($data -> {level} * 15 + 3);
 
@@ -2588,24 +2588,7 @@ sub draw_super_table_text_cell {
 
 	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
-	# $html .= '<nobr>' unless $data -> {no_nobr};
-
 	# $html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
-
-	# if ($data -> {href}) {
-
-	# 	$a_attributes_html = dump_attributes ({
-	# 		id      => $data -> {a_id},
-	# 		class   => $data -> {a_class},
-	# 		target  => $data -> {target},
-	# 		href    => $data -> {href},
-	# 		onFocus => "blur()",
-	# 		style   => $fgcolor ? "color:$fgcolor;" : undef,
-	# 	});
-
-	# 	$html .= qq {<a $a_attributes_html $$data{onclick}>};
-
-	# }
 
 	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
@@ -2616,16 +2599,6 @@ sub draw_super_table_text_cell {
 	$html .= '</b>'      if $data -> {bold}   || $options -> {bold};
 	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
 	$html .= '</strike>' if $data -> {strike} || $options -> {strike};
-
-	# if ($data -> {href}) {
-
-	# 	$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
-
-	# }
-
-	# $html .= '</nobr>' unless $data -> {no_nobr};
-
-	# $html .= dump_hiddens ([$data -> {hidden_name} => $data -> {hidden_value}]) if $data -> {add_hidden};
 
 	$html .= '</td>';
 
@@ -3128,24 +3101,37 @@ sub draw_super_table__only_table {
 
 	$html .= qq {<tbody>};
 
+	my $row_cnt = 0;
+
 	foreach our $i (@$list) {
 
 		foreach my $tr (@{$i -> {__trs}}) {
 
-			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 
-			$html .= "<tr id='$$i{__tr_id}'";
+			my $attributes = {};
+
+			if ($_REQUEST {__scrollable_table_row} > 0 && !$_REQUEST {__edited_cells_table}
+				&& $_REQUEST {__scrollable_table_row} == $row_cnt
+			) {
+
+				$attributes -> {class} = 'row-state-visited-turbomilk';
+			}
+
+			$attributes = dump_attributes ($attributes);
+
+			$html .= "<tr id='$$i{__tr_id}' $attributes";
 
 			# if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
 			# 	$menus .= $i -> {__menu};
 			# 	$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent ();"};
 			# }
 
+			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 			$html .= qq {data-target="$$i{__target}" data-href="$$i{__href}"} if $has_href;
 			$html .= '>';
 			$html .= $tr;
 			$html .= '</tr>';
-
+			$row_cnt++;
 		}
 	}
 
@@ -3222,8 +3208,6 @@ sub draw_super_table {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 	my $html = qq {<div $attributes></div>\n};
-
-	$_REQUEST {__scrollable_table_row} ||= 0;
 
 	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr";
 	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
@@ -3429,7 +3413,6 @@ sub draw_table {
 			$html .= '>';
 			$html .= $tr;
 			$html .= '</tr>';
-
 		}
 
 	}
