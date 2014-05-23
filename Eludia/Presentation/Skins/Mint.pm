@@ -3222,6 +3222,7 @@ sub draw_super_table {
 
 	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr";
 	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
+	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable_turbomilk";
 
 	$_REQUEST {__head_links} =~ /supertable\.js/
 		or $_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
