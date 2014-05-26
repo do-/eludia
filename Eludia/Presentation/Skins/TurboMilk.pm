@@ -1112,7 +1112,7 @@ sub draw_form_field_checkbox {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">};
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">};
 
 }
 
@@ -1158,7 +1158,7 @@ sub draw_form_field_select {
 	my ($_SKIN, $options, $data) = @_;
 
 	$options -> {attributes} ||= {};
-	my $id = $options -> {id} || "_$options->{name}_select";
+	my $id = $options -> {id} || "input_$options->{name}";
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
 	if (@{$options -> {values}} == 0 && defined ($options -> {empty}) && defined ($options -> {other})) {
@@ -1311,7 +1311,7 @@ EOJS
 	}
 
 
-	my $html = qq[<span style="white-space: nowrap" id="_$options->{name}_span"><input type="text" $attributes id="${options}_label" >]
+	my $html = qq[<span style="white-space: nowrap" id="input_$options->{name}"><input type="text" $attributes id="${options}_label" >]
 
 		. ($options -> {other} ? qq [ <input type="button" value="..." onclick="$options->{other}->{onChange}">] : '')
 
