@@ -3868,18 +3868,22 @@ sub load_ui_elements {
 
 			var header_height  = \$table_container.find('.st-table-header-right-pane').height();
 
-			var body_height = \$table_container.find('.st-table-right-viewport').children().height();
+			var body_height = 0;
 
-			var panes_height = \$table_container.height() - \$table_container.find('.st-table-container').height();
+			\$table_container.find('.st-fixed-table-right').children('tr:visible').not('.st-table-widths-row').each(function(){
+				body_height = body_height + \$(this).outerHeight();
+			});
 
-			var expanded_table_height  = header_height + body_height + panes_height + 45;
+			var panes_height = \$table_container.find('.table-header').height() + 45;
+
+			var expanded_table_height  = header_height + body_height + panes_height;
 
 			var rest_to_page_end = \$(window).height() - \$table_container.position().top;
 
 			var min_height = parseInt(\$(table_container).attr('eludia-min-height'));
 
-			if (expanded_table_height < min_height) {
-				return min_height;
+			if (body_height < min_height) {
+				return panes_height + header_height + min_height;
 			}
 
 			// long table fits page
