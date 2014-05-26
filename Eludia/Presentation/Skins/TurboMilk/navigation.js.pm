@@ -4121,6 +4121,15 @@ function toggle_field (name, is_visible, is_clear_field) {
 	td_field.toggle(is_visible);
 	td_field.prev().toggle(is_visible);
 
+	var sibling = td_field.next().length? td_field.next().next() : td_field.prev().prev();
+	if (sibling.length) {
+		var colspan = sibling.attr('colspan') + (is_visible? 1 : -1);
+		sibling.attr('colspan', colspan);
+	}
+
+	var tr = td_field.closest('tr');
+	tr.toggle(tr.children(':visible').length > 0);
+
 	if (is_clear_field) {
 		field.val(0);
 	}

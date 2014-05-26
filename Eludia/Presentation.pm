@@ -682,6 +682,20 @@ sub draw_form {
 			next if $i < @$row - 1;
 			$row -> [$i] -> {sum_colspan} = $sum_colspan;
 		}
+
+		for (my $i = 0; $i < @$row; $i++) {
+			next
+				unless $row -> [$i] -> {hidden};
+
+			my @right_siblings = grep {!$_ -> {off} && !$_ -> {hidden}}
+				($i + 1 < @$row? @$row [$i + 1 .. @$row - 1] : ());
+			my @left_siblings = grep {!$_ -> {off} && !$_ -> {hidden}}
+				($i - 1 >= 0? @$row [0 .. $i - 1] : ());
+			my $sibling = $right_siblings [0] || $left_siblings [0];
+
+			!$sibling or $sibling -> {colspan} += 1 + ($sibling -> {label_off}? 0 : 1);
+		}
+
 		$max_colspan > $sum_colspan or $max_colspan = $sum_colspan;
 	}
 

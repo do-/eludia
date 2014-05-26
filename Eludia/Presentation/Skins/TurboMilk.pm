@@ -481,7 +481,11 @@ EOH
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
-		$html .= qq{<tr id="$tr_id">};
+
+		my $is_any_field_shown = 0 + grep {!$_ -> {hidden}} @$row;
+		my $attributes = dump_attributes ({class => $is_any_field_shown? undef : 'form-hidden-field'});
+
+		$html .= qq{<tr id="$tr_id" $attributes>};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
 	}
@@ -611,6 +615,11 @@ sub draw_form_field {
 			align  => 'right',
 		};
 
+		if ($field -> {hidden}) {
+			$a -> {class} .= ' form-hidden-field';
+		}
+
+
 		$a -> {colspan} = $field -> {colspan_label} if $field -> {colspan_label};
 		$a -> {width}   = $field -> {label_width}   if $field -> {label_width};
 		$a -> {title}   = $field -> {label_title}   if $field -> {label_title};
@@ -620,6 +629,10 @@ sub draw_form_field {
 	}
 
 	my $a = {class  => $class . ($field -> {fake} == -1 ? 'deleted' : 'inputs')};
+
+	if ($field -> {hidden}) {
+		$a -> {class} .= ' form-hidden-field';
+	}
 
 	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
 	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
