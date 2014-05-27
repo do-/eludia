@@ -691,7 +691,7 @@ sub draw_form {
 				($i + 1 < @$row? @$row [$i + 1 .. @$row - 1] : ());
 			my @left_siblings = grep {!$_ -> {off} && !$_ -> {hidden}}
 				($i - 1 >= 0? @$row [0 .. $i - 1] : ());
-			my $sibling = $right_siblings [0] || $left_siblings [0];
+			my $sibling = $left_siblings [0] || $right_siblings [0];
 
 			!$sibling or $sibling -> {colspan} += 1 + ($sibling -> {label_off}? 0 : 1);
 		}

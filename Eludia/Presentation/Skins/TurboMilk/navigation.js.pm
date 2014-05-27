@@ -4118,13 +4118,17 @@ function toggle_field (name, is_visible, is_clear_field) {
 	var field = $('[name=_' + name + ']');
 	var td_field = field.closest('td');
 
+	if (td_field.is(":visible") === is_visible) {
+		return;
+	}
+
 	td_field.toggle(is_visible);
 	td_field.prev().toggle(is_visible);
 
-	var sibling = td_field.next().length? td_field.next().next() : td_field.prev().prev();
+	var sibling = td_field.prev().prev().length? td_field.prev().prev() : td_field.next().next();
 	if (sibling.length) {
-		var colspan = sibling.attr('colspan') + (is_visible? 1 : -1);
-		sibling.attr('colspan', colspan);
+		var colspan = sibling.attr('colSpan') + (is_visible? -2 : 2);
+		sibling.attr('colSpan', colspan);
 	}
 
 	var tr = td_field.closest('tr');
