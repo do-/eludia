@@ -3163,12 +3163,17 @@ sub draw_super_table__only_table {
 
 		my $sort_direction = $_QUERY -> {content} -> {columns} -> {$column -> {id}} -> {desc}? "desc" : "asc";
 
+		my $width = $_QUERY -> {content} -> {columns} -> {$column -> {id}} -> {width} || undef;
+
 		push @$columns, {
-			id   => $column -> {id},
+			id    => $column -> {id},
+			($width? (width => $width) : ()),
 			($column -> {sortable}? (sort => "1") : ()),
 			($column -> {sortable}? ($sort_direction => "1") : ()),
 		};
 	}
+
+	my $is_set_all_headers_width  = !grep {!$_ -> {width}} @$columns;
 
 	my $table = {
 		id          => $options -> {id_table},
@@ -3181,7 +3186,7 @@ sub draw_super_table__only_table {
 		start       => $_REQUEST {start} + 0,
 		data        => $html,
 		calculated_dimensions => {
-			headers => 0,
+			headers => $is_set_all_headers_width + 0,
 			rows    => 0,
 		},
 		#datasource_params => \%_REQUEST,
