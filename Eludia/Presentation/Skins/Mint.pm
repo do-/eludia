@@ -3862,68 +3862,11 @@ sub load_ui_elements {
 
 	$_REQUEST {__on_load} .= qq{;
 
-		var calculate_eludia_table_height = function(table_container) {
-
-			var \$table_container = \$(table_container);
-
-			var header_height  = \$table_container.find('.st-table-header-right-pane').height();
-
-			var body_height = 0;
-
-			\$table_container.find('.st-fixed-table-right').children('tr:visible').not('.st-table-widths-row').each(function(){
-				body_height = body_height + \$(this).outerHeight();
-			});
-
-			var panes_height = \$table_container.find('.table-header').height() + 45;
-
-			var expanded_table_height  = header_height + body_height + panes_height;
-
-			var rest_to_page_end = \$(window).height() - \$table_container.position().top;
-
-			var min_height = parseInt(\$(table_container).attr('eludia-min-height'));
-
-			if (body_height < min_height) {
-				return panes_height + header_height + min_height;
-			}
-
-			// long table fits page
-			if (expanded_table_height < rest_to_page_end) {
-				return expanded_table_height;
-			}
-
-
-			// long table fits page with scrollbar
-			if (rest_to_page_end > min_height) {
-				return rest_to_page_end;
-			}
-
-			// long table out of page
-			return expanded_table_height;
-		}
-
-		var adjust_super_table_dimensions = function (table_container) {
-		\$(table_container).height(calculate_eludia_table_height(table_container));
-			\$(table_container).trigger('setPanesSize');
-		}
-
-		var checkSuperTableContainers = function(){
-			\$('.eludia-table-container').each(function() {
-				adjust_super_table_dimensions(this);
-			});
-		}
-
-		\$(window).resize(function(e){
-			checkSuperTableContainers();
-		});
-
 		\$('.eludia-table-container').each(function() {
 
 			var that = this;
 			var options = {
 				tableUrl: '/\?${table_url}&__only_table=' + this.id,
-				pageLoaded: function() {
-					adjust_super_table_dimensions(that);
-				},
 				el: \$(that)
 			};
 			new window.SuperTable(options);
