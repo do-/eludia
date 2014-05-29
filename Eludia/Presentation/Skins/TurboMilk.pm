@@ -1178,6 +1178,7 @@ sub draw_form_field_select {
 		$options -> {attributes} -> {onClick} .= ";if (this.length == 2) {this.selectedIndex=1; this.onchange();}";
 	}
 
+	$options -> {max_len} += 0;
 	$options -> {attributes} -> {max_len} = $options -> {max_len};
 
 	my $attributes = dump_attributes ($options -> {attributes});
@@ -2105,6 +2106,9 @@ EOJS
 	}
 
 	$options -> {attributes} ||= {};
+
+	$options -> {max_len} += 0;
+	$options -> {attributes} -> {max_len} = $options -> {max_len};
 
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
