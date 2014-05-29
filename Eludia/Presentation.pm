@@ -685,11 +685,11 @@ sub draw_form {
 
 		for (my $i = 0; $i < @$row; $i++) {
 			next
-				unless $row -> [$i] -> {hidden};
+				unless $row -> [$i] -> {draw_hidden};
 
-			my @right_siblings = grep {!$_ -> {off} && !$_ -> {hidden}}
+			my @right_siblings = grep {!$_ -> {off} && !$_ -> {draw_hidden}}
 				($i + 1 < @$row? @$row [$i + 1 .. @$row - 1] : ());
-			my @left_siblings = grep {!$_ -> {off} && !$_ -> {hidden}}
+			my @left_siblings = grep {!$_ -> {off} && !$_ -> {draw_hidden}}
 				($i - 1 >= 0? @$row [0 .. $i - 1] : ());
 			my $sibling = $left_siblings [0] || $right_siblings [0];
 
