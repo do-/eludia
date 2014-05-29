@@ -2094,6 +2094,9 @@ EOJS
 
 	$options -> {attributes} ||= {};
 
+	$options -> {max_len} += 0;
+	$options -> {attributes} -> {max_len} = $options -> {max_len};
+
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
 	$options -> {attributes} -> {onChange} = $options -> {onChange};

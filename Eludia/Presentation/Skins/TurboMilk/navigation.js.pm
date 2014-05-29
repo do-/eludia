@@ -1055,7 +1055,7 @@ function invoke_setSelectOption (a) {
 
 function setSelectOption (select, id, label) {
 
-	var max_len = $(select).attr('max_len') || max_len;
+	var max_len = $(select).attr('max_len') || window.max_len;
 
 	label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...');
 
