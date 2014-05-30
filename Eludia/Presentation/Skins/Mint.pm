@@ -42,7 +42,7 @@ sub options {
 
 	return {
 		core_unblock_navigation => $preconf -> {core_unblock_navigation},
-		static_path             => '/i/mint/',
+		# static_path             => '/i/mint/',
 	};
 
 }
