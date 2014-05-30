@@ -1704,7 +1704,7 @@ EOH
 
 	my %keep_params = map {$_ => 1} @{$options -> {keep_params}};
 
-	$keep_params {$_} = 1 foreach qw (sid __last_query_string __last_scrollable_table_row __last_last_query_string);
+	$keep_params {$_} = 1 foreach qw (sid __last_query_string __last_scrollable_table_row __last_last_query_string _charset_);
 
 	$html .= dump_hiddens (map {[$_ => $_REQUEST {$_}]} (keys %keep_params));
 
@@ -3238,7 +3238,7 @@ sub draw_super_table {
 		$$options{path}
 		$$options{top_toolbar}
 
-		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible" $enctype>
+		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible">
 		</form>
 		<input type=hidden name="__suggest" value="" />
 		$hiddens_html
@@ -3801,7 +3801,7 @@ EOH
 		<title>$$i18n{_page_title}</title>
 
 		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
-		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 		<link href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet" />
 		<link href="$_REQUEST{__static_url}/jquery-ui-1.8.21.custom.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet" />

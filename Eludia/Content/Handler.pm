@@ -194,7 +194,10 @@ sub setup_request_params {
 	if ($charset && $r -> header_in ('Content-Type') =~ /UTF\-?8/i) {
 
 		Encode::from_to ($_, 'utf8', $charset) foreach (values %_REQUEST);
+	}
 
+	if ($_REQUEST {_charset_}) {
+		Encode::from_to ($_, $_REQUEST {_charset_}, $i18n -> {_charset}) foreach (values %_REQUEST);
 	}
 
 	our %_REQUEST_VERBATIM = %_REQUEST;
