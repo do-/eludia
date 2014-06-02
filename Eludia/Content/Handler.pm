@@ -75,6 +75,18 @@ sub page_is_not_needed {
 
 	setup_request_params     (@_);
 
+	if ($ENV {REQUEST_METHOD} eq 'OPTIONS') {
+
+		$r -> headers_out -> {'Allow'} = 'PROPFIND, DELETE, MKCOL, PUT, MOVE, COPY, PROPPATCH, LOCK, UNLOCK, OPTIONS, GET, HEAD, POST';
+		$r -> headers_out -> {'DAV'} = '1,2';
+		$r -> headers_out -> {'MS-Author-Via'} = 'DAV';
+		$r -> headers_out -> {'Content-Length'} = '0';
+		send_http_header ();
+		$_REQUEST {__response_sent} = 1;
+
+		return 1;
+	}
+
 	require_config           (  );
 
 	sql_reconnect            (  );
@@ -82,6 +94,17 @@ sub page_is_not_needed {
 	require_model            (  );
 
 	__profile_in ('handler.setup_user');
+
+	if ($r -> {headers_in} -> {'User-Agent'} =~ /^Microsoft/) {
+
+		$_REQUEST {type} = $_REQUEST_VERBATIM {type} = 'webdav';
+		$_REQUEST {method} = $ENV {REQUEST_METHOD};
+
+		$_REQUEST {query} ||= $ENV {'REQUEST_URI'};
+		$_REQUEST {query} =~ s/\/webdav\///;
+		$_REQUEST {query} =~ s/^(\d+)_//;
+		$_REQUEST {sid} ||= $1;
+	}
 
 	my $u = setup_user ();
 
@@ -432,6 +455,17 @@ sub handle_error {
 
 sub handle_request_of_type_kickout {
 
+	if ($_REQUEST {type} eq 'webdav') {
+
+		$r -> status (401); # unauthorized
+
+		send_http_header ();
+
+		$_REQUEST {__response_sent} = 1;
+
+		return handler_finish ();
+	}
+
 	foreach (qw(sid salt _salt __last_query_string __last_scrollable_table_row)) {delete $_REQUEST {$_}}
 
 	setup_json ();
@@ -499,7 +533,7 @@ sub handle_request_of_type_action {
 				action => '',
 				id     => $_REQUEST {id},
 				__last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row},
-				__refresh_tree => $_REQUEST {__refresh_tree},
+				__refresh_tree => uri_escape ($_REQUEST {__refresh_tree}),
 			);
 
 		check_dbl_click_finish ($redirect_url);

@@ -682,6 +682,20 @@ sub draw_form {
 			next if $i < @$row - 1;
 			$row -> [$i] -> {sum_colspan} = $sum_colspan;
 		}
+
+		for (my $i = 0; $i < @$row; $i++) {
+			next
+				unless $row -> [$i] -> {draw_hidden};
+
+			my @right_siblings = grep {!$_ -> {off} && !$_ -> {draw_hidden}}
+				($i + 1 < @$row? @$row [$i + 1 .. @$row - 1] : ());
+			my @left_siblings = grep {!$_ -> {off} && !$_ -> {draw_hidden}}
+				($i - 1 >= 0? @$row [0 .. $i - 1] : ());
+			my $sibling = $left_siblings [0] || $right_siblings [0];
+
+			!$sibling or $sibling -> {colspan} += 1 + ($sibling -> {label_off}? 0 : 1);
+		}
+
 		$max_colspan > $sum_colspan or $max_colspan = $sum_colspan;
 	}
 
@@ -2539,7 +2553,7 @@ sub draw_page {
 	$_REQUEST {__invisibles}   = ['invisible'];
 
 	eval {
-		$_SKIN -> {subset}       = $_SUBSET;
+		$_SKIN -> {subset}       = $preconf -> {hide_subsets} ? undef : $_SUBSET;
 		$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
 		$page  -> {auth_toolbar} = draw_auth_toolbar ();
 		$page  -> {body} 	 = call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content}) unless $_REQUEST {__only_menu} || !$_REQUEST_VERBATIM {type} && !$_REQUEST_VERBATIM {__subset};

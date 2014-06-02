@@ -217,10 +217,14 @@ function dialog_open (options) {
 	var result = window.showModalDialog(url, options, options.options + ';dialogWidth=' + width + 'px;dialogHeight=' + height + 'px');
 	result = result || {result : 'esc'};
 
+//	if (result.result == 'ok')
+//		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
+
 	options.after = options.after || function (result){};
 	options.after(result);
 
-	document.body.style.cursor='default';
+	setCursor ();
+
 }
 
 function close_multi_select_window (ret) {
@@ -771,9 +775,16 @@ function open_popup_menu (event, type, level) {
 		hideSubMenus (level);
 	}
 
-	div.style.top  = event.clientY - 5 + document.body.scrollTop;
-	div.style.left = event.clientX - 5 + document.body.scrollLeft;
+	var menu_top  = event.clientY - 5 + document.body.scrollTop;
+	var menu_left = event.clientX - 5 + document.body.scrollLeft;
 
+	var is_offscreen = menu_top + $(div).height() > $(window).height();
+	if (is_offscreen) {
+		menu_top = menu_top - $(div).height();
+	}
+
+	div.style.top  = menu_top;
+	div.style.left = menu_left;
 
 	last_vert_menu [level] = {
 		div:	div,
@@ -1044,6 +1055,8 @@ function invoke_setSelectOption (a) {
 
 function setSelectOption (select, id, label) {
 
+	var max_len = $(select).attr('max_len') || window.max_len;
+
 	label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...');
 
 	for (var i = 0; i < select.options.length; i++) {
@@ -1246,12 +1259,9 @@ function show_size(obj) {
 
 }
 
-
-
-
-
-
-
+function closeTab () {
+	top.close();
+}
 
 function span_on_click () {
 
@@ -4109,8 +4119,21 @@ function toggle_field (name, is_visible, is_clear_field) {
 	var field = $('[name=_' + name + ']');
 	var td_field = field.closest('td');
 
+	if (td_field.is(":visible") === is_visible) {
+		return;
+	}
+
 	td_field.toggle(is_visible);
 	td_field.prev().toggle(is_visible);
+
+	var sibling = td_field.prev().prev().length? td_field.prev().prev() : td_field.next().next();
+	if (sibling.length) {
+		var colspan = sibling.attr('colSpan') + (is_visible? -2 : 2);
+		sibling.attr('colSpan', colspan);
+	}
+
+	var tr = td_field.closest('tr');
+	tr.toggle(tr.children(':visible').length > 0);
 
 	if (is_clear_field) {
 		field.val(0);

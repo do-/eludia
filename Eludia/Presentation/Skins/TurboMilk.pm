@@ -318,22 +318,52 @@ EOH
 	}
 
 	my $html = '';
+
+	my $items_html = '';
+
 	my $items = $options -> {menu};
 
+	my $tab_bg = "tab_bg";
+
 	foreach my $item (@$items) {
-		if ($item -> {is_active}) {
+
+		if ($item -> {type} eq 'break') {
+
+			$html =~ s/tab_bg_3/tab_bg_1/g;
+
 			$html .= <<EOH;
+						$items_html</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+		<table border=0 cellspacing=0 cellpadding=0 width=100%>
+			<tr>
+				<td background="$_REQUEST{__static_url}/tab_bg_3.gif?$_REQUEST{__static_salt}" width=10><img height="0" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
+				<td background="$_REQUEST{__static_url}/tab_bg_3.gif?$_REQUEST{__static_salt}" valign="bottom" align="right">
+					<table border=0 cellspacing=0 cellpadding=0>
+						<tr>
+EOH
+			$items_html = '';
+
+			$tab_bg = "tab_bg_2";
+
+			next;
+		}
+
+		if ($item -> {is_active}) {
+			$items_html .= <<EOH;
 				<td width=5><img src="$_REQUEST{__static_url}/tab_l_1.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
 				<td bgcolor="#ffffff"><a id="$item" href="$$item{href}" class="tab-1" target="$item->{target}"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>
 				<td width=5><img src="$_REQUEST{__static_url}/tab_r_1.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
-				<td width=4><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=22 border=0></td>
+				<td width=2><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=2 height=22 border=0></td>
 EOH
 		} else {
-			$html .= <<EOH;
+			$items_html .= <<EOH;
 				<td width=5><img src="$_REQUEST{__static_url}/tab_l_0.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
 				<td background="$_REQUEST{__static_url}/tab_bg_0.gif?$_REQUEST{__static_salt}"><a id="$item" href="$$item{href}" class="tab-0" target="$item->{target}"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>
 				<td width=5><img src="$_REQUEST{__static_url}/tab_r_0.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
-				<td width=4><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=22 border=0></td>
+				<td width=2><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=2 height=22 border=0></td>
 EOH
 		}
 
@@ -342,9 +372,11 @@ EOH
 	return <<EOH;
 		<table border=0 cellspacing=0 cellpadding=0 width=100%>
 			<tr>
-				<td background="$_REQUEST{__static_url}/tab_bg.gif?$_REQUEST{__static_salt}" width=10><img height="33" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
-				<td background="$_REQUEST{__static_url}/tab_bg.gif?$_REQUEST{__static_salt}" valign="bottom" align="right"><table border=0 cellspacing=0 cellpadding=0>
-					<tr>$html</tr></table>
+				<td background="$_REQUEST{__static_url}/$tab_bg.gif?$_REQUEST{__static_salt}" width=10><img height="33" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
+				<td background="$_REQUEST{__static_url}/$tab_bg.gif?$_REQUEST{__static_salt}" valign="bottom" align="right">
+					<table border=0 cellspacing=0 cellpadding=0>
+						<tr>$html$items_html</tr>
+					</table>
 				</td>
 			</tr>
 			<tr>
@@ -449,7 +481,11 @@ EOH
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
-		$html .= qq{<tr id="$tr_id">};
+
+		my $is_any_field_shown = 0 + grep {!$_ -> {off} && !$_ -> {draw_hidden}} @$row;
+		my $attributes = dump_attributes ({class => $is_any_field_shown? undef : 'form-hidden-field'});
+
+		$html .= qq{<tr id="$tr_id" $attributes>};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
 	}
@@ -579,6 +615,11 @@ sub draw_form_field {
 			align  => 'right',
 		};
 
+		if ($field -> {draw_hidden}) {
+			$a -> {class} .= ' form-hidden-field';
+		}
+
+
 		$a -> {colspan} = $field -> {colspan_label} if $field -> {colspan_label};
 		$a -> {width}   = $field -> {label_width}   if $field -> {label_width};
 		$a -> {title}   = $field -> {label_title}   if $field -> {label_title};
@@ -588,6 +629,10 @@ sub draw_form_field {
 	}
 
 	my $a = {class  => $class . ($field -> {fake} == -1 ? 'deleted' : 'inputs')};
+
+	if ($field -> {draw_hidden}) {
+		$a -> {class} .= ' form-hidden-field';
+	}
 
 	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
 	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
@@ -1133,6 +1178,9 @@ sub draw_form_field_select {
 		$options -> {attributes} -> {onClick} .= ";if (this.length == 2) {this.selectedIndex=1; this.onchange();}";
 	}
 
+	$options -> {max_len} += 0;
+	$options -> {attributes} -> {max_len} = $options -> {max_len};
+
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	if (defined $options -> {other}) {
@@ -1324,7 +1372,7 @@ sub draw_form_field_tree {
 	$options -> {active} += 0;
 
 	my $name = $options -> {name} || 'd';
-	$options->{height} ||= 200;
+	$options->{height} ||= 20;
 
 	my $nodes = $_JSON -> encode (\@nodes);
 
@@ -2059,6 +2107,9 @@ EOJS
 
 	$options -> {attributes} ||= {};
 
+	$options -> {max_len} += 0;
+	$options -> {attributes} -> {max_len} = $options -> {max_len};
+
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
@@ -2759,6 +2810,64 @@ sub draw_select_cell {
 
 	$data -> {onChange} ||= $options -> {onChange};
 
+	if (defined $data -> {other}) {
+
+		$data -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
+		$data -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+
+		$data -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+
+		my ($confirm_js_if, $confirm_js_else) = $data -> {no_confirm} ? ('', '')
+			: (
+				"if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {",
+				"} else {this.selectedIndex = 0}"
+			);
+
+		$data -> {onChange} .= <<EOJS;
+
+			if (this.options[this.selectedIndex].value == -1) {
+
+				$confirm_js_if
+
+				if (\$.browser.webkit || \$.browser.safari)
+					\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
+
+				var dialog_width = $data->{other}->{width};
+				var dialog_height = $data->{other}->{height};
+
+				try {
+
+					var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$data->{other}->{href}&select=$data->{name}&salt=' + Math.random(), parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+
+					focus ();
+
+					if (result.result == 'ok') {
+
+						setSelectOption (this, result.id, result.label);
+
+					} else {
+
+						this.selectedIndex = 0;
+
+					}
+
+				} catch (e) {
+
+					this.selectedIndex = 0;
+
+				}
+
+				if (\$.browser.webkit || \$.browser.safari)
+					\$.unblockUI ();
+
+				$confirm_js_else
+
+			}
+
+EOJS
+
+	}
+
 	my $html = qq {<td $attributes><select
 		$s_attributes
 		name="$$data{name}"
@@ -2775,10 +2884,20 @@ sub draw_select_cell {
 
 	$html .= '>';
 
-	$html .= qq {<option value="0">$$data{empty}</option>\n} if defined $data -> {empty};
+	if (defined $data -> {empty}) {
+		$html .= qq {<option value="0">$$data{empty}</option>\n};
+	}
+
+	if (defined $data -> {other} && $data -> {other} -> {on_top}) {
+		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
+	}
 
 	foreach my $value (@{$data -> {values}}) {
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
+	}
+
+	if (defined $data -> {other} && !$data -> {other} -> {on_top}) {
+		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
 	}
 
 	$html .= qq {</select>$label_tail</td>};
@@ -3273,6 +3392,32 @@ $('form[target^="invisible"]').submit (function () {
 	window.setInterval(poll_invisibles, 100);
 });
 EOJS
+		}
+
+		if ($_REQUEST {__refresh_tree}) {
+
+			return <<EOH;
+				<html>
+					<script for="window" event="onload">
+						var w = window, re = /_body_iframe_\\d/;
+						for (i = 0; i < 7 && !re.test (w.name) && w.name != '_body_iframe'; i ++) {
+							if (w.parent && w.parent.name) {
+								w = w.parent;
+							} else {
+								w = w.top;
+							}
+						}
+						if (re.test (w.name) || w.name == '_body_iframe') {
+							w.location.href = '$_REQUEST{__refresh_tree}&salt=' + Math.random ();
+						}
+						else {
+							w.open ('$_REQUEST{__refresh_tree}&salt=' + Math.random (), w.name);
+						}
+					</script>
+					<body>
+					</body>
+				</html>
+EOH
 		}
 
 		if ($_REQUEST {__im_delay}) {

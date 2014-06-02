@@ -1138,6 +1138,11 @@ sub sql_safe_execute {
 
 	my ($st, $params, $dbh) = @_;
 
+	if ($ENV {ELUDIA_SILENT}) {
+		$st -> execute (@$params);
+		return;
+	}
+
 	eval {$st -> execute (@$params)};
 
 	my $error = $@;
