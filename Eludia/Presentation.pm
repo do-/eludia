@@ -1232,6 +1232,9 @@ sub draw_centered_toolbar_button {
 			push @$items, $item;
 		}
 
+		return ''
+			unless $items;
+
 		$options -> {items} = $items;
 
 		$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});
