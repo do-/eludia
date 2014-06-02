@@ -2294,7 +2294,7 @@ sub draw_toolbar_button_vert_menu {
 	my ($_SKIN, $name, $types, $level, $is_main) = @_;
 
 	my $html = <<EOH;
-		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:100">
+		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:1000">
 			<table id="vert_menu_table_$name" width=1 class="tbbgc" cellspacing=0 cellpadding=0 border=0 border=1>
 EOH
 
