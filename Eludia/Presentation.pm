@@ -1086,6 +1086,8 @@ sub draw_toolbar {
 
 		if (ref $button eq HASH) {
 
+			$button -> {off} = !(grep {!$_ -> {off}} @{$button -> {items}}) if (exists $button -> {items} && @{$button -> {items}} > 0);
+
 			next if $button -> {off};
 
 			if (@{$button -> {items}}) {
@@ -1281,6 +1283,9 @@ sub draw_centered_toolbar {
 	$options -> {cnt} = 0;
 
 	foreach my $i (@$list) {
+
+		$i -> {off} = !(grep {!$_ -> {off}} @{$i -> {items}}) if (exists $i -> {items} && @{$i -> {items}} > 0);
+
 		next if $i -> {off};
 		$i -> {target} ||= $options -> {buttons_target};
 
