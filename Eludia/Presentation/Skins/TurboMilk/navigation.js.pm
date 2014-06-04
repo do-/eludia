@@ -4128,15 +4128,22 @@ function toggle_field (name, is_visible, is_clear_field) {
 
 function toggle_field_id (id, is_visible,is_clear_field) {
 
-	if(document.getElementById(id)){
+	var full_id = '';
+	if (document.getElementById('input_' + id))
+		full_id = 'input_' + id;
+		else if (document.getElementById('_' + id + '_span'))
+			full_id = '_' + id + '_span';
+			else if (document.getElementById('_' + id + '_select'))
+				full_id = '_' + id + '_select';
 
-		var td_field = $('[id=' + id + ']').closest('td');
+	if(full_id){
+		var td_field = $('[id=' + full_id + ']').closest('td');
 		toggle_field_and_row(td_field, is_visible);
 
 		if (is_clear_field == 2)
-			document.getElementById(id).value = 0;
+			document.getElementById(full_id).value = 0;
 		else if (is_clear_field == 1)
-			document.getElementById(id).value = "";
+			document.getElementById(full_id).value = "";
 	}
 }
 
