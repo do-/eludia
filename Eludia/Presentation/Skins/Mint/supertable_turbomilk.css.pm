@@ -23,3 +23,27 @@
 a:hover,td[data-href]:hover,tr[data-href] td:hover,tr[data-href]:hover td,a:focus,td[data-href]:focus,tr[data-href] td:focus{
 	color:#293869 !important;
 }
+
+.table-header {
+	font-family: Tahoma, 'MS Sans Serif';
+	font-weight: normal;
+	font-size: 8pt;
+	height: 17px;
+}
+
+.table-header a {
+	font-weight: normal;
+	font-size: 8pt;
+}
+
+a.st-btn {
+	height: 30px;
+	padding-top: 7px;
+	padding-bottom: 7px;
+	padding-left: 7px;
+	padding-right: 7px;
+}
+
+a.st-btn:first-child {
+	padding-left: 20px;
+}
