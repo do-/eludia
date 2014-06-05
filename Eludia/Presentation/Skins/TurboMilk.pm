@@ -979,7 +979,7 @@ sub draw_form_field_hgroup {
 		next if $item -> {off};
 		$html .= $item -> {label} if $item -> {label};
 		$html .= $item -> {html};
-		$html .= '&nbsp;';
+		$html .= '&nbsp;' unless $options -> {no_nbsp};
 	}
 
 	$html .= '</nobr>'
