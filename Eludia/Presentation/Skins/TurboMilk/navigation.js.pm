@@ -4140,6 +4140,54 @@ function toggle_field (name, is_visible, is_clear_field) {
 	}
 }
 
+function toggle_field_id (id, is_visible,is_clear_field) {
+
+	var full_id;
+	if (document.getElementById('input_' + id))
+		full_id = 'input_' + id;
+	else if (document.getElementById('_' + id + '_span'))
+		full_id = '_' + id + '_span';
+	else if (document.getElementById('_' + id + '_select'))
+		full_id = '_' + id + '_select';
+	if(!full_id)
+		return 0;
+	var td_field = $('[id=' + full_id + ']').closest('td');
+	toggle_field_and_row(td_field, is_visible);
+	if (is_clear_field == 2)
+		document.getElementById(full_id).value = 0;
+	else if (is_clear_field == 1)
+		document.getElementById(full_id).value = "";
+}
+
+function toggle_field_and_row (td_field, is_visible) {
+
+	td_field.toggle(is_visible);
+	td_field.prev().toggle(is_visible);
+
+	if (td_field.next().next().length == 1){
+
+		var td_expand = td_field.next().next();
+		td_expand.attr('colSpan', is_visible ? 1 : 3);
+
+		var is_row_visible = td_expand.parent().children(':visible').length;
+		td_expand.parent().toggle(is_row_visible ? true : false);
+
+	} else if (td_field.prev().prev().length == 1){
+
+		var td_expand = td_field.prev().prev();
+		td_expand.attr('colSpan', is_visible ? 1 : 3);
+
+		var is_row_visible = td_expand.parent().children(':visible').length;
+		td_expand.parent().toggle(is_row_visible ? true : false);
+
+	} else {
+
+		var is_row_visible = td_field.parent().children(':visible').length;
+		td_field.parent().toggle(is_row_visible ? true : false);
+
+	}
+}
+
 function getOffsetSum(elem) {
 	var top = 0, left = 0;
 

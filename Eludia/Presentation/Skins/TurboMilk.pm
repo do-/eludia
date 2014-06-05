@@ -1125,7 +1125,7 @@ sub draw_form_field_checkbox {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">};
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">};
 
 }
 
