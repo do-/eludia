@@ -38,6 +38,14 @@ a:hover,td[data-href]:hover,tr[data-href] td:hover,tr[data-href]:hover td,a:focu
 a.st-btn {
 	padding-top: 7px;
 	padding-bottom: 7px;
-	padding-left: 7px;
-	padding-right: 7px;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+a.st-btn+a.st-btn {
+	padding-left: 0px;
+}
+
+a.st-btn:first-child {
+	padding-left: 15px;
 }
