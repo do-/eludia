@@ -48,6 +48,13 @@ var kb_hooks = [{}, {}, {}, {}];
 
 var max_len = 50;
 
+var is_open_edit_cell = 1;
+var old_inp_value;
+var old_inp_outerHTML;
+var is_open_other_window = 0;
+var is_open_calendar = 0;
+var cell_pressed_keycode = 0;
+
 window.__original_alert   = window.alert;
 window.alert = function (s) {
 
@@ -2775,6 +2782,7 @@ Calendar.prototype.callCloseHandler = function () {
 	if (this.onClose) {
 		this.onClose(this);
 	}
+	this.params.inputField.select();
 	this.hideShowCovered();
 };
 
@@ -3394,6 +3402,112 @@ function number_clean (number) {
 	return isNaN (result) ? 0 : result;
 }
 
+function open_edit_cell (id, name, url_options, __edited_cells_table) {
+
+	is_open_edit_cell = 1;
+
+	var view_td  = document.getElementById ('_div_' + __edited_cells_table + '_' + id + '_td');
+	var view_div = document.getElementById ('_div_' + __edited_cells_table + '_' + id);
+	var edit_div = document.getElementById ('_editor_div_' + __edited_cells_table + '_' + id);
+	var inp      = document.getElementsByName('_' + __edited_cells_table + '_' + id)[0];
+	if (view_div === undefined || edit_div === undefined || inp === undefined)
+		return;
+
+	var calendar_img;
+
+	if (inp.id === "input_" + __edited_cells_table + '_' + id) {
+		is_open_calendar = 1;
+		calendar_img = document.getElementById ("calendar_trigger_" + id);
+		calendar_img.onclick = function () {
+			is_open_calendar = 0;
+		}
+	}
+
+	old_inp_value = inp.type === 'checkbox' || inp.type === 'radio' ? (inp.checked ? 1 : 0) : inp.value;
+	old_inp_outerHTML = inp.outerHTML;
+
+	view_div.style.display = 'none';
+	edit_div.style.display = 'block';
+
+	inp.onblur = function () {
+
+		if (is_open_other_window == 1) {
+			return;
+		}
+
+		if (is_open_calendar == 1) {
+			is_open_calendar = 0
+			inp.select();
+			return;
+		}
+
+		var value = inp.type === 'checkbox' || inp.type === 'radio' ? (inp.checked ? 1 : 0) : inp.value;
+		is_open_edit_cell = 0;
+
+		if (value === old_inp_value) {
+			cancel_edit_cell (id, __edited_cells_table);
+			return;
+		}
+
+		if (cell_pressed_keycode != 27) {
+			url_options += "&" + name + "=" + value;
+
+			$.ajax({
+				type     : 'GET',
+				url      : url_options,
+				dataType : 'json',
+				success  : function (data) {
+					if (data.message) {
+						alert (data.message);
+						is_open_edit_cell = 1;
+						inp.focus();
+					} else {
+						view_td.outerHTML = data.html;
+						cancel_edit_cell (id, __edited_cells_table);
+					}
+				}
+			});
+		}
+
+		cell_pressed_keycode = 0;
+	};
+
+	inp.onkeydown = function() {
+		if (window.event && !window.event.ctrlKey && !window.event.altKey) {
+			if (window.event.keyCode == 13) {
+				inp.blur();
+			}
+			if (window.event.keyCode == 27) {
+				cell_pressed_keycode = 27;
+				is_open_edit_cell = 0;
+				inp.outerHTML = old_inp_outerHTML;
+				if (inp.type === 'checkbox' || inp.type === 'radio') {
+					inp.checked = old_inp_value;
+					inp.value   = inp.checked ? 1 : 0;
+				} else {
+					inp.value = old_inp_value;
+				}
+				cancel_edit_cell (id, __edited_cells_table);
+			}
+		}
+	}
+
+	inp.focus();
+};
+
+function cancel_edit_cell (id, edited_cells_table) {
+
+	cell_pressed_keycode = 0;
+
+	if (is_open_edit_cell)
+		return;
+
+	var view_div = document.getElementById ('_div_' + edited_cells_table + '_' + id);
+	var edit_div = document.getElementById ('_editor_div_' + edited_cells_table + '_' + id);
+
+	view_div.style.display = 'block';
+	edit_div.style.display = 'none';
+};
 
 
 

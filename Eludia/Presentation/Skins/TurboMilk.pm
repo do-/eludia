@@ -391,7 +391,7 @@ EOH
 
 sub _draw_input_datetime {
 
-	return '' if $_REQUEST {__only_field};
+	return '' if $_REQUEST {__only_field} && !$_REQUEST {__only_table};
 
 	my ($_SKIN, $options) = @_;
 
@@ -400,6 +400,8 @@ sub _draw_input_datetime {
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
 	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
+
+	$options -> {attributes} -> {id} ||= 'input_calendar_trigger_' . $options -> {name};
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -2708,11 +2710,22 @@ sub draw_text_cell {
 
 	$data -> {attributes} -> {title} .= $label_tail;
 
+	my $id = $data -> {attributes} -> {id};
+	delete 	$data -> {attributes} -> {id};
+
 	my $html = dump_tag ('td', $data -> {attributes});
+
+	$html .= dump_tag ('div', {id => $id . '_td'});
+
+	$html .= dump_tag ('div', {id => $id});
 
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
 
-		return $html . '&nbsp;</td>';
+		$html .= '&nbsp;</div>';
+
+		$html .= $data -> {editor} if (exists $data -> {editor} && $_REQUEST {__edited_cells_table});
+
+		return $html . '</td>';
 
 	}
 
@@ -2754,7 +2767,10 @@ sub draw_text_cell {
 
 	$html .= dump_hiddens ([$data -> {hidden_name} => $data -> {hidden_value}]) if $data -> {add_hidden};
 
-	$html .= '</td>';
+	$html .= '</div>';
+	$html .= $data -> {editor} if (exists $data -> {editor} && $_REQUEST {__edited_cells_table});
+
+	$html .= '</div></td>';
 
 	return $html;
 
@@ -2772,8 +2788,11 @@ sub draw_radio_cell {
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
-	return qq {<td $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'>$label_tail</td>};
+	my $html = ($options -> {editor} ? '<div' : '<td')
+		. qq { $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'>$label_tail}
+		. ($options -> {editor} ? '</div>' : '</td>');
 
+	return $html;
 }
 
 ################################################################################
@@ -2790,8 +2809,23 @@ sub draw_datetime_cell {
 
 	local $options -> {name} = $data -> {name};
 
-	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "$label_tail</td>";
+	if ($options -> {editor}) {
 
+		$data -> {attributes} -> {id} = 'input' . $options -> {name};
+
+		$data -> {id} = $options -> {id};
+
+		$data -> {editor} = $options -> {editor};
+
+		$data -> {attributes} -> {style} = '';
+	}
+
+	my $html = ($options -> {editor} ? '<div' : '<td')
+		. " $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data)
+		. "$label_tail"
+		. ($options -> {editor} ? '</div>' : '</td>');
+
+	return $html;
 }
 
 ################################################################################
@@ -2808,8 +2842,11 @@ sub draw_checkbox_cell {
 
 	my $label = $data -> {label} ? '&nbsp;' . $data -> {label} : '';
 
-	return qq {<td $$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label$label_tail</td>};
+	my $html = ($options -> {editor} ? '<div' : '<td')
+		. qq{$$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label$label_tail}
+		. ($options -> {editor} ? '</div>' : '</td>');
 
+	return $html;
 }
 
 ################################################################################
@@ -2848,6 +2885,8 @@ sub draw_select_cell {
 
 			if (this.options[this.selectedIndex].value == -1) {
 
+				is_open_other_window = 1;
+
 				$confirm_js_if
 
 				if (\$.browser.webkit || \$.browser.safari)
@@ -2883,19 +2922,21 @@ sub draw_select_cell {
 
 				$confirm_js_else
 
+				is_open_other_window = 0;
 			}
 
 EOJS
 
 	}
 
-	my $html = qq {<td $attributes><select
-		$s_attributes
-		name="$$data{name}"
-		onChange="is_dirty=true; $$data{onChange}"
-		onkeypress='typeAhead();'
-		$multiple
-	};
+	my $html = ($options -> {editor} ? '<div' : '<td')
+		. qq {$attributes><select
+			$s_attributes
+			name="$$data{name}"
+			onChange="is_dirty=true; $$data{onChange}"
+			onkeypress='typeAhead();'
+			$multiple
+		};
 
 	if (($options -> {__fixed_cols} > 0) && msie_less_7) {
 
@@ -2921,7 +2962,7 @@ EOJS
 		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
 	}
 
-	$html .= qq {</select>$label_tail</td>};
+	$html .= qq {</select>$label_tail} . $options -> {editor} ? "</div>" : "</td>";
 
 	return $html;
 
@@ -2962,7 +3003,8 @@ sub draw_string_voc_cell {
 EOJS
 	}
 
-	my $html = qq {<td $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" value="$$data{label}" name="$$data{name}_label" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
+	my $html = ($options -> {editor} ? '<div' : '<td')
+		. qq { $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" value="$$data{label}" name="$$data{name}_label" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
 		. ($data -> {other} ? qq [<input type="button" value="$data->{other}->{button}" onclick="$data->{other}->{onChange}">] : '')
 		. dump_tag (input => {
 
@@ -2972,7 +3014,8 @@ EOJS
 			id    => "$data->{name}_id",
 
 		})
-		. "</span></nobr>$label_tail</td>";
+		. "</span></nobr>$label_tail"
+		. ($options -> {editor} ? '</div>' : '</td>');
 
 	return $html;
 
@@ -3071,6 +3114,8 @@ EOH
 
 	my $tabindex = 'tabindex=' . (++ $_REQUEST {__tabindex});
 
+	return qq {<div $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" $attr_input name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex>$autocomplete</nobr>$label_tail</div>}
+		if ($options -> {editor});
 	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" $attr_input name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex>$autocomplete</nobr>$label_tail</td>};
 
 }
@@ -3247,8 +3292,6 @@ sub draw_table {
 
 		foreach my $tr (@{$i -> {__trs}}) {
 
-			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
-
 			$html .= "<tr id='$$i{__tr_id}'";
 
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
@@ -3257,9 +3300,7 @@ sub draw_table {
 			}
 
 			$html .= '>';
-			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $has_href;
 			$html .= $tr;
-			$html .= qq {</a>} if $has_href;
 			$html .= '</tr>';
 
 		}
@@ -3379,7 +3420,7 @@ sub draw_page {
 		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {};";
 
 		$_REQUEST {__on_load} .= "tableSlider.set_row ($_REQUEST{__scrollable_table_row});"
-			if $_REQUEST {__scrollable_table_row} > 0;
+			if $_REQUEST {__scrollable_table_row} > 0 && !$_REQUEST {__edited_cells_table};
 
 		$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 
