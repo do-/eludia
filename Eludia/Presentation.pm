@@ -1086,8 +1086,6 @@ sub draw_toolbar {
 
 		if (ref $button eq HASH) {
 
-			$button -> {off} = !(grep {!$_ -> {off}} @{$button -> {items}}) if (exists $button -> {items} && @{$button -> {items}} > 0);
-
 			next if $button -> {off};
 
 			if (@{$button -> {items}}) {
@@ -1114,9 +1112,16 @@ sub draw_toolbar {
 					push @$items, $item;
 				}
 
-				$button -> {items} = $items;
+				if (!$items) {
+					next;
+				} elsif (@$items == 1) {
+					$button = $items -> [0];
+				} else {
+					$button -> {items} = $items;
+					$button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items});
+				}
 
-				$button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items});
+
 			}
 
 			if ($button -> {hidden} && !$_REQUEST {__edit_query}) {
@@ -1234,12 +1239,23 @@ sub draw_centered_toolbar_button {
 			push @$items, $item;
 		}
 
-		return ''
-			unless $items;
+		if (!$items) {
 
-		$options -> {items} = $items;
+			return '';
 
-		$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});
+		} elsif (@$items == 1) {
+
+			$_ [0] = $options = $items -> [0];
+
+		} else {
+
+			$options -> {items} = $items;
+
+			$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});
+
+		}
+
+
 	}
 
 	if ($options -> {preset}) {
