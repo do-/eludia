@@ -2607,15 +2607,15 @@ sub draw_super_table_text_cell {
 
 	# }
 
-	# $html .= '<b>'      if $data -> {bold}   || $options -> {bold};
-	# $html .= '<i>'      if $data -> {italic} || $options -> {italic};
-	# $html .= '<strike>' if $data -> {strike} || $options -> {strike};
+	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
+	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
 
 	$html .= $data -> {label};
 
-	# $html .= '</b>'      if $data -> {bold}   || $options -> {bold};
-	# $html .= '</i>'      if $data -> {italic} || $options -> {italic};
-	# $html .= '</strike>' if $data -> {strike} || $options -> {strike};
+	$html .= '</b>'      if $data -> {bold}   || $options -> {bold};
+	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '</strike>' if $data -> {strike} || $options -> {strike};
 
 	# if ($data -> {href}) {
 
