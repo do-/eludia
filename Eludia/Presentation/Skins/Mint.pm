@@ -3836,7 +3836,7 @@ EOH
 
 	if ($_REQUEST {__doctype_html5}) {
 
-		$doctype = qq{<!DOCTYPE html><html class="no-js"><!--<![endif]-->};
+		$doctype = qq{<!DOCTYPE html><html class="no-js" style="background-color:#b9c5d7;" ><!--<![endif]-->};
 
 		$_REQUEST{__head_links} = <<EOS . $_REQUEST{__head_links};
 <meta charset="utf-8">
