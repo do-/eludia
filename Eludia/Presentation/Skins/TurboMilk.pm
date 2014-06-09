@@ -1306,7 +1306,7 @@ sub draw_form_field_string_voc {
 			var dialog_height = $options->{other}->{height};
 EOJS
 		if ($options -> {other} -> {no_param}) {
-			$options -> {other} -> {onChange} .= "var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}' + '&select=$options->{name}&$options->{other}->{cgi_tail}', parent:window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');"		
+			$options -> {other} -> {onChange} .= "var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}' + '&select=$options->{name}&$options->{other}->{cgi_tail}', parent:window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');"
 		} else {
 		$options -> {other} -> {onChange} .= <<EOJS;
 			var q = encode1251(document.getElementById('${options}_label').value);
@@ -2296,49 +2296,28 @@ sub draw_toolbar_button_vert_menu {
 	my ($_SKIN, $name, $types, $level, $is_main) = @_;
 
 	my $html = <<EOH;
-		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:100">
+		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:1000">
 			<table id="vert_menu_table_$name" width=1 class="tbbgc" cellspacing=0 cellpadding=0 border=0 border=1>
 EOH
 
 	foreach my $type (@$types) {
 
-		if ($type eq BREAK) {
+		if ($type -> {icon}) {
+			my $label = $type -> {label};
+			my $img_path = _icon_path ($type -> {icon});
 
-			$html .= <<EOH;
-				<tr height=2>
+			$type -> {label} = qq|&nbsp;<img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=0 align=absmiddle>&nbsp;|;
+			$type -> {label} .= "&nbsp;$label";
+		}
 
-					<td class="tbbgc" width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
-					<td class="tbbgc" width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
+		$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
 
-					<td>
-						<table width=90% border=0 cellspacing=0 cellpadding=0 align=center minheight=2>
-							<tr height=1><td class="tbbgc"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
-							<tr height=1><td bgcolor="#ffffff"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
-						</table>
-					</td>
+		$html .= <<EOH;
+				<tr>
+					<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
 				</tr>
 EOH
-		}
-		else {
 
-			if ($type -> {icon}) {
-				my $label = $type -> {label};
-				my $img_path = _icon_path ($type -> {icon});
-
-				$type -> {label} = qq|&nbsp;<img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=0 align=absmiddle>&nbsp;|;
-				$type -> {label} .= "&nbsp;$label";
-			}
-
-			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
-
-			$html .= <<EOH;
-					<tr>
-						<td class="tbbgc" width=2><img src="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" width="2" height="25" border="0"></td>
-						<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
-					</tr>
-EOH
-
-		}
 
 	}
 
@@ -3638,7 +3617,7 @@ EOH
 			td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
 			td.submit-area  { text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
 			div.grey-submit { background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
-			td.toolbar-btn-vert-menu { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #232324;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/btn_bg.gif);cursor: pointer;}
+			td.toolbar-btn-vert-menu { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #232324;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/btn4_bg.gif);cursor: pointer;}
 		</style>
 
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
