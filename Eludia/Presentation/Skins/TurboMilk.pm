@@ -2710,11 +2710,7 @@ sub draw_text_cell {
 
 	$data -> {attributes} -> {title} .= $label_tail;
 
-	my $has_href = $options -> {href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
-
 	my $html = dump_tag ('td', $data -> {attributes});
-
-	$html .= qq{<a target="$$options{__target}" href="$$options{href}">} if $has_href;
 
 	if (exists $data -> {editor} && $_REQUEST {__edited_cells_table}) {
 
@@ -2781,8 +2777,6 @@ sub draw_text_cell {
 		$html .= '</div>';
 		$html .= $data -> {editor};
 		$html .= '</div>';
-	} else {
-		$html .= "</a>" if $has_href;
 	}
 
 	$html .= '</td>';
