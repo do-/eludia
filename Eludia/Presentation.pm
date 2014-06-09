@@ -1734,13 +1734,7 @@ EOJS
 
 		}
 
-		my $has_href = $options -> {href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
-
-		$result .= qq{<a target="$$options{__target}" href="$$options{href}">} if $has_href;
-
 		$result .= call_from_file ("Eludia/Presentation/TableCells/$cell->{type}.pm", "draw_$cell->{type}_cell", $cell, $options);
-
-		$result .= "</a>" if $has_href;
 
 	}
 
