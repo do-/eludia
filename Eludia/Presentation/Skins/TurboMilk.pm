@@ -2711,7 +2711,7 @@ sub draw_text_cell {
 	$data -> {attributes} -> {title} .= $label_tail;
 
 	my $id = $data -> {attributes} -> {id};
-	delete 	$data -> {attributes} -> {id};
+	delete 	$data -> {attributes} -> {id} if (exists $data -> {editor} && $_REQUEST {__edited_cells_table});
 
 	my $html = dump_tag ('td', $data -> {attributes});
 
