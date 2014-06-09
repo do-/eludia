@@ -2710,20 +2710,28 @@ sub draw_text_cell {
 
 	$data -> {attributes} -> {title} .= $label_tail;
 
-	my $id = $data -> {attributes} -> {id};
-	delete 	$data -> {attributes} -> {id} if (exists $data -> {editor} && $_REQUEST {__edited_cells_table});
-
 	my $html = dump_tag ('td', $data -> {attributes});
 
-	$html .= dump_tag ('div', {id => $id . '_td'});
+	if (exists $data -> {editor} && $_REQUEST {__edited_cells_table}) {
 
-	$html .= dump_tag ('div', {id => $id});
+		my $id = $data -> {attributes} -> {id};
+		delete 	$data -> {attributes} -> {id};
+
+		$html = dump_tag ('td', $data -> {attributes});
+
+		$html .= dump_tag ('div', {id => $id . '_td'});
+
+		$html .= dump_tag ('div', {id => $id});
+
+	}
 
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
 
-		$html .= '&nbsp;</div>';
+		if (exists $data -> {editor} && $_REQUEST {__edited_cells_table}) {
+			$html .= '&nbsp;</div>';
 
-		$html .= $data -> {editor} if (exists $data -> {editor} && $_REQUEST {__edited_cells_table});
+			$html .= $data -> {editor};
+		}
 
 		return $html . '</td>';
 
@@ -2767,10 +2775,13 @@ sub draw_text_cell {
 
 	$html .= dump_hiddens ([$data -> {hidden_name} => $data -> {hidden_value}]) if $data -> {add_hidden};
 
-	$html .= '</div>';
-	$html .= $data -> {editor} if (exists $data -> {editor} && $_REQUEST {__edited_cells_table});
+	if (exists $data -> {editor} && $_REQUEST {__edited_cells_table}) {
+		$html .= '</div>';
+		$html .= $data -> {editor};
+		$html .= '</div>';
+	}
 
-	$html .= '</div></td>';
+	$html .= '</td>';
 
 	return $html;
 
