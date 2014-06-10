@@ -4283,7 +4283,7 @@ function toggle_field_and_row (td_field, is_visible) {
 		var td_expand = td_field.next().next();
 		td_expand.attr('colSpan', is_visible ? 1 : 3);
 
-		var is_row_visible = td_expand.parent().children(':visible').length;
+		var is_row_visible = is_visible || td_expand.parent().children(':visible').length;
 		td_expand.parent().toggle(is_row_visible ? true : false);
 
 	} else if (td_field.prev().prev().length == 1){
@@ -4291,12 +4291,12 @@ function toggle_field_and_row (td_field, is_visible) {
 		var td_expand = td_field.prev().prev();
 		td_expand.attr('colSpan', is_visible ? 1 : 3);
 
-		var is_row_visible = td_expand.parent().children(':visible').length;
+		var is_row_visible = is_visible || td_expand.parent().children(':visible').length;
 		td_expand.parent().toggle(is_row_visible ? true : false);
 
 	} else {
 
-		var is_row_visible = td_field.parent().children(':visible').length;
+		var is_row_visible = is_visible || td_field.parent().children(':visible').length;
 		td_field.parent().toggle(is_row_visible ? true : false);
 
 	}
