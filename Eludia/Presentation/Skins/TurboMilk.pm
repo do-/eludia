@@ -2708,9 +2708,12 @@ sub draw_text_cell {
 
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
 
-		$html .= '&nbsp;</div>';
+		$html .= '&nbsp;';
+		if (exists $data -> {editor} && $_REQUEST {__edited_cells_table}) {
+			$html .= '</div>';
 
-		$html .= $data -> {editor} if (exists $data -> {editor} && $_REQUEST {__edited_cells_table});
+			$html .= $data -> {editor};
+		}
 
 		return $html . '</td>';
 

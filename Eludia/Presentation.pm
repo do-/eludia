@@ -1691,7 +1691,7 @@ sub draw_cells {
 
 		$cell -> {href} ||= $options -> {href};
 
-		delete $cell -> {editor} if (exists $_REQUEST {__edited_cells_table} && $i -> {fake} != 0);
+		delete $cell -> {editor} if (exists $_REQUEST {__edited_cells_table} && ($i -> {fake} != 0 || $_REQUEST {xls}));
 
 		if (exists $cell -> {editor} && $_REQUEST {__edited_cells_table}) {
 
@@ -1709,7 +1709,7 @@ sub draw_cells {
 
 			$cell -> {editor} -> {name} = '_' . $_REQUEST {__edited_cells_table} . '_' . $cell -> {editor} -> {name};
 
-			$cell -> {editor} -> {label} ||= $cell -> {label};
+			$cell -> {editor} -> {label} ||= $cell -> {label} if $cell -> {editor} -> {type} ~~ ['input', 'date', 'datetime'];
 
 			$cell -> {editor} -> {hidden} ||= $_REQUEST {xls};
 
