@@ -2689,12 +2689,9 @@ sub draw_text_cell {
 
 	$data -> {attributes} -> {title} .= $label_tail;
 
-	my $has_href = $options -> {href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
+	my $has_href = $data -> {href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 
 	my $html = dump_tag ('td', $data -> {attributes});
-
-	$html .= dump_tag ('a', {target => $options -> {__target}, href => $options -> {href} || '#', class => $data -> {a_class} || 'row-cell'})
-		if $has_href;
 
 	if (exists $data -> {editor} && $_REQUEST {__edited_cells_table}) {
 
@@ -2721,11 +2718,9 @@ sub draw_text_cell {
 
 	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
-	$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
-
 	$html .= '<nobr>' unless $data -> {no_nobr};
 
-	if ($data -> {href}) {
+	if ($has_href) {
 
 		$a_attributes_html = dump_attributes ({
 			id      => $data -> {a_id},
@@ -2736,9 +2731,11 @@ sub draw_text_cell {
 			style   => $fgcolor ? "color:$fgcolor;" : undef,
 		});
 
-		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a $a_attributes_html $$data{onclick}>};
+		$html .= qq {<a $a_attributes_html $$data{onclick}><span>};
 
 	}
+
+	$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
 	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
@@ -2747,9 +2744,13 @@ sub draw_text_cell {
 	$html .= $data -> {label};
 	$html .= $label_tail;
 
-	if ($data -> {href}) {
+	$html .= '</strike>' if $data -> {strike} || $options -> {strike};
+	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '</b>'      if $data -> {bold}   || $options -> {bold};
 
-		$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
+	if ($has_href) {
+
+		$html .= '</span></a>';
 
 	}
 
@@ -2761,8 +2762,6 @@ sub draw_text_cell {
 		$html .= '</div>';
 		$html .= $data -> {editor};
 		$html .= '</div>';
-	} else {
-		$html .= "</a>" if $has_href;
 	}
 
 	$html .= '</td>';

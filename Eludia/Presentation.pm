@@ -1689,6 +1689,8 @@ sub draw_cells {
 
 	foreach my $cell (@cells) {
 
+		$cell -> {href} ||= $options -> {href};
+
 		delete $cell -> {editor} if (exists $_REQUEST {__edited_cells_table} && $i -> {fake} != 0);
 
 		if (exists $cell -> {editor} && $_REQUEST {__edited_cells_table}) {
