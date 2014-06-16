@@ -922,7 +922,7 @@ function open_popup_menu_for_toolbar_btn (event, type, id, level) {
 	var toolbar_button = document.getElementById (id);
 	var a_offset = getOffset(toolbar_button);
 
-	div.style.top  = a_offset.top + toolbar_button.clientHeight + document.body.scrollTop - 2;
+	div.style.top  = a_offset.top + toolbar_button.clientHeight - 2;
 	div.style.left = a_offset.left + document.body.scrollLeft;
 
 	if (div.children[0].style.width < toolbar_button.clientWidth)
