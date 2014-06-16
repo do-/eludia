@@ -920,9 +920,13 @@ function open_popup_menu_for_toolbar_btn (event, type, id, level) {
 	}
 
 	var toolbar_button = document.getElementById (id);
-	var a_offset = getOffset(toolbar_button);
+	var a_offset = $(toolbar_button).offset();
 
-	div.style.top  = a_offset.top + toolbar_button.clientHeight - 2;
+	if (a_offset.top + $(div).height() + toolbar_button.clientHeight - document.body.scrollTop > $(document.body).height()) {
+		div.style.top  = a_offset.top - $(div).height() + 2;
+	} else {
+		div.style.top  = a_offset.top + toolbar_button.clientHeight - 2;
+	}
 	div.style.left = a_offset.left + document.body.scrollLeft;
 
 	if (div.children[0].style.width < toolbar_button.clientWidth)
@@ -4302,43 +4306,6 @@ function toggle_field_and_row (td_field, is_visible) {
 	}
 }
 
-function getOffsetSum(elem) {
-	var top = 0, left = 0;
-
-	while(elem) {
-		top = top + parseFloat(elem.offsetTop)
-		left = left + parseFloat(elem.offsetLeft)
-		elem = elem.offsetParent
-	}
-
-	return {top: Math.round(top), left: Math.round(left)}
-};
-
-function getOffsetRect(elem) {
-	var box = elem.getBoundingClientRect()
-
-	var body = document.body
-	var docElem = document.documentElement
-
-	var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop
-	var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft
-
-	var clientTop = docElem.clientTop || body.clientTop || 0
-	var clientLeft = docElem.clientLeft || body.clientLeft || 0
-
-	var top  = box.top +  scrollTop - clientTop
-	var left = box.left + scrollLeft - clientLeft
-
-	return { top: Math.round(top), left: Math.round(left) }
-};
-
-function getOffset(elem) {
-	if (elem.getBoundingClientRect) {
-		return getOffsetRect(elem)
-	} else {
-		return getOffsetSum(elem)
-	}
-};
 
 // [Cookie] Returns ids of open nodes as a string
 
