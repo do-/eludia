@@ -69,8 +69,10 @@ sub fix___query {
 		my $is_there_some_order;
 
 		foreach my $o (@_ORDER) {
-		
-			$is_there_some_order ||= $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord};
+
+			next unless ($o -> {order} || $o -> {no_order});
+
+			$is_there_some_order ||= $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {ord};
 		
 			foreach my $filter (@{$o -> {filters}}) {
 			
@@ -110,8 +112,10 @@ sub fix___query {
 
 		foreach my $o (@_ORDER) {
 		
-			my $parent = exists $o -> {parent} ? $o -> {parent} -> {order} : '';
-			$content -> {columns} -> {$o -> {order}} = {ord => ++ $n {$parent}};
+			next unless ($o -> {order} || $o -> {no_order} || $o -> {parent} -> {order} || $o -> {parent} -> {no_order});
+
+			my $parent = exists $o -> {parent} ? ($o -> {parent} -> {order} || $o -> {parent} -> {no_order}) : '';
+			$content -> {columns} -> {$o -> {order} || $o -> {no_order}} = {ord => ++ $n {$parent}};
 
 			foreach my $filter (@{$o -> {filters}}) {
 			
@@ -465,6 +469,8 @@ sub draw_item_of___queries {
 		my $o = $_ORDER [$i];
 
 		$o -> {order} ||= $o -> {no_order};
+
+		next unless ($o -> {order} || $o -> {no_order});
 
 		next
 			if $o -> {__hidden} || $o -> {hidden};

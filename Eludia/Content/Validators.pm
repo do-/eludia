@@ -57,7 +57,7 @@ sub vld_unique {
 	
 	$options -> {field} ||= 'label';
 	$options -> {value} ||= $_REQUEST {'_' . $options -> {field}};
-	$options -> {id}    ||= $_REQUEST {id};
+	$options -> {id}    ||= $_REQUEST {id_edit_cell} || $_REQUEST {id};
 	
 	my $filter = "$$options{field} = ? AND fake = 0 AND id <> ?";
 	$filter .= " AND $$options{filter}" if $options -> {filter};

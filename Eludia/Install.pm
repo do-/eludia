@@ -1751,6 +1751,9 @@ sub test {
 
 	waitpid ($pid, 0);
 
+	my $child_exit_status = $? >> 8;
+
+	return $child_exit_status;
 }
 
 1;

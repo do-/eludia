@@ -509,7 +509,15 @@ sub handle_request_of_type_action {
 
 	eval { $db -> {AutoCommit} = 0; };
 
-	eval { $_REQUEST {error} = call_for_role ("validate_${action}_$$page{type}"); };
+	my $page_type = $page -> {type};
+
+	if ($_REQUEST {__edited_cells_table}) {
+		require_content ( $_REQUEST {action_type} )	if $_REQUEST {action_type};
+
+		$page_type = $_REQUEST {action_type} || $page -> {type};
+	}
+
+	eval { $_REQUEST {error} = call_for_role ("validate_${action}_$page_type"); };
 
 	$_REQUEST {error} ||= $@ if $@;
 
@@ -519,15 +527,39 @@ sub handle_request_of_type_action {
 
 	eval {
 
-		call_for_role ("do_${action}_$$page{type}");
+		call_for_role ("do_${action}_$page_type");
 
-		call_for_role ("recalculate_$$page{type}") if $action ne 'create';
+		call_for_role ("recalculate_$page_type") if $action ne 'create';
 
 	};
 
 	$_REQUEST {error} = $@ if $@;
 
 	return handle_error ($page) if $_REQUEST {error};
+
+	if ($_REQUEST {__edited_cells_table}) {
+
+		my $skin = $_REQUEST {__skin};
+
+		$_REQUEST {__skin} = 'TurboMilk';
+
+		setup_skin ();
+
+
+		eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
+
+		$_REQUEST {error} = $@ if $@;
+
+		return handle_error ($page) if $_REQUEST {error};
+
+		my $result = call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content});
+
+		$_REQUEST {__skin} = $skin;
+
+		out_json ({html => $result});
+
+		return action_finish ();
+	}
 
 	unless ($_REQUEST {__response_sent}) {
 

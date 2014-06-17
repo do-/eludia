@@ -16,6 +16,7 @@ sub fake_select {
 			{id => '-1', label => 'Удалённые'},
 		],
 		empty   => 'Активные',
+		off     => $options -> {off},
 	}
 	
 }

@@ -162,15 +162,17 @@ sub do_create_DEFAULT { # создание
 
 sub do_update_DEFAULT { # запись карточки
 
-	my $type = $_[0] || $_REQUEST {type};
+	my $type = $_[0] || $_REQUEST {__edited_cells_table} || $_REQUEST {type};
 
 	my $columns = $model_update -> get_columns ($type);
+
+	my $id_edit = $_REQUEST {id_edit_cell} || $_REQUEST {id};
 
 	if ($_REQUEST {_file_clear_flag_for_file} && !$_REQUEST {_file}) {
 
 		sql_delete_file ({path_column => 'file_path', table => $type});
 
-		sql_do ("UPDATE $type SET file_name = NULL, file_size = NULL, file_type = NULL, file_path = NULL WHERE id = ?", $_REQUEST {id});
+		sql_do ("UPDATE $type SET file_name = NULL, file_size = NULL, file_type = NULL, file_path = NULL WHERE id = ?", $id_edit);
 
 	}
 
@@ -202,7 +204,7 @@ sub do_update_DEFAULT { # запись карточки
 
 		my $id = $_[2] || 'id';
 
-		sql_do_update ($type, \@fields, {$id => $_[1] || $_REQUEST {id}});
+		sql_do_update ($type, \@fields, {$id => $_[1] || $id_edit});
 	
 	}
 
@@ -220,7 +222,7 @@ sub do_update_DEFAULT { # запись карточки
 		
 			table => $table,
 			key   => $',
-			root  => {$from => $_REQUEST {id}},
+			root  => {$from => $id_edit},
 			
 		};
 
