@@ -2041,7 +2041,7 @@ sub draw_toolbar_input_select {
 
 		if ($options -> {no_confirm}) {
 
-			$options -> {onChange} .= <<EOJS;
+			$options -> {onChange} = <<EOJS . $options -> {onChange};
 
 				if (this.options[this.selectedIndex].value == -1) {
 
@@ -2065,12 +2065,10 @@ sub draw_toolbar_input_select {
 					}
 
 				} else {
-					submit ();
-				}
 EOJS
 		} else {
 
-			$options -> {onChange} .= <<EOJS;
+			$options -> {onChange} = <<EOJS . $options -> {onChange};
 
 				if (this.options[this.selectedIndex].value == -1) {
 
@@ -2101,10 +2099,10 @@ EOJS
 
 					}
 				} else {
-					submit ();
-				}
 EOJS
 		}
+
+		$options -> {onChange} .= '}';
 	}
 
 	$options -> {attributes} ||= {};
@@ -2229,7 +2227,7 @@ sub draw_toolbar_input_datetime {
 	my ($_SKIN, $options) = @_;
 
 	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
-	$options -> {onKeyPress} = "if (window.event.keyCode == 13) {this.form.submit()}";
+	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {this.form.submit()}";
 
 	my $html = '<td class="toolbar" nowrap>';
 
