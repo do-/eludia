@@ -42,7 +42,7 @@ sub options {
 
 	return {
 		core_unblock_navigation => $preconf -> {core_unblock_navigation},
-		# static_path             => '/i/mint/',
+		static_path             => '/i/mint/',
 	};
 
 }
@@ -354,9 +354,6 @@ EOH
 					<tr>$html</tr></table>
 				</td>
 			</tr>
-			<tr>
-				<td bgcolor="#ffffff" colspan=2><img height="8" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
-			</tr>
 		</table>
 EOH
 
@@ -519,9 +516,6 @@ EOH
 
 	$path .= <<EOH;
 &nbsp;</td>
-						</tr>
-						<tr>
-							<td class="tbbgb" colspan=2>&nbsp;</td>
 						</tr>
 					</table>
 				</td>
@@ -2295,9 +2289,6 @@ sub draw_centered_toolbar {
 				<td>
 					<table cellspacing=0 cellpadding=0 width="100%" border=0>
 						<tr>
-							<td colspan=$colspan><img height=3 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
-						</tr>
-						<tr>
 							<td width="45%">
 								<table cellspacing=0 cellpadding=0 width="100%" border=0>
 									<tr>
@@ -3498,12 +3489,7 @@ sub draw_page {
 
 	my $body_options = {
 		bgcolor      => 'white',
-		leftMargin   => 0,
-		topMargin    => 0,
-		bottomMargin => 0,
-		rightMargin  => 0,
-		marginwidth  => 0,
-		marginheight => 0,
+		margin       => 0,
 		name         => 'body',
 		id           => 'body',
 	};
@@ -3697,7 +3683,7 @@ EOH
 			my $height = user_agent () -> {msie} >= 10 ? '99%' : '100%';
 
 			$body = <<EOH;
-				<iframe name='_body_iframe' id='_body_iframe' src="$_REQUEST{__static_url}/0.html" width=100% height=$height border=0 frameborder=0 marginheight=0 marginwidth=0 application=yes>
+				<iframe name='_body_iframe' id='_body_iframe' src="$_REQUEST{__static_url}/0.html">
 				</iframe>
 EOH
 		}
@@ -3771,6 +3757,7 @@ EOH
 	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";
 
 	$_REQUEST {__head_links}  = qq {
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 		<title>$$i18n{_page_title}</title>
 
@@ -3806,20 +3793,19 @@ EOH
 
 	}
 
-	my $doctype = qq{<html xmlns:v="urn:schemas-microsoft-com:vml">};
+#	my $doctype = qq{<html xmlns:v="urn:schemas-microsoft-com:vml">};
 
 	if ($_REQUEST {__doctype_html5}) {
 
-		$doctype = qq{<!DOCTYPE html><html class="no-js" style="background-color:#b9c5d7;" ><!--<![endif]-->};
+#		$doctype = qq{<!DOCTYPE html><html class="no-js"><!--<![endif]-->};
 
 		$_REQUEST{__head_links} = <<EOS . $_REQUEST{__head_links};
 <meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
 EOS
 		$_REQUEST {__charset} = 'utf-8';
 	}
 
-	return qq {$doctype<head>$_REQUEST{__head_links}</head>$body</html>};
+	return qq {<!DOCTYPE html><head>$_REQUEST{__head_links}</head>$body</html>};
 
 }
 
@@ -4312,9 +4298,9 @@ EOH
 
 
 	my $frameset = qq {<frameset cols="$options->{width},*">
-		<frame src="$ENV{SCRIPT_URI}/i/_skins/Mint/0.html" name="_tree_iframe" id="__tree_iframe" application="yes">
+		<frame src="$ENV{SCRIPT_URI}/i/_skins/Mint/0.html" name="_tree_iframe" id="__tree_iframe">
 		</frame>
-		<frame src="${\($selected_node_url ? $selected_node_url : "$_REQUEST{__static_url}/0.html")}" name="$options->{name}" id="__content_iframe" application="yes" @{[is_ua_mobile () ? '' : 'scrolling="no"']}>
+		<frame src="${\($selected_node_url ? $selected_node_url : "$_REQUEST{__static_url}/0.html")}" name="$options->{name}" id="__content_iframe">
 		</frame>
 	</frameset>};
 
@@ -4322,7 +4308,7 @@ EOH
 
 		$frameset = <<EOH;
 			<frameset rows="$options->{top}->{height},*">
-				<frame src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" application="yes" noresize scrolling=no>
+				<frame src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" noresize>
 				</frame>
 				$frameset
 			</frameset>
