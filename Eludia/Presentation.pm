@@ -549,7 +549,7 @@ sub draw_window_title {
 
 	my ($options) = @_;
 
-	return '' if $options -> {off};
+	return '' if $options -> {off} || !$options -> {label};
 
 	$options -> {label} = $i18n -> {$options -> {label}}
 		if $options -> {label};
