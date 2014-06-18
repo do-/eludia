@@ -4372,3 +4372,21 @@ if (!Array.prototype.pop) {
 	}
 
 };
+
+function eludia_is_flash_installed () {
+
+	if (typeof navigator.plugins == 'undefined' || navigator.plugins.length == 0) {
+		try {
+			return !!(new ActiveXObject('ShockwaveFlash.ShockwaveFlash'));
+		} catch (e) {
+			return false;
+		}
+	}
+
+	return navigator.plugins['Shockwave Flash'];
+}
+
+function eludia_copy_clipboard (text, element) {
+
+	window.prompt(top.i18n.copy_clipboard, text);
+}
