@@ -90,6 +90,50 @@ ol, ul {list-style: none;}
 
 .nowrap {white-space:nowrap}
 
+.k-grouping-header {
+	background-image: url(/i/ken/images/highlight.png);
+	background-position: 0px -258px;
+	background-color: #efefef;
+	border-top-width: 1px;
+	border-top-style: solid;
+	border-top: 1px solid #C5C5C5;
+	border-bottom: 1px solid #C5C5C5;
+}
+
+.bgBreadcrumbsIcon{
+	display: block;
+	float: left;
+	position: relative;
+	top: 5px;
+	width:18px;
+	height:18px;
+	margin-left: 10px;
+	background-repeat: no-repeat;
+}
+.path {
+	font-size: 95%;
+	font-weight: bold;
+	text-decoration: none;
+	color: #000000;
+}
+
+
+.k-pager-wrap{
+	border-width: 0px !important;
+}
+
+.k-tabstrip-items .k-tab-on-top, .k-tabstrip-items .k-state-active, .k-panelbar .k-tabstrip-items .k-state-active {
+	border-bottom: 0px;
+	margin-bottom: -1px;
+	padding-bottom: 1px;
+	font-weight: bold;
+}
+
+.k-grid-toolbar {
+	border-bottom: 1px solid #C5C5C5;
+}
+
+
 div.modal_div  > * {
     -webkit-transform: translateZ(0px);
 }
@@ -466,18 +510,6 @@ a.tab-1, a.tab-1:link, a.tab-1:active, a.tab-1:visited, a.tab-1:hover {
 	font-size: 8pt;
 	color: #000000;
 	text-decoration: none;
-}
-
-A.path, A.path:link, A.path:active, A.path:hover, A.path:visited {
-	FONT-WEIGHT: normal;
-	FONT-SIZE: 8pt;
-/*
-	COLOR: #000000;
-*/
-	COLOR: #23385a;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
-	TEXT-DECORATION: underline;
-	WHITE-SPACE: nowrap;
 }
 
 .txt0 {

@@ -323,41 +323,21 @@ sub _draw_bottom {
 
 	foreach my $item (@$items) {
 		if ($item -> {is_active}) {
-			$html .= <<EOH;
-				<td width=5><img src="$_REQUEST{__static_url}/tab_l_1.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
-				<td bgcolor="#ffffff"><a id="$item" href="$$item{href}" class="tab-1" target="$item->{target}"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>
-				<td width=5><img src="$_REQUEST{__static_url}/tab_r_1.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
-				<td width=4><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=22 border=0></td>
-EOH
+			$html .='<li class="k-state-active k-item k-tab-on-top k-state-default k-first">
+					<a id="'.$item.'" href="'.$$item{href}.'" class="tab-1 k-link" target="'.$item->{target}.'"><nobr>&nbsp;'.$$item{label}.'&nbsp;</nobr></a>
+				</li>'
 		} else {
-			$html .= <<EOH;
-				<td width=5><img src="$_REQUEST{__static_url}/tab_l_0.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
-				<td background="$_REQUEST{__static_url}/tab_bg_0.gif?$_REQUEST{__static_salt}"><a id="$item" href="$$item{href}" class="tab-0" target="$item->{target}"><nobr>&nbsp;$$item{label}&nbsp;</nobr></a></td>
-				<td width=5><img src="$_REQUEST{__static_url}/tab_r_0.gif?$_REQUEST{__static_salt}" width=5 height=22 border=0></td>
-				<td width=4><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=22 border=0></td>
-EOH
+			$html .= '<li class="k-item k-state-default">
+					<a id="'.$item.'" href="'.$$item{href}.'" class="tab-0 k-link" target="'.$item->{target}.'"><nobr>&nbsp;'.$$item{label}.'&nbsp;</nobr></a>
+				</li>'
 		}
 
 	}
 
 	return <<EOH;
-		<table border=0 cellspacing=0 cellpadding=0 width=100%>
-			<tr>
-				<td class="tbbg1" colspan="20" height="1px" ></td>
-			</tr>
-			<tr>
-				<td class="tbbg2" colspan="20" height="1px" ></td>
-			</tr>
-			<tr>
-				<td class="tbbg3" colspan="20" height="1px" ></td>
-			</tr>
-			<tr>
-				<td class="bgr0" width=10><img height="30" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
-				<td class="bgr0" valign="bottom" align="right"><table border=0 cellspacing=0 cellpadding=0>
-					<tr>$html</tr></table>
-				</td>
-			</tr>
-		</table>
+		<div class="k-widget k-header k-tabstrip">
+				<ul class="k-tabstrip-items k-reset tabbb">$html</ul>
+		</div>
 EOH
 
 }
@@ -467,20 +447,12 @@ sub draw_path {
 	$options -> {style} ||= $options -> {nowrap} ? qq{style="background:url('$_REQUEST{__static_url}/bgr_grey.gif?$_REQUEST{__static_salt}');background-repeat:repeat-x;"} : '';
 
 	my $path = <<EOH;
-		<table cellspacing=0 cellpadding=0 width="100%" border=0>
-			<tr>
-				<td>
-					<table cellspacing=0 cellpadding=0 width="100%" border=0>
-						<tr>
-							<td class="toolbar" $$options{style}>
-								<img height=29 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0>
-							</td>
-							<td class="toolbar" $$options{style} $$options{nowrap}>&nbsp;
+		<div class="k-grouping-header fixed-header">&nbsp;
 EOH
 
-	my $icon = $options -> {status} ? "status_$options->{status}->{icon}.gif" : 'i_folder.gif';
+	my $icon = $options -> {status} ? "status_$options->{status}->{icon}.png" : 'i_folder.gif';
 
-	$path .= qq{<img src="$_REQUEST{__static_url}/${icon}?$_REQUEST{__static_salt}" border=0 hspace=3 vspace=1 align=absmiddle>&nbsp;};
+	$path .= qq{<div class="bgBreadcrumbsIcon" style="background-image:url($_REQUEST{__static_url}/path_folder.png?$_REQUEST{__static_salt})"></div>};
 
 	for (my $i = 0; $i < @$list; $i ++) {
 
@@ -499,12 +471,7 @@ EOH
 	}
 
 	$path .= <<EOH;
-&nbsp;</td>
-						</tr>
-					</table>
-				</td>
-			</tr>
-		</table>
+&nbsp;</div>
 EOH
 
 	return $path;
@@ -1716,6 +1683,10 @@ sub draw_toolbar_break {
 
 sub _icon_path {
 
+	if (-r $r -> document_root . "/i/ken/images/icons/$_[0].png") {
+		return "$_REQUEST{__static_site}/i/ken/images/icons/$_[0].png";
+	}
+
 	-r $r -> document_root . "/i/_skins/Mint/i_$_[0].gif" ?
 	"$_REQUEST{__static_url}/i_$_[0].gif?$_REQUEST{__static_salt}" :
 	"$_REQUEST{__static_site}/i/buttons/$_[0].gif"
@@ -2124,6 +2095,8 @@ sub draw_toolbar_input_datetime {
 		$html .= $options -> {label};
 		$html .= ': </span>';
 	}
+
+	$options -> {attributes} -> {class} ||= ' ';
 
 	$html .= $_SKIN -> _draw_input_datetime ($options);
 
@@ -3198,9 +3171,7 @@ EOH
 sub draw_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
-warn 'Mint::draw_table';
-use Data::Dumper;
-warn Dumper ($options);
+
 	if ($options -> {super_table}) {
 		return draw_super_table ($_SKIN, $tr_callback, $list, $options);
 	}
@@ -3459,7 +3430,7 @@ sub draw_page___only_table {
 
 	$_REQUEST {__content_type} ||= 'application/json; charset=utf-8';
 	$_REQUEST {__charset} = 'utf-8';
-warn $page -> {body};
+
 	return $page -> {body};
 }
 
@@ -3494,8 +3465,8 @@ sub draw_page {
 		push @{$_REQUEST {__include_js}}, '_skins/Mint/jquery.blockUI'
 			if $preconf -> {core_blockui_on_submit} || $r -> headers_in -> {'User-Agent'} =~ /webkit/i;
 
-		push @{$_REQUEST {__include_js}}, '_skins/Mint/kendo.ui.core.min';
-		push @{$_REQUEST {__include_css}}, '_skins/Mint/kendo.common.min', '_skins/Mint/kendo.bootstrap.min';
+		push @{$_REQUEST {__include_js}}, 'ken/js/kendo.ui.core.min';
+		push @{$_REQUEST {__include_css}}, 'ken/styles/kendo.common.min', 'ken/styles/kendo.bootstrap.min';
 
 		1 or $body .= qq {
 
