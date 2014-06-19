@@ -651,6 +651,211 @@ function check_edit_mode (a, fallback_href) {
 
 }
 
+function adjust_kendo_selects() {
+
+	var select_tranform = function(){
+		var original_select = this;
+		$(original_select).kendoDropDownList({
+			height: 320,
+			open: function (e) {
+				if ($(original_select).attr('data-ken-autoopen') !== 'true') {
+					return;
+				}
+
+				var kendo_select = this;
+				var non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
+					return el.value != 0 && el.value != -1;
+				});
+				if (non_voc_options.length > 0) {
+					return;
+				}
+
+				// auto click vocabulary item
+				setTimeout (function (){ // HACK: 'after_open' event replacement
+					kendo_select.select(function(dataItem){return dataItem.value == -1});
+					$(original_select).trigger('change');
+					kendo_select.close();
+				}, 200);
+				return blockEvent();
+			}
+		}).data('kendoDropDownList').list.width('auto');
+	}
+
+	$('select').not('#_setting__suggest, #_id_filter__suggest')
+		.each(select_tranform)
+		.change(select_tranform);
+}
+
+
+function do_kendo_combo_box (id, options) {
+
+	var values = options.values,
+		initialized = 0;
+
+
+	var combo = $('#' + id).kendoComboBox({
+		placeholder     : options.empty,
+		dataTextField   : 'label',
+		dataValueField  : 'id',
+		filter          : 'contains',
+		highlightFirst  : true,
+		suggest         : true,
+		minLength       : 3,
+		autoBind        : true,
+		dataSource: {
+			transport: {
+				read        : options.href + '&salt=' + Math.random (),
+				contentType : 'application/json; charset=utf-8',
+				type        : 'POST',
+				dataType    : 'json',
+				parameterMap: function(data, type) {
+					var q;
+					if (data.filter && data.filter.filters && data.filter.filters [0] && data.filter.filters [0].value)
+						q = data.filter.filters [0].value;
+
+					if (type == 'read') {
+						return {
+							start   : data.skip,
+							portion : data.take,
+							ids     : data.ids,
+							q       : q
+						}
+					}
+				}
+			},
+			serverFiltering : true,
+			serverPaging    : true,
+			pageSize        : options.portion,
+			schema   : {
+				total : 'cnt',
+					data  : function (result) {
+					for(var i = 0; i < values.length; i++) {
+						result.result.unshift (values [i]);
+					}
+
+					return result.result;
+				}
+			}
+
+		},
+		change: function(e) {
+
+			if (this.value() && !this.dataItem()) {
+
+				this.value ('');
+
+			} else {
+
+				var input = this.element [0];
+
+				if (!input.options)
+					input.options = [];
+
+				input.selectedIndex = this.selectedIndex;
+				input.options [this.selectedIndex] = {};
+				input.options [this.selectedIndex].value = this.value ();
+
+			}
+		},
+
+		dataBound: function(e) {
+
+			if (!initialized) {
+
+				for(var i = 0; i < values.length; i++) {
+					if (values [i].selected) {
+						this.select (i);
+						break;
+					}
+				}
+
+				initialized = 1;
+
+			} else if (this.dataSource.data().length == values.length + 1) {
+				this.select (values.length);
+			}
+		}
+
+	}).data('kendoComboBox');
+
+	combo.list.width(options.width);
+
+
+}
+
+function hide_dropdown_button (id) {
+	if (document.getElementById ("ul_" + id)) {
+		$("#ul_" + id).remove();
+		return true;
+	}
+};
+
+function setup_drop_down_button (id, data) {
+	$("#" + id).on ('blur', function (e) {
+		var relTarg = e.relatedTarget || e.toElement
+		if (relTarg == undefined || relTarg == null) {
+			window.setTimeout(function () {hide_dropdown_button (id);}, 100);
+			return;
+		}
+		if (relTarg.id !== "ul_" + id)
+			hide_dropdown_button (id);
+	});
+
+	$("#" + id).on ('click', function (e) {
+
+		if (hide_dropdown_button (id)) {
+			return false;
+		}
+
+		var menuDiv = $('<ul id="ul_' + id + '" class="get_down_the_text" title="" style="position:absolute;z-index:200;white-space:nowrap" />').appendTo (document.body);
+
+		var a_offset = getOffset(this);
+
+		menuDiv.css ({
+			top:  a_offset.top + this.clientHeight,
+			left: a_offset.left,
+		});
+
+		menuDiv.kendoMenu ({
+			dataSource: data,
+			orientation: 'vertical',
+			select: function (e) {
+				var selected_item = data [$(e.item).index()];
+				if (selected_item) {
+					var selected_url = selected_item.url;
+					if (selected_url) {
+						if (selected_url.match(/^javascript:/i)) {
+							if (selected_item.confirm) {
+								if (confirm (selected_item.confirm)) {
+									eval (selected_url);
+								}
+							} else {
+								eval (selected_url);
+							}
+						} else {
+							if (selected_item.confirm) {
+								if (!confirm (selected_item.confirm)) {
+									setCursor ();
+									menuDiv.remove ();
+									e.preventDefault();
+								}
+							}
+						}
+					}
+				}
+				menuDiv.remove ();
+			}
+		});
+
+		if (menuDiv.width () < this.clientWidth)
+			menuDiv.width (this.clientWidth);
+
+		return false;
+
+	});
+}
+
+
 function UpdateClock () {
 
 	var tDate = new Date ();

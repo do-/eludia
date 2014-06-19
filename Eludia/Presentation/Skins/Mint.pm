@@ -315,13 +315,7 @@ sub _draw_bottom {
 	my ($_SKIN, $options) = @_;
 
 	unless ($options -> {menu}) {
-		return <<EOH;
-			<table cellspacing=0 cellpadding=0 width="100%">
-				<tr>
-					<td class=bgr6><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
-				</tr>
-			</table>
-EOH
+		return '';
 	}
 
 	my $html = '';
@@ -349,8 +343,17 @@ EOH
 	return <<EOH;
 		<table border=0 cellspacing=0 cellpadding=0 width=100%>
 			<tr>
-				<td background="$_REQUEST{__static_url}/tab_bg.gif?$_REQUEST{__static_salt}" width=10><img height="33" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
-				<td background="$_REQUEST{__static_url}/tab_bg.gif?$_REQUEST{__static_salt}" valign="bottom" align="right"><table border=0 cellspacing=0 cellpadding=0>
+				<td class="tbbg1" colspan="20" height="1px" ></td>
+			</tr>
+			<tr>
+				<td class="tbbg2" colspan="20" height="1px" ></td>
+			</tr>
+			<tr>
+				<td class="tbbg3" colspan="20" height="1px" ></td>
+			</tr>
+			<tr>
+				<td class="bgr0" width=10><img height="30" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
+				<td class="bgr0" valign="bottom" align="right"><table border=0 cellspacing=0 cellpadding=0>
 					<tr>$html</tr></table>
 				</td>
 			</tr>
@@ -371,44 +374,25 @@ sub _draw_input_datetime {
 
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
+	$options -> {onChange}   ||= 'null';
 	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
 
 	$options -> {attributes} -> {class} ||= 'form-active-inputs';
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	my $shows_time = $options -> {no_time} ? 'false' : 'true';
-
+	my $picker_type = $options -> {no_time}? 'datepicker' : 'datetimepicker';
 	my $html = <<EOH;
-		<nobr>
-		<input
+	<nobr>
+		<input data-type="$picker_type"
 			type="text"
 			name="$$options{name}"
 			$attributes
-			autocomplete="off"
-			onFocus="scrollable_table_is_blocked = true; q_is_focused = true; this.select()"
-			onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
 			onKeyPress="$$options{onKeyPress}"
 			onKeyDown="$$options{onKeyDown}"
+			onChange="$$options{onChange}"
 		>
-		<img id="calendar_trigger_$$options{id}" src="$_REQUEST{__static_url}/i_calendar.gif" align=absmiddle>
-		</nobr>
-		<script type="text/javascript">
-
-			i18n_calendar (Calendar);
-
-			Calendar.setup (
-				{
-					inputField : "input$$options{name}",
-					ifFormat   : "$$options{format}",
-					showsTime  : $shows_time,
-					button     : "calendar_trigger_$$options{id}",
-					onClose    : $$options{onClose}
-				}
-			);
-
-		</script>
-
+	</nobr>
 EOH
 
 	return $html;
@@ -1692,43 +1676,26 @@ sub draw_toolbar {
 	}
 
 	my $html = <<EOH;
-			<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
+	<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
 EOH
 
 
 	my %keep_params = map {$_ => 1} @{$options -> {keep_params}};
 
-	$keep_params {$_} = 1 foreach qw (sid __last_query_string __last_scrollable_table_row __last_last_query_string _charset_);
+	$keep_params {$_} = 1 foreach qw (sid __last_query_string __last_scrollable_table_row __last_last_query_string);
 
 	$html .= dump_hiddens (map {[$_ => $_REQUEST {$_}]} (keys %keep_params));
 
 	$html .= <<EOH;
-		<table class="tbbg0" cellspacing=0 cellpadding=0 width="100%" border=0>
-				<tr>
-					<td class="tbbg1" colspan="20" height="1px" ></td>
-				</tr>
-				<tr>
-					<td class="tbbg2" colspan="20" height="1px" ></td>
-				</tr>
-				<tr>
-					<td class="tbbg3" colspan="20" height="1px" ></td>
-				</tr>
-				<tr>
-					<td class="bgr0" width=30><img height=30 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 border=0></td>
+		<ul class="filters">
 EOH
-
-	foreach (@{$options -> {buttons}}) {	$html .= $_ -> {html};	}
+	foreach (@{$options -> {buttons}}) {
+		$html .= $_ -> {html};
+	}
 
 	$html .= <<EOH;
-					<td class="bgr0" width=100%><img height="1px" src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width="1px" border="0px"></td>
-				</tr>
-				<tr>
-					<td class="tbbg4" colspan="20" height="1px" ></td>
-				</tr>
-				<tr>
-					<td class="tbbg5" colspan="20" height="1px" ></td>
-				</tr>
-		</table></form>
+		</ul>
+		</form>
 EOH
 
 	return $html;
@@ -1741,36 +1708,7 @@ sub draw_toolbar_break {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = <<EOH;
-					<td class="bgr0" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
-				</tr>
-				<tr>
-					<td class="tbbg4" colspan="20" height="1px" ></td>
-				</tr>
-				<tr>
-					<td class="tbbg5" colspan="20" height="1px" ></td>
-				</tr>
-EOH
-
-	if ($options -> {break_table}) {
-		$html .= '</table><table class="tbbg6" cellspacing=0 cellpadding=0 dialog_widthth="100%" border=0>';
-	}
-
-	$html .= <<EOH;
-				<tr>
-					<td class="tbbg1" colspan="20" height="1px" ></td>
-				</tr>
-				<tr>
-					<td class="tbbg2" colspan="20" height="1px" ></td>
-				</tr>
-				<tr>
-					<td class="tbbg3" colspan="20" height="1px" ></td>
-				</tr>
-				<tr>
-					<td class="bgr0" width=30><img height=30 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 border=0></td>
-EOH
-
-	return $html;
+	return $options -> {break_table} ? '</ul><ul class="filters">' : '';
 
 }
 
@@ -1790,33 +1728,51 @@ sub draw_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
 	my $html = <<EOH;
-		<td class="bgr0">
-		<table cellspacing=0 cellpadding=0 border=0 valign="middle">
-		<tr>
-			<td class="bgr0" width=6><img src="$_REQUEST{__static_url}/btn2_l.gif?$_REQUEST{__static_salt}" width="6" height="21" border="0"></td>
-			<td class="bgr0" style="background-repeat:repeat-x" background="$_REQUEST{__static_url}/btn2_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><nobr>&nbsp;<a TABINDEX=-1 class=button href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}">
+		<li>
 EOH
+
+	if ($options -> {items}) {
+
+		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
+
+		$html .= "<script>var data_$id = [";
+		map {
+			$_ -> {imageUrl} = _icon_path ($_ -> {icon}) if $_ -> {icon};
+			$html .= <<EOH;
+			{ text: '$$_{label}', url: "$$_{href}", imageUrl: "$$_{imageUrl}", confirm: "$$_{confirm}" },
+EOH
+		} @{$options -> {items}};
+		$html .= "]; </script>";
+
+		$html .= <<EOH;
+
+			<a TABINDEX=-1 class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
+
+			<script>
+
+				setup_drop_down_button ("$id", data_$id);
+
+			</script>
+EOH
+	} else {
+		$html .= <<EOH;
+			<a TABINDEX=-1 class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+EOH
+	}
 
 	if ($options -> {icon}) {
 		my $img_path = _icon_path ($options -> {icon});
-		$html .= qq {<img src="$img_path" alt="$label" border=0 hspace=0 align=absmiddle>&nbsp;};
+		$html .= qq {<img src="$img_path" alt="$label" border=0 hspace=0 style='vertical-align:middle;'><span style='vertical-align:middle;'>};
 	}
 
 	$html .= <<EOH;
-			</a>
-			</nobr></td>
-			<td class="bgr0" style="background-repeat:repeat-x" background="$_REQUEST{__static_url}/btn2_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><nobr>&nbsp;<a TABINDEX=-1 class=button href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}">
+
 				$options->{label}
+					</span></nobr>
 				</a>
-			</nobr></td>
-			<td width=6><img src="$_REQUEST{__static_url}/btn2_r.gif?$_REQUEST{__static_salt}" width="6" height="21" border="0"></td>
-		</tr>
-		</table>
-		</td>
+		</li>
 
 EOH
-
-	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
 
 	return $html;
 
@@ -1997,11 +1953,11 @@ sub draw_toolbar_input_select {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<td class="toolbar" nowrap>';
+	my $html = '<li class="toolbar nowrap"><span class="get_down_the_text_1">';
 
 	if ($options -> {label} && $options -> {show_label}) {
 		$html .= $options -> {label};
-		$html .= ': ';
+		$html .= ': </span>';
 	}
 
 	$options -> {name} = '_' . $options -> {name}
@@ -2027,7 +1983,7 @@ sub draw_toolbar_input_select {
 					open_vocabulary_from_select (
 						this,
 						{
-							message       : '$i18n->{choose_open_vocabulary}',
+							message       : i18n.choose_open_vocabulary,
 							href          : '$options->{other}->{href}&select=$name&salt=' + Math.random(),
 							dialog_width  : $options->{other}->{width},
 							dialog_height : $options->{other}->{height}
@@ -2043,8 +1999,6 @@ EOJS
 
 	$options -> {attributes} ||= {};
 
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
-
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
 
 	$options -> {attributes} -> {onKeyPress} = 'typeAhead(1)';
@@ -2052,7 +2006,7 @@ EOJS
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
-		<select name="$name" id="${name}_select" $read_only $attributes>
+		<select name="$name" id="${name}_select"  $read_only $attributes>
 EOH
 
 	foreach my $value (@{$options -> {values}}) {
@@ -2063,7 +2017,7 @@ EOH
 
 	}
 
-	$html .= '</select></td><td class="toolbar">&nbsp;&nbsp;&nbsp;</td>';
+	$html .= '</select></li>';
 
 	return $html;
 
@@ -2075,16 +2029,16 @@ sub draw_toolbar_input_checkbox {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<td class="toolbar" nowrap>';
+	my $html = '<li class="toolbar nowrap">';
 
 	if ($options -> {label}) {
-		$html .= qq {<label for="$options">$$options{label}</label>};
-		$html .= ': ';
+		$html .= qq {<span class="get_up_the_text"><label for="$options">$$options{label}</label>};
+		$html .= ':</span> ';
 	}
 
 	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
 
-	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
+	$html .= "</li>";
 
 	return $html;
 
@@ -2096,7 +2050,7 @@ sub draw_toolbar_input_submit {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<td class="toolbar" nowrap>';
+	my $html = '<li class="toolbar nowrap">';
 
 	if ($options -> {label}) {
 		$html .= $options -> {label};
@@ -2105,7 +2059,7 @@ sub draw_toolbar_input_submit {
 
 	$html .= qq {<input type=submit name="$$options{name}" value="$$options{label}">};
 
-	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
+	$html .= "</li>";
 
 	return $html;
 
@@ -2117,7 +2071,7 @@ sub draw_toolbar_input_text {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<td nowrap class="toolbar" valign="middle">';
+	my $html = '<li nowrap class="toolbar" valign="middle"><span class="get_down_the_text">';
 
 	if ($options -> {label}) {
 		$html .= $options -> {label};
@@ -2133,6 +2087,7 @@ sub draw_toolbar_input_text {
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
+		</span>
 		<input
 			onKeyPress="$$options{onKeyPress};"
 			type=text
@@ -2142,12 +2097,11 @@ sub draw_toolbar_input_text {
 			onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
 			onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
 			$attributes
-			class='form-active-inputs'
+			class="k-textbox"
 			id="$options->{id}"
 		>
 EOH
-
-	$html .= "</td><td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
+	$html .= "</li>";
 
 	return $html;
 
@@ -2161,17 +2115,19 @@ sub draw_toolbar_input_datetime {
 
 	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
 	$options -> {onKeyPress} = "if (event.keyCode == 13) {this.form.submit()}";
+	$options -> {onChange}   = join ';', $options -> {onChange}, "submit ()"
+		if !$options -> {no_change_submit};
 
-	my $html = '<td class="toolbar" nowrap>';
+	my $html = '<li class="toolbar nowrap"><span class="get_down_the_text">';
 
 	if ($options -> {label}) {
 		$html .= $options -> {label};
-		$html .= ': ';
+		$html .= ': </span>';
 	}
 
 	$html .= $_SKIN -> _draw_input_datetime ($options);
 
-	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
+	$html .= "</li>";
 
 	return $html;
 
@@ -2183,16 +2139,16 @@ sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<td class="bgr0"><table cellspacing=2 cellpadding=0><tr>';
+	my $html = '<li class="bgr0"><table cellspacing=2 cellpadding=0><tr>';
 
 	if ($options -> {total}) {
 
 		if ($options -> {rewind_url}) {
-			$html .= qq {<td nowrap valign="middle"><a TABINDEX=-1 href="$$options{rewind_url}" class=lnk0 onFocus="blur()"><img src="$_REQUEST{__static_url}/pager_f.gif?$_REQUEST{__static_salt}" width="16" height="17" border="0"></a></td>};
+			$html .= qq {<td nowrap valign="middle" class="k-pager-wrap-new"><a TABINDEX=-1 href="$$options{rewind_url}" class="k-link-new" onFocus="blur()"><span class="k-icon k-i-seek-w">Первая страница</span></a></td>};
 		}
 
 		if ($options -> {back_url}) {
-			$html .= qq {<td nowrap valign="middle"><a TABINDEX=-1 href="$$options{back_url}" class=lnk0 id="_pager_prev" onFocus="blur()"><img src="$_REQUEST{__static_url}/pager_p.gif?$_REQUEST{__static_salt}" width="16" height="17" border="0"></a></td>};
+			$html .= qq {<td nowrap valign="middle" class="k-pager-wrap-new"><a TABINDEX=-1 href="$$options{back_url}" class="k-link-new" id="_pager_prev" onFocus="blur()"><span class="k-icon k-i-arrow-w">Предыдущая страница</span></a></td>};
 		}
 
 		$html .= '<td nowrap class="toolbar" valign="middle">&nbsp;' . ($options -> {start} + 1);
@@ -2202,19 +2158,19 @@ sub draw_toolbar_pager {
 		$html .= '&nbsp;</td>';
 
 		if ($options -> {next_url}) {
-			$html .= qq {<td  nowrap valign="middle"><a TABINDEX=-1 href="$$options{next_url}" class=lnk0 id="_pager_next" onFocus="blur()"><img src="$_REQUEST{__static_url}/pager_n.gif?$_REQUEST{__static_salt}" width="16" height="17" border="0"></a></td>};
+			$html .= qq {<td  nowrap valign="middle" class="k-pager-wrap-new"><a TABINDEX=-1 href="$$options{next_url}" class="k-link-new" id="_pager_next" onFocus="blur()"><span class="k-icon k-i-arrow-e">Следующая страница</span></a></td>};
 		}
 
 		if ($options -> {last_url}) {
-			$html .= qq {<td nowrap valign="middle"><a TABINDEX=-1 href="$$options{last_url}" class=lnk0 onFocus="blur()"><img src="$_REQUEST{__static_url}/pager_l.gif?$_REQUEST{__static_salt}" width="16" height="17" border="0"></a></td>};
+			$html .= qq {<td nowrap valign="middle" class="k-pager-wrap-new"><a TABINDEX=-1 href="$$options{last_url}" class="k-link-new" onFocus="blur()"><span class="k-icon k-i-seek-e">Последняя страница</span></a></td>};
 		}
 
 	}
 	else {
-		$html .= '<td nowrap class="toolbar">' . $i18n -> {toolbar_pager_empty_list} . '</td>';
+		$html .= '<td nowrap class="toolbar"><span>' . $i18n -> {toolbar_pager_empty_list} . '</span></td>';
 	}
 
-	$html .= "</tr></table></td><td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
+	$html .= "</tr></table></li>";
 
 	return $html;
 
@@ -2254,20 +2210,47 @@ sub draw_centered_toolbar_button {
 
 	my $nbsp = $options -> {label} ? '&nbsp;' : '';
 
-	return <<EOH;
-		<td nowrap background="$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}">
-			<table cellspacing="0" cellpadding="0" border="0">
-				<tr>
-					<td width=6><img src="$_REQUEST{__static_url}/btn_l.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
-					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}"><img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=1 align=absmiddle>${nbsp}</a></td>
-					<td background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center"><nobr><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}">$$options{label} </a></nobr></td>
-					<td width=6><img src="$_REQUEST{__static_url}/btn_r.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
-				</tr>
-			</table>
-		</td>
-		<td background="$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}"><img height=40 hspace=0 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
+	my $html = "<td nowrap>";
 
+	if ($options -> {items}) {
 
+		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
+
+		$html .= "<script>var data_$id = [";
+		map {
+			$_ -> {imageUrl} = _icon_path ($_ -> {icon}) if $_ -> {icon};
+			$html .= <<EOH;
+			{ text: '$$_{label}', url: "$$_{href}", imageUrl: "$$_{imageUrl}", confirm: "$$_{confirm}" },
+EOH
+		} @{$options -> {items}};
+		$html .= "];</script>";
+
+		$html .= <<EOH;
+
+			<a TABINDEX=-1 class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
+
+			<script>
+
+				setup_drop_down_button ("$id", data_$id);
+
+		</script>
+EOH
+
+	} else {
+		$html .= <<EOH;
+			<a class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+EOH
+	}
+
+	$html .= <<EOH;
+			<img src="$img_path" border="0" hspace="0" style="vertical-align:middle;">
+			${nbsp}
+			<nobr class="smallizer_text">
+				$$options{label}
+			</nobr>
+		</a>
+	</td>
+	<td><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
 EOH
 
 
@@ -2284,18 +2267,18 @@ sub draw_centered_toolbar {
 	my $colspan = 3 * (1 + $options -> {cnt}) + 1;
 
 	my $html = <<EOH;
-		<table cellspacing=0 cellpadding=0 width="100%" border=0 id="$__last_centered_toolbar_id">
+		<table cellspacing=0 cellpadding=0 width="100%" border=0 style="background-color: #ececec;">
 			<tr>
-				<td>
+				<td colspan=$colspan><div style="height:8px;"></div></td>
+			</tr>
+			<tr>
+				<td width="45%">
 					<table cellspacing=0 cellpadding=0 width="100%" border=0>
 						<tr>
-							<td width="45%">
-								<table cellspacing=0 cellpadding=0 width="100%" border=0>
-									<tr>
-										<td background="$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}"><img height=40 hspace=0 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
-									</tr>
-								</table>
-							</td>
+							<td><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+						</tr>
+					</table>
+				</td>
 EOH
 
 	foreach (@$list) {
@@ -2303,19 +2286,18 @@ EOH
 	}
 
 	$html .= <<EOH;
-							<td width="45%">
-								<table cellspacing=0 cellpadding=0 width="100%" border=0>
-									<tr>
-										<td background="$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}"><img height=40 hspace=0 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
-									</tr>
-								</table>
-							</td>
+				<td width="45%">
+					<table cellspacing=0 cellpadding=0 width="100%" border=0>
+						<tr>
+							<td><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
 						</tr>
 					</table>
 				</td>
 			</tr>
+			<tr>
+				<td colspan=$colspan><div style="height:8px;"></div></td>
+			</tr>
 		</table>
-
 EOH
 
 	return $html;
@@ -2551,7 +2533,7 @@ sub draw_super_table_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-		if (defined $data -> {level}) {
+	if (defined $data -> {level}) {
 
 		$data -> {attributes} -> {style} = 'padding-left:' . ($data -> {level} * 15 + 3);
 
@@ -2579,44 +2561,17 @@ sub draw_super_table_text_cell {
 
 	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
-	# $html .= '<nobr>' unless $data -> {no_nobr};
-
 	# $html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
-	# if ($data -> {href}) {
-
-	# 	$a_attributes_html = dump_attributes ({
-	# 		id      => $data -> {a_id},
-	# 		class   => $data -> {a_class},
-	# 		target  => $data -> {target},
-	# 		href    => $data -> {href},
-	# 		onFocus => "blur()",
-	# 		style   => $fgcolor ? "color:$fgcolor;" : undef,
-	# 	});
-
-	# 	$html .= qq {<a $a_attributes_html $$data{onclick}>};
-
-	# }
-
-	# $html .= '<b>'      if $data -> {bold}   || $options -> {bold};
-	# $html .= '<i>'      if $data -> {italic} || $options -> {italic};
-	# $html .= '<strike>' if $data -> {strike} || $options -> {strike};
+	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
+	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
 
 	$html .= $data -> {label};
 
-	# $html .= '</b>'      if $data -> {bold}   || $options -> {bold};
-	# $html .= '</i>'      if $data -> {italic} || $options -> {italic};
-	# $html .= '</strike>' if $data -> {strike} || $options -> {strike};
-
-	# if ($data -> {href}) {
-
-	# 	$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
-
-	# }
-
-	# $html .= '</nobr>' unless $data -> {no_nobr};
-
-	# $html .= dump_hiddens ([$data -> {hidden_name} => $data -> {hidden_value}]) if $data -> {add_hidden};
+	$html .= '</b>'      if $data -> {bold}   || $options -> {bold};
+	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '</strike>' if $data -> {strike} || $options -> {strike};
 
 	$html .= '</td>';
 
@@ -3119,24 +3074,37 @@ sub draw_super_table__only_table {
 
 	$html .= qq {<tbody>};
 
+	my $row_cnt = 0;
+
 	foreach our $i (@$list) {
 
 		foreach my $tr (@{$i -> {__trs}}) {
 
-			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 
-			$html .= "<tr id='$$i{__tr_id}'";
+			my $attributes = {};
+
+			if ($_REQUEST {__scrollable_table_row} > 0 && !$_REQUEST {__edited_cells_table}
+				&& $_REQUEST {__scrollable_table_row} == $row_cnt
+			) {
+
+				$attributes -> {class} = 'row-state-visited-turbomilk';
+			}
+
+			$attributes = dump_attributes ($attributes);
+
+			$html .= "<tr id='$$i{__tr_id}' $attributes";
 
 			# if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
 			# 	$menus .= $i -> {__menu};
 			# 	$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent ();"};
 			# }
 
+			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 			$html .= qq {data-target="$$i{__target}" data-href="$$i{__href}"} if $has_href;
 			$html .= '>';
 			$html .= $tr;
 			$html .= '</tr>';
-
+			$row_cnt++;
 		}
 	}
 
@@ -3214,8 +3182,6 @@ sub draw_super_table {
 	my $attributes = dump_attributes ($options -> {attributes});
 	my $html = qq {<div $attributes></div>\n};
 
-	$_REQUEST {__scrollable_table_row} ||= 0;
-
 	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr";
 	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
 	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable_turbomilk";
@@ -3241,7 +3207,9 @@ EOH
 sub draw_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
-
+warn 'Mint::draw_table';
+use Data::Dumper;
+warn Dumper ($options);
 	if ($options -> {super_table}) {
 		return draw_super_table ($_SKIN, $tr_callback, $list, $options);
 	}
@@ -3420,7 +3388,6 @@ sub draw_table {
 			$html .= '>';
 			$html .= $tr;
 			$html .= '</tr>';
-
 		}
 
 	}
@@ -3501,7 +3468,7 @@ sub draw_page___only_table {
 
 	$_REQUEST {__content_type} ||= 'application/json; charset=utf-8';
 	$_REQUEST {__charset} = 'utf-8';
-
+warn $page -> {body};
 	return $page -> {body};
 }
 
@@ -3533,8 +3500,12 @@ sub draw_page {
 	}
 	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
 
-		$_REQUEST {__head_links} .= qq |<script src='$_REQUEST{__static_url}/jquery.blockUI.js?$_REQUEST{__static_salt}'></script>|
+		push @{$_REQUEST {__include_js}}, '_skins/Mint/jquery.blockUI'
 			if $preconf -> {core_blockui_on_submit} || $r -> headers_in -> {'User-Agent'} =~ /webkit/i;
+
+		push @{$_REQUEST {__include_js}}, '_skins/Mint/kendo.ui.core.min';
+		push @{$_REQUEST {__include_css}}, '_skins/Mint/kendo.common.min', '_skins/Mint/kendo.bootstrap.min';
+
 		1 or $body .= qq {
 
 			<div style='display:none'>$_REQUEST{__menu_links}</div>
@@ -3635,6 +3606,19 @@ $('form[target^="invisible"]').submit (function () {
 });
 EOJS
 		}
+
+		$_REQUEST {__on_load} .= <<'EOJS';
+			adjust_kendo_selects ();
+
+			$('[data-type=datepicker]').kendoDatePicker();
+			$('[data-type=datetimepicker]').kendoDateTimePicker();
+
+			$('input[type=file]').each(function () {
+				$(this).kendoUpload({
+					multiple : $(this).attr('data-ken-multiple') == 'true'
+				});
+			});
+EOJS
 
 		if ($_REQUEST {__im_delay}) {
 
@@ -3823,7 +3807,7 @@ EOH
 
 	if ($_REQUEST {__doctype_html5}) {
 
-#		$doctype = qq{<!DOCTYPE html><html class="no-js"><!--<![endif]-->};
+		$doctype = qq{<!DOCTYPE html><html class="no-js" style="background-color:#b9c5d7;" ><!--<![endif]-->};
 
 		$_REQUEST{__head_links} = <<EOS . $_REQUEST{__head_links};
 <meta charset="utf-8">

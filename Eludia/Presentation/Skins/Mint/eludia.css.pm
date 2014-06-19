@@ -75,6 +75,21 @@ div.checkboxes {
 
 }
 
+.filters {
+	display: table;
+	padding: 0;
+}
+.filters li {
+	height: 27px;
+	padding-top: 7px;
+	padding-left: 10px;
+	float: left;
+}
+
+ol, ul {list-style: none;}
+
+.nowrap {white-space:nowrap}
+
 div.modal_div  > * {
     -webkit-transform: translateZ(0px);
 }

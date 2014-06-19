@@ -2142,7 +2142,7 @@ sub draw_table {
 
 	my ($tr_callback, $list, $options) = @_;
 
-	!exists $_REQUEST {__only_table} or $_REQUEST {__only_table} eq $options -> {name} or return '';
+#	!exists $_REQUEST {__only_table} or $_REQUEST {__only_table} eq $options -> {name} or return '';
 
 	$options -> {super_table} ||= $_REQUEST {__skin} eq 'Mint';
 
@@ -2773,7 +2773,7 @@ sub draw_page {
 		$_SKIN -> {subset}       = $preconf -> {hide_subsets} ? undef : $_SUBSET;
 		$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
 		$page  -> {auth_toolbar} = draw_auth_toolbar ();
-		$page  -> {body} 	 = call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content}) unless $_REQUEST {__only_menu} || !$_REQUEST_VERBATIM {type} && !$_REQUEST_VERBATIM {__subset};
+		$page  -> {body}         = call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content}) unless $_REQUEST {__only_menu} || !$_REQUEST_VERBATIM {type} && !$_REQUEST_VERBATIM {__subset};
 		$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
 		$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
 	};
@@ -3125,7 +3125,6 @@ sub setup_skin {
 
 		}
 		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON'
-			|| $r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' && !$_REQUEST {__suggest}
 			|| $_REQUEST {__only_json}
 		) {
 
