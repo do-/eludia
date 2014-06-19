@@ -232,6 +232,64 @@ function set_suggest_result (sel, id) {
 
 }
 
+function dialog_open (options) {
+
+	if (typeof (options) === 'number') {
+		options = dialogs[options];
+	}
+
+	options.off = options.off || function (){return false};
+
+	if (options.off()) return;
+
+	options.before = options.before || function (){};
+	options.before();
+
+	options.href   = options.href.replace(/\#?\&_salt=[\d\.]+$/, '');
+	options.href  += '&_salt=' + Math.random ();
+	options.parent = window;
+
+	var wWidth  = options.is_ua_mobile ? window.innerWidth  : screen.availWidth;
+	var wHeight = options.is_ua_mobile ? window.innerHeight : screen.availHeight;
+
+	var width  = options.width  || (wWidth  - (wWidth  <= 800 ? 50 : 100));
+	var height = options.height || (wHeight - (wHeight <= 600 ? 50 : 100));
+
+	var url = 'http://' + window.location.host + '/i/_skins/Ken/dialog.html?' + Math.random ();
+
+	if ($.browser.webkit || $.browser.safari)
+		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
+
+	var result;
+
+	if (options.is_ua_mobile) {
+		$.showModalDialog({
+			url             : url,
+			height          : height,
+			width           : width,
+			resizable       : true,
+			scrolling       : 'no',
+			dialogArguments : options,
+			onClose         : function () { result = this.returnValue }
+		});
+	} else {
+		result = window.showModalDialog(url, options, options.options + ';dialogWidth=' + width + 'px;dialogHeight=' + height + 'px');
+	}
+
+	result = result || {result : 'close'};
+
+	var after = options.after || function (result){};
+	after(result);
+
+	if ($.browser.webkit || $.browser.safari)
+		$.unblockUI ();
+
+	setCursor ();
+
+	return result;
+
+}
+
 function close_multi_select_window (ret) {
 	var w = window, i = 0;
 	for (;i < 5 && w.name != '_modal_iframe'; i ++)
