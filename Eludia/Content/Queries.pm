@@ -69,8 +69,8 @@ sub fix___query {
 		my $is_there_some_order;
 
 		foreach my $o (@_ORDER) {
-		
-			$is_there_some_order ||= $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord};
+
+			$is_there_some_order ||= $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {ord};
 		
 			foreach my $filter (@{$o -> {filters}}) {
 			
@@ -111,7 +111,7 @@ sub fix___query {
 		foreach my $o (@_ORDER) {
 		
 			my $parent = exists $o -> {parent} ? $o -> {parent} -> {order} : '';
-			$content -> {columns} -> {$o -> {order}} = {ord => ++ $n {$parent}};
+			$content -> {columns} -> {$o -> {order} || $o -> {no_order}} = {ord => ++ $n {$parent}};
 
 			foreach my $filter (@{$o -> {filters}}) {
 			
