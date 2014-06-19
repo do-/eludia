@@ -3223,9 +3223,9 @@ sub draw_super_table {
 		$$options{top_toolbar}
 
 		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible">
-		</form>
 		<input type=hidden name="__suggest" value="" />
 		$hiddens_html
+		</form>
 EOH
 }
 
