@@ -633,7 +633,7 @@ sub handle_request_of_type_showing {
 
 	foreach (qw (js css)) { push @{$_REQUEST {"__include_$_"}}, @{$conf -> {"include_$_"}}}
 
-	adjust_last_query_string ();
+	$page -> {no_adjust_last_query_string} or adjust_last_query_string ();
 
 	setup_page_content ($page)
 		unless ($_REQUEST {__only_menu} || !$_REQUEST_VERBATIM {type} && !$_REQUEST_VERBATIM {__subset});

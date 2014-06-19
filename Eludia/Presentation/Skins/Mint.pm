@@ -3049,17 +3049,6 @@ sub draw_table_header_cell {
 
 ####################################################################
 
-sub draw_super_table_from_static_json {
-	local $/;
-	open(JSON, $preconf -> {_} -> {docroot} . 'i/_skins/Mint/table0.json')
-		or die "Can't read file 'filename' [$!]\n";
-	my $json = <JSON>;
-	close (JSON);
-	return $json;
-}
-
-####################################################################
-
 sub draw_super_table__only_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
@@ -3110,19 +3099,22 @@ sub draw_super_table__only_table {
 
 	$html .= '</tbody></table>';
 
-	#return draw_super_table_from_static_json ();
-
 	my $columns = [];
+
+	my $settings = exists $_QUERY -> {content} -> {columns}? $_QUERY -> {content} -> {columns} : {};
 
 	foreach my $column (@{$options -> {headers}}) {
 
 		$column -> {id} ||= $column -> {order} || $column -> {no_order},
 
-		$column -> {sortable} = $column -> {order} && $_REQUEST {order} eq $column -> {id};
+		$column -> {sortable} = $column -> {order} && (
+			$_REQUEST {order} eq $column -> {id}
+			|| !$_REQUEST {order} && $settings -> {$column -> {id}} -> {sort}
+		);
 
-		my $sort_direction = $_QUERY -> {content} -> {columns} -> {$column -> {id}} -> {desc}? "desc" : "asc";
+		my $sort_direction = $settings -> {$column -> {id}} -> {desc}? "desc" : "asc";
 
-		my $width = $_QUERY -> {content} -> {columns} -> {$column -> {id}} -> {width} || undef;
+		my $width = $settings -> {$column -> {id}} -> {width} || undef;
 
 		push @$columns, {
 			id    => $column -> {id},
@@ -3148,7 +3140,6 @@ sub draw_super_table__only_table {
 			headers => $is_set_all_headers_width + 0,
 			rows    => 0,
 		},
-		#datasource_params => \%_REQUEST,
 	};
 
 	return $_JSON -> encode ($table);
@@ -3196,9 +3187,9 @@ sub draw_super_table {
 		$$options{top_toolbar}
 
 		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible">
-		</form>
 		<input type=hidden name="__suggest" value="" />
 		$hiddens_html
+		</form>
 EOH
 }
 
@@ -4406,22 +4397,8 @@ sub dialog_open {
 
 	my ($_SKIN, $arg, $options) = @_;
 
-	foreach (qw(status resizable help)) {$options -> {$_} ||= 'no'}
+	return "javaScript: dialog_open ($options->{id});";
 
-#	$options -> {dialogHeight} ||= '150px';
-#	$options -> {dialogWidth}  ||= '600px';
-	delete $options -> {dialogHeight};
-	delete $options -> {dialogWidth};
-
-
-	my $url = $ENV{SCRIPT_URI} . '/i/_skins/TurboMilk/dialog.html?';
-	my $o = join ';', map {"$_:$options->{$_}"} keys %$options;
-
-	return "javaScript:dialog_open_$options->{id}.href = dialog_open_$options->{id}.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, ''); dialog_open_$options->{id}.href += '&_salt=' + Math.random (); dialog_open_$options->{id}.parent = window; var result=window.showModalDialog('$url' + Math.random (), dialog_open_$options->{id}, '$o' + ';dialogWidth=' + dialog_open_$options->{id}_width + 'px;dialogHeight=' + dialog_open_$options->{id}_height + 'px');document.body.style.cursor='default';void(0);";
-
-	# my ($_SKIN, $arg, $options) = @_;
-
-	# return "javaScript: dialog_open (dialogs[$options->{id}]);";
 }
 
 ################################################################################
