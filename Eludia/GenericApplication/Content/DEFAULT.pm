@@ -295,7 +295,7 @@ sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
 
 ################################################################################
 
-sub do_update_columns_DEFAULT { # переставили колонки
+sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
 
 	my $columns = $_JSON -> decode ($_REQUEST {columns});
 
@@ -322,6 +322,8 @@ sub do_update_columns_DEFAULT { # переставили колонки
 	}
 
 	my $page = setup_page ();
+
+	$page -> {no_adjust_last_query_string} = 1;
 
 	handle_request_of_type_showing ($page);
 }
