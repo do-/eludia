@@ -3076,17 +3076,6 @@ sub draw_table_header_cell {
 
 ####################################################################
 
-sub draw_super_table_from_static_json {
-	local $/;
-	open(JSON, $preconf -> {_} -> {docroot} . 'i/_skins/Mint/table0.json')
-		or die "Can't read file 'filename' [$!]\n";
-	my $json = <JSON>;
-	close (JSON);
-	return $json;
-}
-
-####################################################################
-
 sub draw_super_table__only_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
@@ -3137,19 +3126,22 @@ sub draw_super_table__only_table {
 
 	$html .= '</tbody></table>';
 
-	#return draw_super_table_from_static_json ();
-
 	my $columns = [];
+
+	my $settings = exists $_QUERY -> {content} -> {columns}? $_QUERY -> {content} -> {columns} : {};
 
 	foreach my $column (@{$options -> {headers}}) {
 
 		$column -> {id} ||= $column -> {order} || $column -> {no_order},
 
-		$column -> {sortable} = $column -> {order} && $_REQUEST {order} eq $column -> {id};
+		$column -> {sortable} = $column -> {order} && (
+			$_REQUEST {order} eq $column -> {id}
+			|| !$_REQUEST {order} && $settings -> {$column -> {id}} -> {sort}
+		);
 
-		my $sort_direction = $_QUERY -> {content} -> {columns} -> {$column -> {id}} -> {desc}? "desc" : "asc";
+		my $sort_direction = $settings -> {$column -> {id}} -> {desc}? "desc" : "asc";
 
-		my $width = $_QUERY -> {content} -> {columns} -> {$column -> {id}} -> {width} || undef;
+		my $width = $settings -> {$column -> {id}} -> {width} || undef;
 
 		push @$columns, {
 			id    => $column -> {id},
@@ -3175,7 +3167,6 @@ sub draw_super_table__only_table {
 			headers => $is_set_all_headers_width + 0,
 			rows    => 0,
 		},
-		#datasource_params => \%_REQUEST,
 	};
 
 	return $_JSON -> encode ($table);
