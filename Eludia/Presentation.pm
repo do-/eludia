@@ -606,7 +606,7 @@ sub draw_form {
 
 	my ($options, $data, $fields) = @_;
 
-	return '' if $options -> {off} && $data;
+	return '' if $options -> {off} && $data || $_REQUEST {__only_table};
 
 	$options -> {path} ||= $data -> {path};
 
@@ -684,6 +684,20 @@ sub draw_form {
 			next if $i < @$row - 1;
 			$row -> [$i] -> {sum_colspan} = $sum_colspan;
 		}
+
+		for (my $i = 0; $i < @$row; $i++) {
+			next
+				unless $row -> [$i] -> {draw_hidden};
+
+			my @right_siblings = grep {!$_ -> {off} && !$_ -> {draw_hidden}}
+				($i + 1 < @$row? @$row [$i + 1 .. @$row - 1] : ());
+			my @left_siblings = grep {!$_ -> {off} && !$_ -> {draw_hidden}}
+				($i - 1 >= 0? @$row [0 .. $i - 1] : ());
+			my $sibling = $left_siblings [0] || $right_siblings [0];
+
+			!$sibling or $sibling -> {colspan} += 1 + ($sibling -> {label_off}? 0 : 1);
+		}
+
 		$max_colspan > $sum_colspan or $max_colspan = $sum_colspan;
 	}
 
@@ -1100,9 +1114,16 @@ sub draw_toolbar {
 					push @$items, $item;
 				}
 
-				$button -> {items} = $items;
+				if (!$items) {
+					next;
+				} elsif (@$items == 1) {
+					$button = $items -> [0];
+				} else {
+					$button -> {items} = $items;
+					$button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items});
+				}
 
-				$button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items});
+
 			}
 
 			if ($button -> {hidden} && !$_REQUEST {__edit_query}) {
@@ -1220,9 +1241,23 @@ sub draw_centered_toolbar_button {
 			push @$items, $item;
 		}
 
-		$options -> {items} = $items;
+		if (!$items) {
 
-		$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});
+			return '';
+
+		} elsif (@$items == 1) {
+
+			$_ [0] = $options = $items -> [0];
+
+		} else {
+
+			$options -> {items} = $items;
+
+			$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});
+
+		}
+
+
 	}
 
 	if ($options -> {preset}) {
@@ -1269,6 +1304,9 @@ sub draw_centered_toolbar {
 	$options -> {cnt} = 0;
 
 	foreach my $i (@$list) {
+
+		$i -> {off} = !(grep {!$_ -> {off}} @{$i -> {items}}) if (exists $i -> {items} && @{$i -> {items}} > 0);
+
 		next if $i -> {off};
 		$i -> {target} ||= $options -> {buttons_target};
 
@@ -1554,8 +1592,6 @@ sub draw_cells {
 	if ($options -> {href}) {
 		check_href ($options) ;
 		$options -> {a_class} ||= 'row-cell';
-		$i -> {__href} ||= $options -> {href};
-		$i -> {__target} ||= $options -> {target};
 	}
 
 	$options -> {__fixed_cols} = 0;
@@ -1655,7 +1691,60 @@ sub draw_cells {
 	!$options -> {__fixed_cols}
 		or $cells [$options -> {__fixed_cols}] -> {__is_first_not_fixed_cell} = 1;
 
-	$result .= call_from_file ("Eludia/Presentation/TableCells/$_->{type}.pm", "draw_$_->{type}_cell", $_, $options) foreach @cells;
+	my $url = create_url();
+
+	foreach my $cell (@cells) {
+
+		$cell -> {href} ||= $options -> {href};
+
+		delete $cell -> {editor} if (exists $_REQUEST {__edited_cells_table} && ($i -> {fake} != 0 || $_REQUEST {xls}));
+
+		if (exists $cell -> {editor} && $_REQUEST {__edited_cells_table}) {
+
+			my $id_cell = $cell -> {editor} -> {name} || $cell -> {editor} -> {attributes} -> {id} || $cell -> {editor};
+
+			next unless ($id_cell =~ /^(\w+)_(\d+)$/);
+
+			my $name = $1;
+			my $id_edit_cell = $2;
+			my $id_type = $_REQUEST {id} ? "&id=$_REQUEST{id}" : "";
+
+			$cell -> {attributes} -> {id} ||= "_div_" . $_REQUEST {__edited_cells_table} . '_' . $id_cell;
+
+			$cell -> {editor} -> {attributes} -> {id} ||= "_editor_div_" . $_REQUEST {__edited_cells_table} . '_' . $id_cell;
+
+			$cell -> {editor} -> {name} = '_' . $_REQUEST {__edited_cells_table} . '_' . $cell -> {editor} -> {name};
+
+			$cell -> {editor} -> {label} ||= $cell -> {label} if $cell -> {editor} -> {type} ~~ ['input', 'date', 'datetime'];
+
+			$cell -> {editor} -> {hidden} ||= $_REQUEST {xls};
+
+			$cell -> {editor} -> {attributes} -> {style} .= "display:none;";
+
+			$cell -> {editor} -> {edit} = 1;
+
+			$cell -> {editor} = call_from_file ("Eludia/Presentation/TableCells/$cell->{editor}->{type}.pm", "draw_$cell->{editor}->{type}_cell", $cell -> {editor}, {id => $id_cell, editor => 1});
+
+			$options -> {action} ||= $cell -> {editor} -> {action};
+			$options -> {action} ||= 'add';
+
+			$cell -> {attributes} -> {ondblclick} ||= <<EOJS;
+				var url_options = '$url&__edited_cells_table=$_REQUEST{__edited_cells_table}&action=$$options{action}&type=$_REQUEST{type}&action_type=$$options{action_type}&id_edit_cell=${id_edit_cell}${id_type}&__only_table=$_REQUEST{__edited_cells_table}&__only_field=$id_cell';
+				open_edit_cell ('$id_cell', '$name', url_options, '$_REQUEST{__edited_cells_table}');
+EOJS
+			$cell -> {href}    = '';
+			$options -> {href} = '';
+
+			if ($_REQUEST {__only_field} && $_REQUEST {__only_field} eq $id_cell) {
+				$result = call_from_file ("Eludia/Presentation/TableCells/$cell->{type}.pm", "draw_$cell->{type}_cell", $cell, $options);
+				return {id => $id_cell, html => $result};
+			}
+
+		}
+
+		$result .= call_from_file ("Eludia/Presentation/TableCells/$cell->{type}.pm", "draw_$cell->{type}_cell", $cell, $options);
+
+	}
 
 	if ($options -> {gantt}) {
 
@@ -1930,7 +2019,7 @@ sub is_not_possible_order {
 
 ################################################################################
 
-sub _adjust_super_table_options {
+sub _adjust_table_options {
 
 	my ($options, $list) = @_;
 
@@ -1943,6 +2032,10 @@ sub _adjust_super_table_options {
 			Digest::MD5::md5_hex ($_REQUEST {type} . '_' . $options -> {title} -> {label});
 
 	}
+
+	$options -> {id_table} ||= $_REQUEST {type} . '_' . $_REQUEST {__table_cnt}++;
+
+	$options -> {super_table} ||= $_REQUEST {__skin} eq 'Mint';
 
 	if ($options -> {super_table} && !$options -> {pager}) {
 
@@ -1957,13 +2050,6 @@ sub _adjust_super_table_options {
 		$options -> {pager} -> {cnt} ||= @$list;
 		$options -> {pager} -> {total} ||= @$list;
 	}
-
-	return
-		if $options -> {id_table};
-
-
-	$_REQUEST {__super_table_cnt} ++;
-	$options -> {id_table} ||= $_REQUEST {type} . '_' . $_REQUEST {__super_table_cnt};
 }
 
 ################################################################################
@@ -2054,11 +2140,11 @@ sub draw_table {
 
 	my ($tr_callback, $list, $options) = @_;
 
-	$options -> {super_table} ||= $_REQUEST {__skin} eq 'Mint';
+	_adjust_table_options ($options, $list);
+
+	!exists $_REQUEST {__only_table} or $_REQUEST {__only_table} eq $options -> {id_table} or return '';
 
 	if ($options -> {super_table}) {
-
-		_adjust_super_table_options ($options, $list);
 
 		_load_super_table_dimensions ($options, $headers, $list);
 
@@ -2066,6 +2152,7 @@ sub draw_table {
 
 		$options -> {headers} = $headers;
 	}
+
 
 	__profile_in ('draw.table' => {label => exists $options -> {title} && $options -> {title} ? $options -> {title} -> {label} : $options -> {name}});
 
@@ -2233,6 +2320,9 @@ sub draw_table {
 
 	local $i;
 
+	delete $_REQUEST {__edited_cells_table} if exists $_REQUEST {__edited_cells_table};
+	$_REQUEST{__edited_cells_table} = $options -> {name} if ($options -> {edited_cells} == 1);
+
 	foreach $i (@$list) {
 
 		$i -> {__n} = ++ $n;
@@ -2252,9 +2342,14 @@ sub draw_table {
 
 			$_SKIN -> start_table_row if $_SKIN -> {options} -> {no_buffering};
 
+			local $_REQUEST {_edit_row_id} = $i -> {id} if ($options -> {edited_cells} == 1);
+
 			my $tr = &$callback ();
 
 			$tr or next;
+
+			return $tr -> {html}
+				if ($_REQUEST {__only_field} && $tr -> {id} eq $_REQUEST {__only_field});
 
 			if ($_SKIN -> {options} -> {no_buffering}) {
 
@@ -3011,6 +3106,8 @@ sub setup_skin {
 
 	unless ($_REQUEST {__skin}) {
 
+		$_REQUEST {__no_json} ||= $_REQUEST {__suggest} || $_REQUEST {__only_menu};
+
 		if ($_COOKIE {ExtJs}) {
 
 			$_REQUEST {__skin} = 'ExtJs';
@@ -3026,7 +3123,8 @@ sub setup_skin {
 			$_REQUEST {__skin} = 'Dumper';
 
 		}
-		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON') {
+		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON'
+			|| $r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' && !$_REQUEST {__no_json}) {
 
 			$_REQUEST {__skin} = 'JSONDumper';
 

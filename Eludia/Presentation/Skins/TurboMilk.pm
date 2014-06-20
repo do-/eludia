@@ -391,7 +391,7 @@ EOH
 
 sub _draw_input_datetime {
 
-	return '' if $_REQUEST {__only_field};
+	return '' if $_REQUEST {__only_field} && !$_REQUEST {__only_table};
 
 	my ($_SKIN, $options) = @_;
 
@@ -400,6 +400,8 @@ sub _draw_input_datetime {
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
 	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
+
+	$options -> {attributes} -> {id} ||= 'input_calendar_trigger_' . $options -> {name};
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -481,7 +483,11 @@ EOH
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
-		$html .= qq{<tr id="$tr_id">};
+
+		my $is_any_field_shown = 0 + grep {!$_ -> {off} && !$_ -> {draw_hidden}} @$row;
+		my $attributes = dump_attributes ({class => $is_any_field_shown? undef : 'form-hidden-field'});
+
+		$html .= qq{<tr id="$tr_id" $attributes>};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
 	}
@@ -611,6 +617,11 @@ sub draw_form_field {
 			align  => 'right',
 		};
 
+		if ($field -> {draw_hidden}) {
+			$a -> {class} .= ' form-hidden-field';
+		}
+
+
 		$a -> {colspan} = $field -> {colspan_label} if $field -> {colspan_label};
 		$a -> {width}   = $field -> {label_width}   if $field -> {label_width};
 		$a -> {title}   = $field -> {label_title}   if $field -> {label_title};
@@ -620,6 +631,10 @@ sub draw_form_field {
 	}
 
 	my $a = {class  => $class . ($field -> {fake} == -1 ? 'deleted' : 'inputs')};
+
+	if ($field -> {draw_hidden}) {
+		$a -> {class} .= ' form-hidden-field';
+	}
 
 	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
 	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
@@ -966,7 +981,7 @@ sub draw_form_field_hgroup {
 		next if $item -> {off};
 		$html .= $item -> {label} if $item -> {label};
 		$html .= $item -> {html};
-		$html .= '&nbsp;';
+		$html .= '&nbsp;' unless $options -> {no_nbsp};
 	}
 
 	$html .= '</nobr>'
@@ -1112,7 +1127,7 @@ sub draw_form_field_checkbox {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">};
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">};
 
 }
 
@@ -1165,6 +1180,7 @@ sub draw_form_field_select {
 		$options -> {attributes} -> {onClick} .= ";if (this.length == 2) {this.selectedIndex=1; this.onchange();}";
 	}
 
+	$options -> {max_len} += 0;
 	$options -> {attributes} -> {max_len} = $options -> {max_len};
 
 	my $attributes = dump_attributes ($options -> {attributes});
@@ -1290,7 +1306,7 @@ sub draw_form_field_string_voc {
 			var dialog_height = $options->{other}->{height};
 EOJS
 		if ($options -> {other} -> {no_param}) {
-			$options -> {other} -> {onChange} .= "var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}' + '&select=$options->{name}&$options->{other}->{cgi_tail}', parent:window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');"		
+			$options -> {other} -> {onChange} .= "var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}' + '&select=$options->{name}&$options->{other}->{cgi_tail}', parent:window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');"
 		} else {
 		$options -> {other} -> {onChange} .= <<EOJS;
 			var q = encode1251(document.getElementById('${options}_label').value);
@@ -2093,6 +2109,9 @@ EOJS
 
 	$options -> {attributes} ||= {};
 
+	$options -> {max_len} += 0;
+	$options -> {attributes} -> {max_len} = $options -> {max_len};
+
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
@@ -2277,49 +2296,28 @@ sub draw_toolbar_button_vert_menu {
 	my ($_SKIN, $name, $types, $level, $is_main) = @_;
 
 	my $html = <<EOH;
-		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:100">
+		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:1000">
 			<table id="vert_menu_table_$name" width=1 class="tbbgc" cellspacing=0 cellpadding=0 border=0 border=1>
 EOH
 
 	foreach my $type (@$types) {
 
-		if ($type eq BREAK) {
+		if ($type -> {icon}) {
+			my $label = $type -> {label};
+			my $img_path = _icon_path ($type -> {icon});
 
-			$html .= <<EOH;
-				<tr height=2>
+			$type -> {label} = qq|&nbsp;<img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=0 align=absmiddle>&nbsp;|;
+			$type -> {label} .= "&nbsp;$label";
+		}
 
-					<td class="tbbgc" width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
-					<td class="tbbgc" width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
+		$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
 
-					<td>
-						<table width=90% border=0 cellspacing=0 cellpadding=0 align=center minheight=2>
-							<tr height=1><td class="tbbgc"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
-							<tr height=1><td bgcolor="#ffffff"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
-						</table>
-					</td>
+		$html .= <<EOH;
+				<tr>
+					<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
 				</tr>
 EOH
-		}
-		else {
 
-			if ($type -> {icon}) {
-				my $label = $type -> {label};
-				my $img_path = _icon_path ($type -> {icon});
-
-				$type -> {label} = qq|&nbsp;<img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=0 align=absmiddle>&nbsp;|;
-				$type -> {label} .= "&nbsp;$label";
-			}
-
-			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
-
-			$html .= <<EOH;
-					<tr>
-						<td class="tbbgc" width=2><img src="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" width="2" height="25" border="0"></td>
-						<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
-					</tr>
-EOH
-
-		}
 
 	}
 
@@ -2691,21 +2689,41 @@ sub draw_text_cell {
 
 	$data -> {attributes} -> {title} .= $label_tail;
 
+	my $has_href = $data -> {href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
+
 	my $html = dump_tag ('td', $data -> {attributes});
+
+	if (exists $data -> {editor} && $_REQUEST {__edited_cells_table}) {
+
+		my $id = $data -> {attributes} -> {id};
+		delete 	$data -> {attributes} -> {id};
+
+		$html = dump_tag ('td', $data -> {attributes});
+
+		$html .= dump_tag ('div', {id => $id . '_td'});
+
+		$html .= dump_tag ('div', {id => $id});
+
+	}
 
 	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
 
-		return $html . '&nbsp;</td>';
+		$html .= '&nbsp;';
+		if (exists $data -> {editor} && $_REQUEST {__edited_cells_table}) {
+			$html .= '</div>';
+
+			$html .= $data -> {editor};
+		}
+
+		return $html . '</td>';
 
 	}
 
 	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
-	$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
-
 	$html .= '<nobr>' unless $data -> {no_nobr};
 
-	if ($data -> {href}) {
+	if ($has_href) {
 
 		$a_attributes_html = dump_attributes ({
 			id      => $data -> {a_id},
@@ -2716,9 +2734,11 @@ sub draw_text_cell {
 			style   => $fgcolor ? "color:$fgcolor;" : undef,
 		});
 
-		$html .= $data -> {href} eq $options -> {href} ? '<span>' : qq {<a $a_attributes_html $$data{onclick}>};
+		$html .= qq {<a $a_attributes_html $$data{onclick}><span>};
 
 	}
+
+	$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
 	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
@@ -2727,15 +2747,25 @@ sub draw_text_cell {
 	$html .= $data -> {label};
 	$html .= $label_tail;
 
-	if ($data -> {href}) {
+	$html .= '</strike>' if $data -> {strike} || $options -> {strike};
+	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
+	$html .= '</b>'      if $data -> {bold}   || $options -> {bold};
 
-		$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
+	if ($has_href) {
+
+		$html .= '</span></a>';
 
 	}
 
 	$html .= '</nobr>' unless $data -> {no_nobr};
 
 	$html .= dump_hiddens ([$data -> {hidden_name} => $data -> {hidden_value}]) if $data -> {add_hidden};
+
+	if (exists $data -> {editor} && $_REQUEST {__edited_cells_table}) {
+		$html .= '</div>';
+		$html .= $data -> {editor};
+		$html .= '</div>';
+	}
 
 	$html .= '</td>';
 
@@ -2755,8 +2785,11 @@ sub draw_radio_cell {
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
-	return qq {<td $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'>$label_tail</td>};
+	my $html = ($options -> {editor} ? '<div' : '<td')
+		. qq { $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'>$label_tail}
+		. ($options -> {editor} ? '</div>' : '</td>');
 
+	return $html;
 }
 
 ################################################################################
@@ -2773,8 +2806,23 @@ sub draw_datetime_cell {
 
 	local $options -> {name} = $data -> {name};
 
-	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "$label_tail</td>";
+	if ($options -> {editor}) {
 
+		$data -> {attributes} -> {id} = 'input' . $options -> {name};
+
+		$data -> {id} = $options -> {id};
+
+		$data -> {editor} = $options -> {editor};
+
+		$data -> {attributes} -> {style} = '';
+	}
+
+	my $html = ($options -> {editor} ? '<div' : '<td')
+		. " $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data)
+		. "$label_tail"
+		. ($options -> {editor} ? '</div>' : '</td>');
+
+	return $html;
 }
 
 ################################################################################
@@ -2791,8 +2839,11 @@ sub draw_checkbox_cell {
 
 	my $label = $data -> {label} ? '&nbsp;' . $data -> {label} : '';
 
-	return qq {<td $$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label$label_tail</td>};
+	my $html = ($options -> {editor} ? '<div' : '<td')
+		. qq{$$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label$label_tail}
+		. ($options -> {editor} ? '</div>' : '</td>');
 
+	return $html;
 }
 
 ################################################################################
@@ -2831,6 +2882,8 @@ sub draw_select_cell {
 
 			if (this.options[this.selectedIndex].value == -1) {
 
+				is_open_other_window = 1;
+
 				$confirm_js_if
 
 				if (\$.browser.webkit || \$.browser.safari)
@@ -2866,19 +2919,21 @@ sub draw_select_cell {
 
 				$confirm_js_else
 
+				is_open_other_window = 0;
 			}
 
 EOJS
 
 	}
 
-	my $html = qq {<td $attributes><select
-		$s_attributes
-		name="$$data{name}"
-		onChange="is_dirty=true; $$data{onChange}"
-		onkeypress='typeAhead();'
-		$multiple
-	};
+	my $html = ($options -> {editor} ? '<div' : '<td')
+		. qq {$attributes><select
+			$s_attributes
+			name="$$data{name}"
+			onChange="is_dirty=true; $$data{onChange}"
+			onkeypress='typeAhead();'
+			$multiple
+		};
 
 	if (($options -> {__fixed_cols} > 0) && msie_less_7) {
 
@@ -2904,7 +2959,7 @@ EOJS
 		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
 	}
 
-	$html .= qq {</select>$label_tail</td>};
+	$html .= qq {</select>$label_tail} . $options -> {editor} ? "</div>" : "</td>";
 
 	return $html;
 
@@ -2945,7 +3000,8 @@ sub draw_string_voc_cell {
 EOJS
 	}
 
-	my $html = qq {<td $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" value="$$data{label}" name="$$data{name}_label" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
+	my $html = ($options -> {editor} ? '<div' : '<td')
+		. qq { $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" value="$$data{label}" name="$$data{name}_label" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
 		. ($data -> {other} ? qq [<input type="button" value="$data->{other}->{button}" onclick="$data->{other}->{onChange}">] : '')
 		. dump_tag (input => {
 
@@ -2955,7 +3011,8 @@ EOJS
 			id    => "$data->{name}_id",
 
 		})
-		. "</span></nobr>$label_tail</td>";
+		. "</span></nobr>$label_tail"
+		. ($options -> {editor} ? '</div>' : '</td>');
 
 	return $html;
 
@@ -3054,6 +3111,8 @@ EOH
 
 	my $tabindex = 'tabindex=' . (++ $_REQUEST {__tabindex});
 
+	return qq {<div $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" $attr_input name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex>$autocomplete</nobr>$label_tail</div>}
+		if ($options -> {editor});
 	return qq {<td $$data{title} $attributes><nobr><input onFocus="q_is_focused = true; left_right_blocked = true;" $attr_input name="$$data{name}" value="$$data{label}" maxlength="$$data{max_len}" size="$$data{size}" $tabindex>$autocomplete</nobr>$label_tail</td>};
 
 }
@@ -3230,8 +3289,6 @@ sub draw_table {
 
 		foreach my $tr (@{$i -> {__trs}}) {
 
-			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
-
 			$html .= "<tr id='$$i{__tr_id}'";
 
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
@@ -3240,9 +3297,7 @@ sub draw_table {
 			}
 
 			$html .= '>';
-			$html .= qq {<a target="$$i{__target}" href="$$i{__href}">} if $has_href;
 			$html .= $tr;
-			$html .= qq {</a>} if $has_href;
 			$html .= '</tr>';
 
 		}
@@ -3362,7 +3417,7 @@ sub draw_page {
 		$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {};";
 
 		$_REQUEST {__on_load} .= "tableSlider.set_row ($_REQUEST{__scrollable_table_row});"
-			if $_REQUEST {__scrollable_table_row} > 0;
+			if $_REQUEST {__scrollable_table_row} > 0 && !$_REQUEST {__edited_cells_table};
 
 		$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 
@@ -3571,7 +3626,7 @@ EOH
 			td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1 #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
 			td.submit-area  { text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;}
 			div.grey-submit { background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0; width:165;min-width:150px;padding-left:20px;}
-			td.toolbar-btn-vert-menu { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #232324;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/btn_bg.gif);cursor: pointer;}
+			td.toolbar-btn-vert-menu { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #232324;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/btn4_bg.gif);cursor: pointer;}
 		</style>
 
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">

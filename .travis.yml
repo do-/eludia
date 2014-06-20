@@ -1,0 +1,18 @@
+language: perl
+
+perl:
+  - "5.16"
+  - "5.14"
+  - "5.10"
+
+before_script:
+  - mysql -e 'create database eludia_test'
+  - cd ..
+  - git clone https://github.com/do-/default-eludia.pm-application.git
+  - cd default-eludia.pm-application
+  - mkdir conf
+  - cp ../eludia/.travis_httpd.conf conf/httpd.conf
+  - perl -MCwd -p -i -e 's/ELUDIA_PATH/\.\.\/eludia/g' conf/httpd.conf
+  - perl -MCwd -p -i -e 's/APP_PATH/cwd/eg' conf/httpd.conf
+
+script: perl -I$(pwd)/../eludia -MEludia::Install -e "exit(test())"

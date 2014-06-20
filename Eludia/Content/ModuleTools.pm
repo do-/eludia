@@ -568,7 +568,16 @@ sub call_for_role {
 	my $full_sub_name = $sub_name . '_for_' . $role;
 
 	my $default_sub_name = $sub_name;
-	$default_sub_name =~ s{_$_REQUEST{type}$}{_DEFAULT};
+
+	my $page_type = $_REQUEST {type};
+
+	if ($_REQUEST {__edited_cells_table}) {
+		require_content ( $_REQUEST {action_type} )	if $_REQUEST {action_type};
+
+		$page_type = $_REQUEST {action_type} || $_REQUEST {type};
+	}
+
+	$default_sub_name =~ s{_$page_type$}{_DEFAULT};
 
 	my $name_to_call = 
 		exists $$_PACKAGE {$full_sub_name}    ? $full_sub_name :
