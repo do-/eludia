@@ -387,7 +387,6 @@ sub check_title {
 	$title =~ s{\<.*?\>}{}g;
 	$title =~ s{^(\&nbsp\;|\s)+}{};
 
-	$title = HTML::Entities::decode_entities ($title) if $title =~ /\&/;
 	$title =~ s{\"}{\&quot\;}g;
 
 	$data -> {attributes} -> {title} = $title ;
