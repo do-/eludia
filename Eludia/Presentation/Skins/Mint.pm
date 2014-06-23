@@ -3200,13 +3200,6 @@ sub draw_super_table {
 	my $attributes = dump_attributes ($options -> {attributes});
 	my $html = qq {<div $attributes></div>\n};
 
-	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr";
-	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
-	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable_turbomilk";
-
-	$_REQUEST {__head_links} =~ /supertable\.js/
-		or $_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
-
 	return <<EOH . $html;
 
 		$$options{title}
@@ -3731,6 +3724,12 @@ EOH
 		undef;
 
 	;
+
+	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr";
+	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
+	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable_turbomilk";
+
+	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
 
 	my $js_var = $_REQUEST {__js_var};
 
