@@ -3100,6 +3100,7 @@ sub draw_super_table__only_table {
 			my $attributes = {};
 
 			if ($_REQUEST {__scrollable_table_row} > 0 && !$_REQUEST {__edited_cells_table}
+				&& $_REQUEST {__table_cnt} == 1
 				&& $_REQUEST {__scrollable_table_row} == $row_cnt
 			) {
 
@@ -3839,15 +3840,16 @@ sub load_ui_elements {
 	$table_url .= '&' . $keep_params;
 
 	$_REQUEST {__on_load} .= qq{;
-
-		\$('.eludia-table-container').each(function() {
+		\$('div.eludia-table-container').each(function() {
 
 			var that = this;
-			var options = {
-				tableUrl: '/\?${table_url}&__only_table=' + this.id,
+			var table_url = '/\?${table_url}&__only_table=' + this.id;
+			table_url = table_url + '&__table_cnt=' + \$('div.eludia-table-container').length;
+
+			new window.SuperTable({
+				tableUrl: table_url,
 				el: \$(that)
-			};
-			new window.SuperTable(options);
+			});
 		});
 
 	;};
