@@ -3103,7 +3103,7 @@ sub draw_super_table__only_table {
 				&& $_REQUEST {__scrollable_table_row} == $row_cnt
 			) {
 
-				$attributes -> {class} = 'row-state-visited-turbomilk';
+				$attributes -> {class} = 'row-state-visited';
 			}
 
 			$attributes = dump_attributes ($attributes);
