@@ -796,8 +796,9 @@ sub draw_form_field_datetime {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$options -> {name} = '_' . $options -> {name};
+	$options -> {name}      = '_' . $options -> {name};
 	$options -> {onKeyDown} ="tabOnEnter()";
+	$options -> {onClose}   = "function (cal) { cal.hide (); $$options{onClose}; }";
 
 	return $_SKIN -> _draw_input_datetime ($options);
 
