@@ -3562,6 +3562,8 @@ EOH
 
 	}
 
+	return $_JSON -> encode ({html => $body}) if ($_REQUEST {__only_page});
+
 	$_REQUEST {__js_var} -> {menu_md5}                 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
 
 	$_REQUEST {__js_var} -> {edit_mode}                = undef;
