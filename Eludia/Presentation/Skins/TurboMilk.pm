@@ -2593,6 +2593,11 @@ EOH
 		}
 		else {
 
+			if ($type -> {clipboard_text}) {
+
+				$type -> {onclick} = "eludia_copy_clipboard ('$$type{clipboard_text}')";
+			}
+
 			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
 
 			my $td = $type -> {items} ? <<EOH : qq{<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
