@@ -2039,16 +2039,18 @@ sub draw_toolbar_input_select {
 
 		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
-		if ($options -> {no_confirm}) {
+		$options -> {no_confirm} += 0;
 
-			$options -> {onChange} .= <<EOJS;
+		$options -> {onChange} = <<EOJS . $options -> {onChange} . '}';
 
-				if (this.options[this.selectedIndex].value == -1) {
+			if (this.options[this.selectedIndex].value == -1) {
 
-					var dialog_width = $options->{other}->{width};
-					var dialog_height = $options->{other}->{height};
+				if ($$options{no_confirm} || window.confirm ('$$i18n{confirm_open_vocabulary}')) {
 
 					try {
+
+						var dialog_width = $options->{other}->{width};
+						var dialog_height = $options->{other}->{height};
 
 						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 
@@ -2056,55 +2058,21 @@ sub draw_toolbar_input_select {
 
 						if (result.result == 'ok') {
 							setSelectOption (this, result.id, result.label);
-							submit ();
+						submit ();
 						} else {
 							this.selectedIndex = 0;
 						}
 					} catch (e) {
-							this.selectedIndex = 0;
-					}
-
-				} else {
-					submit ();
-				}
-EOJS
-		} else {
-
-			$options -> {onChange} .= <<EOJS;
-
-				if (this.options[this.selectedIndex].value == -1) {
-
-					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-
-						try {
-
-							var dialog_width = $options->{other}->{width};
-							var dialog_height = $options->{other}->{height};
-
-							var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-
-							focus ();
-
-							if (result.result == 'ok') {
-								setSelectOption (this, result.id, result.label);
-	  						submit ();
-							} else {
-								this.selectedIndex = 0;
-							}
-						} catch (e) {
-							this.selectedIndex = 0;
-						}
-
-					} else {
-
 						this.selectedIndex = 0;
-
 					}
+
 				} else {
-					submit ();
+
+					this.selectedIndex = 0;
+
 				}
+			} else {
 EOJS
-		}
 	}
 
 	$options -> {attributes} ||= {};
@@ -2229,7 +2197,7 @@ sub draw_toolbar_input_datetime {
 	my ($_SKIN, $options) = @_;
 
 	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
-	$options -> {onKeyPress} = "if (window.event.keyCode == 13) {this.form.submit()}";
+	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {this.form.submit()}";
 
 	my $html = '<td class="toolbar" nowrap>';
 
