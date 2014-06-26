@@ -2058,17 +2058,20 @@ sub draw_toolbar_input_select {
 
 						if (result.result == 'ok') {
 							setSelectOption (this, result.id, result.label);
-						submit ();
+							submit ();
 						} else {
 							this.selectedIndex = 0;
+							submit ();
 						}
 					} catch (e) {
 						this.selectedIndex = 0;
+						submit ();
 					}
 
 				} else {
 
 					this.selectedIndex = 0;
+					submit ();
 
 				}
 			} else {
