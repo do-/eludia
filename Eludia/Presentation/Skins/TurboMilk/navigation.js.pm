@@ -4234,7 +4234,7 @@ function toggle_field (name, is_visible, is_clear_field) {
 
 	is_visible = is_visible > 0;
 
-	var field = $('[name=_' + name + ']');
+	var field = $('[name=_' + name + ']' + ',#input_' + name);
 	var td_field = field.closest('td');
 
 	if (td_field.is(":visible") === is_visible) {
