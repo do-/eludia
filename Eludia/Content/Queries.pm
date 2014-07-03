@@ -40,7 +40,11 @@ sub setup_page_content {
 
 	require_both '__queries';
 
+	$_REQUEST {__allow_check___query} = 1;
+
 	check___query ();
+
+	$_REQUEST {__allow_check___query} = 0;
 
 	$_REQUEST {type} = $page -> {type} = '__queries';
 	

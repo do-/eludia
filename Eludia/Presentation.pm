@@ -2025,7 +2025,18 @@ sub draw_table {
 
 	!exists $_REQUEST {__only_table} or $_REQUEST {__only_table} eq $options -> {name} or return '';
 
-	__profile_in ('draw.table' => {label => exists $options -> {title} && $options -> {title} ? $options -> {title} -> {label} : $options -> {name}});
+	my $table_label = exists $options -> {title} && $options -> {title} ?
+		$options -> {title} -> {label} : $options -> {name};
+
+	__profile_in ('draw.table' => {label => $table_label});
+
+	if ($options -> {off}) {
+
+		__profile_out ('draw.table' => {label => "[OFF] $table_label"});
+
+		return '';
+
+	}
 
 	my $__edit_query = 0;
 	foreach my $top_toolbar_field (@{$options -> {top_toolbar}}) {
@@ -2108,14 +2119,6 @@ sub draw_table {
 	$options -> {action} ||= 'add';
 	$options -> {name}   ||= 'form';
 	$options -> {target} ||= 'invisible';
-
-	if ($options -> {off}) {
-
-		__profile_out ('draw.table' => {label => "[OFF] $options->{title}->{label}"});
-
-		return '';
-
-	}
 
 	$_REQUEST {__salt} ||= rand () * time ();
 	$_REQUEST {__uri_root_common} ||=  $_REQUEST {__uri} . '?salt=' . $_REQUEST {__salt} . '&sid=' . $_REQUEST {sid};
