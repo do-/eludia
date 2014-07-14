@@ -2093,7 +2093,8 @@ sub draw_table {
 							$p = $p -> {parent};
 						}
 					} else {
-						$h -> {ord} = ($h -> {parent} -> {ord}) * 1000 + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
+						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord})
+							: ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} * 1000);
 					}
 				}
 
