@@ -2660,6 +2660,10 @@ sub draw_text_cell {
 
 	}
 
+	if ($data -> {border}) {
+		$data -> {attributes} -> {style} .= " border: 2px solid $$data{border}";
+	};
+
 	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
 
 	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor;
