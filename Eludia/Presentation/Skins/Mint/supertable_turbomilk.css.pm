@@ -50,6 +50,6 @@ a.st-btn:first-child {
 	padding-left: 15px;
 }
 
-tr.row-state-visited-turbomilk{
+tr.row-state-visited {
 	outline: 2px solid #cacaca;
 }

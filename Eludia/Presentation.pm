@@ -2018,7 +2018,7 @@ sub is_not_possible_order {
 
 ################################################################################
 
-sub _adjust_super_table_options {
+sub _adjust_table_options {
 
 	my ($options, $list) = @_;
 
@@ -2031,6 +2031,10 @@ sub _adjust_super_table_options {
 			Digest::MD5::md5_hex ($_REQUEST {type} . '_' . $options -> {title} -> {label});
 
 	}
+
+	$options -> {id_table} ||= $_REQUEST {type} . '_' . $_REQUEST {__table_cnt}++;
+
+	$options -> {super_table} ||= $_REQUEST {__skin} eq 'Mint';
 
 	if ($options -> {super_table} && !$options -> {pager}) {
 
@@ -2045,13 +2049,6 @@ sub _adjust_super_table_options {
 		$options -> {pager} -> {cnt} ||= @$list;
 		$options -> {pager} -> {total} ||= @$list;
 	}
-
-	return
-		if $options -> {id_table};
-
-
-	$_REQUEST {__super_table_cnt} ++;
-	$options -> {id_table} ||= $_REQUEST {type} . '_' . $_REQUEST {__super_table_cnt};
 }
 
 ################################################################################
@@ -2142,13 +2139,11 @@ sub draw_table {
 
 	my ($tr_callback, $list, $options) = @_;
 
-#	!exists $_REQUEST {__only_table} or $_REQUEST {__only_table} eq $options -> {name} or return '';
+	_adjust_table_options ($options, $list);
 
-	$options -> {super_table} ||= $_REQUEST {__skin} eq 'Mint';
+	!exists $_REQUEST {__only_table} or $_REQUEST {__only_table} eq $options -> {id_table} or return '';
 
 	if ($options -> {super_table}) {
-
-		_adjust_super_table_options ($options, $list);
 
 		_load_super_table_dimensions ($options, $headers, $list);
 
@@ -3109,6 +3104,8 @@ sub setup_skin {
 
 	unless ($_REQUEST {__skin}) {
 
+		$_REQUEST {__no_json} ||= $_REQUEST {__suggest} || $_REQUEST {__only_menu};
+
 		if ($_COOKIE {ExtJs}) {
 
 			$_REQUEST {__skin} = 'ExtJs';
@@ -3127,6 +3124,7 @@ sub setup_skin {
 		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON'
 			|| $_REQUEST {__only_json}
 		) {
+			|| $r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' && !$_REQUEST {__no_json}) {
 
 			$_REQUEST {__skin} = 'JSONDumper';
 

@@ -3046,10 +3046,11 @@ sub draw_super_table__only_table {
 			my $attributes = {};
 
 			if ($_REQUEST {__scrollable_table_row} > 0 && !$_REQUEST {__edited_cells_table}
+				&& $_REQUEST {__table_cnt} == 1
 				&& $_REQUEST {__scrollable_table_row} == $row_cnt
 			) {
 
-				$attributes -> {class} = 'row-state-visited-turbomilk';
+				$attributes -> {class} = 'row-state-visited';
 			}
 
 			$attributes = dump_attributes ($attributes);
@@ -3145,13 +3146,6 @@ sub draw_super_table {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 	my $html = qq {<div $attributes></div>\n};
-
-	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr";
-	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
-	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable_turbomilk";
-
-	$_REQUEST {__head_links} =~ /supertable\.js/
-		or $_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
 
 	return <<EOH . $html;
 
@@ -3690,6 +3684,12 @@ EOH
 
 	;
 
+	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr";
+	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
+	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable_turbomilk";
+
+	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
+
 	my $js_var = $_REQUEST {__js_var};
 
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
@@ -3769,7 +3769,7 @@ EOH
 
 	if ($_REQUEST {__doctype_html5}) {
 
-		$doctype = qq{<!DOCTYPE html><html class="no-js" style="background-color:#b9c5d7;" ><!--<![endif]-->};
+#		$doctype = qq{<!DOCTYPE html><html class="no-js"><!--<![endif]-->};
 
 		$_REQUEST{__head_links} = <<EOS . $_REQUEST{__head_links};
 <meta charset="utf-8">
@@ -3798,15 +3798,16 @@ sub load_ui_elements {
 	$table_url .= '&' . $keep_params;
 
 	$_REQUEST {__on_load} .= qq{;
-
-		\$('.eludia-table-container').each(function() {
+		\$('div.eludia-table-container').each(function() {
 
 			var that = this;
-			var options = {
-				tableUrl: '/\?${table_url}&__only_table=' + this.id,
+			var table_url = '/\?${table_url}&__only_table=' + this.id;
+			table_url = table_url + '&__table_cnt=' + \$('div.eludia-table-container').length;
+
+			new window.SuperTable({
+				tableUrl: table_url,
 				el: \$(that)
-			};
-			new window.SuperTable(options);
+			});
 		});
 
 	;};
