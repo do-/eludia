@@ -1643,7 +1643,7 @@ sub draw_toolbar {
 	}
 
 	my $html = <<EOH;
-	<form action=$_REQUEST{__uri} name=$options->{form_name} target="$$options{target}">
+	<form action="$_REQUEST{__uri}" name="$options->{form_name}" target="$$options{target}" class="toolbar">
 EOH
 
 
@@ -1733,13 +1733,11 @@ EOH
 
 	if ($options -> {icon}) {
 		my $img_path = _icon_path ($options -> {icon});
-		$html .= qq {<img src="$img_path" alt="$label" border=0 hspace=0 style='vertical-align:middle;'><span style='vertical-align:middle;'>};
+		$html .= qq {<img src="$img_path" alt="$label" border=0 hspace=0 style='vertical-align:middle;'>};
 	}
 
 	$html .= <<EOH;
-
-				$options->{label}
-					</span></nobr>
+				$options->{label}</nobr>
 				</a>
 		</li>
 
@@ -1924,11 +1922,11 @@ sub draw_toolbar_input_select {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<li class="toolbar nowrap"><span class="get_down_the_text_1">';
+	my $html = '<li class="toolbar nowrap">';
 
 	if ($options -> {label} && $options -> {show_label}) {
 		$html .= $options -> {label};
-		$html .= ': </span>';
+		$html .= ': ';
 	}
 
 	$options -> {name} = '_' . $options -> {name}
@@ -2042,7 +2040,7 @@ sub draw_toolbar_input_text {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<li nowrap class="toolbar" valign="middle"><span class="get_down_the_text">';
+	my $html = '<li nowrap class="toolbar">';
 
 	if ($options -> {label}) {
 		$html .= $options -> {label};
@@ -2058,7 +2056,6 @@ sub draw_toolbar_input_text {
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
-		</span>
 		<input
 			onKeyPress="$$options{onKeyPress};"
 			type=text
@@ -2089,11 +2086,11 @@ sub draw_toolbar_input_datetime {
 	$options -> {onChange}   = join ';', $options -> {onChange}, "submit ()"
 		if !$options -> {no_change_submit};
 
-	my $html = '<li class="toolbar nowrap"><span class="get_down_the_text">';
+	my $html = '<li class="toolbar nowrap">';
 
 	if ($options -> {label}) {
 		$html .= $options -> {label};
-		$html .= ': </span>';
+		$html .= ': ';
 	}
 
 	$options -> {attributes} -> {class} ||= ' ';
@@ -2112,42 +2109,10 @@ sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<li class="bgr0"><table cellspacing=2 cellpadding=0><tr>';
-
-	if ($options -> {total}) {
-
-		if ($options -> {rewind_url}) {
-			$html .= qq {<td nowrap valign="middle" class="k-pager-wrap-new"><a TABINDEX=-1 href="$$options{rewind_url}" class="k-link-new" onFocus="blur()"><span class="k-icon k-i-seek-w">Первая страница</span></a></td>};
-		}
-
-		if ($options -> {back_url}) {
-			$html .= qq {<td nowrap valign="middle" class="k-pager-wrap-new"><a TABINDEX=-1 href="$$options{back_url}" class="k-link-new" id="_pager_prev" onFocus="blur()"><span class="k-icon k-i-arrow-w">Предыдущая страница</span></a></td>};
-		}
-
-		$html .= '<td nowrap class="toolbar" valign="middle">&nbsp;' . ($options -> {start} + 1);
-		$html .= ' - ';
-		$html .= ($options -> {start} + $options -> {cnt});
-		$html .= qq |$$i18n{toolbar_pager_of}<a TABINDEX=-1 class=lnk0 href="$$options{infty_url}">$$options{infty_label}</a>|;
-		$html .= '&nbsp;</td>';
-
-		if ($options -> {next_url}) {
-			$html .= qq {<td  nowrap valign="middle" class="k-pager-wrap-new"><a TABINDEX=-1 href="$$options{next_url}" class="k-link-new" id="_pager_next" onFocus="blur()"><span class="k-icon k-i-arrow-e">Следующая страница</span></a></td>};
-		}
-
-		if ($options -> {last_url}) {
-			$html .= qq {<td nowrap valign="middle" class="k-pager-wrap-new"><a TABINDEX=-1 href="$$options{last_url}" class="k-link-new" onFocus="blur()"><span class="k-icon k-i-seek-e">Последняя страница</span></a></td>};
-		}
-
-	}
-	else {
-		$html .= '<td nowrap class="toolbar"><span>' . $i18n -> {toolbar_pager_empty_list} . '</span></td>';
-	}
-
-	$html .= "</tr></table></li>";
-
-	return $html;
+	return '<li role="header"></li>';
 
 }
+
 
 ################################################################################
 
@@ -2301,93 +2266,91 @@ sub draw_menu {
 
 	my ($_SKIN, $_options) = @_;
 
-	my @types = (@{$_options -> {left_items}}, BREAK, @{$_options -> {right_items}});
+# 	my @types = (@{$_options -> {left_items}}, BREAK, @{$_options -> {right_items}});
 
-	my $colspan = 1 + @types;
+# 	my $colspan = 1 + @types;
 
-	my $html = <<EOH;
+# 	my $html = <<EOH;
 
-	<div style="position:relative" id="main_menu">
+# 	<div style="position:relative" id="main_menu">
 
-		<table width="100%" class=bgr8 cellspacing=0 cellpadding=0 border=0>
-			<tr>
-				<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=1><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
-				<td background="$_REQUEST{__static_url}/menu_bg_s.gif?$_REQUEST{__static_salt}" width=0><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=0 border=0></td>
-EOH
+# 		<table width="100%" class=bgr8 cellspacing=0 cellpadding=0 border=0>
+# 			<tr>
+# 				<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=1><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
+# 				<td background="$_REQUEST{__static_url}/menu_bg_s.gif?$_REQUEST{__static_salt}" width=0><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=0 border=0></td>
+# EOH
 
-	my $core_unblock_navigation = $preconf -> {core_unblock_navigation} || 0;
+# 	my $core_unblock_navigation = $preconf -> {core_unblock_navigation} || 0;
 
-	foreach my $type (@types) {
+# 	foreach my $type (@types) {
 
-		next if ($type -> {name} eq '_logout');
+# 		next if ($type -> {name} eq '_logout');
 
-		if ($type -> {name} eq '_xls') {
+# 		if ($type -> {name} eq '_xls') {
 
-			$type -> {href}   = "javaScript:_dumper_href ('&xls=1', 'invisible')";
+# 			$type -> {href}   = "javaScript:_dumper_href ('&xls=1', 'invisible')";
 
-		}
+# 		}
 
-		$_REQUEST {__menu_links} .= "<a id='main_menu_$$type{name}' target='$$type{target}' href='$$type{href}' onclick='return !check_edit_mode (this);'>-</a>";
+# 		$type -> {target} = '_body_iframe' if $type -> {target} eq '_self';
 
-		$type -> {target} = '_body_iframe' if $type -> {target} eq '_self';
+# 		if ($type eq BREAK) {
+# 			$html .= qq{<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>};
+# 			next;
+# 		}
 
-		if ($type eq BREAK) {
-			$html .= qq{<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>};
-			next;
-		}
+# 		my $a_options = {
+# 			class    => "main-menu",
+# 			id       => "main_menu_$$type{name}",
+# 			target   => $type -> {target},
+# 			tabindex => -1,
+# 		};
 
-		my $a_options = {
-			class    => "main-menu",
-			id       => "main_menu_$$type{name}",
-			target   => $type -> {target},
-			tabindex => -1,
-		};
+# 		if ($type -> {no_page}) {
 
-		if ($type -> {no_page}) {
+# 			$a_options -> {name}     = '' . $type;
 
-			$a_options -> {name}     = '' . $type;
+# 		}
+# 		else {
 
-		}
-		else {
-
-			$a_options -> {href}     = $type -> {href};
-			$a_options -> {onClick} .= "setCursor (window, 'wait');" if $type -> {href} !~ /^javaScript/i && $type -> {target} eq '_body_iframe';
-			$a_options -> {onClick} .= <<EOJS  if $type -> {href} !~ /^javaScript/i && $type -> {target} eq '_body_iframe' && is_ua_mobile ();
-if (last_vert_menu [0] != this.parentElement) {
-	var evObj = document.createEvent ('MouseEvents');
-	evObj.initEvent ('mouseover', true, true );
-	this.parentElement.dispatchEvent (evObj);
-	return false;
-}
-var evObj = document.createEvent ('MouseEvents');
-evObj.initEvent ('mouseout', true, true );
-this.parentElement.dispatchEvent (evObj);
-EOJS
+# 			$a_options -> {href}     = $type -> {href};
+# 			$a_options -> {onClick} .= "setCursor (window, 'wait');" if $type -> {href} !~ /^javaScript/i && $type -> {target} eq '_body_iframe';
+# 			$a_options -> {onClick} .= <<EOJS  if $type -> {href} !~ /^javaScript/i && $type -> {target} eq '_body_iframe' && is_ua_mobile ();
+# if (last_vert_menu [0] != this.parentElement) {
+# 	var evObj = document.createEvent ('MouseEvents');
+# 	evObj.initEvent ('mouseover', true, true );
+# 	this.parentElement.dispatchEvent (evObj);
+# 	return false;
+# }
+# var evObj = document.createEvent ('MouseEvents');
+# evObj.initEvent ('mouseout', true, true );
+# this.parentElement.dispatchEvent (evObj);
+# EOJS
 
 
-		}
+# 		}
 
-		$a_options -> {onClick} .= " return !check_edit_mode (this);" if $type -> {name} ne '_dump';
+# 		$a_options -> {onClick} .= " return !check_edit_mode (this);" if $type -> {name} ne '_dump';
 
-		my $label = dump_tag (a => $a_options, "&nbsp;$type->{label}&nbsp;");
+# 		my $label = dump_tag (a => $a_options, "&nbsp;$type->{label}&nbsp;");
 
-		$html .= qq {<td onmouseover="if (!edit_mode || $core_unblock_navigation) {$$type{onhover}; subsets_are_visible_ (0); document.getElementById ('_body_iframe').contentWindow.subsets_are_visible_ (0)}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;$label</td>};
+# 		$html .= qq {<td onmouseover="if (!edit_mode || $core_unblock_navigation) {$$type{onhover}; subsets_are_visible_ (0); document.getElementById ('_body_iframe').contentWindow.subsets_are_visible_ (0)}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;$label</td>};
 
-	}
+# 	}
 
-	$html .= <<EOH;
-		</table>
-EOH
+# 	$html .= <<EOH;
+# 		</table>
+# EOH
 
-	foreach my $type (@types) {
-		$html .= $type -> {vert_menu};
-	}
+# 	foreach my $type (@types) {
+# 		$html .= $type -> {vert_menu};
+# 	}
 
-	$html .= <<EOH;
-	</div>
-EOH
+# 	$html .= <<EOH;
+# 	</div>
+# EOH
 
-	return $html;
+	return '';
 
 }
 
@@ -2397,67 +2360,17 @@ sub draw_vert_menu {
 
 	my ($_SKIN, $name, $types, $level, $is_main) = @_;
 
-	my $html = <<EOH;
-		<div id="vert_menu_$name" style="display:none; position:absolute; z-index:110">
-			<table id="vert_menu_table_$name" width=1 class="tbbg7" cellspacing=0 cellpadding=0 border=0 border=1>
-EOH
+	[map {
 
-
-	foreach my $type (@$types) {
-
-		if ($type eq BREAK) {
-
-			$html .= <<EOH;
-				<tr height=2>
-
-					<td class="tbbg8" width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
-					<td class="tbbg8" width=1><img height=2 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td>
-
-					<td>
-						<table width=90% border=0 cellspacing=0 cellpadding=0 align=center minheight=2>
-							<tr height=1><td class="tbbg9"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
-							<tr height=1><td bgcolor="#ffffff"><img height=1 src=$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt} width=1 border=0></td></tr>
-						</table>
-					</td>
-				</tr>
-EOH
-		}
-		else {
-
-			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
-
-			my $td = $type -> {items} ? <<EOH : qq{<td nowrap id="$type->{name}" onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
-				<td nowrap onclick="$$type{onclick}" class="vert-menu" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}">
-						<table width="100%" cellspacing=0 cellpadding=0 border=0><tr>
-							<td align="left" nowrap style="font-family: Tahoma, 'MS Sans Serif'; font-weight: normal; font-size: 8pt; color: #ffffff;">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
-							<td align="right" style="font-family: Lucida Sans Unicode; font-weight: normal; font-size: 8pt; color: #ffffff;">&#9654;</td>
-						</tr></table>
-				</td>
-EOH
-			$html .= <<EOH;
-					<tr>
-						<td width=1 class="tbbg8"><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
-						<td width=1 class="tbbg8"><img height=1 src=$_REQUEST{__static_url}/0.gif width=1 border=0></td>
-					$td
-				</tr>
-EOH
-
+		ref $_ ne HASH ? () : {
+			text  => $_ -> {label},
+			url   => $_ -> {href},
+			target => $_ -> {target},
+			(!$_ -> {icon}  ? () : (imageUrl => _icon_path ($_ -> {icon}))),
+			(!$_ -> {items} ? () : (items => $_SKIN -> draw_vert_menu ($_ -> {items}))),
 		}
 
-	}
-
-	$html .= <<EOH;
-			</table>
-EOH
-
-	foreach my $type (@$types) {
-		$html .= $type -> {vert_menu};
-	}
-
-	$html .= <<EOH;
-		</div>
-EOH
-	return $html;
+	} @$types];
 
 }
 
@@ -2853,35 +2766,19 @@ sub draw_row_button {
 	my ($_SKIN, $options) = @_;
 
 	if ($options -> {off} || $_REQUEST {lpt}) {
-		return $conf -> {core_hide_row_buttons} == 2 ? '' : '<td class=bgr0 valign=top nowrap width="1%">&nbsp;</td>';
-	}
-
-	if ($conf -> {core_show_icons} || $_REQUEST {__core_show_icons}) {
-
-		my $label = $options -> {label};
-		my $img_path = _icon_path ($options -> {icon});
-
-		$options -> {label} = qq|&nbsp;<img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=0 align=absmiddle>&nbsp;|;
-		$options -> {label} .= "&nbsp;$label" if $options -> {force_label} || $conf -> {core_hide_row_buttons} > -1;
-
-	}
-	else {
-		$options -> {label} = "\&nbsp;[$$options{label}]\&nbsp;";
-	}
-
-	my $vert_line = {label => $options -> {label}, href => $options -> {href}, target => $options -> {target}};
-	$vert_line -> {label} =~ s{[\[\]]}{}g;
-	push @{$_SKIN -> {__current_row} -> {__types}}, $vert_line;
-
-	if ($conf -> {core_hide_row_buttons} == 2) {
 		return '';
 	}
-	elsif ($conf -> {core_hide_row_buttons} == 1) {
-		return $_SKIN -> draw_text_cell ({label => '&nbsp;'});
-	}
-	else {
-		return qq {<td $$options{title} class="row-button" valign=top nowrap width="1%"><a TABINDEX=-1 class="row-button" href="$$options{href}" target="$$options{target}">$$options{label}</a></td>};
-	}
+
+	my $vert_line = {
+		label  => $options -> {label},
+		href   => $options -> {href},
+		target => $options -> {target},
+		icon   => $options -> {icon},
+	};
+
+	push @{$_SKIN -> {__current_row} -> {__types}}, $vert_line;
+
+	return '';
 
 }
 
@@ -3057,10 +2954,12 @@ sub draw_super_table__only_table {
 
 			$html .= "<tr id='$$i{__tr_id}' $attributes";
 
-			# if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
-			# 	$menus .= $i -> {__menu};
-			# 	$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent ();"};
-			# }
+			if ($i -> {__menu}) {
+
+				my $context_menu = $_JSON -> encode ($i -> {__menu});
+				$context_menu =~ s/\"/&quot;/g;
+				$html .= qq { data-menu="$context_menu" };
+			}
 
 			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 			$html .= qq {data-target="$$i{__target}" data-href="$$i{__href}"} if $has_href;
@@ -3147,7 +3046,7 @@ sub draw_super_table {
 	my $attributes = dump_attributes ($options -> {attributes});
 	my $html = qq {<div $attributes></div>\n};
 
-	return <<EOH . $html;
+	return <<EOH;
 
 		$$options{title}
 		$$options{path}
@@ -3156,6 +3055,7 @@ sub draw_super_table {
 		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible">
 		<input type=hidden name="__suggest" value="" />
 		$hiddens_html
+		$html
 		</form>
 EOH
 }
@@ -3222,11 +3122,11 @@ sub draw_table {
 				qq {<div class="table-container-x" onScroll="tableSlider.cell_on()">} :
 				qq {<div class="table-container" onScroll="tableSlider.cell_on()">};
 	}
-	$html .= qq {<table class="list" width="100%" id="$options->{id}">\n};
+	$html .= qq |<table class="list" width="100%" id="$options->{id}">\n|;
 
 	$_REQUEST {__scrollable_table_row} ||= 0;
 
-	$_REQUEST {__on_load} .= qq{;
+	$_REQUEST {__on_load} .= <<EOJS;
 
 		\$('#$options->{id}').parent().each(function(index) {
 
@@ -3318,7 +3218,7 @@ sub draw_table {
 		});
 		tableSlider.set_row ($_REQUEST{__scrollable_table_row});
 
-;};
+EOJS
 
 	$html .= $options -> {header} if $options -> {header};
 
@@ -3459,12 +3359,10 @@ sub draw_page {
 		push @{$_REQUEST {__include_js}}, '_skins/Mint/jquery.blockUI'
 			if $preconf -> {core_blockui_on_submit} || $r -> headers_in -> {'User-Agent'} =~ /webkit/i;
 
-		push @{$_REQUEST {__include_js}}, 'ken/js/kendo.ui.core.min';
+		push @{$_REQUEST {__include_js}}, 'ken/js/kendo.ui.core.min', 'ken/js/cultures/kendo.culture.ru-RU.min';
 		push @{$_REQUEST {__include_css}}, 'ken/styles/kendo.common.min', 'ken/styles/kendo.bootstrap.min';
 
 		1 or $body .= qq {
-
-			<div style='display:none'>$_REQUEST{__menu_links}</div>
 
 			<div style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:100; visibility:hidden; pointer-events: none; border: solid #888888 2px;' id="slider" onContextMenu="
 				var c = tableSlider.get_cell ();
@@ -3684,7 +3582,7 @@ EOH
 
 	;
 
-	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr";
+	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr", "_skins/$_REQUEST{__skin}/i18n_$_REQUEST{lang}";
 	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
 	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable_turbomilk";
 
@@ -3750,8 +3648,6 @@ EOH
 
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
 		</script>
-		<script src="$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js?$_REQUEST{__static_salt}">
-		</script>
 		<script src="$_REQUEST{__static_url}/jquery-ui-1.8.21.custom.min.js?$_REQUEST{__static_salt}"></script>
 		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js?$_REQUEST{__static_salt}"></script>
 
@@ -3795,9 +3691,9 @@ sub load_ui_elements {
 
 	$table_url =~ s/__last_query_string=-?\d+//;
 
-	$table_url .= '&' . $keep_params;
+	$table_url .= '&' . $keep_params . '&__no_json=1';
 
-	$_REQUEST {__on_load} .= qq{;
+	$_REQUEST {__on_load} .= <<EOJS;
 		\$('div.eludia-table-container').each(function() {
 
 			var that = this;
@@ -3806,11 +3702,16 @@ sub load_ui_elements {
 
 			new window.SuperTable({
 				tableUrl: table_url,
-				el: \$(that)
+				el: \$(that),
+				containerRender : function(table) {
+
+					\$(table.container).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+
+				}
 			});
 		});
 
-	;};
+EOJS
 
 }
 

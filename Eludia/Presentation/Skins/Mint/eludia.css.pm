@@ -78,10 +78,11 @@ div.checkboxes {
 .filters {
 	display: table;
 	padding: 0;
+	margin: 0;
 }
 .filters li {
-	height: 27px;
-	padding-top: 7px;
+	height: 38px;
+	padding-top: 4px;
 	padding-left: 10px;
 	float: left;
 }
@@ -131,6 +132,29 @@ ol, ul {list-style: none;}
 
 .k-grid-toolbar {
 	border-bottom: 1px solid #C5C5C5;
+}
+
+A.k-button {
+	line-height: 26px;
+}
+
+FORM.toolbar {
+	background-color: #B9C5D7;
+}
+
+.menuFonDark.k-header {
+       background-color:#A6AFBE;
+       border-color: #A6AFBE;
+       border-width: 2px;
+}
+.menuFonDark .k-state-hover{
+       background-color:#117cc0
+}
+.menuFonDark  .k-state-hover>.k-link:link {
+       color: #ffffff;
+}
+.menuFonDark  .k-link:link {
+       color: #263248;
 }
 
 

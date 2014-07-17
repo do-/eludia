@@ -1253,7 +1253,7 @@ sub draw_centered_toolbar_button {
 
 			$options -> {items} = $items;
 
-			$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});
+			eval {$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});};
 
 		}
 
@@ -2043,7 +2043,6 @@ sub _adjust_table_options {
 			$options -> {pager} -> {total}   = 0 + $pager_button -> {total} || $_REQUEST {__page_content} -> {cnt};
 			$options -> {pager} -> {cnt}     = 0 + $pager_button -> {cnt};
 			$options -> {pager} -> {portion} = 0 + $pager_button -> {portion} || $_REQUEST {__page_content} -> {portion} || $conf -> {portion};;
-			$pager_button -> {off} = 1;
 		}
 
 		$options -> {pager} -> {cnt} ||= @$list;
@@ -3123,7 +3122,6 @@ sub setup_skin {
 		}
 		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON'
 			|| $_REQUEST {__only_json}
-		) {
 			|| $r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' && !$_REQUEST {__no_json}) {
 
 			$_REQUEST {__skin} = 'JSONDumper';

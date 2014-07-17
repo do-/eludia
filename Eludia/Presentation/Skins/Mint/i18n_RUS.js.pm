@@ -22,10 +22,9 @@ function i18n_calendar (Calendar) {
 		"TODAY"           : "Сегодня",
 		"DEF_DATE_FORMAT" : "y-mm-dd",
 		"TT_DATE_FORMAT"  : "D, M d",
-		"WK"              : "нед" 
+		"WK"              : "нед"
 	};
 
 }
 
-
-
+kendo.culture("ru-RU");

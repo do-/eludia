@@ -867,7 +867,7 @@ function setup_drop_down_button (id, data) {
 
 		var menuDiv = $('<ul id="ul_' + id + '" class="get_down_the_text" title="" style="position:absolute;z-index:200;white-space:nowrap" />').appendTo (document.body);
 
-		var a_offset = getOffset(this);
+		var a_offset = $(this).offset ();
 
 		menuDiv.css ({
 			top:  a_offset.top + this.clientHeight,
@@ -913,6 +913,52 @@ function setup_drop_down_button (id, data) {
 	});
 }
 
+function table_row_context_menu (e, tr) {
+
+	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap" />').appendTo (document.body);
+
+	menuDiv.css ({
+		top:  e.pageY,
+		left: e.pageX
+	});
+
+	var items = $.parseJSON ($(tr).attr ('data-menu'));
+	menuDiv.kendoMenu ({
+		dataSource: items,
+		orientation: 'vertical',
+		select: function (e) {
+			var selected_url = items [$(e.item).index()].url;
+			if (selected_url.match(/^javascript:/)) {
+				eval (selected_url);
+			}
+			menuDiv.remove ();
+		}
+	});
+
+	var width = menuDiv.width ();
+
+	window.setTimeout (function () {
+		menuDiv.width (width);
+	}, 100);
+
+	var kill = window.setTimeout (function () {
+		menuDiv.remove ()
+	}, 1500);
+
+	menuDiv.hover (
+		function () {
+			window.clearTimeout (kill);
+			menuDiv.width (width);
+		},
+		function () {
+			window.setTimeout (function () {
+				menuDiv.remove ()
+			}, 500);
+		}
+	);
+
+	return false;
+}
 
 function UpdateClock () {
 
