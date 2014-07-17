@@ -4040,7 +4040,7 @@ EOH
 		c.iconPath = '$_REQUEST{__static_url}/tree_';
 		c.target = '$options->{name}';
 		c.useStatusText = true;
-		c.useCookies = '$use_cookies';
+		c.useCookies = $use_cookies;
 		win.d.icon.node = 'folderopen.gif';
 
 		var nodes = $nodes;
