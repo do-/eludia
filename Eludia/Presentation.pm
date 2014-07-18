@@ -2174,7 +2174,7 @@ sub draw_table {
 		};
 		unshift @{$options -> {top_toolbar}}, $toolbar_options;
 
-		my $href = {href => {ids => undef}};
+		my $href = {href => {ids => undef, add_id => undef}};
 		check_href ($href);
 		$_REQUEST {ids} ||= '-1';
 
@@ -2185,15 +2185,16 @@ EOS
 
 		$_REQUEST {__script} .= <<'EOJS';
 function set_choose_ids () {
-	var new_ids = '';
+	var add_id = '';
 	$(".id_checkbox").children().each(function() {
 		if ($(this).is(":checked")) {
-			new_ids = new_ids + ',' + $(this).parent().attr("id");
+			if (add_id != '') add_id = add_id + ',';
+			add_id = add_id + $(this).parent().attr("id");
 		}
 	});
 	setCursor();
-	if (new_ids == '') return;
-	nope (href + '&ids=' + ids + new_ids, '_self');
+	if (add_id == '') return;
+	nope (href + '&ids=' + ids + ',' + add_id + '&add_id=' + add_id, '_self');
 }
 EOJS
 
