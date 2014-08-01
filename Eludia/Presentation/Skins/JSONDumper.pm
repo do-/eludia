@@ -28,8 +28,6 @@ sub draw_page {
 
 	$_REQUEST {__only_menu} and return $_SKIN -> draw_page_just_to_reload_menu ($page);
 
-	$page -> {content} -> {__this_content_is_ok_to_be_shown_completely} or $page -> {content} = 'Sorry?..';
-
 	return $_SKIN -> draw_hash ({
 
 		content => $page -> {content},
@@ -44,12 +42,12 @@ sub draw_error_page {
 
 	my ($_SKIN, $page) = @_;
 
-	return $_SKIN -> draw_hash ({ 
-	
+	return $_SKIN -> draw_hash ({
+
 		message => $_REQUEST {error},
-		
+
 		field   => $page -> {error_field},
-		
+
 	});
 
 }
@@ -60,10 +58,10 @@ sub draw_redirect_page {
 
 	my ($_SKIN, $page) = @_;
 
-	return $_SKIN -> draw_hash ({ 
-	
+	return $_SKIN -> draw_hash ({
+
 		url   => $page -> {url},
-		
+
 	});
 
 }
@@ -78,11 +76,8 @@ sub _menu_item {
 
 	if ($i -> {no_page} || $i -> {items}) {
 		$i -> {href} ||= "undefined";
-	}
-	else {
+	} else {
 		$i -> {href} ||= "/?type=$i->{name}";
-		$i -> {href}  .= "&sid=$_REQUEST{sid}"
-			if $i -> {href} !~ /^http/;
 	}
 
 	$i -> {id} ||= $i -> {href} eq 'undefined'?
@@ -158,5 +153,93 @@ sub draw_page_just_to_reload_menu {
 	return $_JSON -> encode ([map {menu_item_2_json ($_)} @$menu]);
 
 }
+
+################################################################################
+
+sub vert_menu_2_ken {
+
+	my ($types) = @_;
+
+	[map {
+
+		ref $_ ne HASH ? () : {
+			text  => $_ -> {label},
+			url   => $_ -> {href},
+			target => $_ -> {target},
+			(!$_ -> {icon}  ? () : (imageUrl => "/i/ken/images/icons/$_->{icon}.png")),
+			(!$_ -> {items} ? () : (items => vert_menu_2_ken ($_ -> {items}))),
+			(!$_ -> {clipboard_text} ? () : (clipboard_text => $_ -> {clipboard_text})),
+		}
+
+	} @$types];
+
+}
+
+################################################################################
+
+sub draw_vert_menu {
+
+	my ($_SKIN, $name, $types, $level, $is_main) = @_;
+
+	vert_menu_2_ken ($types);
+
+}
+
+################################################################################
+
+sub draw_tree {
+
+	my ($_SKIN, $node_callback, $list, $options) = @_;
+
+	foreach my $i (@$list) {
+
+		foreach my $key (keys %{$i -> {__node}}) {
+			$i -> {$key} = $i -> {__node} -> {$key};
+			$i -> {menu} = $i -> {__menu};
+		}
+
+		$i -> {href}   = $options -> {url_base} . $i -> {href};
+
+		delete $i -> {__node};
+		delete $i -> {level};
+	};
+}
+
+
+################################################################################
+
+sub draw_node {
+
+	my ($_SKIN, $options, $i) = @_;
+
+	my $node = {
+		id      => $options -> {id},
+		text    => $options -> {label},
+		parent   => $i -> {parent},
+		target   => $i -> {target},
+		href     => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
+		imageUrl => $options -> {icon}? _icon_path ($options -> {icon}) : undef,
+		clipboard_text => $i -> {clipboard_text},
+	};
+
+	return $node;
+}
+
+################################################################################
+
+sub _icon_path {
+
+	if (-r $r -> document_root . "/i/ken/images/icons/$_[0].png") {
+		return "$_REQUEST{__static_site}/i/ken/images/icons/$_[0].png";
+	}
+
+	-r $r -> document_root . "/i/_skins/Mint/i_$_[0].png" ?
+		"$_REQUEST{__static_url}/i_$_[0].png?$_REQUEST{__static_salt}" :
+		"$_REQUEST{__static_site}/i/buttons/$_[0].png";
+}
+
+################################################################################
+
+sub __adjust_vert_menu_item {}
 
 1;

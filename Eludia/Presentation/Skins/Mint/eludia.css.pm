@@ -523,7 +523,7 @@ a.main-menu, a.main-menu:link, a.main-menu:active, a.main-menu:visited, a.main-m
 a.tab-0, a.tab-0:link, a.tab-0:active, a.tab-0:visited, a.tab-0:hover {
 	font-family: Tahoma, 'MS Sans Serif';
 	FONT-WEIGHT: normal;
-	font-size: 8pt;
+	font-size: 9pt;
 	color: #363638;
 	text-decoration: none;
 }
@@ -531,7 +531,7 @@ a.tab-0, a.tab-0:link, a.tab-0:active, a.tab-0:visited, a.tab-0:hover {
 a.tab-1, a.tab-1:link, a.tab-1:active, a.tab-1:visited, a.tab-1:hover {
 	font-family: Tahoma, 'MS Sans Serif';
 	FONT-WEIGHT: normal;
-	font-size: 8pt;
+	font-size: 9pt;
 	color: #000000;
 	text-decoration: none;
 }
@@ -1001,6 +1001,16 @@ INPUT {
 
 .cbx {
 	border: 0px solid;
+}
+
+li.toolbar > .cbx{
+	margin: 8px;
+	vertical-align: middle;
+}
+span.get_down_the_text_1 {
+	display: inline-block;
+	margin: 4px;
+	vertical-align: middle;
 }
 
 SELECT {

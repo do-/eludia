@@ -169,7 +169,7 @@ sub trunc_string {
 
 	$s = decode_entities ($s) if $has_ext_chars;
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-	$s = encode_entities ($s, "<>‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars;
+	$s = encode_entities ($s, "<>â€šâ€ž-â€°â€¹â€˜-â„¢â€º\xA0Â¤Â¦Â§Â©Â«-Â®Â°-Â±Âµ-Â·Â»") if $has_ext_chars;
 
 	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
 
@@ -2739,6 +2739,20 @@ sub draw_page {
 	$_REQUEST {error} and return draw_error_page ($page);
 
 	setup_skin ();
+
+	if ($_REQUEST {__ajax_load}) {
+
+		eval {
+
+			my $draw_function = ($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type};
+			call_for_role ($draw_function, $page -> {content});
+		};
+
+		if ($@) {
+			$_REQUEST {error} ||= $@;
+			return $_SKIN -> draw_error_page ($page);
+		};
+	}
 
 	$_SKIN -> {options} -> {no_presentation} and return $_SKIN -> draw_page ($page);
 

@@ -18,10 +18,12 @@ sub draw_input_cell {
 	}
 
 	if ($data -> {autocomplete} && $_REQUEST {__suggest} eq $data -> {name}) {
-
+		if ($ENV {HTTP_CONTENT_TYPE} =~ /charset=UTF-8/i) {
+			$_REQUEST {$data -> {name}} = encode ("cp1251", decode ("utf-8", $_REQUEST {$data -> {name}}));
+		}
 		our $_SUGGEST_SUB = &{$data -> {autocomplete} -> {values}} ();
 
-	} 
+	}
 
 	check_title ($data);
 

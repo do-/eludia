@@ -1,7 +1,7 @@
 sub draw_form_field_suggest {
 
 	my ($options, $data) = @_;
-	
+
 	$options -> {max_len} ||= 255;
 	$options -> {size}    ||= 120;
 	$options -> {lines}   ||= 10;
@@ -10,18 +10,20 @@ sub draw_form_field_suggest {
 	$options -> {value__id} = $options -> {value};
 
 	my $id = $_REQUEST {id};
-	
+
 	if ($_REQUEST {__suggest} eq $options -> {name}) {
-	
+		if ($ENV {HTTP_CONTENT_TYPE} =~ /charset=UTF-8/i) {
+			$_REQUEST {"_$options->{name}__label"} = encode ("cp1251", decode ("utf-8", $_REQUEST {"_$options->{name}__label"}));
+		}
 		our $_SUGGEST_SUB = $options -> {values};
-	
+
 	}
 	elsif ($data -> {id}) {
-	
+
 		if ($options -> {value} == 0) {
-		
+
 			$options -> {value} = '';
-		
+
 		}
 		else {
 
@@ -33,11 +35,11 @@ sub draw_form_field_suggest {
 		}
 
 	}
-	
+
 	adjust_form_field_options ($options);
 
 	return $_SKIN -> draw_form_field_suggest (@_);
-	
+
 }
 
 1;

@@ -167,119 +167,7 @@ sub draw_auth_toolbar {
 
 	my ($_SKIN, $options) = @_;
 
-	my $logout_url = $conf -> {exit_url} || create_url (type => '_logout', id => '');
-	my $logo_url = $conf -> {logo_url};
-
-	my ($header, $header_height, $subset_div, $subset_div, $subset_cell);
-
-	my $header_prefix = 'out';
-
-	if ($_USER -> {id}) {
-
-		if ($_USER -> {f} && $_USER -> {i}) {
-
-			$$options {user_label} =~ s/$$i18n{User}: ${\($$_USER{label} || $$i18n{not_logged_in})}//;
-
-			$$options {user_label} = '<nobr><b>' . $_USER -> {f} . ' ' . substr ($_USER -> {i}, 0, 1) . '. ' . substr ($_USER -> {o}, 0, 1) . '.</b></nobr><br>' . $options -> {user_label}
-
-		}
-
-		if (@{$_SKIN -> {subset} -> {items}} > 1) {
-
-#			my $href = create_url (type => '', id => '');
-			$_REQUEST {__uri_root} || create_url ();
-			my $href = $_REQUEST {__uri_root};
-
-			$subset_div = <<EOH;
-				<div id="Menu">
-					<table border="0" cellpadding="0" cellspacing="0">
-EOH
-
-			for (my $i = 0; $i < @{$_SKIN -> {subset} -> {items}}; $i++) {
-
-				my $item = $_SKIN -> {subset} -> {items} -> [$i];
-
-				if ($item -> {name} eq $_SKIN -> {subset} -> {name}) {
-
-					$subset_cell = <<EOH;
-						<td width="5" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2px" height="28px"></td>
-						<td><img src="$_REQUEST{__static_url}/0.gif" border="0" hspace="0" width=5 height=1></td>
-						<td><div id="admin" onClick="subsets_are_visible_ (1 - subsets_are_visible); document.getElementById ('_body_iframe').contentWindow.subsets_are_visible_ (subsets_are_visible)"><a href="#">$$item{label}</a></div></td>
-EOH
-
-				}
-
-				my $class = $i == @{$_SKIN -> {subset} -> {items}} - 1 ? 'mm0' : 'mm';
-
-				$subset_div .= <<EOH;
-					<tr @{[$item -> {name} eq $_SKIN -> {subset} -> {name} ? 'style="display: none"' : '']} id="_subset_tr_$$item{name}"><td class="$class"><a id="_subset_a_$$item{name}" onClick="subset_on_change('$$item{name}', '$href&__subset=$$item{name}')" href="#">$$item{label}</a></td></tr>
-EOH
-
-			}
-
-			$subset_div .= <<EOH;
-				<tr><td><img src="$_REQUEST{__static_url}/menu_bottom.gif?$_REQUEST{__static_salt}" border="0"></td></tr>
-			</table>
-		</div>
-EOH
-
-		}
-
-		$header_height = 48;
-		$header_prefix = 'in';
-
-		my $calendar = draw_calendar ();
-
-		$header = <<EOU;
-
-			$subset_cell
-
-			<td>&nbsp;</td>
-
-			<td width="1" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2" height="28" hspace=10></td>
-			<td align="left" class="txt1" nowrap>$calendar</td>
-
-			<td width="1" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2" height="28" hspace=10></td>
-			<td align="left" class="txt1">$$options{user_label}</td>
-
-			<td width="1" align="center"><img src="$_REQUEST{__static_url}/vline.gif?$_REQUEST{__static_salt}" width="2px" height="28" hspace=10></td>
-			<td width="50" align="right" nowrap><nobr><a class="button" href="$logout_url">&nbsp;$i18n->{Exit}&nbsp;<img src="$_REQUEST{__static_url}/i_exit.gif?$_REQUEST{__static_salt}" width="14px" height="10px" border="0"></a></nobr></td>
-EOU
-	} elsif ($$conf{logon_hint}) {
-		$header_height = 90;
-
-		$header = <<EOH;
-			<td><table border=0 cellspacing=0 cellpadding=0>
-				<tr>
-					<td><img src="$_REQUEST{__static_url}/hint_l.gif?$_REQUEST{__static_salt}" width="6" height="61" border=0></td>
-					<td background="$_REQUEST{__static_url}/hint_bg.gif?$_REQUEST{__static_salt}" style='padding-left: 10px; padding-right: 10px;'><img src="$_REQUEST{__static_url}/exclam.gif?$_REQUEST{__static_salt}" width="30" height="34" border=0></td>
-					<td background="$_REQUEST{__static_url}/hint_bg.gif?$_REQUEST{__static_salt}" style='padding: 2px;' class="txt1"><img src="$_REQUEST{__static_url}/hint_title.gif?$_REQUEST{__static_salt}" width="144" height="16" border=0><br>$$conf{logon_hint}</td>
-					<td><img src="$_REQUEST{__static_url}/hint_r.gif?$_REQUEST{__static_salt}" width="6" height="61" border=0></td>
-				</tr>
-			</table></td>
-
-EOH
-	} else {
-		$header_height = 90;
-	}
-	return <<EOH;
-		<table id="logo_table" cellSpacing=0 cellPadding=0 width="100%" border=0 class="tbbga" background="$_REQUEST{__static_site}/i/bg_logo_$header_prefix.gif" style="background-repeat: repeat-x">
-			<tr>
-			<td width="20"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=$header_height border=0></td>
-			<td width=1><table border=0 valign="middle" border=0><tr>
-				<td valign="top" width=1><a href="$logo_url"><img src="$_REQUEST{__static_site}/i/logo_$header_prefix.gif" border="0"></a></td>
-				<td width=1><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 height=1 border=0></td>
-				<td width=1 valign="middle"><img src="$_REQUEST{__static_url}/gsep.gif?$_REQUEST{__static_salt}" width="4" height="21"></td>
-				<td align="left" valign="middle" class='header_0' width=1><nobr>&nbsp;$$conf{page_title}</nobr></td>
-			</tr></table></td>
-
-			$header
-			<td width="20px" align="right">&nbsp;</td></tr>
-		 </table>
-		$subset_div
-		$$options{top_banner}
-EOH
-
+	return '';
 
 }
 
@@ -592,136 +480,86 @@ sub draw_form_field_suggest {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	my $id = '' . $options;
-
-	$_REQUEST {__script} .= qq{;
-
-		function off_suggest_$options->{name} () {
-			var s = document.getElementById ('_$options->{name}__suggest');
-			s.style.display = 'none';
-		};
-
-	};
-
-	$options -> {attributes} -> {onKeyPress} .= q {;
-
-		if (event.keyCode == 13) {
-			return blockEvent (event);
-		}
-
-		if (event.keyCode != 27) { is_dirty=true }
-
-	};
-
-	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
-	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
-	$options -> {attributes} -> {onBlur}     .= qq {;
-		scrollable_table_is_blocked = false;
-		q_is_focused = false;
-		this.form.elements ['_$options->{name}__label'].value = this.value;
-		_suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);
-	};
-	$options -> {attributes} -> {onChange}   .= "$$options{after};";
-
-	$options -> {attributes} -> {onKeyDown}  .= <<EOH;
-
-		var s = getElementById('_$options->{name}__suggest');
-
-		if (event.keyCode == 40 && s.style.display == 'block') {
-			s.focus ();
-		}
-
-EOH
-
-
-	$options -> {attributes} -> {onKeyUp} .= <<EOH;
-
-		if (event.keyCode == 13) {
-			getElementById('_$options->{name}__suggest').style.display = 'none';
-			return blockEvent (event);
-		}
-
-		if (suggest_clicked) {
-			suggest_clicked = 0;
-		}
-		else {
-			var SUGGEST_DELAY = 500;
-			clearTimeout(typingIdleTimer);
-			typingIdleTimer = setTimeout('lookup_$options->{name}()', SUGGEST_DELAY);
-		}
-EOH
-
-	my $id = '' . $options;
-
-	$_REQUEST {__script} .= qq{;
-		var typingIdleTimer;
-		function lookup_$options->{name}() {
-			var suggest_label = document.getElementById ('$id');
-			var f = suggest_label.form;
-			var e = f.elements;
-			e ['_$options->{name}__label'].value = '';
-			e ['_$options->{name}__id'].value = '';
-			var s = e ['__suggest'];
-			\$('#_$options->{name}__suggest').hide ();
-			if (suggest_label.value.length > 0) {
-				s.value = '$options->{name}';
-				e ['_$options->{name}__label'].value = suggest_label.value;
-				f.submit ();
-				s.value = '';
-			}
-		};
-	};
-
-	$options -> {attributes} -> {id}           = $id;
-	$options -> {attributes} -> {autocomplete} = 'off';
-	$options -> {attributes} -> {type}         = 'text';
-
-	return qq {
-		<script>
-			var _suggest_timer_$options->{name} = null;
-		</script>
-		<select
-			id="_$options->{name}__suggest"
-			name="_$options->{name}__suggest"
-			size="$options->{lines}"
-			style="
-				display : none;
-				position: absolute;
-				border  : solid black 1px;
-				z-index : 100;
-			"
-			onFocus="
-				if (_suggest_timer_$options->{name}) {
-					clearTimeout (_suggest_timer_$options->{name});
-					_suggest_timer_$options->{name} = null;
-				}
-				this.options[0].focus ();
-			"
-			onBlur="this.style.display='none'; $$options{after}"
-			onDblClick="set_suggest_result (this, '$id'); $$options{after}"
-			onKeyPress="if (event.keyCode == 13) { set_suggest_result (this, '$id'); $$options{after}; suggest_clicked = 1 } return false;"
-			@{[is_ua_mobile () ? qq|onChange="set_suggest_result (this, '$id'); $$options{after}"| : '']}
-
-		>
-		</select>
-
+	my $values = $_JSON -> encode ([]);
+	if (ref $options -> {values} ne 'CODE') {
+		$values = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}]} @{$options -> {values}}]);
 	}
 
-	. dump_tag (input => $options -> {attributes})
+	$options -> {min_length} ||= 3;
+	$options -> {attributes} -> {size} ||= $options -> {size} || 60;
 
-	. dump_tag (input => {
-		type  => 'hidden',
-		id    => "${id}__label",
-		name  => "_$options->{name}__label",
-		value => $options -> {attributes} -> {value},
-	})
+	my $change_js = $options -> {onchange_href}? <<EOJS : '';
+		nope ('$$options{onchange_href}&id=' + id, '_self');
+EOJS
 
-	. dump_tag (input => {
-		type  => 'hidden',
-		id    => "${id}__id",
-		name  => "_$options->{name}__id",
-		value => $options -> {value__id},
-	});
+	my $id = $options -> {name} || 'suggest';
+	my $js = <<EOJS;
+		\$("#$id").kendoAutoComplete({
+			minLength       : $$options{min_length},
+			filter          : 'contains',
+			suggest         : true,
+			dataTextField   : 'label',
+			dataSource      : {
+				serverFiltering : true,
+				data: {
+					json: $values,
+				},
+				transport: {
+					read        : {
+						url : "$ENV{REQUEST_URI}&__suggest=$options->{name}" + "&salt=" + Math.random (),
+						contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
+						data        : {
+							"_$options->{name}__label": function() {
+								return \$("#$id").data("kendoAutoComplete").value();
+							}
+						},
+						dataType    : 'json'
+					}
+				}
+			}
+		}).bind("change", function(e) {
+
+			var _this = \$(this).data("kendoAutoComplete");
+
+			var selected_item = _this.current();
+			var id = '', label = '';
+
+			if (selected_item) {
+				var data = _this.dataSource.data();
+				id = data [selected_item.index()].id;
+				label = data [selected_item.index()].label;
+			}
+
+			var prev_id = \$('#${id}__id').val();
+
+			\$('#${id}__label').val(label);
+			\$('#${id}__id').val(id);
+
+			if (id && id != prev_id) {
+				$change_js
+			}
+		});
+EOJS
+
+	$options -> {attributes} -> {id} = $id;
+
+	my $html = dump_tag (input => $options -> {attributes})
+
+		. dump_tag (input => {
+			type  => 'hidden',
+			id    => "${id}__label",
+			name  => "_$options->{name}__label",
+			value => $options -> {attributes} -> {value},
+		})
+
+		. dump_tag (input => {
+			type  => 'hidden',
+			id    => "${id}__id",
+			name  => "_$options->{name}__id",
+			value => $options -> {value__id},
+		});
+
+	return $html . "<script>\$(document).ready (function () {$js})</script>";
 
 }
 
@@ -1212,15 +1050,6 @@ EOH
 	}
 
 	$html .= '</select>';
-
-#	if (defined $options -> {other}) {
-#		$html .= <<EOH;
-#			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)}">
-#				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="$_REQUEST{__static_url}/0.html" application="yes">
-#				</iframe>
-#			</div>
-#EOH
-#	}
 
 	return $html;
 
@@ -2001,8 +1830,7 @@ sub draw_toolbar_input_checkbox {
 	my $html = '<li class="toolbar nowrap">';
 
 	if ($options -> {label}) {
-		$html .= qq {<span class="get_up_the_text"><label for="$options">$$options{label}</label>};
-		$html .= ':</span> ';
+		$html .= qq {<label for="$options">$$options{label}:</label>};
 	}
 
 	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} name="$$options{name}" onClick="$$options{onClick}">};
@@ -2266,89 +2094,6 @@ sub draw_menu {
 
 	my ($_SKIN, $_options) = @_;
 
-# 	my @types = (@{$_options -> {left_items}}, BREAK, @{$_options -> {right_items}});
-
-# 	my $colspan = 1 + @types;
-
-# 	my $html = <<EOH;
-
-# 	<div style="position:relative" id="main_menu">
-
-# 		<table width="100%" class=bgr8 cellspacing=0 cellpadding=0 border=0>
-# 			<tr>
-# 				<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=1><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>
-# 				<td background="$_REQUEST{__static_url}/menu_bg_s.gif?$_REQUEST{__static_salt}" width=0><img height=26 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=0 border=0></td>
-# EOH
-
-# 	my $core_unblock_navigation = $preconf -> {core_unblock_navigation} || 0;
-
-# 	foreach my $type (@types) {
-
-# 		next if ($type -> {name} eq '_logout');
-
-# 		if ($type -> {name} eq '_xls') {
-
-# 			$type -> {href}   = "javaScript:_dumper_href ('&xls=1', 'invisible')";
-
-# 		}
-
-# 		$type -> {target} = '_body_iframe' if $type -> {target} eq '_self';
-
-# 		if ($type eq BREAK) {
-# 			$html .= qq{<td background="$_REQUEST{__static_url}/menu_bg.gif?$_REQUEST{__static_salt}" width=100%><img height=1 src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 border=0></td>};
-# 			next;
-# 		}
-
-# 		my $a_options = {
-# 			class    => "main-menu",
-# 			id       => "main_menu_$$type{name}",
-# 			target   => $type -> {target},
-# 			tabindex => -1,
-# 		};
-
-# 		if ($type -> {no_page}) {
-
-# 			$a_options -> {name}     = '' . $type;
-
-# 		}
-# 		else {
-
-# 			$a_options -> {href}     = $type -> {href};
-# 			$a_options -> {onClick} .= "setCursor (window, 'wait');" if $type -> {href} !~ /^javaScript/i && $type -> {target} eq '_body_iframe';
-# 			$a_options -> {onClick} .= <<EOJS  if $type -> {href} !~ /^javaScript/i && $type -> {target} eq '_body_iframe' && is_ua_mobile ();
-# if (last_vert_menu [0] != this.parentElement) {
-# 	var evObj = document.createEvent ('MouseEvents');
-# 	evObj.initEvent ('mouseover', true, true );
-# 	this.parentElement.dispatchEvent (evObj);
-# 	return false;
-# }
-# var evObj = document.createEvent ('MouseEvents');
-# evObj.initEvent ('mouseout', true, true );
-# this.parentElement.dispatchEvent (evObj);
-# EOJS
-
-
-# 		}
-
-# 		$a_options -> {onClick} .= " return !check_edit_mode (this);" if $type -> {name} ne '_dump';
-
-# 		my $label = dump_tag (a => $a_options, "&nbsp;$type->{label}&nbsp;");
-
-# 		$html .= qq {<td onmouseover="if (!edit_mode || $core_unblock_navigation) {$$type{onhover}; subsets_are_visible_ (0); document.getElementById ('_body_iframe').contentWindow.subsets_are_visible_ (0)}" onmouseout="$$type{onmouseout}" class="main-menu" nowrap>&nbsp;$label</td>};
-
-# 	}
-
-# 	$html .= <<EOH;
-# 		</table>
-# EOH
-
-# 	foreach my $type (@types) {
-# 		$html .= $type -> {vert_menu};
-# 	}
-
-# 	$html .= <<EOH;
-# 	</div>
-# EOH
 
 	return '';
 
@@ -2427,7 +2172,8 @@ sub draw_super_table_text_cell {
 
 	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
 
-	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor;
+	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor
+		if $fgcolor;
 
 	$data -> {attributes} -> {"data-href"} = $data -> {href};
 
@@ -2446,8 +2192,6 @@ sub draw_super_table_text_cell {
 	}
 
 	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
-
-	# $html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
 	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
@@ -2471,9 +2215,9 @@ sub draw_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	if ($_REQUEST {__only_table}) {
+#	if ($_REQUEST {__only_table}) {
 		return draw_super_table_text_cell ($_SKIN, $data, $options);
-	}
+#	}
 
 	if (defined $data -> {level}) {
 
@@ -2683,69 +2427,78 @@ sub draw_input_cell {
 	};
 
 	if ($data -> {autocomplete}) {
-		my $id = '' . $data -> {autocomplete};
-		$_REQUEST {__script} .= qq{;
-			function off_suggest$data->{name} () {
-				var s = document.getElementById ('$data->{name}__suggest');
-				s.style.display = 'none';
-				try {tableSlider.cell_on ();} catch(e) {};
-			};
-		};
+		my $a_options = $data -> {autocomplete};
 
-		$attr_input -> {autocomplete} = 'off';
-		$attr_input -> {onBlur}     .= qq{; _suggest_timer$data->{name} = setTimeout (off_suggest$data->{name}, 100);};
-		$attr_input -> {onChange}   .= "$data->{autocomplete}{after};";
-		$attr_input -> {onKeyDown}  .= <<EOH;
-			var s = getElementById('$data->{name}__suggest');
+		my $values = $_JSON -> encode ([]);
+		if (ref $a_options -> {values} ne 'CODE') {
+			$values = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}]} @{$a_options -> {values}}]);
+		}
 
-			if (window.event.keyCode == 40 && s.style.display == 'block') {
-				s.focus ();
-			}
-EOH
-		$attr_input -> {onKeyUp} .= <<EOH;
-			if (suggest_clicked) {
-				suggest_clicked = 0;
-			}
-			else {
-				var f = this.form;
-				var s = f.elements ['__suggest'];
-				document.getElementById ('$data->{name}__suggest').style.display = 'none';
-				if (this.value.length > 0) {
-					s.value = '$data->{name}';
-					f.submit ();
-					s.value = '';
+		$a_options -> {min_length} ||= 3;
+		$a_options -> {attributes} -> {size} ||= $a_options -> {size} || 60;
+
+		my $id = '' . $data -> {autocomplete}  . "_$$data{name}";
+		$id =~ s/[\(\)]//g;
+
+		my $js = <<EOJS;
+		\$("#$id").kendoAutoComplete({
+			minLength       : $$a_options{min_length},
+			filter          : 'contains',
+			suggest         : true,
+			dataTextField   : 'label',
+			dataSource      : {
+				serverFiltering : true,
+				data: {
+					json: $values,
+				},
+				transport: {
+					read            : {
+						url         : "$ENV{REQUEST_URI}&__suggest=$$data{name}" + "&salt=" + Math.random (),
+						contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
+						data        : {
+							"$$data{name}": function() {
+								return \$("#$id").data("kendoAutoComplete").value();
+							}
+						},
+						dataType    : 'json'
+					},
 				}
 			}
-EOH
-		$data -> {autocomplete} -> {after} .= ';try {tableSlider.cell_on ();} catch(e) {};';
-		$data -> {autocomplete} -> {lines} ||= 10;
+		}).bind("change", function(e) {
 
-		$autocomplete = qq {
-			<script>
-				var _suggest_timer$data->{name} = null;
-			</script>
-			<select
-				id="$data->{name}__suggest"
-				name="$data->{name}__suggest"
-				size="$data->{autocomplete}{lines}"
-				style="
-					display : none;
-					position: absolute;
-					border  : solid black 1px;
-					z-index : 100;
-				"
-				onFocus="
-					if (_suggest_timer$data->{name}) {
-						clearTimeout (_suggest_timer$data->{name});
-						_suggest_timer$data->{name} = null;
-					}
-				"
-				onBlur="this.style.display='none'; $data->{autocomplete}{after}"
-				onDblClick="set_suggest_result (this, '$$data{name}'); $data->{autocomplete}{after}"
-				onKeyPress="set_suggest_result (this, '$$data{name}'); $data->{autocomplete}{after}; suggest_clicked = 1"
-			>
-			</select>
-		};
+			var _this = \$(this).data("kendoAutoComplete");
+
+			var selected_item = _this.current();
+			var id = '', label = '';
+
+			if (selected_item) {
+				var data = _this.dataSource.data();
+				id = data [selected_item.index()].id;
+				label = data [selected_item.index()].label;
+			}
+
+			\$('#${id}__label').val(label);
+			\$('#${id}__id').val(id);
+		});
+EOJS
+
+		$attr_input -> {id} = $id;
+		$autocomplete = dump_tag (input => {
+			type  => 'hidden',
+			id    => "${id}__label",
+			name  => "_$data->{name}__label",
+			value => $a_options -> {attributes} -> {value},
+		})
+
+		. dump_tag (input => {
+			type  => 'hidden',
+			id    => "${id}__id",
+			name  => "_$data->{name}__id",
+			value => $a_options -> {value__id},
+		});
+
+		$_REQUEST {__on_load} .= $js;
+
 	}
 
 	my $attributes = dump_attributes ($data -> {attributes});
@@ -2802,9 +2555,9 @@ sub draw_table_header {
 
 	my ($_SKIN, $data_rows, $html_rows) = @_;
 
-	if ($_REQUEST {__only_table}) {
+#	if ($_REQUEST {__only_table}) {
 		return draw_super_table_header ($_SKIN, $data_rows, $html_rows);
-	}
+#	}
 
 	# jquery.dataTables helper
 	my $columns_cnt = 0;
@@ -2842,9 +2595,20 @@ sub get_super_table_cell_id {
 
 	my ($_SKIN, $cell) = @_;
 
-	return $cell -> {order}
-		|| $cell -> {no_order}
-		|| Digest::MD5::md5_hex ($cell -> {label});
+	if ($cell -> {order} || $cell -> {no_order}) {
+		return $cell -> {order} || $cell -> {no_order};
+	}
+
+	$_REQUEST {__generated_cell_ids} ||= {};
+	my $id = Digest::MD5::md5_hex ($cell -> {label});
+
+	while ($_REQUEST {__generated_cell_ids} -> {$id}) {
+		$id .= '0';
+	}
+
+	$_REQUEST {__generated_cell_ids} -> {$id} = 1;
+
+	return $id;
 }
 
 ####################################################################
@@ -2883,9 +2647,9 @@ sub draw_table_header_cell {
 
 	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);
 
-	if ($_REQUEST {__only_table}) {
+#	if ($_REQUEST {__only_table}) {
 		return draw_super_table_header_cell ($_SKIN, $cell);
-	}
+#	}
 
 	$cell -> {label} .= "\&nbsp;\&nbsp;<a class=row-cell-header-a href=\"$$cell{href_asc}\"><b>\&uarr;</b></a>"  if $cell -> {href_asc};
 	$cell -> {label} .= "\&nbsp;\&nbsp;<a class=row-cell-header-a href=\"$$cell{href_desc}\"><b>\&darr;</b></a>" if $cell -> {href_desc};
@@ -2923,7 +2687,7 @@ sub draw_super_table__only_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
 
-	if ($_REQUEST {__only_table} ne $options -> {id_table}) {
+	if ($_REQUEST {__only_table} && $_REQUEST {__only_table} ne $options -> {id_table}) {
 		return '';
 	}
 
@@ -2974,30 +2738,94 @@ sub draw_super_table__only_table {
 
 	my $columns = [];
 
-	my $settings = exists $_QUERY -> {content} -> {columns}? $_QUERY -> {content} -> {columns} : {};
+	my $header_rows = $options -> {headers};
 
-	foreach my $column (@{$options -> {headers}}) {
+	ref $header_rows -> [0] eq ARRAY or $header_rows = [$header_rows];
 
-		$column -> {id} ||= $column -> {order} || $column -> {no_order},
+	my $matrix;
+
+	for (my $row = 0; $row < @$header_rows; $row ++) {
+		foreach my $cell (@{$header_rows -> [$row]}) {
+			my $col = @{$matrix -> [$row]};
+			$cell -> {id} ||= "coord_$row_$col";
+			my $cell_cnt_to_insert = $cell -> {colspan} || 1;
+			for (my $i = 0; $i < $col && $cell_cnt_to_insert > 0; $i ++) {
+				if (!defined ($matrix -> [$row] -> [$i])) {
+					$matrix -> [$row] -> [$i] = $cell;
+					$cell_cnt_to_insert --;
+				}
+			}
+			push @{$matrix -> [$row]}, ($cell) x $cell_cnt_to_insert
+				if $cell_cnt_to_insert > 0;
+			for (my $rowspan = 1; $rowspan < $cell -> {rowspan}; $rowspan ++) {
+				$matrix -> [$row + $rowspan] -> [$col + rowspan] = $cell;
+			}
+		}
+	}
+
+	for (my $row = 1; $row < @$matrix; $row ++) {
+		for (my $col = 0; $col < @{$matrix -> [$row]}; $col ++) {
+			my $cell = $matrix -> [$row] -> [$col];
+
+
+			my $parent = $matrix -> [$row - 1] -> [$col];
+			unless ($cell -> {id} eq $parent -> {id}) {
+				$cell -> {parent} = $parent;
+			}
+
+		}
+	}
+
+	my $is_set_all_headers_width  = 1;
+	local $settings = exists $_QUERY -> {content} -> {columns}? $_QUERY -> {content} -> {columns} : {};
+
+	my $_adjust_cell_hash = sub {
+
+		my ($column) = @_;
+
+		$column -> {id} = $column -> {order} || $column -> {no_order} || $column -> {id},
 
 		$column -> {sortable} = $column -> {order} && (
 			$_REQUEST {order} eq $column -> {id}
 			|| !$_REQUEST {order} && $settings -> {$column -> {id}} -> {sort}
 		);
 
-		my $sort_direction = $settings -> {$column -> {id}} -> {desc}? "desc" : "asc";
+		my $sort_direction = $settings -> {$column -> {id}} -> {desc} ? "desc" : "asc";
 
 		my $width = $settings -> {$column -> {id}} -> {width} || undef;
 
-		push @$columns, {
-			id    => $column -> {id},
-			($width? (width => $width) : ()),
-			($column -> {sortable}? (sort => "1") : ()),
+		return {
+			id                                       => $column -> {id},
+			($width ? (width                         => $width) : ()),
+			($column -> {sortable}? (sort            => "1") : ()),
 			($column -> {sortable}? ($sort_direction => "1") : ()),
-		};
+			($column -> {group} ? (group             => $column -> {group}) : ()),
+		}
+
+	};
+
+
+	for (my $row = 0; $row < @$matrix - 1; $row ++) {
+		for (my $col = 0; $col < @{$matrix -> [$row]}; $col ++) {
+			my $cell = $matrix -> [$row] -> [$col];
+			foreach my $child (@{$matrix -> [$row + 1]}) {
+				if ($child -> {parent} -> {id} eq $cell -> {id} && !grep {$child -> {id} eq $_ -> {id}} @{$cell -> {group}}) {
+					push @{$cell -> {group}}, $_adjust_cell_hash -> ($child);
+					$is_set_all_headers_width = 0
+						unless $child -> {width};
+				}
+			}
+		}
 	}
 
-	my $is_set_all_headers_width  = !grep {!$_ -> {width}} @$columns;
+	foreach my $cell (@{$matrix -> [0]}) {
+		if (!grep {$cell -> {id} eq $_ -> {id}} @$columns) {
+			push @$columns, $_adjust_cell_hash -> ($cell);
+			$is_set_all_headers_width = 0
+				unless $cell -> {width};
+		}
+	}
+
 
 	my $table = {
 		id          => $options -> {id_table},
@@ -3024,13 +2852,15 @@ sub draw_super_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
 
-	$_REQUEST {__doctype_html5} = 1;
-	$_REQUEST {__super_table} = 1;
+	my $data_json = $_SKIN -> draw_super_table__only_table ($tr_callback, $list, $options);
 
-	if ($_REQUEST {__only_table}) {
-		$_REQUEST {__doctype_html5} = 1;
-		return draw_super_table__only_table ($_SKIN, $tr_callback, $list, $options);
-	}
+	return $data_json
+		if $_REQUEST {__only_table};
+
+	$_REQUEST {__script} .= <<EOJS;
+		window.tables_data = window.tables_data || {};
+		window.tables_data ['$options->{id_table}'] = $data_json;
+EOJS
 
 
 
@@ -3046,13 +2876,45 @@ sub draw_super_table {
 	my $attributes = dump_attributes ($options -> {attributes});
 	my $html = qq {<div $attributes></div>\n};
 
+	my %hidden = ();
+
+	$hidden {$_} = $_REQUEST {$_} foreach (
+		'__tree',
+		'__last_scrollable_table_row',
+		grep {/^[^_]/ or /^__get_ids_/ or $_ eq '__salt'} keys %_REQUEST
+	);
+
+	$hidden {$_} = $options -> {$_} foreach (
+		'type',
+		'action',
+	);
+
+	$hidden {__last_query_string} = $_REQUEST{__last_last_query_string};
+
+	my $hiddens_html;
+
+	while (my ($k, $v) = each %hidden) {
+
+		$hiddens_html .= "\n" . dump_tag (input => {
+
+			type  => 'hidden',
+			name  => $k,
+			value => $v,
+
+		}) if defined $v;
+
+	}
+
+	my $enctype = $data_json =~ /\btype\=[\'\"]?file\b/ ?
+		'enctype="multipart/form-data"' : '';
+
 	return <<EOH;
 
 		$$options{title}
 		$$options{path}
 		$$options{top_toolbar}
 
-		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible">
+		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible" $enctype>
 		<input type=hidden name="__suggest" value="" />
 		$hiddens_html
 		$html
@@ -3349,224 +3211,173 @@ sub draw_page {
 		id           => 'body',
 	};
 
-	if (!$_USER -> {id}) {
+	push @{$_REQUEST {__include_js}}, '_skins/Mint/jquery.blockUI'
+		if $preconf -> {core_blockui_on_submit} || $r -> headers_in -> {'User-Agent'} =~ /webkit/i;
 
-		$body_options -> {scroll} = 'no';
+	push @{$_REQUEST {__include_js}}, 'ken/js/kendo.all.min', 'ken/js/cultures/kendo.culture.ru-RU.min';
+	push @{$_REQUEST {__include_css}}, 'ken/styles/kendo.common.min', 'ken/styles/kendo.bootstrap.min';
 
-	}
-	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
+	1 or $body .= qq {
 
-		push @{$_REQUEST {__include_js}}, '_skins/Mint/jquery.blockUI'
-			if $preconf -> {core_blockui_on_submit} || $r -> headers_in -> {'User-Agent'} =~ /webkit/i;
+		<div style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:100; visibility:hidden; pointer-events: none; border: solid #888888 2px;' id="slider" onContextMenu="
+			var c = tableSlider.get_cell ();
+			if (!c) return;
+			var tr = c.parentNode;
+			if (!tr) return;
+			var h = tr.oncontextmenu;
+			if (!h) return;
+			return h(event);
+		"></div>
+		<div style='position:absolute; left:200px; top:300px; height:4px; width:4px; z-index:101; visibility:hidden; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
 
-		push @{$_REQUEST {__include_js}}, 'ken/js/kendo.ui.core.min', 'ken/js/cultures/kendo.culture.ru-RU.min';
-		push @{$_REQUEST {__include_css}}, 'ken/styles/kendo.common.min', 'ken/styles/kendo.bootstrap.min';
+	};
 
-		1 or $body .= qq {
+	1 or $_REQUEST {__script}  .= '; check_top_window (); ';
 
-			<div style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:100; visibility:hidden; pointer-events: none; border: solid #888888 2px;' id="slider" onContextMenu="
-				var c = tableSlider.get_cell ();
-				if (!c) return;
-				var tr = c.parentNode;
-				if (!tr) return;
-				var h = tr.oncontextmenu;
-				if (!h) return;
-				return h(event);
-			"></div>
-			<div style='position:absolute; left:200px; top:300px; height:4px; width:4px; z-index:101; visibility:hidden; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
+	1 or $_REQUEST {__on_load} .= "try {top.hideSubMenus(0); top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
 
-		};
+	if (is_ua_mobile ()) {
 
-		1 or $_REQUEST {__script}  .= '; check_top_window (); ';
+		# $_REQUEST {__on_load} .= q {
+		# 		function translate_event (e) {
+		# 			parent.document.getElementById ('_body_iframe').dispatchEvent(e);
+		# 		}
 
-		1 or $_REQUEST {__on_load} .= "try {top.hideSubMenus(0); top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
+		# 		if (window.name == '_body_iframe') {
+		# 			document.addEventListener("touchstart", translate_event);
+		# 			document.addEventListener("touchmove", translate_event);
+		# 			document.addEventListener("touchend", translate_event);
+		# 			document.addEventListener("touchcancel", translate_event);
+		# 		}
+		# }
 
-		if (is_ua_mobile ()) {
+	} else {
 
-			# $_REQUEST {__on_load} .= q {
-			# 		function translate_event (e) {
-			# 			parent.document.getElementById ('_body_iframe').dispatchEvent(e);
-			# 		}
+		1 or $_REQUEST {__on_load} .= q {
 
-			# 		if (window.name == '_body_iframe') {
-			# 			document.addEventListener("touchstart", translate_event);
-			# 			document.addEventListener("touchmove", translate_event);
-			# 			document.addEventListener("touchend", translate_event);
-			# 			document.addEventListener("touchcancel", translate_event);
-			# 		}
-			# }
+			if (0 && $.browser.msie && window.dialogArguments) {
 
-		} else {
+				$(top).on('resize', function () {
 
-			1 or $_REQUEST {__on_load} .= q {
+					$(top.document.getElementById ('__body_iframe')).width ($(top).width());
+					$(top.document.getElementById ('__body_iframe')).height ($(top).height());
 
-				if (0 && $.browser.msie && window.dialogArguments) {
-
-					$(top).on('resize', function () {
-
-						$(top.document.getElementById ('__body_iframe')).width ($(top).width());
-						$(top.document.getElementById ('__body_iframe')).height ($(top).height());
-
-						$(window).resize ();
-					});
-
-				}
-
-				$(window).resize (function() {
-
-					if (window.resizeTimer) clearTimeout (window.resizeTimer);
-
-					window.resizeTimer = setTimeout (checkTableContainers, 100);
-
+					$(window).resize ();
 				});
 
-				$(window).scroll (checkTableContainers);
-
-				$(window).resize ();
-
-				tableSlider.scrollCellToVisibleTop ();
-
 			}
+
+			$(window).resize (function() {
+
+				if (window.resizeTimer) clearTimeout (window.resizeTimer);
+
+				window.resizeTimer = setTimeout (checkTableContainers, 100);
+
+			});
+
+			$(window).scroll (checkTableContainers);
+
+			$(window).resize ();
+
+			tableSlider.scrollCellToVisibleTop ();
+
 		}
-
-		$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
-
-		$_REQUEST {__on_load} .= 'window.focus ();'                                                                 if ! $_REQUEST {__no_focus};
-
-		$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');";
-
-		$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " try {top.edit_mode = 1} catch (e) {};" : " try {top.edit_mode = 0} catch (e) {};"                 if ! $_REQUEST {select};
-
-		if ($preconf -> {core_blockui_on_submit}) {
-
-			$_REQUEST {__on_load} .= "\$('form').submit (function () {\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\"$_REQUEST{__static_url}/busy.gif\"> $i18n->{request_sent}</h2>'}); return true;});";
-
-			$_REQUEST {__script} .= <<'EOJS';
-function poll_invisibles () {
-	var has_loading_iframes;
-	$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
-	if (!has_loading_iframes) {
-		window.clearInterval(poll_invisibles);
-		$.unblockUI ();
-		is_interface_is_locked = false;
-		setCursor ();
 	}
+
+	$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
+
+	$_REQUEST {__on_load} .= 'window.focus ();'                                                                 if ! $_REQUEST {__no_focus};
+
+	$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');";
+
+	$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " try {top.edit_mode = 1} catch (e) {};" : " try {top.edit_mode = 0} catch (e) {};"                 if ! $_REQUEST {select};
+
+	if ($preconf -> {core_blockui_on_submit}) {
+
+		$_REQUEST {__on_load} .= "\$('form').submit (function () {\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\"$_REQUEST{__static_url}/busy.gif\"> $i18n->{request_sent}</h2>'}); return true;});";
+
+		$_REQUEST {__script} .= <<'EOJS';
+function poll_invisibles () {
+var has_loading_iframes;
+$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
+if (!has_loading_iframes) {
+	window.clearInterval(poll_invisibles);
+	$.unblockUI ();
+	is_interface_is_locked = false;
+	setCursor ();
+}
 }
 EOJS
 
-			$_REQUEST {__on_load} .= <<'EOJS';
+		$_REQUEST {__on_load} .= <<'EOJS';
 $('form[target^="invisible"]').submit (function () {
-	window.setInterval(poll_invisibles, 100);
+window.setInterval(poll_invisibles, 100);
 });
 EOJS
-		}
+	}
 
-		$_REQUEST {__on_load} .= <<'EOJS';
-			adjust_kendo_selects ();
+	$_REQUEST {__on_load} .= <<'EOJS';
+		adjust_kendo_selects ();
 
-			$('[data-type=datepicker]').kendoDatePicker();
-			$('[data-type=datetimepicker]').kendoDateTimePicker();
+		$('[data-type=datepicker]').kendoDatePicker();
+		$('[data-type=datetimepicker]').kendoDateTimePicker();
 
-			$('input[type=file]').each(function () {
-				$(this).kendoUpload({
-					multiple : $(this).attr('data-ken-multiple') == 'true'
-				});
+		$('input[type=file]').each(function () {
+			$(this).kendoUpload({
+				multiple : $(this).attr('data-ken-multiple') == 'true'
 			});
+		});
 EOJS
 
-		if ($_REQUEST {__im_delay}) {
+	if ($_REQUEST {__im_delay}) {
 
-			$_REQUEST {__js_var} -> {__im} = {
-				delay =>  $_REQUEST {__im_delay},
-				idx   =>  "/i/_mbox/$_USER->{id}.txt",
-				url   =>  "/?sid=$_REQUEST{sid}&type=_mbox&action=read",
-				timer =>  0,
-			};
-
-			$_REQUEST {__on_load} .= '; try {__im_check ()} catch (e) {} ;';
-
-		}
-
-		$_REQUEST {__on_mouseover}    .= "subsets_are_visible_ (0); try { window.parent.subsets_are_visible_ (0); } catch (xxx) {}";
-
-		$_REQUEST {__on_mousedown}    .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) activate_link (window.location.href + '&__dump=1', 'invisible');\n" if $preconf -> {core_show_dump};
-		$_REQUEST {__on_contextmenu}  .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) return blockEvent();\n" if $preconf -> {core_show_dump};
-
-		$_REQUEST {__on_keydown}      .= " lastKeyDownEvent = event; handle_basic_navigation_keys ();";
-		$_REQUEST {__on_keypress}     .= " if (!browser_is_msie && event.keyCode == 27) return false;";
-
-		foreach my $r (@{$page -> {scan2names}}) {
-			next if $r -> {off};
-			$r -> {data} .= '';
-			my $i = 2 * $r -> {alt} + $r -> {ctrl};
-			$_REQUEST {__on_load} .= "\nkb_hooks [$i] [$r->{code}] = [handle_hotkey_$r->{type}, ";
-			foreach (qw (ctrl alt off type code)) {delete $r -> {$_}}
-			$_REQUEST {__on_load} .=  $_JSON -> encode ($r);
-			$_REQUEST {__on_load} .= '];';
-		}
-
-		$_REQUEST {__on_keydown}      .= " if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
-
-		$_REQUEST {__on_help}          = " nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes'); blockEvent ();" if $_REQUEST {__help_url};
-
-		$_REQUEST {__on_beforeunload} .= " setCursor (window, 'wait'); try {top.setCursor (top, 'wait')} catch (e) {};";
-
-		$_REQUEST {__head_links}      .= "<META HTTP-EQUIV=Refresh CONTENT='$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1'>" if $_REQUEST {__meta_refresh};
-
-		$_REQUEST {__js_var} -> {__read_only}              = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
-
-		$_REQUEST {__js_var} -> {__last_last_query_string} = 0 + $_REQUEST{__last_query_string};
-
-		$body =~ /^\s*\<frameset/ism or $body = qq {
-
-			<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
-				<tr><td valign=top height=100%>$body</td></tr>
-			</table>
-
+		$_REQUEST {__js_var} -> {__im} = {
+			delay =>  $_REQUEST {__im_delay},
+			idx   =>  "/i/_mbox/$_USER->{id}.txt",
+			url   =>  "/?sid=$_REQUEST{sid}&type=_mbox&action=read",
+			timer =>  0,
 		};
 
-	}
-	else {
-
-		$body_options -> {scroll} = 'no';
-
-		delete $_REQUEST {__invisibles};
-
-		$_REQUEST {__on_load} = '';
-
-		$_REQUEST {__on_load}  .= "window.focus (); setInterval (UpdateClock, 500);"
-			if !$_REQUEST {__tree};
-
-		$_REQUEST {__on_load} .= "nope ('" . create_url (__subset => $_SUBSET -> {name}) . "', '_body_iframe');";
-
-		$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive} && $_REQUEST {sid};
-
-		if (is_ua_mobile ()) {
-			$body = <<EOH;
-				<div id="_outer_body_iframe" style="overflow: scroll; -webkit-overflow-scrolling:touch; width: 100%; height: 100%">
-					<iframe name='_body_iframe' id='_body_iframe' src="$_REQUEST{__static_url}/0.html" width=100% height=100% border=0 frameborder=0 marginheight=0 marginwidth=0 application=yes>
-					</iframe>
-				</div>
-EOH
-		} else {
-
-			my $height = user_agent () -> {msie} >= 10 ? '99%' : '100%';
-
-			$body = <<EOH;
-				<iframe name='_body_iframe' id='_body_iframe' src="$_REQUEST{__static_url}/0.html">
-				</iframe>
-EOH
-		}
-		$body = qq {
-
-			<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
-				<tr><td>$page->{auth_toolbar}</td></tr><tr><td>$$page{menu}</td></tr>
-				<tr><td valign=top height=100%>$body</td></tr>
-			</table>
-
-		};
+		$_REQUEST {__on_load} .= '; try {__im_check ()} catch (e) {} ;';
 
 	}
+
+	$_REQUEST {__on_mousedown}    .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) activate_link (window.location.href + '&__dump=1', 'invisible');\n" if $preconf -> {core_show_dump};
+	$_REQUEST {__on_contextmenu}  .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) return blockEvent();\n" if $preconf -> {core_show_dump};
+
+	$_REQUEST {__on_keydown}      .= " lastKeyDownEvent = event; handle_basic_navigation_keys ();";
+	$_REQUEST {__on_keypress}     .= " if (!browser_is_msie && event.keyCode == 27) return false;";
+
+	foreach my $r (@{$page -> {scan2names}}) {
+		next if $r -> {off};
+		$r -> {data} .= '';
+		my $i = 2 * $r -> {alt} + $r -> {ctrl};
+		$_REQUEST {__on_load} .= "\nkb_hooks [$i] [$r->{code}] = [handle_hotkey_$r->{type}, ";
+		foreach (qw (ctrl alt off type code)) {delete $r -> {$_}}
+		$_REQUEST {__on_load} .=  $_JSON -> encode ($r);
+		$_REQUEST {__on_load} .= '];';
+	}
+
+	$_REQUEST {__on_keydown}      .= " if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
+
+	$_REQUEST {__on_help}          = " nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes'); blockEvent ();" if $_REQUEST {__help_url};
+
+	$_REQUEST {__on_beforeunload} .= " setCursor (window, 'wait'); try {top.setCursor (top, 'wait')} catch (e) {};";
+
+	$_REQUEST {__head_links}      .= "<META HTTP-EQUIV=Refresh CONTENT='$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1'>" if $_REQUEST {__meta_refresh};
+
+	$_REQUEST {__js_var} -> {__read_only}              = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
+
+	$_REQUEST {__js_var} -> {__last_last_query_string} = 0 + $_REQUEST{__last_query_string};
+
+	$body =~ /^\s*\<frameset/ism or $body = qq {
+
+		<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
+			<tr><td valign=top height=100%>$body</td></tr>
+		</table>
+
+	};
+
 
 	$_REQUEST {__js_var} -> {menu_md5}                 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
 
@@ -3632,7 +3443,7 @@ EOH
 		<title>$$i18n{_page_title}</title>
 
 		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 
 		<link href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet" />
 		<link href="$_REQUEST{__static_url}/jquery-ui-1.8.21.custom.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet" />
@@ -3646,8 +3457,10 @@ EOH
 			td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1; background-color: #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
 		</style>
 
-		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}">
-		</script>
+
+		<script src="$_REQUEST{__static_url}/jquery-1.11.1.min.js?$_REQUEST{__static_salt}"></script>
+		<script src="$_REQUEST{__static_url}/jquery-migrate-1.2.1.min.js?$_REQUEST{__static_salt}"></script>
+		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}"></script>
 		<script src="$_REQUEST{__static_url}/jquery-ui-1.8.21.custom.min.js?$_REQUEST{__static_salt}"></script>
 		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js?$_REQUEST{__static_salt}"></script>
 
@@ -3659,18 +3472,6 @@ EOH
 
 		$body  = dump_tag (body => $body_options, $body);
 
-	}
-
-#	my $doctype = qq{<html xmlns:v="urn:schemas-microsoft-com:vml">};
-
-	if ($_REQUEST {__doctype_html5}) {
-
-#		$doctype = qq{<!DOCTYPE html><html class="no-js"><!--<![endif]-->};
-
-		$_REQUEST{__head_links} = <<EOS . $_REQUEST{__head_links};
-<meta charset="utf-8">
-EOS
-		$_REQUEST {__charset} = 'utf-8';
 	}
 
 	return qq {<!DOCTYPE html><head>$_REQUEST{__head_links}</head>$body</html>};
@@ -3693,7 +3494,7 @@ sub load_ui_elements {
 
 	$table_url .= '&' . $keep_params . '&__no_json=1';
 
-	$_REQUEST {__on_load} .= <<EOJS;
+	$_REQUEST {__on_load} = <<EOJS . $_REQUEST {__on_load};
 		\$('div.eludia-table-container').each(function() {
 
 			var that = this;
@@ -3702,6 +3503,7 @@ sub load_ui_elements {
 
 			new window.SuperTable({
 				tableUrl: table_url,
+				initial_data : tables_data [this.id],
 				el: \$(that),
 				containerRender : function(table) {
 
@@ -3994,202 +3796,330 @@ sub draw_tree {
 
 	my ($_SKIN, $node_callback, $list, $options) = @_;
 
-	my $menus = '';
-	my @nodes = ();
+	$options -> {name} ||= '_content_iframe';
+	$options -> {active} ||= 0;
 
-	my ($root_id, $root_url, $selected_node_url, $selected_code);
+	my $content_div_style = is_ua_mobile ()? "-webkit-overflow-scrolling:touch; overflow: scroll;"
+		: "overflow: hidden; ";
 
-	our %idx = ();
-	our %lch = ();
-
-	foreach my $i (@$list) {
-
-		my $node = $i -> {__node};
-
-		push @nodes, $node;
-
-		($root_id, $root_url) = ($node -> {id}, $node -> {url}) unless $root_id;
-
-		if ($node -> {id} == $options -> {selected_node}) {
-			$selected_node_url = $options -> {url_base} . $node -> {url};
-			$selected_code = 'win.d.selectedFound = true; win.d.selectedNode = ' . (@nodes - 1);
-
-			&{$_PACKAGE . 'set_cookie'} (
-				-name	=> "cs_$_REQUEST{type}",
-				-value	=> $node -> {id},
-			);
-		}
-
-		$idx {$node -> {id}} = $node;
-		$lch {$node -> {pid}} = $node if $node -> {pid};
-		$menus .= $i -> {__menu};
-
-	}
-
-	unless ($selected_node_url) {
-		$options -> {selected_node} = $root_id;
-		$selected_node_url = $options -> {url_base} . $root_url;
-	}
-
-	while (my ($k, $v) = each %lch) {
-		$idx {$k} -> {_hc} = 1;
-		$v -> {_ls} = 1;
-	}
-
-	my $nodes = $_JSON -> encode (\@nodes);
-
-	if ($options -> {active} && $_REQUEST {__parent}) {
-
-		my $m = $_JSON -> encode ([$menus]);
-
-		&{$_PACKAGE . 'set_cookie'} (
-			-name	=> "co_$_REQUEST{type}",
-			-value	=> ($_COOKIE {"co_$_REQUEST{type}"} ? $_COOKIE {"co_$_REQUEST{type}"} . '.' : '' ) . $_REQUEST {__parent},
-		);
-
-		return out_html ({}, <<EOH);
-<html>
-	<head>
-		<script>
-
-			function load () {
-
-				var new_nodes = $nodes;
-				for (i = 0; i < new_nodes.length; i++) {
-					var node = new_nodes [i];
-					if (node.title) continue;
-					node.title = node.label;
-				}
-				var m = $m;
-				var f = window.parent.parent.document.getElementById ('__tree_iframe');
-				var d = f.contentWindow.d;
-				var old_nodes = d.aNodes;
-				var n = -1;
-
-// prevent reload content frame
-				d.selectedFound = true;
-				var selected_node = d.selectedNode;
-				old_nodes [selected_node]._is = false;
-
-				for (i = 0; i < old_nodes.length; i ++) {
-					var cn = old_nodes [i];
-					if (cn.id != $_REQUEST{__parent}) continue;
-					n = i;
-					cn._hac += new_nodes.length;
-					cn._io = true;
-					break;
-				};
-
-				var k = 0;
-				var nodes = [];
-
-				for (i = 0;     i <= n;               i ++) nodes [k++] = old_nodes [i];
-				for (i = 0;     i < new_nodes.length; i ++) nodes [k++] = new_nodes [i];
-				for (i = n + 1; i < old_nodes.length; i ++) nodes [k++] = old_nodes [i];
-
-				d.aNodes = nodes;
-
-				f.contentWindow.document.getElementById ('dtree_td').innerHTML = d.toString ();
-				f.contentWindow.document.getElementById ('dtree_menus').innerHTML += m [0];
-				f.contentWindow.document.body.style.cursor = 'default';
-				d.selectedNode = selected_node <= n ? selected_node : selected_node + new_nodes.length;
-				d.aNodes [d.selectedNode]._is = true;
-
-				var eNew = f.contentWindow.document.getElementById("sd" + d.selectedNode);
-				eNew.className = "nodeSel";
-			}
-
-		</script>
-	</head>
-	<body onLoad="load ()"></body>
-</html>
-EOH
-
-	}
-
-	$menus =~ s{[\n\r]+}{ }gsm;
-	$menus =~ s/\"/\\"/gsm;  #"
-
-	$options -> {active} += 0;
-	$options -> {name} ||= '_content_' . int (rand (10000000000)) . '_iframe';
-	$_REQUEST {__tree_content_iframe} = $options -> {name};
-
-	if ($_COOKIE {"co_$_REQUEST{type}"}) {
-
-		&{$_PACKAGE . 'set_cookie_for_root'} ("co_$_REQUEST{type}" => $_COOKIE {"co_$_REQUEST{type}"});
-
-	}
-
-	$_REQUEST {__only_tree_frameset} = 1;
-
-	$_REQUEST {__script} .= <<EOH;
-	\$(window).load (function () {
-		var ifr = document.getElementById ('__tree_iframe');
-		if (ifr == null) return;
-		var win = ifr.contentWindow;
-		win.d = new win.dTree ('d');
-		win.d._url_base = '$options->{url_base}';
-		win.d._cookie_name = '$_REQUEST{type}';
-		var c = win.d.config;
-		c.iconPath = '$_REQUEST{__static_url}/tree_';
-		c.target = '$options->{name}';
-		c.useStatusText = true;
-		c.useCookies = true;
-		win.d.icon.node = 'folderopen.gif';
-
-		var nodes = $nodes;
-
-		for (i = 0; i < nodes.length; i++) {
-			var node = nodes [i];
-			if (node.title) continue;
-			node.title = node.label;
-		}
-
-		win.d.aNodes = nodes;
-
-		win.d._active = $options->{active};
-		win.d._href = '$options->{href}';
-		$selected_code
-		var styleNode = win.document.createElement("STYLE");
-		styleNode.type = "text/css";
-		win.document.body.appendChild(styleNode);
-		var sheet = win.document.styleSheets[0];
-		if (sheet.addRule) {
-			sheet.addRule ('td.vert-menu', "background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;");
-		} else {
-			sheet.insertRule ("td.vert-menu {background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}", 0);
-		}
-
-		win.document.body.innerHTML = "<table class=dtree width=100% celspacing=0 cellpadding=0 border=0><tr><td id='dtree_td' valign=top>" + win.d + "</td></tr></table><div id='dtree_menus'>$menus</div>";
-@{[ $options->{selected_node} ? <<EOO : '' ]}
-		if (win.d.selectedNode == null || win.d.selectedFound) {
-			win.d.openTo ($options->{selected_node}, true);
-		}
-EOO
-	})
-EOH
-
-
-	my $frameset = qq {<frameset cols="$options->{width},*">
-		<frame src="$ENV{SCRIPT_URI}/i/_skins/Mint/0.html" name="_tree_iframe" id="__tree_iframe">
-		</frame>
-		<frame src="${\($selected_node_url ? $selected_node_url : "$_REQUEST{__static_url}/0.html")}" name="$options->{name}" id="__content_iframe">
-		</frame>
-	</frameset>};
+	my $html = qq {
+		<div id="splitted_tree_window" style="height:100%">
+			<div id="splitted_tree_window_left">
+			</div>
+			<div id="splitted_tree_window_right" style="$content_div_style" data-name="$$options{name}">
+			</div>
+		</div>
+	};
 
 	if ($options -> {top}) {
 
-		$frameset = <<EOH;
-			<frameset rows="$options->{top}->{height},*">
-				<frame src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" noresize>
-				</frame>
-				$frameset
-			</frameset>
-EOH
+		$html = qq {
+
+			<div id="outer_tree_window" style="height:100%">
+				<div id="outer_tree_window_top" style="height:$options->{top}->{height}px;">
+					<iframe width=100% height=100% src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" application="yes" noresize scrolling=no>
+					</iframe>
+				</div>
+				<div id="outer_tree_window_bottom" style="height:100%">
+					$html
+				</div>
+			</div>
+
+		};
 
 	}
 
-	return $frameset;
+	my $js = qq {
+
+		\$("#splitted_tree_window").kendoSplitter ({
+			panes: [
+				{ collapsible: false, size: "220px" },
+				{ collapsible: false }
+			]
+		});
+
+		var expanded_nodes = {};
+
+		var stored_expanded_nodes = getCookie("co_$_REQUEST{type}");
+		if (stored_expanded_nodes) {
+			stored_expanded_nodes = stored_expanded_nodes.split(".");
+			for (var i in stored_expanded_nodes) {
+				expanded_nodes[stored_expanded_nodes[i]] = true;
+			}
+		}
+		\$(window).on('resize', function () {
+			var ontouchcontentheight = \$(window.parent.document).find('iframe').height() ? \$(window.parent.document).find('iframe').height() : \$(window).height();
+			\$('#touch_welt').css({'height': ontouchcontentheight});
+			\$('#__content_iframe').css('height', ontouchcontentheight);
+			setTimeout(function () {
+				var stw = \$("#splitted_tree_window").data("kendoSplitter");
+				stw.size('#splitted_tree_window_left', "220px" );
+			}, 500)
+		})
+
+	};
+
+	if (!$options -> {active}) {
+
+		my %p2n = ();
+		my %i2n = ();
+
+		foreach my $i (@$list) {
+
+			my $n = $i -> {__node};
+
+			my $nn = {
+				id     => $i -> {id},
+				parent => $i -> {parent},
+				text   => $n -> {name},
+				href   => $options -> {url_base} . $n -> {url},
+				menu   => $i -> {__menu},
+				clipboard_text => $i -> {clipboard_text},
+			};
+
+			$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
+
+			push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
+
+			$i2n {$i -> {id}} = $nn;
+
+		}
+
+		my $id = $options -> {selected_node};
+
+		while (my $nn = $i2n {$id}) {
+			$nn -> {expanded} = \1;
+			$id = $nn -> {parent};
+		}
+
+		foreach my $nn (values %i2n) {
+
+			my $items = $p2n {$nn -> {id}} or next;
+
+			$nn -> {items} = $items;
+
+		}
+
+		my $data = $_JSON -> encode ($p2n {0} ||= []);
+
+		$js .= qq {
+
+			var dataSource = new kendo.data.HierarchicalDataSource({
+			    data: $data
+			});
+
+		};
+
+	} elsif ($options -> {active} == 2) {
+
+		my @params = @{$options -> {keep_params}} || keys %_REQUEST;
+		my $keep_params = join '&', map {"$_=$_REQUEST{$_}"} grep {$_ !~ /^__/i} @params;
+
+		$js .= qq {
+
+			var dataSource = new kendo.data.HierarchicalDataSource({
+				transport : {
+
+					read: {
+						url      : "/?sid=$_REQUEST{sid}&type=$_REQUEST{type}&__ajax_load=1&$keep_params",
+						dataType : "json",
+						cache    : false,
+					}
+				},
+
+				schema: {
+					model: {
+						id          : '__parent',
+						hasChildren : 'cnt_children'
+					},
+
+					data : treeview_convert_plain_response,
+				}
+			});
+		};
+	}
+
+	$options -> {selected_node} ||= $_REQUEST {selected_node} || 1;
+
+	$js .= qq {
+
+		function treeview_onexpand(e) {
+
+			var treeview = e.sender;
+
+			var id_expanded_node = treeview.dataItem(e.node).id;
+			expanded_nodes[id_expanded_node] = true;
+			setCookie ("co_$_REQUEST{type}", Object.keys(expanded_nodes).join('.'));
+
+			\$( document ).on( 'contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu );
+		}
+
+		function treeview_save_subtree_collapsed(node, treeview) {
+
+			delete expanded_nodes[treeview.dataItem(node).id];
+			\$(node).children("ul").children("li").each(function(index, node) {
+				treeview_save_subtree_collapsed(node, treeview);
+			});
+		}
+
+		function treeview_oncollapse(e) {
+
+			var treeview = e.sender;
+
+			var id_collapsed_node = treeview.dataItem(e.node).id;
+			delete expanded_nodes[id_collapsed_node];
+
+			treeview_save_subtree_collapsed(e.node, treeview);
+
+			setCookie ("co_$_REQUEST{type}", Object.keys(expanded_nodes).join('.'));
+		}
+		function treeview_get_node_uid_by_id(node, id) {
+			if (node.id == id) {
+				return node.uid;
+			}
+			if (node.hasChildren) {
+
+				var childs = node.children.data();
+				var res = 0;
+				for (var i = 0; i < childs.length; i++) {
+					res = treeview_get_node_uid_by_id(childs[i], id);
+					if (res) {return res;};
+				}
+			}
+			return 0;
+		}
+
+		function treeview_select_node(e) {
+			 var selected_node = "$$options{selected_node}";
+				if (selected_node) {
+					var tree =\$('#splitted_tree_window_left');
+						var treeview = tree.data('kendoTreeView');
+						var root = treeview.dataSource.data();
+						var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node);
+						if(selected_node_uid){
+							var select_node = treeview.findByUid(selected_node_uid);
+							treeview.select(select_node);
+							treeview_onselect_node (select_node);
+							treeview.unbind("dataBound", treeview_select_node);
+						}
+				}
+		}
+
+		function treeview_databound(e) {
+
+			if (e.node) { return; };
+
+			var treeview = e.sender;
+
+			var root = \$(".k-item:first");
+			treeview.select(root);
+			treeview.trigger('select', {node: root});
+		}
+
+		\$("#splitted_tree_window_left").data("active", $$options{active}).kendoTreeView({
+			dataSource : dataSource,
+			expand     : treeview_onexpand,
+			collapse   : treeview_oncollapse,
+			dataBound  : treeview_databound,
+			select: function (e) {
+				treeview_onselect_node (e.node);
+			}
+
+		});
+		\$("#splitted_tree_window_left").data("kendoTreeView").bind("dataBound", treeview_select_node);
+
+	};
+
+		$js .= qq {
+
+			\$( document ).on( 'contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu );
+
+			function treeview_oncontextmenu(e) {
+
+				e.stopPropagation ();
+
+
+				var uid = \$(this).data('uid');
+
+				var tree_div = \$("#splitted_tree_window_left");
+				var treeview = tree_div.data ("kendoTreeView");
+
+				var node = treeview.findByUid (uid);
+				treeview.select (node);
+				treeview_onselect_node (node);
+
+				var data = treeview.dataSource.getByUid(uid);
+				if (!data) return false;
+				var menu = data.menu;
+				if (!menu) return false;
+
+				var a = [];
+				for (i = 0; i < menu.length; i ++) a [i] = menu [i];
+				var menuDiv = \$('<ul class="menuFonDark" style="position:absolute;z-index:200" />').appendTo (tree_div);
+
+				menuDiv.kendoMenu ({
+					dataSource: a,
+					orientation: 'vertical',
+					select: function (e) {
+						menuDiv.remove ();
+					}
+				});
+
+				var left = e.pageX;
+				if (e.pageX + menuDiv.width () > tree_div.width ())
+					left = tree_div.width () - menuDiv.width () - 10;
+
+				if (left < 0)
+					left = 0;
+
+				var top = e.pageY;
+				if (e.pageY + menuDiv.height () > tree_div.height ())
+					top = tree_div.height () - menuDiv.height () - 10;
+
+				if (top < 0)
+					top = 0;
+
+				menuDiv.css ({
+					top:  tree_div.scrollTop() + top,
+					left: tree_div.scrollLeft() + left
+				});
+
+				\$('a', menuDiv).each (function (i, element) {
+					var href = \$(element).attr('href');
+					var url = a[i].url;
+					if (a[i].clipboard_text) {
+						eludia_copy_clipboard (a[i].clipboard_text, element);
+						a[i].target = 'invisible';
+					} else if ( url && /^javascript:/.test(href)){
+						\$(element).attr('href', url);
+					}
+					var target = a[i].target || '$options->{name}';
+					\$(element).attr ('target', target);
+				});
+
+				var kill = window.setTimeout (function () {
+					menuDiv.remove ()
+				}, 3000);
+
+				menuDiv.hover (
+					function () {
+						window.clearTimeout (kill)
+					},
+					function () {
+						window.setTimeout (function () {
+							menuDiv.remove ()
+						}, 1000);
+					}
+				);
+
+				return false;
+
+			}
+
+		};
+
+	$html . "<script>\$(document).ready (function () {$js})</script>";
+
 }
 
 ################################################################################
@@ -4198,18 +4128,15 @@ sub draw_node {
 
 	my ($_SKIN, $options, $i) = @_;
 
-	$options -> {label} =~ s{\"}{\&quot;}gsm; #"
-	$options -> {label} =~ s{\'}{\&rsquo;}gsm; #"
-
 	my $node = {
 		id      => $options -> {id},
 		pid     => $options -> {parent},
-		name    => $options -> {label},
-		url     => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
+		name => $options -> {label},
+		url  => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
 		title   => $options -> {title} || $options -> {label},
 	};
 
-	map {$node -> {$_} = $options -> {$_} if $options -> {$_}} qw (target icon iconOpen is_checkbox is_radio);
+	map {$node -> {$_} = $options -> {$_} if $options -> {$_}} qw (target icon iconOpen is_checkbox is_radio clipboard_text);
 
 	if ($options -> {title} && $options -> {title} ne $options -> {label}) {
 		$node -> {title} = $options -> {title};
@@ -4280,66 +4207,11 @@ sub draw_suggest_page {
 
 	my ($_SKIN, $data) = @_;
 
-	my $a = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}, $_ -> {_confirm}]} @$data]);
+	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
 
-	$size = 10 if $size > 10;
+	my $a = $_JSON -> encode ([map {{id => $_ -> {id}, label => $_ -> {label}}} @$data]);
 
-	return <<EOH;
-<html>
-	<head>
-		<script>
-			function r () {
-
-				var q = {};
-
-				var a = $a;
-
-				var s = parent.document.getElementById ('_$_REQUEST{__suggest}__suggest');
-				if (!s) {
-					s = parent.document.getElementById ('$_REQUEST{__suggest}__suggest');
-					var t = parent.document.getElementById ('$_REQUEST{__suggest}');
-					try {parent.tableSlider.cell_off ()} catch (e) {}
-					parent.\$(s).css ({
-						top : 0,
-						left : 0,
-						width : t.offsetWidth,
-						position : 'relative'
-					});
-				} else {
-					var t = s.form.elements ['_$_REQUEST{__suggest}'];
-					var o = parent.\$(t).offset (parent.\$(parent.document.body));
-
-					parent.\$(s).css ({
-						top   : o.top + 18,
-						width : t.offsetWidth
-					});
-				}
-
-				s.options.length = 0;
-				for (var i = 0; i < a.length; i++) {
-					var o = a [i];
-					s.options [i] = new Option (o [1], o [0]);
-					if (o [2]) q [o [0]] = o [2];
-				}
-
-				if (a.length > 0) {
-					s.size = a.length > 1 ? a.length : 2;
-					s.style.display = 'block';
-					parent.suggest_is_visible = 1;
-				}
-				else {
-					s.style.display = 'none';
-					parent.suggest_is_visible = 0;
-				}
-
-				parent.questions_for_suggest ['_$_REQUEST{__suggest}__suggest'] = q;
-
-			}
-		</script>
-	</head>
-	<body onLoad="r()"></body>
-</html>
-EOH
+	return $a;
 
 }
 
@@ -4352,6 +4224,24 @@ sub draw_form_field_article {
 	$field -> {value} =~ s{\n}{<br>}gsm;
 
 	return qq{<table width=95% align=center cellpadding=10><tr minheight=200><td>$field->{value}</td></tr></table>};
+
+}
+
+################################################################################
+
+sub draw_page__only_field {
+
+	my ($_SKIN, $page) = @_;
+
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+
+	$_REQUEST {__on_load} .= q {;
+
+		window.parent.adjust_kendo_selects();
+
+	};
+
+	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="$_REQUEST{__on_load}"></body><html>};
 
 }
 
