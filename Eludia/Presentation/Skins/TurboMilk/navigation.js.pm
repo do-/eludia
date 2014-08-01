@@ -4234,7 +4234,7 @@ function toggle_field (name, is_visible, is_clear_field) {
 
 	is_visible = is_visible > 0;
 
-	var field = $('[name=_' + name + ']');
+	var field = $('[name=_' + name + ']' + ',#input_' + name);
 	var td_field = field.closest('td');
 
 	if (td_field.is(":visible") === is_visible) {
@@ -4372,3 +4372,21 @@ if (!Array.prototype.pop) {
 	}
 
 };
+
+function eludia_is_flash_installed () {
+
+	if (typeof navigator.plugins == 'undefined' || navigator.plugins.length == 0) {
+		try {
+			return !!(new ActiveXObject('ShockwaveFlash.ShockwaveFlash'));
+		} catch (e) {
+			return false;
+		}
+	}
+
+	return navigator.plugins['Shockwave Flash'];
+}
+
+function eludia_copy_clipboard (text, element) {
+
+	window.prompt(top.i18n.copy_clipboard, text);
+}

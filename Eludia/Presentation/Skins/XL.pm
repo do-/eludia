@@ -322,6 +322,12 @@ sub draw_toolbar_button {
 
 ################################################################################
 
+sub draw_toolbar_button_vert_menu {
+	my ($_SKIN, $options) = @_;
+	return '';
+}
+################################################################################
+
 sub draw_toolbar_input_select {
 	my ($_SKIN, $options) = @_;	
 	return '';	

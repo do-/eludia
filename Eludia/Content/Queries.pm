@@ -40,7 +40,11 @@ sub setup_page_content {
 
 	require_both '__queries';
 
+	$_REQUEST {__allow_check___query} = 1;
+
 	check___query ();
+
+	$_REQUEST {__allow_check___query} = 0;
 
 	$_REQUEST {type} = $page -> {type} = '__queries';
 	
@@ -338,7 +342,12 @@ sub do_update___queries {
 		$key =~ /^_(.+)_ord$/ or next;
 		
 		my $order = $1;
-		
+
+		my $mandatory_field_label = $_REQUEST {"_${order}_mandatory"};
+
+		!$mandatory_field_label or $_REQUEST {"_${order}_ord"}
+			or croak "#_${order}_ord#:Колонка \"$mandatory_field_label\" обязательна";
+
 		$content -> {columns} -> {$order} = {
 			ord  => $_REQUEST {"_${order}_ord"},
 			sort => $_REQUEST {"_${order}_sort"},
@@ -550,6 +559,12 @@ sub draw_item_of___queries {
 							empty => 'возрастание',
 							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {desc},
 							off   => $o -> {no_column} || $o -> {no_order},
+						},
+						{
+							name  => $o -> {order} . '_mandatory',
+							type  => 'hidden',
+							value => $o -> {title} || $o -> {label},
+							off   => $o -> {no_column} || $o -> {no_order} || !$o -> {mandatory},
 						},
 						{
 							type  => 'static',

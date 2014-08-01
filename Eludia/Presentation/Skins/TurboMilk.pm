@@ -796,8 +796,9 @@ sub draw_form_field_datetime {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$options -> {name} = '_' . $options -> {name};
+	$options -> {name}      = '_' . $options -> {name};
 	$options -> {onKeyDown} ="tabOnEnter()";
+	$options -> {onClose}   = "function (cal) { cal.hide (); $$options{onClose}; }";
 
 	return $_SKIN -> _draw_input_datetime ($options);
 
@@ -2039,16 +2040,18 @@ sub draw_toolbar_input_select {
 
 		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
-		if ($options -> {no_confirm}) {
+		$options -> {no_confirm} += 0;
 
-			$options -> {onChange} .= <<EOJS;
+		$options -> {onChange} = <<EOJS . $options -> {onChange} . '}';
 
-				if (this.options[this.selectedIndex].value == -1) {
+			if (this.options[this.selectedIndex].value == -1) {
 
-					var dialog_width = $options->{other}->{width};
-					var dialog_height = $options->{other}->{height};
+				if ($$options{no_confirm} || window.confirm ('$$i18n{confirm_open_vocabulary}')) {
 
 					try {
+
+						var dialog_width = $options->{other}->{width};
+						var dialog_height = $options->{other}->{height};
 
 						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
 
@@ -2059,52 +2062,21 @@ sub draw_toolbar_input_select {
 							submit ();
 						} else {
 							this.selectedIndex = 0;
+							submit ();
 						}
 					} catch (e) {
-							this.selectedIndex = 0;
-					}
-
-				} else {
-					submit ();
-				}
-EOJS
-		} else {
-
-			$options -> {onChange} .= <<EOJS;
-
-				if (this.options[this.selectedIndex].value == -1) {
-
-					if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-
-						try {
-
-							var dialog_width = $options->{other}->{width};
-							var dialog_height = $options->{other}->{height};
-
-							var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-
-							focus ();
-
-							if (result.result == 'ok') {
-								setSelectOption (this, result.id, result.label);
-	  						submit ();
-							} else {
-								this.selectedIndex = 0;
-							}
-						} catch (e) {
-							this.selectedIndex = 0;
-						}
-
-					} else {
-
 						this.selectedIndex = 0;
-
+						submit ();
 					}
+
 				} else {
+
+					this.selectedIndex = 0;
 					submit ();
+
 				}
+			} else {
 EOJS
-		}
 	}
 
 	$options -> {attributes} ||= {};
@@ -2229,7 +2201,7 @@ sub draw_toolbar_input_datetime {
 	my ($_SKIN, $options) = @_;
 
 	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
-	$options -> {onKeyPress} = "if (window.event.keyCode == 13) {this.form.submit()}";
+	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {this.form.submit()}";
 
 	my $html = '<td class="toolbar" nowrap>';
 
@@ -2389,11 +2361,13 @@ EOH
 EOH
 	}
 
+	my $title = $options -> {title} ? "title=\"$options->{title}\"" : '';
+
 	$html .= <<EOH;
 				<tr>
 					<td width=6><img src="$_REQUEST{__static_url}/btn_l.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
 					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}"><img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=1 align=absmiddle>${nbsp}</a></td>
-					<td background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="absmiddle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}">$$options{label}</a>${nbsp}${nbsp}</td>
+					<td background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="absmiddle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}" $title>$$options{label}</a>${nbsp}${nbsp}</td>
 					<td width=6><img src="$_REQUEST{__static_url}/btn_r.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
 				</tr>
 			</table>
@@ -2592,6 +2566,11 @@ EOH
 EOH
 		}
 		else {
+
+			if ($type -> {clipboard_text}) {
+
+				$type -> {onclick} = "eludia_copy_clipboard ('$$type{clipboard_text}')";
+			}
 
 			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
 
@@ -3561,6 +3540,8 @@ EOH
 		};
 
 	}
+
+	return $_JSON -> encode ({html => $body}) if ($_REQUEST {__only_page});
 
 	$_REQUEST {__js_var} -> {menu_md5}                 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
 

@@ -27,7 +27,7 @@ sub draw_datetime_cell {
 
 	$data -> {attributes} -> {id} ||= 'input' . $data -> {name};
 
-	$data -> {attributes} -> {class} ||= $data -> {mandatory} ? 'form-mandatory-inputs' : 'form-active-inputs';
+	$data -> {attributes} -> {class} ||= 'row-cell';
 
 	$data -> {attributes} -> {value} ||= $data -> {label};
 
