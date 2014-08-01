@@ -2660,6 +2660,10 @@ sub draw_text_cell {
 
 	}
 
+	if ($data -> {border}) {
+		$data -> {attributes} -> {style} .= " border: 2px solid $$data{border}";
+	};
+
 	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
 
 	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor;
@@ -4014,6 +4018,7 @@ EOH
 
 	$options -> {active} += 0;
 	$options -> {name} ||= '_content_iframe';
+	my $use_cookies = $options -> {no_use_cookies} ? 'false' : 'true';
 
 	if ($_COOKIE {"co_$_REQUEST{type}"}) {
 
@@ -4035,7 +4040,7 @@ EOH
 		c.iconPath = '$_REQUEST{__static_url}/tree_';
 		c.target = '$options->{name}';
 		c.useStatusText = true;
-		c.useCookies = true;
+		c.useCookies = $use_cookies;
 		win.d.icon.node = 'folderopen.gif';
 
 		var nodes = $nodes;

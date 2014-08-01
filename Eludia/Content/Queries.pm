@@ -345,8 +345,10 @@ sub do_update___queries {
 
 		my $mandatory_field_label = $_REQUEST {"_${order}_mandatory"};
 
-		!$mandatory_field_label or $_REQUEST {"_${order}_ord"}
-			or croak "#_${order}_ord#:Колонка \"$mandatory_field_label\" обязательна";
+		if (!exists($_REQUEST{"_${order}_parent"}) || $_REQUEST{$_REQUEST {"_${order}_parent"}} > 0) {
+			!$mandatory_field_label or $_REQUEST {"_${order}_ord"}
+				or croak "#_${order}_ord#:Колонка \"$mandatory_field_label\" обязательна";
+		};
 
 		$content -> {columns} -> {$order} = {
 			ord  => $_REQUEST {"_${order}_ord"},
@@ -565,6 +567,12 @@ sub draw_item_of___queries {
 							type  => 'hidden',
 							value => $o -> {title} || $o -> {label},
 							off   => $o -> {no_column} || $o -> {no_order} || !$o -> {mandatory},
+						},
+						{
+							name  => $o -> {order} . '_parent',
+							type  => 'hidden',
+							value => "_$o->{parent}->{order}_ord",
+							off   => $o -> {no_column} || $o -> {no_order} || !$o -> {mandatory} || !$o->{parent}->{order},
 						},
 						{
 							type  => 'static',

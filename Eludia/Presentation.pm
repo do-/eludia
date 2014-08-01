@@ -1639,6 +1639,17 @@ sub draw_cells {
 
 	my @cells = order_cells (@{$_[0]});
 
+	if ($_REQUEST {__multi_select_checkbox} == 1) {
+		unshift @cells, {
+			type       => 'checkbox',
+			name       => "_id_$$i{id}",
+			attributes => {
+				id    => $i -> {id},
+				class => 'id_checkbox row-cell',
+			},
+		};
+	}
+
 	$options -> {target} ||= '_self';
 
 	foreach my $cell (@cells) {
@@ -2165,7 +2176,12 @@ sub draw_table {
 
 	my $__edit_query = 0;
 	foreach my $top_toolbar_field (@{$options -> {top_toolbar}}) {
-		$__edit_query = 1 if (ref $top_toolbar_field eq HASH && exists $top_toolbar_field -> {href} && (ref $top_toolbar_field -> {href} eq HASH && $top_toolbar_field -> {href} -> {__edit_query} == 1 || $top_toolbar_field -> {href} =~ /\b__edit_query\b/));
+		$__edit_query = 1 if ref $top_toolbar_field eq HASH
+			&& exists $top_toolbar_field -> {href}
+			&& (
+				ref $top_toolbar_field -> {href} eq HASH && $top_toolbar_field -> {href} -> {__edit_query} == 1
+				|| $top_toolbar_field -> {href} =~ /\b__edit_query\b/
+			);
 	}
 
 	$options -> {no_order} = !$__edit_query && is_not_possible_order ($headers) unless (exists $options -> {no_order});
@@ -2218,7 +2234,8 @@ sub draw_table {
 							$p = $p -> {parent};
 						}
 					} else {
-						$h -> {ord} = ($h -> {parent} -> {ord}) * 1000 + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
+						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord})
+							: ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} * 1000);
 					}
 				}
 
@@ -2268,6 +2285,46 @@ sub draw_table {
 
 	}
 
+	if ($_REQUEST {multi_select}
+		&& ($preconf -> {core_multi_select_checkbox} || $options -> {multi_select_checkbox})
+		&& !$options -> {no_multi_select_checkbox}
+		&& !$_REQUEST {__multi_select_checkbox}
+	) {
+		# В режиме множественного выбора добавляем кнопку Выбрать
+		my $toolbar_options = shift @{$options -> {top_toolbar}};
+		unshift @{$options -> {top_toolbar}}, {
+			icon    => 'choose',
+			label   => 'Выбрать',
+			href    => "javascript: set_choose_ids()",
+		};
+		unshift @{$options -> {top_toolbar}}, $toolbar_options;
+
+		my $href = {href => {ids => undef, add_id => undef}};
+		check_href ($href);
+		$_REQUEST {ids} ||= '-1';
+
+		$_REQUEST {__script} .= <<EOS;
+var href = '$href->{href}';
+var ids = '$_REQUEST{ids}';
+EOS
+
+		$_REQUEST {__script} .= <<'EOJS';
+function set_choose_ids () {
+	var add_id = '';
+	$(".id_checkbox").children().each(function() {
+		if ($(this).is(":checked")) {
+			if (add_id != '') add_id = add_id + ',';
+			add_id = add_id + $(this).parent().attr("id");
+		}
+	});
+	setCursor();
+	if (add_id == '') return;
+	nope (href + '&ids=' + ids + ',' + add_id + '&add_id=' + add_id, '_self');
+}
+EOJS
+
+	}
+
 	if (ref $options -> {top_toolbar} eq ARRAY) {
 
 		$options -> {top_toolbar} -> [0] -> {_list} = $list;
@@ -2308,6 +2365,40 @@ sub draw_table {
 	}
 
 	$headers = \@old_headers;
+
+	if ($_REQUEST {multi_select}
+		&& ($preconf -> {core_multi_select_checkbox} || $options -> {multi_select_checkbox})
+		&& !$options -> {no_multi_select_checkbox}
+		&& !$_REQUEST {__multi_select_checkbox}
+	) {
+		# В режиме множественного выбора добавляем первым столбцом чекбоксы
+
+		my $headers_rowspan = @$headers > 0 ? ref $headers -> [0] eq ARRAY ? @$headers + 0 : 1 : 0;
+
+		if ($headers_rowspan > 0) {
+
+			unshift @{ref $headers -> [0] eq ARRAY ? $headers -> [0] : $headers}, {
+				label      => '<input type="checkbox" id="check_all" class="row-cell">',
+				attributes => {width => '1%'},
+				rowspan    => $headers_rowspan,
+			};
+
+			$_REQUEST {__script} .= <<'EOJS';
+$(document).ready(function() {
+	$("#check_all").click(function () {
+		if (!$("#check_all").is(":checked"))
+			$(".id_checkbox").children().removeAttr("checked");
+		else
+			$(".id_checkbox").children().attr("checked","checked");
+	});
+});
+EOJS
+
+		}
+
+		$_REQUEST {__multi_select_checkbox} = 1;
+
+	}
 
 	$options -> {header}   = draw_table_header ($headers) if @$headers > 0 && $_REQUEST {xls};
 
@@ -2371,6 +2462,10 @@ sub draw_table {
 
 		}
 
+	}
+
+	if ($_REQUEST {multi_select}) {
+		$_REQUEST {__multi_select_checkbox} = 2;
 	}
 
 	$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common};
