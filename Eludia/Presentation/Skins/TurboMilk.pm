@@ -3419,7 +3419,7 @@ sub draw_page {
 			$_REQUEST {__script} .= <<'EOJS';
 function poll_invisibles () {
 	var has_loading_iframes;
-	$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
+	$('iframe[name^="invisible"]').each (function () {var is_redirecting = this.contentWindow.document.getElementsByTagName('body')[0].redirect; if (this.readyState == 'loading' || is_redirecting) has_loading_iframes = 1});
 	if (!has_loading_iframes) {
 		window.clearInterval(poll_invisibles);
 		$.unblockUI ();
