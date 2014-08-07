@@ -139,7 +139,7 @@ A.k-button {
 }
 
 FORM.toolbar {
-	background-color: #B9C5D7;
+	background-color: #cacaca;
 }
 
 .menuFonDark.k-header {
@@ -148,7 +148,7 @@ FORM.toolbar {
        border-width: 2px;
 }
 .menuFonDark .k-state-hover{
-       background-color:#117cc0
+       background-color:#117cc0 !important;
 }
 .menuFonDark  .k-state-hover>.k-link:link {
        color: #ffffff;
@@ -156,7 +156,6 @@ FORM.toolbar {
 .menuFonDark  .k-link:link {
        color: #263248;
 }
-
 
 div.modal_div  > * {
     -webkit-transform: translateZ(0px);

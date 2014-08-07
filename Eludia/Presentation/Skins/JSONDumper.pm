@@ -166,7 +166,7 @@ sub vert_menu_2_ken {
 			text  => $_ -> {label},
 			url   => $_ -> {href},
 			target => $_ -> {target},
-			(!$_ -> {icon}  ? () : (imageUrl => "/i/ken/images/icons/$_->{icon}.png")),
+			(!$_ -> {icon}  ? () : (imageUrl => "/i/images/icons/$_->{icon}.png")),
 			(!$_ -> {items} ? () : (items => vert_menu_2_ken ($_ -> {items}))),
 			(!$_ -> {clipboard_text} ? () : (clipboard_text => $_ -> {clipboard_text})),
 		}
@@ -229,8 +229,8 @@ sub draw_node {
 
 sub _icon_path {
 
-	if (-r $r -> document_root . "/i/ken/images/icons/$_[0].png") {
-		return "$_REQUEST{__static_site}/i/ken/images/icons/$_[0].png";
+	if (-r $r -> document_root . "/i/images/icons/$_[0].png") {
+		return "$_REQUEST{__static_site}/i/images/icons/$_[0].png";
 	}
 
 	-r $r -> document_root . "/i/_skins/Mint/i_$_[0].png" ?

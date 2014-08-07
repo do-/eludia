@@ -197,6 +197,7 @@ sub setup_request_params {
 		, $preconf -> {core_auth_join_session}? 'session' : ''
 	);
 
+	my $encode_utf = $ENV {HTTP_CONTENT_TYPE} =~ /charset=UTF-8/i;
 	foreach my $k (keys %_REQUEST) {
 
 		my $k_ = $k;
@@ -205,6 +206,11 @@ sub setup_request_params {
 		}
 
 		$_REQUEST {$k} =~ s/</&lt;/g; $_REQUEST {$k} =~ s/>/&gt;/g;
+
+		if ($encode_utf) {
+			$_REQUEST {$k} = encode ("cp1251", decode ("utf-8", $_REQUEST {$k}));
+		}
+
 	}
 
 	our $_QUERY = undef;

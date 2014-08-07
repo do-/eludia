@@ -1,1 +1,0 @@
-/var/projects/avva_rus/modules/SuperTable/lib/supertable.css

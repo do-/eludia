@@ -3,7 +3,7 @@
 sub setup_page_content {
 
 	my ($page) = @_;
-	
+
 	$_REQUEST {__allow_check___query} = 1;
 	delete $_REQUEST {__the_table};
 
@@ -11,7 +11,7 @@ sub setup_page_content {
 
 	$_REQUEST {__allow_check___query} = 0;
 
-	$@ and return $_REQUEST {error} = $@;	
+	$@ and return $_REQUEST {error} = $@;
 
 	$_USER -> {id} and !$_REQUEST {__only_menu} and $_REQUEST {__edit_query} or return;
 
@@ -47,14 +47,14 @@ sub setup_page_content {
 	$_REQUEST {__allow_check___query} = 0;
 
 	$_REQUEST {type} = $page -> {type} = '__queries';
-	
+
 	$_REQUEST {id}   = $_REQUEST {id___query};
-		
+
 	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role ('get_item_of___queries', $page -> {content}) };
 
-	$@ and return $_REQUEST {error} = $@;	
+	$@ and return $_REQUEST {error} = $@;
 
-	delete $_REQUEST {__skin};	
+	delete $_REQUEST {__skin};
 
 }
 
@@ -62,14 +62,14 @@ sub setup_page_content {
 
 sub fix___query {
 
-	$conf -> {core_store_table_order} or return;	
+	$conf -> {core_store_table_order} or return;
 
 	$_REQUEST {__order_context} ||= '';
-	
+
 	@_ORDER > 0 or return;
 
 	if ($_REQUEST {id___query}) {
-	
+
 		my $is_there_some_order;
 
 		foreach my $o (@_ORDER) {
@@ -77,52 +77,52 @@ sub fix___query {
 			next unless ($o -> {order} || $o -> {no_order});
 
 			$is_there_some_order ||= $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {ord};
-		
+
 			foreach my $filter (@{$o -> {filters}}) {
-			
+
 				$_QUERY -> {content} -> {filters} -> {$filter -> {name}} = $_REQUEST {$filter -> {name}};
 
 			}
 
 		}
-		
+
 		$is_there_some_order or return;
-			
+
 		my $id___query = $_REQUEST {id___query};
 
 		$_REQUEST {id___query} = sql_select_id (
-	
+
 			$conf -> {systables} -> {__queries} => {
-	
+
 				fake		=> 0,
 				id_user		=> $_USER -> {id},
 				type		=> $_REQUEST {type},
 				-dump		=> Dumper ($_QUERY -> {content}),
 				label		=> '',
 				order_context	=> $_REQUEST {__order_context},
-	
+
 			}, ['id_user', 'type', 'label', 'order_context'],
-	
+
 		);
-			
+
 		!$id___query or $_REQUEST {id___query} == $id___query or sql_do ("UPDATE $conf->{systables}->{__queries} SET parent = ? WHERE id = ?", $id___query, $_REQUEST {id___query});
-		
-	} 
+
+	}
 	else {
-	
+
 		my $content = {filters => {}, columns => {}};
-		
+
 		my %n;
 
 		foreach my $o (@_ORDER) {
-		
+
 			next unless ($o -> {order} || $o -> {no_order} || $o -> {parent} -> {order} || $o -> {parent} -> {no_order});
 
 			my $parent = exists $o -> {parent} ? ($o -> {parent} -> {order} || $o -> {parent} -> {no_order}) : '';
 			$content -> {columns} -> {$o -> {order} || $o -> {no_order}} = {ord => ++ $n {$parent}};
 
 			foreach my $filter (@{$o -> {filters}}) {
-			
+
 				$content -> {filters} -> {$filter -> {name}} = $_REQUEST {$filter -> {name}};
 
 			}
@@ -145,7 +145,7 @@ sub fix___query {
 		);
 
 	}
-	
+
 }
 
 ################################################################################
@@ -159,7 +159,7 @@ sub check___query {
 	$conf -> {core_store_table_order} or return;
 
 	$_REQUEST {__order_context} ||= '';
-	
+
 	if ($_REQUEST {id___query} == -1) {
 
 		if ($SQL_VERSION -> {driver} eq 'Oracle') {
@@ -178,23 +178,23 @@ sub check___query {
 		}
 
 	}
-	
+
 	unless ($_REQUEST {id___query}) {
 
 		our $_QUERY = {};
 		our @_COLUMNS = ();
 		return;
-		
+
 	}
-	
+
 	our $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id___query});
-	
+
 	if ($_QUERY -> {label}) {
-	
+
 		$_REQUEST {id___query} = sql_select_id (
-	
+
 			$conf -> {systables} -> {__queries} => {
-	
+
 				id_user		=> $_USER -> {id},
 				type		=> $_QUERY -> {type},
 				label		=> '',
@@ -202,11 +202,11 @@ sub check___query {
 				-fake		=> 0,
 				-dump		=> $_QUERY -> {dump},
 				-parent		=> $_QUERY -> {id},
-	
+
 			}, ['id_user', 'type', 'label', 'order_context'],
-	
+
 		);
-	
+
 	}
 
 	our $_QUERY = sql_select_hash (<<EOS, $_REQUEST {id___query});
@@ -221,9 +221,9 @@ sub check___query {
 EOS
 
 	my $VAR1;
-	
+
 	eval $_QUERY -> {dump};
-	
+
 	$_QUERY -> {content} = $VAR1;
 
 	my $filters = $_QUERY -> {content} -> {filters};
@@ -231,52 +231,52 @@ EOS
 	foreach my $key (keys %$filters) {
 
 		next if exists $_REQUEST {$key};
-		
+
 		if ($key =~ /^id_/) {
-		
+
 			$filters -> {$key} = $_USER -> {id} if $filters -> {$key} eq '$_USER -> {id}';
-		
+
 		}
 		elsif ($key =~ /^dt_/ && $filters -> {$key} =~ /[^\d\.]/) {
-		
+
 			my ($y, $m, $d) = Date::Calc::Today;
-			
+
 			my $q = sprintf ('%02d', $m - (($m - 1) % 3));
 			my $m = sprintf ('%02d', $m);
 			my $d = sprintf ('%02d', $d);
-		
+
 			$filters -> {$key} =~ s{ãããã}{$y};
 			$filters -> {$key} =~ s{ìì}{$m};
 			$filters -> {$key} =~ s{êâ}{$q};
 			$filters -> {$key} =~ s{ää}{$d};
-		
+
 		}
-						
+
 		$_REQUEST {$key} = $filters -> {$key};
- 
+
 	}
 
 	my $is_there_some_columns;
-				
+
 	foreach my $key (keys %{$_QUERY -> {content} -> {columns}}) {
-		
+
 		if ($_QUERY -> {content} -> {columns} -> {$key} -> {ord}) {
 			$is_there_some_columns = 1;
 			last;
 		}
 
 	}
-		
+
 	unless ($is_there_some_columns) {
 
 		sql_do ("DELETE FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
 
 		delete $_REQUEST {id___query};
-			
+
 		$_QUERY = undef;
 
 	}
-		
+
 }
 
 ################################################################################
@@ -284,7 +284,7 @@ EOS
 sub get_item_of___queries {
 
 	my ($data) = @_;
-	
+
 	delete $_REQUEST {__read_only};
 
 	return $data;
@@ -298,30 +298,30 @@ sub do_drop_filters___queries {
 	my $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id});
 
 	my $VAR1;
-	
+
 	eval $_QUERY -> {dump};
-	
+
 	$_QUERY -> {content} = $VAR1;
-	
+
 	delete $_QUERY -> {content} -> {filters};
-			
+
 	sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", Dumper ($_QUERY -> {content}), $_REQUEST {id});
 
 	my $esc_href = esc_href ();
 
 	foreach my $key (keys %_REQUEST) {
-	
+
 		$key =~ /^_filter_(.+)$/ or next;
-		
+
 		my $filter = $1;
 
 		$filter =~ s/_\d+//;
 
 		$esc_href =~ s/([\?\&]$filter=)[^\&]*//;
-	
+
 	}
 
-	$esc_href =~ s/([\?\&]__last_query_string=)(\-?\d+)/$1$_REQUEST{__last_query_string}/;	
+	$esc_href =~ s/([\?\&]__last_query_string=)(\-?\d+)/$1$_REQUEST{__last_query_string}/;
 	$esc_href .= '&__edit_query=1';
 
 	redirect ($esc_href, {kind => 'js'});
@@ -338,9 +338,9 @@ sub do_update___queries {
 	my @order = ();
 
 	foreach my $key (keys %_REQUEST) {
-	
+
 		$key =~ /^_(.+)_ord$/ or next;
-		
+
 		my $order = $1;
 
 		my $mandatory_field_label = $_REQUEST {"_${order}_mandatory"};
@@ -355,12 +355,12 @@ sub do_update___queries {
 			sort => $_REQUEST {"_${order}_sort"},
 			desc => $_REQUEST {"_${order}_desc"},
 		};
-		
+
 		if ($_REQUEST {"_${order}_sort"}) {
-		
+
 			$order [ $_REQUEST {"_${order}_sort"} ]  = $order;
 			$order [ $_REQUEST {"_${order}_sort"} ] .= ' DESC' if $_REQUEST {"_${order}_desc"};
-		
+
 		}
 
 	}
@@ -372,7 +372,7 @@ sub do_update___queries {
 			$content -> {filters} -> {$1} .= '';
 		}
 	}
-	
+
 	foreach my $key (keys %_REQUEST) {
 
 		$key =~ /^_filter_(.+)$/ or next;
@@ -382,7 +382,7 @@ sub do_update___queries {
 		$_REQUEST {$key} = join ',', -1, @{$_REQUEST {$key}} if (ref $_REQUEST {$key} eq ARRAY);
 
 		$content -> {filters} -> {$filter} = $_REQUEST {$key} || '';
-	
+
 	}
 
 	sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", Dumper ($content), $_REQUEST {id});
@@ -400,7 +400,7 @@ sub do_update___queries {
 
 		};
 
-	} 
+	}
 
 	$esc_href =~ s/\bstart=\d+\&?//;
 
@@ -460,14 +460,14 @@ sub set_column_props {
 sub draw_item_of___queries {
 
 	my ($data) = @_;
-	
+
 	my @fields = (
-	
+
 		{
 			type  => 'banner',
 			label => 'ÑÒÎËÁÖÛ È ÔÈËÜÒÐÛ',
 		},
-		
+
 	);
 
 	$_REQUEST {__form_checkboxes_custom} = '';
@@ -589,15 +589,15 @@ sub draw_item_of___queries {
 
 				$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
 
-				delete $f {type} 
+				delete $f {type}
 					if $f {type} eq 'input_text';
 
 				$f {type} =~ s/^input_//;
-			
+
 				if ($f {type} eq 'select') {
 					$f {values} = [grep {$_ -> {id} != -1} @{$f {values}}];
 					if ($f {other}) {
-						$f {name} = '_' . $f {name}; 
+						$f {name} = '_' . $f {name};
 						$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
 					}
 				} elsif ($f {type} eq 'date') {
@@ -605,10 +605,10 @@ sub draw_item_of___queries {
 				} elsif ($f {type} eq 'checkbox') {
 					$f {checked} = $f {value};
 				} elsif ($f {type} eq 'radio') {
-					$data -> {"filter_$f{name}"} = $f {value}; 
+					$data -> {"filter_$f{name}"} = $f {value};
 				} elsif ($f {type} eq 'checkboxes') {
 					$data -> {'filter_' . $f {name}} = [split /,/, $f {value}];
-					delete $f {value}; 
+					delete $f {value};
 
 					$_REQUEST {__form_checkboxes_custom} .= ',' . join ',', map {"_$f{name}_$_->{id}"} @{$f {values}};
 				}
@@ -639,12 +639,12 @@ sub draw_item_of___queries {
 			],
 			no_edit => $_REQUEST {'__page_content'} -> {no_del},
 			confirm_ok => undef,
-		}, 
-		
-		$data, 
-		
+		},
+
+		$data,
+
 		\@fields
-		
+
 	);
 
 }

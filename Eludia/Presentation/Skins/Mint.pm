@@ -317,10 +317,6 @@ EOH
 
 	$html .= $options -> {bottom_toolbar};
 
-	$_REQUEST {__on_load} .= ';numerofforms++;';
-
-#	$_REQUEST {__on_load} .= '$(document.forms["' . $options -> {name} . '"]).submit (function () {checkMultipleInputs (this)});';
-
 	return $html;
 
 }
@@ -969,6 +965,9 @@ sub draw_form_field_select {
 
 	my ($_SKIN, $options, $data) = @_;
 
+	return $_SKIN -> draw_form_field_combo ($options, $data)
+		if $options -> {ds};
+
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
 	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
@@ -992,17 +991,9 @@ sub draw_form_field_select {
 
 		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
-		my ($confirm_js_if, $confirm_js_else) = $options -> {no_confirm} ? ('', '')
-			: (
-				"if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {",
-				"} else {this.selectedIndex = 0}"
-			);
-
 		$options -> {onChange} .= <<EOJS;
 
 			if (this.options[this.selectedIndex].value == -1) {
-
-				$confirm_js_if
 
 				open_vocabulary_from_select (
 					this,
@@ -1013,8 +1004,6 @@ sub draw_form_field_select {
 						dialog_height : $options->{other}->{height}
 					}
 				);
-
-				$confirm_js_else
 
 			}
 
@@ -1050,6 +1039,104 @@ EOH
 	}
 
 	$html .= '</select>';
+
+	return $html;
+
+}
+
+################################################################################
+
+sub draw_form_field_combo {
+
+	my ($_SKIN, $options, $data) = @_;
+
+	$options -> {attributes} ||= {};
+
+	$options -> {attributes} -> {id}    ||= ($options -> {id} ||= "_$options->{name}_select");
+
+	$options -> {attributes} -> {size}  ||= $options -> {max_len};
+	$options -> {attributes} -> {size} = length $options -> {empty}
+		if $options -> {attributes} -> {size} < length $options -> {empty};
+
+	$options -> {attributes} -> {style} .= "width: " . ($options -> {attributes} -> {size} * 3) . 'px;';
+
+
+	$options -> {attributes} -> {onFocus}   .= ";stibqif (true,true)";
+	$options -> {attributes} -> {onBlur}    .= ";stibqif (true,false)";
+
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	if (defined $options -> {other}) {
+
+		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
+		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+
+
+	}
+
+	my $values = $_JSON -> encode ($options -> {values} || []);
+	$values =~ s/\"/'/g;
+
+	check_href ($options -> {ds});
+
+	my $html = <<EOH;
+		<span style="white-space: nowrap;" id="input_$options->{name}"><input name="_$$options{name}" $attributes onKeyDown="tabOnEnter();" onChange="is_dirty=true; $$options{onChange}">
+EOH
+
+	if (defined $options -> {other}) {
+		$html .= <<EOH;
+			<input type="button" class="k-button" value="..."
+				onClick="open_vocabulary_from_combo (
+					\$('#$options->{attributes}->{id}').data('kendoComboBox'),
+					{
+						message       : i18n.choose_open_vocabulary,
+						href          : '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(),
+						dialog_width  : $options->{other}->{width},
+						dialog_height : $options->{other}->{height}
+					}
+				);"
+				tabindex=$tabindex
+			>
+EOH
+	}
+
+	$html .= '</span>';
+
+	local $conf -> {portion} ||= 50;
+
+	$options -> {ds} -> {href} = ''
+		if $options -> {ds} -> {off};
+
+	$_REQUEST {__on_load} .= <<EOJS;
+
+		if (window.name.substring (0, 9) == 'invisible') {
+			setTimeout (
+				function () {
+					window = parent;
+					parent.do_kendo_combo_box ('$options->{attributes}->{id}', {
+						values  : $values,
+						empty   : '$options->{empty}',
+						href    : '$options->{ds}->{href}',
+						portion : $conf->{portion},
+						width   : @{[$options -> {attributes} -> {size} * 8]}
+
+					});
+				},
+				10
+			);
+		} else {
+			do_kendo_combo_box ('$options->{attributes}->{id}', {
+				values  : $values,
+				empty   : '$options->{empty}',
+				href    : '$options->{ds}->{href}',
+				portion : $conf->{portion},
+				width   : @{[$options -> {attributes} -> {size} * 8]}
+
+			});
+		}
+
+EOJS
+
 
 	return $html;
 
@@ -1127,116 +1214,66 @@ sub draw_form_field_tree {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	my @nodes = ();
+	my %p2n = ();
+	my %i2n = ();
+	foreach my $i (@{$options -> {values}}) {
 
-	our %idx = ();
-	our %lch = ();
+		my $n = $i -> {__node};
 
-	foreach my $value (@{$options -> {values}}) {
+		my $nn = {
+			id          => $i -> {id},
+			parent      => $i -> {parent},
+			text        => $n -> {name},
+			is_checkbox => $n -> {is_checkbox},
+			is_radio    => $n -> {is_radio},
+		};
 
-		my $node = $value -> {__node};
-		push @nodes, $node;
+		$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
 
-		$idx {$node -> {id}} = $node;
-		$lch {$node -> {pid}} = $node if $node -> {pid};
+		push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
+
+		$i2n {$i -> {id}} = $nn;
+
 	}
 
-	while (my ($k, $v) = each %lch) {
-		$idx {$k} -> {_hc} = 1;
-		$v -> {_ls} = 1;
+	if (my $id = $options -> {selected_node}) {
+
+		while (my $nn = $i2n {$id}) {
+			$nn -> {expanded} = \1;
+			$id = $nn -> {parent};
+		}
+	} elsif (@{$p2n {0}} == 1) {
+		$p2n {0} -> [0] -> {expanded} = \1;
 	}
 
-	$options -> {active} += 0;
+	foreach my $nn (values %i2n) {
+
+		my $items = $p2n {$nn -> {id}} or next;
+
+		$nn -> {items} = $items;
+
+	}
+
+	my $data = $_JSON -> encode ($p2n {0} ||= []);
 
 	my $name = $options -> {name} || 'd';
 	$options->{height} ||= 200;
 
-	my $nodes = $_JSON -> encode (\@nodes);
-
-	if ($options -> {active} && $_REQUEST {__parent}) {
-
-		return out_html ({}, <<EOH);
-<html>
-	<head>
-		<script>
-
-			function load () {
-
-				var new_nodes = $nodes;
-
-				for (i = 0; i < new_nodes.length; i++) {
-					var node = new_nodes [i];
-					if (node.title) continue;
-					node.title = node.label;
-				}
-
-				var f = window.parent;
-				var d = f.$name;
-				var old_nodes = d.aNodes;
-				var n = -1;
-
-				for (i = 0; i < old_nodes.length; i ++) {
-					var cn = old_nodes [i];
-					if (cn.id != $_REQUEST{__parent}) continue;
-					n = i;
-					cn._hac += new_nodes.length;
-					cn._io = true;
-					break;
-				};
-
-				var k = 0;
-				var nodes = [];
-
-				for (i = 0;     i <= n;               i ++) nodes [k++] = old_nodes [i];
-				for (i = 0;     i < new_nodes.length; i ++) nodes [k++] = new_nodes [i];
-				for (i = n + 1; i < old_nodes.length; i ++) nodes [k++] = old_nodes [i];
-
-				d.aNodes = nodes;
-
-				f.document.getElementById ("${name}_td").innerHTML = d.toString ();
-				f.setCursor ();
-
-			}
-
-		</script>
-	</head>
-	<body onLoad="load ()"></body>
-</html>
-EOH
-
+	$_REQUEST {__on_load} .= <<EOJS;
+ \$("#${name}_treeview").kendoTreeView({
+	checkboxes: {
+		template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='_${name}_#=item.id#' value='1' #if(item.is_checkbox == 2){# checked #}#/> #}#"
+	},
+	dataSource: {
+		data : $data
 	}
-
-	$_REQUEST {__script} .= qq {
-
-		var $name = new dTree ('$name');
-
-	};
-
-	$_REQUEST {__on_load} .= qq {
-
-		$name._active = $options->{active};
-		$name._href = '$options->{href}';
-		$name._url_base = '';
-		var c = $name.config;
-		c.iconPath = '$_REQUEST{__static_url}/tree_';
-		c.useStatusText = false;
-		c.useSelection = false;
-		$name.icon.node = 'folderopen.gif';
-		$name.aNodes = $nodes;
-		document.getElementById ("${name}_td").innerHTML = $name.toString ();
-		for (var n = 0; n < $name.checkedNodes.length; n++) {
-			$name.openTo ($name.checkedNodes [n], true, true);
-		}
-
-	};
+});
+EOJS
 
 	return qq {
-
-		<table width=100% height="$options->{height}" celspacing=0 cellpadding=0 class='dtree'>
-			<tr><td valign=top height="$options->{height}" id="${name}_td"> </td></tr>
-		</table>
-
+		<div style="height: $options->{height}px" id="${name}_treeview"></div>
 	};
+
 
 }
 
@@ -1512,8 +1549,8 @@ sub draw_toolbar_break {
 
 sub _icon_path {
 
-	if (-r $r -> document_root . "/i/ken/images/icons/$_[0].png") {
-		return "$_REQUEST{__static_site}/i/ken/images/icons/$_[0].png";
+	if (-r $r -> document_root . "/i/images/icons/$_[0].png") {
+		return "$_REQUEST{__static_site}/i/images/icons/$_[0].png";
 	}
 
 	-r $r -> document_root . "/i/_skins/Mint/i_$_[0].gif" ?
@@ -1584,164 +1621,83 @@ sub draw_toolbar_input_tree {
 
 	my $id = "toolbar_input_tree_$options->{name}";
 
-	my @nodes = ();
+	my %p2n = ();
+	my %i2n = ();
+	foreach my $i (@{$options -> {values}}) {
 
-	our %idx = ();
-	our %lch = ();
+		my $n = $i -> {__node};
 
-	foreach my $value (@{$options -> {values}}) {
+		my $nn = {
+			id          => $i -> {id},
+			parent      => $i -> {parent},
+			text        => $n -> {name},
+			is_checkbox => $n -> {is_checkbox},
+			is_radio    => $n -> {is_radio},
+		};
 
-		my $node = $value -> {__node};
-		push @nodes, $node;
+		$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
 
-		$idx {$node -> {id}} = $node;
-		$lch {$node -> {pid}} = $node if $node -> {pid};
+		push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
+
+		$i2n {$i -> {id}} = $nn;
+
 	}
 
-	while (my ($k, $v) = each %lch) {
-		$idx {$k} -> {_hc} = 1;
-		$v -> {_ls} = 1;
+	if (my $id = $options -> {selected_node}) {
+
+		while (my $nn = $i2n {$id}) {
+			$nn -> {expanded} = \1;
+			$id = $nn -> {parent};
+		}
+	} elsif (@{$p2n {0}} == 1) {
+		$p2n {0} -> [0] -> {expanded} = \1;
 	}
 
+	foreach my $nn (values %i2n) {
+
+		my $items = $p2n {$nn -> {id}} or next;
+
+		$nn -> {items} = $items;
+
+	}
+
+	my $data = $_JSON -> encode ($p2n {0} ||= []);
 	my $name = $options -> {name};
+	my $value = $options -> {label};
+	$value =~ s/\"/\\"/g;
 
 	$options -> {height} ||= 400;
 	$options -> {width}  ||= 600;
+	my $dropdown_width = $options -> {max_len} * 3;
 
-	my $nodes = $_JSON -> encode (\@nodes);
-
-	return qq {
-
-		<td class="toolbar" nowrap>
-
-		<div
-			id="${id}_div"
-			onClick="if (event.srcElement.tagName != 'INPUT') \$('#${id}_select_1').get(0).form.submit()"
-			style="
-				background-color:white;
-				position:absolute;
-				display:none;
-				z-index:200;
-				width:$options->{width}px;
-				height:$options->{height}px;
-				left:500;
-				border:solid black 1px;
-				overflow-y:scroll;
-			"
-		>
-			<table width=100% height=100% celspacing=0 cellpadding=0 border=0 class='dtree'>
-				<tr>
-					<td valign=top class='form-active-inputs'>
-						<script>
-							var $name = new dTree ('$name');
-							$name._url_base = '';
-							var c = $name.config;
-							c.iconPath = '$_REQUEST{__static_url}/tree_';
-							c.useStatusText = false;
-							c.useSelection = false;
-							$name.icon.node = 'folderopen.gif';
-							$name.aNodes = $nodes;
-							$name.checkbox_name_prefix = '';
-							document.write ($name);
-							for (var n = 0; n < $name.checkedNodes.length; n++) {
-								$name.openTo ($name.checkedNodes [n], true, true);
-							}
-						</script>
-					</td>
-				</tr>
-			</table>
-		</div>
+	$_REQUEST {__on_load} .= <<EOJS;
+var ${id}_changed;
+var ${id}_el = \$("#$id").kendoExtDropDownTreeView({
+	dropDownWidth : $dropdown_width,
+	value      : "$value",
+	tree_close : function (e) {
+		if (${id}_changed) {
+			\$("#toolbar_input_tree_id_dep").parents("FORM").submit ();
+		}
+	},
+	treeview   : {
+		width      : $options->{width},
+		height     : $options->{height},
+		checkboxes : {
+			template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='${name}_#=item.id#' value='1' #console.log(item); if(item.is_checkbox == 2){# checked #}#/> #}#"
+		},
+		dataSource : {
+			data : $data
+		}
+	}
+});
+\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
+EOJS
 
 
-				<select id="${id}_select_1"
+	return qq|<li class="toolbar nowrap"><div id="$id"></div></li>|;
 
-					onDblClick="
 
-						var select_1 = \$('#${id}_select_1');
-						var select_2 = \$('#${id}_select_2');
-
-						select_1.hide ();
-						select_2.show ();
-						return blockEvent ();
-
-					"
-
-					onMouseDown="
-
-						var select_1 = \$('#${id}_select_1');
-						var select_2 = \$('#${id}_select_2');
-						var div      = \$('#${id}_div');
-
-						if (div.is (':hidden')) {
-
-							var css      = select_1.offset ();
-							css.top     += 20;
-
-							div.css  (css);
-							div.show ();
-
-							select_1.hide ();
-							select_2.show ();
-
-						}
-						else {
-
-							select_1.get (0).form.submit ()
-
-						}
-
-					"
-
-				>
-					<option>$options->{label}</option>
-				</select>
-				<select id="${id}_select_2" style="display:none"
-
-					onDblClick="
-
-						var select_1 = \$('#${id}_select_1');
-						var select_2 = \$('#${id}_select_2');
-
-						select_2.hide ();
-						select_1.show ();
-						return blockEvent ();
-
-					"
-
-					onMouseDown="
-
-						var select_1 = \$('#${id}_select_1');
-						var select_2 = \$('#${id}_select_2');
-						var div      = \$('#${id}_div');
-
-						var css      = select_2.offset ();
-						css.top     += 20;
-
-						if (div.is (':hidden')) {
-
-							div.css (css);
-							div.toggle();
-
-							select_2.hide ();
-							select_1.show ();
-
-						}
-						else {
-
-							select_2.get (0).form.submit ()
-
-						}
-
-					"
-
-				>
-					<option>$options->{label}</option>
-				</select>
-
-		</td>
-		<td class="toolbar">&nbsp;&nbsp;&nbsp;</td>
-
-	};
 
 }
 
@@ -1941,6 +1897,10 @@ sub draw_toolbar_pager {
 
 }
 
+################################################################################
+
+sub draw_toolbar_button_vert_menu {
+}
 
 ################################################################################
 
@@ -2434,55 +2394,18 @@ sub draw_input_cell {
 			$values = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}]} @{$a_options -> {values}}]);
 		}
 
-		$a_options -> {min_length} ||= 3;
-		$a_options -> {attributes} -> {size} ||= $a_options -> {size} || 60;
-
 		my $id = '' . $data -> {autocomplete}  . "_$$data{name}";
 		$id =~ s/[\(\)]//g;
 
-		my $js = <<EOJS;
-		\$("#$id").kendoAutoComplete({
-			minLength       : $$a_options{min_length},
-			filter          : 'contains',
-			suggest         : true,
-			dataTextField   : 'label',
-			dataSource      : {
-				serverFiltering : true,
-				data: {
-					json: $values,
-				},
-				transport: {
-					read            : {
-						url         : "$ENV{REQUEST_URI}&__suggest=$$data{name}" + "&salt=" + Math.random (),
-						contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
-						data        : {
-							"$$data{name}": function() {
-								return \$("#$id").data("kendoAutoComplete").value();
-							}
-						},
-						dataType    : 'json'
-					},
-				}
-			}
-		}).bind("change", function(e) {
-
-			var _this = \$(this).data("kendoAutoComplete");
-
-			var selected_item = _this.current();
-			var id = '', label = '';
-
-			if (selected_item) {
-				var data = _this.dataSource.data();
-				id = data [selected_item.index()].id;
-				label = data [selected_item.index()].label;
-			}
-
-			\$('#${id}__label').val(label);
-			\$('#${id}__id').val(id);
-		});
-EOJS
-
 		$attr_input -> {id} = $id;
+		$attr_input -> {"data-role"} = "autocomplete";
+		$attr_input -> {"a-data-values"} = $values
+			if $values;
+		$attr_input -> {"a-data-url"} = "$ENV{REQUEST_URI}&__suggest=$$data{name}";
+		$attr_input -> {"a-data-min-length"} = $a_options -> {min_length}
+			if $a_options -> {min_length} && $a_options -> {min_length} != 3;
+
+
 		$autocomplete = dump_tag (input => {
 			type  => 'hidden',
 			id    => "${id}__label",
@@ -2497,7 +2420,7 @@ EOJS
 			value => $a_options -> {value__id},
 		});
 
-		$_REQUEST {__on_load} .= $js;
+		$_REQUEST {__script} .= $js;
 
 	}
 
@@ -2535,19 +2458,6 @@ sub draw_row_button {
 
 }
 
-####################################################################
-
-sub draw_super_table_header {
-
-	my ($_SKIN, $data_rows, $html_rows) = @_;
-
-	my $html = '<thead>';
-	# $html .= "<tr style='display:none' class='displaynone'>" . ('<th class="row-cell-header"></th>' x $columns_cnt) . '</tr>';
-	foreach (@$html_rows) {$html .= $_};
-	$html .= '</thead>';
-
-	return $html;
-}
 
 ####################################################################
 
@@ -2555,23 +2465,11 @@ sub draw_table_header {
 
 	my ($_SKIN, $data_rows, $html_rows) = @_;
 
-#	if ($_REQUEST {__only_table}) {
-		return draw_super_table_header ($_SKIN, $data_rows, $html_rows);
-#	}
-
-	# jquery.dataTables helper
-	my $columns_cnt = 0;
-	my $headers = $data_rows;
-	$headers = $headers -> [0] if ref $headers -> [0] eq 'ARRAY';
-	foreach (@$headers) {
-		next if $_ -> {hidden} || $_ -> {off};
-		$columns_cnt += $_ -> {colspan} || 1;
-	}
-
 	my $html = '<thead>';
-	$html .= "<tr style='display:none' class='displaynone'>" . ('<th class="row-cell-header"></th>' x $columns_cnt) . '</tr>';
 	foreach (@$html_rows) {$html .= $_};
 	$html .= '</thead>';
+
+	return $html;
 
 }
 
@@ -2613,9 +2511,11 @@ sub get_super_table_cell_id {
 
 ####################################################################
 
-sub draw_super_table_header_cell {
+sub draw_table_header_cell {
 
 	my ($_SKIN, $cell) = @_;
+
+	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);
 
 	$cell -> {attributes} -> {style} = 'z-index:' . ($cell -> {no_scroll} ? 110 : 100) . ';' . $cell -> {attributes} -> {style};
 
@@ -2637,47 +2537,6 @@ sub draw_super_table_header_cell {
 	}
 
 	return $html;
-}
-
-####################################################################
-
-sub draw_table_header_cell {
-
-	my ($_SKIN, $cell) = @_;
-
-	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);
-
-#	if ($_REQUEST {__only_table}) {
-		return draw_super_table_header_cell ($_SKIN, $cell);
-#	}
-
-	$cell -> {label} .= "\&nbsp;\&nbsp;<a class=row-cell-header-a href=\"$$cell{href_asc}\"><b>\&uarr;</b></a>"  if $cell -> {href_asc};
-	$cell -> {label} .= "\&nbsp;\&nbsp;<a class=row-cell-header-a href=\"$$cell{href_desc}\"><b>\&darr;</b></a>" if $cell -> {href_desc};
-
-	if (($cell -> {order} || $cell -> {href} =~ /\border=/) && !$conf -> {core_no_order_arrows}) {
-		my $label = $cell -> {label};
-		$cell -> {label} = '';
-		if ($cell -> {nobr} || !($conf -> {core_no_nobr_table_header_cell} || $cell -> {no_nobr})) {
-			$cell -> {label} .= "<nobr>";
-		}
-		$cell -> {label} .= "<img src='$_REQUEST{__static_url}/order.gif' border=0 hspace=1 vspace=0 align=absmiddle>" . $label;
-		if ($cell -> {nobr} || !($conf -> {core_no_nobr_table_header_cell} || $cell -> {no_nobr})) {
-			$cell -> {label} .= "</nobr>";
-		}
-	}
-	elsif (!$cell -> {no_nbsp}) {
-		$cell -> {label} = '&nbsp;' . $cell -> {label};
-	}
-
-	if ($cell -> {href}) {
-		$cell -> {label} = "<a class=row-cell-header-a href=\"$$cell{href}\"><b>" . $cell -> {label} . "</b></a>";
-	}
-
-	$cell -> {no_nbsp} or $cell -> {label} .= '&nbsp;';
-
-	$cell -> {attributes} -> {style} = 'z-index:' . ($cell -> {no_scroll} ? 110 : 100) . ';' . $cell -> {attributes} -> {style};
-
-	dump_tag (th => $cell -> {attributes}, $cell -> {label});
 
 }
 
@@ -2846,9 +2705,10 @@ sub draw_super_table__only_table {
 	return $_JSON -> encode ($table);
 }
 
+
 ####################################################################
 
-sub draw_super_table {
+sub draw_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
 
@@ -2857,7 +2717,8 @@ sub draw_super_table {
 	return $data_json
 		if $_REQUEST {__only_table};
 
-	$_REQUEST {__script} .= <<EOJS;
+
+	$_REQUEST {__script} = <<EOJS . $_REQUEST {__script};
 		window.tables_data = window.tables_data || {};
 		window.tables_data ['$options->{id_table}'] = $data_json;
 EOJS
@@ -2874,7 +2735,11 @@ EOJS
 	};
 
 	my $attributes = dump_attributes ($options -> {attributes});
-	my $html = qq {<div $attributes></div>\n};
+
+	my $html;
+
+	$html = qq {<div $attributes></div>\n}
+		unless index ($data_json, '<tr') == -1;
 
 	my %hidden = ();
 
@@ -2919,221 +2784,6 @@ EOJS
 		$hiddens_html
 		$html
 		</form>
-EOH
-}
-
-####################################################################
-
-sub draw_table {
-
-	my ($_SKIN, $tr_callback, $list, $options) = @_;
-
-	if ($options -> {super_table}) {
-		return draw_super_table ($_SKIN, $tr_callback, $list, $options);
-	}
-
-	$options -> {id} ||= '' . $options;
-	$options -> {id} =~ s{[\(\)]}{}g;
-
-	$_REQUEST {__script} .= "; scrollable_table_ids.push ('$options->{id}');";
-	$_REQUEST {__script} .= "; table_min_heights = window.table_min_heights || {}; table_min_heights ['$options->{id}'] = " . $options -> {min_height}
-		if $options -> {min_height};
-
-	$options -> {height}     ||= 10000;
-	$options -> {min_height} ||= 200;
-
-	$$options{toolbar} =~ s{^\s+}{}sm;
-	$$options{toolbar} =~ s{\s+$}{}sm;
-
-	my $html = '';
-
-	my %hidden = ();
-
-	my $hiddens_html;
-	$hidden {$_} = $_REQUEST {$_} foreach (
-		'__tree',
-		'__last_scrollable_table_row',
-		grep {/^[^_]/ or /^__get_ids_/} keys %_REQUEST
-	);
-
-	$hidden {$_} = $options -> {$_} foreach (
-		'type',
-		'action',
-	);
-
-	$hidden {__last_query_string} = $_REQUEST{__last_last_query_string};
-
-	while (my ($k, $v) = each %hidden) {
-
-		$hiddens_html .= "\n" . dump_tag (input => {
-
-			type  => 'hidden',
-			name  => $k,
-			value => $v,
-
-		}) if defined $v;
-
-	}
-
-	$html .= qq {<td class=bgr8>};
-
-	unless (is_ua_mobile ()) {
-		$html .= $options -> {container} ?
-			$options -> {container} :
-				$options -> {no_scroll} ?
-				qq {<div class="table-container-x" onScroll="tableSlider.cell_on()">} :
-				qq {<div class="table-container" onScroll="tableSlider.cell_on()">};
-	}
-	$html .= qq |<table class="list" width="100%" id="$options->{id}">\n|;
-
-	$_REQUEST {__scrollable_table_row} ||= 0;
-
-	$_REQUEST {__on_load} .= <<EOJS;
-
-		\$('#$options->{id}').parent().each(function(index) {
-
-			if (\$(this).hasClass ('table-container') || \$(this).hasClass ('table-container-x')) {
-
-				\$(this).width(document.body.offsetWidth - 18);
-
-				if (\$(this).hasClass ('table-container')) {
-
-					var countTd = \$('#$options->{id} > thead tr:first').find('th').length;
-					\$('#$options->{id} > thead tr').each(function (i){
-						if(\$(this).hasClass('displaynone') == false){
-							if(\$(this).find('th').attr('class') === undefined){
-								\$(this).detach();
-							}
-						} else {
-							if(countTd == 0){
-								\$(this).detach();
-							} else {
-								\$(this).next().find('th').css('border-top-width', '0px');
-							}
-						}
-					})
-					\$('#$options->{id} > thead tr:last th').each(function (i){
-						\$(this).attr('rowspan', '1');
-					})
-					\$('#$options->{id} thead tr:first th').each(function (i){
-						var num = i + 1;
-						var CellTh = '#$options->{id} tr th:nth-child(' + num + ')';
-						var CellTd = '#$options->{id} tr td:nth-child(' + num + ')';
-						\$(CellTh).addClass('col' + num);
-						\$(CellTd).attr('data-col', num);
-						\$(CellTd).addClass('col' + num);
-					})
-					if(countTd > 0){
-						\$('#$options->{id} > tbody tr').each(function (i){
-							var tbodyAddTd = '';
-							var countTdStr = \$(this).find('td').length;
-							for (var i = 0; i < countTd - countTdStr; i++) {
-								tbodyAddTd += "<td style='display:none;'></td>";
-							}
-							\$(this).prepend(tbodyAddTd);
-							if(countTd != countTdStr){
-								\$(this).addClass('noCol');
-							}
-						})
-						\$('#$options->{id} > thead tr').each(function (i){
-							var countThStr = \$(this).find('th').length;
-							if(countTd != countThStr){
-								\$(this).addClass('noCol');
-							}
-						})
-					}
-
-					var fixedColumnCnt = \$('thead tr:first th.row-cell-transparent-no-scroll, thead tr:first th.row-cell-header-no-scroll', this.firstChild).length;
-
-					var table_height = actual_table_height(this, $$options{min_height}, $$options{height}, '$__last_centered_toolbar_id');
-					var header_height = \$(this.firstChild.tHead).outerHeight();
-
-					var scrolly = table_height - header_height + 4;
-
-					var table = \$(this.firstChild).dataTable({
-						'sScrollY': scrolly + 'px',
-						'sScrollX': '100%',
-						'bFilter': false,
-						'bScrollCollapse': false,
-						'bPaginate': false,
-						'bSort':false,
-						'aaSorting': [],
-						'bInfo':false,
-						'oLanguage': {
-							'sEmptyTable': '',
-							'sZeroRecords': ''
-						}
-					});
-
-					if (fixedColumnCnt > 0) {
-
-						new FixedColumns (table, {
-							'iLeftColumns': fixedColumnCnt
-						});
-
-					}
-
-
-				}
-
-			}
-		});
-		tableSlider.set_row ($_REQUEST{__scrollable_table_row});
-
-EOJS
-
-	$html .= $options -> {header} if $options -> {header};
-
-	$html .= qq {<tbody>\n};
-
-	if ($options -> {dotdot}) {
-		$html .= $options -> {dotdot};
-	}
-
-	my $menus = '';
-
-	foreach our $i (@$list) {
-
-		foreach my $tr (@{$i -> {__trs}}) {
-
-			$html .= "<tr id='$$i{__tr_id}'";
-
-			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
-				$menus .= $i -> {__menu};
-				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); return blockEvent ();"};
-			}
-
-			$html .= '>';
-			$html .= $tr;
-			$html .= '</tr>';
-		}
-
-	}
-
-	$html .= <<EOH;
-			</tbody></table></div>$$options{toolbar}</td></tr></table></form>
-		$menus
-
-EOH
-
-	$__last_centered_toolbar_id = '';
-
-	my $enctype = $html =~ /\btype\=[\'\"]?file\b/ ?
-		'enctype="multipart/form-data"' : '';
-
-	$_REQUEST {__on_load} .= ';numeroftables++;';
-
-	return <<EOH . $html;
-
-		$$options{title}
-		$$options{path}
-		$$options{top_toolbar}
-
-		<form name=$$options{name} action=$_REQUEST{__uri} method=post target=invisible $enctype>
-		<input type=hidden name="__suggest" value="">
-		$hiddens_html
-		<table cellspacing=0 cellpadding=0 width="100%">
-			<tr>
 EOH
 
 }
@@ -3214,7 +2864,7 @@ sub draw_page {
 	push @{$_REQUEST {__include_js}}, '_skins/Mint/jquery.blockUI'
 		if $preconf -> {core_blockui_on_submit} || $r -> headers_in -> {'User-Agent'} =~ /webkit/i;
 
-	push @{$_REQUEST {__include_js}}, 'ken/js/kendo.all.min', 'ken/js/cultures/kendo.culture.ru-RU.min';
+	push @{$_REQUEST {__include_js}}, 'ken/js/kendo.all.min', 'libs/kendo.web.ext', 'ken/js/cultures/kendo.culture.ru-RU-1251.min';
 	push @{$_REQUEST {__include_css}}, 'ken/styles/kendo.common.min', 'ken/styles/kendo.bootstrap.min';
 
 	1 or $body .= qq {
@@ -3395,7 +3045,7 @@ EOJS
 
 	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr", "_skins/$_REQUEST{__skin}/i18n_$_REQUEST{lang}";
 	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
-	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable_turbomilk";
+#	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable_turbomilk";
 
 	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
 
@@ -3508,11 +3158,12 @@ sub load_ui_elements {
 				containerRender : function(table) {
 
 					\$(table.container).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+					activate_suggest_fields ();
 
 				}
 			});
 		});
-
+		activate_suggest_fields ();
 EOJS
 
 }
@@ -4129,11 +3780,11 @@ sub draw_node {
 	my ($_SKIN, $options, $i) = @_;
 
 	my $node = {
-		id      => $options -> {id},
-		pid     => $options -> {parent},
-		name => $options -> {label},
-		url  => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
-		title   => $options -> {title} || $options -> {label},
+		id    => $options -> {id},
+		pid   => $options -> {parent},
+		name  => $options -> {label},
+		url   => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
+		title => $options -> {title} || $options -> {label},
 	};
 
 	map {$node -> {$_} = $options -> {$_} if $options -> {$_}} qw (target icon iconOpen is_checkbox is_radio clipboard_text);

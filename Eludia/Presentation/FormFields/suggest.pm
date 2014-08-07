@@ -12,9 +12,6 @@ sub draw_form_field_suggest {
 	my $id = $_REQUEST {id};
 
 	if ($_REQUEST {__suggest} eq $options -> {name}) {
-		if ($ENV {HTTP_CONTENT_TYPE} =~ /charset=UTF-8/i) {
-			$_REQUEST {"_$options->{name}__label"} = encode ("cp1251", decode ("utf-8", $_REQUEST {"_$options->{name}__label"}));
-		}
 		our $_SUGGEST_SUB = $options -> {values};
 
 	}

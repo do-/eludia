@@ -169,7 +169,7 @@ sub trunc_string {
 
 	$s = decode_entities ($s) if $has_ext_chars;
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-	$s = encode_entities ($s, "<>â€šâ€ž-â€°â€¹â€˜-â„¢â€º\xA0Â¤Â¦Â§Â©Â«-Â®Â°-Â±Âµ-Â·Â»") if $has_ext_chars;
+	$s = encode_entities ($s, "<>‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars;
 
 	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
 
@@ -1636,9 +1636,9 @@ sub draw_cells {
 		}
 
 	}
-
+#darn $_[0];
 	my @cells = order_cells (@{$_[0]});
-
+#darn \@cells;
 	if ($_REQUEST {__multi_select_checkbox} == 1) {
 		unshift @cells, {
 			type       => 'checkbox',
@@ -3128,6 +3128,8 @@ sub gzip_if_it_is_needed (\$) {
 ################################################################################
 
 sub out_json ($) {
+
+	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
 
 	out_html ({}, $_JSON -> encode ($_[0]));
 
