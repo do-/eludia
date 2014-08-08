@@ -150,10 +150,7 @@ FORM.toolbar {
 .menuFonDark .k-state-hover{
        background-color:#117cc0 !important;
 }
-.menuFonDark  .k-state-hover>.k-link:link {
-       color: #ffffff;
-}
-.menuFonDark  .k-link:link {
+.menuFonDark .k-link:link {
        color: #263248;
 }
 

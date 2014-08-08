@@ -1636,9 +1636,9 @@ sub draw_cells {
 		}
 
 	}
-#darn $_[0];
+
 	my @cells = order_cells (@{$_[0]});
-#darn \@cells;
+
 	if ($_REQUEST {__multi_select_checkbox} == 1) {
 		unshift @cells, {
 			type       => 'checkbox',
