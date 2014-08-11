@@ -3251,7 +3251,20 @@ sub lrt_start {
 		<!doctype html>
 		<html>
 		<head>
-			<script type="text/javascript">window=parent; parent.lrt_start ($_REQUEST{__lrt_id})</script>
+			<script src="$_REQUEST{__static_url}/jquery-1.11.1.min.js?$_REQUEST{__static_salt}"></script>
+
+			<script type="text/javascript">
+				if (window.name == 'invisible') {
+					window=parent;
+					parent.lrt_start ($_REQUEST{__lrt_id});
+				} else {
+					\$('head').append('<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}"></' + 'script>');
+					\$('head').append('<script src="$_REQUEST{__static_url}/jquery.blockUI.js?$_REQUEST{__static_salt}"></' + 'script>');
+					\$('head').append('<link rel="stylesheet" href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" />');
+
+					lrt_start ($_REQUEST{__lrt_id});
+				}
+			</script>
 		</head>
 		<body>
 		$lrt_bar

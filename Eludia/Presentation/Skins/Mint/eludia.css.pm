@@ -1036,7 +1036,7 @@ input.form-active-deleted, select.form-active-deleted, textarea.form-active-dele
 input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
-	background-color: #f4ff00;
+	background-color: #f7f7ad;
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	border: 2px solid black;
 	padding-left: 3px;
@@ -1045,12 +1045,16 @@ input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandato
 input.form-mandatory-deleted, select.form-mandatory-deleted, textarea.form-mandatory-deleted {
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
-	background-color: #f4ff00;
+	background-color: #f7f7ad;
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	border: 2px solid black;
 	padding-left: 3px;
 	padding-right: 3px;
 }
+input.k-textbox.form-mandatory-inputs, span.form-mandatory-inputs .k-dropdown-wrap {
+	background-color: #F7F7AD!important;
+}
+
 
 td.toolbar {
 	FONT-SIZE: 8pt;
