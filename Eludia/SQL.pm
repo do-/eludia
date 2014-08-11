@@ -164,6 +164,7 @@ sub check_systables {
 		__benchmarks
 		__request_benchmarks
 		__last_update
+		__lrt
 		__moved_links
 		__required_files
 		__screenshots

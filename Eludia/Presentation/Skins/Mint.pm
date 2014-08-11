@@ -147,22 +147,6 @@ EOH
 
 ################################################################################
 
-sub draw_calendar {
-
-	my $month_names = $_JSON -> encode ($i18n -> {months});
-
-	qq {
-
-		<script>var __month_names = $month_names;</script>
-
-		<span id='clock_d'></span>&nbsp;&nbsp;&nbsp;<span id='clock_h'></span><span id='clock_s'>:</span><span id='clock_m'></span>
-
-	}
-
-}
-
-################################################################################
-
 sub draw_auth_toolbar {
 
 	my ($_SKIN, $options) = @_;
@@ -970,7 +954,6 @@ sub draw_form_field_select {
 
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
 	if (
 		$r -> headers_in -> {'User-Agent'} !~ /webkit|safari/i
@@ -1833,7 +1816,6 @@ sub draw_toolbar_input_text {
 
 
 	$options -> {attributes} ||= {};
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
 	$options -> {onKeyPress} ||= "if (event.keyCode == 13) {form.submit(); blockEvent ()}";
 
@@ -2302,12 +2284,6 @@ sub draw_select_cell {
 		onkeypress='typeAhead();'
 		$multiple
 	};
-
-	if (($options -> {__fixed_cols} > 0) && msie_less_7) {
-
-		$html .= qq {style= "visibility:expression(cell_select_visibility(this, $options->{__fixed_cols}))"};
-
-	}
 
 	$html .= '>';
 
@@ -3098,16 +3074,6 @@ EOJS
 		<link href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet" />
 		<link href="$_REQUEST{__static_url}/jquery-ui-1.8.21.custom.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet" />
 
-		<style>
-			v\\:*           { behavior: url(#default#VML); }
-			#admin          { width:205px;height:25px;padding:5px 5px 5px 9px;background:url('$_REQUEST{__static_url}/menu_button.gif') no-repeat 0 0;}
-			.calendar .nav  { background: transparent url($_REQUEST{__static_url}/menuarrow.gif) no-repeat 100% 100%; }
-			td.main-menu    { padding-top:1px; padding-bottom:1px; background-image: url($_REQUEST{__static_url}/menu_bg.gif); cursor: pointer; }
-			td.vert-menu    { background-color: #454a7c;font-family: Tahoma, 'MS Sans Serif';font-weight: normal;font-size: 8pt;color: #ffffff;text-decoration: none;padding-top:4px;padding-bottom:4px;background-image: url($_REQUEST{__static_url}/menu_bg.gif);cursor: pointer;}
-			td.login-head   { background:url('$_REQUEST{__static_url}/login_title_pix.gif') repeat-x 1 1; background-color: #B9C5D7;font-size:10pt;font-weight:bold;padding:7px;}
-		</style>
-
-
 		<script src="$_REQUEST{__static_url}/jquery-1.11.1.min.js?$_REQUEST{__static_salt}"></script>
 		<script src="$_REQUEST{__static_url}/jquery-migrate-1.2.1.min.js?$_REQUEST{__static_salt}"></script>
 		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}"></script>
@@ -3236,17 +3202,11 @@ sub lrt_print {
 
 	my $_SKIN = shift;
 
-	my $id = int (time * rand);
-	$r -> print ("<span id='$id'><font color=white>");
-	$r -> print (@_);
-	$r -> print ("</span>");
-	$r -> print ($lrt_bar);
-	$r -> print (<<EOH);
-	<script>
-		document.getElementById ('$id').scrollIntoView (false);
-	</script>
-	</body></html>
-EOH
+	&{$_PACKAGE . 'sql_do'} ("INSERT INTO $conf->{systables}->{__lrt} (id_session, lrt_id, label) VALUES (?, ?, ?)",
+		$_REQUEST {sid},
+		$_REQUEST {__lrt_id},
+		join '', @_,
+	);
 
 
 }
@@ -3265,9 +3225,13 @@ sub lrt_println {
 
 sub lrt_ok {
 	my $_SKIN = shift;
-	my $color = $_[1] ? 'red' : 'yellow';
-	my $label = $_[1] ? 'Îøèáêà' : 'ÎÊ';
-	$_SKIN -> lrt_println ("$_[0] <font color='$color'><b>[$label]</b></font>");
+
+	&{$_PACKAGE . 'sql_do'} ("INSERT INTO $conf->{systables}->{__lrt} (id_session, lrt_id, label, is_error) VALUES (?, ?, ?, ?)",
+		$_REQUEST {sid},
+		$_REQUEST {__lrt_id},
+		$_[1] ? 'Îøèáêà' : 'ÎÊ',
+		$_[1] || 0,
+	);
 }
 
 ################################################################################
@@ -3281,10 +3245,18 @@ sub lrt_start {
 	$r -> content_type ('text/html; charset=windows-1251');
 	$r -> send_http_header ();
 
-	$_SKIN -> lrt_print (<<EOH);
-		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="STYLESHEET"><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
-			<iframe name=invisible src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes">
-			</iframe>
+	$_REQUEST {__lrt_id} = rand (100000);
+
+	$r -> print (<<EOH);
+		<!doctype html>
+		<html>
+		<head>
+			<script type="text/javascript">window=parent; parent.lrt_start ($_REQUEST{__lrt_id})</script>
+		</head>
+		<body>
+		$lrt_bar
+		</body>
+		</html>
 EOH
 
 }
@@ -3297,149 +3269,42 @@ sub lrt_finish {
 
 	my ($banner, $href, $options) = @_;
 
-	if ($options -> {kind} eq 'download') {
+# 	if ($options -> {kind} eq 'download') {
 
-		$r -> print ($options -> {toolbar});
+# 		$r -> print ($options -> {toolbar});
 
-		my $js = q {
+# 		my $js = q {
 
-			var download = document.getElementById ('download');
+# 			var download = document.getElementById ('download');
 
-			download.scrollIntoView (true);
+# 			download.scrollIntoView (true);
 
-		};
+# 		};
 
-		$js .= user_agent () -> {nt} >= 6 ? '' : ' download.click ();';
+# 		$js .= user_agent () -> {nt} >= 6 ? '' : ' download.click ();';
 
-		$r -> print ("<script>$js</script></body></html>" . (' ' x 4096));
+# 		$r -> print ("<script>$js</script></body></html>" . (' ' x 4096));
 
-	}
-	elsif ($options -> {kind} eq 'link') {
-		$_SKIN -> lrt_print (<<EOH);
-		<br><a href="javascript: document.location = '$href'"><font color='yellow'>$banner</font></a>
-		</body></html>
-EOH
-	}
-	else {
+# 	}
+	if ($options -> {kind} eq 'link') {
+		&{$_PACKAGE . 'sql_do'} ("INSERT INTO $conf->{systables}->{__lrt} (id_session, lrt_id, label, href) VALUES (?, ?, ?, ?)",
+			$_REQUEST {sid},
+			$_REQUEST {__lrt_id},
+			qq|<a style="font-size: large;" href="javascript: document.location = '$href'">$banner</a>|,
+			'fake',
+		);
 
-		$_SKIN -> lrt_print (<<EOH);
-		<script>
-			alert ('$banner');
-			document.location = '$href';
-		</script>
-		</body></html>
-EOH
-
+	} else {
+		&{$_PACKAGE . 'sql_do'} ("INSERT INTO $conf->{systables}->{__lrt} (id_session, lrt_id, label, href) VALUES (?, ?, ?, ?)",
+			$_REQUEST {sid},
+			$_REQUEST {__lrt_id},
+			$banner,
+			$href,
+		);
 	}
 
 }
 
-################################################################################
-
-sub draw_logon_form {
-
-	my ($_SKIN, $options) = @_;
-
-	my $focused_field = $_COOKIE {user_login} ? 'password' : 'login';
-
-	$_REQUEST {__on_load} .= qq {
-
-		\$('#$focused_field').focus ();
-
-		\$("#login").keypress ( function (e) {
-
-			if (get_event (e).keyCode == 13) \$("#password").focus ();
-
-		});
-
-		\$("#password").keypress ( function (e) {
-
-			if (get_event (e).keyCode == 13) this.form.submit ();
-
-		});
-
-	};
-	if ($preconf -> {core_fix_tz}) {
-		my $tz = (Date::Calc::Timezone ()) [3] || 0;
-		$_REQUEST {__on_load} .= " var d = new Date(); document.form.tz_offset.value=$tz - d.getTimezoneOffset()/60;";
-	}
-
-	my $hiddens = dump_hiddens (
-		[type            => 'logon'],
-		[action          => 'execute'],
-		[tz_offset       => ''],
-	);
-
-	my $auth_toolbar = &{$_PACKAGE . 'draw_auth_toolbar'} ({
-		top_banner => ($conf -> {top_banner} ? interpolate ($conf -> {top_banner}) : ''),
-	});
-
-	return <<EOH;
-
-<table border="0" cellpadding="0" cellspacing="0" align=center height=100% width=100%>
-
-	<tr>
-
-		<td valign=top height=90>
-$auth_toolbar
-		</td>
-
-	</tr>
-
-	<tr>
-
-		<td align=center valign=middle>
-
-			<table border="0" cellpadding="4" cellspacing="1" width="470" height="225" class="logon">
-				<tr><td class="login-head">$i18n->{authorization}</td></tr>
-				<tr>
-					<td align="center" style="border:solid 1px #B9C5D7; height:150px;">
-
-						<table border="0" cellpadding="8" cellspacing="0">
-						<form action="$_REQUEST{__uri}" method=post autocomplete="off" name=form target="$options->{target}">
-							$hiddens
-							<tr class="logon">
-								<td><b>$i18n->{login}:</b></td>
-								<td><input type="text" id="login" name="login" value="$_COOKIE{user_login}" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false"></td>
-							</tr>
-							<tr class="logon">
-								<td><b>$i18n->{password}:</b></td>
-								<td><input type="password" id="password" name="password" style="width:200px;" onfocus="q_is_focused = true" onblur="q_is_focused = false"></td>
-							</tr>
-
-
-						</form>
-						</table>
-					</td>
-				</tr>
-				<tr>
-					<td style="text-align:center;height:36px;background:url('$_REQUEST{__static_url}/submit_area_bgr.gif') repeat-x 0 0;"><center>
-
-						<table border=0 cellspacing=0 cellpadding=0>
-							<tr>
-								<td style="background:url('$_REQUEST{__static_url}/grey_ear_left.gif') no-repeat 0 0;"><a href="#"><img src="$_REQUEST{__static_url}/i_logon.gif?$_REQUEST{__static_salt}" border="0" align="absmiddle" hspace="5"></a><a class="grey-submit" href="javascript:document.forms['form'].submit()">$i18n->{execute_logon}</a></td>
-								<td><img src="$_REQUEST{__static_url}/grey_ear_right.gif?$_REQUEST{__static_salt}" border="0"></td>
-							</tr>
-						</table>
-					</center></td>
-				</tr>
-			</table>
-
-		</td>
-
-
-	</tr>
-	<tr>
-		<td valign=top height=90>
-			<img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=20 height=90 border=0>
-		</td>
-	</tr>
-
-</table>
-
-EOH
-
-}
 
 ################################################################################
 
