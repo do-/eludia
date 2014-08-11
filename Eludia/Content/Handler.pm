@@ -95,17 +95,6 @@ sub page_is_not_needed {
 
 	__profile_in ('handler.setup_user');
 
-	if ($r -> {headers_in} -> {'User-Agent'} =~ /^Microsoft/) {
-
-		$_REQUEST {type} = $_REQUEST_VERBATIM {type} = 'webdav';
-		$_REQUEST {method} = $ENV {REQUEST_METHOD};
-
-		$_REQUEST {query} ||= $ENV {'REQUEST_URI'};
-		$_REQUEST {query} =~ s/\/webdav\///;
-		$_REQUEST {query} =~ s/^(\d+)_//;
-		$_REQUEST {sid} ||= $1;
-	}
-
 	my $u = setup_user ();
 
 	__profile_out ('handler.setup_user', {label => "id_user=$_USER->{id}, ip=$_USER->{ip}, ip_fw=$_USER->{ip_fw}, sid=$_REQUEST{sid}"});
@@ -200,6 +189,17 @@ sub setup_request_params {
 	our %_REQUEST_VERBATIM = %_REQUEST;
 
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
+
+	if ($r -> {headers_in} -> {'User-Agent'} =~ /^Microsoft/) {
+		$_REQUEST {type} = $_REQUEST_VERBATIM {type} = 'webdav';
+		$_REQUEST {method} = $ENV {REQUEST_METHOD};
+
+		$_REQUEST {query} ||= $ENV {'REQUEST_URI'};
+		$_REQUEST {query} =~ s/\/webdav\///;
+		$_REQUEST {query} =~ s/^([a-z0-9]+)_(\d+)_//;
+		$_COOKIE {client_cookie} = $1;
+		$_REQUEST {sid} ||= $2;
+	}
 
 	set_cookie_for_root (
 		client_cookie => $_COOKIE {client_cookie} || Digest::MD5::md5_hex (rand ())
