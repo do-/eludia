@@ -576,9 +576,10 @@ sub draw_redirect_page {
 	<script for=window event=onload>
 		$options->{before};
 		var w = window;
+		w.is_redirecting = 1;
 		w.open ('$options->{url}&salt=' + Math.random (), $target, '$options->{window_options}');
 	</script>
-	<body redirect="1">
+	<body>
 	</body>
 </html>
 EOH
