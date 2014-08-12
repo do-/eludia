@@ -2116,10 +2116,10 @@ function lrt_start (lrt_id) {
 
 	$.getScript("/i/libs/console.js", function(){
 
-		var width = screen.availWidth - 200,
-			height = screen.availHeight - 300,
-			left = screen.availWidth / 2  - width / 2,
-			top = screen.availHeight / 2  - height / 2;
+		var width = $(window).width() - 200,
+			height = $(window).height() - 300,
+			left = $(window).width() / 2  - width / 2,
+			top = $(window).height() / 2  - height / 2;
 
 		$.blockUI ({fadeIn: 0, message: ' '});
 
