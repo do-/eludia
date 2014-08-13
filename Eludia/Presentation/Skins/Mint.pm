@@ -1710,26 +1710,27 @@ sub draw_toolbar_input_select {
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
 
 		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+		my $submit;
+		if ($options -> {onChange} =~ s/(submit\(\);)$//) {
+			$submit = $1;
+		}
 
 		$options -> {onChange} .= <<EOJS;
+			if (this.options[this.selectedIndex].value == -1) {
+				open_vocabulary_from_select (
+					this,
+					{
+						message       : i18n.choose_open_vocabulary,
+						href          : '$options->{other}->{href}&select=$name&salt=' + Math.random(),
+						dialog_width  : $options->{other}->{width},
+						dialog_height : $options->{other}->{height}
+					}
+				);
+			}
 
-				var confirmed = $options->{no_confirm} || window.confirm ('$$i18n{confirm_open_vocabulary}');
-
-				if (this.options[this.selectedIndex].value == -1 && confirmed) {
-
-					open_vocabulary_from_select (
-						this,
-						{
-							message       : i18n.choose_open_vocabulary,
-							href          : '$options->{other}->{href}&select=$name&salt=' + Math.random(),
-							dialog_width  : $options->{other}->{width},
-							dialog_height : $options->{other}->{height}
-						}
-					);
-
-				} else {
-					submit ();
-				}
+			if (\$.data (this, 'prev_value') != this.selectedIndex) {
+				$submit;
+			}
 EOJS
 
 	} # defined $options -> {other}
@@ -1737,6 +1738,7 @@ EOJS
 	$options -> {attributes} ||= {};
 
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
+	$options -> {attributes} -> {onFocus} = q|debugger; $.data (this, 'prev_value', this.selectedIndex);|;
 
 	$options -> {attributes} -> {onKeyPress} = 'typeAhead(1)';
 
@@ -2102,7 +2104,7 @@ sub js_set_select_option {
 
 ################################################################################
 
-sub draw_super_table_text_cell {
+sub draw_text_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
@@ -2135,70 +2137,8 @@ sub draw_super_table_text_cell {
 
 	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
-	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
-	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
-	$html .= '<strike>' if $data -> {strike} || $options -> {strike};
-
-	$html .= $data -> {label};
-
-	$html .= '</b>'      if $data -> {bold}   || $options -> {bold};
-	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
-	$html .= '</strike>' if $data -> {strike} || $options -> {strike};
-
-	$html .= '</td>';
-
-	return $html;
-
-}
-
-################################################################################
-
-sub draw_text_cell {
-
-	my ($_SKIN, $data, $options) = @_;
-
-#	if ($_REQUEST {__only_table}) {
-		return draw_super_table_text_cell ($_SKIN, $data, $options);
-#	}
-
-	if (defined $data -> {level}) {
-
-		$data -> {attributes} -> {style} = 'padding-left:' . ($data -> {level} * 15 + 3);
-
-	}
-
-	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
-
-	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor;
-
-	my $html = dump_tag ('td', $data -> {attributes});
-
-	if ($data -> {off} || $data -> {label} !~ s/^\s*(.+?)\s*$/$1/gsm) {
-
-		return $html . '&nbsp;</td>';
-
-	}
-
-	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
-
-	$html .= '<nobr>' unless $data -> {no_nobr};
-
 	$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
 
-	if ($data -> {href}) {
-
-		$a_attributes_html = dump_attributes ({
-			id      => $data -> {a_id},
-			class   => $data -> {a_class},
-			target  => $data -> {target},
-			href    => $data -> {href},
-			onFocus => "blur()",
-			style   => $fgcolor ? "color:$fgcolor;" : undef,
-		});
-
-		$html .= qq {<a $a_attributes_html $$data{onclick}>};
-
-	}
 
 	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
@@ -2210,21 +2150,12 @@ sub draw_text_cell {
 	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
 	$html .= '</strike>' if $data -> {strike} || $options -> {strike};
 
-	if ($data -> {href}) {
-
-		$html .= $data -> {href} eq $options -> {href} ? '</span>' : '</a>';
-
-	}
-
-	$html .= '</nobr>' unless $data -> {no_nobr};
-
-	$html .= dump_hiddens ([$data -> {hidden_name} => $data -> {hidden_value}]) if $data -> {add_hidden};
-
 	$html .= '</td>';
 
 	return $html;
 
 }
+
 
 ################################################################################
 

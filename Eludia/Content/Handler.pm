@@ -465,9 +465,11 @@ sub handle_request_of_type_kickout {
 
 	foreach (qw(sid salt _salt __last_query_string __last_scrollable_table_row)) {delete $_REQUEST {$_}}
 
-	setup_json ();
-	my %_R = map {$_ => $_REQUEST {$_}} grep {!ref $_REQUEST {$_}} keys %_REQUEST;
-	set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode ($_JSON -> encode (\%_R)), -path => '/');
+	unless ($r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest') {
+		setup_json ();
+		my %_R = map {$_ => $_REQUEST {$_}} grep {!ref $_REQUEST {$_}} keys %_REQUEST;
+		set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode ($_JSON -> encode (\%_R)), -path => '/');
+	}
 
 	redirect (
 		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),

@@ -636,7 +636,7 @@ function adjust_kendo_selects() {
 
 	var setWidth = function (el) {
 		var p = el.data("kendoDropDownList").popup.element;
-		var w = p.css("visibility","hidden").show().outerWidth() + 16;
+		var w = p.css("visibility","hidden").show().outerWidth() + 32;
 		p.hide().css("visibility","visible");
 		el.closest(".k-widget").width(w);
 	}
@@ -646,6 +646,9 @@ function adjust_kendo_selects() {
 		$(original_select).kendoDropDownList({
 			height: 320,
 			open: function (e) {
+
+				$.data (original_select, 'prev_value', this.selectedIndex);
+
 				if ($(original_select).attr('data-ken-autoopen') !== 'true') {
 					return;
 				}

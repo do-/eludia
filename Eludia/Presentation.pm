@@ -1595,6 +1595,13 @@ sub draw_cells {
 
 	$options -> {__fixed_cols} = 0;
 
+	my $row = [];
+	foreach my $cell (@$_[0]) {
+		push @$row, $cell
+			unless $cell -> {hidden};
+	}
+
+
 
 	if ($conf -> {core_store_table_order} && !$_REQUEST {__no_order}) {
 
@@ -1624,13 +1631,13 @@ sub draw_cells {
 
 			ref $h eq HASH && !$h -> {has_child} or next;
 
-			last if $j >= @{$_ [0]};
+			last if $j >= @$row;
 
-			$_ [0] [$j] = {label => $_ [0] [$j]} unless ref $_ [0] [$j] eq HASH;
+			$row -> [$j] = {label => $row -> [$j]} unless ref $row -> [$j] eq HASH;
 
-			$_ [0] [$j] -> {ord} ||= $__COLUMNS [$i] -> {ord};
+			$row -> [$j] -> {ord} ||= $__COLUMNS [$i] -> {ord};
 
-			$_ [0] [$j] -> {hidden} ||= $__COLUMNS [$i] -> {hidden};
+			$row -> [$j] -> {hidden} ||= $__COLUMNS [$i] -> {hidden};
 
 			$j++;
 		}
@@ -1936,22 +1943,23 @@ sub get_table_header_field {
 
 	my ($headers) = @_;
 
-	my $result_headers = [];
+	ref $headers -> [0] eq ARRAY or $headers = [$headers];
 
-	if (ref $headers -> [0] eq ARRAY) {
-
-		my $result_headers = get_composite_table_headers ({headers => $headers});
-
-		return $result_headers -> {headers};
+	my $source_headers = [];
+	foreach my $row (@$headers) {
+		my $source_row = [];
+		foreach my $cell (@$row) {
+			push @$source_row, $cell
+				unless $cell -> {hidden};
+		}
+		push @$source_headers, $source_row
+			if @$source_row;
 	}
 
-	for (my $i = 0; $i < @$headers; $i++) {
 
-		push @$result_headers, $headers -> [$i];
+	my $result_headers = get_composite_table_headers ({headers => $source_headers});
 
-	}
-
-	return $result_headers;
+	return $result_headers -> {headers};
 }
 
 
@@ -1991,6 +1999,7 @@ sub get_composite_table_headers {
 			for (my $k = 0; $k < @{$result -> {headers}}; $k++) {
 
 				$result -> {headers} -> [$k] -> {parent} = $headers -> [$i] -> [$j];
+				push @{$headers -> [$i] -> [$j] -> {children}}, $result -> {headers} -> [$k];
 				$headers -> [$i] -> [$j] -> {has_child} ++;
 
 				push @$result_headers, $result -> {headers} -> [$k];
@@ -2203,7 +2212,7 @@ sub draw_table {
 		my @header_cells = ();
 
 		my $is_exists_subheaders;
-		my $cells_cnt;
+		my $max_ord;
 
 		$headers = get_table_header_field ($headers);
 
@@ -2213,10 +2222,13 @@ sub draw_table {
 
 			push @header_cells, $h;
 
-			$cells_cnt += 1
-				if (($h -> {order} || $h -> {no_order})
-					&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}
-					&& $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord});
+			if (($h -> {order} || $h -> {no_order})
+				&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}
+				&& $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord}) {
+				if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} > $max_ord) {
+					$max_ord = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
+				}
+			}
 
 		}
 
@@ -2225,7 +2237,10 @@ sub draw_table {
 			push @_COLUMNS, $h;
 
 			if ($_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
-				if ($cells_cnt && ($h -> {order} || $h -> {no_order}) && exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}) {
+				if ($max_ord && ($h -> {order} || $h -> {no_order})
+					&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}
+					&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord}
+				) {
 					if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} == 0) {
 						my $p = $h -> {parent};
 						while ($p -> {label}) {
@@ -2237,6 +2252,18 @@ sub draw_table {
 						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord})
 							: ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} * 1000);
 					}
+				} elsif (!$h -> {hidden}) {
+					if ($h -> {parent}) {
+						if ($h -> {parent} -> {ord} > 0) {
+							$h -> {parent} -> {children_ord} ||= @{$h -> {parent} -> {children}};
+							$h -> {parent} -> {children_ord} ++;
+							$h -> {ord} = $h -> {parent} -> {ord} + $h -> {parent} -> {children_ord};
+						}
+					} else {
+						$max_ord ++;
+						$h -> {ord} = $max_ord;
+					}
+
 				}
 
 				$h -> {__hidden} = $h -> {hidden};
@@ -2254,6 +2281,7 @@ sub draw_table {
 				if ($h -> {order} || $h -> {no_order});
 
 		}
+darn \@_COLUMNS;
 	}
 
 	$options -> {type}   ||= $_REQUEST{type};

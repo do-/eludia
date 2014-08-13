@@ -137,6 +137,9 @@ ol, ul {list-style: none;}
 A.k-button {
 	line-height: 26px;
 }
+.k-list .k-item {
+	white-space:nowrap;
+}
 
 FORM.toolbar {
 	background-color: #cacaca;
