@@ -830,12 +830,15 @@ function setup_drop_down_button (id, data) {
 					var selected_url = selected_item.url;
 					if (selected_url) {
 						if (selected_url.match(/^javascript:/i)) {
+
+							var code = decodeURI (selected_url.substr (11));
+
 							if (selected_item.confirm) {
 								if (confirm (selected_item.confirm)) {
-									eval (selected_url);
+									eval (code);
 								}
 							} else {
-								eval (selected_url);
+								eval (code);
 							}
 						} else {
 							if (selected_item.confirm) {
@@ -2174,4 +2177,19 @@ function lrt_start (lrt_id) {
 
 
 	});
+}
+
+function blockui (message, poll) {
+
+	$.blockUI ({
+		onBlock: function(){ is_interface_is_locked = true; },
+		onUnblock: function(){ is_interface_is_locked = false; },
+		fadeIn: 0,
+		message: "<h2>" + (message || "<img src='/i/_skins/Mint/busy.gif'> " + i18n.request_sent) + "</h2>"
+	});
+
+	if (poll)
+		window.setInterval(poll_invisibles, 100);
+
+	return true;
 }

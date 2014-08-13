@@ -2281,7 +2281,7 @@ sub draw_table {
 				if ($h -> {order} || $h -> {no_order});
 
 		}
-darn \@_COLUMNS;
+
 	}
 
 	$options -> {type}   ||= $_REQUEST{type};

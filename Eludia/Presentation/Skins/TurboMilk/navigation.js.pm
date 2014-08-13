@@ -4390,3 +4390,19 @@ function eludia_copy_clipboard (text, element) {
 
 	window.prompt(top.i18n.copy_clipboard, text);
 }
+
+
+function blockui (message, poll) {
+
+	$.blockUI ({
+		onBlock: function(){ is_interface_is_locked = true; },
+		onUnblock: function(){ is_interface_is_locked = false; },
+		fadeIn: 0,
+		message: "<h2><img src='/i/_skins/TurboMilk/busy.gif'>" + (message || i18n.request_sent) + "</h2>"
+	});
+
+	if (poll)
+		window.setInterval(poll_invisibles, 100);
+
+	return true;
+}

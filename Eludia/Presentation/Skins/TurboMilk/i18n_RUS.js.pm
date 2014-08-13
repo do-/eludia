@@ -1,6 +1,7 @@
 var i18n = {
 	F5: "Внимание! Вы изменили содержимое некоторых полей ввода. Перезагрузка страницы приведёт к утере этой информации. Продолжить?",
 	choose_open_vocabulary: 'Запрос отправлен на сервер',
+	request_sent : 'Запрос отправлен на сервер',
 	copy_clipboard: "Для копирования нажмите CTRL+C, потом ENTER"
 };
 
@@ -24,7 +25,7 @@ function i18n_calendar (Calendar) {
 		"TODAY"           : "Сегодня",
 		"DEF_DATE_FORMAT" : "y-mm-dd",
 		"TT_DATE_FORMAT"  : "D, M d",
-		"WK"              : "нед" 
+		"WK"              : "нед"
 	};
 
 }

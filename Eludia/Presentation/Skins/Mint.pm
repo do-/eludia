@@ -1555,14 +1555,18 @@ EOH
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
-		$html .= "<script>var data_$id = [";
-		map {
-			$_ -> {imageUrl} = _icon_path ($_ -> {icon}) if $_ -> {icon};
-			$html .= <<EOH;
-			{ text: '$$_{label}', url: "$$_{href}", imageUrl: "$$_{imageUrl}", confirm: "$$_{confirm}" },
-EOH
-		} @{$options -> {items}};
-		$html .= "]; </script>";
+		$html .= "<script>var data_$id = " . $_JSON -> encode ([
+			map {
+				$_ -> {imageUrl} = _icon_path ($_ -> {icon}) if $_ -> {icon};
+				{
+					text  => $_ -> {label},
+					url   => $_ -> {href},
+					imageUrl => $_ -> {imageUrl} || '',
+					confirm => $_ -> {confirm} || '',
+				}
+			} @{$options -> {items}}
+		]);
+		$html .= "</script>";
 
 		$html .= <<EOH;
 
@@ -1912,9 +1916,7 @@ sub draw_centered_toolbar_button {
 
 		}
 
-		my $code = "\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\\'$_REQUEST{__static_url}/busy.gif\\'> $i18n->{request_sent}</h2>'})";
-
-		$options -> {href} =~ s/\bnope\b/$code;nope/;
+		$options -> {href} =~ s/\bnope\b/blockui ('', 1);nope/;
 
 	}
 
@@ -1926,14 +1928,18 @@ sub draw_centered_toolbar_button {
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
-		$html .= "<script>var data_$id = [";
-		map {
-			$_ -> {imageUrl} = _icon_path ($_ -> {icon}) if $_ -> {icon};
-			$html .= <<EOH;
-			{ text: '$$_{label}', url: "$$_{href}", imageUrl: "$$_{imageUrl}", confirm: "$$_{confirm}" },
-EOH
-		} @{$options -> {items}};
-		$html .= "];</script>";
+		$html .= "<script>var data_$id = " . $_JSON -> encode ([
+			map {
+				$_ -> {imageUrl} = _icon_path ($_ -> {icon}) if $_ -> {icon};
+				{
+					text  => $_ -> {label},
+					url   => $_ -> {href},
+					imageUrl => $_ -> {imageUrl} || '',
+					confirm => $_ -> {confirm} || '',
+				}
+			} @{$options -> {items}}
+		]);
+		$html .= "</script>";
 
 		$html .= <<EOH;
 
@@ -2768,8 +2774,7 @@ sub draw_page {
 		id           => 'body',
 	};
 
-	push @{$_REQUEST {__include_js}}, '_skins/Mint/jquery.blockUI'
-		if $preconf -> {core_blockui_on_submit} || $r -> headers_in -> {'User-Agent'} =~ /webkit/i;
+	push @{$_REQUEST {__include_js}}, '_skins/Mint/jquery.blockUI';
 
 	push @{$_REQUEST {__include_js}}, 'ken/js/kendo.all.min', 'libs/kendo.web.ext', 'ken/js/cultures/kendo.culture.ru-RU-1251.min';
 	push @{$_REQUEST {__include_css}}, 'ken/styles/kendo.common.min', 'ken/styles/kendo.bootstrap.min';
@@ -2851,7 +2856,7 @@ sub draw_page {
 
 	if ($preconf -> {core_blockui_on_submit}) {
 
-		$_REQUEST {__on_load} .= "\$('form').submit (function () {\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\"$_REQUEST{__static_url}/busy.gif\"> $i18n->{request_sent}</h2>'}); return true;});";
+		$_REQUEST {__on_load} .= "\$('form').submit (function () {return blockui();});";
 
 		$_REQUEST {__script} .= <<'EOJS';
 function poll_invisibles () {
