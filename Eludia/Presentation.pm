@@ -1596,12 +1596,10 @@ sub draw_cells {
 	$options -> {__fixed_cols} = 0;
 
 	my $row = [];
-	foreach my $cell (@$_[0]) {
+	foreach my $cell (@{$_[0]}) {
 		push @$row, $cell
 			unless $cell -> {hidden};
 	}
-
-
 
 	if ($conf -> {core_store_table_order} && !$_REQUEST {__no_order}) {
 
@@ -2253,7 +2251,7 @@ sub draw_table {
 							: ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} * 1000);
 					}
 				} elsif (!$h -> {hidden}) {
-					if ($h -> {parent}) {
+					if (keys %{$h -> {parent}}) {
 						if ($h -> {parent} -> {ord} > 0) {
 							$h -> {parent} -> {children_ord} ||= @{$h -> {parent} -> {children}};
 							$h -> {parent} -> {children_ord} ++;
@@ -2261,7 +2259,7 @@ sub draw_table {
 						}
 					} else {
 						$max_ord ++;
-						$h -> {ord} = $max_ord;
+						$h -> {ord} = $max_ord * 1000;
 					}
 
 				}
