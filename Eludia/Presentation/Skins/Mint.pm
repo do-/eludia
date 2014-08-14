@@ -2747,8 +2747,7 @@ sub draw_page___only_table {
 
 	my ($_SKIN, $page) = @_;
 
-	$_REQUEST {__content_type} ||= 'application/json; charset=utf-8';
-	$_REQUEST {__charset} = 'utf-8';
+	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
 
 	return $page -> {body};
 }

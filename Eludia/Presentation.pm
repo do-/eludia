@@ -2049,7 +2049,7 @@ sub _adjust_table_options {
 
 	}
 
-	$options -> {id_table} ||= $_REQUEST {type} . '_' . $_REQUEST {__table_cnt}++;
+	$options -> {id_table} ||= $_REQUEST {type} . '_' . $_REQUEST {__table_ids_cnt}++;
 
 	$options -> {super_table} ||= $_REQUEST {__skin} eq 'Mint';
 
