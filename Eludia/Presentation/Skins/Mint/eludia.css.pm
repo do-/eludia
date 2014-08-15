@@ -24,19 +24,6 @@ FORM {
 	margin: 0px;
 }
 
-.tbbg0 {background-color: #b9c5d7; font-size: 1px;}
-.tbbg1 {background-color: #6f7681; font-size: 1px;}
-.tbbg2 {background-color: #949eac; font-size: 1px;}
-.tbbg3 {background-color: #adb8c9; font-size: 1px;}
-.tbbg4 {background-color: #c5d2df; font-size: 1px;}
-.tbbg5 {background-color: #8c9ab1; font-size: 1px;}
-.tbbg6 {background-color: #b9c5d7;}
-.tbbg7 {background-color: #454a7c;}
-.tbbg8 {background-color: #5d6496;}
-.tbbg9 {background-color: #888888;}
-.tbbga {background-color: #e5e5e5;}
-.tbbgb {background-color: #e4e9ee; font-size: 1px;}
-
 .form-article {
 
 	FONT-SIZE:  12pt;
@@ -136,6 +123,9 @@ ol, ul {list-style: none;}
 
 A.k-button {
 	line-height: 26px;
+}
+A.k-button:focus {
+	text-decoration: none;
 }
 .k-list .k-item {
 	white-space:nowrap;
@@ -1075,15 +1065,6 @@ a.hint {
 }
 
 
-
-
-
-
-
-
-
-
-
 #admin a {color:#000000;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 
 #Menu {position:absolute;top:0;left:0;z-index:100;display:none}
@@ -1107,63 +1088,3 @@ a.grey-submit:hover {color:#222323;text-decoration:underline;FONT-SIZE: 8pt;}
 	text-decoration: none;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-/*--------------------------------------------------|
-| dTree 2.05 | www.destroydrop.com/javascript/tree/ |
-|---------------------------------------------------|
-| Copyright (c) 2002-2003 Geir Landrö               |
-|--------------------------------------------------*/
-
-.dtree {
-	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
-	font-size: 11px;
-	white-space: nowrap;
-	float: left;
-
-	PADDING: 3px;
-	MARGIN: 0px;
-
-	scrollbar-base-color:#d6d3ce;
-	scrollbar-arrow-color:#485f70;
-	scrollbar-3dlight-color: #efefef;
-	scrollbar-darkshadow-color:#b0b0b0;
-
-}
-
-.dtree img {
-	border: 0px;
-	vertical-align: middle;
-}
-.dtree a, a:visited, a:hover {
-	color: #333;
-	text-decoration: none;
-}
-
-.dtree a:active {
-	color: #596084;
-}
-
-.dtree a.node, .dtree a.nodeSel {
-	white-space: nowrap;
-	padding: 1px 2px 1px 2px;
-}
-.dtree a.node:hover, .dtree a.nodeSel:hover {
-	color: #333;
-	text-decoration: underline;
-}
-.dtree a.nodeSel {
-	background-color: #c0d2ec;
-}
-.dtree .clip {
-	overflow: hidden;
-}

@@ -564,18 +564,6 @@ sub draw_form_field_file {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	$_REQUEST {__script} .= <<EOH if $_REQUEST {__script} !~ /function form_field_file_clear\s+/;
-
-		function form_field_file_clear (id) {
-
-			setCursor ();
-
-			var form_field_file = \$('#' + id);
-
-			form_field_file.replaceWith(form_field_file.clone(true));
-		}
-EOH
-
 	my $html = "<span id='form_field_file_head_$options->{name}'>";
 
 	$$options{value} ||= $data -> {file_name};
@@ -608,8 +596,8 @@ EOH
 				onChange="is_dirty=true; $$options{onChange}"
 				onKeyDown="if (event.keyCode != 9) return false;"
 				tabindex=-1
+				data-ken-multiple="false"
 			/>
-			<a href="javaScript:form_field_file_clear('form_field_file_head_$options->{name}');void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>
 EOH
 
 	$html .= <<EOH if ($options -> {can_edit});
@@ -629,66 +617,17 @@ sub draw_form_field_files {
 
 	my ($_SKIN, $options, $data) = @_;
 
+	$_REQUEST {__script} .= <<'EOJS' if $_REQUEST {__script} !~ /function number_file_fields_for_compatibility/;
+	function number_file_fields_for_compatibility (file_field) {
+		var next_counter = 1 + parseInt(file_field.name.match(/\d+$/)[0]);
+		file_field.name = file_field.name.replace(/\d+$/, next_counter);
+	}
+EOJS
+
+	$options -> {attributes} -> {"data-ken-multiple"} = "true";
+	$options -> {attributes} -> {onchange} = "number_file_fields_for_compatibility(this)";
+
 	my $attributes = dump_attributes ($options -> {attributes});
-
-	my $tail = qq {
-		type="file"
-		size=$$options{size}
-		$attributes
-		onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
-		onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
-		onChange="is_dirty=true; $$options{onChange}"
-		tabindex=-1
-	};
-
-	$tail =~ y{'}{"}; #"'
-	$tail =~ s{[\n\r\t]+}{ }gsm;
-
-	my $head_file_html = <<EOH;
-		<a href="javaScript:file_field_clear_$options->{name}();void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>&nbsp;
-		<input name="_$$options{name}_1" $tail>&nbsp;
-		<a href="javaScript:file_field_add_$options->{name}();void(0);"><img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18 border=0 align=absmiddle></a>
-EOH
-	$head_file_html =~ s{[\n\r\t]+}{}gsm;
-
-	$_REQUEST {__script} .= <<EOH;
-
-		var file_field_$options->{name}_cnt = 1;
-
-		function file_field_add_$options->{name} () {
-
-			setCursor ();
-
-			file_field_$options->{name}_cnt ++;
-
-			var file_field_id = 'file_field_$options->{name}' + file_field_$options->{name}_cnt;
-
-			var remove_button_html = '<a href="javaScript:file_field_remove_$options->{name}(' + file_field_id + ');void(0);"><img height=12 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=12 border=0 align=absmiddle></a>&nbsp;';
-
-			var input_html = '<input name="_$$options{name}_' + file_field_$options->{name}_cnt  + '" $tail>';
-
-			\$(file_field_$options->{name}).append('<span id="' + file_field_id + '"><br>' + remove_button_html + input_html + '</span>');
-
-		}
-
-		function file_field_remove_$options->{name} (id_file_field) {
-
-			setCursor ();
-
-			\$(id_file_field).empty();
-
-		}
-
-		function file_field_clear_$options->{name} () {
-
-			setCursor ();
-
-			\$(file_field_$options->{name}_head).empty();
-
-			\$(file_field_$options->{name}_head).append('$head_file_html');
-		}
-
-EOH
 
 	return <<EOH;
 
@@ -698,8 +637,15 @@ EOH
 			value="$options->{field}"
 		>
 
+		<input
+			type="hidden"
+			name="__$$options{name}_file_no_del"
+			value="$options->{no_del}"
+		>
 		<span id="file_field_$options->{name}">
-			<span id="file_field_$options->{name}_head">$head_file_html</span>
+			<span id="file_field_$options->{name}_head">
+				<input name="_$$options{name}_0" type="file" $attributes />
+			</span>
 		</span>
 
 EOH
@@ -2888,6 +2834,12 @@ EOJS
 				multiple : $(this).attr('data-ken-multiple') == 'true'
 			});
 		});
+		$("form").on ("submit", function () {
+			$('input[type=file][disabled]', this).each (function () {
+				if ($('input[type=file][name="' + this.name + '"]').length == 1)
+					$(this).removeAttr("disabled");
+			});
+		});
 EOJS
 
 	if ($_REQUEST {__im_delay}) {
@@ -3056,11 +3008,9 @@ sub load_ui_elements {
 				tableUrl: table_url,
 				initial_data : tables_data [this.id],
 				el: \$(that),
-				containerRender : function(table) {
-
-					\$(table.container).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+				containerRender : function() {
+					\$(that).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 					activate_suggest_fields ();
-
 				}
 			});
 		});
