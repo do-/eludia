@@ -2741,122 +2741,17 @@ sub draw_page {
 
 	1 or $_REQUEST {__script}  .= '; check_top_window (); ';
 
-	1 or $_REQUEST {__on_load} .= "try {top.hideSubMenus(0); top.setCursor ()} catch (e) {}; tableSlider.set_row (" . ($_REQUEST {__scrollable_table_row} ||= 0) . ");";
+	my $init_page_options = {
+		table_url              => $_SKIN -> table_url (),
+		__scrollable_table_row => $_REQUEST {__scrollable_table_row} ||= 0,
+		focus                  => !$_REQUEST {__no_focus},
+		__focused_input        => $_REQUEST {__focused_input},
+		blockui_on_submit      => $preconf -> {core_blockui_on_submit},
+	};
 
-	if (is_ua_mobile ()) {
+	$init_page_options = $_JSON -> encode ($init_page_options);
 
-		# $_REQUEST {__on_load} .= q {
-		# 		function translate_event (e) {
-		# 			parent.document.getElementById ('_body_iframe').dispatchEvent(e);
-		# 		}
-
-		# 		if (window.name == '_body_iframe') {
-		# 			document.addEventListener("touchstart", translate_event);
-		# 			document.addEventListener("touchmove", translate_event);
-		# 			document.addEventListener("touchend", translate_event);
-		# 			document.addEventListener("touchcancel", translate_event);
-		# 		}
-		# }
-
-	} else {
-
-		1 or $_REQUEST {__on_load} .= q {
-
-			if (0 && $.browser.msie && window.dialogArguments) {
-
-				$(top).on('resize', function () {
-
-					$(top.document.getElementById ('__body_iframe')).width ($(top).width());
-					$(top.document.getElementById ('__body_iframe')).height ($(top).height());
-
-					$(window).resize ();
-				});
-
-			}
-
-			$(window).resize (function() {
-
-				if (window.resizeTimer) clearTimeout (window.resizeTimer);
-
-				window.resizeTimer = setTimeout (checkTableContainers, 100);
-
-			});
-
-			$(window).scroll (checkTableContainers);
-
-			$(window).resize ();
-
-			tableSlider.scrollCellToVisibleTop ();
-
-		}
-	}
-
-	$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {};";
-
-	$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
-
-	$_REQUEST {__on_load} .= 'window.focus ();'                                                                 if ! $_REQUEST {__no_focus};
-
-	$_REQUEST {__on_load} .= "focus_on_input ('$_REQUEST{__focused_input}');";
-
-	$_REQUEST {__on_load} .= $_REQUEST {__edit} ? " try {top.edit_mode = 1} catch (e) {};" : " try {top.edit_mode = 0} catch (e) {};"                 if ! $_REQUEST {select};
-
-	if ($preconf -> {core_blockui_on_submit}) {
-
-		$_REQUEST {__on_load} .= "\$('form').submit (function () {return blockui();});";
-
-		$_REQUEST {__script} .= <<'EOJS';
-function poll_invisibles () {
-var has_loading_iframes;
-$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
-if (!has_loading_iframes) {
-	window.clearInterval(poll_invisibles);
-	$.unblockUI ();
-	is_interface_is_locked = false;
-	setCursor ();
-}
-}
-EOJS
-
-		$_REQUEST {__on_load} .= <<'EOJS';
-$('form[target^="invisible"]').submit (function () {
-window.setInterval(poll_invisibles, 100);
-});
-EOJS
-	}
-
-	$_REQUEST {__on_load} .= <<'EOJS';
-		adjust_kendo_selects ();
-
-		$('[data-type=datepicker]').kendoDatePicker();
-		$('[data-type=datetimepicker]').kendoDateTimePicker();
-
-		$('input[type=file]').each(function () {
-			$(this).kendoUpload({
-				multiple : $(this).attr('data-ken-multiple') == 'true'
-			});
-		});
-		$("form").on ("submit", function () {
-			$('input[type=file][disabled]', this).each (function () {
-				if ($('input[type=file][name="' + this.name + '"]').length == 1)
-					$(this).removeAttr("disabled");
-			});
-		});
-EOJS
-
-	$_REQUEST {__on_load} .= <<EOJS;
-		if (top.message) {
-			var notification = \$("#notification", top.document).data("kendoNotification");
-			if (!notification) {
-				notification = \$("#notification", top.document).kendoNotification({
-					stacking: "down",
-					button: true
-				}).data("kendoNotification");
-			}
-			notification.show (top.message);
-			top.message = '';
-		}
-EOJS
+	$_REQUEST {__on_load} .= "init_page ($init_page_options);";
 
 	if ($_REQUEST {__im_delay}) {
 
@@ -2910,21 +2805,8 @@ EOJS
 
 	$_REQUEST {__js_var} -> {menu_md5}                 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
 
-	$_REQUEST {__js_var} -> {edit_mode}                = undef;
-
-	$_REQUEST {__js_var} -> {edit_mode_args}           =
-
-		$preconf -> {core_unblock_navigation} ? {dialog_url => "$ENV{SCRIPT_URI}/i/_skins/Mint/dialog.html?$_REQUEST{__static_salt}"} :
-
-		!$_REQUEST {__only_tree_frameset}     ? {label      => $i18n -> {save_or_cancel}} :
-
-		undef;
-
-	;
-
 	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr", "_skins/$_REQUEST{__skin}/i18n_$_REQUEST{lang}";
 	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
-#	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable_turbomilk";
 
 	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
 
@@ -2936,7 +2818,6 @@ EOJS
 
 	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}'>\n</script>" foreach (@{$_REQUEST {__include_js}});
 
-	load_ui_elements ();
 
 	foreach (keys %_REQUEST) {
 
@@ -2956,8 +2837,6 @@ EOJS
 			my $what = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
 
 			$_REQUEST {__script} .= qq {\n \$($what).bind ('$1', function (event) { $code }) };
-#			$attributes -> {event} = "on$1";
-#			$attributes -> {for}   = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
 
 		}
 
@@ -2999,9 +2878,7 @@ EOJS
 
 ################################################################################
 
-sub load_ui_elements {
-
-	my ($options) = @_;
+sub table_url {
 
 	my @keep_params = ('id___query', '__last_query_string');
 
@@ -3013,26 +2890,7 @@ sub load_ui_elements {
 
 	$table_url .= '&' . $keep_params . '&__no_json=1';
 
-	$_REQUEST {__on_load} = <<EOJS . $_REQUEST {__on_load};
-		\$('div.eludia-table-container').each(function() {
-
-			var that = this;
-			var table_url = '/\?${table_url}&__only_table=' + this.id;
-			table_url = table_url + '&__table_cnt=' + \$('div.eludia-table-container').length;
-
-			new window.SuperTable({
-				tableUrl: table_url,
-				initial_data : tables_data [this.id],
-				el: \$(that),
-				containerRender : function() {
-					\$(that).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
-					activate_suggest_fields ();
-				}
-			});
-		});
-		activate_suggest_fields ();
-EOJS
-
+	return $table_url;
 }
 
 ################################################################################

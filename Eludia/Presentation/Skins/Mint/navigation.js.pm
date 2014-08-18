@@ -461,24 +461,6 @@ function _dumper_href (tail, target) {
 
 }
 
-function check_menu_md5 (menu_md5) {
-
-	return;
-
-	try {
-		window.parent.subsets_are_visible_ (0);
-	} catch (xxx) {}
-
-	if (
-		window.parent.menu_md5 == menu_md5
-		|| !window.parent.location
-		|| window.parent.location.href.indexOf ('dialog.html') > 0
-	) return;
-
-	$.getScript (window.location.href + '&__only_menu=1');
-
-}
-
 function code_alt_ctrl (code, alt, ctrl) {
 	var e = get_event (lastKeyDownEvent);
 	if (e.keyCode != code) return 0;
@@ -1567,7 +1549,6 @@ TableSlider.prototype.cell_on = function () {
 
 	if (!cell) return;
 
-	hideSubMenus (0);
 	var c            = $(cell);
 	var a            = $('a', c).get (0);
 	var table        = c.parents ('table').eq (0);
@@ -2192,4 +2173,92 @@ function blockui (message, poll) {
 		window.setInterval(poll_invisibles, 100);
 
 	return true;
+}
+
+
+function init_page (options) {
+
+	try {top.setCursor ();} catch (e) {};
+
+	if (options.focus)
+		window.focus ();
+
+
+	$('div.eludia-table-container').each(function() {
+
+		var that = this;
+		var table_url = '/?' + options.table_url + '&__only_table=' + this.id;
+		table_url = table_url + '&__table_cnt=' + $('div.eludia-table-container').length;
+
+		new window.SuperTable({
+			tableUrl: table_url,
+			initial_data : tables_data [this.id],
+			el: $(that),
+			containerRender : function() {
+				$(that).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+				activate_suggest_fields ();
+			}
+		});
+	});
+
+	tableSlider.set_row (options.__scrollable_table_row);
+
+	activate_suggest_fields ();
+
+	$(window).resize (function() {
+
+		if (window.resizeTimer) clearTimeout (window.resizeTimer);
+
+		window.resizeTimer = setTimeout (checkTableContainers, 100);
+
+	});
+
+	$(window).scroll (checkTableContainers);
+
+	$(window).resize ();
+
+	tableSlider.scrollCellToVisibleTop ();
+
+	focus_on_input (options.__focused_input);
+
+	if (options.blockui_on_submit) {
+
+		$('form').submit (function () {return blockui();});
+
+		$('form[target^="invisible"]').submit (function () {
+			window.setInterval(poll_invisibles, 100);
+		});
+
+	}
+
+	adjust_kendo_selects ();
+
+	$('[data-type=datepicker]').kendoDatePicker();
+	$('[data-type=datetimepicker]').kendoDateTimePicker();
+
+	$('input[type=file]').each(function () {
+		$(this).kendoUpload({
+			multiple : $(this).attr('data-ken-multiple') == 'true'
+		});
+	});
+	$("form").on ("submit", function () {
+		$('input[type=file][disabled]', this).each (function () {
+			if ($('input[type=file][name="' + this.name + '"]').length == 1)
+				$(this).removeAttr("disabled");
+		});
+	});
+
+	if (top.message) {
+		var notification = $("#notification", top.document).data("kendoNotification");
+		if (!notification) {
+			notification = $("#notification", top.document).kendoNotification({
+				stacking: "down",
+				button: true
+			}).data("kendoNotification");
+		}
+		notification.show (top.message);
+		top.message = '';
+	}
+
+
 }
