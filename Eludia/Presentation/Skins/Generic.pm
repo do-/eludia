@@ -571,6 +571,19 @@ sub draw_redirect_page {
 
 	$options -> {$_} ||= '' foreach qw (before window_options);
 
+	if ($options -> {message}) {
+
+		my $data = $_JSON -> encode ([$options -> {message}]);
+
+		$options -> {before} .= <<EOJS
+			if ('message' in top) {
+				var data = $data;
+				top.message = data [0];
+			}
+EOJS
+
+	}
+
 	my $salt = $options -> {no_check_url}? "''" : "'&salt=' + Math.random ()";
 	return <<EOH;
 <html>

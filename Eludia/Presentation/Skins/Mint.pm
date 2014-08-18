@@ -2791,6 +2791,8 @@ sub draw_page {
 		}
 	}
 
+	$_REQUEST {__on_load} .= "try {top.setCursor ()} catch (e) {};";
+
 	$_REQUEST {__on_load} .= "check_menu_md5 ('" . Digest::MD5::md5_hex (freeze ($page -> {menu_data})) . "');" if !($_REQUEST {__no_navigation} or $_REQUEST {__tree});
 
 	$_REQUEST {__on_load} .= 'window.focus ();'                                                                 if ! $_REQUEST {__no_focus};
@@ -2840,6 +2842,20 @@ EOJS
 					$(this).removeAttr("disabled");
 			});
 		});
+EOJS
+
+	$_REQUEST {__on_load} .= <<EOJS;
+		if (top.message) {
+			var notification = \$("#notification", top.document).data("kendoNotification");
+			if (!notification) {
+				notification = \$("#notification", top.document).kendoNotification({
+					stacking: "down",
+					button: true
+				}).data("kendoNotification");
+			}
+			notification.show (top.message);
+			top.message = '';
+		}
 EOJS
 
 	if ($_REQUEST {__im_delay}) {
