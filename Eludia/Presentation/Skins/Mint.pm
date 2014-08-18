@@ -1478,12 +1478,8 @@ sub draw_toolbar_break {
 
 sub _icon_path {
 
-	if (-r $r -> document_root . "/i/images/icons/$_[0].png") {
-		return "$_REQUEST{__static_site}/i/images/icons/$_[0].png";
-	}
-
-	-r $r -> document_root . "/i/_skins/Mint/i_$_[0].gif" ?
-	"$_REQUEST{__static_url}/i_$_[0].gif?$_REQUEST{__static_salt}" :
+	-r $r -> document_root . "/i/images/icons/$_[0].png" ? "$_REQUEST{__static_site}/i/images/icons/$_[0].png" :
+		-r $r -> document_root . "/i/_skins/Mint/i_$_[0].gif" ?	"$_REQUEST{__static_url}/i_$_[0].gif?$_REQUEST{__static_salt}" :
 	"$_REQUEST{__static_site}/i/buttons/$_[0].gif"
 
 }
@@ -2089,8 +2085,11 @@ sub draw_text_cell {
 
 	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
-	$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>} if $data -> {status};
-
+	if ($data -> {status} && -r $r -> document_root . "$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif") {
+		$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>};
+	} elsif ($data -> {status} && -r $r -> document_root . "$_REQUEST{__static_url}/status_$data->{status}->{icon}.png") {
+		$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.png' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>};
+	}
 
 	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
 	$html .= '<i>'      if $data -> {italic} || $options -> {italic};
