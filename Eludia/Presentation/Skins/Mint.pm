@@ -2751,6 +2751,7 @@ sub draw_page {
 	$init_page_options = $_JSON -> encode ($init_page_options);
 
 	$_REQUEST {__on_load} .= "init_page ($init_page_options);";
+	$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive} && $_REQUEST {sid};
 
 	if ($_REQUEST {__im_delay}) {
 
