@@ -1,7 +1,7 @@
 ################################################################################
 
 sub do_add_DEFAULT { # Слияние дубликатов
-	
+
 	sql_do_relink ($_REQUEST {type}, [get_ids ('clone')] => $_REQUEST {id});
 
 }
@@ -9,11 +9,11 @@ sub do_add_DEFAULT { # Слияние дубликатов
 ################################################################################
 
 sub do_kill_DEFAULT { # массовое удаление
-	
+
 	foreach my $id (get_ids ($_REQUEST {type})) {
-	
+
 		sql_do ("UPDATE $_REQUEST{type} SET fake = -1 WHERE id = ?", $id);
-		
+
 	}
 
 }
@@ -21,17 +21,17 @@ sub do_kill_DEFAULT { # массовое удаление
 ################################################################################
 
 sub do_unkill_DEFAULT { # массовое восстановление
-	
+
 	my $extra = '';
 	$extra .= ', is_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {is_merged_to};
 	$extra .= ', id_merged_to = 0' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {id_merged_to};
-	
+
 	foreach my $id (get_ids ($_REQUEST {type})) {
-	
+
 		sql_do ("UPDATE $_REQUEST{type} SET fake = 0 $extra WHERE id = ?", $id);
 
 		sql_undo_relink ($_REQUEST{type}, $_REQUEST{id});
-		
+
 	}
 
 	$_REQUEST {fake} = 0;
@@ -57,103 +57,103 @@ sub do_unkill_DEFAULT { # массовое восстановление
 sub do_create_DEFAULT { # создание
 
 	my $default_values = {};
-	
+
 	my $def = $DB_MODEL -> {tables} -> {$_REQUEST {type}};
-	
+
 	my $parent;
-	
+
 	if ($def && $def -> {columns}) {
-	
+
 		my $columns = $def -> {columns};
-	
+
 		foreach my $key (keys %$columns) {
-		
+
 			my $column = $columns -> {$key};
-			
+
 			$column -> {parent} or next;
-			
+
 			$parent = {column => $key, columns => []};
-			
+
 			unless ($column -> {ref}) {
-			
+
 				foreach my $table ($model_update -> get_tables) {
 
 					$key eq 'id_' . en_unplural ($table) or next;
-					
+
 					$parent -> {table} = $table;
-					
+
 					last;
-					
+
 				}
-				
+
 				$parent -> {table} or die "Parent table not found for $key\n";
-				
+
 				my $parent_def = $DB_MODEL -> {tables} -> {$parent -> {table}} or die "Table definition not found for $parent->{table}\n";
-					
+
 				my $parent_columns = $parent_def -> {columns} or die "Columns definition not found for $parent->{table}\n";
-				
+
 				foreach my $key (%$parent_columns) {
-				
+
 					$key =~ /^id_/ or next;
-					
+
 					$columns -> {$key} or next;
-					
+
 					push @{$parent -> {columns}}, $key;
-				
+
 				}
-			
+
 			}
-			
+
 			last;
-		
+
 		}
-	
+
 	}
 
 	my $columns = $model_update -> get_columns ($_REQUEST {type});
-	
+
 	if ($parent && !$_REQUEST {"_$parent->{column}"}) {
-	
+
 		my $href = session_access_log_get ($_REQUEST {__last_last_query_string});
-		
+
 		if ($href =~ /\bid\=(\d+)/) {
-		
+
 			$_REQUEST {"_$parent->{column}"} = $1;
-			
+
 		}
-	
+
 	}
-	
+
 	if ($parent && $_REQUEST {"_$parent->{column}"}) {
 
 		my $data = sql ($parent -> {table} => $_REQUEST {"_$parent->{column}"});
-			
+
 		foreach my $key (@{$parent -> {columns}}) {
-			
+
 			exists $_REQUEST {"_$key"} or $_REQUEST {"_$key"} = $data -> {$key};
-			
+
 		}
 
 	}
 
 	while (my ($k, $v) = each %_REQUEST) {
-	
+
 		if ($k =~ /^_/) {
-		
+
 			exists $columns -> {$'} or next;
 			$default_values -> {$'} = $v;
-		
+
 		}
 		else {
-		
+
 			next if $k =~ /^(s(id|alt|elect)|type|action|lang|error|fake)$/;
-			exists $columns -> {$k} or next; 
+			exists $columns -> {$k} or next;
 			$default_values -> {$k} = $v;
-		
-		}				
-	
+
+		}
+
 	}
-		
+
 	$_REQUEST {id} = sql_do_insert ($_REQUEST {type}, $default_values);
 
 }
@@ -193,41 +193,41 @@ sub do_update_DEFAULT { # запись карточки
 	sql_upload_files ({name => 'file'});
 
 	my @fields = ();
-	
-	foreach my $key (keys %_REQUEST) {	
+
+	foreach my $key (keys %_REQUEST) {
 		$key =~ /^_/ or next;
 		$columns -> {$'} or next;
 		push @fields, $';
 	}
-	
+
 	if (@fields > 0) {
 
 		my $id = $_[2] || 'id';
 
 		sql_do_update ($type, \@fields, {$id => $_[1] || $id_edit});
-	
+
 	}
 
 	foreach my $key (keys %_REQUEST) {
-	
+
 		$key =~ /^__checkboxes_/ or next;
-		
+
 		my $table_from = $_REQUEST {$key};
-		
+
 		my ($table, $from) = split /\./, $table_from;
-		
+
 		$from ||= 'id_' . en_unplural ($_REQUEST {type});
 
 		my $options = {
-		
+
 			table => $table,
 			key   => $',
 			root  => {$from => $id_edit},
-			
+
 		};
 
 		sql_store_ids (darn $options);
-	
+
 	}
 
 }
@@ -237,7 +237,7 @@ sub do_update_DEFAULT { # запись карточки
 sub do_download_DEFAULT { # загрузка файла
 
 	my $name = $_REQUEST {_name} || 'file';
-	
+
 	my $options = {
 		name => $name,
 		dir => 'upload/images',
@@ -247,7 +247,7 @@ sub do_download_DEFAULT { # загрузка файла
 		type_column => $name . '_type',
 		path_column => $name . '_path',
 	};
-	
+
 	$options -> {body_column} = $name . '_body' if $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {$name . '_body'};
 
 	sql_download_file ($options);
@@ -291,6 +291,10 @@ sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
 		$column -> {id_query} = $_REQUEST {id___query};
 		set_column_props ($column);
 	}
+	my $query = sql_select_hash ("SELECT parent, dump FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
+	if ($query -> {parent}) {
+		sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", $query -> {dump}, $query -> {parent});
+	}
 
 	out_json ({});
 }
@@ -321,6 +325,11 @@ sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
 			desc     => $column -> {sortable}? ($column -> {desc} || 0) : 0,
 		});
 		$ord++;
+	}
+
+	if ($_QUERY -> {parent}) {
+		my $dump = sql_select_scalar ("SELECT dump FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
+		sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", $dump, $_QUERY -> {parent});
 	}
 
 	my $page = setup_page ();
