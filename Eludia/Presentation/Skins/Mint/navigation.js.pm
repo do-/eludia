@@ -665,7 +665,13 @@ function do_kendo_combo_box (id, options) {
 
 	var values      = options.values,
 		initialized = 0,
-		ds          = {};
+		ds          = {},
+		setWidth = function (combo) {
+			var p = combo.popup.element;
+			var w = p.css("visibility","hidden").show().outerWidth() + 32;
+			p.hide().css("visibility","visible");
+			combo.element.closest(".k-widget").width(w);
+		};
 
 	if (options.href) {
 		ds = {
@@ -760,12 +766,12 @@ schema_loop:
 			} else if (this.dataSource.data().length == values.length + 1) {
 				this.select (values.length);
 			}
+
+			setWidth (this);
 		}
 
 	}
 	).data('kendoComboBox');
-
-	combo.list.width(options.width);
 
 
 }
