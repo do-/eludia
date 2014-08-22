@@ -12,27 +12,7 @@ sub notify_about_error {
 
 	my $subdelimiter = "\n" . ('-' x 80) . "\n";
 
-	my $error_details;
-
-	$options -> {error_kind} = "code error";
-
-	if ($options -> {sql}) {
-
-		$options -> {error_kind} = "sql error";
-
-		$error_details .= $options -> {sql} . "\n";
-
-		if (@{$options -> {params}}) {
-			$error_details .= "params:\n(" . join (", ", @{$options -> {params}}) . ")\n";
-		}
-
-		my $is_lock_error = 0 + ($options -> {error} =~ /failed:\s*(dead)?lock/i);
-
-		if ($is_lock_error) {
-			$error_details .= $subdelimiter . sql_engine_status ();
-			$options -> {error_kind} = "sql lock error";
-		}
-	}
+	my $error_details = _adjust_core_error_kind ($options);
 
 	my $id_error = internal_error_id ();
 
@@ -83,8 +63,8 @@ sub guess_error_author_mail { # error author = last file commiter
 
 	my ($options) = @_;
 
-	$options -> {error_kind} eq 'sql error'
-		or $options -> {error_kind} eq 'code error'
+	$options -> {error_kind} eq 'sql'
+		or $options -> {error_kind} eq 'code'
 		or return ();
 
 	my ($file, $line) = $options -> {error} =~ /called at (\/.*lib\/.*\.pm) line (\d+)/;
@@ -110,6 +90,50 @@ sub guess_error_author_mail { # error author = last file commiter
 	my ($label, $mail) = split /:/, $result;
 
 	return ({label => $label, mail => $mail, file => $file, line => $line});
+}
+
+################################################################################
+
+sub _adjust_core_error_kind {
+
+	my ($options) = @_;
+
+	$options -> {error_kind} = "code";
+
+	my $error_details;
+
+	if ($options -> {sql}) {
+
+		$options -> {error_kind} = "sql";
+
+		$error_details .= $options -> {sql} . "\n";
+
+		if (@{$options -> {params}}) {
+			$error_details .= "params:\n(" . join (", ", @{$options -> {params}}) . ")\n";
+		}
+
+		my $is_lock_error = 0 + ($options -> {error} =~ /failed:\s*(dead)?lock/i);
+
+		if ($is_lock_error) {
+			$error_details .= $subdelimiter . sql_engine_status ();
+			$options -> {error_kind} = "sql lock";
+		}
+	}
+
+	if ($options -> {error} =~ /Invalid response/i) {
+		$options -> {error_kind} = "network";
+	}
+
+	if ($options -> {error} =~ /Unknown column/i || $options -> {error} =~ /Duplicate entry/i) {
+		$options -> {error_kind} = "model";
+	}
+
+
+	if ($options -> {error} =~ /Can't open file/i || $options -> {error} =~ /Can't write/i) {
+		$options -> {error_kind} = "file";
+	}
+
+	return $error_details;
 }
 
 ################################################################################
