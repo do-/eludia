@@ -88,6 +88,14 @@ ol, ul {list-style: none;}
 	border-bottom: 1px solid #C5C5C5;
 }
 
+.st-table-pre-render tr:last-child th {
+	border-bottom: 4px solid #cacaca;
+	margin-top: -4px;
+}
+.st-table-pre-render {
+	padding-bottom: 10px;
+}
+
 .bgBreadcrumbsIcon{
 	display: block;
 	float: left;
