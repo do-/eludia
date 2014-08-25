@@ -2042,7 +2042,7 @@ sub _adjust_table_options {
 	$options -> {id_table} ||= $_REQUEST {type} . '_' . $options -> {name}
 		if $options -> {name};
 
-	if (exists $options -> {title} -> {label}) {
+	if (ref $options -> {title} eq 'HASH' && exists $options -> {title} -> {label}) {
 
 		$options -> {id_table} ||=
 			Digest::MD5::md5_hex ($_REQUEST {type} . '_' . $options -> {title} -> {label});
