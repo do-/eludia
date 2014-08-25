@@ -10,8 +10,6 @@ sub notify_about_error {
 
 	my $delimiter = "\n" . ('=' x 80) . "\n";
 
-	my $subdelimiter = "\n" . ('-' x 80) . "\n";
-
 	my $error_details = _adjust_core_error_kind ($options);
 
 	my $id_error = internal_error_id ();
@@ -101,6 +99,8 @@ sub _adjust_core_error_kind {
 	$options -> {error_kind} = "code";
 
 	my $error_details;
+
+	my $subdelimiter = "\n" . ('-' x 80) . "\n";
 
 	if ($options -> {sql}) {
 
