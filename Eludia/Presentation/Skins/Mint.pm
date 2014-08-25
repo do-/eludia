@@ -171,7 +171,7 @@ EOJ
 	} else {
 
 		return <<EOH
-			<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="header_3"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
+			<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="table_title"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
 EOH
 
 	}
@@ -1819,6 +1819,37 @@ sub draw_toolbar_input_datetime {
 
 ################################################################################
 
+sub draw_toolbar_input_file {
+
+	my ($_SKIN, $options) = @_;
+
+	my $html = '<li class="toolbar nowrap">';
+
+	if ($options -> {label}) {
+		$html .= $options -> {label};
+		$html .= ': ';
+	}
+
+	$html .= <<EOH;
+			<input
+				type="file"
+				name="_$$options{name}"
+				size=$$options{size}
+				tabindex=-1
+				data-ken-multiple="false"
+				data-upload-url="$$options{href}"
+			/></li>
+EOH
+
+
+	return $html;
+
+
+
+}
+
+################################################################################
+
 sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
@@ -2648,22 +2679,6 @@ EOH
 
 ################################################################################
 
-sub draw_one_cell_table {
-
-	my ($_SKIN, $options, $body) = @_;
-
-	return <<EOH
-		<table cellspacing=0 cellpadding=0 width="100%">
-				<form name=form action=$_REQUEST{__uri} method=post enctype=multipart/form-data target=invisible>
-					<tr><td class=bgr8>$body</td></tr>
-				</form>
-		</table>
-EOH
-
-}
-
-################################################################################
-
 sub start_page {
 }
 
@@ -2713,7 +2728,6 @@ sub draw_page {
 
 	my $body_options = {
 		bgcolor      => 'white',
-		margin       => 0,
 		name         => 'body',
 		id           => 'body',
 	};
