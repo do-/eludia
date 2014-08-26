@@ -763,11 +763,12 @@ schema_loop:
 
 				initialized = 1;
 
+				setWidth (this);
+
 			} else if (this.dataSource.data().length == values.length + 1) {
 				this.select (values.length);
 			}
 
-			setWidth (this);
 		}
 
 	}
