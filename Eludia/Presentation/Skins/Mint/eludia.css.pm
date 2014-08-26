@@ -75,9 +75,9 @@ div.checkboxes {
 	float: left;
 }
 
-# .filters li .k-widget, .filters li .k-widget .k-dropzone {
-# 	display: inline;
-# }
+.filters li .k-upload, .filters li .k-widget .k-dropzone {
+	display: inline;
+}
 
 ol, ul {list-style: none;}
 
@@ -91,14 +91,6 @@ ol, ul {list-style: none;}
 	border-top-style: solid;
 	border-top: 1px solid #C5C5C5;
 	border-bottom: 1px solid #C5C5C5;
-}
-
-.st-table-pre-render tr:last-child th {
-	border-bottom: 4px solid #cacaca;
-	margin-top: -4px;
-}
-.st-table-pre-render {
-	padding-bottom: 10px;
 }
 
 .bgBreadcrumbsIcon{
