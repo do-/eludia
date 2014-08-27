@@ -1636,6 +1636,10 @@ sub draw_toolbar_input_select {
 
 	my ($_SKIN, $options) = @_;
 
+	return $_SKIN -> draw_toolbar_input_combo ($options)
+		if $options -> {ds} && !$options -> {read_only};
+
+
 	my $html = '<li class="toolbar nowrap">';
 
 	if ($options -> {label} && $options -> {show_label}) {
@@ -1684,7 +1688,7 @@ EOJS
 	$options -> {attributes} ||= {};
 
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
-	$options -> {attributes} -> {onFocus} = q|debugger; $.data (this, 'prev_value', this.selectedIndex);|;
+	$options -> {attributes} -> {onFocus} = q|$.data (this, 'prev_value', this.selectedIndex);|;
 
 	$options -> {attributes} -> {onKeyPress} = 'typeAhead(1)';
 
@@ -1705,6 +1709,100 @@ EOH
 	$html .= '</select></li>';
 
 	return $html;
+
+}
+
+################################################################################
+
+sub draw_toolbar_input_combo {
+
+	my ($_SKIN, $options) = @_;
+
+	my $html = '<li class="toolbar nowrap">';
+
+	if ($options -> {label} && $options -> {show_label}) {
+		$html .= $options -> {label};
+		$html .= ': ';
+	}
+
+	$options -> {name} = '_' . $options -> {name}
+		if defined $options -> {other};
+
+	my $name = $$options{name};
+
+	$options -> {attributes} ||= {};
+
+	$options -> {attributes} -> {id}    ||= "${name}_select";
+	$options -> {attributes} -> {onChange} = $options -> {onChange};
+
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	if (defined $options -> {other}) {
+
+		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
+		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+
+
+	}
+
+	my ($values, $placeholder);
+	foreach my $value (@{$options -> {values}}) {
+		if (!$value -> {id}) {
+			$placeholder = $value -> {label};
+		} elsif ($value -> {id} != -1) {
+			push @$values, $value;
+		}
+	}
+
+
+	$values = $_JSON -> encode ($values);
+	$values =~ s/\"/'/g;
+
+	check_href ($options -> {ds});
+
+	$html .= <<EOH;
+		<input name="$name" $attributes>
+EOH
+
+	if (defined $options -> {other}) {
+		$html .= <<EOH;
+			<input type="button" class="k-button" value="..."
+				onClick="open_vocabulary_from_combo (
+					\$('#$options->{attributes}->{id}').data('kendoComboBox'),
+					{
+						message       : i18n.choose_open_vocabulary,
+						href          : '$options->{other}->{href}&select=$name&salt=' + Math.random(),
+						dialog_width  : $options->{other}->{width},
+						dialog_height : $options->{other}->{height}
+					}
+				);"
+			>
+EOH
+	}
+
+	$html .= '</li>';
+
+	local $conf -> {portion} ||= 50;
+
+	$options -> {ds} -> {href} = ''
+		if $options -> {ds} -> {off};
+
+	$_REQUEST {__on_load} .= <<EOJS;
+		do_kendo_combo_box ('$options->{attributes}->{id}', {
+			values  : $values,
+			empty   : '$options->{empty}',
+			href    : '$options->{ds}->{href}',
+			portion : $conf->{portion},
+			width   : @{[$options -> {attributes} -> {size} * 8]},
+			placeholder : '$placeholder'
+		});
+EOJS
+
+
+	return $html;
+
+
+
 
 }
 

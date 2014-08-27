@@ -358,9 +358,19 @@ function open_vocabulary_from_combo (combo, options) {
 
 			if (result.result == 'ok') {
 
-				combo.dataSource.query({
-					ids : result.id
-				});
+				for (var j = 0; j < combo.dataSource.data().length; j ++) {
+					if (combo.dataSource.data() [j].id == result.id) {
+						combo.select (j);
+						combo.trigger ('change');
+						break;
+					}
+				}
+
+				if (j == combo.dataSource.data().length) {
+					combo.dataSource.query({
+						ids : result.id
+					});
+				}
 
 			}
 		}
@@ -731,13 +741,13 @@ schema_loop:
 		dataSource      : ds,
 		change: function(e) {
 
+			var input = this.element [0];
+
 			if (this.value() && !this.dataItem()) {
 
 				this.value ('');
 
 			} else {
-
-				var input = this.element [0];
 
 				if (!input.options)
 					input.options = [];
@@ -747,17 +757,24 @@ schema_loop:
 				input.options [this.selectedIndex].value = this.value ();
 
 			}
-		}
-		,
+
+			$(input).trigger ('change');
+
+
+		},
 
 		dataBound: function(e) {
 
 			if (!initialized) {
-
+data_bound_loop:
 				for(var i = 0; i < values.length; i++) {
 					if (values [i].selected) {
-						this.select (i);
-						break;
+						for (var j = 0; j < this.dataSource.data().length; j ++) {
+							if (this.dataSource.data() [j].id == values [i].id) {
+								this.select (j);
+								break data_bound_loop;
+							}
+						}
 					}
 				}
 
@@ -767,6 +784,7 @@ schema_loop:
 
 			} else if (this.dataSource.data().length == values.length + 1) {
 				this.select (values.length);
+				this.trigger ('change');
 			}
 
 		}
