@@ -284,9 +284,17 @@ sub _sql_filters {
 			}
 			else {								# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
 
-				$$buffer .= "\n  AND ($field (-1";
+				if (@$values == 1 && $values -> [0] =~ /SELECT.+FROM/gsm) {
 
-				foreach (grep {/\d/} @$values) { $where .= ", $_"}
+					$$buffer .= "\n  AND ($field ($values->[0]";
+
+				} else {
+
+					$$buffer .= "\n  AND ($field (-1";
+
+					foreach (grep {/\d/} @$values) { $where .= ", $_"}
+
+				}
 
 				$$buffer .= "))";
 
@@ -294,12 +302,12 @@ sub _sql_filters {
 
 		}
 		else {
-		
+
 			if ($field =~ s{\<\+}{\<}) {					# 'dt <+ 2008-09-30' --> 'dt < 2008-10-01'
-				my @ymd = split /\-/, $first_value;				
+				my @ymd = split /\-/, $first_value;
 				$values -> [0] = dt_iso (Date::Calc::Add_Delta_Days (@ymd, 1));
 			}
-			
+
 			unless ($has_placeholder || $is_null) {
 
 				$field  =~ /(=|\<|\>|LIKE)\s*$/ or $field .= ' = ';	# 'id_org'           --> 'id_org = '
