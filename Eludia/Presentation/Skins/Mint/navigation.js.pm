@@ -680,6 +680,11 @@ function do_kendo_combo_box (id, options) {
 			var p = combo.popup.element;
 			var w = p.css("visibility","hidden").show().outerWidth() + 32;
 			p.hide().css("visibility","visible");
+			if (combo.options.placeholder) {
+				var placeholder_len = combo.options.placeholder.length * 8;
+				if (w < placeholder_len)
+					w = placeholder_len;
+			}
 			combo.element.closest(".k-widget").width(w);
 		};
 
