@@ -1642,7 +1642,7 @@ sub draw_cells {
 
 	}
 
-	my @cells = order_cells (@{$_[0]});
+	my @cells = order_cells (@row);
 
 	if ($_REQUEST {__multi_select_checkbox} == 1) {
 		unshift @cells, {
