@@ -129,7 +129,10 @@ sub _adjust_core_error_kind {
 	}
 
 
-	if ($options -> {error} =~ /Can't open file/i || $options -> {error} =~ /Can't write/i) {
+	if ($options -> {error} =~ /Can't open file/i
+		|| $options -> {error} =~ /Can't write/i
+		|| $options -> {error} =~ /File not found/i) {
+
 		$options -> {error_kind} = "file";
 	}
 
