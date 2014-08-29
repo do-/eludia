@@ -3655,13 +3655,14 @@ sub get_chart_image_pathes {
 
 	my $chart_names = [sort {$a cmp $b} @chart_keys];
 
-	eval { require Image::LibRSVG; };
-	if ($@) {
-		warn $@;
-		return;
-	}
+	my $rsvg;
+	if ($i18n -> {_charset} eq 'windows-1251') {
 
-	my $rsvg = new Image::LibRSVG () if ($preconf -> {core_skin} ne 'Ken');
+		eval { require Image::LibRSVG; };
+		if ($@) {warn $@;return;}
+
+		$rsvg = new Image::LibRSVG ();
+	}
 
 	foreach my $name (@$chart_names) {
 
@@ -3684,18 +3685,18 @@ sub get_chart_image_pathes {
 		$data -> {"chart_image_width_$name"} = sprintf ("%.0f", $width / 1.65);
 		$data -> {"chart_image_heigth_$name"} = sprintf ("%.0f", $height / 1.65);
 
-		$_REQUEST {"svg_text_$name"} = Encode::decode('cp-1251', $_REQUEST {"svg_text_$name"}) if ($preconf -> {core_skin} ne 'Ken');
+		$_REQUEST {"svg_text_$name"} = Encode::decode('cp-1251', $_REQUEST {"svg_text_$name"}) if ($i18n -> {_charset} eq 'windows-1251');
 		print CHART_IMAGE $_REQUEST {"svg_text_$name"};
 
 		close CHART_IMAGE;
 
-		my $chart_path = $chart_image_path . "$name." . ($preconf -> {core_skin} eq 'Ken' ? "svg" : "png");
+		my $chart_path = $chart_image_path . "$name." . ($i18n -> {_charset} eq 'windows-1251' ? "png" : "svg");
 
 		push @$chart_image_pathes, $preconf -> {_} -> {docroot} . $chart_path;
 
-		if ($preconf -> {core_skin} ne 'Ken') {
+		if ($rsvg && $i18n -> {_charset} eq 'windows-1251') {
 			$rsvg -> convert ($preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg", $preconf -> {_} -> {docroot} . $chart_path);
-			# unlink $preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg";
+			unlink $preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg";
 		}
 
 		$data -> {"chart_image_path_$name"} = "http://" . $ENV {HTTP_HOST} . "/" . $chart_path if (-e  $preconf -> {_} -> {docroot} . $chart_path);
