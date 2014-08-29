@@ -3733,31 +3733,38 @@ sub draw_chart {
 	}
 EOH
 
+	$options -> {chartArea} -> {height} ||= 400;
+
 	my $html .= <<EOH;
-<script>
+	<table id='$$options{name}' cellspacing=0 cellpadding=0 height="$options->{chartArea}->{height}" width="100%">
+		<tr>
+			<td>
+				<script>
+					function series_Click (dialog) {
 
-	function series_Click (dialog) {
+						var dialog_width = screen.availWidth - (screen.availWidth <= 800 ? 50 : 100);
+						var dialog_height = screen.availHeight - (screen.availHeight <= 600 ? 50 : 100);
 
-		var dialog_width = screen.availWidth - (screen.availWidth <= 800 ? 50 : 100);
-		var dialog_height = screen.availHeight - (screen.availHeight <= 600 ? 50 : 100);
+						dialog.href = dialog.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, '');
 
-		dialog.href = dialog.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, '');
+						dialog.href += '&_salt=' + Math.random ();
 
-		dialog.href += '&_salt=' + Math.random ();
+						var result = window.showModalDialog(
+										'$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}'
+										, dialog
+										, 'status:no;help:no;resizable:no' + ';dialogWidth=' + dialog_width + 'px;dialogHeight=' + dialog_height + 'px'
+									);
+					}
 
-		var result = window.showModalDialog(
-						'$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}'
-						, dialog
-						, 'status:no;help:no;resizable:no' + ';dialogWidth=' + dialog_width + 'px;dialogHeight=' + dialog_height + 'px'
-					);
-	}
-
-	var chartOptions = $chart_options;
-	var chartDataSource = $data_source_options;
-	var seriesClick = $seriesClick_function;
-	var chartName = '$$options{name}';
-</script>
-<iframe src="$_REQUEST{__static_url}/chart.html" frameborder="2" scrolling="yes" style="overflow-y:auto;height:800;width:100%" height="800" width="100%"></iframe>
+					var chartOptions = $chart_options;
+					var chartDataSource = $data_source_options;
+					var seriesClick = $seriesClick_function;
+					var chartName = '$$options{name}';
+				</script>
+				<iframe src="$_REQUEST{__static_url}/chart.html" frameborder="2" scrolling="yes" style="overflow-y:auto;height:800;width:100%" height="options->{chartArea}->{height}" width="100%"></iframe>
+			</td>
+		</tr>
+	</table>
 EOH
 
 	return $html;

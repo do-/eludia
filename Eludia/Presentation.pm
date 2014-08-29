@@ -3498,7 +3498,9 @@ sub draw_chart {
 	$_REQUEST {__charts_count} ||= 0;
 	$_REQUEST {__charts_count} ++;
 
-	push @{$_REQUEST {__charts_names}}, $options -> {name} || 'g' . sprintf('%05d', $_REQUEST {__charts_count});
+	$options -> {name} ||= 'g' . $_REQUEST {__charts_count};
+
+	push @{$_REQUEST {__charts_names}}, $options -> {name} . sprintf('%05d', $_REQUEST {__charts_count});
 
 	my $href = create_url (is_chart => undef, is_grid => undef);
 
@@ -3507,7 +3509,7 @@ sub draw_chart {
 			no_esc  => 1,
 			no_ok   => 1,
 			no_edit => 1,
-			name    => 'form_menu',
+			name    => 'form_menu_' . $options -> {name},
 			menu    => [
 				{
 					href      => "$href&is_chart=1",
@@ -3539,6 +3541,7 @@ sub draw_chart {
 		my $title = draw_window_title ($options -> {title}) if (ref $options -> {title} eq HASH && $options -> {title} -> {label});
 
 		$html .= "$title$top_toolbar";
+
 		$html .= $_SKIN -> draw_chart ($options, $data);
 
 	} elsif ($_REQUEST {is_grid}) { # Данные
