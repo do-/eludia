@@ -1885,13 +1885,13 @@ if (!Array.prototype.pop) {
 // converts received flat data to hierarhy required by kendoTreeView
 function treeview_convert_plain_response(response) {
 
-	if (!response.content) {
+	if (!response) {
 		return [];
 	}
 
 	var tree_key;
-	for (var key in response.content) {
-		if ($.isArray(response.content[key])) {
+	for (var key in response) {
+		if ($.isArray(response[key])) {
 			tree_key = key;
 		}
 	}
@@ -1900,7 +1900,7 @@ function treeview_convert_plain_response(response) {
 		return [];
 	}
 
-	var items = response.content[tree_key];
+	var items = response[tree_key];
 
 	var idx = {};
 	var children_nodes = {};

@@ -339,4 +339,13 @@ sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
 	handle_request_of_type_showing ($page);
 }
 
+
+################################################################################
+
+sub get_data_DEFAULT {
+
+	handle_request_of_type_showing (@_);
+
+}
+
 1;

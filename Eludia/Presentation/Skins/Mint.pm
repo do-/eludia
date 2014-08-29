@@ -20,16 +20,6 @@ BEGIN {
 
 ################################################################################
 
-sub msie_less_7 {
-
-	$r -> headers_in -> {'User-Agent'} =~ /MSIE (\d)/ or return 0;
-
-	return $1 < 7;
-
-}
-
-################################################################################
-
 sub is_ua_mobile {
 
 	return $r -> headers_in -> {'User-Agent'} =~ /mobile|android/i;
@@ -1419,8 +1409,7 @@ sub draw_form_field_multi_select {
 	my $values = $_JSON -> encode ([map {{id => $_ -> {id}, label => $_ -> {label}}} @{$options -> {values}}]);
 
 	$_REQUEST {__on_load} .= <<EOJS;
-debugger;
-		\$("#$options->{attributes}->{id}").kendoMultiSelect({
+		var multi_select = \$("#$options->{attributes}->{id}").kendoMultiSelect({
 			dataTextField: "label",
 			dataValueField: "id",
 			autoBind: false,
@@ -1462,8 +1451,15 @@ debugger;
 				var value = this.value();
 				\$("INPUT[name=_$$options{name}]").val(value.join());
 			}
-		});
+		}).data("kendoMultiSelect");
 EOJS
+
+
+	if ($options -> {mandatory}) {
+		$_REQUEST {__on_load} .= <<'EOJS';
+			multi_select.input.parent().addClass ('form-mandatory-inputs');
+EOJS
+	}
 
 	my $attributes = dump_attributes ($options -> {attributes});
 	my $ids = join (',', map {$_ -> {id}} @{$options -> {values}});
@@ -2181,7 +2177,7 @@ sub draw_menu {
 	my ($_SKIN, $_options) = @_;
 
 
-	return '';
+	return $_options;
 
 }
 
@@ -2864,16 +2860,6 @@ sub draw_page_just_to_reload_menu {
 
 }
 
-################################################################################
-
-sub draw_page___only_table {
-
-	my ($_SKIN, $page) = @_;
-
-	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
-
-	return $page -> {body};
-}
 
 ################################################################################
 
@@ -2881,9 +2867,7 @@ sub draw_page {
 
 	my ($_SKIN, $page) = @_;
 
-	$_REQUEST {__only_menu} and return $_SKIN -> draw_page_just_to_reload_menu ($page);
-
-	$_REQUEST {__only_table} and return $_SKIN -> draw_page___only_table ($page);
+	$r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' && out_json ($page -> {body} || $page -> {content});
 
 	my $parameters = ref ${$_PACKAGE . 'apr'} eq 'Apache2::Request' ? ${$_PACKAGE . 'apr'} -> param : ${$_PACKAGE . 'apr'} -> parms;
 
@@ -3261,6 +3245,26 @@ sub draw_tree {
 
 	my ($_SKIN, $node_callback, $list, $options) = @_;
 
+	if ($r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest') {
+
+		foreach my $i (@$list) {
+
+			foreach my $key (keys %{$i -> {__node}}) {
+				$i -> {$key} = $i -> {__node} -> {$key};
+				$i -> {menu} = $i -> {__menu};
+			}
+
+			$i -> {href}   = $options -> {url_base} . $i -> {href};
+
+			delete $i -> {__node};
+			delete $i -> {level};
+		};
+
+		return;
+	}
+
+
+
 	$options -> {name} ||= '_content_iframe';
 	$options -> {active} ||= 0;
 
@@ -3593,6 +3597,23 @@ sub draw_node {
 
 	my ($_SKIN, $options, $i) = @_;
 
+	if ($r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest') {
+
+		my $node = {
+			id      => $options -> {id},
+			text    => $options -> {label},
+			parent   => $i -> {parent},
+			target   => $i -> {target},
+			href     => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
+			imageUrl => $options -> {icon}? _icon_path ($options -> {icon}) : undef,
+			clipboard_text => $i -> {clipboard_text},
+		};
+
+		return $node;
+
+	}
+
+
 	my $node = {
 		id    => $options -> {id},
 		pid   => $options -> {parent},
@@ -3793,6 +3814,28 @@ EOH
 	}
 
 	$html .= '</form>';
+}
+
+################################################################################
+
+sub __adjust_menu_item {
+
+	my ($_SKIN, $type) = @_;
+
+	$type -> {label} =~ s{^\&}{};
+
+	if ($type -> {no_page} || $type -> {items}) {
+		$type -> {href} ||= "undefined";
+	} else {
+		$type -> {href} ||= "/?type=$type->{name}";
+	}
+
+	$type -> {id} ||= $type -> {href} eq 'undefined'?
+		Digest::MD5::md5_hex ($type -> {label})
+		: $type -> {href};
+
+	$type -> {id} =~ s{[\&\?]?sid\=\d+}{};
+
 }
 
 1;

@@ -2863,20 +2863,6 @@ sub draw_page {
 
 	setup_skin ();
 
-	if ($_REQUEST {__ajax_load}) {
-
-		eval {
-
-			my $draw_function = ($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type};
-			call_for_role ($draw_function, $page -> {content});
-		};
-
-		if ($@) {
-			$_REQUEST {error} ||= $@;
-			return $_SKIN -> draw_error_page ($page);
-		};
-	}
-
 	$_SKIN -> {options} -> {no_presentation} and return $_SKIN -> draw_page ($page);
 
 	$_REQUEST {__read_only} = 0 if $_REQUEST {__only_field};
@@ -3157,7 +3143,10 @@ sub out_json ($) {
 
 	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
 
-	out_html ({}, $_JSON -> encode ($_[0]));
+	my $data = $_[0];
+	$data = $_JSON -> encode ($data) if ref ($data);
+
+	out_html ({}, $data);
 
 }
 
@@ -3242,8 +3231,6 @@ sub setup_skin {
 
 	unless ($_REQUEST {__skin}) {
 
-		$_REQUEST {__no_json} ||= $_REQUEST {__suggest} || $_REQUEST {__only_menu};
-
 		if ($_COOKIE {ExtJs}) {
 
 			$_REQUEST {__skin} = 'ExtJs';
@@ -3258,15 +3245,7 @@ sub setup_skin {
 
 			$_REQUEST {__skin} = 'Dumper';
 
-		}
-		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON'
-			|| $_REQUEST {__only_json}
-			|| $r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' && !$_REQUEST {__no_json}) {
-
-			$_REQUEST {__skin} = 'JSONDumper';
-
-		}
-		else {
+		} else {
 
 			$_REQUEST {__skin} = ($preconf -> {core_skin} ||= 'Classic');
 
@@ -3333,6 +3312,7 @@ sub setup_skin {
 			hotkey
 			i18n
 			out_html
+			out_json
 			preconf
 			r
 			scan2names

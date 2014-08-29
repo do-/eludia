@@ -354,8 +354,8 @@ sub setup_request_params_for_action {
 sub setup_page {
 
 	my $page = {
-		subset => setup_subset (),
-		menu   => setup_menu (),
+		subset => [],
+		menu   => [],
 	};
 
 	$page -> {type} = $_REQUEST {type};
@@ -372,12 +372,25 @@ sub setup_page {
 	require_both $page -> {type};
 
 	$page -> {request_type} =
+		$r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' ? 'data' :
 
 		$_REQUEST {__suggest} ? 'suggest' :
 
 		$_REQUEST {action}    ? 'action'  :
 
 					'showing' ;
+
+	if ($page -> {request_type} eq 'showing') {
+
+		$page -> {subset} = setup_subset ();
+		$page -> {menu}   = setup_menu ();
+
+	} else {
+
+		require_content 'subset';
+		require_content 'menu';
+
+	}
 
 	return $page;
 
@@ -637,6 +650,28 @@ sub handle_request_of_type_showing {
 	return handler_finish () if $_REQUEST {__response_sent} && !$_REQUEST {error};
 
 	out_html ({}, draw_page ($page));
+
+	return handler_finish ();
+
+}
+
+################################################################################
+
+sub handle_request_of_type_data {
+
+	my ($page) = @_;
+
+	setup_skin ();
+
+	require_content DEFAULT;
+
+	eval { $page -> {content} = call_for_role ('get_data_' . $page -> {type}, $page)};
+
+	$_REQUEST {error} ||= $@ if $@;
+
+	return handle_error ($page) if $_REQUEST {error};
+
+	!$_REQUEST {__response_sent} && out_json ($page -> {content});
 
 	return handler_finish ();
 
