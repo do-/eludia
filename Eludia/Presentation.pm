@@ -3502,9 +3502,11 @@ sub draw_chart {
 
 	push @{$_REQUEST {__charts_names}}, $options -> {name};
 
-	my $href = create_url (is_chart => undef, is_grid => undef);
+	$_REQUEST {"is_chart_$$options{name}"} ||= $options -> {no_params} && $options -> {no_grid};
 
-	my $html = $options -> {no_params} || $options -> {no_grid} ? "" : draw_form (
+	my $href = create_url ("is_chart_$$options{name}" => undef, "is_grid_$$options{name}" => undef);
+
+	my $html = $options -> {no_params} && $options -> {no_grid} ? "" : draw_form (
 		{
 			no_esc  => 1,
 			no_ok   => 1,
@@ -3512,21 +3514,21 @@ sub draw_chart {
 			name    => 'form_menu_' . $options -> {name},
 			menu    => [
 				{
-					href      => "$href&is_chart=1",
+					href      => "$href&is_chart_$$options{name}=1",
 					label     => 'График',
-					is_active => $_REQUEST {is_chart},
-					off       => $options -> {no_chart},
+					is_active => $_REQUEST {"is_chart_$$options{name}"},
+					off       => $options -> {no_chart} && !$options -> {no_grid} && !$options -> {no_params},
 				},
 				{
-					href      => "$href&is_grid=1",
+					href      => "$href&is_grid_$$options{name}=1",
 					label     => 'Данные',
-					is_active => $_REQUEST {is_grid},
+					is_active => $_REQUEST {"is_grid_$$options{name}"} || $options -> {no_params} && !$_REQUEST {"is_chart_$$options{name}"},
 					off       => $options -> {no_grid} || (ref $options -> {grid} eq HASH && @{$options -> {grid} -> {columns}} == 0),
 				},
 				{
 					href      => $href,
 					label     => 'Параметры',
-					is_active => !$_REQUEST {is_chart} && !$_REQUEST {is_grid},
+					is_active => !$_REQUEST {"is_chart_$$options{name}"} && !$_REQUEST {"is_grid_$$options{name}"},
 					off       => $options -> {no_params}
 				},
 			],
@@ -3535,7 +3537,7 @@ sub draw_chart {
 		[]
 	);
 
-	if ($_REQUEST {is_chart}) { # График
+	if ($_REQUEST {"is_chart_$$options{name}"}) { # График
 
 		my $top_toolbar = draw_toolbar (@{$options -> {top_toolbar}}) if (ref $options -> {top_toolbar} eq ARRAY);
 		my $title = draw_window_title ($options -> {title}) if (ref $options -> {title} eq HASH && $options -> {title} -> {label});
@@ -3544,7 +3546,7 @@ sub draw_chart {
 
 		$html .= $_SKIN -> draw_chart ($options, $data);
 
-	} elsif ($_REQUEST {is_grid}) { # Данные
+	} elsif ($_REQUEST {"is_grid_$$options{name}"} || $options -> {no_params}) { # Данные
 
 		if (ref $options -> {grid} eq HASH) {
 			$html .= draw_table (
