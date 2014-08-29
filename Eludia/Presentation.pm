@@ -3537,7 +3537,7 @@ sub draw_chart {
 		[]
 	);
 
-	if ($_REQUEST {"is_chart_$$options{name}"} || $options -> {no_params}) { # График
+	if ($_REQUEST {"is_chart_$$options{name}"} || $options -> {no_params} && !$_REQUEST {"is_grid_$$options{name}"}) { # График
 
 		my $top_toolbar = draw_toolbar (@{$options -> {top_toolbar}}) if (ref $options -> {top_toolbar} eq ARRAY);
 		my $title = draw_window_title ($options -> {title}) if (ref $options -> {title} eq HASH && $options -> {title} -> {label});
