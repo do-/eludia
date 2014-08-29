@@ -446,8 +446,8 @@ sub draw_form_field_string {
 
 	$attributes -> {onKeyPress} .= ';if (event.keyCode != 27) is_dirty=true;';
 	$attributes -> {onKeyDown}  .= ';tabOnEnter();';
-	$attributes -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
-	$attributes -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
+	$attributes -> {onFocus}    .= ';stibqif (true);';
+	$attributes -> {onBlur}     .= ';stibqif (false);';
 	$attributes -> {type}        = 'text';
 
 	return dump_tag ('input', $attributes);
@@ -591,8 +591,8 @@ EOH
 				name="_$$options{name}"
 				size=$$options{size}
 				$attributes
-				onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
-				onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
+				onFocus="stibqif (true);"
+				onBlur="stibqif (false);"
 				onChange="is_dirty=true; $$options{onChange}"
 				onKeyDown="if (event.keyCode != 9) return false;"
 				tabindex=-1
@@ -748,8 +748,8 @@ EOJS
 	return <<EOH;
 		<textarea
 			$attributes
-			onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
-			onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
+			onFocus="stibqif (true);"
+			onBlur="stibqif (false);"
 			rows=$$options{rows}
 			cols=$$options{cols}
 			name="_$$options{name}"
@@ -764,7 +764,7 @@ EOH
 sub draw_form_field_password {
 	my ($_SKIN, $options, $data) = @_;
 	my $attributes = dump_attributes ($options -> {attributes});
-	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="scrollable_table_is_blocked = true; q_is_focused = true" onBlur="scrollable_table_is_blocked = false; q_is_focused = false">};
+	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="stibqif (true)" onBlur="stibqif (false)">};
 }
 
 ################################################################################
@@ -859,8 +859,8 @@ sub draw_form_field_radio {
 		$a -> {name}       = '_' . $options -> {name};
 		$a -> {value}      = $value -> {id};
 		$a -> {id}         = ''  . $value;
-		$a -> {onFocus}   .= ";stibqif (true,true)";
-		$a -> {onBlur}    .= ";stibqif (true,false)";
+		$a -> {onFocus}   .= ";stibqif (true)";
+		$a -> {onBlur}    .= ";stibqif (true)";
 		$a -> {onClick}   .= ";is_dirty=true";
 		$a -> {onClick}   .= ";$options->{refresh_name}()" if $options -> {refresh_name};
 		$a -> {onKeyDown} .= ";tabOnEnter()";
@@ -983,12 +983,7 @@ sub draw_form_field_combo {
 
 	$options -> {attributes} -> {id}    ||= ($options -> {id} ||= "_$options->{name}_select");
 
-	$options -> {attributes} -> {size}  ||= $options -> {max_len};
-	$options -> {attributes} -> {size} = length $options -> {empty}
-		if $options -> {attributes} -> {size} < length $options -> {empty};
-
-	$options -> {attributes} -> {style} .= "width: " . ($options -> {attributes} -> {size} * 3) . 'px;';
-
+	$options->{max_len} ||= 0;
 
 	$options -> {attributes} -> {onFocus}   .= ";stibqif (true,true)";
 	$options -> {attributes} -> {onBlur}    .= ";stibqif (true,false)";
@@ -1047,8 +1042,7 @@ EOH
 						empty   : '$options->{empty}',
 						href    : '$options->{ds}->{href}',
 						portion : $conf->{portion},
-						width   : @{[$options -> {attributes} -> {size} * 8]}
-
+						max_len : $options->{max_len}
 					});
 				},
 				10
@@ -1059,8 +1053,7 @@ EOH
 				empty   : '$options->{empty}',
 				href    : '$options->{ds}->{href}',
 				portion : $conf->{portion},
-				width   : @{[$options -> {attributes} -> {size} * 8]}
-
+				max_len : $options->{max_len}
 			});
 		}
 
@@ -1081,8 +1074,8 @@ sub draw_form_field_string_voc {
 
 	$options -> {attributes} -> {onKeyPress} .= qq[;if (event.keyCode != 27) {is_dirty=true;document.getElementById('${options}_id').value = 0; }];
 	$options -> {attributes} -> {onKeyDown}  .= qq[;if (event.keyCode == 8 || event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter();];
-	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
-	$options -> {attributes} -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
+	$options -> {attributes} -> {onFocus}    .= ';stibqif (true);';
+	$options -> {attributes} -> {onBlur}     .= ';stibqif (false);';
 	$options -> {attributes} -> {onChange}   .= 'is_dirty=true;' . ( $options->{onChange} ? $options->{onChange} . ' try { event.cancelBubble = false } catch (e) {} try { event.returnValue = true } catch (e) {}': '');
 
 	my $attributes = dump_attributes ($options -> {attributes});
@@ -1411,6 +1404,77 @@ sub draw_form_field_htmleditor {
 EOH
 
 }
+
+################################################################################
+
+sub draw_form_field_multi_select {
+
+	my ($_SKIN, $options, $data) = @_;
+
+	$options -> {attributes} ||= {};
+	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_multi_select";
+
+	check_href ($options -> {ds});
+
+	my $values = $_JSON -> encode ([map {{id => $_ -> {id}, label => $_ -> {label}}} @{$options -> {values}}]);
+
+	$_REQUEST {__on_load} .= <<EOJS;
+debugger;
+		\$("#$options->{attributes}->{id}").kendoMultiSelect({
+			dataTextField: "label",
+			dataValueField: "id",
+			autoBind: false,
+			dataSource: {
+				serverFiltering: true,
+				transport: {
+					read: {
+						url         : '$options->{ds}->{href}' + '&salt=' + Math.random (),
+						contentType : 'application/x-www-form-urlencoded; charset=UTF-8'
+					},
+					dataType    : 'json',
+					parameterMap: function(data, type) {
+						var q;
+						if (data.filter && data.filter.filters && data.filter.filters [0] && data.filter.filters [0].value)
+							q = data.filter.filters [0].value;
+
+						if (type == 'read') {
+							return {
+								start   : data.skip,
+								portion : data.take,
+								ids     : data.ids,
+								q       : q
+							}
+						}
+					}
+
+				},
+				serverPaging    : true,
+				pageSize        : $conf->{portion},
+				schema   : {
+					total : 'cnt',
+					data  : function (result) {
+						return result.result;
+					}
+				}
+			},
+			value: $values,
+			change: function(e) {
+				var value = this.value();
+				\$("INPUT[name=_$$options{name}]").val(value.join());
+			}
+		});
+EOJS
+
+	my $attributes = dump_attributes ($options -> {attributes});
+	my $ids = join (',', map {$_ -> {id}} @{$options -> {values}});
+
+	return qq|<select multiselect name="_$$options{name}_src" $attributes></select><input type="hidden" name="_$$options{name}" value="$ids">|;
+
+
+}
+
+
+
 
 ################################################################################
 # TOOLBARS
@@ -1749,6 +1813,7 @@ sub draw_toolbar_input_combo {
 	foreach my $value (@{$options -> {values}}) {
 		if (!$value -> {id}) {
 			$placeholder = $value -> {label};
+			push @$values, $value;
 		} elsif ($value -> {id} != -1) {
 			push @$values, $value;
 		}
@@ -1874,8 +1939,8 @@ sub draw_toolbar_input_text {
 			size=$$options{size}
 			name=$$options{name}
 			value="$$options{value}"
-			onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
-			onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
+			onFocus="stibqif (true)"
+			onBlur="stibqif (false)"
 			$attributes
 			class="k-textbox"
 			id="$options->{id}"
