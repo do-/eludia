@@ -3722,16 +3722,6 @@ sub draw_chart {
 	$options -> {data} -> {data} = $data;
 	my $data_source_options = $_JSON -> encode ($options -> {data});
 	$data_source_options =~ s/\"([^"]+)\":/$1:/g;
-	my $seriesClick_function = <<EOH;
-	function (e) {
-		series_Click (
-			{
-				'href': (e.dataItem[e.series.field + '_href'] || e.series.href)  + '&salt=' + Math.random() + '&sid=$_REQUEST{sid}',
-				'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
-			}
-		);
-	}
-EOH
 
 	$options -> {chartArea} -> {height} ||= 400;
 
@@ -3756,12 +3746,46 @@ EOH
 									);
 					}
 
-					var chartOptions = $chart_options;
-					var chartDataSource = $data_source_options;
-					var seriesClick = $seriesClick_function;
-					var chartName = '$$options{name}';
+					var chartOptions_$$options{name} = $chart_options;
+
+					\$(document).ready(function () {
+
+
+						var DataSource_$$options{name} = new kendo.data.DataSource($data_source_options);
+						chartOptions_$$options{name}.dataSource = DataSource_$$options{name};
+						chartOptions_$$options{name}.theme = 'silver';
+						chartOptions_$$options{name}.seriesClick = function (e) {
+							series_Click (
+								{
+									'href': (e.dataItem[e.series.field + '_href'] || e.series.href)  + '&salt=' + Math.random() + '&sid=$_REQUEST{sid}',
+									'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
+								}
+							)
+						};
+
+						function createChart() {
+							\$(".chart_$$options{name}").kendoChart(chartOptions_$$options{name});
+						}
+
+						createChart();
+
+						var chart_$$options{name} = \$(".chart_$$options{name}").data("kendoChart");
+
+						\$("input[name=svg_text_$$options{name}]").val(chart_$$options{name}.svg());
+
+						function dataBound(e) {
+							var pw = \$(document).find("#sale").height();
+							\$(".k-grid-content").css({'height': pw - 71});
+							\$(".chart_$$options{name}, .setting").css({'height': pw - 45});
+						}
+
+						\$(window).resize (function() {
+							chart_$$options{name}.refresh();
+						})
+					});
+
 				</script>
-				<iframe src="$_REQUEST{__static_url}/chart.html" frameborder="2" scrolling="yes" style="overflow-y:auto;height:800;width:100%" height="options->{chartArea}->{height}" width="100%"></iframe>
+				<div class="chart_$$options{name}" style="padding:0px;"></div>
 			</td>
 		</tr>
 	</table>
@@ -3774,7 +3798,7 @@ EOH
 
 sub draw_print_chart_images {
 
-	my ($options) = @_;
+	my ($_SKIN, $options) = @_;
 
 	my $html = <<EOH;
 	<form

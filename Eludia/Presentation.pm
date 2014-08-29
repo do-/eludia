@@ -3498,13 +3498,13 @@ sub draw_chart {
 	$_REQUEST {__charts_count} ||= 0;
 	$_REQUEST {__charts_count} ++;
 
-	$options -> {name} ||= 'g' . $_REQUEST {__charts_count};
+	$options -> {name} ||= 'g' . sprintf('%05d', $_REQUEST {__charts_count});
 
-	push @{$_REQUEST {__charts_names}}, $options -> {name} . sprintf('%05d', $_REQUEST {__charts_count});
+	push @{$_REQUEST {__charts_names}}, $options -> {name};
 
 	my $href = create_url (is_chart => undef, is_grid => undef);
 
-	my $html = draw_form (
+	my $html = $options -> {no_params} || $options -> {no_grid} ? "" : draw_form (
 		{
 			no_esc  => 1,
 			no_ok   => 1,
@@ -3678,9 +3678,9 @@ sub get_chart_image_pathes {
 		$_REQUEST {"svg_text_$name"} =~ s/&gt;/>/g;
 
 		$_REQUEST {"svg_text_$name"} =~ /^.*width='(\d+)px'.*$/;
-		my $width = $1;
+		my $width = $1 || 0;
 		$_REQUEST {"svg_text_$name"} =~ /^.*height='(\d+)px'.*$/;
-		my $height = $1;
+		my $height = $1 || 0;
 
 		$data -> {"chart_image_width_$name"} = sprintf ("%.0f", $width / 1.65);
 		$data -> {"chart_image_heigth_$name"} = sprintf ("%.0f", $height / 1.65);
