@@ -3710,4 +3710,89 @@ sub draw_page__only_field {
 
 }
 
+################################################################################
+
+sub draw_chart {
+
+	my ($_SKIN, $options, $data) = @_;
+
+	my $chart_options = $_JSON -> encode ($options -> {chart});
+	$chart_options =~ s/\"([^"]+)\":/$1:/g;
+
+	$options -> {data} -> {data} = $data;
+	my $data_source_options = $_JSON -> encode ($options -> {data});
+	$data_source_options =~ s/\"([^"]+)\":/$1:/g;
+	my $seriesClick_function = <<EOH;
+	function (e) {
+		series_Click (
+			{
+				'href': (e.dataItem[e.series.field + '_href'] || e.series.href)  + '&salt=' + Math.random() + '&sid=$_REQUEST{sid}',
+				'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
+			}
+		);
+	}
+EOH
+
+	my $html .= <<EOH;
+<script>
+
+	function series_Click (dialog) {
+
+		var dialog_width = screen.availWidth - (screen.availWidth <= 800 ? 50 : 100);
+		var dialog_height = screen.availHeight - (screen.availHeight <= 600 ? 50 : 100);
+
+		dialog.href = dialog.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, '');
+
+		dialog.href += '&_salt=' + Math.random ();
+
+		var result = window.showModalDialog(
+						'$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}'
+						, dialog
+						, 'status:no;help:no;resizable:no' + ';dialogWidth=' + dialog_width + 'px;dialogHeight=' + dialog_height + 'px'
+					);
+	}
+
+	var chartOptions = $chart_options;
+	var chartDataSource = $data_source_options;
+	var seriesClick = $seriesClick_function;
+	var chartName = '$$options{name}';
+</script>
+<iframe src="$_REQUEST{__static_url}/chart.html" frameborder="2" scrolling="yes" style="overflow-y:auto;height:800;width:100%" height="800" width="100%"></iframe>
+EOH
+
+	return $html;
+}
+
+################################################################################
+
+sub draw_print_chart_images {
+
+	my ($options) = @_;
+
+	my $html = <<EOH;
+	<form
+		name="print_chart_images"
+		target=invisible
+		enctype="$$options{enctype}"
+		method="post"
+	>
+EOH
+
+	$html .= dump_hiddens (
+
+		map {[$_ -> {name} => $_ -> {value}]}
+
+			@{$options -> {keep_params}}
+
+	);
+
+	foreach my $chart_name (@{$_REQUEST {__charts_names}}) {
+
+		$html .= "<input name='svg_text_$chart_name' type='hidden'>";
+
+	}
+
+	$html .= '</form>';
+}
+
 1;
