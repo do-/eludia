@@ -3485,4 +3485,221 @@ sub file_icon {
 
 }
 
+################################################################################
+
+sub draw_chart {
+
+	my ($options, $data) = @_;
+
+	__profile_in ('draw.chart');
+
+	return '' if $options -> {off};
+
+	$_REQUEST {__charts_count} ||= 0;
+	$_REQUEST {__charts_count} ++;
+
+	push @{$_REQUEST {__charts_names}}, $options -> {name} || 'g' . sprintf('%05d', $_REQUEST {__charts_count});
+
+	my $href = create_url (is_chart => undef, is_grid => undef);
+
+	my $html = draw_form (
+		{
+			no_esc  => 1,
+			no_ok   => 1,
+			no_edit => 1,
+			name    => 'form_menu',
+			menu    => [
+				{
+					href      => "$href&is_chart=1",
+					label     => 'График',
+					is_active => $_REQUEST {is_chart},
+					off       => $options -> {no_chart},
+				},
+				{
+					href      => "$href&is_grid=1",
+					label     => 'Данные',
+					is_active => $_REQUEST {is_grid},
+					off       => $options -> {no_grid} || (ref $options -> {grid} eq HASH && @{$options -> {grid} -> {columns}} == 0),
+				},
+				{
+					href      => $href,
+					label     => 'Параметры',
+					is_active => !$_REQUEST {is_chart} && !$_REQUEST {is_grid},
+					off       => $options -> {no_params}
+				},
+			],
+		},
+		{},
+		[]
+	);
+
+	if ($_REQUEST {is_chart}) { # График
+
+		my $top_toolbar = draw_toolbar (@{$options -> {top_toolbar}}) if (ref $options -> {top_toolbar} eq ARRAY);
+		my $title = draw_window_title ($options -> {title}) if (ref $options -> {title} eq HASH && $options -> {title} -> {label});
+
+		$html .= "$title$top_toolbar";
+		$html .= $_SKIN -> draw_chart ($options, $data);
+
+	} elsif ($_REQUEST {is_grid}) { # Данные
+
+		if (ref $options -> {grid} eq HASH) {
+			$html .= draw_table (
+
+				[
+					@{$options -> {grid} -> {columns}}
+				],
+
+				sub {
+
+					draw_cells ({},[
+						map {{
+							label   => $i -> {$_ -> {field}},
+							picture => $_ -> {picture},
+							off     => $_ -> {off} || $_ -> {picture} && $i -> {$_ -> {field}} == 0,
+							hidden  => $_ -> {hidden},
+							href    => ($_ -> {href} || $i -> {$_ -> {field} . '_href'}) ? _new_window_href ($_ -> {href} || $i -> {$_ -> {field} . '_href'}) : undef,
+							(map { ($_ => $i -> {$_}) } @{$_ -> {fields}} ),
+						}} @{$options -> {grid} -> {columns}},
+					])
+
+				},
+
+				$data,
+
+				{
+					name  => 't_data',
+					title => {label => $options -> {title} -> {label}},
+					top_toolbar => $options -> {top_toolbar},
+				}
+
+			);
+		} else {
+			$html .= $options -> {grid};
+		}
+
+	} else { # Параметры
+
+		$html .= draw_form (@{$options -> {params}});
+
+	}
+
+	__profile_out ('draw.chart');
+
+	return $html;
+
+}
+
+################################################################################
+
+sub draw_print_chart_images {
+
+	my ($options) = @_;
+
+	__profile_in ('draw.print_chart_images');
+
+	return '' if $options -> {off};
+
+	my   @keep_params = map {{name => $_, value => $_REQUEST {$_}}} @{$options -> {keep_params}};
+	push @keep_params, {name  => 'sid',                         value => $_REQUEST {sid}                         };
+	push @keep_params, {name  => 'select',                      value => $_REQUEST {select}                      };
+	push @keep_params, {name  => '__no_navigation',             value => $_REQUEST {__no_navigation}             };
+	push @keep_params, {name  => '__tree',                      value => $_REQUEST {__tree}                      };
+	push @keep_params, {name  => 'type',                        value => $options -> {type} || $_REQUEST {type}  };
+	push @keep_params, {name  => 'id',                          value => $options -> {id} || $_REQUEST {id}      };
+	push @keep_params, {name  => 'action',                      value => $options -> {action} || 'print'         };
+	push @keep_params, {name  => '__last_query_string',         value => $_REQUEST {__last_last_query_string}    };
+	push @keep_params, {name  => '__form_checkboxes',           value => $_REQUEST {__form_checkboxes}           } if $_REQUEST {__form_checkboxes};
+	push @keep_params, {name  => '__last_scrollable_table_row', value => $_REQUEST {__last_scrollable_table_row} } unless ($_REQUEST {__windows_ce});
+
+	foreach my $key (keys %_REQUEST) {
+
+		$key =~ /^__checkboxes_/ or next;
+
+		push @keep_params, {name => $key, value => $_REQUEST {$key} };
+
+	}
+
+	$options -> {keep_params} = \@keep_params;
+
+	my $html = $_SKIN -> draw_print_chart_images ($options);
+
+	__profile_out ('draw.print_chart_images');
+
+	return $html;
+
+}
+
+################################################################################
+
+sub get_chart_image_pathes {
+
+	my ($data) = @_;
+
+	my $chart_image_pathes;
+
+	my $chart_image_path = 'i/report_charts_images/';
+
+	-d $preconf -> {_} -> {docroot} . $chart_image_path or mkdir $preconf -> {_} -> {docroot} . $chart_image_path;
+
+	my @chart_keys;
+
+	foreach my $key (keys %_REQUEST) {
+		next unless ($key =~ /^svg_text_(\w+)$/);
+
+		push @chart_keys, $1;
+	}
+
+	my $chart_names = [sort {$a cmp $b} @chart_keys];
+
+	eval { require Image::LibRSVG; };
+	if ($@) {
+		warn $@;
+		return;
+	}
+
+	my $rsvg = new Image::LibRSVG () if ($preconf -> {core_skin} ne 'Ken');
+
+	foreach my $name (@$chart_names) {
+
+		$data -> {"chart_image_path_$name"} = '';
+
+		next unless $_REQUEST {"svg_text_$name"};
+
+		push @{$data -> {charts_names}}, $name;
+
+		open CHART_IMAGE, '>' . $preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg";
+
+		$_REQUEST {"svg_text_$name"} =~ s/&lt;/</g;
+		$_REQUEST {"svg_text_$name"} =~ s/&gt;/>/g;
+
+		$_REQUEST {"svg_text_$name"} =~ /^.*width='(\d+)px'.*$/;
+		my $width = $1;
+		$_REQUEST {"svg_text_$name"} =~ /^.*height='(\d+)px'.*$/;
+		my $height = $1;
+
+		$data -> {"chart_image_width_$name"} = sprintf ("%.0f", $width / 1.65);
+		$data -> {"chart_image_heigth_$name"} = sprintf ("%.0f", $height / 1.65);
+
+		$_REQUEST {"svg_text_$name"} = Encode::decode('cp-1251', $_REQUEST {"svg_text_$name"}) if ($preconf -> {core_skin} ne 'Ken');
+		print CHART_IMAGE $_REQUEST {"svg_text_$name"};
+
+		close CHART_IMAGE;
+
+		my $chart_path = $chart_image_path . "$name." . ($preconf -> {core_skin} eq 'Ken' ? "svg" : "png");
+
+		push @$chart_image_pathes, $preconf -> {_} -> {docroot} . $chart_path;
+
+		if ($preconf -> {core_skin} ne 'Ken') {
+			$rsvg -> convert ($preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg", $preconf -> {_} -> {docroot} . $chart_path);
+			# unlink $preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg";
+		}
+
+		$data -> {"chart_image_path_$name"} = "http://" . $ENV {HTTP_HOST} . "/" . $chart_path if (-e  $preconf -> {_} -> {docroot} . $chart_path);
+
+	}
+
+	return $chart_image_pathes;
+}
+
 1;
