@@ -3755,12 +3755,14 @@ sub draw_chart {
 						chartOptions_$$options{name}.dataSource = DataSource_$$options{name};
 						chartOptions_$$options{name}.theme = 'silver';
 						chartOptions_$$options{name}.seriesClick = function (e) {
-							series_Click (
-								{
-									'href': (e.dataItem[e.series.field + '_href'] || e.series.href)  + '&salt=' + Math.random() + '&sid=$_REQUEST{sid}',
-									'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
-								}
-							)
+							if (e.dataItem[e.series.field + '_href'] || e.series.href) {
+								series_Click (
+									{
+										'href': (e.dataItem[e.series.field + '_href'] || e.series.href)  + '&salt=' + Math.random() + '&sid=$_REQUEST{sid}',
+										'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
+									}
+								);
+							}
 						};
 
 						function createChart() {
