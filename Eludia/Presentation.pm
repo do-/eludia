@@ -3583,7 +3583,14 @@ sub draw_chart {
 
 	} else { # Параметры
 
-		$html .= draw_form (@{$options -> {params}});
+		if ($options -> {params}) {
+			if (ref $options -> {params} eq ARRAY) {
+				$html .= draw_form (@{$options -> {params}});
+			} else {
+				$html .= $options -> {params};
+			}
+
+		}
 
 	}
 
