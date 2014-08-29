@@ -360,17 +360,18 @@ function open_vocabulary_from_combo (combo, options) {
 
 				for (var j = 0; j < combo.dataSource.data().length; j ++) {
 					if (combo.dataSource.data() [j].id == result.id) {
-						combo.select (j);
-						combo.trigger ('change');
 						break;
 					}
 				}
 
 				if (j == combo.dataSource.data().length) {
-					combo.dataSource.query({
-						ids : result.id
-					});
+					combo.dataSource.add ({id : result.id, label : result.label});
+					// combo.dataSource.query({
+					// 	ids : result.id
+					// });
 				}
+				combo.select (j);
+				combo.trigger ('change');
 
 			}
 		}
@@ -519,6 +520,8 @@ function refresh_radio__div (id) {
 }
 
 function stibqif (stib, qif) {
+	if (arguments.length == 1)
+		qif = stib;
 	scrollable_table_is_blocked = stib;
 	q_is_focused                = qif;
 }
@@ -665,7 +668,7 @@ function adjust_kendo_selects() {
 		setWidth ($(original_select));
 	}
 
-	$('select').not('#_setting__suggest, #_id_filter__suggest')
+	$('select').not('#_setting__suggest, #_id_filter__suggest, [multiselect]')
 		.each(select_tranform)
 		.change(select_tranform);
 }
@@ -674,19 +677,7 @@ function adjust_kendo_selects() {
 function do_kendo_combo_box (id, options) {
 
 	var values      = options.values,
-		initialized = 0,
-		ds          = {},
-		setWidth = function (combo) {
-			var p = combo.popup.element;
-			var w = p.css("visibility","hidden").show().outerWidth() + 32;
-			p.hide().css("visibility","visible");
-			if (combo.options.placeholder) {
-				var placeholder_len = combo.options.placeholder.length * 8;
-				if (w < placeholder_len)
-					w = placeholder_len;
-			}
-			combo.element.closest(".k-widget").width(w);
-		};
+		ds          = {};
 
 	if (options.href) {
 		ds = {
@@ -718,7 +709,7 @@ function do_kendo_combo_box (id, options) {
 				total : 'cnt',
 				data  : function (result) {
 schema_loop:
-					for(var i = 0; i < values.length; i++) {
+					for(var i = values.length - 1; i >= 0; i--) {
 						for (var j = 0; j < result.result.length; j ++)
 							if (result.result [j].id == values [i].id)
 								continue schema_loop;
@@ -739,10 +730,8 @@ schema_loop:
 		dataTextField   : 'label',
 		dataValueField  : 'id',
 		filter          : 'contains',
-		highlightFirst  : true,
-		suggest         : true,
 		minLength       : 3,
-		autoBind        : true,
+		autoBind        : false,
 		dataSource      : ds,
 		change: function(e) {
 
@@ -768,35 +757,49 @@ schema_loop:
 
 		},
 
-		dataBound: function(e) {
+		open : function (e) {
+			stibqif (true);
+			this.dataSource.query();
+			var max_len = 0,
+				data_items = this.dataItems (),
+				w = this.popup.element.css("width").replace("px", "");
+			for (var i = 0; i < data_items.length; i ++)
+				if (data_items [i].label.length > max_len)
+					max_len = data_items [i].label.length;
 
-			if (!initialized) {
-data_bound_loop:
-				for(var i = 0; i < values.length; i++) {
-					if (values [i].selected) {
-						for (var j = 0; j < this.dataSource.data().length; j ++) {
-							if (this.dataSource.data() [j].id == values [i].id) {
-								this.select (j);
-								break data_bound_loop;
-							}
-						}
-					}
-				}
+			if (max_len * 8 + 32 > w)
+				this.popup.element.css("width", (max_len * 8 + 32) + "px");
 
-				initialized = 1;
+		},
+		close : function (e) {
+			stibqif (false);
+		},
+		select : function (e) {
+			var w = e.item.text ().length * 8 + 32,
+				el = this.element.closest(".k-widget");
 
-				setWidth (this);
-
-			} else if (this.dataSource.data().length == values.length + 1) {
-				this.select (values.length);
-				this.trigger ('change');
-			}
-
+			if (w > el.width ())
+				el.width(w);
 		}
 
 	}
 	).data('kendoComboBox');
 
+	for(var i = 0; i < values.length; i++) {
+		combo.dataSource.add ({id : values [i].id, label : values [i].label});
+		if (values [i].selected)
+			combo.select (i);
+	}
+
+
+	var p = combo.popup.element;
+	var w = p.css("visibility","hidden").show().outerWidth();
+	p.hide().css("visibility","visible");
+	if (options.empty && options.empty.length * 8 > w)
+		w = options.empty.length * 8;
+	if (options.max_len && options.max_len * 8 < w)
+		w = options.max_len * 8;
+	combo.element.closest(".k-widget").width(w + 32);
 
 }
 
