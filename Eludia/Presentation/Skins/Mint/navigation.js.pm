@@ -372,6 +372,7 @@ function open_vocabulary_from_combo (combo, options) {
 				}
 				combo.select (j);
 				combo.trigger ('change');
+				combo.trigger ('select');
 
 			}
 		}
@@ -775,7 +776,7 @@ schema_loop:
 			stibqif (false);
 		},
 		select : function (e) {
-			var w = e.item.text ().length * 8 + 32,
+			var w = (this.dataItem() ? this.dataItem().label : e.item.text ()).length * 8 + 32,
 				el = this.element.closest(".k-widget");
 
 			if (w > el.width ())
