@@ -2529,6 +2529,9 @@ sub draw_table_header_row {
 
 	my ($_SKIN, $data_cells, $html_cells) = @_;
 
+	return ''
+		unless @$html_cells;
+
 	my $html = '<tr>';
 	foreach (@$html_cells) {$html .= $_};
 	$html .= '</tr>';
