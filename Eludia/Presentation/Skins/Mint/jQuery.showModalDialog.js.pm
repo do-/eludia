@@ -148,6 +148,7 @@ function dialog_open (options) {
     options.parent = window;
 
     var url = 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random ();
+    $.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
 
     if (is_ua_mobile) {
 
@@ -160,6 +161,7 @@ function dialog_open (options) {
             dialogArguments: options,
             onClose: function () {
                 var result = this.returnValue || {result : 'esc'};
+                $.unblockUI ();
                 options.after(result);
             }
         });
@@ -174,6 +176,8 @@ function dialog_open (options) {
     result = result || {result : 'esc'};
 
     options.after(result);
+
+    $.unblockUI ();
 
     document.body.style.cursor='default';
 }

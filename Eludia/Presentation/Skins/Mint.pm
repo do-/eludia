@@ -1459,6 +1459,10 @@ debugger;
 					}
 				}
 			},
+			dataBound: function(e) {
+				if (this.value ().join () != \$("INPUT[name=_$$options{name}]").val())
+					this.value (\$("INPUT[name=_$$options{name}]").val().split(','));
+			},
 			value: $values,
 			change: function(e) {
 				var value = this.value();
@@ -1470,8 +1474,36 @@ EOJS
 	my $attributes = dump_attributes ($options -> {attributes});
 	my $ids = join (',', map {$_ -> {id}} @{$options -> {values}});
 
-	return qq|<select multiselect name="_$$options{name}_src" $attributes></select><input type="hidden" name="_$$options{name}" value="$ids">|;
+	my $after = <<EOJS;
+		if (typeof result !== 'undefined' && result.result == 'ok') {
+			var multi_select = \$("#$options->{attributes}->{id}").data("kendoMultiSelect");
+			multi_select.dataSource.query({
+				ids : result.ids
+			});
+			result.ids = result.ids.replace (/-1,/, '');
+			multi_select.value (result.ids.split (','));
+			\$("INPUT[name='_$$options{name}'").val (result.ids);
+		}
+		setCursor ();
+EOJS
 
+	my $url = &{$_PACKAGE . 'dialog_open'} ({
+		href  => $options -> {href} . '&multi_select=1',
+		title => $label,
+		after => $after,
+	});
+
+	$url =~ s/^javascript://i;
+	my $url_dialog_id = $_REQUEST {__dialog_cnt};
+
+
+	return <<EOH;
+		<select multiselect name="_$$options{name}_src" $attributes></select><input type="hidden" name="_$$options{name}" value="$ids">
+		<input type="button" class="k-button" value="..."
+			onClick="re = /&_?salt=[\\d\\.]*/g; dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, ''); re = /&ids=[^&]*/i; dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, ''); dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&ids=' + document.getElementsByName ('_$options->{name}') [0].value;
+			$url"
+		>
+EOH
 
 }
 

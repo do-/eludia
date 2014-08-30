@@ -136,6 +136,12 @@ A.k-button:focus {
 	white-space:nowrap;
 }
 
+.k-multiselect {
+	width: 90%;
+	float: left;
+	margin-right: 10px;
+}
+
 FORM.toolbar {
 	background-color: #cacaca;
 }
