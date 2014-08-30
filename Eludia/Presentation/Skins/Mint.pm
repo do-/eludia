@@ -1404,6 +1404,8 @@ sub draw_form_field_multi_select {
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_multi_select";
 
+	ref $options -> {ds} eq HASH or $options -> {ds} = {href => $options -> {ds}};
+
 	check_href ($options -> {ds});
 
 	my $values = $_JSON -> encode ([map {{id => $_ -> {id}, label => $_ -> {label}}} @{$options -> {values}}]);
@@ -3743,42 +3745,75 @@ sub draw_chart {
 	$options -> {data} -> {data} = $data;
 	my $data_source_options = $_JSON -> encode ($options -> {data});
 	$data_source_options =~ s/\"([^"]+)\":/$1:/g;
-	my $seriesClick_function = <<EOH;
-	function (e) {
-		series_Click (
-			{
-				'href': (e.dataItem[e.series.field + '_href'] || e.series.href)  + '&salt=' + Math.random() + '&sid=$_REQUEST{sid}',
-				'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
-			}
-		);
-	}
-EOH
+
+	$options -> {chartArea} -> {height} ||= 400;
 
 	my $html .= <<EOH;
-<script>
+	<table id='$$options{name}' cellspacing=0 cellpadding=0 height="$options->{chartArea}->{height}" width="100%">
+		<tr>
+			<td>
+				<script>
+					function series_Click (dialog) {
 
-	function series_Click (dialog) {
+						var dialog_width = screen.availWidth - (screen.availWidth <= 800 ? 50 : 100);
+						var dialog_height = screen.availHeight - (screen.availHeight <= 600 ? 50 : 100);
 
-		var dialog_width = screen.availWidth - (screen.availWidth <= 800 ? 50 : 100);
-		var dialog_height = screen.availHeight - (screen.availHeight <= 600 ? 50 : 100);
+						dialog.href = dialog.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, '');
 
-		dialog.href = dialog.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, '');
+						dialog.href += '&_salt=' + Math.random ();
 
-		dialog.href += '&_salt=' + Math.random ();
+						var result = window.showModalDialog(
+										'$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}'
+										, dialog
+										, 'status:no;help:no;resizable:no' + ';dialogWidth=' + dialog_width + 'px;dialogHeight=' + dialog_height + 'px'
+									);
+					}
 
-		var result = window.showModalDialog(
-						'$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}'
-						, dialog
-						, 'status:no;help:no;resizable:no' + ';dialogWidth=' + dialog_width + 'px;dialogHeight=' + dialog_height + 'px'
-					);
-	}
+					var chartOptions_$$options{name} = $chart_options;
 
-	var chartOptions = $chart_options;
-	var chartDataSource = $data_source_options;
-	var seriesClick = $seriesClick_function;
-	var chartName = '$$options{name}';
-</script>
-<iframe src="$_REQUEST{__static_url}/chart.html" frameborder="2" scrolling="yes" style="overflow-y:auto;height:800;width:100%" height="800" width="100%"></iframe>
+					\$(document).ready(function () {
+
+
+						var DataSource_$$options{name} = new kendo.data.DataSource($data_source_options);
+						chartOptions_$$options{name}.dataSource = DataSource_$$options{name};
+						chartOptions_$$options{name}.theme = 'silver';
+						chartOptions_$$options{name}.seriesClick = function (e) {
+							if (e.dataItem[e.series.field + '_href'] || e.series.href) {
+								series_Click (
+									{
+										'href': (e.dataItem[e.series.field + '_href'] || e.series.href)  + '&salt=' + Math.random() + '&sid=$_REQUEST{sid}',
+										'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
+									}
+								);
+							}
+						};
+
+						function createChart() {
+							\$(".chart_$$options{name}").kendoChart(chartOptions_$$options{name});
+						}
+
+						createChart();
+
+						var chart_$$options{name} = \$(".chart_$$options{name}").data("kendoChart");
+
+						\$("input[name=svg_text_$$options{name}]").val(chart_$$options{name}.svg());
+
+						function dataBound(e) {
+							var pw = \$(document).find("#sale").height();
+							\$(".k-grid-content").css({'height': pw - 71});
+							\$(".chart_$$options{name}, .setting").css({'height': pw - 45});
+						}
+
+						\$(window).resize (function() {
+							chart_$$options{name}.refresh();
+						})
+					});
+
+				</script>
+				<div class="chart_$$options{name}" style="padding:0px;"></div>
+			</td>
+		</tr>
+	</table>
 EOH
 
 	return $html;
@@ -3788,7 +3823,7 @@ EOH
 
 sub draw_print_chart_images {
 
-	my ($options) = @_;
+	my ($_SKIN, $options) = @_;
 
 	my $html = <<EOH;
 	<form

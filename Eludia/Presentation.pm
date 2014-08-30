@@ -3478,33 +3478,37 @@ sub draw_chart {
 	$_REQUEST {__charts_count} ||= 0;
 	$_REQUEST {__charts_count} ++;
 
-	push @{$_REQUEST {__charts_names}}, $options -> {name} || 'g' . sprintf('%05d', $_REQUEST {__charts_count});
+	$options -> {name} ||= 'g' . sprintf('%05d', $_REQUEST {__charts_count});
 
-	my $href = create_url (is_chart => undef, is_grid => undef);
+	push @{$_REQUEST {__charts_names}}, $options -> {name};
 
-	my $html = draw_form (
+	$_REQUEST {"is_chart_$$options{name}"} ||= $options -> {no_params} && $options -> {no_grid};
+
+	my $href = create_url ("is_chart_$$options{name}" => undef, "is_grid_$$options{name}" => undef);
+
+	my $html = $options -> {no_params} && $options -> {no_grid} ? "" : draw_form (
 		{
 			no_esc  => 1,
 			no_ok   => 1,
 			no_edit => 1,
-			name    => 'form_menu',
+			name    => 'form_menu_' . $options -> {name},
 			menu    => [
 				{
-					href      => "$href&is_chart=1",
+					href      => "$href&is_chart_$$options{name}=1",
 					label     => 'График',
-					is_active => $_REQUEST {is_chart},
-					off       => $options -> {no_chart},
+					is_active => $_REQUEST {"is_chart_$$options{name}"} || $options -> {no_params} && !$_REQUEST {"is_grid_$$options{name}"},
+					off       => $options -> {no_chart} && !$options -> {no_grid} && !$options -> {no_params},
 				},
 				{
-					href      => "$href&is_grid=1",
+					href      => "$href&is_grid_$$options{name}=1",
 					label     => 'Данные',
-					is_active => $_REQUEST {is_grid},
+					is_active => $_REQUEST {"is_grid_$$options{name}"},
 					off       => $options -> {no_grid} || (ref $options -> {grid} eq HASH && @{$options -> {grid} -> {columns}} == 0),
 				},
 				{
 					href      => $href,
 					label     => 'Параметры',
-					is_active => !$_REQUEST {is_chart} && !$_REQUEST {is_grid},
+					is_active => !$_REQUEST {"is_chart_$$options{name}"} && !$_REQUEST {"is_grid_$$options{name}"},
 					off       => $options -> {no_params}
 				},
 			],
@@ -3513,15 +3517,16 @@ sub draw_chart {
 		[]
 	);
 
-	if ($_REQUEST {is_chart}) { # График
+	if ($_REQUEST {"is_chart_$$options{name}"} || $options -> {no_params} && !$_REQUEST {"is_grid_$$options{name}"}) { # График
 
 		my $top_toolbar = draw_toolbar (@{$options -> {top_toolbar}}) if (ref $options -> {top_toolbar} eq ARRAY);
 		my $title = draw_window_title ($options -> {title}) if (ref $options -> {title} eq HASH && $options -> {title} -> {label});
 
 		$html .= "$title$top_toolbar";
+
 		$html .= $_SKIN -> draw_chart ($options, $data);
 
-	} elsif ($_REQUEST {is_grid}) { # Данные
+	} elsif ($_REQUEST {"is_grid_$$options{name}"}) { # Данные
 
 		if (ref $options -> {grid} eq HASH) {
 			$html .= draw_table (
@@ -3560,7 +3565,14 @@ sub draw_chart {
 
 	} else { # Параметры
 
-		$html .= draw_form (@{$options -> {params}});
+		if ($options -> {params}) {
+			if (ref $options -> {params} eq ARRAY) {
+				$html .= draw_form (@{$options -> {params}});
+			} else {
+				$html .= $options -> {params};
+			}
+
+		}
 
 	}
 
@@ -3632,13 +3644,14 @@ sub get_chart_image_pathes {
 
 	my $chart_names = [sort {$a cmp $b} @chart_keys];
 
-	eval { require Image::LibRSVG; };
-	if ($@) {
-		warn $@;
-		return;
-	}
+	my $rsvg;
+	if ($i18n -> {_charset} eq 'windows-1251') {
 
-	my $rsvg = new Image::LibRSVG () if ($preconf -> {core_skin} ne 'Ken');
+		eval { require Image::LibRSVG; };
+		if ($@) {warn $@;return;}
+
+		$rsvg = new Image::LibRSVG ();
+	}
 
 	foreach my $name (@$chart_names) {
 
@@ -3654,25 +3667,25 @@ sub get_chart_image_pathes {
 		$_REQUEST {"svg_text_$name"} =~ s/&gt;/>/g;
 
 		$_REQUEST {"svg_text_$name"} =~ /^.*width='(\d+)px'.*$/;
-		my $width = $1;
+		my $width = $1 || 0;
 		$_REQUEST {"svg_text_$name"} =~ /^.*height='(\d+)px'.*$/;
-		my $height = $1;
+		my $height = $1 || 0;
 
 		$data -> {"chart_image_width_$name"} = sprintf ("%.0f", $width / 1.65);
 		$data -> {"chart_image_heigth_$name"} = sprintf ("%.0f", $height / 1.65);
 
-		$_REQUEST {"svg_text_$name"} = Encode::decode('cp-1251', $_REQUEST {"svg_text_$name"}) if ($preconf -> {core_skin} ne 'Ken');
+		$_REQUEST {"svg_text_$name"} = Encode::decode('cp-1251', $_REQUEST {"svg_text_$name"}) if ($i18n -> {_charset} eq 'windows-1251');
 		print CHART_IMAGE $_REQUEST {"svg_text_$name"};
 
 		close CHART_IMAGE;
 
-		my $chart_path = $chart_image_path . "$name." . ($preconf -> {core_skin} eq 'Ken' ? "svg" : "png");
+		my $chart_path = $chart_image_path . "$name." . ($i18n -> {_charset} eq 'windows-1251' ? "png" : "svg");
 
 		push @$chart_image_pathes, $preconf -> {_} -> {docroot} . $chart_path;
 
-		if ($preconf -> {core_skin} ne 'Ken') {
+		if ($rsvg && $i18n -> {_charset} eq 'windows-1251') {
 			$rsvg -> convert ($preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg", $preconf -> {_} -> {docroot} . $chart_path);
-			# unlink $preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg";
+			unlink $preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg";
 		}
 
 		$data -> {"chart_image_path_$name"} = "http://" . $ENV {HTTP_HOST} . "/" . $chart_path if (-e  $preconf -> {_} -> {docroot} . $chart_path);
