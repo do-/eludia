@@ -2219,3 +2219,19 @@ function init_page (options) {
 
 
 }
+
+function IsID (input){
+	return (input - 0) == input && input.length > 0 && input != -1;
+}
+
+function stringSetsEqual (set1, set2) {
+
+	var set1Values = $.grep (set1.split(','), IsID).sort ();
+	var set2Values = $.grep (set2.split(','), IsID).sort ();
+
+	var setsEqual = set1Values.length == set2Values.length;
+	for (var i = 0; set1Values[i] && setsEqual; i++) {
+		setsEqual = set1Values[i] === set2Values[i];
+	}
+	return setsEqual;
+}

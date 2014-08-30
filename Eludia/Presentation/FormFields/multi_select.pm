@@ -17,23 +17,6 @@ sub draw_form_field_multi_select {
 	$label =~ s/\s+/ /g;
 
 	my $hasOnChangeEvent = 0 + (exists ($options -> {onChange}) && length ($options->{onChange}) > 0);
-	js <<EOJS if $hasOnChangeEvent && $_REQUEST {__script} !~ /function stringSetsEqual\s+/;
-		function IsID (input){
-			return (input - 0) == input && input.length > 0 && input != -1;
-		}
-
-		function stringSetsEqual (set1, set2) {
-
-			var set1Values = \$.grep (set1.split(','), IsID).sort ();
-			var set2Values = \$.grep (set2.split(','), IsID).sort ();
-
-			var setsEqual = set1Values.length == set2Values.length;
-			for (var i = 0; set1Values[i] && setsEqual; i++) {
-				setsEqual = set1Values[i] === set2Values[i];
-			}
-			return setsEqual;
-		}
-EOJS
 
 	$options -> {delimeter} ||= $conf -> {multi_select_delimeter} || '<br>';
 
