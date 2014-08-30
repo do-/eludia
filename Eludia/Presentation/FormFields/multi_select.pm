@@ -4,6 +4,9 @@ sub draw_form_field_multi_select {
 
 	my ($options, $data) = @_;
 
+	return $_SKIN -> draw_form_field_multi_select (@_)
+		if $options -> {ds} && $_SKIN -> can('draw_form_field_multi_select');
+
 	local $_REQUEST {select} = undef
 		if $options -> {href} =~ m/\bmulti_select=1\b/;
 

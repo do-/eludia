@@ -293,7 +293,7 @@ sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
 	}
 	my $query = sql_select_hash ("SELECT parent, dump FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
 	if ($query -> {parent}) {
-		sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", $query -> {dump}, $query -> {parent});
+		sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ? AND id_user = ?", $query -> {dump}, $query -> {parent}, $_USER -> {id});
 	}
 
 	out_json ({});
@@ -329,8 +329,10 @@ sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
 
 	if ($_QUERY -> {parent}) {
 		my $dump = sql_select_scalar ("SELECT dump FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
-		sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", $dump, $_QUERY -> {parent});
+		sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ? AND id_user = ?", $dump, $_QUERY -> {parent}, $_USER -> {id});
 	}
+
+	$_QUERY = undef;
 
 	my $page = setup_page ();
 

@@ -1414,6 +1414,8 @@ sub draw_form_field_multi_select {
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_multi_select";
 
+	ref $options -> {ds} eq HASH or $options -> {ds} = {href => $options -> {ds}};
+
 	check_href ($options -> {ds});
 
 	my $values = $_JSON -> encode ([map {{id => $_ -> {id}, label => $_ -> {label}}} @{$options -> {values}}]);
