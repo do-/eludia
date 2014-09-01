@@ -448,6 +448,9 @@ sub draw_form_field_string {
 	$attributes -> {onKeyDown}  .= ';tabOnEnter();';
 	$attributes -> {onFocus}    .= ';stibqif (true);';
 	$attributes -> {onBlur}     .= ';stibqif (false);';
+
+	$attributes -> {class}      .= ' k-textbox ';
+
 	$attributes -> {type}        = 'text';
 
 	return dump_tag ('input', $attributes);
@@ -861,7 +864,7 @@ sub draw_form_field_radio {
 		$a -> {id}         = ''  . $value;
 		$a -> {onFocus}   .= ";stibqif (true)";
 		$a -> {onBlur}    .= ";stibqif (true)";
-		$a -> {onClick}   .= ";is_dirty=true";
+		$a -> {onClick}   .= $value -> {onclick} . ";is_dirty=true";
 		$a -> {onClick}   .= ";$options->{refresh_name}()" if $options -> {refresh_name};
 		$a -> {onKeyDown} .= ";tabOnEnter()";
 
