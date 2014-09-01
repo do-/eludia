@@ -438,6 +438,9 @@ sub draw_form_field_string {
 	$attributes -> {onKeyDown}  .= ';tabOnEnter();';
 	$attributes -> {onFocus}    .= ';stibqif (true);';
 	$attributes -> {onBlur}     .= ';stibqif (false);';
+
+	$attributes -> {class}      .= ' k-textbox ';
+
 	$attributes -> {type}        = 'text';
 
 	return dump_tag ('input', $attributes);
@@ -851,7 +854,7 @@ sub draw_form_field_radio {
 		$a -> {id}         = ''  . $value;
 		$a -> {onFocus}   .= ";stibqif (true)";
 		$a -> {onBlur}    .= ";stibqif (true)";
-		$a -> {onClick}   .= ";is_dirty=true";
+		$a -> {onClick}   .= $value -> {onclick} . ";is_dirty=true";
 		$a -> {onClick}   .= ";$options->{refresh_name}()" if $options -> {refresh_name};
 		$a -> {onKeyDown} .= ";tabOnEnter()";
 
@@ -3788,8 +3791,8 @@ sub draw_chart {
 		<tr>
 			<td>
 				<script>
-					function series_Click (dialog) {
 
+					function series_Click (dialog) {
 						var dialog_width = screen.availWidth - (screen.availWidth <= 800 ? 50 : 100);
 						var dialog_height = screen.availHeight - (screen.availHeight <= 600 ? 50 : 100);
 
@@ -3804,45 +3807,33 @@ sub draw_chart {
 									);
 					}
 
+					var DataSource_$$options{name} = new kendo.data.DataSource($data_source_options);
+
 					var chartOptions_$$options{name} = $chart_options;
-
-					\$(document).ready(function () {
-
-
-						var DataSource_$$options{name} = new kendo.data.DataSource($data_source_options);
-						chartOptions_$$options{name}.dataSource = DataSource_$$options{name};
-						chartOptions_$$options{name}.theme = 'silver';
-						chartOptions_$$options{name}.seriesClick = function (e) {
-							if (e.dataItem[e.series.field + '_href'] || e.series.href) {
-								series_Click (
-									{
-										'href': (e.dataItem[e.series.field + '_href'] || e.series.href)  + '&salt=' + Math.random() + '&sid=$_REQUEST{sid}',
-										'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
-									}
-								);
-							}
-						};
-
-						function createChart() {
-							\$(".chart_$$options{name}").kendoChart(chartOptions_$$options{name});
+					chartOptions_$$options{name}.dataSource = DataSource_$$options{name};
+					chartOptions_$$options{name}.theme = 'silver';
+					chartOptions_$$options{name}.seriesClick = function (e) {
+						if (e.dataItem[e.series.field + '_href'] || e.series.href) {
+							series_Click (
+								{
+									'href': (e.dataItem[e.series.field + '_href'] || e.series.href)  + '&salt=' + Math.random() + '&sid=$_REQUEST{sid}',
+									'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
+								}
+							);
 						}
+					};
 
-						createChart();
+					function createChart_$$options{name}() {
+						\$(".chart_$$options{name}").kendoChart(chartOptions_$$options{name});
 
 						var chart_$$options{name} = \$(".chart_$$options{name}").data("kendoChart");
 
 						\$("input[name=svg_text_$$options{name}]").val(chart_$$options{name}.svg());
 
-						function dataBound(e) {
-							var pw = \$(document).find("#sale").height();
-							\$(".k-grid-content").css({'height': pw - 71});
-							\$(".chart_$$options{name}, .setting").css({'height': pw - 45});
-						}
-
 						\$(window).resize (function() {
 							chart_$$options{name}.refresh();
 						})
-					});
+					}
 
 				</script>
 				<div class="chart_$$options{name}" style="padding:0px;"></div>
@@ -3850,6 +3841,8 @@ sub draw_chart {
 		</tr>
 	</table>
 EOH
+
+	$_REQUEST {__on_load} .= "createChart_$$options{name}();";
 
 	return $html;
 }
