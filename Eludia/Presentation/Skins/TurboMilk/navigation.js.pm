@@ -336,7 +336,9 @@ function check_menu_md5 (menu_md5) {
 		|| window.parent.location.href.indexOf ('dialog.html') > 0
 	) return;
 
-	$.getScript (window.location.href + '&__only_menu=1');
+	var url = window.location.href.replace (/\btype=(\w+)/, 'type=menu');
+
+	$.getScript (url + '&__only_menu=1');
 
 }
 

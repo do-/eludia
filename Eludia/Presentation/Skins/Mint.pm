@@ -33,6 +33,7 @@ sub options {
 	return {
 		core_unblock_navigation => $preconf -> {core_unblock_navigation},
 		static_path             => '/i/mint/',
+		skip_menu_ajusting      => 1,
 	};
 
 }

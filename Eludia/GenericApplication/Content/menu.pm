@@ -42,7 +42,7 @@ sub get_data_menu {
 
 	my $menu = setup_menu ();
 
-	return $_SKIN -> draw_menu (_fix_menu ($menu));
+	return draw_menu (_fix_menu ($menu));
 
 }
 

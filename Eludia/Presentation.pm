@@ -1462,6 +1462,10 @@ sub draw_menu {
 
 	@$types or return '';
 
+	return $_SKIN -> draw_menu (@_)
+		if $_SKIN -> {options} -> {skip_menu_ajusting};
+
+
 	delete $_REQUEST {__tree} if $_REQUEST {__only_menu};
 
 	($_REQUEST {__no_navigation} or $_REQUEST {__tree}) and return '';
