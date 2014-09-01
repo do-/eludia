@@ -142,6 +142,10 @@ A.k-button:focus {
 	margin-right: 10px;
 }
 
+.k-datepicker, .k-combobox {
+	padding: 0 !important;
+}
+
 FORM.toolbar {
 	background-color: #cacaca;
 }
@@ -584,7 +588,12 @@ A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, 
 INPUT {
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+}
+
+TEXTAREA.k-textbox {
+	margin-bottom:0pt;
+	width:95%;
+	height: 20%;
 }
 
 .cbx {
@@ -605,7 +614,6 @@ input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
 	background-color: #ffffff;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	border: 1px #7f9db9 solid;
 	padding-left: 3px;
 	padding-right: 3px;
@@ -614,7 +622,6 @@ input.form-active-deleted, select.form-active-deleted, textarea.form-active-dele
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
 	background-color: #ffffff;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	border: 1px #7f9db9 solid;
 	padding-left: 3px;
 	padding-right: 3px;
@@ -624,7 +631,6 @@ input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandato
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
 	background-color: #f7f7ad;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	border: 2px solid black;
 	padding-left: 3px;
 	padding-right: 3px;
@@ -633,7 +639,6 @@ input.form-mandatory-deleted, select.form-mandatory-deleted, textarea.form-manda
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
 	background-color: #f7f7ad;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	border: 2px solid black;
 	padding-left: 3px;
 	padding-right: 3px;

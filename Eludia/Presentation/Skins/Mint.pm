@@ -448,6 +448,9 @@ sub draw_form_field_string {
 	$attributes -> {onKeyDown}  .= ';tabOnEnter();';
 	$attributes -> {onFocus}    .= ';stibqif (true);';
 	$attributes -> {onBlur}     .= ';stibqif (false);';
+
+	$attributes -> {class}      .= ' k-textbox ';
+
 	$attributes -> {type}        = 'text';
 
 	return dump_tag ('input', $attributes);
@@ -696,54 +699,9 @@ sub draw_form_field_text {
 
 	my ($_SKIN, $options, $data) = @_;
 
+	$options -> {attributes} -> {class} .= ' k-textbox ';
+
 	my $attributes = dump_attributes ($options -> {attributes});
-
-	my $url = '_skins/Mint/jquery.textarearesizer.compressed';
-
-	unless (grep {$_ eq $url} @{$_REQUEST {__include_js}}) {
-
-		push @{$_REQUEST{__include_js}}, $url;
-
-		$_REQUEST {__head_links} .= <<EOH;
-		<style>
-			div.grippie {
-				background:#EEEEEE url($_REQUEST{__static_url}/grippie.png) no-repeat scroll center 2px;
-				border-color:#DDDDDD;
-				border-style:solid;
-				border-width:0pt 1px 1px;
-				cursor:s-resize;
-				height:9px;
-				overflow:hidden;
-			}
-			.resizable-textarea textarea {
-				display:block;
-				margin-bottom:0pt;
-				width:95%;
-				height: 20%;
-			}
-		</style>
-EOH
-
-		if ($_REQUEST {__only_form}) {
-
-			$_REQUEST {__on_load} .= <<EOJS;
-					parent.setTimeout ('reset_textarearesizer(\\'_$$options{name}\\')', 10);
-EOJS
-		} else {
-
-			$_REQUEST {__script} .= <<'EOJS';
-				function reset_textarearesizer (name) {
-					$("textarea[name='" + name + "']").parent().parent().after($("textarea[name='" + name + "']")).remove().siblings('.grippie').remove();
-					$("textarea:not(.processed)").TextAreaResizer();
-				}
-EOJS
-
-			$_REQUEST {__on_load} .= <<'EOJS';
-				$('textarea:not(.processed)').TextAreaResizer();
-EOJS
-		}
-
-	}
 
 	return <<EOH;
 		<textarea
@@ -861,7 +819,7 @@ sub draw_form_field_radio {
 		$a -> {id}         = ''  . $value;
 		$a -> {onFocus}   .= ";stibqif (true)";
 		$a -> {onBlur}    .= ";stibqif (true)";
-		$a -> {onClick}   .= ";is_dirty=true";
+		$a -> {onClick}   .= $value -> {onclick} . ";is_dirty=true";
 		$a -> {onClick}   .= ";$options->{refresh_name}()" if $options -> {refresh_name};
 		$a -> {onKeyDown} .= ";tabOnEnter()";
 
