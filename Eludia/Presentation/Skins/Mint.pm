@@ -3818,7 +3818,7 @@ sub draw_chart {
 	</table>
 EOH
 
-	$_REQUEST {__on_load} .= "createChart_$$options{name}();";
+	$_REQUEST {__on_load} .= ";setTimeout ('createChart_$$options{name}();', $_REQUEST{__charts_count} * 50);";
 
 	return $html;
 }
