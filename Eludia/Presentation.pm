@@ -3498,7 +3498,7 @@ sub draw_chart {
 	$_REQUEST {__charts_count} ||= 0;
 	$_REQUEST {__charts_count} ++;
 
-	$options -> {name} ||= 'g' . sprintf('%05d', $_REQUEST {__charts_count});
+	$options -> {name} ||= 'chart' . sprintf('%05d', $_REQUEST {__charts_count});
 
 	push @{$_REQUEST {__charts_names}}, $options -> {name};
 
@@ -3573,7 +3573,7 @@ sub draw_chart {
 				$data,
 
 				{
-					name  => 't_data',
+					name  => 't_' . $options -> {name},
 					title => {label => $options -> {title} -> {label}},
 					top_toolbar => $options -> {top_toolbar},
 				}
