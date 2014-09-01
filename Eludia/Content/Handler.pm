@@ -372,11 +372,12 @@ sub setup_page {
 	require_both $page -> {type};
 
 	$page -> {request_type} =
-		$r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' ? 'data' :
 
 		$_REQUEST {__suggest} ? 'suggest' :
 
 		$_REQUEST {action}    ? 'action'  :
+
+		$r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' ? 'data' :
 
 					'showing' ;
 

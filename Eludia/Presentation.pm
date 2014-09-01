@@ -3143,6 +3143,8 @@ sub out_json ($) {
 
 	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
 
+	setup_json ();
+
 	my $data = $_[0];
 	$data = $_JSON -> encode ($data) if ref ($data);
 
