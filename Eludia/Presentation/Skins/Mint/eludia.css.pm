@@ -20,9 +20,17 @@ IFRAME {
 	border: 0;
 }
 
-
 FORM {
 	margin: 0px;
+}
+
+#body_table {
+	border-spacing: 0;
+	padding: 0;
+	overflow: hidden;
+	border: 0;
+	width: 100%;
+	height: 100%;
 }
 
 .form-article {

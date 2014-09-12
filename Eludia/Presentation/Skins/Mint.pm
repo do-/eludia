@@ -211,6 +211,8 @@ sub _draw_input_datetime {
 
 	return '' if $_REQUEST {__only_field};
 
+	$_REQUEST {_libs} -> {kendo} -> {datetimepicker} = 1;
+
 	my ($_SKIN, $options) = @_;
 
 	$options -> {id} ||= '' . $options;
@@ -423,8 +425,13 @@ sub draw_form_field_banner {
 ################################################################################
 
 sub draw_form_field_button {
+
 	my ($_SKIN, $options, $data) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {button} = 1;
+
 	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex=$tabindex>};
+
 }
 
 ################################################################################
@@ -454,6 +461,8 @@ sub draw_form_field_suggest {
 
 	my ($_SKIN, $options, $data) = @_;
 
+	$_REQUEST {_libs} -> {kendo} -> {autocomplete} = 1;
+
 	my $values = $_JSON -> encode ([]);
 	if (ref $options -> {values} ne 'CODE') {
 		$values = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}]} @{$options -> {values}}]);
@@ -467,6 +476,7 @@ sub draw_form_field_suggest {
 EOJS
 
 	my $id = $options -> {name} || 'suggest';
+
 	my $js = <<EOJS;
 		\$("#$id").kendoAutoComplete({
 			minLength       : $$options{min_length},
@@ -556,6 +566,8 @@ sub draw_form_field_file {
 
 	my ($_SKIN, $options, $data) = @_;
 
+	$_REQUEST {_libs} -> {kendo} -> {upload} = 1;
+
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	my $html = "<span id='form_field_file_head_$options->{name}'>";
@@ -610,6 +622,8 @@ EOH
 sub draw_form_field_files {
 
 	my ($_SKIN, $options, $data) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {upload} = 1;
 
 	$_REQUEST {__script} .= <<'EOJS' if $_REQUEST {__script} !~ /function number_file_fields_for_compatibility/;
 	function number_file_fields_for_compatibility (file_field) {
@@ -847,6 +861,8 @@ sub draw_form_field_select {
 	return $_SKIN -> draw_form_field_combo ($options, $data)
 		if $options -> {ds};
 
+	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
+
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
 
@@ -927,6 +943,8 @@ EOH
 sub draw_form_field_combo {
 
 	my ($_SKIN, $options, $data) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {combobox} = 1;
 
 	$options -> {attributes} ||= {};
 
@@ -1084,6 +1102,9 @@ EOJS
 sub draw_form_field_tree {
 
 	my ($_SKIN, $options, $data) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {treeview} = 1;
+	$_REQUEST {_libs} -> {kendo} -> {splitter} = 1;
 
 	my %p2n = ();
 	my %i2n = ();
@@ -1360,6 +1381,8 @@ sub draw_form_field_multi_select {
 
 	my ($_SKIN, $options, $data) = @_;
 
+	$_REQUEST {_libs} -> {kendo} -> {multiselect} = 1;
+
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_multi_select";
 
@@ -1542,6 +1565,9 @@ sub _icon_path {
 sub draw_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {button} = 1;
+
 	my $html = <<EOH;
 		<li>
 EOH
@@ -1600,6 +1626,10 @@ EOH
 sub draw_toolbar_input_tree {
 
 	my ($_SKIN, $options) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
+	$_REQUEST {_libs} -> {kendo} -> {treeview} = 1;
+	push @{$_REQUEST{__include_js}}, 'libs/kendo.web.ext';
 
 	my $id = "toolbar_input_tree_$options->{name}";
 
@@ -1692,6 +1722,7 @@ sub draw_toolbar_input_select {
 	return $_SKIN -> draw_toolbar_input_combo ($options)
 		if $options -> {ds} && !$options -> {read_only};
 
+	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
 
 	my $html = '<li class="toolbar nowrap">';
 
@@ -1770,6 +1801,8 @@ EOH
 sub draw_toolbar_input_combo {
 
 	my ($_SKIN, $options) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {combobox} = 1;
 
 	my $html = '<li class="toolbar nowrap">';
 
@@ -1975,6 +2008,8 @@ sub draw_toolbar_input_file {
 
 	my ($_SKIN, $options) = @_;
 
+	$_REQUEST {_libs} -> {kendo} -> {upload} = 1;
+
 	my $html = '<li class="toolbar nowrap">';
 
 	if ($options -> {label}) {
@@ -2020,6 +2055,8 @@ sub draw_toolbar_button_vert_menu {
 sub draw_centered_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {button} = 1;
 
 	my $img_path = "$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}";
 
@@ -2761,16 +2798,10 @@ sub draw_table {
 	return $data_json
 		if $_REQUEST {__only_table};
 
-
-	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable" unless (@{$_REQUEST {__include_css}} ~~ "_skins/$_REQUEST{__skin}/supertable");
-	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/supertable" unless (@{$_REQUEST {__include_js}} ~~ "_skins/$_REQUEST{__skin}/supertable");
-
 	$_REQUEST {__script} = <<EOJS . $_REQUEST {__script};
 		window.tables_data = window.tables_data || {};
 		window.tables_data ['$options->{id_table}'] = $data_json;
 EOJS
-
-
 
 	my $height = $options -> {__height} || $options -> {min_height} || 100; # px
 
@@ -2859,6 +2890,48 @@ sub draw_page_just_to_reload_menu {
 
 }
 
+################################################################################
+
+sub draw__boot_page {
+
+	my ($_SKIN, $page) = @_;
+
+	$_REQUEST {__script} .= <<EOJS;
+;function nope (url, name, options) {
+	var w = window;
+	if (name == '_self') {
+		w.location.href = url;
+	}
+	else {
+		w.open (url, name, options);
+	}
+}
+function _onload () {
+	$_REQUEST{__on_load}
+}
+EOJS
+
+	my $script = dump_tag (script => {}, $_REQUEST {__script}) . "\n";
+
+	return <<EOH;
+<html>
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+		<title>$$i18n{_page_title}</title>
+
+		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
+		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
+		$script
+	</head>
+	<body onLoad="_onload ()">
+		$page->{body}
+	</body>
+<html>
+EOH
+
+}
+
 
 ################################################################################
 
@@ -2867,8 +2940,7 @@ sub draw_page {
 	my ($_SKIN, $page) = @_;
 
 	$r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' && out_json ($page -> {body} || $page -> {content});
-
-	my $parameters = ref ${$_PACKAGE . 'apr'} eq 'Apache2::Request' ? ${$_PACKAGE . 'apr'} -> param : ${$_PACKAGE . 'apr'} -> parms;
+	$_REQUEST {type} eq '_boot' && return $_SKIN -> draw__boot_page ($page);
 
 	my $body = $page -> {body};
 
@@ -2878,40 +2950,7 @@ sub draw_page {
 		id           => 'body',
 	};
 
-	push @{$_REQUEST {__include_js}}, '_skins/Mint/jquery.blockUI';
-
-	push @{$_REQUEST {__include_js}}, 'ken/js/kendo.all.min', 'libs/kendo.web.ext', 'ken/js/cultures/kendo.culture.ru-RU-1251.min';
 	push @{$_REQUEST {__include_css}}, 'ken/styles/kendo.common.min', 'ken/styles/kendo.bootstrap.min';
-
-	1 or $body .= qq {
-
-		<div style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:100; visibility:hidden; pointer-events: none; border: solid #888888 2px;' id="slider" onContextMenu="
-			var c = tableSlider.get_cell ();
-			if (!c) return;
-			var tr = c.parentNode;
-			if (!tr) return;
-			var h = tr.oncontextmenu;
-			if (!h) return;
-			return h(event);
-		"></div>
-		<div style='position:absolute; left:200px; top:300px; height:4px; width:4px; z-index:101; visibility:hidden; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
-
-	};
-
-	1 or $_REQUEST {__script}  .= '; check_top_window (); ';
-
-	my $init_page_options = {
-		table_url              => $_SKIN -> table_url (),
-		__scrollable_table_row => $_REQUEST {__scrollable_table_row} ||= 0,
-		focus                  => !$_REQUEST {__no_focus},
-		__focused_input        => $_REQUEST {__focused_input},
-		blockui_on_submit      => $preconf -> {core_blockui_on_submit},
-	};
-
-	$init_page_options = $_JSON -> encode ($init_page_options);
-
-	$_REQUEST {__on_load} .= "init_page ($init_page_options);";
-	$_REQUEST {__on_load} .= "setInterval (function () {\$.get ('$_REQUEST{__uri}?keepalive=$_REQUEST{sid}&_salt=' + Math.random ())}," . 60000 * (($conf -> {session_timeout} ||= 30) - 0.5) . ');' if !$preconf -> {no_keepalive} && $_REQUEST {sid};
 
 	if ($_REQUEST {__im_delay}) {
 
@@ -2926,12 +2965,6 @@ sub draw_page {
 
 	}
 
-	$_REQUEST {__on_mousedown}    .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) activate_link (window.location.href + '&__dump=1', 'invisible');\n" if $preconf -> {core_show_dump};
-	$_REQUEST {__on_contextmenu}  .= "var e = get_event (event); if (e.button == 2 && e.ctrlKey && !e.altKey && !e.shiftKey) return blockEvent();\n" if $preconf -> {core_show_dump};
-
-	$_REQUEST {__on_keydown}      .= " lastKeyDownEvent = event; handle_basic_navigation_keys ();";
-	$_REQUEST {__on_keypress}     .= " if (!browser_is_msie && event.keyCode == 27) return false;";
-
 	foreach my $r (@{$page -> {scan2names}}) {
 		next if $r -> {off};
 		$r -> {data} .= '';
@@ -2942,61 +2975,33 @@ sub draw_page {
 		$_REQUEST {__on_load} .= '];';
 	}
 
-	$_REQUEST {__on_keydown}      .= " if (code_alt_ctrl (115, 0, 0)) return blockEvent ();";
-
-	$_REQUEST {__on_help}          = " nope ('$_REQUEST{__help_url}', '_blank', 'toolbar=no,resizable=yes'); blockEvent ();" if $_REQUEST {__help_url};
-
-	$_REQUEST {__on_beforeunload} .= " setCursor (window, 'wait'); try {top.setCursor (top, 'wait')} catch (e) {};";
-
 	$_REQUEST {__head_links}      .= "<META HTTP-EQUIV=Refresh CONTENT='$_REQUEST{__meta_refresh}; URL=@{[create_url()]}&__no_focus=1'>" if $_REQUEST {__meta_refresh};
 
 	$_REQUEST {__js_var} -> {__read_only}              = $_REQUEST {id} ? 0 + $_REQUEST {__read_only} : 1;
 
 	$_REQUEST {__js_var} -> {__last_last_query_string} = 0 + $_REQUEST{__last_query_string};
 
-	$body =~ /^\s*\<frameset/ism or $body = qq {
-
-		<table id="body_table" cellspacing=0 cellpadding=0 border=0 width=100% height=100%>
-			<tr><td valign=top height=100%>$body</td></tr>
-		</table>
-
-	};
-
-
 	$_REQUEST {__js_var} -> {menu_md5}                 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
-
-	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr", "_skins/$_REQUEST{__skin}/i18n_$_REQUEST{lang}";
 
 	my $js_var = $_REQUEST {__js_var};
 
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 
-	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">}     foreach (@{$_REQUEST {__include_css}});
+	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">}   foreach (@{$_REQUEST {__include_css}});
 
-	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}'>\n</script>" foreach (@{$_REQUEST {__include_js}});
+	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js'>\n</script>"                          foreach (@{$_REQUEST {__include_js}});
 
 
 	foreach (keys %_REQUEST) {
 
 		/^__on_(\w+)$/ or next;
+		$1 eq 'load' and next;
 
-		my $attributes = {};
 		my $code       = $_REQUEST {$&};
 
-		if ($1 eq 'load') {
+		my $what = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
 
-			$code  = "\n\$(document).ready (function () {\n${code}\n})\n";
-
-			$_REQUEST {__head_links} .= dump_tag (script => $attributes, $code) . "\n";
-		}
-		else {
-
-			my $what = $1 eq 'resize' ? 'window' : $1 eq 'beforeunload' ? 'window' : 'document';
-
-			$_REQUEST {__script} .= qq {\n \$($what).bind ('$1', function (event) { $code }) };
-
-		}
-
+		$_REQUEST {__script} .= qq {\n \$($what).bind ('$1', function (event) { $code }) };
 
 	}
 
@@ -3010,23 +3015,71 @@ sub draw_page {
 		<meta name="Generator" content="Eludia ${Eludia::VERSION} / $$SQL_VERSION{string}; parameters are fetched with @{[ ref $apr ]}; gateway_interface is $ENV{GATEWAY_INTERFACE}; @{[$ENV {MOD_PERL} || 'NO mod_perl AT ALL']} is in use">
 		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 
-		<link href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet" />
-		<link href="$_REQUEST{__static_url}/jquery-ui-1.8.21.custom.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet" />
+		<link href="$_REQUEST{__static_url}/eludia.css" type="text/css" rel="stylesheet" />
+		<link href="/i/libs/jquery-ui/jquery-ui.min.css" type="text/css" rel="stylesheet" />
+		<link href="$_REQUEST{__static_url}/supertable.css" type="text/css" rel="stylesheet" />
 
-		<script src="$_REQUEST{__static_url}/jquery-1.11.1.min.js?$_REQUEST{__static_salt}"></script>
-		<script src="$_REQUEST{__static_url}/jquery-migrate-1.2.1.min.js?$_REQUEST{__static_salt}"></script>
-		<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}"></script>
-		<script src="$_REQUEST{__static_url}/jquery-ui-1.8.21.custom.min.js?$_REQUEST{__static_salt}"></script>
-		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js?$_REQUEST{__static_salt}"></script>
+		<script src="/i/libs/require.js"></script>
+		<script src="/i/ken/js/jquery.min.js"></script>
+
+		<script src="$_REQUEST{__static_url}/navigation.js"></script>
+		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js" async></script>
+
 
 	} . $_REQUEST {__head_links};
 
-	if ($body !~ /^\s*\<frameset/ism) {
+	my $init_page_options = {
+		table_url              => $_SKIN -> table_url (),
+		__scrollable_table_row => $_REQUEST {__scrollable_table_row} ||= 0,
+		focus                  => !$_REQUEST {__no_focus},
+		__focused_input        => $_REQUEST {__focused_input},
+		blockui_on_submit      => $preconf -> {core_blockui_on_submit},
+		session_timeout        => !$preconf -> {no_keepalive} && $_REQUEST {sid} && 60000 * (($conf -> {session_timeout} ||= 30) - 0.5),
+		core_show_dump         => $preconf -> {core_show_dump},
+		help_url               => $_REQUEST {__help_url},
+	};
 
+	$init_page_options = $_JSON -> encode ($init_page_options);
+
+	my $kendo_modules = join ',', qq |"cultures/kendo.culture.ru-RU-1251.min"|,
+		qq |"$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js"|,
+		map {qq |"kendo.$_.min"|} keys %{$_REQUEST {_libs} -> {kendo}};
+
+
+	$_REQUEST {__head_links} .= <<EOJS;
+		<script>
+			requirejs.config({
+				baseUrl: '/i/ken/js',
+				shim: {
+					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {
+						deps: ['cultures/kendo.culture.ru-RU-1251.min']
+					},
+					'$_REQUEST{__static_url}/supertable.js' : {}
+				}
+			});
+			require([ $kendo_modules ], function () {\$(document).ready (function () {$_REQUEST{__on_load}; init_page ($init_page_options);}) });
+		</script>
+EOJS
+
+	unless ($body =~ /^\s*\<frameset/ism) {
+		$body = qq {
+			<table id="body_table">
+				<tr><td valign=top height=100%>$body</td></tr>
+			</table>
+			<div style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:100; visibility:hidden; pointer-events: none; border: solid #888888 2px;' id="slider" onContextMenu="
+				var c = tableSlider.get_cell ();
+				if (!c) return;
+				var tr = c.parentNode;
+				if (!tr) return;
+				var h = tr.oncontextmenu;
+				if (!h) return;
+				return h(event);
+			"></div>
+			<div style='position:absolute; left:200px; top:300px; height:4px; width:4px; z-index:101; visibility:hidden; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
+		};
 		$body .= "<iframe name='$_' src='$_REQUEST{__static_url}/0.html' width=0 height=0 application='yes' style='display:none'>\n</iframe>" foreach (@{$_REQUEST{__invisibles}});
 
 		$body  = dump_tag (body => $body_options, $body);
-
 	}
 
 	return qq {<!DOCTYPE html><head>$_REQUEST{__head_links}</head>$body</html>};
@@ -3167,16 +3220,16 @@ sub lrt_start {
 		<!doctype html>
 		<html>
 		<head>
-			<script src="$_REQUEST{__static_url}/jquery-1.11.1.min.js?$_REQUEST{__static_salt}"></script>
+			<script src="/i/ken/js/jquery.min.js"></script>
 
 			<script type="text/javascript">
 				if (window.name == 'invisible') {
 					window=parent;
 					parent.lrt_start ($_REQUEST{__lrt_id});
 				} else {
-					\$('head').append('<script src="$_REQUEST{__static_url}/navigation.js?$_REQUEST{__static_salt}"></' + 'script>');
-					\$('head').append('<script src="$_REQUEST{__static_url}/jquery.blockUI.js?$_REQUEST{__static_salt}"></' + 'script>');
-					\$('head').append('<link rel="stylesheet" href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" />');
+					\$('head').append('<script src="$_REQUEST{__static_url}/navigation.js"></' + 'script>');
+					\$('head').append('<script src="$_REQUEST{__static_url}/jquery.blockUI.js"></' + 'script>');
+					\$('head').append('<link rel="stylesheet" href="$_REQUEST{__static_url}/eludia.css" type="text/css" />');
 
 					lrt_start ($_REQUEST{__lrt_id});
 				}
@@ -3259,9 +3312,11 @@ sub draw_tree {
 		return;
 	}
 
-
+	$_REQUEST {_libs} -> {kendo} -> {treeview} = 1;
+	$_REQUEST {_libs} -> {kendo} -> {splitter} = 1;
 
 	$options -> {name} ||= '_content_iframe';
+	$options -> {selected_node} ||= $_REQUEST {selected_node} || 1;
 	$options -> {active} ||= 0;
 
 	my $content_div_style = is_ua_mobile ()? "-webkit-overflow-scrolling:touch; overflow: scroll;"
@@ -3269,7 +3324,7 @@ sub draw_tree {
 
 	my $html = qq {
 		<div id="splitted_tree_window" style="height:100%">
-			<div id="splitted_tree_window_left">
+			<div id="splitted_tree_window_left" data-selected-node="$$options{selected_node}">
 			</div>
 			<div id="splitted_tree_window_right" style="$content_div_style" data-name="$$options{name}">
 			</div>
@@ -3293,36 +3348,6 @@ sub draw_tree {
 		};
 
 	}
-
-	my $js = qq {
-
-		\$("#splitted_tree_window").kendoSplitter ({
-			panes: [
-				{ collapsible: false, size: "220px" },
-				{ collapsible: false }
-			]
-		});
-
-		var expanded_nodes = {};
-
-		var stored_expanded_nodes = getCookie("co_$_REQUEST{type}");
-		if (stored_expanded_nodes) {
-			stored_expanded_nodes = stored_expanded_nodes.split(".");
-			for (var i in stored_expanded_nodes) {
-				expanded_nodes[stored_expanded_nodes[i]] = true;
-			}
-		}
-		\$(window).on('resize', function () {
-			var ontouchcontentheight = \$(window.parent.document).find('iframe').height() ? \$(window.parent.document).find('iframe').height() : \$(window).height();
-			\$('#touch_welt').css({'height': ontouchcontentheight});
-			\$('#__content_iframe').css('height', ontouchcontentheight);
-			setTimeout(function () {
-				var stw = \$("#splitted_tree_window").data("kendoSplitter");
-				stw.size('#splitted_tree_window_left', "220px" );
-			}, 500)
-		})
-
-	};
 
 	if (!$options -> {active}) {
 
@@ -3404,82 +3429,8 @@ sub draw_tree {
 		};
 	}
 
-	$options -> {selected_node} ||= $_REQUEST {selected_node} || 1;
-
 	$js .= qq {
 
-		function treeview_onexpand(e) {
-
-			var treeview = e.sender;
-
-			var id_expanded_node = treeview.dataItem(e.node).id;
-			expanded_nodes[id_expanded_node] = true;
-			setCookie ("co_$_REQUEST{type}", Object.keys(expanded_nodes).join('.'));
-
-			\$( document ).on( 'contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu );
-		}
-
-		function treeview_save_subtree_collapsed(node, treeview) {
-
-			delete expanded_nodes[treeview.dataItem(node).id];
-			\$(node).children("ul").children("li").each(function(index, node) {
-				treeview_save_subtree_collapsed(node, treeview);
-			});
-		}
-
-		function treeview_oncollapse(e) {
-
-			var treeview = e.sender;
-
-			var id_collapsed_node = treeview.dataItem(e.node).id;
-			delete expanded_nodes[id_collapsed_node];
-
-			treeview_save_subtree_collapsed(e.node, treeview);
-
-			setCookie ("co_$_REQUEST{type}", Object.keys(expanded_nodes).join('.'));
-		}
-		function treeview_get_node_uid_by_id(node, id) {
-			if (node.id == id) {
-				return node.uid;
-			}
-			if (node.hasChildren) {
-
-				var childs = node.children.data();
-				var res = 0;
-				for (var i = 0; i < childs.length; i++) {
-					res = treeview_get_node_uid_by_id(childs[i], id);
-					if (res) {return res;};
-				}
-			}
-			return 0;
-		}
-
-		function treeview_select_node(e) {
-			 var selected_node = "$$options{selected_node}";
-				if (selected_node) {
-					var tree =\$('#splitted_tree_window_left');
-						var treeview = tree.data('kendoTreeView');
-						var root = treeview.dataSource.data();
-						var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node);
-						if(selected_node_uid){
-							var select_node = treeview.findByUid(selected_node_uid);
-							treeview.select(select_node);
-							treeview_onselect_node (select_node);
-							treeview.unbind("dataBound", treeview_select_node);
-						}
-				}
-		}
-
-		function treeview_databound(e) {
-
-			if (e.node) { return; };
-
-			var treeview = e.sender;
-
-			var root = \$(".k-item:first");
-			treeview.select(root);
-			treeview.trigger('select', {node: root});
-		}
 
 		\$("#splitted_tree_window_left").data("active", $$options{active}).kendoTreeView({
 			dataSource : dataSource,
@@ -3492,98 +3443,14 @@ sub draw_tree {
 
 		});
 		\$("#splitted_tree_window_left").data("kendoTreeView").bind("dataBound", treeview_select_node);
+		\$( document ).on( 'contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu );
 
 	};
 
-		$js .= qq {
+	$_REQUEST {__on_load} .= $js;
 
-			\$( document ).on( 'contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu );
+	return $html;
 
-			function treeview_oncontextmenu(e) {
-
-				e.stopPropagation ();
-
-
-				var uid = \$(this).data('uid');
-
-				var tree_div = \$("#splitted_tree_window_left");
-				var treeview = tree_div.data ("kendoTreeView");
-
-				var node = treeview.findByUid (uid);
-				treeview.select (node);
-				treeview_onselect_node (node);
-
-				var data = treeview.dataSource.getByUid(uid);
-				if (!data) return false;
-				var menu = data.menu;
-				if (!menu) return false;
-
-				var a = [];
-				for (i = 0; i < menu.length; i ++) a [i] = menu [i];
-				var menuDiv = \$('<ul class="menuFonDark" style="position:absolute;z-index:200" />').appendTo (tree_div);
-
-				menuDiv.kendoMenu ({
-					dataSource: a,
-					orientation: 'vertical',
-					select: function (e) {
-						menuDiv.remove ();
-					}
-				});
-
-				var left = e.pageX;
-				if (e.pageX + menuDiv.width () > tree_div.width ())
-					left = tree_div.width () - menuDiv.width () - 10;
-
-				if (left < 0)
-					left = 0;
-
-				var top = e.pageY;
-				if (e.pageY + menuDiv.height () > tree_div.height ())
-					top = tree_div.height () - menuDiv.height () - 10;
-
-				if (top < 0)
-					top = 0;
-
-				menuDiv.css ({
-					top:  tree_div.scrollTop() + top,
-					left: tree_div.scrollLeft() + left
-				});
-
-				\$('a', menuDiv).each (function (i, element) {
-					var href = \$(element).attr('href');
-					var url = a[i].url;
-					if (a[i].clipboard_text) {
-						eludia_copy_clipboard (a[i].clipboard_text, element);
-						a[i].target = 'invisible';
-					} else if ( url && /^javascript:/.test(href)){
-						\$(element).attr('href', url);
-					}
-					var target = a[i].target || '$options->{name}';
-					\$(element).attr ('target', target);
-				});
-
-				var kill = window.setTimeout (function () {
-					menuDiv.remove ()
-				}, 3000);
-
-				menuDiv.hover (
-					function () {
-						window.clearTimeout (kill)
-					},
-					function () {
-						window.setTimeout (function () {
-							menuDiv.remove ()
-						}, 1000);
-					}
-				);
-
-				return false;
-
-			}
-
-		};
-
-	$html . "<script>\$(document).ready (function () {$js})</script>";
 
 }
 
