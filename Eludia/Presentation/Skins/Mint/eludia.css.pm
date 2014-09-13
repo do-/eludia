@@ -154,6 +154,10 @@ A.k-button:focus {
 	padding: 0 !important;
 }
 
+.k-widget {
+	margin: 2px 0;
+}
+
 FORM.toolbar {
 	background-color: #cacaca;
 }
@@ -174,36 +178,7 @@ div.modal_div  > * {
     -webkit-transform: translateZ(0px);
 }
 
-/*jquery ui dialog*/
-.ui-dialog .ui-dialog-titlebar {
-	background: #b9c5d7 !important;
-	color: black !important;
-	border: black !important;
-}
-
-.ui-dialog .ui-dialog-title {
-	font-weight: bold;
-	font-size: 8pt;
-	font-family: Tahoma, 'MS Sans Serif';
-}
-
-.ui-dialog .ui-dialog-titlebar .ui-state-focus {
-	border: none !important;
-}
-
-.ui-dialog .ui-dialog-titlebar .ui-state-hover {
-	border: none !important;
-	background-image: none !important;
-}
-
-.ui-dialog .ui-dialog-titlebar .ui-dialog-titlebar-close {
-	background: url(dialog_close.png) no-repeat center !important;
-	background-size: cover !important;
-}
-
-.ui-widget-header, .ui-widget-header .ui-icon, .ui-widget-content, .ui-widget-overlay {
-	background-image: none !important;
-}
+.ui-dialog { z-index: 1100 !important ;}
 
 .table_title {
 	FONT-WEIGHT: bold;
@@ -553,7 +528,7 @@ A.form-deleted-deleted, A.form-deleted-deleted:link, A.form-deleted-deleted:hove
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 }
 
-.form-active-inputs, .form-passive-inputs {
+td.form-active-inputs, td.form-passive-inputs {
 	background-color: #f9f9ff;
 	padding-left: 5px;
 	padding-right: 10px;

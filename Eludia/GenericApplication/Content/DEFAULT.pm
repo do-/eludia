@@ -303,9 +303,9 @@ sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
 
 sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
 
-	my $columns = $_JSON -> decode ($_REQUEST {columns});
+	setup_json ();
 
-	check___query ();
+	my $columns = $_JSON -> decode ($_REQUEST {columns});
 
 	my $ord = 1;
 	foreach my $column (@$columns) {
@@ -327,9 +327,10 @@ sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
 		$ord++;
 	}
 
-	if ($_QUERY -> {parent}) {
-		my $dump = sql_select_scalar ("SELECT dump FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
-		sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ? AND id_user = ?", $dump, $_QUERY -> {parent}, $_USER -> {id});
+	my ($parent, $dump) = sql_select_array ("SELECT parent, dump FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
+
+	if ($parent) {
+		sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ? AND id_user = ?", $dump, $parent, $_USER -> {id});
 	}
 
 	$_QUERY = undef;

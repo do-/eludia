@@ -468,16 +468,46 @@ sub draw_form_field_suggest {
 		$values = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}]} @{$options -> {values}}]);
 	}
 
-	$options -> {min_length} ||= 3;
-	$options -> {attributes} -> {size} ||= $options -> {size} || 60;
-
-	my $change_js = $options -> {onchange_href}? <<EOJS : '';
-		nope ('$$options{onchange_href}&id=' + id, '_self');
-EOJS
-
+	$options -> {attributes} ||= {};
+	my $attr_input = $options -> {attributes};
 	my $id = $options -> {name} || 'suggest';
 
-	my $js = <<EOJS;
+	$attr_input -> {id}                  = $id;
+	$attr_input -> {size}              ||= $options -> {size} || 60;
+	$attr_input -> {"data-role"}         = "autocomplete";
+	$attr_input -> {"a-data-values"}     = $values
+		if $values;
+	$attr_input -> {"a-data-url"}        = "$ENV{REQUEST_URI}&__suggest=$options->{name}";
+	$attr_input -> {"a-data-min-length"} = $options -> {min_length}
+		if $options -> {min_length} && $options -> {min_length} != 1;
+
+	$attr_input -> {"a-data-change"}     = "$$options{after}"
+		if $options -> {after};
+
+
+	return dump_tag (input => $options -> {attributes})
+
+		. dump_tag (input => {
+			type  => 'hidden',
+			id    => "${id}__label",
+			name  => "_$options->{name}__label",
+			value => $options -> {attributes} -> {value},
+		})
+
+		. dump_tag (input => {
+			type     => 'hidden',
+			id       => "${id}__id",
+			name     => "_$options->{name}__id",
+			value    => $options -> {value__id},
+			onchange => $options -> {after},
+		});
+
+
+
+
+
+
+	$_REQUEST {__on_load} .= <<EOJS;
 		\$("#$id").kendoAutoComplete({
 			minLength       : $$options{min_length},
 			filter          : 'contains',
@@ -524,26 +554,6 @@ EOJS
 			}
 		});
 EOJS
-
-	$options -> {attributes} -> {id} = $id;
-
-	my $html = dump_tag (input => $options -> {attributes})
-
-		. dump_tag (input => {
-			type  => 'hidden',
-			id    => "${id}__label",
-			name  => "_$options->{name}__label",
-			value => $options -> {attributes} -> {value},
-		})
-
-		. dump_tag (input => {
-			type  => 'hidden',
-			id    => "${id}__id",
-			name  => "_$options->{name}__id",
-			value => $options -> {value__id},
-		});
-
-	return $html . "<script>\$(document).ready (function () {$js})</script>";
 
 }
 
@@ -1574,6 +1584,8 @@ EOH
 
 	if ($options -> {items}) {
 
+		$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
 		$html .= "<script>var data_$id = " . $_JSON -> encode ([
@@ -2048,6 +2060,9 @@ sub draw_toolbar_pager {
 ################################################################################
 
 sub draw_toolbar_button_vert_menu {
+
+	$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+
 }
 
 ################################################################################
@@ -2216,6 +2231,8 @@ sub draw_menu {
 sub draw_vert_menu {
 
 	my ($_SKIN, $name, $types, $level, $is_main) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
 
 	[map {
 
@@ -2457,6 +2474,8 @@ EOJS
 sub draw_input_cell {
 
 	my ($_SKIN, $data, $options) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {autocomplete} = 1;
 
 	my $autocomplete;
 	my $attr_input = {

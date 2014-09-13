@@ -2168,16 +2168,21 @@ function treeview_get_node_uid_by_id(node, id) {
 function treeview_select_node(e) {
 	var tree = $('#splitted_tree_window_left');
 	var selected_node = tree.data ('selected-node');
-	if (selected_node) {
-		var treeview = tree.data('kendoTreeView');
-		var root = treeview.dataSource.data();
-		var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node);
-		if(selected_node_uid){
-			var select_node = treeview.findByUid(selected_node_uid);
-			treeview.select(select_node);
-			treeview_onselect_node (select_node);
-			treeview.unbind("dataBound", treeview_select_node);
-		}
+	if (!selected_node) {
+		treeview.unbind("dataBound", treeview_select_node);
+		return;
+	}
+	var treeview = tree.data('kendoTreeView');
+	var root = treeview.dataSource.data();
+	if (!root.length)
+		return;
+
+	var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node);
+	if(selected_node_uid){
+		var select_node = treeview.findByUid(selected_node_uid);
+		treeview.select(select_node);
+		treeview_onselect_node (select_node);
+		treeview.unbind("dataBound", treeview_select_node);
 	}
 }
 
@@ -2254,7 +2259,7 @@ function activate_suggest_fields () {
 		read_data [i.attr ('name')] = new Function("return $('#" + id + "').data('kendoAutoComplete').value()");
 
 		i.kendoAutoComplete({
-			minLength       : i.attr ('a-data-min-length') || 3,
+			minLength       : i.attr ('a-data-min-length') || 1,
 			filter          : 'contains',
 			suggest         : true,
 			dataTextField   : 'label',
@@ -2277,7 +2282,8 @@ function activate_suggest_fields () {
 			var _this = $(this).data("kendoAutoComplete");
 
 			var selected_item = _this.current();
-			var id = '', label = '';
+			var id = '',
+				label = _this.value();
 
 			if (selected_item) {
 				var data = _this.dataSource.data();
@@ -2285,8 +2291,15 @@ function activate_suggest_fields () {
 				label = data [selected_item.index()].label;
 			}
 
+			var prev_id = $('#' + this.id + '__id').val();
+
 			$('#' + this.id + '__label').val(label);
-			$('#' + this.id + '__id').val(id);
+			$('#' + this.id + '__id').val(id).trigger ('change');
+
+			var onchange = i.attr ('a-data-change');
+			if (onchange) {
+				eval (onchange);
+			}
 
 		});
 
