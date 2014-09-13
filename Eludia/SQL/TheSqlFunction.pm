@@ -284,9 +284,17 @@ sub _sql_filters {
 			}
 			else {								# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
 
-				$$buffer .= "\n  AND ($field (-1";
+				if (@$values == 1 && $values -> [0] =~ /SELECT.+FROM/gsm) {
 
-				foreach (grep {/\d/} @$values) { $where .= ", $_"}
+					$$buffer .= "\n  AND ($field ($values->[0]";
+
+				} else {
+
+					$$buffer .= "\n  AND ($field (-1";
+
+					foreach (grep {/\d/} @$values) { $where .= ", $_"}
+
+				}
 
 				$$buffer .= "))";
 

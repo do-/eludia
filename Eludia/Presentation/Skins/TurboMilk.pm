@@ -666,7 +666,12 @@ sub draw_form_field_string {
 	my ($_SKIN, $options) = @_;
 
 	my $attributes = $options -> {attributes};
+	if ($options -> {disabled}) {
+		$attributes -> {readonly} = 'readonly';
+		$attributes -> {style} .= '; background-color: #eeeeee;';
+	}
 
+	$attributes -> {onKeyUp}    .= $options -> {onKeyUp};
 	$attributes -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
 	$attributes -> {onKeyDown}  .= ';tabOnEnter();';
 	$attributes -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
@@ -1155,7 +1160,7 @@ sub draw_form_field_radio {
 
 		$html .= qq {\n</td><td class="form-inner" width=1><nobr>&nbsp;<label for="$value">$$value{label}</label></nobr>};
 
-		$html .= qq {\n\t\t<td class="form-inner"><div style="display:expression(getElementById('$value').checked ? 'block' : 'none')">$$value{html}</div>} if $value -> {html};
+		$html .= qq {\n\t\t<td class="form-inner"><div style="display:expression(document.getElementById('$value').checked ? 'block' : 'none')">$$value{html}</div>} if $value -> {html};
 
 		$options -> {no_br} or ++ $n == @{$options -> {values}} or $html .= qq {\n\t\t<td class="form-inner"><div>&nbsp;</div><tr>};
 
@@ -3418,7 +3423,7 @@ sub draw_page {
 			$_REQUEST {__script} .= <<'EOJS';
 function poll_invisibles () {
 	var has_loading_iframes;
-	$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
+	$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading' || this.contentWindow.is_redirecting) has_loading_iframes = 1});
 	if (!has_loading_iframes) {
 		window.clearInterval(poll_invisibles);
 		$.unblockUI ();
