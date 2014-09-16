@@ -2765,9 +2765,6 @@ sub draw_table {
 		if $_REQUEST {__only_table};
 
 
-	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable" unless (@{$_REQUEST {__include_css}} ~~ "_skins/$_REQUEST{__skin}/supertable");
-	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/supertable" unless (@{$_REQUEST {__include_js}} ~~ "_skins/$_REQUEST{__skin}/supertable");
-
 	$_REQUEST {__script} = <<EOJS . $_REQUEST {__script};
 		window.tables_data = window.tables_data || {};
 		window.tables_data ['$options->{id_table}'] = $data_json;
@@ -2981,6 +2978,9 @@ sub draw_page {
 	$_REQUEST {__js_var} -> {menu_md5}                 = Digest::MD5::md5_hex (freeze ($page -> {menu_data}));
 
 	push @{$_REQUEST {__include_js}}, "_skins/$_REQUEST{__skin}/modernizr", "_skins/$_REQUEST{__skin}/i18n_$_REQUEST{lang}";
+	push @{$_REQUEST {__include_css}}, "_skins/$_REQUEST{__skin}/supertable";
+
+	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/_skins/$_REQUEST{__skin}/supertable.js?$_REQUEST{__static_salt}' charset='UTF-8'></script>";
 
 	my $js_var = $_REQUEST {__js_var};
 
