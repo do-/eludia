@@ -2971,6 +2971,20 @@ sub draw_page {
 
 	push @{$_REQUEST {__include_css}}, 'ken/styles/kendo.common.min', 'ken/styles/kendo.bootstrap.min';
 
+	if ($_REQUEST {__refresh_tree}) {
+
+		$_REQUEST {__on_load} .= qq{
+			var tree = window.parent.\$('#splitted_tree_window_left');
+
+			if (tree.data ("active") === 2) {
+				tree = tree.data ("kendoTreeView");
+				tree.dataSource.read();
+			} else {
+				window.parent.location.reload ();
+			}
+		};
+	}
+
 	if ($_REQUEST {__im_delay}) {
 
 		$_REQUEST {__js_var} -> {__im} = {
