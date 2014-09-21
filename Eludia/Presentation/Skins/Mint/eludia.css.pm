@@ -572,6 +572,9 @@ INPUT {
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
 }
+INPUT.k-textbox {
+	width: auto;
+}
 
 TEXTAREA.k-textbox {
 	margin-bottom:0pt;
