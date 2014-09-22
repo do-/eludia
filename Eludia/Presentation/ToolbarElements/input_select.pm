@@ -13,9 +13,9 @@ sub draw_toolbar_input_select {
 		check_href ($options -> {other});
 		$options -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
 		if ($options -> {other} -> {top}) {
-			unshift @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}};
+			unshift @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}, other => 1};
 		} else {
-			push @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}};
+			push @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}, other => 1};
 		}
 
 	}
@@ -26,7 +26,7 @@ sub draw_toolbar_input_select {
 
 	foreach my $value (@{$options -> {values}}) {
 		$value -> {label}    = trunc_string ($value -> {label}, $options -> {max_len});
-		$value -> {selected} = $value -> {id} != -1 && $value -> {id} eq $options -> {value} ? 'selected' : '';
+		$value -> {selected} = !$value -> {other} && $value -> {id} eq $options -> {value} ? 'selected' : '';
 	}
 
 	$options -> {onChange} ||= 'submit();';
