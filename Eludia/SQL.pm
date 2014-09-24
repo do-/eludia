@@ -349,7 +349,7 @@ sub sql_reconnect {
 		LongTruncOk => 1,
 		InactiveDestroy => 0,
 	});
-
+#warn "Connect: '" . $dbh -> {odbc_has_unicode} . "'\n\n\n";
 	if ($preconf -> {db_cache_statements}) {
 
 		require Eludia::Content::Tie::LRUHash;

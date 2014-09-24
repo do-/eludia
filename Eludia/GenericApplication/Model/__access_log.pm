@@ -10,5 +10,4 @@ columns => {
 
 keys => {
 	ix => 'id_session,no',
-	ix2 => 'id_session,href(255)',
 },

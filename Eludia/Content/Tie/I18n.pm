@@ -9,20 +9,20 @@ sub i18n {
 	$_REQUEST {lang} ||= $preconf -> {lang} || $conf -> {lang}; # According to NISO Z39.53
 
 	$conf -> {i18n} -> {$_REQUEST {lang}} -> {_page_title} ||= $conf -> {page_title};
-	
+
 	our $_ACTIONS ||= {_actions => {}};
 	our $_I18N_TYPES ||= {};
 
 	my %i18n = ();
-	
+
 	tie %i18n, Eludia::Tie::I18n, {
-	
+
 		lang => $_REQUEST {lang},
-		
+
 		over => [$_ACTIONS, $_I18N_TYPES, $conf -> {i18n} -> {$_REQUEST {lang}}],
-		
+
 	};
-	
+
 	return bless \%i18n, 'Eludia::Tie::I18n';
 
 }
@@ -37,20 +37,20 @@ sub ucfirst {
 
 	my ($self, $s) = @_;
 
-	$self -> uc (substr ($s, 0, 1)) . 
-	
+	$self -> uc (substr ($s, 0, 1)) .
+
 	substr ($s, 1)
-	
+
 };
 
 sub ucfirstlcrest {
 
 	my ($self, $s) = @_;
 
-	$self -> uc (substr ($s, 0, 1)) . 
-	
+	$self -> uc (substr ($s, 0, 1)) .
+
 	$self -> lc (substr ($s, 1))
-	
+
 };
 
 sub TIEHASH  {
@@ -58,36 +58,36 @@ sub TIEHASH  {
 	my ($package, $options) = @_;
 
 	$options -> {lang} or die "LANG not defined\n";
-	
+
 	${"Eludia::Tie::I18n::$options->{lang}"} ||= eval "require Eludia::Content::Tie::I18n::$options->{lang}";
-	
+
 	$options -> {under} = ${"Eludia::Tie::I18n::$options->{lang}"};
-	
-	$options -> {under} -> {_subs} -> {'lc'} = eval qq { 
+
+	$options -> {under} -> {_subs} -> {'lc'} = eval qq {
 
 		sub {
 
-			my (\$s) = \@_; 
+			my (\$s) = \@_;
 
 			\$s =~ y/$options->{under}->{_uc}/$options->{under}->{_lc}/;
 
 			return \$s;
 
-		} 
+		}
 
 	};
-	
-	$options -> {under} -> {_subs} -> {'uc'} = eval qq { 
+
+	$options -> {under} -> {_subs} -> {'uc'} = eval qq {
 
 		sub {
 
-			my (\$s) = \@_; 
+			my (\$s) = \@_;
 
 			\$s =~ y/$options->{under}->{_lc}/$options->{under}->{_uc}/;
 
 			return \$s;
 
-		} 
+		}
 
 	};
 
@@ -98,13 +98,13 @@ sub TIEHASH  {
 sub FETCH {
 
 	my ($options, $key) = @_;
-	
+
 	foreach my $over (@{$options -> {over}}) {
-	
+
 		return $over -> {$key} if $over -> {$key};
-	
+
 	}
-	
+
 	return $options -> {under} -> {$key} || $key;
 
 }

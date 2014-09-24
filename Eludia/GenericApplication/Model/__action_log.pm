@@ -10,5 +10,5 @@ columns => {
 },
 
 keys => {
-	ix => 'id_session,params_hash(255)',
+	ix => 'id_session',
 },

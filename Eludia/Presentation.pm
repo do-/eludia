@@ -3197,11 +3197,11 @@ sub out_html {
 
 	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
 
-	if ($_REQUEST {__charset}) {
-		$html = Encode::decode ($i18n -> {_charset}, $html);
+	if ($i18n -> {_charset} eq 'UTF-8') {
+		utf8::decode ($html);
+	} else {
+		$html = Encode::encode ('windows-1252', $html);
 	}
-
-	$html = Encode::encode ($_REQUEST {__charset} || 'windows-1252', $html);
 
 	return print $html if $_REQUEST {__response_started};
 

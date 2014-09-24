@@ -1,5 +1,4 @@
 columns => {
-
 	dt          => {TYPE_NAME => 'timestamp'},
 
 	id_user     => {TYPE_NAME => 'int'},

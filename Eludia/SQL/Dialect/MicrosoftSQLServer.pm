@@ -8,15 +8,15 @@ sub sql_version {
 	my $tmp = sql_select_scalar ('SELECT @@VERSION');
 
 	my $version = $SQL_VERSION;
-	
+
 	$version -> {string} => $tmp;
-	
+
 	($version -> {number}) = $tmp =~ /([\d\.]+)/;
-	
+
 	$version -> {number_tokens} = [split /\./, $version -> {number}];
 
 	return $version;
-	
+
 }
 
 ################################################################################
@@ -34,12 +34,12 @@ sub sql_select_loop {
 
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
-	
+
 	our $i;
 	while ($i = $st -> fetchrow_hashref) {
 		&$coderef ();
 	}
-	
+
 	$st -> finish ();
 
 }
@@ -51,13 +51,13 @@ sub sql_do_refresh_sessions {
 	my $timeout = sql_sessions_timeout_in_minutes ();
 
 	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < dateadd(MINUTE, -" . $timeout . ", getdate())");
-	
+
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
 
 	$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
-	
+
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = GETDATE() WHERE id = ? ", 0+$_REQUEST {sid});
-	
+
 }
 
 ################################################################################
@@ -72,12 +72,12 @@ sub sql_do {
 	my $ids = '-1';
 
 	if ($conf -> {'db_temporality'} && $_REQUEST {_id_log}) {
-			
+
 		my $insert_sql = '';
 		my $update_sql = '';
 
 		if ($sql =~ /\s*DELETE\s+FROM\s*(\w+).*?(WHERE.*)/i && $1 ne $conf -> {systables} -> {log} && sql_is_temporal_table ($1)) {
-		
+
 			my $cols = join ', ', keys %{$model_update -> get_columns ($1)};
 
 			my $select_sql = "SELECT id FROM $1 $2";
@@ -90,10 +90,10 @@ sub sql_do {
 
 			$update_sql = "UPDATE __log_$1 SET __is_actual = 0 WHERE id IN ($ids) AND __is_actual = 1";
 			$insert_sql = "INSERT INTO __log_$1 ($cols, __dt, __op, __id_log, __is_actual) SELECT $cols, GETDATE() AS __dt, 3 AS __op, $_REQUEST{_id_log} AS __id_log, 1 AS __is_actual FROM $1 WHERE $1.id IN ($ids)";
-			
+
 		}
 		elsif ($sql =~ /\s*UPDATE\s*(\w+).*?(WHERE.*)/i && $1 ne $conf -> {systables} -> {log} && sql_is_temporal_table ($1)) {
-		
+
 			my $cols = join ', ', keys %{$model_update -> get_columns ($1)};
 
 			my $select_sql = "SELECT id FROM $1 $2";
@@ -104,23 +104,23 @@ sub sql_do {
 			$ids = sql_select_ids ($select_sql, @copy_params);
 
 		}
-		
+
 		$db -> do ($update_sql) if $update_sql;
 		$db -> do ($insert_sql) if $insert_sql;
 
-	}	
-	
+	}
+
 #	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
 
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
-	$st -> finish;	
-	
+	$st -> finish;
+
 	if ($conf -> {'db_temporality'} && $_REQUEST {_id_log}) {
-			
+
 		my $insert_sql = '';
 		my $update_sql = '';
-		
+
 		if ($sql =~ /\s*UPDATE\s*(\w+).*?(WHERE.*)/i && $1 ne $conf -> {systables} -> {log} && sql_is_temporal_table ($1)) {
 
 			my $cols = join ', ', keys %{$model_update -> get_columns ($1)};
@@ -143,8 +143,8 @@ sub sql_do {
 		$db -> do ($update_sql) if $update_sql;
 		$db -> do ($insert_sql) if $insert_sql;
 
-	}	
-	
+	}
+
 }
 
 ################################################################################
@@ -167,19 +167,19 @@ sub sql_select_all_cnt {
 	if (@params > 0 and ref ($params [-1]) eq HASH) {
 		$options = pop @params;
 	}
-	
+
 	if ($options -> {fake}) {
-	
+
 		my $where = 'WHERE ';
 		my $fake  = $_REQUEST {fake} || 0;
 		my $condition = $fake =~ /\,/ ? "IN ($fake)" : '=' . $fake;
-	
+
 		foreach my $table (split /\,/, $options -> {fake}) {
 			$where .= "$table.fake $condition AND ";
-		}	
+		}
 
 		$sql =~ s{where}{$where}i;
-			
+
 	}
 
 	if ($_REQUEST {xls} && $conf -> {core_unlimit_xls} && !$_REQUEST {__limit_xls}) {
@@ -192,19 +192,19 @@ sub sql_select_all_cnt {
 	my $st = $db -> prepare($sql);
 
 	$st -> execute (@params);
-	my $cnt = 0;	
+	my $cnt = 0;
 	my @result = ();
-	
+
 	while (my $i = $st -> fetchrow_hashref ()) {
-	
+
 		$cnt++;
-		
+
 		$cnt > $start or next;
 		$cnt <= $start + $portion or last;
 		push @result, $i;
-	
+
 	}
-	
+
 	$st -> finish;
 
 	$sql =~ s{ORDER BY.*}{}ism;
@@ -219,7 +219,7 @@ sub sql_select_all_cnt {
 		$sql =~ s/SELECT.*?FROM/SELECT COUNT(*) FROM/ism;
 		$cnt = sql_select_scalar ($sql, @params);
 	}
-		
+
 	return (\@result, $cnt);
 }
 
@@ -235,21 +235,21 @@ sub sql_select_all {
 	if (@params > 0 and ref ($params [-1]) eq HASH) {
 		$options = pop @params;
 	}
-	
+
 	if ($options -> {fake}) {
-	
+
 		my $where = 'WHERE ';
 		my $fake  = $_REQUEST {fake} || 0;
 		my $condition = $fake =~ /\,/ ? "IN ($fake)" : '=' . $fake;
-	
+
 		foreach my $table (split /\,/, $options -> {fake}) {
 			$where .= "$table.fake $condition AND ";
-		}	
-		
+		}
+
 		$sql =~ s{where}{$where}i;
-			
+
 	}
-	
+
 #	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
 
 	my $st = $db -> prepare ($sql);
@@ -257,12 +257,12 @@ sub sql_select_all {
 
 	return $st if $options -> {no_buffering};
 
-	my $result = $st -> fetchall_arrayref ({});	
+	my $result = $st -> fetchall_arrayref ({});
 	$st -> finish;
-	
+
 	$_REQUEST {__benchmarks_selected} += @$result;
-	
-	return $result;	
+
+	return $result;
 
 }
 
@@ -271,7 +271,7 @@ sub sql_select_all {
 sub sql_select_all_hash {
 
 	my ($sql, @params) = @_;
-	
+
 	$sql =~ s{^\s+}{};
 
 	$sql =~ /GROUP\s+BY/i or $sql .= ' GROUP BY 1';
@@ -280,34 +280,34 @@ sub sql_select_all_hash {
 	if (@params > 0 and ref ($params [-1]) eq HASH) {
 		$options = pop @params;
 	}
-	
+
 	if ($options -> {fake}) {
-	
+
 		my $where = 'WHERE ';
 		my $fake  = $_REQUEST {fake} || 0;
 		my $condition = $fake =~ /\,/ ? "IN ($fake)" : '=' . $fake;
-	
+
 		foreach my $table (split /\,/, $options -> {fake}) {
 			$where .= "$table.fake $condition AND ";
-		}	
-		
+		}
+
 		$sql =~ s{where}{$where}i;
-			
+
 	}
-	
+
 	my $result = {};
-	
+
 #	$sql .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
 
 	my $st = $db -> prepare ($sql);
 	$st -> execute (@params);
-	
+
 	while (my $r = $st -> fetchrow_hashref) {
 		$result -> {$r -> {id}} = $r;
 	}
-	
+
 	$st -> finish;
-	
+
 	return $result;
 
 }
@@ -329,7 +329,7 @@ sub sql_select_col {
 		push @result, @r;
 	}
 	$st -> finish;
-	
+
 	return @result;
 
 }
@@ -339,38 +339,38 @@ sub sql_select_col {
 sub sql_select_hash {
 
 	my ($sql_or_table_name, @params) = @_;
-		
+
 	if ($sql_or_table_name !~ /^\s*(SELECT|HANDLER)/i) {
-	
+
 		my $id = $_REQUEST {id};
-		
+
 		if (@params) {
 			$id = ref $params [0] eq HASH ? $params [0] -> {id} : $params [0];
 		}
-	
+
 		@params = ({}) if (@params == 0);
-		
+
 		$_REQUEST {__the_table} = $sql_or_table_name;
 
 		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE id = ?", $id);
-		
-	}	
+
+	}
 
 	$sql_or_table_name =~ s{^\s+}{};
 
 	if (!$_REQUEST {__the_table} && $sql_or_table_name =~ /\s+FROM\s+(\w+)/sm) {
-	
+
 		$_REQUEST {__the_table} = $1;
-	
+
 	}
-	
+
 #	$sql_or_table_name .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
 
 	my $st = $db -> prepare ($sql_or_table_name);
 	$st -> execute (@params);
 	my $result = $st -> fetchrow_hashref ();
 	$st -> finish;
-	
+
 	return $result;
 
 }
@@ -388,7 +388,7 @@ sub sql_select_array {
 	$st -> execute (@params);
 	my @result = $st -> fetchrow_array ();
 	$st -> finish;
-	
+
 	return wantarray ? @result : $result [0];
 
 }
@@ -413,20 +413,20 @@ sub sql_select_scalar {
 
 		my $st = $db -> prepare ($sql);
 		$st -> execute (@params);
-		my $cnt = 0;	
-	
+		my $cnt = 0;
+
 		while (my @r = $st -> fetchrow_array ()) {
-	
+
 			$cnt++;
-		
+
 			$cnt > $start or next;
 			$cnt <= $start + $portion or last;
-			
+
 			push @result, @r;
 			last;
-	
+
 		}
-	
+
 		$st -> finish;
 
 	} else {
@@ -437,7 +437,7 @@ sub sql_select_scalar {
 		@result = $st -> fetchrow_array ();
 		$st -> finish;
 	}
-	
+
 	return $result [0];
 
 }
@@ -445,9 +445,9 @@ sub sql_select_scalar {
 ################################################################################
 
 sub sql_select_path {
-	
+
 	my ($table_name, $id, $options) = @_;
-	
+
 	$options -> {name} ||= 'name';
 	$options -> {type} ||= $table_name;
 	$options -> {id_param} ||= 'id';
@@ -456,19 +456,19 @@ sub sql_select_path {
 
 	my @path = ();
 
-	while ($parent) {	
+	while ($parent) {
 		my $r = sql_select_hash ("SELECT id, parent, $$options{name} as name, '$$options{type}' as type, '$$options{id_param}' as id_param FROM $table_name WHERE id = ?", $parent);
 		$r -> {cgi_tail} = $options -> {cgi_tail},
-		unshift @path, $r;		
-		$parent = $r -> {parent};	
+		unshift @path, $r;
+		$parent = $r -> {parent};
 	}
-	
+
 	if ($options -> {root}) {
 		unshift @path, {
-			id => 0, 
-			parent => 0, 
-			name => $options -> {root}, 
-			type => $options -> {type}, 
+			id => 0,
+			parent => 0,
+			name => $options -> {root},
+			type => $options -> {type},
 			id_param => $options -> {id_param},
 			cgi_tail => $options -> {cgi_tail},
 		};
@@ -483,21 +483,21 @@ sub sql_select_path {
 sub sql_select_subtree {
 
 	my ($table_name, $id, $options) = @_;
-	
+
 	my @ids = ($id);
-	
+
 	while (TRUE) {
-	
+
 		my $ids = join ',', @ids;
-	
+
 		my @new_ids = sql_select_col ("SELECT id FROM $table_name WHERE parent IN ($ids) AND id NOT IN ($ids)");
-		
+
 		last unless @new_ids;
-	
+
 		push @ids, @new_ids;
-	
+
 	}
-	
+
 	return @ids;
 
 }
@@ -520,9 +520,9 @@ sub sql_do_update {
 		id        => $_REQUEST {id},
 	};
 
-	
+
 	$options -> {id} ||= $_REQUEST {id};
-	
+
 	my $have_fake_param;
 	my $sql = join ', ', map {$have_fake_param ||= ($_ eq 'fake'); "$_ = ?"} @$field_list;
 	$options -> {stay_fake} or $have_fake_param or $sql .= ', fake = 0';
@@ -538,7 +538,7 @@ sub sql_do_update {
 	}
 
 	sql_do ($sql, @params);
-	
+
 }
 
 ################################################################################
@@ -546,7 +546,7 @@ sub sql_do_update {
 sub sql_do_insert {
 
 	my ($table_name, $pairs) = @_;
-		
+
 	delete_fakes ($table_name);
 
 	my $fields = '';
@@ -554,11 +554,11 @@ sub sql_do_insert {
 	my @params = ();
 
 	$pairs -> {fake} = $_REQUEST {sid} unless exists $pairs -> {fake};
-	
+
 	my $statement = 'INSERT';
 
 	if (is_recyclable ($table_name)) {
-	
+
 		assert_fake_key ($table_name);
 
 		### all orphan records are now mine
@@ -567,7 +567,7 @@ sub sql_do_insert {
 			UPDATE
 				$table_name
 				LEFT JOIN $conf->{systables}->{sessions} ON $table_name.fake = $conf->{systables}->{sessions}.id
-			SET	
+			SET
 				$table_name.fake = ?
 			WHERE
 				$table_name.fake > 0
@@ -577,15 +577,20 @@ EOS
 		### get my least fake id (maybe ex-orphan, maybe not)
 
 		$__last_insert_id = sql_select_scalar ("SELECT TOP 1 id FROM $table_name WHERE fake = ? ORDER BY id", $_REQUEST {sid});
-		
+
 		if ($__last_insert_id) {
 			$pairs -> {id} = $__last_insert_id;
 			$statement = 'REPLACE';
 		}
-	
+
 	}
+	my $is_set_identity_insert;
 
 	foreach my $field (keys %$pairs) {
+		if ($field eq 'id' && $statement eq 'INSERT') {
+			$statement = "SET IDENTITY_INSERT $table_name ON; INSERT";
+			$is_set_identity_insert = 1;
+		}
 		my $value = $pairs -> {$field};
 		my $comma = @params ? ', ' : '';
 		$fields .= "$comma $field";
@@ -595,8 +600,12 @@ EOS
 
 	sql_do ("$statement INTO $table_name ($fields) VALUES ($args)", @params);
 
-	return want ('VOID') ? undef : sql_last_insert_id ();
-	
+	if ($is_set_identity_insert) {
+		sql_do ("SET IDENTITY_INSERT $table_name OFF");
+	}
+
+	return want ('VOID') ? undef : sql_last_insert_id ("$table_name");
+
 }
 
 ################################################################################
@@ -604,44 +613,44 @@ EOS
 sub sql_do_delete {
 
 	my ($table_name, $options) = @_;
-		
+
 	if (ref $options -> {file_path_columns} eq ARRAY) {
-		
+
 		map {sql_delete_file ({table => $table_name, path_column => $_})} @{$options -> {file_path_columns}}
-		
+
 	}
-	
-	our %_OLD_REQUEST = %_REQUEST;	
+
+	our %_OLD_REQUEST = %_REQUEST;
 	eval {
 		my $item = sql_select_hash ($table_name);
 		foreach my $key (keys %$item) {
 			$_OLD_REQUEST {'_' . $key} = $item -> {$key};
 		}
 	};
-	
+
 	sql_do ("DELETE FROM $table_name WHERE id = ?", $_REQUEST{id});
-	
+
 	delete $_REQUEST{id};
-	
+
 }
 
 ################################################################################
 
 sub sql_delete_file {
 
-	my ($options) = @_;	
-	
+	my ($options) = @_;
+
 	if ($options -> {path_column}) {
 		$options -> {file_path_columns} = [$options -> {path_column}];
 	}
-	
+
 	$options -> {id} ||= $_REQUEST {id};
 
 	foreach my $column (@{$options -> {file_path_columns}}) {
 		my $path = sql_select_array ("SELECT $column FROM $$options{table} WHERE id = ?", $options -> {id});
 		delete_file ($path);
 	}
-	
+
 
 }
 
@@ -650,49 +659,49 @@ sub sql_delete_file {
 sub sql_download_file {
 
 	my ($options) = @_;
-	
+
 	$_REQUEST {id} ||= $_PAGE -> {id};
-	
+
 	my $r = sql_select_hash ("SELECT * FROM $$options{table} WHERE id = ?", $_REQUEST {id});
 	$options -> {path} = $r -> {$options -> {path_column}};
 	$options -> {type} = $r -> {$options -> {type_column}};
 	$options -> {file_name} = $r -> {$options -> {file_name_column}};
-	
+
 	download_file ($options);
-	
+
 }
 
 ################################################################################
 
 sub sql_upload_file {
-	
+
 	my ($options) = @_;
 
 	my $uploaded = upload_file ($options) or return;
-		
+
 	sql_delete_file ($options);
-	
+
 	my (@fields, @params) = ();
-	
-	foreach my $field (qw(file_name size type path)) {	
+
+	foreach my $field (qw(file_name size type path)) {
 		my $column_name = $options -> {$field . '_column'} or next;
 		push @fields, "$column_name = ?";
 		push @params, $uploaded -> {$field};
 	}
-	
+
 	foreach my $field (keys (%{$options -> {add_columns}})) {
 		push @fields, "$field = ?";
 		push @params, $options -> {add_columns} -> {$field};
 	}
-	
+
 	@fields or return;
-	
+
 	my $tail = join ', ', @fields;
-		
+
 	sql_do ("UPDATE $$options{table} SET $tail WHERE id = ?", @params, $_REQUEST {id});
-	
+
 	return $uploaded;
-	
+
 }
 
 ################################################################################
@@ -707,21 +716,21 @@ sub keep_alive {
 sub select__table_data {
 
 	exit if $_REQUEST {table} eq $conf -> {systables} -> {sessions};
-	
+
 	my $table = $DB_MODEL -> {tables} -> {$_REQUEST {table}} or exit;
-	
+
 	my $columns = join ', ', sort ('id', 'fake', keys %{$table -> {columns}});
-	
+
 	my $fn = '/i/upload/images/' . $_REQUEST {table} . '.txt';
-	
+
 	my $filename = $r -> document_root () . $fn;
-	
+
 	unlink $filename if -f $filename;
-	
+
 	sql_do ("SELECT $columns FROM $_REQUEST{table} INTO OUTFILE '$filename'");
-	
+
 	redirect ($fn);
-	
+
 }
 
 ################################################################################
@@ -729,20 +738,20 @@ sub select__table_data {
 sub download_table_data {
 
 	my ($options) = @_;
-	
+
 	my $table = $DB_MODEL -> {tables} -> {$options -> {table}} or exit;
-	
+
 	my $columns = join ', ', sort ('id', 'fake', keys %{$table -> {columns}});
 
 	my $filename = $r -> document_root () . '/i/upload/images/_' . $options -> {table} . '.txt';
-	
+
 	unlink $filename if -f $filename;
-	
+
 	lrt_print ("Downloading " . $options -> {table} . '...');
-	
+
 	require LWP;
 	require LWP::UserAgent;
-	
+
 	my $ua = new LWP::UserAgent ();
 	$ua -> env_proxy;
 
@@ -754,13 +763,13 @@ sub download_table_data {
 
 	if (HTTP::Status::is_error ($code)) {
 		lrt_ok (HTTP::Status::status_message ($code) . " ($url)", 1);
-		return;	
+		return;
 	}
-	
+
 	open (F, $filename);
 	my $line = <F>;
 	close F;
-	
+
 	if ($line =~ /\s+\<html/) {
 		lrt_ok (' :-( ', 1);
 #		unlink $filename;
@@ -768,17 +777,17 @@ sub download_table_data {
 	}
 
 	chmod 0777, $filename;
-	
+
 	lrt_ok ();
-	
+
 	lrt_print ("Truncating " . $options -> {table} . '...');
-	
+
 	sql_do ("TRUNCATE TABLE $$options{table}");
-	
+
 	lrt_ok ();
-	
+
 	lrt_print ("Loading " . $options -> {table} . '...');
-		
+
 	sql_do ("LOAD DATA INFILE '$filename' INTO TABLE $$options{table} ($columns)");
 
 #	unlink $filename;

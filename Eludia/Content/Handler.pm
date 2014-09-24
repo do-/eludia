@@ -197,7 +197,7 @@ sub setup_request_params {
 		, $preconf -> {core_auth_join_session}? 'session' : ''
 	);
 
-	my $encode_utf = $ENV {HTTP_CONTENT_TYPE} =~ /charset=UTF-8/i;
+	my $encode_utf = $ENV {HTTP_CONTENT_TYPE} =~ /charset=UTF-8/i && $i18n -> {_charset} eq 'windows-1251';
 	foreach my $k (keys %_REQUEST) {
 
 		my $k_ = $k;
@@ -482,7 +482,13 @@ sub handle_request_of_type_kickout {
 	unless ($r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest') {
 		setup_json ();
 		my %_R = map {$_ => $_REQUEST {$_}} grep {!ref $_REQUEST {$_}} keys %_REQUEST;
-		set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode ($_JSON -> encode (\%_R)), -path => '/');
+		set_cookie (
+			-name => 'redirect_params',
+			-value => $i18n -> {_charset} eq 'windows-1251' ?
+				encode ('utf-8', decode ('windows-1251', $_JSON -> encode (\%_R))) :
+				$_JSON -> encode (\%_R),
+			-path => '/'
+		);
 	}
 
 	redirect (
@@ -909,7 +915,8 @@ sub recalculate_logon {
 
 	if ($_COOKIE {redirect_params}) {
 
-		my $VAR1 = $_JSON -> decode (MIME::Base64::decode ($_COOKIE {redirect_params}));
+		my $VAR1;
+		eval {$VAR1 = $_JSON -> decode (MIME::Base64::decode ($_COOKIE {redirect_params}));};
 
 		foreach my $key (keys %$VAR1) { $_REQUEST {$key} = $VAR1 -> {$key} }
 
