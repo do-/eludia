@@ -1060,6 +1060,7 @@ EOJS
 			rows=$$options{rows}
 			cols=$$options{cols}
 			name="_$$options{name}"
+			id="input_$$options{name}"
 			onchange="is_dirty=true;"
 		>$$options{value}</textarea>
 EOH
