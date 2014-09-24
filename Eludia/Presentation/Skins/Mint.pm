@@ -2391,13 +2391,44 @@ sub draw_select_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
+
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	my $multiple = $data -> {rows} > 1 ? "multiple size=$$data{rows}" : '';
 
 	$data -> {onChange} ||= $options -> {onChange};
 
+	if (defined $data -> {other}) {
+
+		$data -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
+		$data -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
+
+		$data -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+
+		$data -> {onChange} .= <<EOJS;
+
+			if (this.options[this.selectedIndex].value == -1) {
+				open_vocabulary_from_select (
+					this,
+					{
+						message       : '$i18n->{choose_open_vocabulary}',
+						href          : '$data->{other}->{href}&select=$data->{name}&salt=' + Math.random(),
+						dialog_width  : $data->{other}->{width},
+						dialog_height : $data->{other}->{height}
+					}
+				);
+
+			}
+
+EOJS
+
+	}
+
+	my $id_select = $data -> {id} || "_$data->{name}_select";
+
 	my $html = qq {<td $attributes><select
+		id="$id_select"
 		name="$$data{name}"
 		onChange="is_dirty=true; $$data{onChange}"
 		onkeypress='typeAhead();'
@@ -2408,8 +2439,16 @@ sub draw_select_cell {
 
 	$html .= qq {<option value="0">$$data{empty}</option>\n} if defined $data -> {empty};
 
+	if (defined $data -> {other} && $data -> {other} -> {on_top}) {
+		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
+	}
+
 	foreach my $value (@{$data -> {values}}) {
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
+	}
+
+	if (defined $data -> {other} && !$data -> {other} -> {on_top}) {
+		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
 	}
 
 	$html .= qq {</select></td>};

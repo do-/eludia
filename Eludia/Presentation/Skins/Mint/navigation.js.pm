@@ -2401,6 +2401,7 @@ function init_page (options) {
 				containerRender : function() {
 					$(that).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 					activate_suggest_fields ();
+					adjust_kendo_selects();
 				}
 			})
 		});
