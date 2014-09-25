@@ -938,9 +938,10 @@ sub draw_form_field {
 		}
 		elsif ($field -> {type} eq 'radio') {
 			my $html = '';
-			foreach (@{$field -> {values}}) {$html .= draw_form_field ($_, $data)}
-			my $has_subfields = grep {$_ -> {name}} @{$field -> {values}};
-			return $html if $html || !$has_subfields;
+			if ($field -> {name} ~~ @fields || 0 < grep {$_ -> {name} ~~ @fields} @{$field -> {values}}) {
+				foreach (@{$field -> {values}}) {$html .= draw_form_field ($_, $data)}
+			}
+			return $html;
 		}
 		else {
 			(grep {$_ eq $field -> {name}} @fields) > 0 or return '';
