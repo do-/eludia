@@ -2292,7 +2292,11 @@ function activate_suggest_fields () {
 				label = data [selected_item.index()].label;
 			} else {
 				label = this.value;
-				id = data[0].id;
+
+				$.each(data, function(idx, item) {
+					if (item.label === label)
+						id = item.id;
+				});
 			}
 
 			var prev_id = $('#' + this.id + '__id').val();
