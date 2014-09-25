@@ -2285,10 +2285,14 @@ function activate_suggest_fields () {
 			var id = '',
 				label = _this.value();
 
+			var data = _this.dataSource.data();
+
 			if (selected_item) {
-				var data = _this.dataSource.data();
 				id = data [selected_item.index()].id;
 				label = data [selected_item.index()].label;
+			} else {
+				label = this.value;
+				id = data[0].id;
 			}
 
 			var prev_id = $('#' + this.id + '__id').val();
