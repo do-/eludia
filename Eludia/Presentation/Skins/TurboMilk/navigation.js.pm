@@ -282,9 +282,30 @@ function handle_hotkey_href     (r) {
 
 }
 
-function nope (a1, a2, a3) {
+function nope (href, target, options) {
+
+	if (typeof options === 'object' && options !== null) {
+
+		if (options.fitscreen) {
+
+			$.extend (options, {
+				resizable: 'yes',
+				left  : 25,
+				top   : 25,
+				width : screen.availWidth - 50,
+				height: screen.availHeight - 50
+			});
+		}
+
+		var params = [];
+		$.each(options, function(key, value) {
+			params.push(key + "=" + value);
+		});
+		options = params.join(",");
+	}
+
 	var w = window;
-	w.open (a1, a2, a3);
+	w.open (href, target, options);
 }
 
 function nop () {}
