@@ -617,7 +617,7 @@ input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandato
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
 	background-color: #f7f7ad;
-	border: 2px solid black;
+	border: 1px #7f9db9 solid;
 	padding-left: 3px;
 	padding-right: 3px;
 }
