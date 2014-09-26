@@ -504,57 +504,6 @@ sub draw_form_field_suggest {
 
 
 
-
-
-
-	$_REQUEST {__on_load} .= <<EOJS;
-		\$("#$id").kendoAutoComplete({
-			minLength       : $$options{min_length},
-			filter          : 'contains',
-			suggest         : true,
-			dataTextField   : 'label',
-			dataSource      : {
-				serverFiltering : true,
-				data: {
-					json: $values,
-				},
-				transport: {
-					read        : {
-						url : "$ENV{REQUEST_URI}&__suggest=$options->{name}" + "&salt=" + Math.random (),
-						contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
-						data        : {
-							"_$options->{name}__label": function() {
-								return \$("#$id").data("kendoAutoComplete").value();
-							}
-						},
-						dataType    : 'json'
-					}
-				}
-			}
-		}).bind("change", function(e) {
-
-			var _this = \$(this).data("kendoAutoComplete");
-
-			var selected_item = _this.current();
-			var id = '', label = '';
-
-			if (selected_item) {
-				var data = _this.dataSource.data();
-				id = data [selected_item.index()].id;
-				label = data [selected_item.index()].label;
-			}
-
-			var prev_id = \$('#${id}__id').val();
-
-			\$('#${id}__label').val(label);
-			\$('#${id}__id').val(id);
-
-			if (id && id != prev_id) {
-				$change_js
-			}
-		});
-EOJS
-
 }
 
 ################################################################################

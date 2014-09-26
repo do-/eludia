@@ -2251,7 +2251,6 @@ function poll_invisibles () {
 function activate_suggest_fields () {
 
 	$("INPUT[data-role='autocomplete']").each (function () {
-
 		var i = $(this);
 		var id = i.attr ('id');
 
@@ -2310,6 +2309,8 @@ function activate_suggest_fields () {
 			}
 
 		});
+
+		i.parent().css("width", i.attr("size") * 8);
 
 	});
 }
