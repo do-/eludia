@@ -3062,7 +3062,7 @@ sub draw_page {
 
 	$init_page_options = $_JSON -> encode ($init_page_options);
 
-	my $kendo_modules = join ',', qq |"cultures/kendo.culture.ru-RU-1251.min"|,
+	my $kendo_modules = join ',',
 		qq |"$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js"|,
 		map {qq |"kendo.$_.min"|} keys %{$_REQUEST {_libs} -> {kendo}};
 
@@ -3073,7 +3073,7 @@ sub draw_page {
 				baseUrl: '/i/ken/js',
 				shim: {
 					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {
-						deps: ['cultures/kendo.culture.ru-RU-1251.min']
+						deps: ['cultures/kendo.culture.ru-RU.min']
 					},
 					'$_REQUEST{__static_url}/supertable.js' : {}
 				}

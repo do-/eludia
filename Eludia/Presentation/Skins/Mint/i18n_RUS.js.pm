@@ -20,4 +20,5 @@ try{
 		statusFailed: "не удалось"
 	});
 } catch(e) {
+	console.log (e);
 }
