@@ -7,18 +7,20 @@ var i18n = {
 
 try{
 	kendo.culture("ru-RU");
-	kendo.ui.Upload.prototype.options.localization =
-	  $.extend(kendo.ui.Upload.prototype.options.localization, {
-		select: "Выберите...",
-		cancel: "Отмена",
-		retry: "Повторить",
-		remove: "Удалить",
-		uploadSelectedFiles: "Загрузить файлы",
-		dropFilesHere: "Для загрузки, перетащите файл сюда.",
-		statusUploading: "загрузка",
-		statusUploaded: "загрузил",
-		statusFailed: "не удалось"
-	});
+	if (kendo.ui && kendo.ui.Upload) {
+		kendo.ui.Upload.prototype.options.localization =
+		  $.extend(kendo.ui.Upload.prototype.options.localization, {
+			select: "Выберите...",
+			cancel: "Отмена",
+			retry: "Повторить",
+			remove: "Удалить",
+			uploadSelectedFiles: "Загрузить файлы",
+			dropFilesHere: "Для загрузки, перетащите файл сюда.",
+			statusUploading: "загрузка",
+			statusUploaded: "загрузил",
+			statusFailed: "не удалось"
+		});
+	}
 } catch(e) {
-	console.log (e);
+//	console.log (e);
 }

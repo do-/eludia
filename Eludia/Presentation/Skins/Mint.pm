@@ -3745,4 +3745,43 @@ sub __adjust_menu_item {
 
 }
 
+################################################################################
+
+sub __adjust_form_field_select {
+
+	my ($options) = @_;
+
+	if ($options -> {rows}) {
+
+		$options -> {attributes} -> {multiple} = 1;
+
+		$options -> {attributes} -> {size} = $options -> {rows};
+
+	}
+
+	foreach my $value (@{$options -> {values}}) {
+
+		$value -> {label} = trunc_string ($value -> {label}, $options -> {max_len});
+
+		$value -> {id}    =~ s{\"}{\&quot;}g; #";
+
+	}
+
+	if (defined $options -> {detail}) {
+
+		my $js_detail = js_detail ($options);
+
+		if ($options -> {ds}) {
+			$options -> {onChange} .= ";$js_detail";
+		} else {
+			$options -> {onChange} .= ";var v = this.options[this.selectedIndex].value; if (v && v != -1){$js_detail}";
+		}
+
+	}
+
+	return undef;
+
+}
+
+
 1;

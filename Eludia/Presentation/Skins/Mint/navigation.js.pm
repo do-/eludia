@@ -337,8 +337,7 @@ function open_vocabulary_from_combo (combo, options) {
 			}
 
 			combo.select (j);
-			combo.trigger ('change');
-			combo.trigger ('select');
+			$(combo.element[0]).trigger('change');
 
 		}
 
@@ -699,6 +698,8 @@ function do_kendo_combo_box (id, options) {
 					var q;
 					if (data.filter && data.filter.filters && data.filter.filters [0] && data.filter.filters [0].value)
 						q = data.filter.filters [0].value;
+					if (!data.ids && !q)
+						q = $('#' + id).data("kendoComboBox").input.val();
 
 					if (type == 'read') {
 						return {
@@ -733,6 +734,14 @@ schema_loop:
 		ds = values;
 	}
 
+	var input_change = {
+		is_changed : true,
+		on_change  : function () {
+			this.is_changed = true;
+		}
+	};
+	$('#' + id).on('change', $.proxy(input_change.on_change, input_change));
+
 	var combo = $('#' + id).kendoComboBox({
 		placeholder     : options.empty,
 		dataTextField   : 'label',
@@ -741,8 +750,7 @@ schema_loop:
 		minLength       : 3,
 		autoBind        : false,
 		dataSource      : ds,
-		change: function(e) {
-
+		cascade: function(e) {
 			var input = this.element [0];
 
 			if (this.value() && !this.dataItem()) {
@@ -760,14 +768,13 @@ schema_loop:
 
 			}
 
-			$(input).trigger ('change');
-
-
 		},
 
 		open : function (e) {
 			stibqif (true);
-			this.dataSource.query();
+			if (input_change.is_changed)
+				this.dataSource.query();
+			input_change.is_changed = false;
 			var max_len = 0,
 				data_items = this.dataItems (),
 				w = this.popup.element.css("width").replace("px", "");
@@ -777,11 +784,12 @@ schema_loop:
 
 			if (max_len * 8 + 32 > w)
 				this.popup.element.css("width", (max_len * 8 + 32) + "px");
-
 		},
+
 		close : function (e) {
 			stibqif (false);
 		},
+
 		select : function (e) {
 			var w = (this.dataItem() ? this.dataItem().label : e.item.text ()).length * 8 + 32,
 				el = this.element.closest(".k-widget");
@@ -790,8 +798,7 @@ schema_loop:
 				el.width(w);
 		}
 
-	}
-	).data('kendoComboBox');
+	}).data('kendoComboBox');
 
 	for(var i = 0; i < values.length; i++) {
 		combo.dataSource.add ({id : values [i].id, label : values [i].label});
@@ -2180,8 +2187,10 @@ function treeview_select_node(e) {
 	var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node);
 	if(selected_node_uid){
 		var select_node = treeview.findByUid(selected_node_uid);
-		treeview.select(select_node);
-		treeview_onselect_node (select_node);
+		if (select_node) {
+			treeview.select(select_node);
+			treeview_onselect_node (select_node);
+		}
 		treeview.unbind("dataBound", treeview_select_node);
 	}
 }
