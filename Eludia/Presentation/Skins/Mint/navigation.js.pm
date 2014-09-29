@@ -776,7 +776,7 @@ schema_loop:
 				this.dataSource.query();
 			input_change.is_changed = false;
 			var max_len = 0,
-				data_items = this.dataItems (),
+				data_items = this.dataSource.data (),
 				w = this.popup.element.css("width").replace("px", "");
 			for (var i = 0; i < data_items.length; i ++)
 				if (data_items [i].label.length > max_len)
