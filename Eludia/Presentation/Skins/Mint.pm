@@ -2957,8 +2957,6 @@ sub draw_page {
 		id           => 'body',
 	};
 
-	push @{$_REQUEST {__include_css}}, 'ken/styles/kendo.common.min', 'ken/styles/kendo.bootstrap.min';
-
 	if ($_REQUEST {__refresh_tree}) {
 
 		$_REQUEST {__on_load} .= qq{
@@ -3037,11 +3035,13 @@ sub draw_page {
 		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 
 		<link href="$_REQUEST{__static_url}/eludia.css" type="text/css" rel="stylesheet" />
-		<link href="/i/libs/jquery-ui/jquery-ui.min.css" type="text/css" rel="stylesheet" />
-		<link href="$_REQUEST{__static_url}/supertable.css" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/jQueryUI/jquery-ui.min.css" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/SuperTable/supertable.css" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/KendoUI/styles/kendo.common.min.css" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/KendoUI/styles/kendo.bootstrap.min.css" type="text/css" rel="stylesheet" />
 
-		<script src="/i/libs/require.js"></script>
-		<script src="/i/ken/js/jquery.min.js"></script>
+		<script src="/i/mint/libs/require.min.js"></script>
+		<script src="/i/mint/libs/KendoUI/js/jquery.min.js"></script>
 
 		<script src="$_REQUEST{__static_url}/navigation.js"></script>
 		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js" async></script>
@@ -3070,12 +3070,12 @@ sub draw_page {
 	$_REQUEST {__head_links} .= <<EOJS;
 		<script>
 			requirejs.config({
-				baseUrl: '/i/ken/js',
+				baseUrl: '/i/mint/libs/KendoUI/js',
 				shim: {
 					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {
 						deps: ['cultures/kendo.culture.ru-RU.min']
 					},
-					'$_REQUEST{__static_url}/supertable.js' : {}
+					'/i/mint/libs/SuperTable/supertable.min.js' : {}
 				}
 			});
 			require([ $kendo_modules ], function () {\$(document).ready (function () {$_REQUEST{__on_load}; init_page ($init_page_options);}) });

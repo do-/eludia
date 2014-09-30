@@ -2327,9 +2327,9 @@ function activate_suggest_fields () {
 
 function lrt_start (lrt_id) {
 
-	$('head').append('<link rel="stylesheet" href="/i/libs/console.css" type="text/css" />');
+	$('head').append('<link rel="stylesheet" href="/i/mint/libs/console.css" type="text/css" />');
 
-	$.getScript("/i/libs/console.js", function(){
+	$.getScript("/i/mint/libs/console.js", function(){
 
 		var width = $(window).width() - 200,
 			height = $(window).height() - 300,
@@ -2411,7 +2411,7 @@ function init_page (options) {
 		var that = this;
 		var table_url = '/?' + options.table_url + '&__only_table=' + that.id;
 		table_url = table_url + '&__table_cnt=' + $('div.eludia-table-container').length;
-		require (['/i/_skins/Mint/supertable.js'], function (supertable) {
+		require (['/i/mint/libs/SuperTable/supertable.min.js'], function (supertable) {
 			new supertable({
 				tableUrl: table_url,
 				initial_data : tables_data [that.id],
