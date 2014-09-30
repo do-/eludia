@@ -350,7 +350,7 @@ sub sql_select_hash {
 
 		@params = ({}) if (@params == 0);
 
-		$_REQUEST {__the_table} = $sql_or_table_name;
+		$_REQUEST {__the_table} ||= $sql_or_table_name;
 
 		return sql_select_hash ("SELECT * FROM $sql_or_table_name WHERE id = ?", $id);
 
