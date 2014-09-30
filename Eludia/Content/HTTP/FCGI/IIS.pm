@@ -6,9 +6,9 @@ use Time::HiRes 'time';
 
 our $fake_stderr = new IO::File;
 
-open STDERR, ">c:/error.log" or die "Can't write to c:/error.log: $!\n";
+#open STDERR, ">c:/error.log" or die "Can't write to c:/error.log: $!\n";
 
-print STDERR "Eludia::IIS is starting\n";
+#print STDERR "Eludia::IIS is starting\n";
 
 my $path = __FILE__;
 $path =~ s{Eludia/IIS\.pm}{lib};

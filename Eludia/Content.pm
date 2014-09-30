@@ -482,12 +482,6 @@ sub check_dbl_click_start {
 
 	my %r = (%_REQUEST_VERBATIM);
 
-	foreach my $name (@{$preconf -> {core_log} -> {suppress} -> {always}}) {delete $r {$name}};
-
-	foreach my $name (@{$preconf -> {core_log} -> {suppress} -> {empty}})  {delete $r {$name} if $r {$name} eq ''};
-
-	foreach my $name (grep {$_} split /\,/, delete $r {__form_checkboxes})  {$r {$name} ||= ''};
-
 	my $params = Digest::MD5::md5_hex (Dumper (\%r));
 
 	my $action_log = sql_select_hash (<<EOS, $_REQUEST {sid}, $params);

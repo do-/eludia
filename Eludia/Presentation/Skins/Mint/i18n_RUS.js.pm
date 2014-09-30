@@ -1,23 +1,26 @@
 var i18n = {
-	F5: "Внимание! Вы изменили содержимое некоторых полей ввода. Перезагрузка страницы приведёт к утере этой информации. Продолжить?",
-	choose_open_vocabulary: "Выбор из справочника",
-	request_sent : 'Запрос отправлен на сервер',
-	copy_clipboard: "Для копирования нажмите CTRL+C, потом ENTER"
+	F5: "Р’РЅРёРјР°РЅРёРµ! Р’С‹ РёР·РјРµРЅРёР»Рё СЃРѕРґРµСЂР¶РёРјРѕРµ РЅРµРєРѕС‚РѕСЂС‹С… РїРѕР»РµР№ РІРІРѕРґР°. РџРµСЂРµР·Р°РіСЂСѓР·РєР° СЃС‚СЂР°РЅРёС†С‹ РїСЂРёРІРµРґС‘С‚ Рє СѓС‚РµСЂРµ СЌС‚РѕР№ РёРЅС„РѕСЂРјР°С†РёРё. РџСЂРѕРґРѕР»Р¶РёС‚СЊ?",
+	choose_open_vocabulary: "Р’С‹Р±РѕСЂ РёР· СЃРїСЂР°РІРѕС‡РЅРёРєР°",
+	request_sent : 'Р—Р°РїСЂРѕСЃ РѕС‚РїСЂР°РІР»РµРЅ РЅР° СЃРµСЂРІРµСЂ',
+	copy_clipboard: "Р”Р»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ РЅР°Р¶РјРёС‚Рµ CTRL+C, РїРѕС‚РѕРј ENTER"
 };
 
 try{
 	kendo.culture("ru-RU");
-	kendo.ui.Upload.prototype.options.localization =
-	  $.extend(kendo.ui.Upload.prototype.options.localization, {
-		select: "Выберите...",
-		cancel: "Отмена",
-		retry: "Повторить",
-		remove: "Удалить",
-		uploadSelectedFiles: "Загрузить файлы",
-		dropFilesHere: "Для загрузки, перетащите файл сюда.",
-		statusUploading: "загрузка",
-		statusUploaded: "загрузил",
-		statusFailed: "не удалось"
-	});
+	if (kendo.ui && kendo.ui.Upload) {
+		kendo.ui.Upload.prototype.options.localization =
+		  $.extend(kendo.ui.Upload.prototype.options.localization, {
+			select: "Р’С‹Р±РµСЂРёС‚Рµ...",
+			cancel: "РћС‚РјРµРЅР°",
+			retry: "РџРѕРІС‚РѕСЂРёС‚СЊ",
+			remove: "РЈРґР°Р»РёС‚СЊ",
+			uploadSelectedFiles: "Р—Р°РіСЂСѓР·РёС‚СЊ С„Р°Р№Р»С‹",
+			dropFilesHere: "Р”Р»СЏ Р·Р°РіСЂСѓР·РєРё, РїРµСЂРµС‚Р°С‰РёС‚Рµ С„Р°Р№Р» СЃСЋРґР°.",
+			statusUploading: "Р·Р°РіСЂСѓР·РєР°",
+			statusUploaded: "Р·Р°РіСЂСѓР·РёР»",
+			statusFailed: "РЅРµ СѓРґР°Р»РѕСЃСЊ"
+		});
+	}
 } catch(e) {
+//	console.log (e);
 }
