@@ -2,7 +2,7 @@
     // START of plugin definition
     $.fn.showModalDialog = function(options) {
 
-        require (['/i/libs/jquery-ui/jquery-ui.min.js'], function () {
+        require (['/i/mint/libs/jQueryUI/jquery-ui.min.js'], function () {
 
             if (window.frameElement && window.parent.$ && window.parent.$.showModalDialog) {
 //                options.position = [10, 50];
