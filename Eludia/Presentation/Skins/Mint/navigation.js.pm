@@ -244,7 +244,7 @@ function open_vocabulary_from_select (s, options) {
 		if (is_ua_mobile) {
 
 			 $.showModalDialog({
-				url             : 'http://' + window.location.host + window.location.pathname + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				url             : 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				height          : dialog_height,
 				width           : dialog_width,
 				resizable       : true,
@@ -280,7 +280,7 @@ function open_vocabulary_from_select (s, options) {
 		} else {
 
 			var result = window.showModalDialog (
-				'http://' + window.location.host + window.location.pathname + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
@@ -350,7 +350,7 @@ function open_vocabulary_from_combo (combo, options) {
 			 var me = this;
 
 			 $.showModalDialog({
-				url             : 'http://' + window.location.host + window.location.pathname + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				url             : 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				height          : dialog_height,
 				width           : dialog_width,
 				resizable       : true,
@@ -374,7 +374,7 @@ function open_vocabulary_from_combo (combo, options) {
 		} else {
 
 			var result = window.showModalDialog (
-				'http://' + window.location.host + window.location.pathname + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
