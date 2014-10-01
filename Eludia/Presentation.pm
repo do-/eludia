@@ -1713,6 +1713,9 @@ sub draw_cells {
 
 	foreach my $cell (@cells) {
 
+		$i -> {__href} = $options -> {href};
+		$i -> {__target} = $options -> {target};
+
 		$cell -> {href} ||= $options -> {href};
 
 		delete $cell -> {editor} if (exists $_REQUEST {__edited_cells_table} && ($i -> {fake} != 0 || $_REQUEST {xls}));
