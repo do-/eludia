@@ -590,10 +590,13 @@ li.toolbar > .cbx{
 	margin: 8px;
 	vertical-align: middle;
 }
+
+.st-btn {
+	padding: 10px 5px !important;
+}
+
 span.get_down_the_text_1 {
-	display: inline-block;
-	margin: 4px;
-	vertical-align: middle;
+	line-height: 38px;
 }
 
 input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs {
