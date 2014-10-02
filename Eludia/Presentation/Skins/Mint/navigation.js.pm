@@ -244,7 +244,7 @@ function open_vocabulary_from_select (s, options) {
 		if (is_ua_mobile) {
 
 			 $.showModalDialog({
-				url             : 'http://' + window.location.host + window.location.pathname + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				url             : 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				height          : dialog_height,
 				width           : dialog_width,
 				resizable       : true,
@@ -280,7 +280,7 @@ function open_vocabulary_from_select (s, options) {
 		} else {
 
 			var result = window.showModalDialog (
-				'http://' + window.location.host + window.location.pathname + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
@@ -337,8 +337,7 @@ function open_vocabulary_from_combo (combo, options) {
 			}
 
 			combo.select (j);
-			combo.trigger ('change');
-			combo.trigger ('select');
+			$(combo.element[0]).trigger('change');
 
 		}
 
@@ -351,7 +350,7 @@ function open_vocabulary_from_combo (combo, options) {
 			 var me = this;
 
 			 $.showModalDialog({
-				url             : 'http://' + window.location.host + window.location.pathname + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				url             : 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				height          : dialog_height,
 				width           : dialog_width,
 				resizable       : true,
@@ -375,7 +374,7 @@ function open_vocabulary_from_combo (combo, options) {
 		} else {
 
 			var result = window.showModalDialog (
-				'http://' + window.location.host + window.location.pathname + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
@@ -699,6 +698,8 @@ function do_kendo_combo_box (id, options) {
 					var q;
 					if (data.filter && data.filter.filters && data.filter.filters [0] && data.filter.filters [0].value)
 						q = data.filter.filters [0].value;
+					if (!data.ids && !q)
+						q = $('#' + id).data("kendoComboBox").input.val();
 
 					if (type == 'read') {
 						return {
@@ -733,6 +734,14 @@ schema_loop:
 		ds = values;
 	}
 
+	var input_change = {
+		is_changed : true,
+		on_change  : function () {
+			this.is_changed = true;
+		}
+	};
+	$('#' + id).on('change', $.proxy(input_change.on_change, input_change));
+
 	var combo = $('#' + id).kendoComboBox({
 		placeholder     : options.empty,
 		dataTextField   : 'label',
@@ -741,8 +750,7 @@ schema_loop:
 		minLength       : 3,
 		autoBind        : false,
 		dataSource      : ds,
-		change: function(e) {
-
+		cascade: function(e) {
 			var input = this.element [0];
 
 			if (this.value() && !this.dataItem()) {
@@ -760,16 +768,15 @@ schema_loop:
 
 			}
 
-			$(input).trigger ('change');
-
-
 		},
 
 		open : function (e) {
 			stibqif (true);
-			this.dataSource.query();
+			if (input_change.is_changed)
+				this.dataSource.query();
+			input_change.is_changed = false;
 			var max_len = 0,
-				data_items = this.dataItems (),
+				data_items = this.dataSource.data (),
 				w = this.popup.element.css("width").replace("px", "");
 			for (var i = 0; i < data_items.length; i ++)
 				if (data_items [i].label.length > max_len)
@@ -777,11 +784,12 @@ schema_loop:
 
 			if (max_len * 8 + 32 > w)
 				this.popup.element.css("width", (max_len * 8 + 32) + "px");
-
 		},
+
 		close : function (e) {
 			stibqif (false);
 		},
+
 		select : function (e) {
 			var w = (this.dataItem() ? this.dataItem().label : e.item.text ()).length * 8 + 32,
 				el = this.element.closest(".k-widget");
@@ -790,8 +798,7 @@ schema_loop:
 				el.width(w);
 		}
 
-	}
-	).data('kendoComboBox');
+	}).data('kendoComboBox');
 
 	for(var i = 0; i < values.length; i++) {
 		combo.dataSource.add ({id : values [i].id, label : values [i].label});
@@ -2168,16 +2175,23 @@ function treeview_get_node_uid_by_id(node, id) {
 function treeview_select_node(e) {
 	var tree = $('#splitted_tree_window_left');
 	var selected_node = tree.data ('selected-node');
-	if (selected_node) {
-		var treeview = tree.data('kendoTreeView');
-		var root = treeview.dataSource.data();
-		var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node);
-		if(selected_node_uid){
-			var select_node = treeview.findByUid(selected_node_uid);
+	if (!selected_node) {
+		treeview.unbind("dataBound", treeview_select_node);
+		return;
+	}
+	var treeview = tree.data('kendoTreeView');
+	var root = treeview.dataSource.data();
+	if (!root.length)
+		return;
+
+	var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node);
+	if(selected_node_uid){
+		var select_node = treeview.findByUid(selected_node_uid);
+		if (select_node) {
 			treeview.select(select_node);
 			treeview_onselect_node (select_node);
-			treeview.unbind("dataBound", treeview_select_node);
 		}
+		treeview.unbind("dataBound", treeview_select_node);
 	}
 }
 
@@ -2246,7 +2260,6 @@ function poll_invisibles () {
 function activate_suggest_fields () {
 
 	$("INPUT[data-role='autocomplete']").each (function () {
-
 		var i = $(this);
 		var id = i.attr ('id');
 
@@ -2254,7 +2267,7 @@ function activate_suggest_fields () {
 		read_data [i.attr ('name')] = new Function("return $('#" + id + "').data('kendoAutoComplete').value()");
 
 		i.kendoAutoComplete({
-			minLength       : i.attr ('a-data-min-length') || 3,
+			minLength       : i.attr ('a-data-min-length') || 1,
 			filter          : 'contains',
 			suggest         : true,
 			dataTextField   : 'label',
@@ -2277,18 +2290,36 @@ function activate_suggest_fields () {
 			var _this = $(this).data("kendoAutoComplete");
 
 			var selected_item = _this.current();
-			var id = '', label = '';
+			var id = '',
+				label = _this.value();
+
+			var data = _this.dataSource.data();
 
 			if (selected_item) {
-				var data = _this.dataSource.data();
 				id = data [selected_item.index()].id;
 				label = data [selected_item.index()].label;
+			} else {
+				label = this.value;
+
+				$.each(data, function(idx, item) {
+					if (item.label === label)
+						id = item.id;
+				});
 			}
 
+			var prev_id = $('#' + this.id + '__id').val();
+
 			$('#' + this.id + '__label').val(label);
-			$('#' + this.id + '__id').val(id);
+			$('#' + this.id + '__id').val(id).trigger ('change');
+
+			var onchange = i.attr ('a-data-change');
+			if (onchange) {
+				eval (onchange);
+			}
 
 		});
+
+		i.parent().css("width", i.attr("size") * 8);
 
 	});
 }
@@ -2296,9 +2327,9 @@ function activate_suggest_fields () {
 
 function lrt_start (lrt_id) {
 
-	$('head').append('<link rel="stylesheet" href="/i/libs/console.css" type="text/css" />');
+	$('head').append('<link rel="stylesheet" href="/i/mint/libs/console.css" type="text/css" />');
 
-	$.getScript("/i/libs/console.js", function(){
+	$.getScript("/i/mint/libs/console.js", function(){
 
 		var width = $(window).width() - 200,
 			height = $(window).height() - 300,
@@ -2380,7 +2411,7 @@ function init_page (options) {
 		var that = this;
 		var table_url = '/?' + options.table_url + '&__only_table=' + that.id;
 		table_url = table_url + '&__table_cnt=' + $('div.eludia-table-container').length;
-		require (['/i/_skins/Mint/supertable.js'], function (supertable) {
+		require (['/i/mint/libs/SuperTable/supertable.min.js'], function (supertable) {
 			new supertable({
 				tableUrl: table_url,
 				initial_data : tables_data [that.id],
@@ -2388,6 +2419,7 @@ function init_page (options) {
 				containerRender : function() {
 					$(that).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 					activate_suggest_fields ();
+					adjust_kendo_selects();
 				}
 			})
 		});

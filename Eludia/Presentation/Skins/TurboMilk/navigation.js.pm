@@ -4277,17 +4277,20 @@ function toggle_field_id (id, is_visible,is_clear_field) {
 		document.getElementById(full_id).value = 0;
 	else if (is_clear_field == 1)
 		document.getElementById(full_id).value = "";
+	else if (is_clear_field == 3)
+		document.getElementById(full_id).checked = false;
+
 }
 
 function toggle_field_and_row (td_field, is_visible) {
 
 	td_field.toggle(is_visible);
 	td_field.prev().toggle(is_visible);
-
+	var cs = td_field[0].colSpan;
 	if (td_field.next().next().length == 1){
 
 		var td_expand = td_field.next().next();
-		td_expand.attr('colSpan', is_visible ? 1 : 3);
+		td_expand.attr('colSpan', is_visible ? 1 : 2 + cs);
 
 		var is_row_visible = is_visible || td_expand.parent().children(':visible').length;
 		td_expand.parent().toggle(is_row_visible ? true : false);
@@ -4295,7 +4298,7 @@ function toggle_field_and_row (td_field, is_visible) {
 	} else if (td_field.prev().prev().length == 1){
 
 		var td_expand = td_field.prev().prev();
-		td_expand.attr('colSpan', is_visible ? 1 : 3);
+		td_expand.attr('colSpan', is_visible ? 1 : 2 + cs);
 
 		var is_row_visible = is_visible || td_expand.parent().children(':visible').length;
 		td_expand.parent().toggle(is_row_visible ? true : false);

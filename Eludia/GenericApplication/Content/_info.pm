@@ -46,6 +46,32 @@ sub select__info {
 	
 	setup_skin ();
 	
+	my $git_path = `which git`; chomp $git_path;
+
+	my $application_package = "";
+
+	foreach my $library_path (@$PACKAGE_ROOT) {
+
+		$application_package .= "$library_path";
+
+		$library_path =~ s/\/GenericApplication//;
+
+		if ( -x "$git_path" && -d "$library_path/../.git" ) {
+
+			my $branch = `$git_path --git-dir=$library_path/../.git rev-parse --abbrev-ref HEAD`;
+			chomp $branch;
+
+			my $dt_last_commit = `$git_path --git-dir=$library_path/../.git log -1 --format=%cd`;
+			chomp $dt_last_commit;
+
+			$application_package .= " ($branch, $dt_last_commit)";
+
+		}
+
+		$application_package .= "<br>";
+
+	}
+
 	my $data = {rows => [
 	
 		{
@@ -105,7 +131,7 @@ sub select__info {
 		{			
 			id    => 'Application package',
 			label => ($_PACKAGE =~ /(\w+)/),
-			path  => join ', ', @$PACKAGE_ROOT,
+			path  => $application_package,
 		},
 
 		{

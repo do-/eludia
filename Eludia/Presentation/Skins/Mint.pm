@@ -468,66 +468,24 @@ sub draw_form_field_suggest {
 		$values = $_JSON -> encode ([map {[$_ -> {id}, $_ -> {label}]} @{$options -> {values}}]);
 	}
 
-	$options -> {min_length} ||= 3;
-	$options -> {attributes} -> {size} ||= $options -> {size} || 60;
-
-	my $change_js = $options -> {onchange_href}? <<EOJS : '';
-		nope ('$$options{onchange_href}&id=' + id, '_self');
-EOJS
-
+	$options -> {attributes} ||= {};
+	my $attr_input = $options -> {attributes};
 	my $id = $options -> {name} || 'suggest';
 
-	my $js = <<EOJS;
-		\$("#$id").kendoAutoComplete({
-			minLength       : $$options{min_length},
-			filter          : 'contains',
-			suggest         : true,
-			dataTextField   : 'label',
-			dataSource      : {
-				serverFiltering : true,
-				data: {
-					json: $values,
-				},
-				transport: {
-					read        : {
-						url : "$ENV{REQUEST_URI}&__suggest=$options->{name}" + "&salt=" + Math.random (),
-						contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
-						data        : {
-							"_$options->{name}__label": function() {
-								return \$("#$id").data("kendoAutoComplete").value();
-							}
-						},
-						dataType    : 'json'
-					}
-				}
-			}
-		}).bind("change", function(e) {
+	$attr_input -> {id}                  = $id;
+	$attr_input -> {size}              ||= $options -> {size} || 60;
+	$attr_input -> {"data-role"}         = "autocomplete";
+	$attr_input -> {"a-data-values"}     = $values
+		if $values;
+	$attr_input -> {"a-data-url"}        = "$ENV{REQUEST_URI}&__suggest=$options->{name}";
+	$attr_input -> {"a-data-min-length"} = $options -> {min_length}
+		if $options -> {min_length} && $options -> {min_length} != 1;
 
-			var _this = \$(this).data("kendoAutoComplete");
+	$attr_input -> {"a-data-change"}     = "$$options{after}"
+		if $options -> {after};
 
-			var selected_item = _this.current();
-			var id = '', label = '';
 
-			if (selected_item) {
-				var data = _this.dataSource.data();
-				id = data [selected_item.index()].id;
-				label = data [selected_item.index()].label;
-			}
-
-			var prev_id = \$('#${id}__id').val();
-
-			\$('#${id}__label').val(label);
-			\$('#${id}__id').val(id);
-
-			if (id && id != prev_id) {
-				$change_js
-			}
-		});
-EOJS
-
-	$options -> {attributes} -> {id} = $id;
-
-	my $html = dump_tag (input => $options -> {attributes})
+	return dump_tag (input => $options -> {attributes})
 
 		. dump_tag (input => {
 			type  => 'hidden',
@@ -537,13 +495,14 @@ EOJS
 		})
 
 		. dump_tag (input => {
-			type  => 'hidden',
-			id    => "${id}__id",
-			name  => "_$options->{name}__id",
-			value => $options -> {value__id},
+			type     => 'hidden',
+			id       => "${id}__id",
+			name     => "_$options->{name}__id",
+			value    => $options -> {value__id},
+			onchange => $options -> {after},
 		});
 
-	return $html . "<script>\$(document).ready (function () {$js})</script>";
+
 
 }
 
@@ -1574,6 +1533,8 @@ EOH
 
 	if ($options -> {items}) {
 
+		$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
 		$html .= "<script>var data_$id = " . $_JSON -> encode ([
@@ -2048,6 +2009,9 @@ sub draw_toolbar_pager {
 ################################################################################
 
 sub draw_toolbar_button_vert_menu {
+
+	$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+
 }
 
 ################################################################################
@@ -2217,6 +2181,8 @@ sub draw_vert_menu {
 
 	my ($_SKIN, $name, $types, $level, $is_main) = @_;
 
+	$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+
 	[map {
 
 		ref $_ ne HASH ? () : {
@@ -2374,13 +2340,44 @@ sub draw_select_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
+	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
+
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	my $multiple = $data -> {rows} > 1 ? "multiple size=$$data{rows}" : '';
 
 	$data -> {onChange} ||= $options -> {onChange};
 
+	if (defined $data -> {other}) {
+
+		$data -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
+		$data -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
+
+		$data -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+
+		$data -> {onChange} .= <<EOJS;
+
+			if (this.options[this.selectedIndex].value == -1) {
+				open_vocabulary_from_select (
+					this,
+					{
+						message       : '$i18n->{choose_open_vocabulary}',
+						href          : '$data->{other}->{href}&select=$data->{name}&salt=' + Math.random(),
+						dialog_width  : $data->{other}->{width},
+						dialog_height : $data->{other}->{height}
+					}
+				);
+
+			}
+
+EOJS
+
+	}
+
+	my $id_select = $data -> {id} || "_$data->{name}_select";
+
 	my $html = qq {<td $attributes><select
+		id="$id_select"
 		name="$$data{name}"
 		onChange="is_dirty=true; $$data{onChange}"
 		onkeypress='typeAhead();'
@@ -2391,8 +2388,16 @@ sub draw_select_cell {
 
 	$html .= qq {<option value="0">$$data{empty}</option>\n} if defined $data -> {empty};
 
+	if (defined $data -> {other} && $data -> {other} -> {on_top}) {
+		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
+	}
+
 	foreach my $value (@{$data -> {values}}) {
 		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
+	}
+
+	if (defined $data -> {other} && !$data -> {other} -> {on_top}) {
+		$html .= qq {<option value=-1>${$$data{other}}{label}</option>};
 	}
 
 	$html .= qq {</select></td>};
@@ -2457,6 +2462,8 @@ EOJS
 sub draw_input_cell {
 
 	my ($_SKIN, $data, $options) = @_;
+
+	$_REQUEST {_libs} -> {kendo} -> {autocomplete} = 1;
 
 	my $autocomplete;
 	my $attr_input = {
@@ -2950,7 +2957,19 @@ sub draw_page {
 		id           => 'body',
 	};
 
-	push @{$_REQUEST {__include_css}}, 'ken/styles/kendo.common.min', 'ken/styles/kendo.bootstrap.min';
+	if ($_REQUEST {__refresh_tree}) {
+
+		$_REQUEST {__on_load} .= qq{
+			var tree = window.parent.\$('#splitted_tree_window_left');
+
+			if (tree.data ("active") === 2) {
+				tree = tree.data ("kendoTreeView");
+				tree.dataSource.read();
+			} else {
+				window.parent.location.reload ();
+			}
+		};
+	}
 
 	if ($_REQUEST {__im_delay}) {
 
@@ -3016,11 +3035,13 @@ sub draw_page {
 		<meta http-equiv="Content-Type" content="text/html; charset=$$i18n{_charset}">
 
 		<link href="$_REQUEST{__static_url}/eludia.css" type="text/css" rel="stylesheet" />
-		<link href="/i/libs/jquery-ui/jquery-ui.min.css" type="text/css" rel="stylesheet" />
-		<link href="$_REQUEST{__static_url}/supertable.css" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/jQueryUI/jquery-ui.min.css" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/SuperTable/supertable.css" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/KendoUI/styles/kendo.common.min.css" type="text/css" rel="stylesheet" />
+		<link href="/i/mint/libs/KendoUI/styles/kendo.bootstrap.min.css" type="text/css" rel="stylesheet" />
 
-		<script src="/i/libs/require.js"></script>
-		<script src="/i/ken/js/jquery.min.js"></script>
+		<script src="/i/mint/libs/require.min.js"></script>
+		<script src="/i/mint/libs/KendoUI/js/jquery.min.js"></script>
 
 		<script src="$_REQUEST{__static_url}/navigation.js"></script>
 		<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js" async></script>
@@ -3041,7 +3062,7 @@ sub draw_page {
 
 	$init_page_options = $_JSON -> encode ($init_page_options);
 
-	my $kendo_modules = join ',', qq |"cultures/kendo.culture.ru-RU-1251.min"|,
+	my $kendo_modules = join ',',
 		qq |"$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js"|,
 		map {qq |"kendo.$_.min"|} keys %{$_REQUEST {_libs} -> {kendo}};
 
@@ -3049,12 +3070,12 @@ sub draw_page {
 	$_REQUEST {__head_links} .= <<EOJS;
 		<script>
 			requirejs.config({
-				baseUrl: '/i/ken/js',
+				baseUrl: '/i/mint/libs/KendoUI/js',
 				shim: {
 					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {
-						deps: ['cultures/kendo.culture.ru-RU-1251.min']
+						deps: ['cultures/kendo.culture.ru-RU.min']
 					},
-					'$_REQUEST{__static_url}/supertable.js' : {}
+					'/i/mint/libs/SuperTable/supertable.min.js' : {}
 				}
 			});
 			require([ $kendo_modules ], function () {\$(document).ready (function () {$_REQUEST{__on_load}; init_page ($init_page_options);}) });
@@ -3723,5 +3744,44 @@ sub __adjust_menu_item {
 	$type -> {id} =~ s{[\&\?]?sid\=\d+}{};
 
 }
+
+################################################################################
+
+sub __adjust_form_field_select {
+
+	my ($options) = @_;
+
+	if ($options -> {rows}) {
+
+		$options -> {attributes} -> {multiple} = 1;
+
+		$options -> {attributes} -> {size} = $options -> {rows};
+
+	}
+
+	foreach my $value (@{$options -> {values}}) {
+
+		$value -> {label} = trunc_string ($value -> {label}, $options -> {max_len});
+
+		$value -> {id}    =~ s{\"}{\&quot;}g; #";
+
+	}
+
+	if (defined $options -> {detail}) {
+
+		my $js_detail = js_detail ($options);
+
+		if ($options -> {ds}) {
+			$options -> {onChange} .= ";$js_detail";
+		} else {
+			$options -> {onChange} .= ";var v = this.options[this.selectedIndex].value; if (v && v != -1){$js_detail}";
+		}
+
+	}
+
+	return undef;
+
+}
+
 
 1;

@@ -438,7 +438,6 @@ sub options_win32 {
 
 	my %options = @_;
 
-	$options {-address}      ||= ':9000';
 	$options {-backlog}      ||= 1024;
 	$options {-processes}    ||= 2;
 	$options {-timeout}      ||= 1;
@@ -451,37 +450,95 @@ sub options_win32 {
 
 sub start_win32 {
 
+	my $len = 60;
+
+	my $bar	= '+' . ('-' x ($len + 2)) . "+\n";
+
+	my $line = sub {
+		my ($k, $v) = @_;
+		my $bar = '.' x ($len - length ($k) - length ($v));
+		return "+ ${k}${bar}${v} +\n";
+	};
+
 	my %options = options_win32 (@_);
 
-	require Win32::Pipe;
+	warn "\n -------------------------------------------------\n";
+	warn " == Starting Eludia.pm FastCGI server for nginx ==\n";
+	warn " -------------------------------------------------\n\n";
 
-	$options {-address} =~ /\d+/;
+	unless ($options {-nginx_conf}) {
 
-	my $pipe_out = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.out.Eludia_$&");
-	my $pipe_in  = new Win32::Pipe ("\\\\.\\pipe\\winserv.scm.in.Eludia_$&");
+		print STDERR "Nginx configuration file location is unknown, looking for running process...";
 
-	if ($pipe_in) {
+		eval  {
 
-		threads -> create (sub {
+			my $ps = `wmic process where (name="nginx.exe") get executablepath 2>&1`;
 
-			$pipe_in -> Read ();
+			foreach (split /[\r\n]+/, $ps) {
+				s{nginx\.exe\s*$}{conf\\nginx.conf}i or next;
+				$options {-nginx_conf} = $_ and last;
+			}
 
-			exit;
+			if ($options {-nginx_conf}) {
+				print STDERR "Found!\nThe config should be $options{-nginx_conf}\n";
+			}
+			else {
+				$ps =~ s/\s+$//gsm;
+				print STDERR "\nNo luck: WMIC said ``$ps'' :-(\n(Could you you fire up nginx before?)\n";
+				$options {-nginx_conf} = "C:\\nginx\\conf\\nginx.conf";
+				print STDERR "Falling back to $options{-nginx_conf}\n";
+			}
 
-		}, @_) -> detach;
+		}
 
 	}
 
-	my $nginx = {conf => 'c:/nginx/conf/nginx.conf'};
+	my $nginx = {conf => $options {-nginx_conf}};
 
-	if ($nginx -> {conf} and open (N, $nginx -> {conf})) {
+	-f $nginx -> {conf} or die "$nginx->{conf} is not a file, giving up\n";
 
-		open STDOUT, '>/dev/null';
+	open (N, $nginx -> {conf}) or die "Can't open $nginx->{conf}: $!\n";
 
-		while (<N>) {
+	print STDERR "Reading nginx configuration...\n";
 
-			next if /^\s*\#/;
+	open STDOUT, '>/dev/null';
 
+	while (<N>) {
+
+		next if /^\s*\#/;
+
+		if (/^\s*server\s+127\.0\.0\.1(\:\d+)/ && !$options {-address}) {
+			$options {-address} = $1;
+			print STDERR "By the way, seems like we are meant to listen at 127.0.0.1$options{-address}.\n";
+			next;
+		}
+
+		/root\s+/ or next;
+
+		my $app = $';
+
+		$app =~ s{\s*;\s*$}{};
+
+		if ($app =~ /^"(.*)"$/) {$app = $1}
+
+		$app =~ s{/docroot/?.*}{};
+
+		print STDERR "Found some document root at $app...";
+
+		if (-f "$app/conf/httpd.conf" and -f "$app/lib/Config.pm") {
+
+			print STDERR " yes, this is ours. Let's load it...\n";
+
+		}
+		else {
+
+			print STDERR " oh sorry, I'm mistaken\n" and next;
+
+		}
+
+		next if $main::configs -> {$app};
+
+		check_configuration_for_application ($app);
 			/root\s+/ or next;
 
 			my $app = $';
@@ -490,7 +547,9 @@ sub start_win32 {
 
 			if ($app =~ /^"(.*)"$/) {$app = $1}
 
-			$app =~ s{/docroot/?}{};
+		print STDERR "Trying $app...\n";
+
+		$ENV {SCRIPT_NAME} = '/__try__and__disconnect';
 
 			-f "$app/conf/httpd.conf" and -f "$app/lib/Config.pm" or next;
 
@@ -510,9 +569,7 @@ sub start_win32 {
 
 		}
 
-		close (N);
-
-	}
+	close (N);
 
 	my $socket = FCGI::OpenSocket ($options {-address}, $options {-backlog});
 

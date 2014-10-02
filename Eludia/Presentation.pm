@@ -3694,7 +3694,11 @@ sub get_chart_image_pathes {
 			unlink $preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg";
 		}
 
-		$data -> {"chart_image_path_$name"} = "http://" . $ENV {HTTP_HOST} . "/" . $chart_path if (-e  $preconf -> {_} -> {docroot} . $chart_path);
+		my $host = $preconf -> {reporting_api} -> {server_name}
+			|| $ENV {HTTP_HOST}
+			|| $preconf -> {mail} -> {server_name};
+
+		$data -> {"chart_image_path_$name"} = "http://" . $host . "/" . $chart_path if (-e  $preconf -> {_} -> {docroot} . $chart_path);
 
 	}
 
