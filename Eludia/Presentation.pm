@@ -1415,7 +1415,7 @@ sub draw_close_toolbar {
 		@{$options -> {additional_buttons}},
 		{
 			preset => 'close',
-			href => 'javascript: top.window.close()',
+			href => 'javascript: window.parent.close()',
 		},
 		@{$options -> {right_buttons}},
 	 ])
