@@ -40,7 +40,7 @@ sub vld_snils {
 		$n [7] * 2  +
 		$n [8] * 1;
 
-	$checksum = $checksum % 100;
+	$checksum = $checksum % 101;
 
 	$checksum == 0 + substr ($value, 9, 2) or $name1 ? die "#$name1#:Не сходится контрольная сумма СНИЛС" : return 'Не сходится контрольная сумма СНИЛС';
 
