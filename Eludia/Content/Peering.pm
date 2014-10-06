@@ -30,18 +30,30 @@ sub check_peer_server {
 
 	$id_role or die ("Role not found: $role\n");
 
-	my $id_user = 
-	
-		sql_select_scalar ("SELECT id FROM $conf->{systables}->{users} WHERE peer_id = ? AND peer_server = ?", 0 + $user -> {id}, $peer_server) ||
-		
-		sql_do_insert ($conf->{systables}->{users}, {
+	my $current_user = sql_select_hash ("SELECT * FROM $conf->{systables}->{users} WHERE peer_id = ? AND peer_server = ?", 0 + $user -> {id}, $peer_server);
+
+	my $id_user;
+
+	if ($current_user -> {id}) {
+
+		$id_user = $current_user -> {id};
+
+		sql_do ("UPDATE $conf->{systables}->{users} SET label = ?, id_role = ?, mail = ?  WHERE id = ?", $user -> {label}, $id_role, $user -> {mail}, $id_user)
+			if $current_user -> {label} ne $user -> {label} or $current_user -> {id_role} ne $id_role or $current_user -> {mail} ne $user -> {mail};
+
+	} else {
+
+		$id_user = sql_do_insert ($conf->{systables}->{users}, {
+			label       => $user -> {label},
+			id_role     => $id_role,
+			mail        => $user -> {mail},
 			fake        => -128,
 			peer_id     => 0 + $user -> {id},
 			peer_server => $peer_server,
 		});
-		
-	sql_do ("UPDATE $conf->{systables}->{users} SET label = ?, id_role = ?, mail = ?  WHERE id = ?", $user -> {label}, $id_role, $user -> {mail}, $id_user);
-	
+
+	}
+
 	while (1) {
 		$local_sid = int (time * rand);
 		last if 0 == sql_select_scalar ("SELECT COUNT(*) FROM $conf->{systables}->{sessions} WHERE id = ?", $local_sid);
