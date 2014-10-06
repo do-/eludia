@@ -44,6 +44,11 @@ sub vld_snils {
 
 	$checksum == 0 + substr ($value, 9, 2) or $name1 ? die "#$name1#:Не сходится контрольная сумма СНИЛС" : return 'Не сходится контрольная сумма СНИЛС';
 
+	$_REQUEST {$name1} = substr ($value, 0, 3)
+		. '-' . substr ($value, 3, 3)
+		. '-' . substr ($value, 6, 3)
+		. ' ' . substr ($value, 9, 2) if ($name1);
+
 	return undef;
 
 }
