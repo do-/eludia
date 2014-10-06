@@ -2655,14 +2655,6 @@ sub draw_super_table__only_table {
 
 			my $attributes = {};
 
-			# if ($_REQUEST {__scrollable_table_row} > 0 && !$_REQUEST {__edited_cells_table}
-			# 	&& $_REQUEST {__table_cnt} == 1
-			# 	&& $_REQUEST {__scrollable_table_row} == $row_cnt
-			# ) {
-
-			# 	$attributes -> {class} = 'row-state-visited';
-			# }
-
 			$attributes = dump_attributes ($attributes);
 
 			$html .= "<tr id='$$i{__tr_id}' $attributes";

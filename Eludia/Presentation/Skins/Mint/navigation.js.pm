@@ -1374,7 +1374,7 @@ function handle_basic_navigation_keys () {
 
 	if (keyCode == 8 && !q_is_focused) {
 		typeAheadInfo.accumString = "";
-		blockEvent ();
+//		blockEvent ();
 		return;
 	}
 
