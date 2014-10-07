@@ -2253,9 +2253,11 @@ sub draw_text_cell {
 	$data -> {attributes} -> {style} = join '; color:', $data -> {attributes} -> {style}, $fgcolor
 		if $fgcolor;
 
-	$data -> {attributes} -> {"data-href"} = $data -> {href};
-
-	$data -> {attributes} -> {"data-href-target"} = $data -> {target};
+	if ($data -> {href} && $data -> {href} ne $options -> {href}) {
+		$data -> {attributes} -> {"data-href"} = $data -> {href};
+		$data -> {attributes} -> {"data-href-target"} = $data -> {target}
+			unless $data -> {target} eq '_self';
+	}
 
 	my $html = dump_tag ('td', $data -> {attributes});
 
@@ -2272,9 +2274,9 @@ sub draw_text_cell {
 	$data -> {label} =~ s{\n}{<br>}gsm if $data -> {no_nobr};
 
 	if ($data -> {status} && -r $r -> document_root . "$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif") {
-		$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>};
+		$html .= qq {<img style="width:11px;height:11px;" src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.gif' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>};
 	} elsif ($data -> {status} && -r $r -> document_root . "$_REQUEST{__static_url}/status_$data->{status}->{icon}.png") {
-		$html .= qq {<img src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.png' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>};
+		$html .= qq {<img style="width:16px;height:16px;" src='$_REQUEST{__static_url}/status_$data->{status}->{icon}.png' border=0 alt='$data->{status}->{label}' align=absmiddle hspace=5>};
 	}
 
 	$html .= '<b>'      if $data -> {bold}   || $options -> {bold};
@@ -2653,14 +2655,6 @@ sub draw_super_table__only_table {
 
 			my $attributes = {};
 
-			if ($_REQUEST {__scrollable_table_row} > 0 && !$_REQUEST {__edited_cells_table}
-				&& $_REQUEST {__table_cnt} == 1
-				&& $_REQUEST {__scrollable_table_row} == $row_cnt
-			) {
-
-				$attributes -> {class} = 'row-state-visited';
-			}
-
 			$attributes = dump_attributes ($attributes);
 
 			$html .= "<tr id='$$i{__tr_id}' $attributes";
@@ -2673,7 +2667,16 @@ sub draw_super_table__only_table {
 			}
 
 			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
-			$html .= qq {data-target="$$i{__target}" data-href="$$i{__href}"} if $has_href;
+
+			if ($has_href) {
+
+				$html .= qq { data-target="$$i{__target}"}
+					if $i -> {__target} && $i -> {__target} ne '_self';
+
+				$html .= qq { data-href="$$i{__href}"};
+
+			}
+
 			$html .= '>';
 			$html .= $tr;
 			$html .= '</tr>';
@@ -3457,7 +3460,6 @@ sub draw_tree {
 			dataSource : dataSource,
 			expand     : treeview_onexpand,
 			collapse   : treeview_oncollapse,
-			dataBound  : treeview_databound,
 			select: function (e) {
 				treeview_onselect_node (e.node);
 			}

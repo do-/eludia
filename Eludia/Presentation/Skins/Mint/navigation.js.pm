@@ -1374,7 +1374,7 @@ function handle_basic_navigation_keys () {
 
 	if (keyCode == 8 && !q_is_focused) {
 		typeAheadInfo.accumString = "";
-		blockEvent ();
+//		blockEvent ();
 		return;
 	}
 
@@ -2194,21 +2194,6 @@ function treeview_select_node(e) {
 		treeview.unbind("dataBound", treeview_select_node);
 	}
 }
-
-function treeview_databound(e) {
-
-	if (e.node) { return; };
-
-	var treeview = e.sender;
-
-	var root = $(".k-item:first");
-	treeview.select(root);
-	treeview.trigger('select', {node: root});
-
-}
-
-
-
 
 function eludia_is_flash_installed () {
 
