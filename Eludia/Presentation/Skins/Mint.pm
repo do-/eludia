@@ -3460,7 +3460,6 @@ sub draw_tree {
 			dataSource : dataSource,
 			expand     : treeview_onexpand,
 			collapse   : treeview_oncollapse,
-			dataBound  : treeview_databound,
 			select: function (e) {
 				treeview_onselect_node (e.node);
 			}

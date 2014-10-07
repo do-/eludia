@@ -2195,21 +2195,6 @@ function treeview_select_node(e) {
 	}
 }
 
-function treeview_databound(e) {
-
-	if (e.node) { return; };
-
-	var treeview = e.sender;
-
-	var root = $(".k-item:first");
-	treeview.select(root);
-	treeview.trigger('select', {node: root});
-
-}
-
-
-
-
 function eludia_is_flash_installed () {
 
 	if (typeof navigator.plugins == 'undefined' || navigator.plugins.length == 0) {
