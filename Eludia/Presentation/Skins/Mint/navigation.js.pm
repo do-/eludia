@@ -2405,6 +2405,8 @@ function init_page (options) {
 					$(that).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 					activate_suggest_fields ();
 					adjust_kendo_selects();
+					$('[data-type=datepicker]', that).each(function () {$(this).kendoDatePicker()});
+					$('[data-type=datetimepicker]', that).each(function () {$(this).kendoDateTimePicker()});
 				}
 			})
 		});
