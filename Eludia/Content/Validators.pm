@@ -1,3 +1,58 @@
+
+################################################################################
+
+sub vld_snils {
+
+	my ($name, $nullable) = @_;
+
+	my $name1;
+	my $value;
+	if ($name !~ /^[\d- ]$/)
+		$name1 = '_' . $name;
+		$value = $_REQUEST {$name1};
+	} else {
+		$value = $name;
+	}
+
+	if (!$value && $nullable) {
+		delete $_REQUEST {$name1} if ($name1);
+		return undef;
+	}
+
+	local $SIG {__DIE__} = 'DEFAULT';
+
+	$value =~ s/[^\d]//g;
+
+	substr ($value, 0, 9) gt '001001998' or return undef;
+
+	$value =~ /^\d{11}$/ or $name1 ? die "#$name1#:СНИЛС должен состоять из 11 арабских цифр" : return 'Код ИНН должен состоять из 11 арабских цифр';
+
+	my @n = split //, $value;
+
+	my $checksum =
+		$n [0] * 9  +
+		$n [1] * 8  +
+		$n [2] * 7 +
+		$n [3] * 6  +
+		$n [4] * 5  +
+		$n [5] * 4  +
+		$n [6] * 3  +
+		$n [7] * 2  +
+		$n [8] * 1;
+
+	$checksum = $checksum % 101;
+
+	$checksum == 0 + substr ($value, 9, 2) or $name1 ? die "#$name1#:Не сходится контрольная сумма СНИЛС" : return 'Не сходится контрольная сумма СНИЛС';
+
+	$_REQUEST {$name1} = substr ($value, 0, 3)
+		. '-' . substr ($value, 3, 3)
+		. '-' . substr ($value, 6, 3)
+		. ' ' . substr ($value, 9, 2) if ($name1);
+
+	return undef;
+
+}
+
 ################################################################################
 
 sub vld_date {
