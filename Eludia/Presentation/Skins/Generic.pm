@@ -355,14 +355,7 @@ sub __adjust_row_cell_style {
 	$a -> {colspan} = $data -> {colspan} if $data -> {colspan};
 	$a -> {rowspan} = $data -> {rowspan} if $data -> {rowspan};
 
-	my $alert_color = $ALERT_COLOR || '#ff9966';
-	if (($data -> {bgcolor} || $options -> {bgcolor}) eq $alert_color && !$a -> {class}) {
-		$a -> {class} = "row-cell-state-error row-cell-transparent";
-	} else {
-		$a -> {$_} ||= ($data -> {$_} || $options -> {$_}) foreach (qw (bgcolor));
-	}
-
-	$a -> {$_} ||= ($data -> {$_} || $options -> {$_}) foreach (qw (style));
+	$a -> {$_} ||= ($data -> {$_} || $options -> {$_}) foreach (qw (bgcolor style));
 
 	unless ($a -> {style}) {
 

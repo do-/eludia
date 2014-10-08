@@ -3785,5 +3785,50 @@ sub __adjust_form_field_select {
 
 }
 
+################################################################################
+
+sub __adjust_row_cell_style {
+
+	my ($data, $options) = @_;
+
+	my $a = ($data -> {attributes} ||= {});
+
+	$a -> {colspan} = $data -> {colspan} if $data -> {colspan};
+	$a -> {rowspan} = $data -> {rowspan} if $data -> {rowspan};
+
+	my $alert_color = $ALERT_COLOR || '#ff9966';
+	if (($data -> {bgcolor} || $options -> {bgcolor}) eq $alert_color && !$a -> {class}) {
+		$a -> {class} = "row-cell-state-error row-cell-transparent";
+	} else {
+		$a -> {$_} ||= ($data -> {$_} || $options -> {$_}) foreach (qw (bgcolor));
+	}
+
+	$a -> {$_} ||= ($data -> {$_} || $options -> {$_}) foreach (qw (style));
+
+	unless ($a -> {style}) {
+
+		delete $a -> {style};
+
+		$a -> {class} ||= (
+
+			$data    -> {class} ||
+
+			($options -> {class} ||= (
+
+				$options -> {is_total} ? 'row-cell-total' :
+
+				'row-cell'
+
+			))
+
+		);
+
+		$a -> {class} .= '-transparent' if $a -> {bgcolor} && $a -> {class} !~ /-transparent/;
+
+		$a -> {class} .= '-no-scroll' if ($data -> {no_scroll} && $data -> {attributes} -> {class} =~ /row-cell/);
+
+	}
+
+}
 
 1;
