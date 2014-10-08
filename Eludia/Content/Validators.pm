@@ -7,7 +7,7 @@ sub vld_snils {
 
 	my $name1;
 	my $value;
-	if ($name !~ /^[\d- ]$/)
+	if ($name !~ /^[\d- ]$/) {
 		$name1 = '_' . $name;
 		$value = $_REQUEST {$name1};
 	} else {
