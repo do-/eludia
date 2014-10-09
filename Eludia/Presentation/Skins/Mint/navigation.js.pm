@@ -50,6 +50,7 @@ var typeAheadInfo = {last:0,
 var kb_hooks = [{}, {}, {}, {}];
 
 var max_len = 50;
+var poll_invisibles_interval_id;
 
 
 var request = {},
@@ -2234,7 +2235,8 @@ function poll_invisibles () {
 	var has_loading_iframes;
 	$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
 	if (!has_loading_iframes) {
-		window.clearInterval(poll_invisibles);
+		window.clearInterval(poll_invisibles_interval_id);
+		poll_invisibles_interval_id = undefined;
 		$.unblockUI ();
 		is_interface_is_locked = false;
 		setCursor ();
@@ -2376,8 +2378,13 @@ function blockui (message, poll) {
 		message: "<h2>" + (message || "<img src='/i/_skins/Mint/busy.gif'> " + i18n.request_sent) + "</h2>"
 	});
 
-	if (poll)
-		window.setInterval(poll_invisibles, 100);
+	if (poll) {
+		if (poll_invisibles_interval_id) {
+			window.clearInterval (poll_invisibles_interval_id);
+			poll_invisibles_interval_id = undefined;
+		}
+		poll_invisibles_interval_id = window.setInterval(poll_invisibles, 100);
+	}
 
 	return true;
 }
@@ -2459,7 +2466,11 @@ function init_page (options) {
 		$('form').submit (function () {return blockui();});
 
 		$('form[target^="invisible"]').submit (function () {
-			window.setInterval(poll_invisibles, 100);
+			if (poll_invisibles_interval_id) {
+				window.clearInterval (poll_invisibles_interval_id);
+				poll_invisibles_interval_id = undefined;
+			}
+			poll_invisibles_interval_id = window.setInterval(poll_invisibles, 1000);
 		});
 
 	}
