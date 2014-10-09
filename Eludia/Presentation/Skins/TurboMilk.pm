@@ -697,10 +697,12 @@ sub draw_form_field_suggest {
 
 	};
 
+	my $id = '' . $options;
+
 	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
 	$options -> {attributes} -> {onFocus}    .= ';scrollable_table_is_blocked = true; q_is_focused = true;';
-	$options -> {attributes} -> {onBlur}     .= qq{;scrollable_table_is_blocked = false; q_is_focused = false; getElementById('_$options->{name}__label').value = this.value; _suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);};
+	$options -> {attributes} -> {onBlur}     .= qq{;scrollable_table_is_blocked = false; q_is_focused = false; getElementById('${id}__label').value = this.value; _suggest_timer_$options->{name} = setTimeout (off_suggest_$options->{name}, 100);};
 	$options -> {attributes} -> {onChange}   .= "$$options{after};";
 
 	$options -> {attributes} -> {onKeyDown}  .= <<EOH;
@@ -725,8 +727,6 @@ EOH
 		}
 EOH
 
-	my $id = '' . $options;
-
 	$_REQUEST {__script} .= qq{;
 		var typingIdleTimer;
 		function lookup_$options->{name}() {
@@ -738,7 +738,7 @@ EOH
 			document.getElementById ('_$options->{name}__suggest').style.display = 'none';
 			if (suggest_label.value.length > 0) {
 				s.value = '$options->{name}';
-				document.getElementById ('_$options->{name}__label').value = suggest_label.value;
+				document.getElementById ('${id}__label').value = suggest_label.value;
 				f.submit ();
 				s.value = '';
 			}
