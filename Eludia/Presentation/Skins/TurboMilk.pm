@@ -3033,11 +3033,11 @@ sub draw_input_cell {
 	my ($_SKIN, $data, $options) = @_;
 
 	my $autocomplete;
-	my $attr_input = {
-		onBlur => 'q_is_focused = false; left_right_blocked = false;',
-		onKeyDown => 'tabOnEnter();',
-		class  => $data -> {mandatory} ? "table-mandatory-inputs" : undef,
-	};
+	my $attr_input = $data -> {attr_input} || {};
+	$attr_input -> {onBlur} .= 'q_is_focused = false; left_right_blocked = false;';
+	$attr_input -> {onKeyDown} .= 'tabOnEnter();';
+	$attr_input -> {class} .= "table-mandatory-inputs"
+		if $data -> {mandatory};
 
 	if ($data -> {autocomplete}) {
 		my $id = '' . $data -> {autocomplete};
