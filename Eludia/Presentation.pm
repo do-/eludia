@@ -1645,7 +1645,7 @@ sub draw_cells {
 				id    => $i -> {id},
 				class => 'id_checkbox row-cell',
 			},
-			off => $i -> {no_select},
+			off => $i -> {no_multi_select_checkbox},
 		};
 	}
 
