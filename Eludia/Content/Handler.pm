@@ -353,10 +353,13 @@ sub setup_request_params_for_action {
 
 sub setup_page {
 
-	my $page = {
-		subset => [],
-		menu   => [],
-	};
+	my $page = $_REQUEST {type} ? {
+			subset => [],
+			menu   => [],
+		} :	{
+			subset => setup_subset (),
+			menu   => setup_menu (),
+		};
 
 	$page -> {type} = $_REQUEST {type};
 
@@ -381,7 +384,7 @@ sub setup_page {
 
 					'showing' ;
 
-	if ($page -> {request_type} eq 'showing') {
+	if ($page -> {request_type} eq 'showing' && !@{$page -> {menu}}) {
 
 		$page -> {subset} = setup_subset ();
 		$page -> {menu}   = setup_menu ();
