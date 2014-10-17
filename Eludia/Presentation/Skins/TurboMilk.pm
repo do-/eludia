@@ -1060,6 +1060,7 @@ EOJS
 			rows=$$options{rows}
 			cols=$$options{cols}
 			name="_$$options{name}"
+			id="input_$$options{name}"
 			onchange="is_dirty=true;"
 		>$$options{value}</textarea>
 EOH
@@ -1805,6 +1806,26 @@ sub draw_toolbar_button {
 
 	my $html = '<td class="bgr0">';
 
+	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
+
+		unless ($options -> {href} =~ /^javaScript\:/i) {
+
+			$options -> {target} ||= '_self';
+
+			$options -> {href} =~ s{\%}{\%25}g;
+
+			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
+
+		}
+
+		my $code = "\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\\'$_REQUEST{__static_url}/busy.gif\\'> $i18n->{request_sent}</h2>'})";
+		$code .= ";window.setInterval(poll_invisibles, 100);" if $options -> {target} eq 'invisible';
+
+		$options -> {href} =~ s/\bnope\b/$code;nope/;
+
+		$options -> {target} = '_self';
+	}
+
 	if (@{$options -> {items}} > 0) {
 
 		$options -> {onclick} = "";
@@ -2335,14 +2356,14 @@ sub draw_centered_toolbar_button {
 
 			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
 
-			$options -> {target} = '_self';
-
 		}
 
 		my $code = "\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\\'$_REQUEST{__static_url}/busy.gif\\'> $i18n->{request_sent}</h2>'})";
+		$code .= ";window.setInterval(poll_invisibles, 100);" if $options -> {target} eq 'invisible';
 
 		$options -> {href} =~ s/\bnope\b/blockui ('', 1);nope/;
 
+		$options -> {target} = '_self';
 	}
 
 	my $nbsp = $options -> {label} ? '&nbsp;' : '';
@@ -3012,11 +3033,11 @@ sub draw_input_cell {
 	my ($_SKIN, $data, $options) = @_;
 
 	my $autocomplete;
-	my $attr_input = {
-		onBlur => 'q_is_focused = false; left_right_blocked = false;',
-		onKeyDown => 'tabOnEnter();',
-		class  => $data -> {mandatory} ? "table-mandatory-inputs" : undef,
-	};
+	my $attr_input = $data -> {attr_input} || {};
+	$attr_input -> {onBlur} .= 'q_is_focused = false; left_right_blocked = false;';
+	$attr_input -> {onKeyDown} .= 'tabOnEnter();';
+	$attr_input -> {class} .= "table-mandatory-inputs"
+		if $data -> {mandatory};
 
 	if ($data -> {autocomplete}) {
 		my $id = '' . $data -> {autocomplete};
