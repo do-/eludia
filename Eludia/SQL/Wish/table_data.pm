@@ -64,8 +64,10 @@ sub wish_to_update_demands_for_table_data {
 		next if exists $new -> {$column}
 			&& !exists ($DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$column});
 
-		my $is_updatable = !defined $original -> {$column}?
-			1 : !$DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$column} -> {__no_update};
+		my $is_updatable = 1;
+		if (defined $original -> {$column} && exists $DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$column}) {
+				$is_updatable = !$DB_MODEL -> {tables} -> {$options -> {table}} -> {columns} -> {$column} -> {__no_update};
+		}
 
 		next if exists $new -> {$column} && $is_updatable;
 
