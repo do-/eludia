@@ -169,7 +169,7 @@ sub trunc_string {
 
 	$s = decode_entities ($s) if $has_ext_chars;
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-	$s = encode_entities ($s, "<>‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars;
+	$s = encode_entities ($s, "<>‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars && $i18n -> {_charset} ne 'UTF-8';
 
 	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
 
@@ -2049,10 +2049,16 @@ sub _adjust_table_options {
 	$options -> {id_table} ||= $_REQUEST {type} . '_' . $options -> {name}
 		if $options -> {name};
 
-	if (ref $options -> {title} eq 'HASH' && exists $options -> {title} -> {label}) {
+	if (ref $options -> {title} eq 'HASH' && exists $options -> {title} -> {label} && !$options -> {id_table}) {
 
-		$options -> {id_table} ||=
-			Digest::MD5::md5_hex ($_REQUEST {type} . '_' . $options -> {title} -> {label});
+		$options -> {id_table} = $_REQUEST {type} . '_' . $options -> {title} -> {label};
+
+		utf8::encode ($options -> {id_table})
+			if $i18n -> {_charset} eq 'UTF-8';
+
+		$options -> {id_table} = Digest::MD5::md5_hex ($options -> {id_table});
+
+
 
 	}
 
@@ -2901,7 +2907,7 @@ sub draw_page {
 		$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
 		$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
 	};
-
+#darn $page;
 	$@ and return draw_error_page ($page, $@);
 
 	$_REQUEST {__only_field} ? $_SKIN -> draw_page__only_field ($page) : $_SKIN -> draw_page ($page);
@@ -3148,7 +3154,7 @@ sub gzip_if_it_is_needed (\$) {
 
 sub out_json ($) {
 
-	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
+	$_REQUEST {__content_type} ||= 'application/json; charset=' . $i18n -> {_charset};
 
 	setup_json ();
 
@@ -3201,7 +3207,7 @@ sub out_html {
 	$preconf -> {core_no_morons} or $html =~ s{window\.open}{nope}gsm;
 
 	if ($i18n -> {_charset} eq 'UTF-8') {
-		utf8::decode ($html);
+		utf8::encode ($html);
 	} else {
 		$html = Encode::encode ('windows-1252', $html);
 	}

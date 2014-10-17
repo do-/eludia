@@ -66,7 +66,22 @@ sub require_config {
 
 		open (I, $preconf -> {_} -> {site_conf} -> {path}) or die "Can't open $preconf->{_}->{site_conf}->{path}: $!\n";
 
+		my $is_utf;
+		if ($i18n -> {_charset}) {
+			$is_utf = $i18n -> {_charset} eq 'UTF-8'
+		} else {
+			my $config_path = $preconf -> {_} -> {site_conf} -> {path};
+			$config_path =~ s{conf/httpd.conf}{lib/Config.pm};
+			if (open (CONF, $config_path)) {
+				$is_utf = (join '', (<CONF>)) =~ /^\s*lang\s*=>.*UTF8/m;
+				close (CONF);
+			}
+		}
+
 		my $httpd_conf = join '', (<I>);
+		$httpd_conf = Encode::decode('windows-1251', $httpd_conf)
+			if $is_utf;
+
 
 		close (I);
 
@@ -80,7 +95,7 @@ sub require_config {
 
 		warn $perl_section;
 
-		eval $perl_section;
+		eval ($is_utf ? 'use utf8; ' : '') . $perl_section;
 
 		if ($@) {
 
@@ -273,7 +288,11 @@ sub require_scripts_of_type ($) {
 			}
 			else {
 
-				do $script -> {path};
+				if ($i18n -> {_charset} eq 'UTF-8') {
+					eval Encode::decode ($preconf -> {core_src_charset} ||= 'windows-1251', $s);
+				} else {
+					do $script -> {path};
+				}
 
 				die $@ if $@;
 
@@ -470,8 +489,20 @@ sub require_fresh {
 
 	}
 
-	foreach my $file (reverse @file_names) {
+	my $is_utf;
+	if ($local_file_name eq '/Config' && open (CONF, $file_names [0] -> {file_name})) {
 
+		$is_utf = ((join '', (<CONF>)) =~ /^\s*lang\s*=>.*UTF8/m);
+		close (CONF);
+
+	} else {
+
+		$is_utf = $i18n -> {_charset} eq 'UTF-8';
+
+	}
+warn "$local_file_name: $is_utf";
+	foreach my $file (reverse @file_names) {
+darn $file;
 		__profile_in ('require.file');
 
 		my ($file_name, $mtime, $last_modified_iso) = ($file -> {file_name}, $file -> {mtime}, $file -> {last_modified_iso});
@@ -492,6 +523,9 @@ sub require_fresh {
 
 		while (my $line = <S>) {
 
+			$line = Encode::decode ($preconf -> {core_src_charset} ||= 'windows-1251', $line)
+				if $is_utf;
+
 			$src .= $line;
 
 			$line =~ /^sub (\w+)_$type \{ # / or next;
@@ -508,7 +542,7 @@ sub require_fresh {
 
 		close (S);
 
-		eval qq{# line 1 "$file_name"\n $src \n; 1;\n};
+		eval qq{# line 1 "$file_name"\n} . ($is_utf ? "use utf8;\n" : "") . qq{$src \n; 1;\n};
 
 		if ($@) {
 
@@ -520,6 +554,10 @@ sub require_fresh {
 		$INC_FRESH {$module_name} = $INC_FRESH_BY_PATH {$file_name} = $mtime;
 
 		__profile_out ('require.file' => {label => "$file_name -> $last_modified_iso"});
+
+warn Encode::is_utf8 (fake_select () -> {empty})
+	if $file -> {file_name} eq '/var/projects/eludia/Eludia/GenericApplication/Config.pm';
+
 
 	}
 

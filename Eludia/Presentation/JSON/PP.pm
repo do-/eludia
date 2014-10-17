@@ -4,7 +4,7 @@ use JSON::PP;
 
 sub setup_json {
 
-	our $_JSON = JSON::PP -> new -> latin1 (1) -> allow_nonref (1);
+	our $_JSON = JSON::PP -> new -> allow_nonref (1) -> allow_blessed (1);
 
 }
 

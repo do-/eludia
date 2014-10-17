@@ -14,7 +14,7 @@ sub i18n {
 	our $_I18N_TYPES ||= {};
 
 	my %i18n = ();
-
+warn "Tie i18n: " . $_REQUEST {lang};
 	tie %i18n, Eludia::Tie::I18n, {
 
 		lang => $_REQUEST {lang},
@@ -28,6 +28,7 @@ sub i18n {
 }
 
 package Eludia::Tie::I18n;
+use Data::Dumper;
 
 sub lc {&{$_[0] -> {_subs} -> {lc}} ($_[1])};
 
@@ -59,7 +60,15 @@ sub TIEHASH  {
 
 	$options -> {lang} or die "LANG not defined\n";
 
-	${"Eludia::Tie::I18n::$options->{lang}"} ||= eval "require Eludia::Content::Tie::I18n::$options->{lang}";
+	unless (${"Eludia::Tie::I18n::$options->{lang}"}) {
+
+		${"Eludia::Tie::I18n::$options->{lang}"} = eval "require Eludia::Content::Tie::I18n::$options->{lang}";
+		if ($options -> {lang} =~ /UTF/i) {
+			my $hash  = Dumper (\%{${"Eludia::Tie::I18n::$options->{lang}"}});
+			$hash =~ s/^\$VAR1 = //;
+			eval qq |use utf8; \${"Eludia::Tie::I18n::$options->{lang}"} = $hash|;
+		}
+	}
 
 	$options -> {under} = ${"Eludia::Tie::I18n::$options->{lang}"};
 

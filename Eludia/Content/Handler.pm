@@ -177,6 +177,10 @@ sub setup_request_params {
 	$ENV {HTTP_HOST} = $http_host if $http_host;
 
 	get_request (@_);
+	if ($i18n -> {_charset} eq 'UTF-8') {
+		utf8::decode ($_) foreach (values %_REQUEST);
+	}
+
 	our %_REQUEST_VERBATIM = %_REQUEST;
 
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
@@ -325,11 +329,15 @@ sub setup_request_params_for_action {
 		$_REQUEST {$key} =~ s{^\s+}{};
 		$_REQUEST {$key} =~ s{\s+$}{};
 
-		my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
+		if ($i18n -> {_charset} ne 'UTF-8') {
 
-		if ($_REQUEST {$key} ne $encoded) {
-			$_REQUEST {$key} = $encoded;
-			next;
+			my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
+
+			if ($_REQUEST {$key} ne $encoded) {
+				$_REQUEST {$key} = $encoded;
+				next;
+			}
+
 		}
 
 		next if $key =~ /^_dt/;

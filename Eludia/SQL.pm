@@ -348,6 +348,7 @@ sub sql_reconnect {
 		LongReadLen => 1000000,
 		LongTruncOk => 1,
 		InactiveDestroy => 0,
+		mysql_enable_utf8 => $i18n -> {_charset} eq 'UTF-8',
 	});
 #warn "Connect: '" . $dbh -> {odbc_has_unicode} . "'\n\n\n";
 	if ($preconf -> {db_cache_statements}) {

@@ -2588,7 +2588,7 @@ sub get_super_table_cell_id {
 	}
 
 	$_REQUEST {__generated_cell_ids} ||= {};
-	my $id = Digest::MD5::md5_hex ($cell -> {label});
+	my $id = Digest::MD5::md5_hex ($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ($cell -> {label}) : $cell -> {label});
 
 	while ($_REQUEST {__generated_cell_ids} -> {$id}) {
 		$id .= '0';
@@ -3740,7 +3740,7 @@ sub __adjust_menu_item {
 	}
 
 	$type -> {id} ||= $type -> {href} eq 'undefined'?
-		Digest::MD5::md5_hex ($type -> {label})
+		Digest::MD5::md5_hex ($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ('UTF-8', $type -> {label}) : $type -> {label})
 		: $type -> {href};
 
 	$type -> {id} =~ s{[\&\?]?sid\=\d+}{};

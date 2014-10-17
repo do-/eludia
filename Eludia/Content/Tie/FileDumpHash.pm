@@ -87,6 +87,9 @@ sub FETCH_ {
 
 		while (my $line = <I>) {
 
+			$line = Encode::decode ('windows-1251', $line)
+				if $i18n -> {_charset} eq 'UTF-8';
+
 			$src .= $line;
 
 			if ($line =~ /(\w+)\s*\=\>.*?\#\s*(.*?)\s*$/sm) {
@@ -97,7 +100,9 @@ sub FETCH_ {
 
 		}
 
-		eval qq{package $options->{package};\n# line 0 "$path"\n \$VAR = {$src}}; die $@ if $@;
+		my $use_utf = $i18n -> {_charset} eq 'UTF-8' ? ' use utf8; ' : '';
+
+		eval qq{package $options->{package};$use_utf\n# line 0 "$path"\n \$VAR = {$src}}; die $@ if $@;
 		close I;
 
 		foreach my $column (values %{$VAR -> {columns}}) {

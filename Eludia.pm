@@ -948,7 +948,7 @@ BEGIN {
 
 	check_constants             ();
 	check_version               ();
-	
+
 	loading_log                 (" Running on Perl $^V ($^X)\n");
 
 	start_loading_logging       ();
