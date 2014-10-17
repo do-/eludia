@@ -70,9 +70,7 @@ sub require_config {
 		if ($i18n -> {_charset}) {
 			$is_utf = $i18n -> {_charset} eq 'UTF-8'
 		} else {
-			my $config_path = $preconf -> {_} -> {site_conf} -> {path};
-			$config_path =~ s{conf/httpd.conf}{lib/Config.pm};
-			if (open (CONF, $config_path)) {
+			if (open (CONF, config_pm_path ())) {
 				$is_utf = (join '', (<CONF>)) =~ /^\s*lang\s*=>.*UTF8/m;
 				close (CONF);
 			}
@@ -320,17 +318,7 @@ sub require_scripts {
 
 	__profile_in ('require.scripts');
 
-	my $file_name;
-
-	foreach my $dir (reverse @$PACKAGE_ROOT) {
-
-		$file_name = "$dir/Config.pm";
-
-		last if -f $file_name;
-
-	}
-
-	$file_name or die "Config.pm not found in @{[ join ',', @$PACKAGE_ROOT ]}\n";
+	my $file_name = config_pm_path ();
 
 	open (CONFIG, $file_name) || die "can't open $file_name: $!";
 
@@ -490,15 +478,13 @@ sub require_fresh {
 	}
 
 	my $is_utf;
-	if ($local_file_name eq '/Config' && open (CONF, $file_names [0] -> {file_name})) {
-
-		$is_utf = ((join '', (<CONF>)) =~ /^\s*lang\s*=>.*UTF8/m);
-		close (CONF);
-
+	if ($i18n -> {_charset}) {
+		$is_utf = $i18n -> {_charset} eq 'UTF-8'
 	} else {
-
-		$is_utf = $i18n -> {_charset} eq 'UTF-8';
-
+		if (open (CONF, config_pm_path ())) {
+			$is_utf = (join '', (<CONF>)) =~ /^\s*lang\s*=>.*UTF8/m;
+			close (CONF);
+		}
 	}
 
 	foreach my $file (reverse @file_names) {
@@ -655,5 +641,26 @@ sub attach_globals {
 	*{"${to}$_"} = *{"${from}$_"} foreach (@what);
 
 }
+
+################################################################################
+
+sub config_pm_path {
+
+	my $file_name;
+
+	foreach my $dir (reverse @$PACKAGE_ROOT) {
+
+		$file_name = "$dir/Config.pm";
+
+		last if -f $file_name;
+
+	}
+
+	$file_name or die "Config.pm not found in @{[ join ',', @$PACKAGE_ROOT ]}\n";
+
+	return $file_name;
+
+}
+
 
 1;
