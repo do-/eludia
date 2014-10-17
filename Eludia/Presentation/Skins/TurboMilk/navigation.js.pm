@@ -338,7 +338,7 @@ function check_menu_md5 (menu_md5) {
 
 	var url = window.location.href.replace (/\btype=(\w+)/, 'type=menu');
 
-	$.getScript (url + '&__only_menu=1');
+	$.getScript (url + '&__only_menu=1&__request_type=showing');
 
 }
 

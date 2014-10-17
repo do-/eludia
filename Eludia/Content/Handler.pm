@@ -376,6 +376,8 @@ sub setup_page {
 
 	$page -> {request_type} =
 
+		$_REQUEST {__request_type} ? $_REQUEST {__request_type} :
+
 		$_REQUEST {__suggest} ? 'suggest' :
 
 		$_REQUEST {action}    ? 'action'  :
