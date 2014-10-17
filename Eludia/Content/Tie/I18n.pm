@@ -14,7 +14,7 @@ sub i18n {
 	our $_I18N_TYPES ||= {};
 
 	my %i18n = ();
-warn "Tie i18n: " . $_REQUEST {lang};
+
 	tie %i18n, Eludia::Tie::I18n, {
 
 		lang => $_REQUEST {lang},

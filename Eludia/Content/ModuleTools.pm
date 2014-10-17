@@ -500,9 +500,9 @@ sub require_fresh {
 		$is_utf = $i18n -> {_charset} eq 'UTF-8';
 
 	}
-warn "$local_file_name: $is_utf";
+
 	foreach my $file (reverse @file_names) {
-darn $file;
+
 		__profile_in ('require.file');
 
 		my ($file_name, $mtime, $last_modified_iso) = ($file -> {file_name}, $file -> {mtime}, $file -> {last_modified_iso});
@@ -554,9 +554,6 @@ darn $file;
 		$INC_FRESH {$module_name} = $INC_FRESH_BY_PATH {$file_name} = $mtime;
 
 		__profile_out ('require.file' => {label => "$file_name -> $last_modified_iso"});
-
-warn Encode::is_utf8 (fake_select () -> {empty})
-	if $file -> {file_name} eq '/var/projects/eludia/Eludia/GenericApplication/Config.pm';
 
 
 	}

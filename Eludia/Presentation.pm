@@ -2907,7 +2907,7 @@ sub draw_page {
 		$page  -> {menu_data}    = Storable::dclone ($page -> {menu});
 		$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
 	};
-#darn $page;
+
 	$@ and return draw_error_page ($page, $@);
 
 	$_REQUEST {__only_field} ? $_SKIN -> draw_page__only_field ($page) : $_SKIN -> draw_page ($page);

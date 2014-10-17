@@ -2588,7 +2588,7 @@ sub get_super_table_cell_id {
 	}
 
 	$_REQUEST {__generated_cell_ids} ||= {};
-	my $id = Digest::MD5::md5_hex ($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ($cell -> {label}) : $cell -> {label});
+	my $id = Digest::MD5::md5_hex ($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ('utf-8', $cell -> {label}) : $cell -> {label});
 
 	while ($_REQUEST {__generated_cell_ids} -> {$id}) {
 		$id .= '0';
