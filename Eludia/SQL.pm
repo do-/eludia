@@ -618,6 +618,18 @@ sub sql_select_id {
 
 	exists $values -> {fake} or $values -> {fake} = 0;
 
+	my $table_model = $DB_MODEL -> {tables} -> {$table_safe};
+
+	foreach my $key (keys %$values) {
+
+		$values -> {$key} = $values -> {$key} eq '' ? undef : $values -> {$key} + 0
+			if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*int.*/);
+
+		$values -> {$key} = $values -> {$key} eq '' ? undef : $values -> {$key}
+			if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*date.*/);
+
+	}
+
 	@lookup_field_sets = (['label']) if @lookup_field_sets == 0;
 
 	my $options = ref $lookup_field_sets [-1] eq HASH ? pop @lookup_field_sets : {};
