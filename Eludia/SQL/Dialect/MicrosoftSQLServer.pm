@@ -599,11 +599,20 @@ EOS
 	}
 	my $is_set_identity_insert;
 
+	my $table = $DB_MODEL -> {tables} -> {$table_name};
+
 	foreach my $field (keys %$pairs) {
 		if ($field eq 'id' && $statement eq 'INSERT') {
 			$statement = "SET IDENTITY_INSERT $table_name ON; INSERT";
 			$is_set_identity_insert = 1;
 		}
+
+		$pairs -> {$field} = $pairs -> {$field} eq '' ? undef : $pairs -> {$field} + 0
+			if ($table -> {columns} -> {$field} -> {TYPE_NAME} =~ /.*int.*/);
+
+		$pairs -> {$field} = $pairs -> {$field} eq '' ? undef : $pairs -> {$field}
+			if ($table -> {columns} -> {$field} -> {TYPE_NAME} =~ /.*date.*/);
+
 		my $value = $pairs -> {$field};
 		my $comma = @params ? ', ' : '';
 		$fields .= "$comma $field";
