@@ -88,7 +88,7 @@ sub FETCH_ {
 		while (my $line = <I>) {
 
 			$line = Encode::decode ('windows-1251', $line)
-				if $i18n -> {_charset} eq 'UTF-8';
+				if ${"$options->{package}::i18n"} -> {_charset} eq 'UTF-8';
 
 			$src .= $line;
 

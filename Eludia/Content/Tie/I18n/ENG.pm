@@ -40,6 +40,7 @@
 	save_or_cancel           => 'Please save your data (Ctrl-Enter) or cancel pending input (Esc)',
 	infty                    => '&infin;',
 	voc                      => ' vocabulary...',
+	voc_title                => 'Vocabulary',
 	today                    => 'Today',
 	wrong_date               => 'Invalid date',
 	wrong_year               => 'Invalid year',

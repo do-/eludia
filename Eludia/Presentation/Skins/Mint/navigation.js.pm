@@ -250,7 +250,7 @@ function open_vocabulary_from_select (s, options) {
 				width           : dialog_width,
 				resizable       : true,
 				scrolling       : 'no',
-				dialogArguments : {href: options.href, parent: window},
+				dialogArguments : {href: options.href, parent: window, title: options.title},
 				onClose: function () {
 
 					var result = this.returnValue || {result: 'esc'};

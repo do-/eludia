@@ -854,7 +854,8 @@ sub draw_form_field_select {
 						message       : '$i18n->{choose_open_vocabulary}',
 						href          : '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(),
 						dialog_width  : $options->{other}->{width},
-						dialog_height : $options->{other}->{height}
+						dialog_height : $options->{other}->{height},
+						title         : '$i18n->{voc_title}'
 					}
 				);
 
@@ -1718,7 +1719,8 @@ sub draw_toolbar_input_select {
 						message       : i18n.choose_open_vocabulary,
 						href          : '$options->{other}->{href}&select=$name&salt=' + Math.random(),
 						dialog_width  : $options->{other}->{width},
-						dialog_height : $options->{other}->{height}
+						dialog_height : $options->{other}->{height},
+						title         : '$i18n->{voc_title}'
 					}
 				);
 			}
@@ -2366,7 +2368,8 @@ sub draw_select_cell {
 						message       : '$i18n->{choose_open_vocabulary}',
 						href          : '$data->{other}->{href}&select=$data->{name}&salt=' + Math.random(),
 						dialog_width  : $data->{other}->{width},
-						dialog_height : $data->{other}->{height}
+						dialog_height : $data->{other}->{height},
+						title         : '$i18n->{voc_title}'
 					}
 				);
 
