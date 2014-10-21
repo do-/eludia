@@ -63,12 +63,6 @@ sub wish_to_clarify_demands_for_table_columns {
 
 	}
 
-	if ($i -> {TYPE_NAME} eq 'DATE') {
-
-		$i -> {TYPE_NAME} = 'DATETIME';
-
-	}
-
 	if (!$i -> {NULLABLE} && !defined $i -> {COLUMN_DEF} && $i -> {name} ne 'id') {
 
 		$i -> {COLUMN_DEF} =
