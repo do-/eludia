@@ -2830,6 +2830,7 @@ EOJS
 		<input type=hidden name="__suggest" value="" />
 		$hiddens_html
 		$html
+		$$options{toolbar}
 		</form>
 EOH
 
