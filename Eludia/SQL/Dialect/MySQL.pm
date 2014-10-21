@@ -582,6 +582,16 @@ sub sql_do_update {
 	my $sql = join ', ', map {$have_fake_param ||= ($_ eq 'fake'); "$_ = ?"} @$field_list;
 	$options -> {stay_fake} or $have_fake_param or $sql .= ', fake = 0';
 
+	my $table = $DB_MODEL -> {tables} -> {$table_name};
+
+	foreach my $f (@$field_list) {
+		$_REQUEST {"_$f"} = $_REQUEST {"_$f"} eq '' ? undef : $_REQUEST {"_$f"} + 0
+			if ($table -> {columns} -> {$f} -> {TYPE_NAME} =~ /.*int.*/);
+
+		$_REQUEST {"_$f"} = $_REQUEST {"_$f"} eq '' ? undef : $_REQUEST {"_$f"}
+			if ($table -> {columns} -> {$f} -> {TYPE_NAME} =~ /.*date.*/);
+	}
+
 	$sql = "UPDATE $table_name SET $sql WHERE id = ?";
 	my @params = @_REQUEST {(map {"_$_"} @$field_list)};
 	push @params, $options -> {id};
