@@ -685,11 +685,19 @@ sub sql_select_id {
 		my @keys   = ();
 		my @values = ();
 
+		my $table_model = $DB_MODEL -> {tables} -> {$table_safe};
+
 		foreach my $key (keys %$values) {
 
 			($forced -> {$key} && $values -> {$key} ne $record -> {$key}) or $record -> {$key} eq '' or next;
 
 			$result -> {update} -> {$key} = {old => $record -> {$key}, new => $values -> {$key}};
+
+			$values -> {$key} = $values -> {$key} eq '' ? undef : $values -> {$key} + 0
+				if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*int.*/);
+
+			$values -> {$key} = $values -> {$key} eq '' ? undef : $values -> {$key}
+				if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*date.*/);
 
 			push @keys,   $key;
 			push @values, $values -> {$key};
