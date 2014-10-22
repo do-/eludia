@@ -56,7 +56,7 @@ sub sql_do_refresh_sessions {
 
 	$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
 
-	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = GETDATE() WHERE id = ? ", 0+$_REQUEST {sid});
+	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = GETDATE() WHERE id = ? ", $_REQUEST {sid});
 
 }
 
