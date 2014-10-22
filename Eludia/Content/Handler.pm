@@ -382,7 +382,7 @@ sub setup_page {
 
 	require_both $page -> {type};
 
-	$page -> {request_type} =
+	$page -> {request_type} ||=
 
 		$_REQUEST {__request_type} ? $_REQUEST {__request_type} :
 
