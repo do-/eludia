@@ -741,7 +741,6 @@ schema_loop:
 			this.is_changed = true;
 		}
 	};
-	$('#' + id).on('change', $.proxy(input_change.on_change, input_change));
 
 	var combo = $('#' + id).kendoComboBox({
 		placeholder     : options.empty,
@@ -800,6 +799,8 @@ schema_loop:
 		}
 
 	}).data('kendoComboBox');
+
+	$('#' + id + '_input').on('keypress', $.proxy(input_change.on_change, input_change));
 
 	for(var i = 0; i < values.length; i++) {
 		combo.dataSource.add ({id : values [i].id, label : values [i].label});
@@ -1283,10 +1284,9 @@ function setSelectOption (select, id, label) {
 
 	select.selectedIndex = select.options.length - 1;
 
-	window.focus ();
+	$(select).data('kendoDropDownList').select (i);
 	select.focus ();
 	$(select).change();
-	$(select).data('kendoDropDownList').refresh();
 };
 
 function blur_all_inputs () {
