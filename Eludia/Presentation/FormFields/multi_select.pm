@@ -90,7 +90,7 @@ EOJS
 				},
 				{
 					type    => 'button',
-					value   => 'Изменить',
+					value   => $i18n -> {Change},
 					onclick => <<EOJS,
 						re = /&_?salt=[\\d\\.]*/g; dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, ''); re = /&ids=[^&]*/i; dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, ''); dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&ids=' + document.getElementsByName ('_$options->{name}') [0].value;
 						$detail_from
