@@ -282,7 +282,7 @@ function open_vocabulary_from_select (s, options) {
 
 			var result = window.showModalDialog (
 				'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
-				{href: options.href, parent: window},
+				{href: options.href, parent: window, title: options.title},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
 
@@ -356,7 +356,7 @@ function open_vocabulary_from_combo (combo, options) {
 				width           : dialog_width,
 				resizable       : true,
 				scrolling       : 'no',
-				dialogArguments : {href: options.href, parent: window},
+				dialogArguments : {href: options.href, parent: window, title: options.title},
 				onClose: function () {
 
 					window.focus ();
@@ -376,7 +376,7 @@ function open_vocabulary_from_combo (combo, options) {
 
 			var result = window.showModalDialog (
 				'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
-				{href: options.href, parent: window},
+				{href: options.href, parent: window, title: options.title},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
 

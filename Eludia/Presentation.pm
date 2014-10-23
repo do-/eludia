@@ -3064,6 +3064,8 @@ sub dialog_open {
 	delete $arg -> {height} unless $arg -> {height};
 	delete $arg -> {width}  unless $arg -> {width};
 
+	$arg -> {title} ||= $i18n -> {voc_title};
+
 	foreach (qw(status resizable help)) {$options -> {$_} ||= 'no'}
 
 	$arg -> {options} = join ';', map {"$_:$options->{$_}"} keys %$options;

@@ -943,7 +943,8 @@ EOH
 						message       : i18n.choose_open_vocabulary,
 						href          : '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(),
 						dialog_width  : $options->{other}->{width},
-						dialog_height : $options->{other}->{height}
+						dialog_height : $options->{other}->{height},
+						title         : '$i18n->{voc_title}'
 					}
 				);"
 				tabindex=$tabindex
@@ -1464,7 +1465,7 @@ sub draw_toolbar {
 			icon    => 'cancel',
 			id      => 'cancel',
 			label   => $i18n -> {close},
-			href    => is_ua_mobile () ? "javaScript:var i = 0, w = parent; for (i = 0; i < 5 && w.name != '_modal_iframe'; i ++) w = w.parent; if (w.name == '_modal_iframe') w.close();" : "javaScript:top.close();",
+			href    => is_ua_mobile () ? "javaScript:var i = 0, w = parent; for (i = 0; i < 5 && w.name != '_modal_iframe'; i ++) w = w.parent; if (w.name == '_modal_iframe') w.close();" : "javaScript:window.parent.close();",
 		};
 
 		$button -> {html} = $_SKIN -> draw_toolbar_button ($button);
@@ -1713,6 +1714,7 @@ sub draw_toolbar_input_select {
 
 		$options -> {onChange} .= <<EOJS;
 			if (this.options[this.selectedIndex].value == -1) {
+
 				open_vocabulary_from_select (
 					this,
 					{
@@ -1723,10 +1725,13 @@ sub draw_toolbar_input_select {
 						title         : '$i18n->{voc_title}'
 					}
 				);
-			}
 
-			if (\$.data (this, 'prev_value') != this.selectedIndex) {
-				$submit;
+			} else {
+
+				if (\$.data (this, 'prev_value') != this.selectedIndex) {
+					$submit;
+				}
+
 			}
 EOJS
 
