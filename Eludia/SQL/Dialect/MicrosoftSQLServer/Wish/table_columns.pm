@@ -201,7 +201,7 @@ sub __genereate_sql_fragment_for_column {
 
 		$i -> {COLUMN_DEF} =~ s{'}{''}g; #';
 
-		if ($i->{COLUMN_DEF} =~ /^\w+\(\)$/) {
+		if ($i->{COLUMN_DEF} =~ /^\w+\(\)$/ || $i->{COLUMN_DEF} =~ /\d+/) {
 			$i -> {SQL_DEF} .= " DEFAULT $i->{COLUMN_DEF}";
 		} else {
 			$i -> {SQL_DEF} .= " DEFAULT '$i->{COLUMN_DEF}'";
