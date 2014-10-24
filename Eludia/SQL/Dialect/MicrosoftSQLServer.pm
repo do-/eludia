@@ -485,21 +485,31 @@ sub sql_select_subtree {
 
 	my ($table_name, $id, $options) = @_;
 
-	my @ids = ($id);
+	return sql_select_col (<<EOS);
+WITH tree(id) AS (
+	SELECT
+		id
+	FROM
+		$table_name
+	WHERE
+		fake = 0
+	AND
+		id = $id
 
-	while (TRUE) {
+	UNION ALL
 
-		my $ids = join ',', @ids;
-
-		my @new_ids = sql_select_col ("SELECT id FROM $table_name WHERE parent IN ($ids) AND id NOT IN ($ids)");
-
-		last unless @new_ids;
-
-		push @ids, @new_ids;
-
-	}
-
-	return @ids;
+	SELECT
+		subtree.id
+	FROM
+		kladr as subtree
+		, tree
+	WHERE
+		subtree.fake = 0
+	AND
+		tree.id = subtree.parent
+)
+SELECT id FROM tree
+EOS
 
 }
 
