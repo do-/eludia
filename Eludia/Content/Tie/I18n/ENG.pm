@@ -19,6 +19,7 @@
 	delete                   => 'delete',
 	download                 => 'download',
 	edit                     => 'edit',
+	error                    => 'Error',
 	'close'                  => 'close',
 	back                     => '&lt;&lt; back',
 	'next'                   => 'next &gt;&gt;',

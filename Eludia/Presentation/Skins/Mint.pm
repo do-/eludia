@@ -3204,12 +3204,17 @@ sub lrt_print {
 
 	my $_SKIN = shift;
 
-	&{$_PACKAGE . 'sql_do'} ("INSERT INTO $conf->{systables}->{__lrt} (id_session, lrt_id, label) VALUES (?, ?, ?)",
-		$_REQUEST {sid},
-		$_REQUEST {__lrt_id},
-		join '', @_,
-	);
+	open  (OUT, '>>' . $_REQUEST {__lrt_filename}) or die "Can't open $_REQUEST{__lrt_filename}:$!\n";
 
+	flock (OUT, LOCK_EX);
+
+	print OUT @_;
+
+	flock (OUT, LOCK_UN);
+
+	close OUT;
+
+	$r -> print (' ' x 100);
 
 }
 
@@ -3226,14 +3231,11 @@ sub lrt_println {
 ################################################################################
 
 sub lrt_ok {
+
 	my $_SKIN = shift;
 
-	&{$_PACKAGE . 'sql_do'} ("INSERT INTO $conf->{systables}->{__lrt} (id_session, lrt_id, label, is_error) VALUES (?, ?, ?, ?)",
-		$_REQUEST {sid},
-		$_REQUEST {__lrt_id},
-		$_[1] ? 'Îøèáêà' : 'ÎÊ',
-		$_[1] || 0,
-	);
+	$_SKIN -> lrt_print ('^:::1:::' . ($_[1] ? $i18n -> {error} : 'OK') . ':::' . ($_[1] || 0) . ':::$');
+
 }
 
 ################################################################################
@@ -3249,22 +3251,39 @@ sub lrt_start {
 
 	$_REQUEST {__lrt_id} = rand (100000);
 
+	my $mbox_path = "$preconf->{_}->{docroot}i/_mbox/by_user/$_USER->{id}";
+
+	-d $mbox_path or mkdir $mbox_path;
+
+	foreach my $file (<$mbox_path/lrt_*.txt>) {
+		unlink ($file)
+				if $file =~ /lrt_(\d+)_/ && $1 != $_REQUEST {sid};
+	}
+
+	$_REQUEST {__lrt_filename} = "$mbox_path/lrt_$_REQUEST{sid}_$_REQUEST{__lrt_id}.txt";
+
+	-f $_REQUEST {__lrt_filename} or unlink $_REQUEST {__lrt_filename};
+
+	open OUT, '>' . $_REQUEST {__lrt_filename} or die "Can't open $_REQUEST{__lrt_filename}:$!\n";
+	close OUT;
+
+
 	$r -> print (<<EOH);
 		<!doctype html>
 		<html>
 		<head>
-			<script src="/i/ken/js/jquery.min.js"></script>
+			<script src="/i/mint/libs/KendoUI/js/jquery.min.js"></script>
 
 			<script type="text/javascript">
 				if (window.name == 'invisible') {
 					window=parent;
-					parent.lrt_start ($_REQUEST{__lrt_id});
+					parent.lrt_start ("/i/_mbox/lrt_$_REQUEST{__lrt_id}.txt");
 				} else {
 					\$('head').append('<script src="$_REQUEST{__static_url}/navigation.js"></' + 'script>');
 					\$('head').append('<script src="$_REQUEST{__static_url}/jquery.blockUI.js"></' + 'script>');
 					\$('head').append('<link rel="stylesheet" href="$_REQUEST{__static_url}/eludia.css" type="text/css" />');
 
-					lrt_start ($_REQUEST{__lrt_id});
+					lrt_start ("/i/_mbox/by_user/$_USER->{id}/lrt_$_REQUEST{sid}_$_REQUEST{__lrt_id}.txt");
 				}
 			</script>
 		</head>
@@ -3302,20 +3321,13 @@ sub lrt_finish {
 
 # 	}
 	if ($options -> {kind} eq 'link') {
-		&{$_PACKAGE . 'sql_do'} ("INSERT INTO $conf->{systables}->{__lrt} (id_session, lrt_id, label, href) VALUES (?, ?, ?, ?)",
-			$_REQUEST {sid},
-			$_REQUEST {__lrt_id},
-			qq|<a style="font-size: large;" href="javascript: document.location = '$href'">$banner</a>|,
-			'fake',
-		);
+
+		$_SKIN -> lrt_print ('^:::2:::', qq|<a style="font-size: large;" href="javascript: document.location = '$href'">$banner</a>| . ':::$');
 
 	} else {
-		&{$_PACKAGE . 'sql_do'} ("INSERT INTO $conf->{systables}->{__lrt} (id_session, lrt_id, label, href) VALUES (?, ?, ?, ?)",
-			$_REQUEST {sid},
-			$_REQUEST {__lrt_id},
-			$banner,
-			$href,
-		);
+
+		$_SKIN -> lrt_print ('^:::3:::', $banner, ':::' . $href . ':::$');
+
 	}
 
 }

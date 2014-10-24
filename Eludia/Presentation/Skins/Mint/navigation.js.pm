@@ -2312,7 +2312,7 @@ function activate_suggest_fields () {
 }
 
 
-function lrt_start (lrt_id) {
+function lrt_start (filepath) {
 
 	$('head').append('<link rel="stylesheet" href="/i/mint/libs/console.css" type="text/css" />');
 
@@ -2328,36 +2328,47 @@ function lrt_start (lrt_id) {
 		var div = $('body').append ('<div class="console" style="position:absolute;z-index:2000;top:'+ top
 			+ 'px;left:' + left + 'px;width:' + width + 'px;height:' + height + 'px;"></div>');
 
-		var get_lrt_interval,
 
+		var get_lrt_interval,
+			bytes_downloaded = 0,
 			get_lrt = function () {
 				return $.ajax ({
-					url: '/',
-					data: {
-						sid : request ['sid'],
-						salt : Math.random (),
-						type : '__lrt',
-						action : 'get',
+					url     : filepath,
+					headers : {Range: 'bytes=' + bytes_downloaded + '-'},
+					success : function (data, textStatus, jqXHR) {
+						bytes_downloaded += parseInt(jqXHR.getResponseHeader ('Content-length'));
 
-						lrt_id : lrt_id,
-					},
-					dataType: 'json',
-					type: 'POST',
-					success: function (data) {
-						if (data instanceof Array) {
-							for (var i = 0; i < data.length; i ++) {
-								var item = data [i];
-								if (item.href) {
+						var cindex = 0;
+						debugger;
+
+						while (cindex < data.length) {
+							var service_message_index = data.indexOf ('^:::', cindex);
+							if (service_message_index != -1) {
+
+								var service_message_finish = data.indexOf (':::$', cindex),
+									service_message = data.substring (service_message_index + 4, service_message_finish);
+
+								cindex = service_message_finish + 4;
+
+								if (service_message.substring(0, 4) == '1:::') {
+									var message = service_message.substring(4).split (':::');
+									kendoConsole.log (message [0], message [1]);
+								} else if (service_message.substring(0, 4) == '2:::') {
 									clearInterval (get_lrt_interval);
-									if (item.href == 'fake') {
-										kendoConsole.log (item.label, item.is_error)
-									} else {
-										var f = function () {alert (item.label);window.location.href = item.href;};
-										setTimeout (f, 1000);
-									}
-								} else {
-									kendoConsole.log (item.label, item.is_error)
+									kendoConsole.log (service_message.substring(4));
+								} else if (service_message.substring(0, 4) == '3:::') {
+									clearInterval (get_lrt_interval);
+									var message = service_message.substring(4).split (':::');
+									var f = function () {alert (message [0]);window.location.href = message [1];};
+									setTimeout (f, 1000);
 								}
+
+							} else {
+
+								kendoConsole.log (data.substring (cindex));
+
+								continue;
+
 							}
 						}
 					}
