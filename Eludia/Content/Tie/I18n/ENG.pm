@@ -41,6 +41,8 @@
 	infty                    => '&infin;',
 	voc                      => ' vocabulary...',
 	today                    => 'Today',
+	wrong_date               => 'Invalid date',
+	wrong_year               => 'Invalid year',
 	wrong_month              => 'Invalid month',
 	wrong_day                => 'Invalid day',
 	wrong_hour               => 'Invalid hours',

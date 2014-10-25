@@ -1656,6 +1656,7 @@ sub draw_cells {
 				id    => $i -> {id},
 				class => 'id_checkbox row-cell',
 			},
+			off => $i -> {no_multi_select_checkbox},
 		};
 	}
 
@@ -2891,7 +2892,7 @@ sub draw_page {
 	$_REQUEST {__script}      .= "; the_page_title = '$_REQUEST{__page_title}';";
 	$_REQUEST {__on_load}     .= "; try {if (!window.top.title_set) window.top.document.title = the_page_title;} catch(e) {}";
 
-	$_REQUEST {__invisibles}   = ['invisible'];
+	push @{$_REQUEST {__invisibles}}, 'invisible';
 
 	eval {
 		$_SKIN -> {subset}       = $preconf -> {hide_subsets} ? undef : $_SUBSET;
