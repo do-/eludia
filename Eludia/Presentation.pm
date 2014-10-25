@@ -2334,7 +2334,7 @@ sub draw_table {
 		my $toolbar_options = shift @{$options -> {top_toolbar}};
 		unshift @{$options -> {top_toolbar}}, {
 			icon    => 'choose',
-			label   => 'Выбрать',
+			label   => $i18n -> {Select},
 			href    => "javascript: set_choose_ids()",
 		};
 		unshift @{$options -> {top_toolbar}}, $toolbar_options;
