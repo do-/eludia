@@ -2334,7 +2334,7 @@ sub draw_table {
 		my $toolbar_options = shift @{$options -> {top_toolbar}};
 		unshift @{$options -> {top_toolbar}}, {
 			icon    => 'choose',
-			label   => 'Выбрать',
+			label   => $i18n -> {Select},
 			href    => "javascript: set_choose_ids()",
 		};
 		unshift @{$options -> {top_toolbar}}, $toolbar_options;
@@ -2898,7 +2898,7 @@ sub draw_page {
 	$_REQUEST {__script}      .= "; the_page_title = '$_REQUEST{__page_title}';";
 	$_REQUEST {__on_load}     .= "; try {if (!window.top.title_set) window.top.document.title = the_page_title;} catch(e) {}";
 
-	$_REQUEST {__invisibles}   = ['invisible'];
+	push @{$_REQUEST {__invisibles}}, 'invisible';
 
 	eval {
 		$_SKIN -> {subset}       = $preconf -> {hide_subsets} ? undef : $_SUBSET;

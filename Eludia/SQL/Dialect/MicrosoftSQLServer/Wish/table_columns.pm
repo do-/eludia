@@ -284,31 +284,87 @@ sub wish_to_actually_recreate_table_columns {
 	foreach my $i (@$items) {
 
 		if ($i->{SQL_DEF} =~ /\bDEFAULT\b/) {
-			my $constraint_name = sql_select_scalar (<<EOS);
-				SELECT
-					dc.name
-				FROM
-					sys.default_constraints dc
-					JOIN sys.columns c ON c.default_object_id = dc.object_id
-				WHERE
-					dc.parent_object_id = OBJECT_ID('$options->{table}')
-					AND c.name = '$i->{name}'
-EOS
+			my $constraint_name = __get_constraint_name_for_column ($options -> {table}, $i -> {name});
 
 			sql_do ("ALTER TABLE $options->{table} DROP CONSTRAINT $constraint_name")
 				if $constraint_name;
+
+			foreach (__get_index_name_for_column ($options -> {table}, $i -> {name})) {
+				sql_do ("DROP INDEX [$options->{table}].[$_]");
+			}
 		}
 
-		foreach (
+		eval {
 
-			"ALTER TABLE $options->{table} ADD           mssuxx    $i->{SQL_DEF} ",
-			"UPDATE      $options->{table} SET           mssuxx =  $i->{name}",
-			"ALTER TABLE $options->{table} DROP COLUMN             $i->{name}",
-			"EXEC sp_rename '$options->{table}.mssuxx', '$i->{name}', 'COLUMN'"
+			foreach (
 
-		) { sql_do ($_) }
+				"ALTER TABLE $options->{table} ADD           mssuxx    $i->{SQL_DEF} ",
+				"UPDATE      $options->{table} SET           mssuxx =  $i->{name}",
+				"ALTER TABLE $options->{table} DROP COLUMN             $i->{name}",
+				"EXEC sp_rename '$options->{table}.mssuxx', '$i->{name}', 'COLUMN'"
+
+			) { sql_do ($_) }
+
+		};
+
+		if ($@) {
+
+			my $error = $@;
+
+			my $constraint_name = __get_constraint_name_for_column ($options -> {table}, 'mssuxx');
+
+			sql_do ("ALTER TABLE $options->{table} DROP CONSTRAINT $constraint_name")
+				if $constraint_name;
+
+			eval {
+
+				sql_do ("ALTER TABLE $options->{table} DROP COLUMN mssuxx");
+
+			};
+
+			die $error;
+
+		}
 
 	}
+
+}
+
+#############################################################################
+
+sub __get_constraint_name_for_column {
+
+	my ($table, $column) = @_;
+
+	return sql_select_scalar (<<EOS);
+		SELECT
+			dc.name
+		FROM
+			sys.default_constraints dc
+			JOIN sys.columns c ON c.default_object_id = dc.object_id
+		WHERE
+			dc.parent_object_id = OBJECT_ID('$table')
+			AND c.name = '$column'
+EOS
+
+}
+
+#############################################################################
+
+sub __get_index_name_for_column {
+
+	my ($table, $column) = @_;
+
+	my @index_names;
+
+	sql_select_loop ("exec sp_helpindex '$table'", sub {
+
+		push @index_names, lc $i -> {index_name}
+			if lc ($i -> {index_keys}) =~ /\b$column\b/;
+
+	});
+
+	return @index_names;
 
 }
 
