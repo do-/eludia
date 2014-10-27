@@ -3115,7 +3115,7 @@ EOJS
 		$body  = dump_tag (body => $body_options, $body);
 	}
 
-	return qq {<!DOCTYPE html><head>$_REQUEST{__head_links}</head>$body</html>};
+	return qq {<!DOCTYPE html><html><head>$_REQUEST{__head_links}</head>$body</html>};
 
 }
 

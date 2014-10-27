@@ -1,6 +1,7 @@
+<!DOCTYPE html>
 <html>
 	<head>
-		<meta http-equiv="X-UA-Compatible" content="IE=5">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<title>Справочник</title>
 		<script>
 			var title_set = 0;
@@ -11,16 +12,31 @@
 				window.close ();
 			}
 		</script>
+		<style>
+HTML, BODY {
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	FONT-WEIGHT: normal;
+	FONT-SIZE: 8pt;
+	COLOR: #000000;
+	background-color: #FFFFFF;
+	height:100%;
+	margin:0px;
+	padding:0px;
+	overflow: auto;
+}
+
+IFRAME {
+	height:100%;
+	width:100%;
+	display:block;
+	margin:0;
+	padding:0;
+	border: 0;
+}
+
+		</style>
 	</head>
 	<BODY
-		BGCOLOR="#FFFFFF"
-		leftMargin=0
-		topMargin=0
-		bottomMargin=0
-		rightMargin=0
-		marginwidth=0
-		marginheight=0
-		scroll=no
 		onLoad="
 			if (dialogArguments.title) {
 				document.title = dialogArguments.title;
@@ -30,7 +46,7 @@
 			open(dialogArguments.href, '_body_iframe');
 		"
 	>
-		<iframe name='_body_iframe' id='__body_iframe' src="0.html" width=100% height=100% scrolling=yes application=yes style="border: 0">
+		<iframe name='_body_iframe' id='__body_iframe' src="0.html" scrolling=yes>
 		</iframe>
 	</body>
 </html>
