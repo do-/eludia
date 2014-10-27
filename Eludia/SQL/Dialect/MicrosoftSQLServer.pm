@@ -55,7 +55,7 @@ sub sql_do_refresh_sessions {
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
 
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = GETDATE() WHERE id = ?", $_REQUEST {sid})
-		if $_REQUEST {sid};
+		if $_REQUEST {sid} > 0;
 
 }
 
