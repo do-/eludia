@@ -37,9 +37,11 @@ EOJS
 	my $replace_delimeter = $options -> {delimeter} eq '<br>' ? ''
 		:".replace(/<br>/g, \"$options->{delimeter}\");";
 
+	$options -> {span_name} ||= "ms_$options";
+
 	my $after = <<EOJS;
 		if (typeof result !== 'undefined' && result.result == 'ok') {
-			document.getElementById ('ms_$options').innerHTML=result.label$replace_delimeter;
+			document.getElementById ('$options->{span_name}').innerHTML=result.label$replace_delimeter;
 			var el_ids = document.getElementsByName ('_$options->{name}') [0];
 			var oldIds = el_ids.value;
 			el_ids.value = result.ids;
@@ -81,7 +83,7 @@ EOJS
 		}
 	}
 
-	my $onclear_js = "document.getElementById ('ms_$options').innerHTML = '';var oldValue = document.getElementsByName ('_$options->{name}') [0].value; document.getElementsByName ('_$options->{name}') [0].value = '';";
+	my $onclear_js = "document.getElementById ('$options->{span_name}').innerHTML = '';var oldValue = document.getElementsByName ('_$options->{name}') [0].value; document.getElementsByName ('_$options->{name}') [0].value = '';";
 	$onclear_js .= "if (oldValue != '') {$options->{onChange}}"
 		if $hasOnChangeEvent;
 	$onclear_js .= $js_detail;
@@ -93,7 +95,7 @@ EOJS
 			items => [
 				{
 					type  => 'static',
-					value => qq[<span id="ms_$options">] . join ($options -> {delimeter}, map {$_ -> {label}} @{$options -> {values}}) . '</span>',
+					value => qq[<span id="$options->{span_name}">] . join ($options -> {delimeter}, map {$_ -> {label}} @{$options -> {values}}) . '</span>',
 				},
 				{
 					type      => 'hidden',
