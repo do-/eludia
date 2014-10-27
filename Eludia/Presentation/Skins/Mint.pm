@@ -3272,17 +3272,17 @@ sub lrt_start {
 		<!doctype html>
 		<html>
 		<head>
+			<link rel="stylesheet" href="$_REQUEST{__static_url}/eludia.css" type="text/css">
 			<script src="/i/mint/libs/KendoUI/js/jquery.min.js"></script>
+			<script src="$_REQUEST{__static_url}/navigation.js"></script>
+			<script src="$_REQUEST{__static_url}/jquery.blockUI.js"></script>
 
 			<script type="text/javascript">
+
 				if (window.name == 'invisible') {
 					window=parent;
 					parent.lrt_start ("/i/_mbox/lrt_$_REQUEST{__lrt_id}.txt");
 				} else {
-					\$('head').append('<script src="$_REQUEST{__static_url}/navigation.js"></' + 'script>');
-					\$('head').append('<script src="$_REQUEST{__static_url}/jquery.blockUI.js"></' + 'script>');
-					\$('head').append('<link rel="stylesheet" href="$_REQUEST{__static_url}/eludia.css" type="text/css" />');
-
 					lrt_start ("/i/_mbox/by_user/$_USER->{id}/lrt_$_REQUEST{sid}_$_REQUEST{__lrt_id}.txt");
 				}
 			</script>
