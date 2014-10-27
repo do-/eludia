@@ -2339,11 +2339,14 @@ function lrt_start (filepath) {
 						bytes_downloaded += parseInt(jqXHR.getResponseHeader ('Content-length'));
 
 						var cindex = 0;
-						debugger;
 
 						while (cindex < data.length) {
 							var service_message_index = data.indexOf ('^:::', cindex);
 							if (service_message_index != -1) {
+
+								if (service_message_index > 0) {
+									kendoConsole.log (data.substring (cindex, service_message_index));
+								}
 
 								var service_message_finish = data.indexOf (':::$', cindex),
 									service_message = data.substring (service_message_index + 4, service_message_finish);
@@ -2355,7 +2358,7 @@ function lrt_start (filepath) {
 									kendoConsole.log (message [0], message [1]);
 								} else if (service_message.substring(0, 4) == '2:::') {
 									clearInterval (get_lrt_interval);
-									kendoConsole.log (service_message.substring(4));
+									kendoConsole.log (service_message.substring(4) + '<br><br><br><br><br><br>');
 								} else if (service_message.substring(0, 4) == '3:::') {
 									clearInterval (get_lrt_interval);
 									var message = service_message.substring(4).split (':::');
@@ -2367,7 +2370,7 @@ function lrt_start (filepath) {
 
 								kendoConsole.log (data.substring (cindex));
 
-								continue;
+								break;
 
 							}
 						}

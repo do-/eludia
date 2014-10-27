@@ -626,7 +626,7 @@ sub sql_select_id {
 			if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*int.*/);
 
 		$values -> {$key} = $values -> {$key} eq '' ? undef : $values -> {$key}
-			if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*date.*/);
+			if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*(date|decimal).*/);
 
 	}
 
@@ -709,7 +709,7 @@ sub sql_select_id {
 				if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*int.*/);
 
 			$values -> {$key} = $values -> {$key} eq '' ? undef : $values -> {$key}
-				if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*date.*/);
+				if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*(date|decimal).*/);
 
 			push @keys,   $key;
 			push @values, $values -> {$key};
