@@ -55,7 +55,7 @@ sub sql_do_refresh_sessions {
 	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
 
 	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = GETDATE() WHERE id = ?", $_REQUEST {sid})
-		if $_REQUEST {sid};
+		if $_REQUEST {sid} > 0;
 
 }
 
@@ -545,7 +545,7 @@ sub sql_do_update {
 			if ($table -> {columns} -> {$f} -> {TYPE_NAME} =~ /.*int.*/);
 
 		$_REQUEST {"_$f"} = $_REQUEST {"_$f"} eq '' ? undef : $_REQUEST {"_$f"}
-			if ($table -> {columns} -> {$f} -> {TYPE_NAME} =~ /.*date.*/);
+			if ($table -> {columns} -> {$f} -> {TYPE_NAME} =~ /.*(date|decimal).*/);
 	}
 
 	$sql = "UPDATE $table_name SET $sql WHERE id = ?";
@@ -620,7 +620,7 @@ EOS
 			if ($table -> {columns} -> {$field} -> {TYPE_NAME} =~ /.*int.*/);
 
 		$pairs -> {$field} = $pairs -> {$field} eq '' ? undef : $pairs -> {$field}
-			if ($table -> {columns} -> {$field} -> {TYPE_NAME} =~ /.*date.*/);
+			if ($table -> {columns} -> {$field} -> {TYPE_NAME} =~ /.*(date|decimal).*/);
 
 		my $value = $pairs -> {$field};
 		my $comma = @params ? ', ' : '';

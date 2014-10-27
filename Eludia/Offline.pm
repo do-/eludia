@@ -61,7 +61,7 @@ sub initialize_offline_script_execution {
 
 	eval 'require LockFile::Simple';
 
-	if ($LockFile::Simple::VERSION) {
+	if ($LockFile::Simple::VERSION && !$preconf -> {no_lock_offline_scripts}) {
 
 		if ($^O ne 'MSWin32') {
 
