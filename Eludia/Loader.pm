@@ -6,28 +6,28 @@ use Time::HiRes 'time';
 sub import {
 
 	my ($dummy, $root, $package, $preconf) = @_;
-	
+
 	$preconf -> {_} -> {site_conf} -> {timestamp} = time;
-	
+
 	$Eludia::last_loaded_package = $package;
-	
-	ref $root eq ARRAY or $root = [$root];	
-			
+
+	ref $root eq ARRAY or $root = [$root];
+
 	eval "use lib '$$root[0]'";
-		
+
 	${$package . '::_NEW_PACKAGE'} = $package;
 	${$package . '::_PACKAGE'}     = $package . '::';
 	${$package . '::PACKAGE_ROOT'} = $root;
 	${$package . '::preconf'}      = $preconf;
 
-	my $path = __FILE__;	
+	my $path = __FILE__;
 	$path =~ s{Loader.pm}{GenericApplication};
 
 	unshift @$root, $path;
 
 	eval "package $package; require Eludia;";
 
-	print STDERR $@ if $@;	
+	print STDERR $@ if $@;
 
 }
 

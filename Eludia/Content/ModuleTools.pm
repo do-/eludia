@@ -507,6 +507,9 @@ sub require_fresh {
 
 		open (S, $file_name);
 
+		flock (S, LOCK_SH)
+			if ($type eq 'Config');
+
 		while (my $line = <S>) {
 
 			$line = Encode::decode ($preconf -> {core_src_charset} ||= 'windows-1251', $line)
@@ -525,6 +528,9 @@ sub require_fresh {
 			$_ACTIONS -> {_actions} -> {$type} -> {$action} = $label;
 
 		}
+
+		flock (S, LOCK_UN)
+			if ($type eq 'Config');
 
 		close (S);
 
