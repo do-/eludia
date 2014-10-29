@@ -283,15 +283,13 @@ sub wish_to_actually_recreate_table_columns {
 
 	foreach my $i (@$items) {
 
-		if ($i->{SQL_DEF} =~ /\bDEFAULT\b/) {
-			my $constraint_name = __get_constraint_name_for_column ($options -> {table}, $i -> {name});
+		my $constraint_name = __get_constraint_name_for_column ($options -> {table}, $i -> {name});
 
-			sql_do ("ALTER TABLE $options->{table} DROP CONSTRAINT $constraint_name")
-				if $constraint_name;
+		sql_do ("ALTER TABLE $options->{table} DROP CONSTRAINT $constraint_name")
+			if $constraint_name;
 
-			foreach (__get_index_name_for_column ($options -> {table}, $i -> {name})) {
-				sql_do ("DROP INDEX [$options->{table}].[$_]");
-			}
+		foreach (__get_index_name_for_column ($options -> {table}, $i -> {name})) {
+			sql_do ("DROP INDEX [$options->{table}].[$_]");
 		}
 
 		eval {
