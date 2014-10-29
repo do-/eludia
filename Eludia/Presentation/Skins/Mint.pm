@@ -211,7 +211,7 @@ sub _draw_input_datetime {
 
 	return '' if $_REQUEST {__only_field};
 
-	$_REQUEST {_libs} -> {kendo} -> {datetimepicker} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {datetimepicker} = 1;
 
 	my ($_SKIN, $options) = @_;
 
@@ -428,7 +428,7 @@ sub draw_form_field_button {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {button} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {button} = 1;
 
 	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex=$tabindex>};
 
@@ -461,7 +461,7 @@ sub draw_form_field_suggest {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {autocomplete} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {autocomplete} = 1;
 
 	my $values = $_JSON -> encode ([]);
 	if (ref $options -> {values} ne 'CODE') {
@@ -525,7 +525,7 @@ sub draw_form_field_file {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {upload} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {upload} = 1;
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -582,7 +582,7 @@ sub draw_form_field_files {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {upload} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {upload} = 1;
 
 	$_REQUEST {__script} .= <<'EOJS' if $_REQUEST {__script} !~ /function number_file_fields_for_compatibility/;
 	function number_file_fields_for_compatibility (file_field) {
@@ -820,7 +820,7 @@ sub draw_form_field_select {
 	return $_SKIN -> draw_form_field_combo ($options, $data)
 		if $options -> {ds};
 
-	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
 
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
@@ -904,7 +904,7 @@ sub draw_form_field_combo {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {combobox} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {combobox} = 1;
 
 	$options -> {attributes} ||= {};
 
@@ -1064,8 +1064,8 @@ sub draw_form_field_tree {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {treeview} = 1;
-	$_REQUEST {_libs} -> {kendo} -> {splitter} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {splitter} = 1;
 
 	my %p2n = ();
 	my %i2n = ();
@@ -1342,7 +1342,7 @@ sub draw_form_field_multi_select {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {multiselect} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {multiselect} = 1;
 
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_multi_select";
@@ -1527,7 +1527,7 @@ sub draw_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {button} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {button} = 1;
 
 	my $html = <<EOH;
 		<li>
@@ -1535,7 +1535,7 @@ EOH
 
 	if ($options -> {items}) {
 
-		$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+		$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
@@ -1590,8 +1590,8 @@ sub draw_toolbar_input_tree {
 
 	my ($_SKIN, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
-	$_REQUEST {_libs} -> {kendo} -> {treeview} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
 	push @{$_REQUEST{__include_js}}, 'libs/kendo.web.ext';
 
 	my $id = "toolbar_input_tree_$options->{name}";
@@ -1685,7 +1685,7 @@ sub draw_toolbar_input_select {
 	return $_SKIN -> draw_toolbar_input_combo ($options)
 		if $options -> {ds} && !$options -> {read_only};
 
-	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
 
 	my $html = '<li class="toolbar nowrap">';
 
@@ -1770,7 +1770,7 @@ sub draw_toolbar_input_combo {
 
 	my ($_SKIN, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {combobox} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {combobox} = 1;
 
 	my $html = '<li class="toolbar nowrap">';
 
@@ -1976,7 +1976,7 @@ sub draw_toolbar_input_file {
 
 	my ($_SKIN, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {upload} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {upload} = 1;
 
 	my $html = '<li class="toolbar nowrap">';
 
@@ -2017,7 +2017,7 @@ sub draw_toolbar_pager {
 
 sub draw_toolbar_button_vert_menu {
 
-	$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
 }
 
@@ -2027,7 +2027,7 @@ sub draw_centered_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {button} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {button} = 1;
 
 	my $img_path = "$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}";
 
@@ -2188,7 +2188,7 @@ sub draw_vert_menu {
 
 	my ($_SKIN, $name, $types, $level, $is_main) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
 	[map {
 
@@ -2349,7 +2349,7 @@ sub draw_select_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
@@ -2473,7 +2473,7 @@ sub draw_input_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {autocomplete} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {autocomplete} = 1;
 
 	my $autocomplete;
 	my $attr_input = {
@@ -3076,7 +3076,7 @@ sub draw_page {
 
 	my $kendo_modules = join ',',
 		qq |"$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js"|,
-		map {qq |"kendo.$_.min"|} keys %{$_REQUEST {_libs} -> {kendo}};
+		map {qq |"kendo.$_.min"|} keys %{$_REQUEST {__libs} -> {kendo}};
 
 
 	$_REQUEST {__head_links} .= <<EOJS;
@@ -3357,8 +3357,8 @@ sub draw_tree {
 		return;
 	}
 
-	$_REQUEST {_libs} -> {kendo} -> {treeview} = 1;
-	$_REQUEST {_libs} -> {kendo} -> {splitter} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {splitter} = 1;
 
 	$options -> {name} ||= '_content_iframe';
 	$options -> {selected_node} ||= $_REQUEST {selected_node} || 1;
@@ -3375,6 +3375,8 @@ sub draw_tree {
 			</div>
 		</div>
 	};
+
+	my $js = '';
 
 	if ($options -> {top}) {
 
