@@ -685,7 +685,12 @@ EOH
 
 sub draw_form_field_password {
 	my ($_SKIN, $options, $data) = @_;
+
+	$options -> {attributes} -> {class} .= ' k-textbox ';
+	$options -> {attributes} -> {autocomplete} = 'off';
+
 	my $attributes = dump_attributes ($options -> {attributes});
+
 	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="stibqif (true)" onBlur="stibqif (false)">};
 }
 
