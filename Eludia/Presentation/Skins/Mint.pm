@@ -268,6 +268,7 @@ sub draw_form {
 				method="$$options{method}"
 				enctype="$$options{enctype}"
 				action="$_REQUEST{__uri}"
+				autocomplete="off"
 			>
 			<input type=hidden name="__suggest" value="">
 EOH
