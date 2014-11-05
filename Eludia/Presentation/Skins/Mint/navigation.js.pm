@@ -899,11 +899,6 @@ function table_row_context_menu (e, tr) {
 
 	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap" />').appendTo (document.body);
 
-	menuDiv.css ({
-		top:  e.pageY,
-		left: e.pageX
-	});
-
 	var items = $.parseJSON ($(tr).attr ('data-menu'));
 	menuDiv.kendoMenu ({
 		dataSource: items,
@@ -915,6 +910,11 @@ function table_row_context_menu (e, tr) {
 			}
 			menuDiv.remove ();
 		}
+	});
+
+	menuDiv.css ({
+		top:  browser_is_msie && $.browser.versionNumber < 10 && $(document.body).height() < e.pageY + menuDiv.height () ? $(document.body).height() - menuDiv.height () : e.pageY,
+		left: e.pageX
 	});
 
 	var width = menuDiv.width ();
@@ -2423,7 +2423,7 @@ function init_page (options) {
 				initial_data : tables_data [that.id],
 				el: $(that),
 				containerRender : function() {
-					$(that).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+					$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 					activate_suggest_fields ();
 					adjust_kendo_selects();
 					$('[data-type=datepicker]', that).each(function () {$(this).kendoDatePicker()});
