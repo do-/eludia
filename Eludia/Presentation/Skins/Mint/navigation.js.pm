@@ -912,9 +912,18 @@ function table_row_context_menu (e, tr) {
 		}
 	});
 
+	var menu_top  = e.clientY - 5 + document.body.scrollTop;
+	var menu_left = e.clientX - 5 + document.body.scrollLeft;
+
+	var is_offscreen = menu_top + $(menuDiv).height() > $(window).height();
+	if (is_offscreen) {
+		menu_top = menu_top - $(menuDiv).height();
+	}
+
+
 	menuDiv.css ({
-		top:  browser_is_msie && $.browser.versionNumber < 10 && $(document.body).height() < e.pageY + menuDiv.height () ? $(document.body).height() - menuDiv.height () : e.pageY,
-		left: e.pageX
+		top:  menu_top,
+		left: menu_left
 	});
 
 	var width = menuDiv.width ();
