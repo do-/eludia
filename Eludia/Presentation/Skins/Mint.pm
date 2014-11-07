@@ -2262,7 +2262,7 @@ sub draw_text_cell {
 	}
 
 	$data -> {attributes} -> {class} .= ' row-cell-nowrap'
-		if $data -> {attributes} -> {title} =~ /^\d+(\.\d+)?/;
+		if $data -> {attributes} -> {title} =~ /^\d+(\.\d+)?$/;
 
 	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
 
