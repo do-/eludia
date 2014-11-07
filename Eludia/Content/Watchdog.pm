@@ -180,7 +180,7 @@ sub internal_error_is_duplicate {
 		return 1;
 	}
 
-	my $max_size = $preconf -> {internal_error_duplicate_cache_size} || 10;
+	my $max_size = $preconf -> {internal_error_duplicate_cache_size} || 100;
 
 	my $time = time;
 
@@ -198,7 +198,7 @@ sub internal_error_is_duplicate {
 
 		foreach my $i (@keys [0 .. $delta + 1]) {
 
-			delete $preconf -> {_} -> {checksums} -> {internal_error} -> {$i};
+			delete $preconf -> {_} -> {checksums} -> {internal_error} -> {$i -> {md5}};
 
 		}
 
@@ -209,6 +209,8 @@ sub internal_error_is_duplicate {
 		time  => $time,
 
 		hits  => 1,
+
+		md5   => $error_md5,
 
 	};
 
