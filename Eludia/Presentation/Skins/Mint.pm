@@ -2015,7 +2015,7 @@ sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
 
-	return '<li role="header"></li>';
+	return '<li role="header" class="toolbar_pager"></li>';
 
 }
 
@@ -2260,6 +2260,9 @@ sub draw_text_cell {
 		$data -> {attributes} -> {style} = 'padding-left:' . ($data -> {level} * 15 + 3);
 
 	}
+
+	$data -> {attributes} -> {class} .= ' row-cell-nowrap'
+		if $data -> {attributes} -> {title} =~ /^\d+(\.\d+)?/;
 
 	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
 
