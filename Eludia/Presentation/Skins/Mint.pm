@@ -970,7 +970,6 @@ EOH
 		if (window.name.substring (0, 9) == 'invisible') {
 			setTimeout (
 				function () {
-					window = parent;
 					parent.do_kendo_combo_box ('$options->{attributes}->{id}', {
 						values  : $values,
 						empty   : '$options->{empty}',
