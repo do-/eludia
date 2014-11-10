@@ -2121,7 +2121,7 @@ sub draw_centered_toolbar {
 	my $colspan = 3 * (1 + $options -> {cnt}) + 1;
 
 	my $html = <<EOH;
-		<table cellspacing=0 cellpadding=0 width="100%" border=0 style="background-color: #ececec;">
+		<table class="centered_toolbar">
 			<tr>
 				<td colspan=$colspan><div style="height:8px;"></div></td>
 			</tr>
