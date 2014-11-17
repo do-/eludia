@@ -268,10 +268,11 @@ EOJS
 				continue;
 			}
 
-			if (document.getElementById('_' + codetails[i])) {
-				codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementById('_' + codetails[i]).value;
+			if (document.getElementById('input_' + codetails[i])) {
+				codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementById('input_' + codetails[i]).value;
 				continue;
 			}
+
 		}
 
 		$onchange
