@@ -636,7 +636,7 @@ function tabOnEnter () {
 }
 
 
-function adjust_kendo_selects() {
+function adjust_kendo_selects(top_element) {
 
 	var setWidth = function (el) {
 		var p = el.data("kendoDropDownList").popup.element;
@@ -677,7 +677,7 @@ function adjust_kendo_selects() {
 		setWidth ($(original_select));
 	}
 
-	$('select').not('#_setting__suggest, #_id_filter__suggest, [multiselect]')
+	$('select', top_element).not('#_setting__suggest, #_id_filter__suggest, [multiselect]')
 		.each(select_tranform)
 		.change(select_tranform);
 }
@@ -2256,9 +2256,9 @@ function poll_invisibles () {
 }
 
 
-function activate_suggest_fields () {
+function activate_suggest_fields (top_element) {
 
-	$("INPUT[data-role='autocomplete']").each (function () {
+	$("INPUT[data-role='autocomplete']", top_element).each (function () {
 		var i = $(this);
 		var id = i.attr ('id');
 
@@ -2429,15 +2429,15 @@ function init_page (options) {
 		var that = this;
 		var table_url = '/?' + options.table_url + '&__only_table=' + that.id;
 		table_url = table_url + '&__table_cnt=' + $('div.eludia-table-container').length;
-		require (['/i/mint/libs/SuperTable/supertable.min.js'], function (supertable) {
+		require (['/i/mint/libs/SuperTable/supertable.js'], function (supertable) {
 			new supertable({
 				tableUrl: table_url,
 				initial_data : tables_data [that.id],
 				el: $(that),
 				containerRender : function() {
 					$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
-					activate_suggest_fields ();
-					adjust_kendo_selects();
+					activate_suggest_fields (that);
+					adjust_kendo_selects (that);
 					$('[data-type=datepicker]', that).each(function () {$(this).kendoDatePicker()});
 					$('[data-type=datetimepicker]', that).each(function () {$(this).kendoDateTimePicker()});
 				}
