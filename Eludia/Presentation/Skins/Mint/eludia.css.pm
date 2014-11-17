@@ -31,6 +31,7 @@ FORM {
 	border: 0;
 	width: 100%;
 	height: 100%;
+	background-color: #f2f2f2;
 }
 
 .form-article {
@@ -121,13 +122,6 @@ ol, ul {list-style: none;}
 	border-width: 0px !important;
 }
 
-.k-tabstrip-items .k-tab-on-top, .k-tabstrip-items .k-state-active, .k-panelbar .k-tabstrip-items .k-state-active {
-	border-bottom: 0px;
-	margin-bottom: -1px;
-	padding-bottom: 1px;
-	font-weight: bold;
-}
-
 .k-grid-toolbar {
 	border-bottom: 1px solid #C5C5C5;
 }
@@ -140,6 +134,28 @@ A.k-button:focus {
 }
 .k-list .k-item {
 	white-space:nowrap;
+}
+
+.k-tabstrip {
+	border-bottom-width: 0 !important;
+	background-color: #fff !important;
+}
+
+.k-tabstrip-items .k-tab-on-top, .k-tabstrip-items .k-state-active, .k-panelbar .k-tabstrip-items .k-state-active {
+	border-bottom: 0px;
+	margin-bottom: -1px;
+	padding-bottom: 1px;
+	font-weight: bold;
+}
+
+.k-tabstrip-items .k-state-default {
+	border-color:#cccccc !important;
+	background-color:#fff !important;
+}
+
+.k-tabstrip-items .k-item.k-state-active {
+	background-color:#f2f2f2 !important;
+	border-bottom-color:#f2f2f2 !important;
 }
 
 .k-multiselect {
@@ -181,7 +197,7 @@ div.modal_div  > * {
 
 .table_title {
 	FONT-WEIGHT: bold;
-	FONT-SIZE: 12pt;
+	FONT-SIZE: 11pt;
 	COLOR: #2f3237;
 	background-color: #b2d2f2;
 }
@@ -339,23 +355,16 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 
 .form-active-banner, .form-passive-banner {
 	FONT-WEIGHT: bold;
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
-	COLOR: #000000;
-	background-color: #ececec;
+	FONT-SIZE: 11pt;
+	COLOR: #2f3237;
+	background-color: #f2f2f2;
 
-	padding-left: 10px;
-	padding-right: 10px;
-	padding-top: 5px;
-	padding-bottom: 5px;
+	padding: 10px 10px;
 
 	border-color: #d6d3ce;
 	border-style:solid;
 
-	border-left-width: 0px;
-	border-top-width: 0px;
-	border-right-width: 1px;
-	border-bottom-width: 1px;
+	border-width: 0 1px 1px 0;
 }
 
 .form-deleted-banner {
@@ -467,7 +476,7 @@ A.form-deleted-deleted, A.form-deleted-deleted:link, A.form-deleted-deleted:hove
 }
 
 td.form-active-inputs, td.form-passive-inputs {
-	background-color: #fcfcfc;
+	background-color: #fff;
 	padding-left: 5px;
 	padding-right: 10px;
 
@@ -480,7 +489,7 @@ td.form-active-inputs, td.form-passive-inputs {
 .form-active-deleted, .form-passive-deleted {
 	FONT-SIZE:  8pt;
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
-	background-color: #fcfcfc;
+	background-color: #fff;
 	padding-left: 5px;
 	padding-right: 10px;
 
@@ -489,7 +498,7 @@ td.form-active-inputs, td.form-passive-inputs {
 
 A.form-active-inputs, A.form-active-inputs:link, A.form-active-inputs:hover, A.form-active-inputs:visited, A.form-passive-inputs, A.form-passive-inputs:link, A.form-passive-inputs:hover, A.form-passive-inputs:visited{
 	COLOR: #293869;
-	background-color: #fcfcfc;
+	background-color: #fff;
 	padding-left: 0px;
 	padding-right: 0px;
 	TEXT-DECORATION: none;
@@ -499,11 +508,16 @@ A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, 
 	FONT-SIZE:  8pt;
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	COLOR: #293869;
-	background-color: #fcfcfc;
+	background-color: #fff;
 	padding-left: 0px;
 	padding-right: 0px;
 	TEXT-DECORATION: none;
 	border: 2px solid black;
+}
+
+.form-very-active-inputs {
+	background-color: #fff!important;
+	font-size: 13px!important;
 }
 
 INPUT {
@@ -590,4 +604,10 @@ a.hint {
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 }
 
-
+.centered_toolbar {
+	background-color: #f2f2f2;
+	padding: 0;
+	border-spacing: 0;
+	width:100%;
+	border-width: 0;
+}
