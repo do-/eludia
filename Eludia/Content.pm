@@ -472,7 +472,10 @@ sub get_user_subset_menu {
 sub check_dbl_click_start {
 
 	return
-		if !$preconf -> {core_dbl_click_protection} || substr($_REQUEST {type}, 0, 1) eq '_' || $r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest';
+		if !$preconf -> {core_dbl_click_protection}
+			|| substr($_REQUEST {type}, 0, 1) eq '_'
+			|| $r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest'
+			|| $_REQUEST {action} eq 'download';
 
 	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
 

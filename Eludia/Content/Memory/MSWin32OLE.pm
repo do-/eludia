@@ -5,6 +5,7 @@ no warnings;
 sub memory_usage {
 
     if ($main::winmgmts_cimv2_object) {
+
 	    my $processes = $main::winmgmts_cimv2_object -> ExecQuery ("select * from Win32_Process where ProcessId=$$");
 
 	    foreach my $proc (Win32::OLE::in ($processes)) {

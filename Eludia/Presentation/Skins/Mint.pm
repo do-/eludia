@@ -211,7 +211,7 @@ sub _draw_input_datetime {
 
 	return '' if $_REQUEST {__only_field};
 
-	$_REQUEST {_libs} -> {kendo} -> {datetimepicker} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {datetimepicker} = 1;
 
 	my ($_SKIN, $options) = @_;
 
@@ -268,6 +268,7 @@ sub draw_form {
 				method="$$options{method}"
 				enctype="$$options{enctype}"
 				action="$_REQUEST{__uri}"
+				autocomplete="off"
 			>
 			<input type=hidden name="__suggest" value="">
 EOH
@@ -428,7 +429,7 @@ sub draw_form_field_button {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {button} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {button} = 1;
 
 	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex=$tabindex>};
 
@@ -461,7 +462,7 @@ sub draw_form_field_suggest {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {autocomplete} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {autocomplete} = 1;
 
 	my $values = $_JSON -> encode ([]);
 	if (ref $options -> {values} ne 'CODE') {
@@ -525,7 +526,7 @@ sub draw_form_field_file {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {upload} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {upload} = 1;
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -582,7 +583,7 @@ sub draw_form_field_files {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {upload} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {upload} = 1;
 
 	$_REQUEST {__script} .= <<'EOJS' if $_REQUEST {__script} !~ /function number_file_fields_for_compatibility/;
 	function number_file_fields_for_compatibility (file_field) {
@@ -685,7 +686,12 @@ EOH
 
 sub draw_form_field_password {
 	my ($_SKIN, $options, $data) = @_;
+
+	$options -> {attributes} -> {class} .= ' k-textbox ';
+	$options -> {attributes} -> {autocomplete} = 'off';
+
 	my $attributes = dump_attributes ($options -> {attributes});
+
 	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="stibqif (true)" onBlur="stibqif (false)">};
 }
 
@@ -820,7 +826,7 @@ sub draw_form_field_select {
 	return $_SKIN -> draw_form_field_combo ($options, $data)
 		if $options -> {ds};
 
-	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
 
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
@@ -904,7 +910,7 @@ sub draw_form_field_combo {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {combobox} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {combobox} = 1;
 
 	$options -> {attributes} ||= {};
 
@@ -964,7 +970,6 @@ EOH
 		if (window.name.substring (0, 9) == 'invisible') {
 			setTimeout (
 				function () {
-					window = parent;
 					parent.do_kendo_combo_box ('$options->{attributes}->{id}', {
 						values  : $values,
 						empty   : '$options->{empty}',
@@ -1064,8 +1069,8 @@ sub draw_form_field_tree {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {treeview} = 1;
-	$_REQUEST {_libs} -> {kendo} -> {splitter} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {splitter} = 1;
 
 	my %p2n = ();
 	my %i2n = ();
@@ -1342,7 +1347,7 @@ sub draw_form_field_multi_select {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {multiselect} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {multiselect} = 1;
 
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_multi_select";
@@ -1527,7 +1532,7 @@ sub draw_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {button} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {button} = 1;
 
 	my $html = <<EOH;
 		<li>
@@ -1535,7 +1540,7 @@ EOH
 
 	if ($options -> {items}) {
 
-		$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+		$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
@@ -1590,8 +1595,8 @@ sub draw_toolbar_input_tree {
 
 	my ($_SKIN, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
-	$_REQUEST {_libs} -> {kendo} -> {treeview} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
 	push @{$_REQUEST{__include_js}}, 'libs/kendo.web.ext';
 
 	my $id = "toolbar_input_tree_$options->{name}";
@@ -1685,7 +1690,7 @@ sub draw_toolbar_input_select {
 	return $_SKIN -> draw_toolbar_input_combo ($options)
 		if $options -> {ds} && !$options -> {read_only};
 
-	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
 
 	my $html = '<li class="toolbar nowrap">';
 
@@ -1770,7 +1775,7 @@ sub draw_toolbar_input_combo {
 
 	my ($_SKIN, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {combobox} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {combobox} = 1;
 
 	my $html = '<li class="toolbar nowrap">';
 
@@ -1976,7 +1981,7 @@ sub draw_toolbar_input_file {
 
 	my ($_SKIN, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {upload} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {upload} = 1;
 
 	my $html = '<li class="toolbar nowrap">';
 
@@ -2009,7 +2014,7 @@ sub draw_toolbar_pager {
 
 	my ($_SKIN, $options) = @_;
 
-	return '<li role="header"></li>';
+	return '<li role="header" class="toolbar_pager"></li>';
 
 }
 
@@ -2017,7 +2022,7 @@ sub draw_toolbar_pager {
 
 sub draw_toolbar_button_vert_menu {
 
-	$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
 }
 
@@ -2027,7 +2032,7 @@ sub draw_centered_toolbar_button {
 
 	my ($_SKIN, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {button} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {button} = 1;
 
 	my $img_path = "$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}";
 
@@ -2116,7 +2121,7 @@ sub draw_centered_toolbar {
 	my $colspan = 3 * (1 + $options -> {cnt}) + 1;
 
 	my $html = <<EOH;
-		<table cellspacing=0 cellpadding=0 width="100%" border=0 style="background-color: #ececec;">
+		<table class="centered_toolbar">
 			<tr>
 				<td colspan=$colspan><div style="height:8px;"></div></td>
 			</tr>
@@ -2188,7 +2193,7 @@ sub draw_vert_menu {
 
 	my ($_SKIN, $name, $types, $level, $is_main) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {menu} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
 	[map {
 
@@ -2254,6 +2259,9 @@ sub draw_text_cell {
 		$data -> {attributes} -> {style} = 'padding-left:' . ($data -> {level} * 15 + 3);
 
 	}
+
+	$data -> {attributes} -> {class} .= ' row-cell-nowrap'
+		if $data -> {attributes} -> {title} =~ /^\d+(\.\d+)?$/;
 
 	my $fgcolor = $data -> {fgcolor} || $options -> {fgcolor};
 
@@ -2349,7 +2357,7 @@ sub draw_select_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {dropdownlist} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
@@ -2473,7 +2481,7 @@ sub draw_input_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	$_REQUEST {_libs} -> {kendo} -> {autocomplete} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {autocomplete} = 1;
 
 	my $autocomplete;
 	my $attr_input = {
@@ -3076,7 +3084,7 @@ sub draw_page {
 
 	my $kendo_modules = join ',',
 		qq |"$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js"|,
-		map {qq |"kendo.$_.min"|} keys %{$_REQUEST {_libs} -> {kendo}};
+		map {qq |"kendo.$_.min"|} keys %{$_REQUEST {__libs} -> {kendo}};
 
 
 	$_REQUEST {__head_links} .= <<EOJS;
@@ -3357,8 +3365,8 @@ sub draw_tree {
 		return;
 	}
 
-	$_REQUEST {_libs} -> {kendo} -> {treeview} = 1;
-	$_REQUEST {_libs} -> {kendo} -> {splitter} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {splitter} = 1;
 
 	$options -> {name} ||= '_content_iframe';
 	$options -> {selected_node} ||= $_REQUEST {selected_node} || 1;
@@ -3375,6 +3383,8 @@ sub draw_tree {
 			</div>
 		</div>
 	};
+
+	my $js = '';
 
 	if ($options -> {top}) {
 
@@ -3817,18 +3827,15 @@ sub __adjust_row_cell_style {
 	$a -> {colspan} = $data -> {colspan} if $data -> {colspan};
 	$a -> {rowspan} = $data -> {rowspan} if $data -> {rowspan};
 
-	my $alert_color = $ALERT_COLOR || '#ff9966';
-	if (($data -> {bgcolor} || $options -> {bgcolor}) eq $alert_color && !$a -> {class}) {
-		$a -> {class} = "row-cell-state-error row-cell-transparent";
-	} else {
-		$a -> {$_} ||= ($data -> {$_} || $options -> {$_}) foreach (qw (bgcolor));
-	}
-
 	$a -> {$_} ||= ($data -> {$_} || $options -> {$_}) foreach (qw (style));
 
 	unless ($a -> {style}) {
 
-		delete $a -> {style};
+		if ($options -> {bgcolor}) {
+			$a -> {style} = "background-color: " . $options -> {bgcolor};
+		} else {
+			delete $a -> {style};
+		}
 
 		$a -> {class} ||= (
 

@@ -264,10 +264,9 @@ function open_vocabulary_from_select (s, options) {
 						var kendo_select = $(s).data('kendoDropDownList');
 						kendo_select.select(0);
 						kendo_select.close();
-						window.focus ();
-						s.focus ();
+						kendo_select.focus ();
 
-						if (s.onchange()) s.onchange();
+						$(s).trigger ('change');
 
 					}
 
@@ -287,7 +286,6 @@ function open_vocabulary_from_select (s, options) {
 			);
 
 			window.focus ();
-			s.focus ();
 
 			if (result.result == 'ok') {
 
@@ -298,6 +296,9 @@ function open_vocabulary_from_select (s, options) {
 				var kendo_select = $(s).data('kendoDropDownList');
 				kendo_select.select(0);
 				kendo_select.close();
+				kendo_select.focus ();
+
+				$(s).trigger ('change');
 
 			}
 
@@ -899,11 +900,6 @@ function table_row_context_menu (e, tr) {
 
 	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap" />').appendTo (document.body);
 
-	menuDiv.css ({
-		top:  e.pageY,
-		left: e.pageX
-	});
-
 	var items = $.parseJSON ($(tr).attr ('data-menu'));
 	menuDiv.kendoMenu ({
 		dataSource: items,
@@ -915,6 +911,20 @@ function table_row_context_menu (e, tr) {
 			}
 			menuDiv.remove ();
 		}
+	});
+
+	var menu_top  = e.clientY - 5 + document.body.scrollTop;
+	var menu_left = e.clientX - 5 + document.body.scrollLeft;
+
+	var is_offscreen = menu_top + $(menuDiv).height() > $(window).height();
+	if (is_offscreen) {
+		menu_top = menu_top - $(menuDiv).height();
+	}
+
+
+	menuDiv.css ({
+		top:  menu_top,
+		left: menu_left
 	});
 
 	var width = menuDiv.width ();
@@ -1259,14 +1269,16 @@ function setSelectOption (select, id, label) {
 
 	label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...');
 
+	var drop_down_list = $(select).data('kendoDropDownList');
+
 	for (var i = 0; i < select.options.length; i++) {
 		if (select.options [i].value == id) {
 			select.options [i].innerText = label;
 			select.selectedIndex = i;
-			window.focus ();
-			select.focus ();
+			drop_down_list.select (i);
+			drop_down_list.focus ();
+			drop_down_list.refresh();
 			$(select).change();
-			$(select).data('kendoDropDownList').refresh();
 			return;
 		}
 	}
@@ -1284,8 +1296,8 @@ function setSelectOption (select, id, label) {
 
 	select.selectedIndex = select.options.length - 1;
 
-	$(select).data('kendoDropDownList').select (i);
-	select.focus ();
+	drop_down_list.select (i);
+	drop_down_list.focus ();
 	$(select).change();
 };
 
@@ -2423,7 +2435,7 @@ function init_page (options) {
 				initial_data : tables_data [that.id],
 				el: $(that),
 				containerRender : function() {
-					$(that).find('tr[data-menu]').on ('contextmenu', function (e) {event.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+					$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 					activate_suggest_fields ();
 					adjust_kendo_selects();
 					$('[data-type=datepicker]', that).each(function () {$(this).kendoDatePicker()});

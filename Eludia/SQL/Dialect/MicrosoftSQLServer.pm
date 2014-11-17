@@ -188,6 +188,10 @@ sub sql_select_all_cnt {
 		return ($result, $cnt);
 	}
 
+	if ($start == 0) {
+		$sql =~ s/SELECT[\s\r\n]/SELECT TOP $portion /i;
+	}
+
 	my $st = $db -> prepare($sql);
 
 	$st -> execute (@params);
@@ -366,9 +370,9 @@ sub sql_select_hash {
 	}
 
 #	$sql_or_table_name .= " # type='$_REQUEST{type}', id='$_REQUEST{id}', action='$_REQUEST{action}', user=$_USER->{id}";
-
 	my $st = $db -> prepare ($sql_or_table_name);
 	$st -> execute (@params);
+
 	my $result = $st -> fetchrow_hashref ();
 	$st -> finish;
 
