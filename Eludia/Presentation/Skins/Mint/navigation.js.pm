@@ -2429,7 +2429,7 @@ function init_page (options) {
 		var that = this;
 		var table_url = '/?' + options.table_url + '&__only_table=' + that.id;
 		table_url = table_url + '&__table_cnt=' + $('div.eludia-table-container').length;
-		require (['/i/mint/libs/SuperTable/supertable.js'], function (supertable) {
+		require (['/i/mint/libs/SuperTable/supertable.min.js'], function (supertable) {
 			new supertable({
 				tableUrl: table_url,
 				initial_data : tables_data [that.id],
