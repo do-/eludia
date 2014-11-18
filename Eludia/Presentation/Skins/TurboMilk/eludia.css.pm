@@ -104,6 +104,7 @@ div.checkboxes {
   cursor: default;
   background: #D7DFE6;
   font-family: tahoma,verdana,sans-serif;
+  z-index: 10000;
 }
 
 .calendar table {
