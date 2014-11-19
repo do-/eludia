@@ -536,6 +536,9 @@ TEXTAREA.k-textbox {
 
 .cbx {
 	border: 0px solid;
+	width: 16px;
+	height: 16px;
+	margin-left: 4px;
 }
 
 li.toolbar > .cbx{
