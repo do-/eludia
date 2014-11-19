@@ -3107,7 +3107,7 @@ EOJS
 			<table id="body_table">
 				<tr><td valign=top height=100%>$body</td></tr>
 			</table>
-			<div style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:100; visibility:hidden; pointer-events: none; border: solid #888888 2px;' id="slider" onContextMenu="
+			<div style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:100; display:none; pointer-events: none; border: solid #888888 2px;' id="slider" onContextMenu="
 				var c = tableSlider.get_cell ();
 				if (!c) return;
 				var tr = c.parentNode;
@@ -3116,7 +3116,7 @@ EOJS
 				if (!h) return;
 				return h(event);
 			"></div>
-			<div style='position:absolute; left:200px; top:300px; height:4px; width:4px; z-index:101; visibility:hidden; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
+			<div style='position:absolute; left:200px; top:300px; height:4px; width:4px; z-index:101; display:none; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
 		};
 		$body .= "<iframe name='$_' src='$_REQUEST{__static_url}/0.html' width=0 height=0 application='yes' style='display:none'>\n</iframe>" foreach (@{$_REQUEST{__invisibles}});
 

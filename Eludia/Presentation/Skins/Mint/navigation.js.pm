@@ -589,42 +589,9 @@ function focus_on_input (__focused_input) {
 		return;
 	}
 
-	var forms = document.forms;
-
-	if (forms != null) {
-
-		var done = 0;
-
-		for (var i = 0; i < forms.length; i++) {
-
-			var elements = forms [i].elements;
-
-			if (elements != null) {
-
-				for (var j = 0; j < elements.length; j++) {
-
-					var element = elements [j];
-
-					if (element.tagName == 'INPUT' && element.name == 'q') break;
-
-					if (
-						(element.tagName == 'INPUT'  && (element.type == 'text' || element.type == 'checkbox' || element.type == 'radio'))
-						||  element.tagName == 'TEXTAREA')
-					{
-						try {element.focus ();} catch (e) { continue; }
-						done = 1;
-						break;
-					}
-
-				}
-
-			}
-
-			if (done) break;
-
-		}
-
-	}
+	$("FORM:not('.toolbar')").find("INPUT[type='text'],INPUT[type='checkbox'],INPUT[type='radio'],TEXTAREA").each (function () {
+		try {this.focus ();} catch (e) { return true; } return false;
+	})
 
 }
 
@@ -1458,6 +1425,18 @@ function show_size(obj) {
 }
 
 
+function refresh_table_slider_on_resize () {
+
+	var d = document.body;
+
+	if (lastClientHeight == d.clientHeight && lastClientWidth == d.clientWidth) return;
+
+	tableSlider.cell_on ();
+
+	lastClientHeight = d.clientHeight;
+	lastClientWidth  = d.clientWidth;
+
+}
 
 function TableSlider (initial_row) {
 
@@ -1470,11 +1449,14 @@ function TableSlider (initial_row) {
 
 TableSlider.prototype.set_row = function (row) {
 
-	$(scrollable_table_ids).each (function (n) {
+	$('.eludia-table-container').each (function (n) {
 
-		var trs = '#' + this + ' > tbody > tr';
+		var trs = '.st-table-right-viewport tr';
 
-		$(trs).each (function (i) {
+		$(trs, this).each (function (i) {
+
+			if ($(this).hasClass("st-table-widths-row"))
+				return;
 
 			tableSlider.rows.push (this);
 
@@ -1493,9 +1475,6 @@ TableSlider.prototype.set_row = function (row) {
 
 	if (row < this.cnt) {
 		this.row = row;
-		if (numeroftables == 1) {
-			this.rows [row].scrollIntoView(false);
-		}
 	}
 
 }
@@ -1518,9 +1497,9 @@ TableSlider.prototype.get_cell = function () {
 
 TableSlider.prototype.cell_off = function (cell) {
 
-	$('#slider').css ('visibility', 'hidden');
+	$('#slider').css ('display', 'none');
 
-	$('#slider_').css ('visibility', 'hidden');
+	$('#slider_').css ('display', 'none');
 
 	return cell;
 
@@ -1534,12 +1513,14 @@ TableSlider.prototype.cell_on = function () {
 
 	if (!cell) return;
 
+	if (!is_scrolled_into_view (cell))
+		return this.cell_off (cell);
+
 	var c            = $(cell);
 	var a            = $('a', c).get (0);
-	var table        = c.parents ('table').eq (0);
-	var div          = table.parents ('div').eq (0);
+	var table        = c.closest ('table');
+	var div          = table.closest ('div.st-table-right-viewport');
 	var offset       = div.offset ();
-	var thead        = $('thead', table);
 	var css          = c.offset ();
 
 	css.width        = c.outerWidth ();
@@ -1578,37 +1559,45 @@ TableSlider.prototype.cell_on = function () {
 	})
 
 	if (
-		css.top < offset.top + thead.outerHeight ()
+		css.top < offset.top
 		|| css.top + css.height + ((div.scrollHeight > div.offsetHeight - 12) ? 16 : 0) > offset.top + div.outerHeight ()
 	) return this.cell_off (cell);
 
 	css.top        --;
 	css.left       --;
-	css.visibility = 'visible';
+	css.display = 'block';
 
 
 	$('#slider_').css ({
-		left   : css.left + css.width  - 2 - browser_is_msie,
-		top    : css.top  + css.height - 2 - browser_is_msie,
-		'visibility': 'visible'
+		left       : css.left + css.width  - 2,
+		top        : css.top  + css.height - 2,
+		display : 'block'
 	});
 
-	if (!browser_is_msie) {
-		css.width  -= 2;
-		css.height -= 2;
-	}
-	else {
-		css.width  ++;
-		css.height ++;
-	}
+	css.width  ++;
+	css.height ++;
+
 	$('#slider').css (css);
-	if (this.last_cell_id != cell) focus_on_first_input (cell);
+//	if (this.last_cell_id != cell) focus_on_first_input (cell);
 
 	this.last_cell_id = cell;
 
 	return cell;
 
 }
+
+function is_scrolled_into_view(elem) {
+	var div           = $(elem).closest ('div.st-table-right-viewport').get(0);
+	var docViewTop    = div.scrollTop;
+	var docViewBottom = docViewTop + div.offsetHeight;
+
+	var elemTop       = elem.offsetTop;
+	var elemBottom    = elemTop + elem.offsetHeight;
+
+	return ((elemBottom >= docViewTop) && (elemTop <= docViewBottom)
+		&& (elemBottom <= docViewBottom) &&  (elemTop >= docViewTop) );
+}
+
 
 function td_on_click (event) {
 
@@ -1647,7 +1636,7 @@ function td_on_click (event) {
 
 	tableSlider.cell_on (cell);
 
-	if (tableSlider.last_cell_id != cell) focus_on_first_input (cell);
+//	if (tableSlider.last_cell_id != cell) focus_on_first_input (cell);
 
 	tableSlider.last_cell_id = cell;
 
@@ -1665,17 +1654,7 @@ TableSlider.prototype.handle_keyboard = function (keyCode) {
 
 		if (!cell) return;
 
-		var children = cell.getElementsByTagName ('a');
-
-		if (children == null || children.length == 0) {
-
-			while (cell && cell.tagName != 'TR') cell = cell.parentNode;
-
-			children = cell.getElementsByTagName ('a');
-
-		}
-
-		if (children != null && children.length > 0) activate_link (children [0].href, children [0].target);
+		$(cell).trigger ('click');
 
 		return false;
 
@@ -1707,11 +1686,7 @@ TableSlider.prototype.handle_keyboard = function (keyCode) {
 
 TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 
-	// hiding the slider
-
 	this.cell_off ();
-
-	// selecting elements
 
 	var td = this.get_cell ();
 
@@ -1719,45 +1694,30 @@ TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 
 	var tr = td.parentNode;
 	if (tr.tagName == 'A') tr = tr.parentNode;
-	var table = tr.parentNode.parentNode;
-	var thead = table.tHead;
-	var div   = table.parentNode;
-
-	// checking top border
+	var table = $(tr).closest('table');
+	var div   = $(tr).closest ('div.st-table-right-viewport').get(0);
 
 	var delta = div.scrollTop - td.offsetTop + 2;
-	if (thead) delta += thead.offsetHeight;
 	if (delta > 0) div.scrollTop -= delta;
-
-	// checking bottom border
 
 	var delta = td.offsetTop - div.scrollTop;
 	if (force_top) {
-		if (thead) delta -= thead.offsetHeight;
 		delta -= td.offsetHeight;
 		delta += 8;
 	}
 	else {
 		delta -= div.offsetHeight;
 		delta += td.offsetHeight;
-//		if (div.scrollWidth > div.offsetWidth - 12) delta += 18;
 	}
 	if (delta > 0) div.scrollTop += delta;
-
-	// checking left border
 
 	var delta = div.scrollLeft - td.offsetLeft + 2;
 	if (delta > 0) div.scrollLeft -= delta;
 
-	// checking right border
-
 	var delta = td.offsetLeft - div.scrollLeft;
 	delta -= div.offsetWidth;
 	delta += td.offsetWidth;
-//	if (div.scrollHeight > div.offsetHeight - 12) delta += 18;
 	if (delta > 0) div.scrollLeft += delta;
-
-	// showing the slider
 
 	this.cell_on ();
 
@@ -2423,27 +2383,43 @@ function init_page (options) {
 	if (options.focus)
 		window.focus ();
 
+	var table_containers = $('div.eludia-table-container');
 
-	$('div.eludia-table-container').each(function() {
-
-		var that = this;
-		var table_url = '/?' + options.table_url + '&__only_table=' + that.id;
-		table_url = table_url + '&__table_cnt=' + $('div.eludia-table-container').length;
+	if (table_containers.length) {
 		require (['/i/mint/libs/SuperTable/supertable.min.js'], function (supertable) {
-			new supertable({
-				tableUrl: table_url,
-				initial_data : tables_data [that.id],
-				el: $(that),
-				containerRender : function() {
-					$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
-					activate_suggest_fields ();
-					adjust_kendo_selects();
-					$('[data-type=datepicker]', that).each(function () {$(this).kendoDatePicker()});
-					$('[data-type=datetimepicker]', that).each(function () {$(this).kendoDateTimePicker()});
-				}
-			})
+			table_containers.each (function() {
+				var that = this;
+				var table_url = '/?' + options.table_url + '&__only_table=' + that.id;
+				table_url = table_url + '&__table_cnt=' + table_containers.length;
+
+				new supertable({
+					tableUrl: table_url,
+					initial_data : tables_data [that.id],
+					el: $(that),
+					containerRender : function() {
+						$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+						activate_suggest_fields ();
+						adjust_kendo_selects();
+						$('[data-type=datepicker]', that).each(function () {$(this).kendoDatePicker()});
+						$('[data-type=datetimepicker]', that).each(function () {$(this).kendoDateTimePicker()});
+					}
+				})
+			});
+
+			tableSlider.set_row (parseInt (options.__scrollable_table_row));
+
+			$(body).scroll(function() {tableSlider.cell_on ();});
+			$(".st-table-right-viewport").scroll(function() {tableSlider.cell_on ();});
+
+			if (typeof tableSlider.row === 'number') {
+				var view_row = tableSlider.rows.length > tableSlider.row + 1 ? tableSlider.row + 1 : tableSlider.row;
+				tableSlider.rows [view_row].scrollIntoView(false);
+				tableSlider.cell_on ();
+			}
+
 		});
-	});
+	}
+
 
 	var splitted_tree_window = $("#splitted_tree_window");
 	if (splitted_tree_window.length) {
@@ -2475,15 +2451,9 @@ function init_page (options) {
 		})
 	}
 
-
-
-	tableSlider.set_row (options.__scrollable_table_row);
-
 	activate_suggest_fields ();
 
 	$(window).resize ();
-
-	tableSlider.scrollCellToVisibleTop ();
 
 	focus_on_input (options.__focused_input);
 
@@ -2502,6 +2472,13 @@ function init_page (options) {
 	}
 
 	adjust_kendo_selects ();
+
+	$('textarea').each (function () {
+		var h = $(this).height();
+		$(this).height(0);
+		h = this.scrollHeight > h ? this.scrollHeight : h;
+		$(this).height(h);
+	});
 
 	$('[data-type=datepicker]').each(function () {$(this).kendoDatePicker()});
 	$('[data-type=datetimepicker]').each(function () {$(this).kendoDateTimePicker()});
@@ -2580,6 +2557,10 @@ function init_page (options) {
 	$(window).on ('beforeunload', function (event) {
 		setCursor (window, 'wait');
 		try {top.setCursor (top, 'wait')} catch (e) {};
+	});
+
+	$(window).on ('resize', function (event) {
+		setTimeout (refresh_table_slider_on_resize, 500) ;
 	});
 
 	require (['/i/_skins/Mint/jquery.blockUI.js']);
