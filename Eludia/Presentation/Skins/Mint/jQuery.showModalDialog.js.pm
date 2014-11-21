@@ -92,7 +92,8 @@
                 if ($modalWindow) {
 
                     var maxTitleLength = 50; // max title length
-                    var title = $(this).contents().find("title").html(); // get target page's title
+                    var title = $(this).contents().find("title").text(); // get target page's title
+                    title = $("<div/>").html(title).text();
 
                     if (title.length > maxTitleLength) {
                         // trim title to max length

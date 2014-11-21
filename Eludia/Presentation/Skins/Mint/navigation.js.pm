@@ -2412,7 +2412,7 @@ function init_page (options) {
 			$(body).scroll(function() {tableSlider.cell_on ();});
 			$(".st-table-right-viewport").scroll(function() {tableSlider.cell_on ();});
 
-			if (typeof tableSlider.row === 'number') {
+			if (typeof tableSlider.row === 'number' && tableSlider.rows.length > tableSlider.row) {
 				var view_row = tableSlider.rows.length > tableSlider.row + 1 ? tableSlider.row + 1 : tableSlider.row;
 				tableSlider.rows [view_row].scrollIntoView(false);
 				tableSlider.cell_on ();

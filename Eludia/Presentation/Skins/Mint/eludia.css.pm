@@ -194,6 +194,7 @@ div.modal_div  > * {
 }
 
 .ui-dialog { z-index: 1100 !important ;}
+.ui-widget-header{background: #479feb !important;}
 
 .table_title {
 	FONT-WEIGHT: bold;
