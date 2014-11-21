@@ -178,12 +178,12 @@ A.k-button:focus {
 }
 
 .menuFonDark.k-header {
-       background-color:#A6AFBE;
+       background-color:#f2f2f2;
        border-color: #A6AFBE;
        border-width: 2px;
 }
 .menuFonDark .k-state-hover{
-       background-color:#117cc0 !important;
+       background-color:#b2d2f2 !important;
 }
 .menuFonDark .k-link:link {
        color: #263248;

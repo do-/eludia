@@ -1931,7 +1931,7 @@ if (!Array.prototype.pop) {
 
 
 // converts received flat data to hierarhy required by kendoTreeView
-function treeview_convert_plain_response(response) {
+function treeview_convert_plain_response (response) {
 
 	if (!response) {
 		return [];
@@ -1985,7 +1985,7 @@ function treeview_convert_plain_response(response) {
 	return first_level_nodes;
 }
 
-function treeview_select_node_by_id(treeview, id_node) {
+function treeview_select_node_by_id (treeview, id_node) {
 
 	var item = treeview.dataSource.get (id_node);
 	if (item) {
@@ -1994,10 +1994,9 @@ function treeview_select_node_by_id(treeview, id_node) {
 	}
 }
 
-function treeview_oncontextmenu(e) {
+function treeview_oncontextmenu (e) {
 
 	e.stopPropagation ();
-
 
 	var uid = $(this).data('uid');
 
@@ -2005,8 +2004,8 @@ function treeview_oncontextmenu(e) {
 	var treeview = tree_div.data ("kendoTreeView");
 
 	var node = treeview.findByUid (uid);
+	var prev_selected_node = treeview.select ();
 	treeview.select (node);
-	treeview_onselect_node (node);
 
 	var data = treeview.dataSource.getByUid(uid);
 	if (!data) return false;
@@ -2060,7 +2059,9 @@ function treeview_oncontextmenu(e) {
 	});
 
 	var kill = window.setTimeout (function () {
-		menuDiv.remove ()
+		if (node.get (0) == treeview.select ().get(0))
+			treeview.select (prev_selected_node);
+		menuDiv.remove ();
 	}, 3000);
 
 	menuDiv.hover (
@@ -2069,6 +2070,8 @@ function treeview_oncontextmenu(e) {
 		},
 		function () {
 			window.setTimeout (function () {
+				if (node.get (0) == treeview.select ().get(0))
+					treeview.select (prev_selected_node);
 				menuDiv.remove ()
 			}, 1000);
 		}
@@ -2093,6 +2096,7 @@ function treeview_onexpand (e) {
 
 
 function treeview_onselect_node (node) {
+
 	var treeview = $("#splitted_tree_window_left").data ("kendoTreeView");
 	node = treeview.dataItem (node);
 	if (!node || !node.href) return;
@@ -2146,6 +2150,7 @@ function treeview_get_node_uid_by_id(node, id) {
 }
 
 function treeview_select_node(e) {
+
 	var tree = $('#splitted_tree_window_left');
 	var selected_node = tree.data ('selected-node');
 	if (!selected_node) {
