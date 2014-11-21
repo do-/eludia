@@ -555,7 +555,7 @@ span.get_down_the_text_1 {
 }
 
 input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs {
-	FONT-SIZE: 8pt;
+	FONT-SIZE: 13px;
 	COLOR: #000000;
 	background-color: #ffffff;
 	border: 1px #7f9db9 solid;
@@ -563,7 +563,7 @@ input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs
 	padding-right: 3px;
 }
 input.form-active-deleted, select.form-active-deleted, textarea.form-active-deleted {
-	FONT-SIZE: 8pt;
+	FONT-SIZE: 13px;
 	COLOR: #000000;
 	background-color: #ffffff;
 	border: 1px #7f9db9 solid;
@@ -572,7 +572,7 @@ input.form-active-deleted, select.form-active-deleted, textarea.form-active-dele
 }
 
 input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
-	FONT-SIZE: 8pt;
+	FONT-SIZE: 13px;
 	COLOR: #000000;
 	background-color: #f7f7ad;
 	border: 1px #7f9db9 solid;
@@ -580,7 +580,7 @@ input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandato
 	padding-right: 3px;
 }
 input.form-mandatory-deleted, select.form-mandatory-deleted, textarea.form-mandatory-deleted {
-	FONT-SIZE: 8pt;
+	FONT-SIZE: 13px;
 	COLOR: #000000;
 	background-color: #f7f7ad;
 	border: 2px solid black;
