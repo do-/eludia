@@ -528,6 +528,9 @@ INPUT {
 INPUT.k-textbox {
 	width: auto;
 }
+LABEL {
+	font-size: 13px;
+}
 
 TEXTAREA.k-textbox {
 	margin-bottom:0pt;
