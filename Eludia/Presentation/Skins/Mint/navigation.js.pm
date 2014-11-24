@@ -1588,14 +1588,21 @@ TableSlider.prototype.cell_on = function () {
 
 function is_scrolled_into_view(elem) {
 	var div           = $(elem).closest ('div.st-table-right-viewport').get(0);
-	var docViewTop    = div.scrollTop;
-	var docViewBottom = docViewTop + div.offsetHeight;
+	var divViewTop    = div.scrollTop;
+	var divViewBottom = divViewTop + div.offsetHeight;
 
 	var elemTop       = elem.offsetTop;
-	var elemBottom    = elemTop + elem.offsetHeight;
+	var elemBottom    = elemTop + elem.offsetHeight + 2;
 
-	return ((elemBottom >= docViewTop) && (elemTop <= docViewBottom)
-		&& (elemBottom <= docViewBottom) &&  (elemTop >= docViewTop) );
+	var docViewTop    = $(window).scrollTop();
+	var docViewBottom = docViewTop + Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	var elemDocTop    = $(elem).offset ().top;
+	var elemDocBottom = elemDocTop + elem.offsetHeight + 2;
+
+	return ((elemBottom >= divViewTop) && (elemTop <= divViewBottom)
+		&& (elemBottom <= divViewBottom) &&  (elemTop >= divViewTop))
+		&& ((elemDocBottom >= docViewTop) && (elemDocTop <= docViewBottom)
+		&& (elemDocBottom <= docViewBottom) &&  (elemDocTop >= docViewTop));
 }
 
 
@@ -2568,6 +2575,8 @@ function init_page (options) {
 	$(window).on ('resize', function (event) {
 		setTimeout (refresh_table_slider_on_resize, 500) ;
 	});
+
+	$(window).on ('scroll', function (event) {try {tableSlider.cell_on ();} catch(e) {};});
 
 	require (['/i/_skins/Mint/jquery.blockUI.js']);
 
