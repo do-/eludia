@@ -578,7 +578,7 @@ input.form-active-deleted, select.form-active-deleted, textarea.form-active-dele
 input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
 	FONT-SIZE: 13px;
 	COLOR: #000000;
-	background-color: #f7f7ad;
+	background-color: #f7f7ad !important;
 	border: 1px #7f9db9 solid;
 	padding-left: 3px;
 	padding-right: 3px;

@@ -668,6 +668,16 @@ sub draw_form_field_text {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
+	my $url = 'mint/libs/jquery.autosize.min';
+
+	unless (grep {$_ eq $url} @{$_REQUEST {__include_js}}) {
+
+		push @{$_REQUEST{__include_js}}, $url;
+
+		$_REQUEST {__on_load} .= ';$("textarea").autosize();';
+
+	}
+
 	return <<EOH;
 		<textarea
 			$attributes
