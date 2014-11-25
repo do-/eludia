@@ -3226,7 +3226,11 @@ sub lrt_print {
 
 	flock (OUT, LOCK_EX);
 
-	print OUT @_;
+	if ($i18n -> {_charset} ne 'UTF-8') {
+		print OUT Encode::decode ('windows-1251', $_) foreach @_
+	} else {
+		print OUT @_;
+	}
 
 	flock (OUT, LOCK_UN);
 
@@ -3264,7 +3268,7 @@ sub lrt_start {
 
 	$|=1;
 
-	$r -> content_type ('text/html; charset=windows-1251');
+	$r -> content_type ("text/html; charset=$i18n->{_charset}");
 	$r -> send_http_header ();
 
 	$_REQUEST {__lrt_id} = rand (100000);
