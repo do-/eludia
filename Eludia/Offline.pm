@@ -33,26 +33,28 @@ sub lock_file_name () {
 
 sub initialize_offline_script_execution {
 
-	my $user = $_[0];
+	my $preconf = $_[0];
+
+	my $user = $preconf -> {user};
 
 	my $current_uid = getuid();
 
 	my $new_uid,$new_gid;
-	
+
 	if ($user && $^O ne 'MSWin32') {
-	
+
 		my ($pwName, $pwCode, $pwUid, $pwGid, $pwQuota, $pwComment, $pwGcos, $pwHome, $pwLogprog) = getpwnam($user);
-		
+
 		if ($pwUid != $current_uid && $current_uid != 0) {
-		
+
 			warn "Can't change uid to '$user', cos you are not root user.";
 			exit;
-		
+
 		} 
-		
+
 		$new_uid = $pwUid;
 		$new_gid = $pwGid;
-	
+
 	}
 
 	our $lock_file_dir = $^O eq 'MSWin32' ? "" : "/var/run/eludia_" . ($user ? $user : getpwuid($<)) . "/";
@@ -60,48 +62,48 @@ sub initialize_offline_script_execution {
 	$ENV {ELUDIA_SILENT} or warn "\n" . offline_script_log_signature . " starting...\n";
 
 	eval 'require LockFile::Simple';
-	
-	if ($LockFile::Simple::VERSION) {
+
+	if ($LockFile::Simple::VERSION && !$preconf -> {no_lock_offline_scripts}) {
 
 		if ($^O ne 'MSWin32') {
-		
+
 			unless ( -d $lock_file_dir ) {
-			
+
 				unless ( mkdir $lock_file_dir ) {
-				
+
 					warn "Can't create directory $lock_file_dir. Quit.\n";
-					
+
 					exit;
-				
+
 				}
 
 			}
 
 			if ( $new_uid ) {
-			
+
 				unless (chown ($new_uid, $new_gid, $lock_file_dir)) {
-				
+
 					warn "Can't change owner to $lock_file_dir. Quit.\n";
-					
+
 					exit;
-				
+
 				}
-				
+
 				setgid ($new_gid);
 				setuid ($new_uid);
-			
+
 			}
-		
+
 		}
 
 		our $LOCK_MANAGER = LockFile::Simple -> make (
-		
+
 			-autoclean => 1,
-			
+
 			-stale => 1,
-			
+
 		);
-		
+
 		my $fn = $lock_file_dir . lock_file_name;
 
 		unless ($LOCK_MANAGER -> trylock ($fn)) {
@@ -213,9 +215,7 @@ BEGIN {
 
 	$package = $Eludia::last_loaded_package if $package eq 'main';
 
-	my $user = ${$package . '::preconf'}->{user};
-
-	initialize_offline_script_execution ($user);
+	initialize_offline_script_execution (${$package . '::preconf'});
 
 	$code = qq {
 	
