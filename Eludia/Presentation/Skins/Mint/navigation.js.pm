@@ -865,7 +865,7 @@ function setup_drop_down_button (id, data) {
 
 function table_row_context_menu (e, tr) {
 
-	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap" />').appendTo (document.body);
+	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap;top:0;left:0" />').appendTo (document.body);
 
 	var items = $.parseJSON ($(tr).attr ('data-menu'));
 	menuDiv.kendoMenu ({
@@ -880,8 +880,11 @@ function table_row_context_menu (e, tr) {
 		}
 	});
 
-	var menu_top  = e.clientY - 5 + document.body.scrollTop;
-	var menu_left = e.clientX - 5 + document.body.scrollLeft;
+	var tr_offset = $(tr).offset ();
+	var tr_height = $(tr).height ();
+
+	var menu_top  = e.pageY >= tr_offset.top && e.pageY <= tr_offset.top + tr_height ? e.pageY - 5 : e.clientY - 5;
+	var menu_left = e.pageX - 5;
 
 	var is_offscreen = menu_top + $(menuDiv).height() > $(window).height();
 	if (is_offscreen) {
@@ -1462,8 +1465,7 @@ TableSlider.prototype.set_row = function (row) {
 
 			$('td', this).each (function (j) {
 
-				this.onclick = td_on_click;
-				this.oncontextmenu = td_on_click;
+				$(this).on ('click oncontextmenu', td_on_click);
 
 			})
 
