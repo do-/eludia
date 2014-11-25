@@ -283,15 +283,20 @@ sub require_scripts_of_type ($) {
 
 				);
 
-			}
-			else {
+			} elsif ($i18n -> {_charset} ne 'UTF-8') {
 
-				if ($i18n -> {_charset} eq 'UTF-8') {
-					eval Encode::decode ($preconf -> {core_src_charset} ||= 'windows-1251', $s);
-				} else {
-					do $script -> {path};
-				}
+				do $script -> {path};
+				die $@ if $@;
 
+			} else {
+
+				my $s = '';
+
+				open (F, $script -> {path}) or die "Can't open $script->{path}: $!\n";
+				while (<F>) {$s .= $_};
+				close (F);
+
+				eval Encode::decode ($preconf -> {core_src_charset} ||= 'windows-1251', $s);
 				die $@ if $@;
 
 			}
