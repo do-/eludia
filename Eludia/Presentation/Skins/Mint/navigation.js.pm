@@ -1465,7 +1465,7 @@ TableSlider.prototype.set_row = function (row) {
 
 			$('td', this).each (function (j) {
 
-				$(this).on ('click oncontextmenu', td_on_click);
+				$(this).on ('click contextmenu', td_on_click);
 
 			})
 
@@ -1649,7 +1649,7 @@ function td_on_click (event) {
 
 	tableSlider.last_cell_id = cell;
 
-	return false;
+	return true;
 
 }
 
