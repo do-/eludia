@@ -222,6 +222,9 @@ sub _draw_input_datetime {
 	$options -> {onChange}   ||= 'null';
 	$options -> {onKeyPress} ||= 'if (event.keyCode != 27) is_dirty=true';
 
+	$options -> {attributes} -> {class} .= ' form-mandatory-inputs'
+		if $options -> {mandatory} ;
+
 	$options -> {attributes} -> {class} ||= 'form-active-inputs';
 
 	my $attributes = dump_attributes ($options -> {attributes});
@@ -2369,6 +2372,9 @@ sub draw_select_cell {
 
 	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
 
+	my $s_attributes -> {class} = "form-mandatory-inputs" if $data -> {mandatory};
+	$s_attributes = dump_attributes ($s_attributes);
+
 	my $attributes = dump_attributes ($data -> {attributes});
 
 	my $multiple = $data -> {rows} > 1 ? "multiple size=$$data{rows}" : '';
@@ -2405,6 +2411,7 @@ EOJS
 	my $id_select = $data -> {id} || "_$data->{name}_select";
 
 	my $html = qq {<td $attributes><select
+		$s_attributes
 		id="$id_select"
 		name="$$data{name}"
 		onChange="is_dirty=true; $$data{onChange}"
@@ -2495,9 +2502,13 @@ sub draw_input_cell {
 
 	my $autocomplete;
 	my $attr_input = {
-		onBlur => 'q_is_focused = false; left_right_blocked = false;',
-		onKeyDown => 'tabOnEnter();'
+		onBlur    => 'q_is_focused = false; left_right_blocked = false;',
+		onKeyDown => 'tabOnEnter();',
+		class     => 'k-textbox',
 	};
+	$attr_input -> {class} .= ' table-mandatory-inputs'
+		if $data -> {mandatory};
+
 
 	if ($data -> {autocomplete}) {
 		my $a_options = $data -> {autocomplete};
@@ -2668,7 +2679,8 @@ sub draw_super_table__only_table {
 
 	my $html = "<table id='$$options{id_table}'>";
 
-	$html .= $options -> {header} if $options -> {header};
+	$options -> {header} ||= '<thead></thead>';
+	$html .= $options -> {header};
 
 	$html .= qq {<tbody>};
 
@@ -2801,6 +2813,9 @@ sub draw_super_table__only_table {
 				unless $cell -> {width};
 		}
 	}
+
+	$is_set_all_headers_width = 0
+		unless @{$matrix -> [0]};
 
 
 	my $table = {

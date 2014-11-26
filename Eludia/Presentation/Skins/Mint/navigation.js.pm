@@ -802,7 +802,7 @@ function setup_drop_down_button (id, data) {
 			window.setTimeout(function () {hide_dropdown_button (id);}, 100);
 			return;
 		}
-		if (relTarg.id !== "ul_" + id)
+		if (relTarg.id !== "ul_" + id && $(relTarg).closest('#ul_' + id).length == 0)
 			hide_dropdown_button (id);
 	});
 
@@ -2171,7 +2171,7 @@ function treeview_select_node(e) {
 	if (!root.length)
 		return;
 
-	var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node);
+	var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node) || root[0].uid;
 	if(selected_node_uid){
 		var select_node = treeview.findByUid(selected_node_uid);
 		if (select_node) {

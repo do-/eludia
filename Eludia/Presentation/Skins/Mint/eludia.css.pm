@@ -215,6 +215,9 @@ div.modal_div  > * {
 	border-right: 2px solid #f2f2f2 !important;
 }
 
+.st-table-pre-render select, .st-table-pre-render input[data-type="datepicker"] {
+	margin: 5px 15px !important;
+}
 
 A.button, A.button:link, A.button:active, A.button:hover, A.button:visited {
 	FONT-WEIGHT: normal; FONT-SIZE: 8pt; COLOR: #232324; FONT-FAMILY: Tahoma, 'MS Sans Serif'; TEXT-DECORATION: none
