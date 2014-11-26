@@ -2269,7 +2269,7 @@ sub draw_text_cell {
 
 	if (defined $data -> {level}) {
 
-		$data -> {attributes} -> {style} = 'padding-left:' . ($data -> {level} * 15 + 3);
+		$data -> {attributes} -> {style} .= ';padding-left:' . ($data -> {level} * 15 + 3);
 
 	}
 
@@ -3884,6 +3884,8 @@ sub __adjust_row_cell_style {
 
 		$a -> {class} .= '-no-scroll' if ($data -> {no_scroll} && $data -> {attributes} -> {class} =~ /row-cell/);
 
+	} elsif ($options -> {bgcolor}) {
+		$a -> {style} .= ";background-color: " . $options -> {bgcolor};
 	}
 
 }

@@ -2417,6 +2417,13 @@ function init_page (options) {
 						adjust_kendo_selects (that);
 						$('[data-type=datepicker]', that).each(function () {$(this).kendoDatePicker()});
 						$('[data-type=datetimepicker]', that).each(function () {$(this).kendoDateTimePicker()});
+
+						if (tableSlider.get_cell ()) {
+							tableSlider.cell_off ();
+							tableSlider = new TableSlider ();
+							tableSlider.set_row (0);
+							tableSlider.cell_on ();
+						}
 					}
 				})
 			});

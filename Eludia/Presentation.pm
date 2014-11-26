@@ -1647,6 +1647,20 @@ sub draw_cells {
 
 	}
 
+	if ($_REQUEST {select} && !$options -> {select_label}) {
+
+		foreach my $cell (@$row) {
+
+			next if $cell -> {no_select_href} ||  $cell    -> {label}        eq '';
+
+			$cell         -> {select_href}    and $options -> {select_label} =  $cell -> {label} and last;
+
+			$options      -> {select_label}   ||= $cell    -> {label};
+
+		}
+
+	}
+
 	my @cells = order_cells (@$row);
 
 	if ($_REQUEST {__multi_select_checkbox} == 1) {
@@ -1691,20 +1705,6 @@ sub draw_cells {
 			$cell -> {icon}           ? 'button'   :
 			exists $cell -> {checked} ? 'checkbox' :
 			'text';
-
-	}
-
-	if ($_REQUEST {select} && !$options -> {select_label}) {
-
-		foreach my $cell (@cells) {
-
-			next if $cell -> {no_select_href} ||  $cell    -> {label}        eq '';
-
-			$cell         -> {select_href}    and $options -> {select_label} =  $cell -> {label} and last;
-
-			$options      -> {select_label}   ||= $cell    -> {label};
-
-		}
 
 	}
 
