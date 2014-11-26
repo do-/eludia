@@ -3525,7 +3525,12 @@ sub draw_tree {
 			}
 
 		});
-		\$("#splitted_tree_window_left").data("kendoTreeView").bind("dataBound", treeview_select_node);
+
+		if ($$options{active}) {
+			\$("#splitted_tree_window_left").data("kendoTreeView").bind("dataBound", treeview_select_node);
+		} else {
+			treeview_select_node ();
+		}
 		\$( document ).on( 'contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu );
 
 	};
