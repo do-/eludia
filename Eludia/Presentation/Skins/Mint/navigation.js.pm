@@ -2430,7 +2430,13 @@ function init_page (options) {
 
 			tableSlider.set_row (parseInt (options.__scrollable_table_row));
 
-			$(body).scroll(function() {tableSlider.cell_on ();});
+			$(body).scroll(function() {
+				$(document.body).find("[data-role=popup]").each(function() {
+					var popup = $(this).data("kendoPopup");
+					popup.close();
+				});
+				tableSlider.cell_on ();
+			});
 			$(".st-table-right-viewport").scroll(function() {tableSlider.cell_on ();});
 
 			if (typeof tableSlider.row === 'number' && tableSlider.rows.length > tableSlider.row) {
