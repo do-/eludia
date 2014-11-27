@@ -871,8 +871,8 @@ function table_row_context_menu (e, tr) {
 	menuDiv.kendoMenu ({
 		dataSource: items,
 		orientation: 'vertical',
-		select: function (e) {
-			var selected_url = items [$(e.item).index()].url;
+		select: function (event) {
+			var selected_url = items [$(event.item).index()].url;
 			if (selected_url.match(/^javascript:/)) {
 				eval (selected_url);
 			}
@@ -2445,6 +2445,8 @@ function init_page (options) {
 				tableSlider.cell_on ();
 			}
 
+			options.on_load ();
+
 		});
 	}
 
@@ -2592,6 +2594,10 @@ function init_page (options) {
 	});
 
 	$(window).on ('scroll', function (event) {try {tableSlider.cell_on ();} catch(e) {};});
+
+	if (table_containers.length == 0) {
+		options.on_load ();
+	}
 
 	require (['/i/_skins/Mint/jquery.blockUI.js']);
 

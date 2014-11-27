@@ -2496,8 +2496,6 @@ sub draw_input_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	$_REQUEST {__libs} -> {kendo} -> {autocomplete} = 1;
-
 	my $autocomplete;
 	my $attr_input = {
 		onBlur    => 'q_is_focused = false; left_right_blocked = false;',
@@ -2509,6 +2507,9 @@ sub draw_input_cell {
 
 
 	if ($data -> {autocomplete}) {
+
+		$_REQUEST {__libs} -> {kendo} -> {autocomplete} = 1;
+
 		my $a_options = $data -> {autocomplete};
 
 		my $values = $_JSON -> encode ([]);
@@ -3121,7 +3122,15 @@ sub draw_page {
 					'/i/mint/libs/SuperTable/supertable.min.js' : {}
 				}
 			});
-			require([ $kendo_modules ], function () {\$(document).ready (function () {$_REQUEST{__on_load}; init_page ($init_page_options);}) });
+			require([ $kendo_modules ], function () {\$(document).ready (
+				function () {
+					var options = $init_page_options;
+					options.on_load = function () {
+						$_REQUEST{__on_load};
+					}
+					init_page (options);
+				})
+			});
 		</script>
 EOJS
 
@@ -3863,8 +3872,8 @@ sub __adjust_row_cell_style {
 
 	unless ($a -> {style}) {
 
-		if ($options -> {bgcolor}) {
-			$a -> {style} = "background-color: " . $options -> {bgcolor};
+		if ($data -> {bgcolor} || $options -> {bgcolor}) {
+			$a -> {style} = "background-color: " . ($data -> {bgcolor} || $options -> {bgcolor});
 		} else {
 			delete $a -> {style};
 		}
