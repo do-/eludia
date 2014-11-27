@@ -845,13 +845,11 @@ sub draw_form_field_select {
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
 
 	if (
-		$r -> headers_in -> {'User-Agent'} !~ /webkit|safari/i
-		&&
 		@{$options -> {values}} == 0
 		&&
 		defined ($options -> {empty}) && defined ($options -> {other})
 	) {
-		$options -> {attributes} -> {onClick} .= q|;if (this.length == 2) {$(this).val(-1).trigger('change')}|;
+		$options -> {attributes} -> {'data-ken-autoopen'} = 1;
 	}
 
 	my $attributes = dump_attributes ($options -> {attributes});

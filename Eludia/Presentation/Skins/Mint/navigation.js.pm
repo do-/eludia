@@ -620,7 +620,7 @@ function adjust_kendo_selects(top_element) {
 
 				$.data (original_select, 'prev_value', this.selectedIndex);
 
-				if ($(original_select).attr('data-ken-autoopen') !== 'true') {
+				if (!$(original_select).attr('data-ken-autoopen')) {
 					return;
 				}
 
@@ -2304,8 +2304,8 @@ function lrt_start (filepath) {
 
 	$.getScript("/i/mint/libs/console.js", function(){
 
-		var width = $(window).width() - 200,
-			height = $(window).height() - 300,
+		var width = $(window).width() - 10,
+			height = $(window).height() - 10,
 			left = $(window).width() / 2  - width / 2,
 			top = $(window).height() / 2  - height / 2;
 
