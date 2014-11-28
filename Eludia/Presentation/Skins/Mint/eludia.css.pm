@@ -620,4 +620,5 @@ a.hint {
 	border-spacing: 0;
 	width:100%;
 	border-width: 0;
+	border-bottom: 1px solid #d6d3ce;
 }

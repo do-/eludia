@@ -2244,6 +2244,7 @@ function activate_suggest_fields (top_element) {
 			filter          : 'contains',
 			suggest         : true,
 			dataTextField   : 'label',
+			highlightFirst  : true,
 			dataSource      : {
 				serverFiltering : true,
 				data: {
@@ -2257,39 +2258,37 @@ function activate_suggest_fields (top_element) {
 						dataType    : 'json'
 					},
 				}
+			},
+			change          : function(e) {
+
+				var selected_item = this.current();
+				var id           = '',
+					label        = this.value(),
+					element_id   = this.element.attr('id'),
+					element_name = this.element.attr('name'),
+					data         = this.dataSource.data();
+
+				if (selected_item) {
+					id    = data [selected_item.index()].id;
+					label = data [selected_item.index()].label;
+				} else {
+					$.each(data, function(idx, item) {
+						if (item.label === label)
+							id = item.id;
+					});
+				}
+
+				var prev_id = $('#' + element_id + '__id').val();
+
+				$('#' + element_id + '__label').val(label);
+				$('#' + element_id + '__id').val(id).trigger ('change');
+				$('#' + element_name + '__suggest').val(id);
+
+				var onchange = i.attr ('a-data-change');
+				if (onchange) {
+					eval (onchange);
+				}
 			}
-		}).bind("change", function(e) {
-
-			var _this = $(this).data("kendoAutoComplete");
-
-			var selected_item = _this.current();
-			var id = '',
-				label = _this.value();
-
-			var data = _this.dataSource.data();
-
-			if (selected_item) {
-				id = data [selected_item.index()].id;
-				label = data [selected_item.index()].label;
-			} else {
-				label = this.value;
-
-				$.each(data, function(idx, item) {
-					if (item.label === label)
-						id = item.id;
-				});
-			}
-
-			var prev_id = $('#' + this.id + '__id').val();
-
-			$('#' + this.id + '__label').val(label);
-			$('#' + this.id + '__id').val(id).trigger ('change');
-
-			var onchange = i.attr ('a-data-change');
-			if (onchange) {
-				eval (onchange);
-			}
-
 		});
 
 		i.parent().css("width", i.attr("size") * 8);

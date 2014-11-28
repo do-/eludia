@@ -2531,16 +2531,9 @@ sub draw_input_cell {
 
 		$autocomplete = dump_tag (input => {
 			type  => 'hidden',
-			id    => "${id}__label",
-			name  => "_$data->{name}__label",
-			value => $a_options -> {attributes} -> {value},
-		})
-
-		. dump_tag (input => {
-			type  => 'hidden',
-			id    => "${id}__id",
-			name  => "_$data->{name}__id",
-			value => $a_options -> {value__id},
+			id    => "$data->{name}__suggest",
+			name  => "$data->{name}__suggest",
+			value => $data -> {value},
 		});
 
 		$_REQUEST {__script} .= $js;
