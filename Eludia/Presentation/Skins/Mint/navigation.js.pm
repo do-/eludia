@@ -2330,7 +2330,9 @@ function lrt_start (filepath) {
 							if (service_message_index != -1) {
 
 								if (service_message_index > 0) {
-									kendoConsole.log (data.substring (cindex, service_message_index));
+									var lines = data.substring (cindex, service_message_index).replace (/<br>$/, '').split (/<br>|[\r\n]/);
+									for (var i = 0; i < lines.length; i ++)
+										kendoConsole.log (lines [i]);
 								}
 
 								var service_message_finish = data.indexOf (':::$', cindex),
@@ -2353,7 +2355,9 @@ function lrt_start (filepath) {
 
 							} else {
 
-								kendoConsole.log (data.substring (cindex));
+								var lines = data.substring (cindex).replace (/<br>$/, '').split (/<br>|[\r\n]/);
+								for (var i = 0; i < lines.length; i ++)
+									kendoConsole.log (lines [i]);
 
 								break;
 
