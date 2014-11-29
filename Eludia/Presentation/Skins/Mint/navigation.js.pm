@@ -2427,6 +2427,8 @@ function init_page (options) {
 				})
 			});
 
+			options.on_load ();
+
 			tableSlider.set_row (parseInt (options.__scrollable_table_row));
 
 			$(body).scroll(function() {
@@ -2443,8 +2445,6 @@ function init_page (options) {
 				tableSlider.rows [view_row].scrollIntoView(false);
 				tableSlider.cell_on ();
 			}
-
-			options.on_load ();
 
 		});
 	}
