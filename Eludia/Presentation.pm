@@ -1980,29 +1980,26 @@ sub get_composite_table_headers {
 
 	my $headers = $options -> {headers};
 	my $i       = $options -> {i} + 0;
-	my $first   = $options -> {first} + 0;
 	my $colspan = $options -> {colspan} || 65535;
 
 	my $result_headers = [];
 
 	my $cnt = @{$headers -> [$i]};
+	$options -> {level_indexes} -> [$i] ||= 0;
 
-	my $f = $first;
-	my $colspan1 = $colspan;
+	for (; $options -> {level_indexes} -> [$i] < $cnt && $colspan > 0; $options -> {level_indexes} -> [$i] ++) {
 
-	my $j = $f;
-
-	for (; $j < $cnt && $j < $colspan + $f && $colspan1 > 0; $j++) {
+		my $j = $options -> {level_indexes} -> [$i];
 
 		push @$result_headers, $headers -> [$i] -> [$j];
 
 		if ($headers -> [$i] -> [$j] -> {colspan}) {
 
 			my $result = get_composite_table_headers ({
-				headers => $headers,
-				i       => $i + 1,
-				first   => $first,
-				colspan => $headers -> [$i] -> [$j] -> {colspan},
+				headers       => $headers,
+				level_indexes => $options -> {level_indexes},
+				i             => $i + 1,
+				colspan       => $headers -> [$i] -> [$j] -> {colspan},
 			});
 
 			for (my $k = 0; $k < @{$result -> {headers}}; $k++) {
@@ -2014,11 +2011,9 @@ sub get_composite_table_headers {
 				push @$result_headers, $result -> {headers} -> [$k];
 			}
 
-			$first += $result -> {count};
-
-			$colspan1 -= $headers -> [$i] -> [$j] -> {colspan};
-
 		}
+
+		$colspan -= $headers -> [$i] -> [$j] -> {colspan} || 1;
 
 	}
 
