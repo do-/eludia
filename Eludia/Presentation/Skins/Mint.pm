@@ -3288,7 +3288,9 @@ sub lrt_start {
 
 	$_REQUEST {__lrt_id} = rand (100000);
 
-	my $mbox_path = "$preconf->{_}->{docroot}i/_mbox/by_user/$_USER->{id}";
+	my $mbox_user_path = "i/_mbox/by_user/$_USER->{id}";
+
+	my $mbox_path = "$preconf->{_}->{docroot}$mbox_user_path";
 
 	-d $mbox_path or mkdir $mbox_path;
 
@@ -3316,11 +3318,13 @@ sub lrt_start {
 
 			<script type="text/javascript">
 
+				var lrt_filename = "/$mbox_user_path/lrt_$_REQUEST{sid}_$_REQUEST{__lrt_id}.txt";
+
 				if (window.name == 'invisible') {
 					window=parent;
-					parent.lrt_start ("/i/_mbox/lrt_$_REQUEST{__lrt_id}.txt");
+					parent.lrt_start (lrt_filename);
 				} else {
-					lrt_start ("/i/_mbox/by_user/$_USER->{id}/lrt_$_REQUEST{sid}_$_REQUEST{__lrt_id}.txt");
+					lrt_start (lrt_filename);
 				}
 			</script>
 		</head>

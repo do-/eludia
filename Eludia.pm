@@ -938,7 +938,11 @@ sub check_module_log {
 
 #############################################################################
 
-sub darn ($) {warn Dumper ($_[0]); return $_[0]}
+sub darn ($) {
+	require Encode::Deep;
+	warn Dumper (Encode::Deep::encode($i18n -> {_charset}, $_[0]));
+	return $_[0]
+}
 
 ################################################################################
 
