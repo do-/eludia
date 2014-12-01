@@ -1651,11 +1651,13 @@ sub draw_cells {
 
 		foreach my $cell (@$row) {
 
-			next if $cell -> {no_select_href} ||  $cell    -> {label}        eq '';
+			next if $cell -> {no_select_href};
 
-			$cell         -> {select_href}    and $options -> {select_label} =  $cell -> {label} and last;
+			$cell         -> {select_href}    and $options -> {select_label} =  $cell -> {label};
 
-			$options      -> {select_label}   ||= $cell    -> {label};
+			$options      -> {select_label}   ||= ref $cell eq 'HASH' ? $cell -> {label} : $cell;
+
+			$options      -> {select_label}   and last;
 
 		}
 
