@@ -387,7 +387,7 @@ sub setup_page {
 
 		$_REQUEST {action}    ? 'action'  :
 
-		$r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' ? 'data' :
+		$r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest' && !$_REQUEST {__only_table} ? 'data' :
 
 					'showing' ;
 
