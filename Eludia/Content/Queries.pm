@@ -245,10 +245,10 @@ EOS
 			my $m = sprintf ('%02d', $m);
 			my $d = sprintf ('%02d', $d);
 
-			$filters -> {$key} =~ s{гггг}{$y};
-			$filters -> {$key} =~ s{мм}{$m};
-			$filters -> {$key} =~ s{кв}{$q};
-			$filters -> {$key} =~ s{дд}{$d};
+			$filters -> {$key} =~ s|$i18n->{reduction_year}|$y|;
+			$filters -> {$key} =~ s|$i18n->{reduction_month}|$m|;
+			$filters -> {$key} =~ s|$i18n->{reduction_quarter}|$q|;
+			$filters -> {$key} =~ s|$i18n->{reduction_day}|$d|;
 
 		}
 
@@ -347,7 +347,7 @@ sub do_update___queries {
 
 		if (!exists($_REQUEST{"_${order}_parent"}) || $_REQUEST{$_REQUEST {"_${order}_parent"}} > 0) {
 			!$mandatory_field_label or $_REQUEST {"_${order}_ord"}
-				or croak "#_${order}_ord#:Колонка \"$mandatory_field_label\" обязательна";
+				or croak "#_${order}_ord#:$i18n->{column} \"$mandatory_field_label\" $i18n->{mandatory_f}";
 		};
 
 		$content -> {columns} -> {$order} = {
@@ -465,7 +465,7 @@ sub draw_item_of___queries {
 
 		{
 			type  => 'banner',
-			label => 'СТОЛБЦЫ И ФИЛЬТРЫ',
+			label => $i18n -> {columns_and_filters},
 		},
 
 	);
@@ -541,14 +541,14 @@ sub draw_item_of___queries {
 					cell_width	=> '50%',
 					items => [
 						{
-							label => 'показ',
+							label => $i18n -> {column_order},
 							size  => 2,
 							name  => $o -> {order} . '_ord',
 							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord},
 							off   => $o -> {no_column},
 						},
 						{
-							label => 'сортировка',
+							label => $i18n -> {sorting},
 							size  => 2,
 							name  => $o -> {order} . '_sort',
 							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {sort},
@@ -557,8 +557,8 @@ sub draw_item_of___queries {
 						{
 							name  => $o -> {order} . '_desc',
 							type  => 'select',
-							values => [{id => 1, label => 'убывание'}],
-							empty => 'возрастание',
+							values => [{id => 1, label => $i18n -> {descending}}],
+							empty => $i18n -> {ascending},
 							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {desc},
 							off   => $o -> {no_column} || $o -> {no_order},
 						},
@@ -630,7 +630,7 @@ sub draw_item_of___queries {
 			right_buttons => [
 				{
 					icon	=> 'delete',
-					label	=> 'Очистить фильтры',
+					label	=> $i18n -> {drop_filters},
 					href	=> "javaScript:document.form.action.value='drop_filters'; \$(document.form).submit(); void(0);",
 					target	=> 'invisible',
 					keep_esc	=> 1,
