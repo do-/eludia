@@ -1597,6 +1597,10 @@ sub draw_cells {
 		check_href ($options) ;
 		$options -> {a_class} ||= 'row-cell';
 	}
+	push @{$i -> {__href}}, $options -> {href};
+	push @{$i -> {__target}}, $options -> {target};
+
+
 
 	$options -> {__fixed_cols} = 0;
 
@@ -1716,9 +1720,6 @@ sub draw_cells {
 	my $url = create_url();
 
 	foreach my $cell (@cells) {
-
-		$i -> {__href} = $options -> {href};
-		$i -> {__target} = $options -> {target};
 
 		$cell -> {href} ||= $options -> {href};
 
