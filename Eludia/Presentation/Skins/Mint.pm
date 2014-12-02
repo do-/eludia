@@ -2680,6 +2680,8 @@ sub draw_super_table__only_table {
 
 	foreach our $i (@$list) {
 
+		my $tr_cnt = 0;
+
 		foreach my $tr (@{$i -> {__trs}}) {
 
 
@@ -2696,14 +2698,14 @@ sub draw_super_table__only_table {
 				$html .= qq { data-menu="$context_menu" };
 			}
 
-			my $has_href = $i -> {__href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
+			my $has_href = $i -> {__href} -> [$tr_cnt] && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 
 			if ($has_href) {
 
-				$html .= qq { data-target="$$i{__target}"}
-					if $i -> {__target} && $i -> {__target} ne '_self';
+				$html .= qq { data-target="$i->{__target}->[$tr_cnt]"}
+					if $i -> {__target} -> [$tr_cnt] && $i -> {__target} -> [$tr_cnt] ne '_self';
 
-				$html .= qq { data-href="$$i{__href}"};
+				$html .= qq { data-href="$i->{__href}->[$tr_cnt]"};
 
 			}
 
@@ -2711,6 +2713,7 @@ sub draw_super_table__only_table {
 			$html .= $tr;
 			$html .= '</tr>';
 			$row_cnt++;
+			$tr_cnt++;
 		}
 	}
 
