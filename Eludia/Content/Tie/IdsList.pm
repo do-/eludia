@@ -47,7 +47,13 @@ sub _check {
 	}
 
 	my $st = $self -> {db} -> prepare_cached ($sql, {}, 3);
-	
+
+	my $cnt_params = $st -> {NUM_OF_PARAMS};
+
+	my $have_params = @{$self -> {params}};
+
+	$cnt_params == $have_params or die "$sql got $have_params, need $cnt_params params";
+
 	&{"$self->{package}::sql_safe_execute"} ($st, $self -> {params}, $self -> {db});
 	
 	while (my @a = $st -> fetchrow_array) {
