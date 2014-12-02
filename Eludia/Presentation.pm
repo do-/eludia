@@ -2421,14 +2421,12 @@ EOJS
 				rowspan    => $headers_rowspan,
 			};
 
-			$_REQUEST {__script} .= <<'EOJS';
-$(document).ready(function() {
-	$("#check_all").click(function () {
-		if (!$("#check_all").is(":checked"))
-			$(".id_checkbox").children().removeAttr("checked");
-		else
-			$(".id_checkbox").children().attr("checked","checked");
-	});
+			$_REQUEST {__on_load} .= <<'EOJS';
+$("#check_all").click(function () {
+	if (!$("#check_all").is(":checked"))
+		$(".id_checkbox").children().removeAttr("checked");
+	else
+		$(".id_checkbox").children().attr("checked","checked");
 });
 EOJS
 
