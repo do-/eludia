@@ -561,10 +561,6 @@ sub draw_redirect_page {
 
 	my ($_SKIN, $options) = @_;
 
-	my $target =
-		$options -> {target} ? "'$$options{target}'" :
-		"(window.name == 'invisible' ? '_parent' : '_self')";
-
 	if ($options -> {label}) {
 		my $data = $_JSON -> encode ([$options -> {label}]);
 		$options -> {before} = "var data = $data; alert(data[0]); ";
@@ -590,9 +586,13 @@ EOJS
 <html>
 	<script for=window event=onload>
 		$options->{before};
-		var w = window;
+		var w = window,
+			target = window.name == 'invisible' ? parent : window;
 		w.is_redirecting = 1;
-		w.open ('$options->{url}' + $salt, $target, '$options->{window_options}');
+		if ('$$options{target}')
+			w.open ('$options->{url}' + $salt, '$$options{target}', '$options->{window_options}');
+		else
+			target.location.href = '$options->{url}';
 	</script>
 	<body>
 	</body>
