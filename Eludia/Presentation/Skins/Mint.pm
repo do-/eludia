@@ -861,7 +861,7 @@ sub draw_form_field_select {
 
 		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
-		$options -> {onChange} .= <<EOJS;
+		$options -> {onChange} = <<EOJS;
 
 			if (this.options[this.selectedIndex].value == -1) {
 
@@ -876,6 +876,8 @@ sub draw_form_field_select {
 					}
 				);
 
+			} else {
+				$options->{onChange}
 			}
 
 EOJS
