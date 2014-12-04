@@ -129,7 +129,7 @@ sub fix___query {
 
 		}
 
-		sql_select_id (
+		$_REQUEST {id___query} = sql_select_id (
 
 			$conf -> {systables} -> {__queries} => {
 
@@ -157,6 +157,8 @@ sub check___query {
 	$_REQUEST {__allow_check___query} or return;
 
 	$conf -> {core_store_table_order} or return;
+
+	local $_REQUEST {__the_table} = $_REQUEST {__the_table};
 
 	$_REQUEST {__order_context} ||= '';
 
