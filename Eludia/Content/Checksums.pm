@@ -11,7 +11,16 @@ sub checksum {
 sub checksum_filter {
 
 	my ($kind, $prefix, $name2def) = @_;
-	
+
+	if ($preconf -> {db_store_checksums}) {
+
+		require_wish 'tables';
+
+		my $tables = wish_to_explore_existing_tables ();
+
+		$tables -> {__checksums} or return ($name2def, {});
+	}
+
 	my $hash = $preconf -> {_} -> {checksums} -> {$kind} or return ($name2def, {});
 
 	my $needed_tables = {};
@@ -169,7 +178,8 @@ BEGIN {
 
 	loading_log " checksums........................... ";
 
-	my @modules = MP2 ? ('Txt') : ('SDBM');
+	my @modules = $preconf -> {db_store_checksums}? 'DB'
+		: MP2 ? ('Txt') : ('SDBM');
 
 	foreach (@modules) {
 	

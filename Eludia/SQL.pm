@@ -164,6 +164,7 @@ sub check_systables {
 		__benchmarks
 		__request_benchmarks
 		__last_update
+		__checksums
 		__moved_links
 		__required_files
 		__screenshots
@@ -191,23 +192,37 @@ sub sql_assert_core_tables {
 
 	__profile_in ('sql.assert_core_tables');
 
-	$model_update -> assert (
+	my $core_tables = {
 
-		tables => {
+		$conf -> {systables} -> {__last_update} => {
 
-			$conf -> {systables} -> {__last_update} => {
+			columns => {
 
-				columns => {
-
-					id        => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-					pid 	  => {TYPE_NAME => 'int'},
-					unix_ts   => {TYPE_NAME => 'bigint'},
-
-				},
+				id        => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
+				pid 	  => {TYPE_NAME => 'int'},
+				unix_ts   => {TYPE_NAME => 'bigint'},
 
 			},
 
 		},
+	};
+
+	$preconf -> {db_store_checksums} and $core_tables -> {__checksums} = {
+			columns => {
+			id          => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
+			kind        => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+			id_checksum => {TYPE_NAME => 'varchar', COLUMN_SIZE => 4096},
+			checksum    => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
+		},
+
+		keys => {
+			id_checksum => 'id_checksum(255)',
+		},
+	};
+
+	$model_update -> assert (
+
+		tables => $core_tables,
 
 		prefix => 'sql_assert_core_tables#',
 
@@ -1342,6 +1357,8 @@ sub assert {
 		wish (views => \@views, {});
 
 	}
+
+	local $preconf -> {core_debug_sql_do} = 0;
 
 	checksum_write ('db_model', $new_checksums);
 
