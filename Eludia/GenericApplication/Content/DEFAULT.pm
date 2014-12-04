@@ -327,7 +327,7 @@ sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
 		$ord++;
 	}
 
-	my ($parent, $dump) = sql_select_array ("SELECT parent, dump FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
+	my ($parent, $dump) = sql_select_array ("SELECT parent, dump FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query} || 0);
 
 	if ($parent) {
 		sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ? AND id_user = ?", $dump, $parent, $_USER -> {id});

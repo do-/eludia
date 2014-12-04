@@ -2098,14 +2098,16 @@ sub _load_super_table_dimensions {
 
 	my $max_fixed_cols_cnt = 0;
 
-	foreach my $h (@$headers) {
+	ref $headers -> [0] eq ARRAY or $headers = [$headers];
 
-		my $row = $h;
-		ref $row eq ARRAY or $row = [$row];
+	foreach my $row (@$headers) {
 
 		my $fixed_cols_cnt = 0;
 
-		foreach my $cell (@$row) {
+		for (my $i = 0; $i < @$row; $i ++) {
+
+			ref $row -> [$i] eq HASH or $row -> [$i] = {label => $row -> [$i]};
+			my $cell = $row -> [$i];
 
 			$fixed_cols_cnt ++ if $cell -> {no_scroll};
 
