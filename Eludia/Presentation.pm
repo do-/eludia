@@ -3069,8 +3069,8 @@ sub dialog_open {
 
 	$arg -> {options} = join ';', map {"$_:$options->{$_}"} keys %$options;
 
-	$_REQUEST {__script} .= 'var results; var dialogs = {};'
-		unless $_REQUEST {__script} =~ /var dialogs/;
+	$_REQUEST {__script} .= 'var results; window.dialogs = window.dialogs || {};'
+		unless $_REQUEST {__script} =~ /var results/;
 
 	my ($before, $after, $off) = (delete $arg -> {before}, delete $arg -> {after}, delete $arg -> {off});
 
