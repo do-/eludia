@@ -2414,7 +2414,7 @@ function init_page (options) {
 					tableUrl: table_url,
 					initial_data : tables_data [that.id],
 					el: $(that),
-					containerRender : function() {
+					containerRender : function(model) {
 						$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
 						adjust_kendo_selects (that);
@@ -2427,6 +2427,11 @@ function init_page (options) {
 							tableSlider.set_row (0);
 							tableSlider.cell_on ();
 						}
+
+						var script = model.get ('script');
+						if (script)
+							eval (script)
+
 					}
 				})
 			});

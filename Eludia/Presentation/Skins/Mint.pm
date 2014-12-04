@@ -2824,6 +2824,7 @@ sub draw_super_table__only_table {
 			headers => $is_set_all_headers_width + 0,
 			rows    => 0,
 		},
+		script      => $_REQUEST {__only_table} ? $_REQUEST {__script} . ';' . $_REQUEST {__on_load} : '',
 	};
 
 	return $_JSON -> encode ($table);
