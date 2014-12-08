@@ -2610,28 +2610,6 @@ sub draw_table_header_row {
 
 ####################################################################
 
-sub get_super_table_cell_id {
-
-	my ($_SKIN, $cell) = @_;
-
-	if ($cell -> {order} || $cell -> {no_order}) {
-		return $cell -> {order} || $cell -> {no_order};
-	}
-
-	$_REQUEST {__generated_cell_ids} ||= {};
-	my $id = Digest::MD5::md5_hex ($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ('utf-8', $cell -> {label}) : $cell -> {label});
-
-	while ($_REQUEST {__generated_cell_ids} -> {$id}) {
-		$id .= '0';
-	}
-
-	$_REQUEST {__generated_cell_ids} -> {$id} = 1;
-
-	return $id;
-}
-
-####################################################################
-
 sub draw_table_header_cell {
 
 	my ($_SKIN, $cell) = @_;
@@ -2643,7 +2621,7 @@ sub draw_table_header_cell {
 	!$cell -> {width} or $cell -> {attributes} -> {style} .= " width: $$cell{width}px;";
 	!$cell -> {height} or $cell -> {attributes} -> {style} .= " height: $$cell{height}px;";
 
-	$cell -> {id} ||= $_SKIN -> get_super_table_cell_id ($cell);
+	$cell -> {id} ||= &{$_PACKAGE . 'get_super_table_cell_id'} ($cell);
 	$cell -> {attributes} -> {id} ||= $cell -> {id};
 	$cell -> {attributes} -> {class} ||= $cell -> {class};
 

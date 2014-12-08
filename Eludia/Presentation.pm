@@ -2064,7 +2064,7 @@ sub _adjust_table_options {
 
 	$options -> {id_table} ||= $_REQUEST {type} . '_' . $_REQUEST {__table_ids_cnt}++;
 
-	$options -> {super_table} ||= $_REQUEST {__skin} eq 'Mint';
+	$options -> {super_table} ||= $_REQUEST {__skin} eq 'Mint' || $_REQUEST {__core_skin} eq 'Mint';
 
 	if ($options -> {super_table} && !$options -> {pager}) {
 
@@ -2113,7 +2113,7 @@ sub _load_super_table_dimensions {
 
 			next if $cell -> {off};
 
-			$cell -> {id} ||= $_SKIN -> get_super_table_cell_id ($cell);
+			$cell -> {id} ||= get_super_table_cell_id ($cell);
 			$cell -> {order}
 				or $cell -> {no_order} && $cell -> {no_order} != 1
 				or $cell -> {no_order} = $cell -> {id};
@@ -2129,6 +2129,28 @@ sub _load_super_table_dimensions {
 	}
 
 	$options -> {__fixed_cols} ||= $max_fixed_cols_cnt;
+}
+
+####################################################################
+
+sub get_super_table_cell_id {
+
+	my ($_SKIN, $cell) = @_;
+
+	if ($cell -> {order} || $cell -> {no_order}) {
+		return $cell -> {order} || $cell -> {no_order};
+	}
+
+	$_REQUEST {__generated_cell_ids} ||= {};
+	my $id = Digest::MD5::md5_hex ($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ('utf-8', $cell -> {label}) : $cell -> {label});
+
+	while ($_REQUEST {__generated_cell_ids} -> {$id}) {
+		$id .= '0';
+	}
+
+	$_REQUEST {__generated_cell_ids} -> {$id} = 1;
+
+	return $id;
 }
 
 ################################################################################
@@ -3253,11 +3275,6 @@ sub setup_skin {
 			$_REQUEST {__skin} = 'ExtJs';
 
 		}
-		elsif ($_REQUEST {xls}) {
-
-			$_REQUEST {__skin} = 'XL';
-
-		}
 		elsif (($_REQUEST {__dump} || $_REQUEST {__d}) && ($preconf -> {core_show_dump} || $_USER -> {peer_server})) {
 
 			$_REQUEST {__skin} = 'Dumper';
@@ -3267,6 +3284,14 @@ sub setup_skin {
 			$_REQUEST {__skin} = ($preconf -> {core_skin} ||= 'Classic');
 
 		}
+
+	}
+
+	if ($_REQUEST {xls}) {
+
+		$_REQUEST {__core_skin} ||= $_REQUEST {__skin};
+
+		$_REQUEST {__skin} = 'XL';
 
 	}
 
