@@ -273,7 +273,15 @@ sub require_scripts_of_type ($) {
 			
 		}
 
-		foreach my $script (sort {$a -> {last_modified} <=> $b -> {last_modified}} grep {$needed_scripts -> {$_ -> {path}}} @scripts) {
+		@scripts = grep {$needed_scripts -> {$_ -> {path}}} @scripts;
+
+		@scripts = sort {
+			$DB_MODEL -> {tables} -> {$a -> {name}} -> {sql}
+					cmp $DB_MODEL -> {tables} -> {$b -> {name}} -> {sql}
+				|| $a -> {last_modified} <=> $b -> {last_modified}
+			} @scripts;
+
+		foreach my $script (@scripts) {
 		
 			__profile_in ("require.scripts.$script_type.file", {label => $script -> {path}});
 					
