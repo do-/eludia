@@ -938,16 +938,7 @@ sub check_module_log {
 
 #############################################################################
 
-sub darn ($) {
-	require Encode::Deep;
-	warn Dumper (
-		Encode::Deep::encode(
-			$i18n -> {_charset},
-			lc $i18n -> {_charset} ne 'utf-8' ? Encode::Deep::decode($i18n -> {_charset}, $_[0]) : $_[0]
-		)
-	);
-	return $_[0]
-}
+sub darn ($) { warn Dumper $_[0];return $_[0] }
 
 ################################################################################
 
