@@ -321,8 +321,10 @@ sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
 			id_query => $_REQUEST {id___query},
 			id       => $column -> {id},
 			ord      => $ord,
-			sort     => $column -> {sortable}? ($column -> {sort} || 1) : 0,
-			desc     => $column -> {sortable}? ($column -> {desc} || 0) : 0,
+			sort     => $column -> {sortable} ? ($column -> {sort} || 1) : 0,
+			desc     => $column -> {sortable} ? ($column -> {desc} || 0) : 0,
+			$column -> {width}  ? (width  => $column -> {width})  : (),
+			$column -> {height} ? (height => $column -> {height}) : (),
 		});
 		$ord++;
 	}
