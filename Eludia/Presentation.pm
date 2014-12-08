@@ -2135,7 +2135,7 @@ sub _load_super_table_dimensions {
 
 sub get_super_table_cell_id {
 
-	my ($_SKIN, $cell) = @_;
+	my ($cell) = @_;
 
 	if ($cell -> {order} || $cell -> {no_order}) {
 		return $cell -> {order} || $cell -> {no_order};
