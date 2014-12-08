@@ -964,7 +964,7 @@ sub delete_fakes {
 
 	$table_name    ||= $_REQUEST {type};
 
-	return if ($_REQUEST {__delete_fakes} -> {$table_name} ||= is_recyclable ($table_name));
+	return if ($_REQUEST {__delete_fakes} -> {$table_name} || !is_recyclable ($table_name));
 
 	assert_fake_key ($table_name);
 
