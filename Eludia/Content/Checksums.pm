@@ -18,7 +18,7 @@ sub checksum_filter {
 
 		my $tables = wish_to_explore_existing_tables ();
 
-		$tables -> {__checksums} or return ($name2def, {});
+		$tables -> {$conf -> {systables} -> {__checksums}} or return ($name2def, {});
 	}
 
 	my $hash = $preconf -> {_} -> {checksums} -> {$kind} or return ($name2def, {});
