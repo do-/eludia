@@ -24,6 +24,7 @@ if (!is_ua_mobile) {
 	var ua = /Chrome\/(\d+)/.exec (navigator.userAgent);
 	is_ua_mobile = ua && ua.length > 1 && ua [1] > 36;
 }
+is_ua_mobile = 1;
 
 
 var scrollable_table_ids = [];
