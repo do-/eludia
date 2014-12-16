@@ -78,7 +78,8 @@ sub _check {
 	my $checksum_hash = {};
 
 	foreach (@$list) {
-		$checksum_hash -> {$_ -> {key}} = $_ -> {checksum};
+
+		$checksum_hash -> {$_ -> {id_checksum}} = $_ -> {checksum};
 	}
 
 	$self -> {body} = $checksum_hash;
