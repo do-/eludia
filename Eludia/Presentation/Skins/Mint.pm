@@ -1901,6 +1901,107 @@ sub draw_toolbar_input_checkbox {
 
 ################################################################################
 
+sub draw_toolbar_input_files {
+
+	my ($_SKIN, $options) = @_;
+
+	$_REQUEST {__libs} -> {kendo} -> {button} = 1;
+
+	my $html = <<EOH;
+		<li>
+EOH
+
+	my $name = "_$$options{name}_1";
+
+	$options -> {href} = "javascript: \$('input[name=$name]').click()";
+
+
+	my $keep_form_params = $options -> {keep_form}? <<EOJS : '';
+		\$(this.form).filter('[isacopy]').remove();
+
+		var \$originalInputs = \$('form[name=$$options{keep_form}] :input').not(':submit');
+
+		\$originalInputs.clone().hide().attr('isacopy','y').appendTo(\$(this.form))
+			.each(function(i, el) {
+				\$(el).val(\$originalInputs.eq(i).val())
+			});
+
+		var \$originalSelects = \$('form[name=$$options{keep_form}] > select');
+
+		\$originalSelects.clone().hide().attr('isacopy','y').appendTo(\$(this.form))
+			.each(function(i, el) {
+				\$(el).val(\$originalSelects.eq(i).val())
+			});
+EOJS
+
+	$options -> {onChange} = "javascript:" . $keep_form_params . <<'EOJS';
+
+		var toolbarFormData = new FormData(this.form);
+
+		toolbarFormData.append('action', 'upload');
+
+		blockui ();
+
+		$.ajax ({
+			type: 'POST',
+			url: '/',
+			data: toolbarFormData,
+			processData: false,
+			contentType : false,
+			dataType: 'json',
+			success: function(data) {
+				if (data.message) {
+					alert(data.message);
+					unblockui ();
+					return;
+				}
+				location.reload(true);
+			},
+			error: function(data) {
+				console.log(data);
+				unblockui ();
+			}
+		});
+EOJS
+
+	$html .= <<EOH;
+			<a TABINDEX=-1 class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+EOH
+
+	$html .= <<EOH;
+				<input
+					type="file"
+					name="$name"
+					$attributes
+					onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
+					onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
+					onChange="is_dirty=true; $$options{onChange}"
+					style="visibility:hidden; width: 1px"
+					multiple="true"
+					is-native="true"
+				/>
+EOH
+
+
+
+	if ($options -> {icon}) {
+		my $img_path = _icon_path ($options -> {icon});
+		$html .= qq {<img src="$img_path" alt="$label" border=0 hspace=0 style='vertical-align:middle;'>};
+	}
+
+	$html .= <<EOH;
+				$options->{label}</nobr>
+				</a>
+		</li>
+
+EOH
+
+	return $html;
+
+}
+
+################################################################################
+
 sub draw_toolbar_input_submit {
 
 	my ($_SKIN, $options) = @_;

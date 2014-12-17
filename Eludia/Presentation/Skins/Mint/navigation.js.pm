@@ -2392,6 +2392,9 @@ function blockui (message, poll) {
 	return true;
 }
 
+function unblockui (message, poll) {
+	$.unblockUI ();
+}
 
 function init_page (options) {
 
@@ -2521,7 +2524,7 @@ function init_page (options) {
 	$('[data-type=datepicker]').each(function () {$(this).kendoDatePicker()});
 	$('[data-type=datetimepicker]').each(function () {$(this).kendoDateTimePicker()});
 
-	$('input[type=file]:not([data-upload-url])').each(function () {
+	$('input[type=file]:not([data-upload-url]):not([is-native])').each(function () {
 		$(this).kendoUpload({
 			multiple : $(this).attr('data-ken-multiple') == 'true'
 		});
