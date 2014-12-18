@@ -2431,9 +2431,13 @@ function init_page (options) {
 							tableSlider.cell_on ();
 						}
 
-						var script = model.get ('script');
-						if (script)
-							eval (script)
+						try {
+							var script = model.get ('script');
+							if (script)
+								eval (script)
+						} catch (e) {
+							console.log(e.message);
+						}
 
 					}
 				})
