@@ -147,7 +147,7 @@ sub check_version {
 
 	$Eludia::VERSION ||= check_version_by_git ();
 
-	$Eludia::VERSION ||= 'UNKNOWN (please write some Eludia::Version module)';
+	$Eludia::VERSION ||= 'UNKNOWN [please write some Eludia::Version module]';
 
 	my $year;
 
