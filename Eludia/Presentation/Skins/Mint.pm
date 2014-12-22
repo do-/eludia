@@ -22,7 +22,7 @@ BEGIN {
 
 sub is_ua_mobile {
 
-	return $r -> headers_in -> {'User-Agent'} =~ /mobile|android/i;
+	return 1; #$r -> headers_in -> {'User-Agent'} =~ /mobile|android/i;
 
 }
 
@@ -1483,7 +1483,7 @@ sub draw_toolbar {
 			icon    => 'cancel',
 			id      => 'cancel',
 			label   => $i18n -> {close},
-			href    => is_ua_mobile () ? "javaScript:var i = 0, w = parent; for (i = 0; i < 5 && w.name != '_modal_iframe'; i ++) w = w.parent; if (w.name == '_modal_iframe') w.close();" : "javaScript:window.parent.close();",
+			href    => is_ua_mobile () ? "javaScript:var i = 0, w = parent; for (i = 0; i < 5 && w.name != '_modal_iframe'; i ++) w = w.parent; if (w.name == '_modal_iframe') w.parent.\$('DIV.modal_div').dialog ('close');" : "javaScript:window.parent.close();",
 		};
 
 		$button -> {html} = $_SKIN -> draw_toolbar_button ($button);

@@ -9,7 +9,10 @@
 				window.returnValue.result = 'ok';
 				window.returnValue.id = id;
 				window.returnValue.label = label;
-				window.close ();
+				if (window.name == '_modal_iframe')
+					parent.$('DIV.modal_div').dialog ('close');
+				else
+					window.close ();
 			}
 		</script>
 		<style>

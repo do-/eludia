@@ -227,7 +227,7 @@ function close_multi_select_window (ret) {
 		w = w.parent;
 	if (w.name == '_modal_iframe') {
 		w.returnValue = ret;
-		w.close ();
+		w.parent.$('DIV.modal_div').dialog ('close');
 	} else {
 		top.returnValue = ret;
 		top.close ();
