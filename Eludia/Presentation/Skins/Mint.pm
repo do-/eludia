@@ -3708,7 +3708,7 @@ sub dialog_close {
 				if (a.alert) alert (a.alert);
 				var w = window.parent.parent;
 				w.returnValue = a.result;
-				w.close ();
+				w.parent.\$('DIV.modal_div').dialog ('close');
 			}
 
 		</script>
