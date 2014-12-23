@@ -1975,6 +1975,7 @@ EOH
 					style="visibility:hidden; width: 1px"
 					multiple="multiple"
 					data-ken-multiple="true"
+					is-native="true"
 				/>
 EOH
 
