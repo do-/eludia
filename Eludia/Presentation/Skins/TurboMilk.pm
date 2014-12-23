@@ -2934,7 +2934,7 @@ EOJS
 
 	}
 
-	my $html = ($options -> {editor} ? '<div' : '<td')
+	my $html = ($options -> {editor} ? '<div ' : '<td ')
 		. qq {$attributes><select
 			$s_attributes
 			name="$$data{name}"

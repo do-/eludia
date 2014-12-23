@@ -33,7 +33,9 @@ sub lock_file_name () {
 
 sub initialize_offline_script_execution {
 
-	my $user = $_[0];
+	my $preconf = $_[0];
+
+	my $user = $preconf -> {user};
 
 	my $current_uid = getuid();
 
@@ -213,9 +215,7 @@ BEGIN {
 
 	$package = $Eludia::last_loaded_package if $package eq 'main';
 
-	my $user = ${$package . '::preconf'}->{user};
-
-	initialize_offline_script_execution ($user);
+	initialize_offline_script_execution (${$package . '::preconf'});
 
 	$code = qq {
 
