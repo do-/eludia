@@ -68,9 +68,10 @@ sub vld_date {
 
 	my ($_sec, $_min, $_hour, $_mday, $_mon, $_year, $_wday, $_yday, $_isdst) = localtime (time);
 
-	$_REQUEST {$name} =~ s{^(\d\d\d\d)-(\d\d)-(\d\d)$}{$3.$2.$1};
+	my @dt = split /\D+/, $_REQUEST {$name};
+	@dt = reverse @dt[0..2] if ($dt [0] <= 31);
 
-	my ($day, $month, $year) = split /\D+/, $_REQUEST {$name};
+	my ($year, $month, $day) = @dt;
 
 	local $SIG {__DIE__} = 'DEFAULT';
 
