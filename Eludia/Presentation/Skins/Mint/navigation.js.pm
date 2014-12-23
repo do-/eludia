@@ -2559,7 +2559,7 @@ function init_page (options) {
 					button: true
 				}).data("kendoNotification");
 			}
-			notification.show (top.message);
+			notification.show (top.message, top.message_type || undefined);
 			top.message = '';
 		});
 	}
