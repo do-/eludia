@@ -732,7 +732,7 @@ sub sql_upload_file {
 
 	$options -> {id} ||= $_REQUEST {id};
 
-	my $uploaded = upload_file ($options) or return;
+	my $uploaded = $options -> {upload} || upload_file ($options) or return;
 
 	sql_delete_file ($options);
 

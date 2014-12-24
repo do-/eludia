@@ -1940,8 +1940,6 @@ EOJS
 
 		toolbarFormData.append('action', 'upload');
 
-		blockui ();
-
 		$.ajax ({
 			type: 'POST',
 			url: '/',
@@ -1952,14 +1950,12 @@ EOJS
 			success: function(data) {
 				if (data.message) {
 					alert(data.message);
-					unblockui ();
 					return;
 				}
 				location.reload(true);
 			},
 			error: function(data) {
 				console.log(data);
-				unblockui ();
 			}
 		});
 EOJS
@@ -1977,7 +1973,8 @@ EOH
 					onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
 					onChange="is_dirty=true; $$options{onChange}"
 					style="visibility:hidden; width: 1px"
-					multiple="true"
+					multiple="multiple"
+					data-ken-multiple="true"
 					is-native="true"
 				/>
 EOH
