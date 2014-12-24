@@ -145,7 +145,8 @@ sub send_mail {
 		$options -> {text} .= "\n\n" . $options -> {signature};
 	}
 
-	my $text = encode_base64 (Encode::encode ($options -> {body_charset}, $options -> {text})
+	my $text = encode_base64 (
+		($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ($options -> {body_charset}, $options -> {text}) : $options -> {text})
 		. "\n"
 		. $options -> {text_tail}
 	);
@@ -340,9 +341,19 @@ sub encode_mail_header {
 
 	my ($s, $charset) = @_;
 
-	$charset ||= Encode::is_utf8($s) ? 'utf-8' : 'windows-1251';
+	if ($i18n -> {_charset} eq 'UTF-8') {
 
-	$s = '=?' . $charset . '?B?' . encode_base64 (Encode::encode ($charset, $s)) . '?=';
+		$charset ||= Encode::is_utf8($s) ? 'utf-8' : 'windows-1251';
+
+		$s = '=?' . $charset . '?B?' . encode_base64 (Encode::encode ($charset, $s)) . '?=';
+
+	} else {
+
+		$charset ||= 'windows-1251';
+		$s = '=?' . $charset . '?B?' . encode_base64 ($s) . '?=';
+
+	}
+
 	$s =~ s{[\n\r]}{}g;
 
 	return $s;
