@@ -38,8 +38,8 @@ sub _select_hash {
 	
 	my $sql = $self -> {sql};
 	
-	$sql =~ s{WHERE.*}{WHERE id = ?}gism;
-	
+	$sql =~ s{WHERE(?!.*WHERE).*}{WHERE id = ?}is;
+
 	my $h = &{"$self->{package}::sql_select_hash"} ($sql, $id);
 	
 	return $h;
