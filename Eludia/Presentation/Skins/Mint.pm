@@ -211,10 +211,10 @@ sub _draw_input_datetime {
 
 	return '' if $_REQUEST {__only_field};
 
+	my ($_SKIN, $options) = @_;
+
 	$_REQUEST {__libs} -> {kendo} -> {datetimepicker} = 1;
 	$_REQUEST {__libs} -> {kendo} -> {maskedtextbox}  = 1 if $options -> {mask};
-
-	my ($_SKIN, $options) = @_;
 
 	$options -> {id} ||= '' . $options;
 
