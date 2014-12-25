@@ -212,6 +212,7 @@ sub _draw_input_datetime {
 	return '' if $_REQUEST {__only_field};
 
 	$_REQUEST {__libs} -> {kendo} -> {datetimepicker} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {maskedtextbox}  = 1 if $options -> {mask};
 
 	my ($_SKIN, $options) = @_;
 
@@ -227,9 +228,13 @@ sub _draw_input_datetime {
 
 	$options -> {attributes} -> {class} ||= 'form-active-inputs';
 
+	$options -> {attributes} -> {mask} = $options -> {mask}
+		if $options -> {mask};
+
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	my $picker_type = $options -> {no_time}? 'datepicker' : 'datetimepicker';
+
 	my $html = <<EOH;
 	<nobr>
 		<input data-type="$picker_type"
@@ -444,6 +449,8 @@ sub draw_form_field_string {
 
 	my ($_SKIN, $options) = @_;
 
+	$_REQUEST {__libs} -> {kendo} -> {maskedtextbox} = 1 if $options -> {mask};
+
 	my $attributes = $options -> {attributes};
 
 	$attributes -> {onKeyPress} .= ';if (event.keyCode != 27) is_dirty=true;';
@@ -454,6 +461,9 @@ sub draw_form_field_string {
 	$attributes -> {class}      .= ' k-textbox ';
 
 	$attributes -> {type}        = 'text';
+
+	$attributes -> {mask}        = $options -> {mask}
+		if $options -> {mask};
 
 	return dump_tag ('input', $attributes);
 
@@ -2610,6 +2620,8 @@ sub draw_input_cell {
 	$attr_input -> {class} .= ' table-mandatory-inputs'
 		if $data -> {mandatory};
 
+	$attr_input -> {mask}   = $options -> {mask}
+		if $options -> {mask};
 
 	if ($data -> {autocomplete}) {
 
