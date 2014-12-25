@@ -575,10 +575,10 @@ sub draw_redirect_page {
 		my $data = $_JSON -> encode ([$options]);
 
 		$options -> {before} .= <<EOJS
-			if ('message' in top) {
+			if (top.localStorage) {
 				var data = $data;
-				top.message = data [0].message;
-				top.message_type = data[0].message_type;
+				top.localStorage ['message'] = data [0].message;
+				top.localStorage ['message_type'] = data[0].message_type;
 			}
 EOJS
 
