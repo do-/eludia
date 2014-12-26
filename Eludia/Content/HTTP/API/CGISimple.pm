@@ -287,7 +287,9 @@ sub parms {
 	my @names = $self -> {Q} -> param;
 
 	foreach my $name (@names) {
-		($vars {$name}) = reverse ($self -> {Q} -> param ($name));
+		my @v = $self -> {Q} -> param ($name);
+		$vars {$name}        = $v [-1];
+		@v == 1 or $vars {$name . '[]'} = \@v;
 	}
 
 	return \%vars;
@@ -302,6 +304,22 @@ sub param {
 
 	return $self -> {Q} -> param ($_ [0]);
 
+}
+
+################################################################################
+
+sub upload_multiple {
+
+	my ($self, $name) = @_;
+
+	my @filenames = $self -> {Q} -> param ($name);
+
+	my @uploads;
+	foreach my $filename (@filenames) {
+		push @uploads, $self -> upload ($filename);
+	}
+
+	return \@uploads;
 }
 
 ################################################################################
@@ -506,6 +524,10 @@ sub new {
 	$self -> {Param} = $_ [1];
 	$self -> {FH} = $self -> {Q} -> upload ($self -> {Param});
 	$self -> {FN} = $self -> {Q} -> param ($self -> {Param});
+	if ($self -> {FH}) {
+		$self -> {FN} ||= $self -> {Param};
+	}
+
 
 	return bless ($self, $class) unless ($self -> {FH} && $self -> {FN});
 

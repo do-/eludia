@@ -268,8 +268,8 @@ EOJS
 				continue;
 			}
 
-			if (document.getElementById('input_' + codetails[i])) {
-				codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementById('input_' + codetails[i]).value;
+			if (document.getElementsByName('_' + codetails[i]).length == 1) {
+				codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementsByName('_' + codetails[i])[0].value;
 				continue;
 			}
 

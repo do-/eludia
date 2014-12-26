@@ -1940,8 +1940,6 @@ EOJS
 
 		toolbarFormData.append('action', 'upload');
 
-		blockui ();
-
 		$.ajax ({
 			type: 'POST',
 			url: '/',
@@ -1956,7 +1954,6 @@ EOJS
 			},
 			error: function(data) {
 				console.log(data);
-				unblockui ();
 			}
 		});
 EOJS
@@ -1974,7 +1971,8 @@ EOH
 					onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
 					onChange="is_dirty=true; $$options{onChange}"
 					style="visibility:hidden; width: 1px"
-					multiple="true"
+					multiple="multiple"
+					data-ken-multiple="true"
 					is-native="true"
 				/>
 EOH
@@ -3705,7 +3703,7 @@ sub dialog_close {
 				if (a.alert) alert (a.alert);
 				var w = window.parent.parent;
 				w.returnValue = a.result;
-				w.close ();
+				w.parent.\$('DIV.modal_div').dialog ('close');
 			}
 
 		</script>

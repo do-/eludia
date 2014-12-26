@@ -298,9 +298,9 @@ sub setup_request_params_for_action {
 
 	foreach (@names) {
 
-		/^__get_ids_/ or next;
+		/^__get_ids_(\w+)$/ or next;
 
-		push @get_ids, '_' . $';
+		push @get_ids, '_' . $1;
 
 	}
 

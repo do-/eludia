@@ -1120,6 +1120,17 @@ sub draw_form_field_static {
 		$html .= '</a>';
 	}
 
+	if ($options -> {history} && !$options -> {history} -> {off}) {
+
+		my $history_icon = _icon_path ($options -> {history} -> {icon});
+
+		$options -> {history} -> {onclick} ||= $options -> {history} -> {href} =~ /^javascript:/?
+			$options -> {history} -> {href}
+			: qq{nope('$options->{history}->{href}', '$options->{history}->{target}')};
+
+		$html .= qq{<a href="#" onclick="$options->{history}->{onclick}" title="$options->{history}->{title}"><img style="border:0;vertical-align:middle;" src="$history_icon" /></a>};
+	}
+
 	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
 
 	return "<span id='input_$$options{name}'>$html</span>";
