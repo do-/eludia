@@ -77,7 +77,7 @@ div.checkboxes {
 	padding: 0;
 	margin: 0;
 }
-.filters li {
+.filters > li {
 	height: 38px;
 	padding-top: 4px;
 	padding-left: 10px;
