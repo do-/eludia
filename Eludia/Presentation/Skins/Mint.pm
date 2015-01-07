@@ -3402,6 +3402,7 @@ sub treeview_convert_nodes {
 			clipboard_text => $i -> {clipboard_text},
 			is_checkbox    => $n -> {is_checkbox},
 			is_radio       => $n -> {is_radio},
+			expanded       => $n -> {is_open} || $n -> {_io},
 		};
 
 		$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
@@ -3453,6 +3454,7 @@ sub draw_tree {
 
 			map {$i -> {$_} = $item -> {$_}} qw (color expanded cnt_children);
 
+			$i -> {expanded}   ||= $item -> {is_open};
 			$i -> {menu}         = $item -> {__menu};
 			$i -> {href}         = $options -> {url_base} . $i -> {href};
 
@@ -3511,6 +3513,36 @@ sub draw_tree {
 			});
 
 		};
+
+		$_REQUEST {__script} .= <<EOJS;
+; var d = {
+	oAll : function (status) {
+		if (status)
+			\$("#splitted_tree_window_left").data("kendoTreeView").expand (".k-item");
+		else
+			\$("#splitted_tree_window_left").data("kendoTreeView").collapse (".k-item");
+		setCursor ();
+	},
+	oLevel : function (status, id_node) {
+		var treeview = \$("#splitted_tree_window_left").data("kendoTreeView");
+		var item = treeview.dataSource.get (id_node);
+		if (item) {
+			var node = treeview.findByUid (item.uid);
+			if (status) {
+				treeview.expand (node);
+				treeview.expand (node.find('li'));
+			} else {
+				treeview.collapse (node.find('li'));
+				treeview.collapse (node);
+			}
+		}
+
+		setCursor ();
+	}
+};
+EOJS
+
+
 
 	} elsif ($options -> {active} == 2) {
 
@@ -3584,6 +3616,7 @@ sub draw_node {
 			text           => $options -> {label},
 			parent         => $i -> {parent},
 			target         => $i -> {target},
+			is_open        => $i -> {is_open},
 			href           => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
 			imageUrl       => $options -> {icon} ? _icon_path ($options -> {icon}) : undef,
 			clipboard_text => $i -> {clipboard_text},
