@@ -4281,7 +4281,9 @@ function toggle_field (name, is_visible, is_clear_field) {
 	}
 }
 
-function toggle_field_id (id, is_visible,is_clear_field) {
+function toggle_field_id (id, is_visible, is_clear_field) {
+
+	is_visible = is_visible > 0;
 
 	var full_id;
 	if (document.getElementById('input_' + id))
@@ -4293,7 +4295,13 @@ function toggle_field_id (id, is_visible,is_clear_field) {
 	if(!full_id)
 		return 0;
 	var td_field = $('[id=' + full_id + ']').closest('td');
+
+	if (td_field.is(":visible") === is_visible) {
+		return;
+	}
+
 	toggle_field_and_row(td_field, is_visible);
+
 	if (is_clear_field == 2)
 		document.getElementById(full_id).value = 0;
 	else if (is_clear_field == 1)
