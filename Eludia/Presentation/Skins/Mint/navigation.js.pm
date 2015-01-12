@@ -2550,17 +2550,18 @@ function init_page (options) {
 		});
 	});
 
-	if (top.message) {
+	if (top.localStorage && top.localStorage ['message']) {
 		require(['kendo.notification.min'], function() {
 			var notification = $("#notification", top.document).data("kendoNotification");
 			if (!notification) {
-				notification = $("#notification", top.document).kendoNotification({
+				notification = $("<span id='notification'/>").appendTo($(top.document.body)).kendoNotification({
 					stacking: "down",
 					button: true
 				}).data("kendoNotification");
 			}
-			notification.show (top.message);
-			top.message = '';
+			notification.show (top.localStorage ['message'], top.localStorage ['message_type']);
+			top.localStorage ['message'] = '';
+			top.localStorage ['message_type'] = '';
 		});
 	}
 
