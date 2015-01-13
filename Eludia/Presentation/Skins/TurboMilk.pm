@@ -4297,4 +4297,39 @@ sub draw_form_field_article {
 
 }
 
+################################################################################
+
+sub draw_chart {
+
+	my ($_SKIN, $options, $data) = @_;
+
+	return '' if $options -> {off};
+
+	my $chart_options = $_JSON -> encode ($options -> {chart});
+
+	my $datasource_options = $_JSON -> encode ({
+		data => $data || []
+	});
+
+	return <<EOH;
+<script>
+	var chartOptions = $chart_options;
+	var chartDataSource = $datasource_options;
+	var seriesClick = function (e) {
+		var href = e.dataItem[e.series.field + '_href'] || e.series.href;
+		if (!href) {
+			return;
+		}
+		href = href  + '&salt=' + Math.random() + '&sid=' + $_REQUEST{sid};
+		dialog_open ({
+			'href': href,
+			'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
+		});
+	};
+	var chartName = '$$options{name}';
+</script>
+<iframe src="/i/chart.html" frameborder="2" scrolling="yes" style="overflow-y:auto;height:800;width:100%" height="800" width="100%"></iframe>
+EOH
+}
+
 1;

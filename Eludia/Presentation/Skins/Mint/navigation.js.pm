@@ -2550,6 +2550,32 @@ function init_page (options) {
 		});
 	});
 
+	$('.eludia-chart').each(function () {
+		var options = $(this).data('chart-options');
+		options.dataSource = new kendo.data.DataSource($(this).data('chart-datasource'));
+
+		options.seriesClick = function (e) {
+			var href = e.dataItem[e.series.field + '_href'] || e.series.href;
+			if (!href) {
+				return;
+			}
+			href = href  + '&salt=' + Math.random() + '&sid=' + request ['sid'];
+			dialog_open ({
+				'href': href,
+				'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
+			});
+		};
+
+		$(this).kendoChart(options);
+
+		var chart = $(this).data('kendoChart');
+		$(window).resize (function() {
+			chart.refresh();
+		});
+
+		$('input[name=svg_text_' + $(this).data('name') + ']').val(chart.svg());
+	});
+
 	if (top.localStorage && top.localStorage ['message']) {
 		require(['kendo.notification.min'], function() {
 			var notification = $("#notification", top.document).data("kendoNotification");
