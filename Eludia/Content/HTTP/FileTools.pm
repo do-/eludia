@@ -20,6 +20,12 @@ sub download_file_header {
 
 	my ($options) = @_;
 
+	set_cookie (
+		-name => 'download_salt',
+		-value => $_REQUEST {__salt},
+		-path => '/'
+	);
+
 	$r -> status (200);
 
 	$options -> {file_name} =~ s{.*\\}{};
