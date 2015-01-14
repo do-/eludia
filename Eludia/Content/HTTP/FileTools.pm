@@ -24,7 +24,7 @@ sub download_file_header {
 		-name => 'download_salt',
 		-value => $_REQUEST {__salt},
 		-path => '/'
-	);
+	) if $_REQUEST {__salt};
 
 	$r -> status (200);
 
