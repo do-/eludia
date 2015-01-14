@@ -3401,6 +3401,7 @@ sub treeview_convert_nodes {
 			is_checkbox    => $n -> {is_checkbox},
 			is_radio       => $n -> {is_radio},
 			expanded       => $n -> {is_open} || $n -> {_io},
+			color          => $i -> {color},
 		};
 
 		$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
