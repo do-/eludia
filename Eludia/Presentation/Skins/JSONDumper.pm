@@ -44,6 +44,8 @@ sub draw_error_page {
 
 		message => $_REQUEST {error},
 
+		message_type => 'error',
+
 		field   => $page -> {error_field},
 
 	});

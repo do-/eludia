@@ -1871,10 +1871,8 @@ EOJS
 			contentType : false,
 			dataType: 'json',
 			success: function(data) {
-				if (data.message) {
-					alert(data.message);
-					return;
-				}
+				top.localStorage ['message'] = data.message;
+				top.localStorage ['message_type'] = data.message_type;
 				location.reload(true);
 			},
 			error: function(data) {

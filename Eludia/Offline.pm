@@ -114,6 +114,15 @@ sub initialize_offline_script_execution {
 
 		}
 
+	} else {
+
+		if ( $new_uid ) {
+
+			setgid ($new_gid);
+			setuid ($new_uid);
+
+		}
+
 	}
 
 }
