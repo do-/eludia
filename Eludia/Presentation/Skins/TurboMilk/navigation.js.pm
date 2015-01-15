@@ -235,17 +235,20 @@ function dialog_open (options) {
 }
 
 function close_multi_select_window (ret) {
-    var w = window, i = 0;
-    for (;i < 5 && w.name != '_modal_iframe'; i ++)
-	w = w.parent;
-    if (w.name == '_modal_iframe') {
-	w.returnValue = ret;
-	w.close ();
-    } else {
-	top.returnValue = ret;
-	top.close ();
-    }
+	var w = window, i = 0;
+	for (;i < 5 && w.name != '_modal_iframe'; i ++)
+		w = w.parent;
+	if (w.name == '_modal_iframe') {
+		if (ret)
+			w.returnValue = ret;
+		w.parent.$('DIV.modal_div').dialog ('close');
+	} else {
+		if (ret)
+			top.returnValue = ret;
+		top.close ();
+	}
 }
+
 function encode1251 (str) {
 
 //	var r = /[à-ÿÀ-ß]/g;

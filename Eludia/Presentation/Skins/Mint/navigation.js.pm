@@ -227,10 +227,12 @@ function close_multi_select_window (ret) {
 	for (;i < 5 && w.name != '_modal_iframe'; i ++)
 		w = w.parent;
 	if (w.name == '_modal_iframe') {
-		w.returnValue = ret;
+		if (ret)
+			w.returnValue = ret;
 		w.parent.$('DIV.modal_div').dialog ('close');
 	} else {
-		top.returnValue = ret;
+		if (ret)
+			top.returnValue = ret;
 		top.close ();
 	}
 }
