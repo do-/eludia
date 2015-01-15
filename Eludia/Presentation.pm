@@ -1989,6 +1989,12 @@ sub get_composite_table_headers {
 	my $cnt = @{$headers -> [$i]};
 	$options -> {level_indexes} -> [$i] ||= 0;
 
+	if ($cnt == 0 && $colspan > 0) {
+		return {
+			headers => [map {{label => ''}} (1 .. $colspan)],
+		}
+	}
+
 	for (; $options -> {level_indexes} -> [$i] < $cnt && $colspan > 0; $options -> {level_indexes} -> [$i] ++) {
 
 		my $j = $options -> {level_indexes} -> [$i];
