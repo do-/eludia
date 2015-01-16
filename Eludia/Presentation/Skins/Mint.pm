@@ -1085,53 +1085,13 @@ sub draw_form_field_tree {
 	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
 	$_REQUEST {__libs} -> {kendo} -> {splitter} = 1;
 
-	my %p2n = ();
-	my %i2n = ();
-	foreach my $i (@{$options -> {values}}) {
-
-		my $n = $i -> {__node};
-
-		my $nn = {
-			id          => $i -> {id},
-			parent      => $i -> {parent},
-			text        => $n -> {name},
-			is_checkbox => $n -> {is_checkbox},
-			is_radio    => $n -> {is_radio},
-		};
-
-		$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
-
-		push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
-
-		$i2n {$i -> {id}} = $nn;
-
-	}
-
-	if (my $id = $options -> {selected_node}) {
-
-		while (my $nn = $i2n {$id}) {
-			$nn -> {expanded} = \1;
-			$id = $nn -> {parent};
-		}
-	} elsif (@{$p2n {0}} == 1) {
-		$p2n {0} -> [0] -> {expanded} = \1;
-	}
-
-	foreach my $nn (values %i2n) {
-
-		my $items = $p2n {$nn -> {id}} or next;
-
-		$nn -> {items} = $items;
-
-	}
-
-	my $data = $_JSON -> encode ($p2n {0} ||= []);
+	my $data = $_SKIN -> treeview_convert_nodes ($options -> {values}, $options);
 
 	my $name = $options -> {name} || 'd';
 	$options->{height} ||= 200;
 
 	$_REQUEST {__on_load} .= <<EOJS;
- \$("#${name}_treeview").kendoTreeView({
+ \$("#${name}_treeview").kendoTreeView ({
 	checkboxes: {
 		template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='_${name}_#=item.id#' value='1' #if(item.is_checkbox == 2){# checked #}#/> #}#"
 	},
@@ -1610,51 +1570,11 @@ sub draw_toolbar_input_tree {
 
 	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
 	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
-	push @{$_REQUEST{__include_js}}, 'libs/kendo.web.ext';
 
 	my $id = "toolbar_input_tree_$options->{name}";
 
-	my %p2n = ();
-	my %i2n = ();
-	foreach my $i (@{$options -> {values}}) {
+	my $data = $_SKIN -> treeview_convert_nodes ($options -> {values}, $options);
 
-		my $n = $i -> {__node};
-
-		my $nn = {
-			id          => $i -> {id},
-			parent      => $i -> {parent},
-			text        => $n -> {name},
-			is_checkbox => $n -> {is_checkbox},
-			is_radio    => $n -> {is_radio},
-		};
-
-		$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
-
-		push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
-
-		$i2n {$i -> {id}} = $nn;
-
-	}
-
-	if (my $id = $options -> {selected_node}) {
-
-		while (my $nn = $i2n {$id}) {
-			$nn -> {expanded} = \1;
-			$id = $nn -> {parent};
-		}
-	} elsif (@{$p2n {0}} == 1) {
-		$p2n {0} -> [0] -> {expanded} = \1;
-	}
-
-	foreach my $nn (values %i2n) {
-
-		my $items = $p2n {$nn -> {id}} or next;
-
-		$nn -> {items} = $items;
-
-	}
-
-	my $data = $_JSON -> encode ($p2n {0} ||= []);
 	my $name = $options -> {name};
 	my $value = $options -> {label};
 	$value =~ s/\"/\\"/g;
@@ -1662,29 +1582,32 @@ sub draw_toolbar_input_tree {
 	$options -> {height} ||= 400;
 	$options -> {width}  ||= 600;
 	my $dropdown_width = $options -> {max_len} * 3;
-
+	$_REQUEST {__script} .= <<EOJS;
+var ${id}_changed = 0;
+EOJS
 	$_REQUEST {__on_load} .= <<EOJS;
-var ${id}_changed;
-var ${id}_el = \$("#$id").kendoExtDropDownTreeView({
-	dropDownWidth : $dropdown_width,
-	value      : "$value",
-	tree_close : function (e) {
-		if (${id}_changed) {
-			\$("#toolbar_input_tree_id_dep").parents("FORM").submit ();
-		}
-	},
-	treeview   : {
-		width      : $options->{width},
-		height     : $options->{height},
-		checkboxes : {
-			template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='${name}_#=item.id#' value='1' #console.log(item); if(item.is_checkbox == 2){# checked #}#/> #}#"
+require (['/i/mint/libs/kendo.web.ext.js'], function () {
+	var ${id}_el = \$("#$id").kendoExtDropDownTreeView ({
+		dropDownWidth : $dropdown_width,
+		value      : "$value",
+		tree_close : function (e) {
+			if (${id}_changed) {
+				\$("#$id").parents("FORM").submit ();
+			}
 		},
-		dataSource : {
-			data : $data
+		treeview   : {
+			width      : $options->{width},
+			height     : $options->{height},
+			checkboxes : {
+				template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='${name}_#=item.id#' value='1' # if(item.is_checkbox == 2){# checked #}#/> #}#"
+			},
+			dataSource : {
+				data : $data
+			}
 		}
-	}
+	});
+	\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
 });
-\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
 EOJS
 
 
@@ -3455,6 +3378,65 @@ sub lrt_finish {
 
 }
 
+################################################################################
+
+sub treeview_convert_nodes {
+
+	my ($_SKIN, $list, $options) = @_;
+
+	my %p2n = ();
+	my %i2n = ();
+
+	foreach my $i (@$list) {
+
+		my $n = $i -> {__node};
+
+		my $nn = {
+			id             => $i -> {id},
+			parent         => $i -> {parent},
+			text           => $n -> {text},
+			href           => $options -> {url_base} . $n -> {url},
+			menu           => $i -> {__menu},
+			clipboard_text => $i -> {clipboard_text},
+			is_checkbox    => $n -> {is_checkbox},
+			is_radio       => $n -> {is_radio},
+			expanded       => $n -> {is_open} || $n -> {_io},
+			color          => $i -> {color},
+		};
+
+		$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
+
+		push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
+
+		$i2n {$i -> {id}} = $nn;
+
+	}
+
+	if (my $id = $options -> {selected_node}) {
+
+		while (my $nn = $i2n {$id}) {
+			$nn -> {expanded} = \1;
+			$id = $nn -> {parent};
+		}
+
+	} elsif (@{$p2n {0}} == 1) {
+
+		$p2n {0} -> [0] -> {expanded} = \1;
+
+	}
+
+	foreach my $nn (values %i2n) {
+
+		my $items = $p2n {$nn -> {id}} or next;
+
+		$nn -> {items} = $items;
+
+	}
+
+	return $_JSON -> encode ($p2n {0} ||= []);
+
+}
+
 
 ################################################################################
 
@@ -3466,15 +3448,15 @@ sub draw_tree {
 
 		foreach my $i (@$list) {
 
-			foreach my $key (keys %{$i -> {__node}}) {
-				$i -> {$key} = $i -> {__node} -> {$key};
-				$i -> {menu} = $i -> {__menu};
-			}
+			my $item = {%$i};
+			%$i = %{$item -> {__node}};
 
-			$i -> {href}   = $options -> {url_base} . $i -> {href};
+			map {$i -> {$_} = $item -> {$_}} qw (color expanded cnt_children);
 
-			delete $i -> {__node};
-			delete $i -> {level};
+			$i -> {expanded}   ||= $item -> {is_open};
+			$i -> {menu}         = $item -> {__menu};
+			$i -> {href}         = $options -> {url_base} . $i -> {href};
+
 		};
 
 		return;
@@ -3521,46 +3503,7 @@ sub draw_tree {
 
 	if (!$options -> {active}) {
 
-		my %p2n = ();
-		my %i2n = ();
-
-		foreach my $i (@$list) {
-
-			my $n = $i -> {__node};
-
-			my $nn = {
-				id     => $i -> {id},
-				parent => $i -> {parent},
-				text   => $n -> {name},
-				href   => $options -> {url_base} . $n -> {url},
-				menu   => $i -> {__menu},
-				clipboard_text => $i -> {clipboard_text},
-			};
-
-			$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
-
-			push @{$p2n {0 + $i -> {parent}} ||= []}, $nn;
-
-			$i2n {$i -> {id}} = $nn;
-
-		}
-
-		my $id = $options -> {selected_node};
-
-		while (my $nn = $i2n {$id}) {
-			$nn -> {expanded} = \1;
-			$id = $nn -> {parent};
-		}
-
-		foreach my $nn (values %i2n) {
-
-			my $items = $p2n {$nn -> {id}} or next;
-
-			$nn -> {items} = $items;
-
-		}
-
-		my $data = $_JSON -> encode ($p2n {0} ||= []);
+		my $data = $_SKIN -> treeview_convert_nodes ($list, $options);
 
 		$js .= qq {
 
@@ -3569,6 +3512,36 @@ sub draw_tree {
 			});
 
 		};
+
+		$_REQUEST {__script} .= <<EOJS;
+; var d = {
+	oAll : function (status) {
+		if (status)
+			\$("#splitted_tree_window_left").data("kendoTreeView").expand (".k-item");
+		else
+			\$("#splitted_tree_window_left").data("kendoTreeView").collapse (".k-item");
+		setCursor ();
+	},
+	oLevel : function (status, id_node) {
+		var treeview = \$("#splitted_tree_window_left").data("kendoTreeView");
+		var item = treeview.dataSource.get (id_node);
+		if (item) {
+			var node = treeview.findByUid (item.uid);
+			if (status) {
+				treeview.expand (node);
+				treeview.expand (node.find('li'));
+			} else {
+				treeview.collapse (node.find('li'));
+				treeview.collapse (node);
+			}
+		}
+
+		setCursor ();
+	}
+};
+EOJS
+
+
 
 	} elsif ($options -> {active} == 2) {
 
@@ -3606,6 +3579,7 @@ sub draw_tree {
 			dataSource : dataSource,
 			expand     : treeview_onexpand,
 			collapse   : treeview_oncollapse,
+			template   : "# if (item.color) { # <span style='color: #= item.color #'>#= item.text #<span> # } else { # #= item.text # # } #",
 			select: function (e) {
 				treeview_onselect_node (e.node);
 			}
@@ -3637,12 +3611,13 @@ sub draw_node {
 	if ($r -> headers_in -> {'X-Requested-With'} eq 'XMLHttpRequest') {
 
 		my $node = {
-			id      => $options -> {id},
-			text    => $options -> {label},
-			parent   => $i -> {parent},
-			target   => $i -> {target},
-			href     => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
-			imageUrl => $options -> {icon}? _icon_path ($options -> {icon}) : undef,
+			id             => $options -> {id},
+			text           => $options -> {label},
+			parent         => $i -> {parent},
+			target         => $i -> {target},
+			is_open        => $i -> {is_open},
+			href           => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
+			imageUrl       => $options -> {icon} ? _icon_path ($options -> {icon}) : undef,
 			clipboard_text => $i -> {clipboard_text},
 		};
 
@@ -3654,7 +3629,7 @@ sub draw_node {
 	my $node = {
 		id    => $options -> {id},
 		pid   => $options -> {parent},
-		name  => $options -> {label},
+		text  => $options -> {label},
 		url   => ($options -> {href_tail} ? '' : $ENV {SCRIPT_URI}) . $options -> {href},
 		title => $options -> {title} || $options -> {label},
 	};

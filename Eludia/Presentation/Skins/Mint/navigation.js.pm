@@ -1967,7 +1967,7 @@ function treeview_convert_plain_response (response) {
 	for (var i in items) {
 		var item = items [i];
 		idx [item.id] = item;
-		item.text = item.label;
+		item.text = item.text || item.label;
 
 		// schema.model.id added to request when loading children
 		item.__parent = item.id;
