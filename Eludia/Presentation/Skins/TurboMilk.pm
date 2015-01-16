@@ -4332,4 +4332,37 @@ sub draw_chart {
 EOH
 }
 
+################################################################################
+
+sub draw_print_chart_images {
+
+	my ($_SKIN, $options) = @_;
+
+	my $html = <<EOH;
+	<form
+		name="print_chart_images"
+		target=invisible
+		enctype="$$options{enctype}"
+		method="post"
+	>
+EOH
+
+	$html .= dump_hiddens (
+
+		map {[$_ -> {name} => $_ -> {value}]}
+
+			@{$options -> {keep_params}}
+
+	);
+
+	foreach my $chart_name (@{$_REQUEST {__charts_names}}) {
+
+		$html .= "<input name='svg_text_$chart_name' type='hidden'>";
+
+	}
+
+	$html .= '</form>';
+}
+
+
 1;
