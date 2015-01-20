@@ -3749,12 +3749,16 @@ sub draw_chart {
 
 	my ($_SKIN, $options, $data) = @_;
 
-	my $chart_options = $_JSON -> encode ($options -> {chart});
-	$chart_options =~ s/\"([^"]+)\":/$1:/g;
+	$_REQUEST {__libs} -> {kendo} -> {'dataviz.core'} = 1;
+	$_REQUEST {__libs} -> {kendo} -> {'dataviz.chart'} = 1;
 
-	$options -> {data} -> {data} = $data;
-	my $data_source_options = $_JSON -> encode ($options -> {data});
-	$data_source_options =~ s/\"([^"]+)\":/$1:/g;
+	$options -> {chart} -> {categoryAxis} -> {labels} -> {template} =~ s|span|tspan|ig;
+
+	my $chart_options = $_JSON -> encode ($options -> {chart});
+
+	my $datasource_options = $_JSON -> encode ({
+		data => $data || []
+	});
 
 	$options -> {chartArea} -> {height} ||= 400;
 
@@ -3762,59 +3766,11 @@ sub draw_chart {
 	<table id='$$options{name}' cellspacing=0 cellpadding=0 height="$options->{chartArea}->{height}" width="100%">
 		<tr>
 			<td>
-				<script>
-
-					function series_Click (dialog) {
-						var dialog_width = screen.availWidth - (screen.availWidth <= 800 ? 50 : 100);
-						var dialog_height = screen.availHeight - (screen.availHeight <= 600 ? 50 : 100);
-
-						dialog.href = dialog.href.replace(/\\#?\\&_salt=[\\d\\.]+\$/, '');
-
-						dialog.href += '&_salt=' + Math.random ();
-
-						var result = window.showModalDialog(
-										'$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}'
-										, dialog
-										, 'status:no;help:no;resizable:no' + ';dialogWidth=' + dialog_width + 'px;dialogHeight=' + dialog_height + 'px'
-									);
-					}
-
-					var DataSource_$$options{name} = new kendo.data.DataSource($data_source_options);
-
-					var chartOptions_$$options{name} = $chart_options;
-					chartOptions_$$options{name}.dataSource = DataSource_$$options{name};
-					chartOptions_$$options{name}.theme = 'silver';
-					chartOptions_$$options{name}.seriesClick = function (e) {
-						if (e.dataItem[e.series.field + '_href'] || e.series.href) {
-							series_Click (
-								{
-									'href': (e.dataItem[e.series.field + '_href'] || e.series.href)  + '&salt=' + Math.random() + '&sid=$_REQUEST{sid}',
-									'title': e.series.name + ' - (' + e.category + ':' + e.value + ')'
-								}
-							);
-						}
-					};
-
-					function createChart_$$options{name}() {
-						\$(".chart_$$options{name}").kendoChart(chartOptions_$$options{name});
-
-						var chart_$$options{name} = \$(".chart_$$options{name}").data("kendoChart");
-
-						\$("input[name=svg_text_$$options{name}]").val(chart_$$options{name}.svg());
-
-						\$(window).resize (function() {
-							chart_$$options{name}.refresh();
-						})
-					}
-
-				</script>
-				<div class="chart_$$options{name}" style="padding:0px;"></div>
+				<div class="eludia-chart" style="padding:0px;" data-name='$$options{name}' data-chart-datasource='$datasource_options' data-chart-options='$chart_options'></div>
 			</td>
 		</tr>
 	</table>
 EOH
-
-	$_REQUEST {__on_load} .= ";setTimeout ('createChart_$$options{name}();', $_REQUEST{__charts_count} * 50);";
 
 	return $html;
 }

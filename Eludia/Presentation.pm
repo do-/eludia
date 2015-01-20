@@ -3663,7 +3663,7 @@ sub draw_print_chart_images {
 
 	$options -> {keep_params} = \@keep_params;
 
-	my $html = $_SKIN -> draw_print_chart_images ($options);
+	my $html .= $_SKIN -> draw_print_chart_images ($options);
 
 	__profile_out ('draw.print_chart_images');
 
@@ -3685,19 +3685,24 @@ sub get_chart_image_pathes {
 
 	my @chart_keys;
 
-	foreach my $key (keys %_REQUEST) {
+	foreach my $key (keys %_REQUEST, keys %$data) {
 		next unless ($key =~ /^svg_text_(\w+)$/);
 
 		push @chart_keys, $1;
 	}
 
+	@chart_keys or return [];
+
 	my $chart_names = [sort {$a cmp $b} @chart_keys];
 
 	my $rsvg;
-	if ($i18n -> {_charset} eq 'windows-1251') {
 
+	if ($i18n -> {_charset} eq 'windows-1251') {
 		eval { require Image::LibRSVG; };
-		if ($@) {warn $@;return;}
+		if ($@) {
+			warn $@;
+			return [];
+		}
 
 		$rsvg = new Image::LibRSVG ();
 	}
@@ -3706,43 +3711,76 @@ sub get_chart_image_pathes {
 
 		$data -> {"chart_image_path_$name"} = '';
 
-		next unless $_REQUEST {"svg_text_$name"};
+		my $key = "svg_text_$name";
+		my $svg_text = $_REQUEST {$key} || $data -> {$key};
+
+		next unless $svg_text;
 
 		push @{$data -> {charts_names}}, $name;
 
-		open CHART_IMAGE, '>' . $preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg";
+		my $chart_path_relative = $chart_image_path . "$name.svg";
 
-		$_REQUEST {"svg_text_$name"} =~ s/&lt;/</g;
-		$_REQUEST {"svg_text_$name"} =~ s/&gt;/>/g;
+		my $chart_path = $preconf -> {_} -> {docroot} . $chart_path_relative;
 
-		$_REQUEST {"svg_text_$name"} =~ /^.*width='(\d+)px'.*$/;
-		my $width = $1 || 0;
-		$_REQUEST {"svg_text_$name"} =~ /^.*height='(\d+)px'.*$/;
-		my $height = $1 || 0;
+		open CHART_IMAGE, '>' . $chart_path
+			or die "Couldn't open file '$chart_path': $!";;
+		binmode (CHART_IMAGE, ":utf-8");
+
+		$svg_text =~ s/&lt;/</g;
+		$svg_text =~ s/&gt;/>/g;
+		$svg_text =~ s/&quot;/'/g;
+		$svg_text =~ s|<span|<tspan|g;
+		$svg_text =~ s|/span>|/tspan>|g;
+		$svg_text =~ s|<tspan><tspan|<tspan|g;
+		$svg_text =~ s|</tspan></tspan>|</tspan>|g;
+
+		# name cannot be uuid (xml id attribute value must be xml name - can't start width digit)
+		$svg_text =~ s| id='[\w-]+'||g;
+
+		$svg_text =~ /^.*width='(\d+)px'.*$/;
+		my $width = $1;
+		$svg_text =~ /^.*height='(\d+)px'.*$/;
+		my $height = $1;
 
 		$data -> {"chart_image_width_$name"} = sprintf ("%.0f", $width / 1.65);
 		$data -> {"chart_image_heigth_$name"} = sprintf ("%.0f", $height / 1.65);
 
-		$_REQUEST {"svg_text_$name"} = Encode::decode('cp-1251', $_REQUEST {"svg_text_$name"}) if ($i18n -> {_charset} eq 'windows-1251');
-		print CHART_IMAGE $_REQUEST {"svg_text_$name"};
+		$svg_text = Encode::decode('cp-1251', $svg_text) if $i18n -> {_charset} eq 'windows-1251';
+		print CHART_IMAGE $svg_text;
 
 		close CHART_IMAGE;
 
-		my $chart_path = $chart_image_path . "$name." . ($i18n -> {_charset} eq 'windows-1251' ? "png" : "svg");
+		if ($i18n -> {_charset} eq 'windows-1251') {
 
-		push @$chart_image_pathes, $preconf -> {_} -> {docroot} . $chart_path;
+			my $chart_path_png = $chart_path;
 
-		if ($rsvg && $i18n -> {_charset} eq 'windows-1251') {
-			$rsvg -> convert ($preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg", $preconf -> {_} -> {docroot} . $chart_path);
-			unlink $preconf -> {_} -> {docroot} . $chart_image_path . "$name.svg";
+			$chart_path_png =~ s/\.svg$/\.png/;
+
+			$rsvg -> convert ($chart_path, $chart_path_png);
+			if (! -f $chart_path_png){
+				warn "rsvg convert $chart_path FAILED";
+				next;
+			}
+
+			$chart_path = $chart_path_png;
+
+			$chart_path_relative =~ s/\.svg$/\.png/;
+		}
+
+		if (!$data -> {"chart_image_width_$name"} || !$data -> {"chart_image_heigth_$name"}) {
+			require Image::Size;
+			my ($w, $h, $id) = Image::Size::imgsize ($chart_path);
+			$data -> {"chart_image_width_$name"} = 0 + $w;
+			$data -> {"chart_image_heigth_$name"} = 0 + $h;
 		}
 
 		my $host = $preconf -> {reporting_api} -> {server_name}
 			|| $ENV {HTTP_HOST}
 			|| $preconf -> {mail} -> {server_name};
 
-		$data -> {"chart_image_path_$name"} = "http://" . $host . "/" . $chart_path if (-e  $preconf -> {_} -> {docroot} . $chart_path);
+		$data -> {"chart_image_path_$name"} = "http://" . $host . "/" . $chart_path_relative if -f $chart_path;
 
+		push @$chart_image_pathes, $chart_path;
 	}
 
 	return $chart_image_pathes;
