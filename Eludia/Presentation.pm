@@ -3729,7 +3729,7 @@ sub get_chart_image_pathes {
 		$svg_text =~ s|</tspan></tspan>|</tspan>|g;
 
 		# name cannot be uuid (xml id attribute value must be xml name - can't start width digit)
-		$svg_text =~ s|id='[\w-]+'||g;
+		$svg_text =~ s| id='[\w-]+'||g;
 
 		$svg_text =~ /^.*width='(\d+)px'.*$/;
 		my $width = $1;
