@@ -3741,9 +3741,22 @@ sub lrt_print {
 
 	my $_SKIN = shift;
 
-	my $id = int (time * rand);
+	return
+		if $_REQUEST {_lrt_show_time} && int (time() - $_REQUEST {__lrt_show_time}) <= $_REQUEST {_lrt_show_time};
+
+	$_REQUEST {__lrt_show_time} = time();
+
+	my $time = '';
+	unless ($_REQUEST {__lrt_no_time}) {
+		my $sec = int ($_REQUEST {__lrt_show_time} - $_REQUEST {__lrt_time});
+		my $min = int ($sec / 60);
+		$sec -= $min * 60;
+		$time = sprintf ("%02d:%02d - ", $min, $sec);
+	}
+
+	my $id = int ($_REQUEST {__lrt_show_time} * rand);
 	$r -> print ("<span id='$id'><font color=white>");
-	$r -> print (@_);
+	$r -> print ($time, @_);
 	$r -> print ("</span>");
 	$r -> print ($lrt_bar);
 	$r -> print (<<EOH);
@@ -3752,7 +3765,6 @@ sub lrt_print {
 	</script>
 	</body></html>
 EOH
-
 
 }
 
@@ -3772,6 +3784,7 @@ sub lrt_ok {
 	my $_SKIN = shift;
 	my $color = $_[1] ? 'red' : 'yellow';
 	my $label = $_[1] ? 'Ошибка' : 'ОК';
+	local $_REQUEST {__lrt_no_time} = 1;
 	$_SKIN -> lrt_println ("$_[0] <font color='$color'><b>[$label]</b></font>");
 }
 
@@ -3786,11 +3799,18 @@ sub lrt_start {
 	$r -> content_type ('text/html; charset=windows-1251');
 	$r -> send_http_header ();
 
+	$_REQUEST {__lrt_time} = $_REQUEST {__lrt_show_time} = time();
+
+	local $_REQUEST {_lrt_show_time} = 0;
+	local $_REQUEST {__lrt_no_time} = 1;
+
 	$_SKIN -> lrt_print (<<EOH);
 		<html><head><LINK href="$_REQUEST{__static_url}/eludia.css?$_REQUEST{__static_salt}" type="text/css" rel="STYLESHEET"><style>BODY {background-color: black}</style></head><BODY BGCOLOR='#000000' TEXT='#dddddd'><font face='Courier New'>
 			<iframe name=invisible src="$_REQUEST{__static_url}/0.html" width=0 height=0 application="yes">
 			</iframe>
 EOH
+
+	$_SKIN -> lrt_println ('Время - Сообщение');
 
 }
 
@@ -3801,6 +3821,9 @@ sub lrt_finish {
 	my $_SKIN = shift;
 
 	my ($banner, $href, $options) = @_;
+
+	local $_REQUEST {__lrt_no_time} = 1;
+	local $_REQUEST {_lrt_show_time} = 0;
 
 	if ($options -> {kind} eq 'download') {
 
@@ -3836,6 +3859,9 @@ EOH
 EOH
 
 	}
+
+	delete $_REQUEST {__lrt_time};
+	delete $_REQUEST {__lrt_show_time};
 
 }
 
