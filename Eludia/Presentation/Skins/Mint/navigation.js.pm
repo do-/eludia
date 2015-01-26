@@ -2658,6 +2658,8 @@ function init_page (options) {
 		options.on_load ();
 	}
 
+	$('A.k-button').on('dragstart', function(event) { event.preventDefault(); });
+
 	require (['/i/_skins/Mint/jquery.blockUI.js']);
 
 }
