@@ -1808,7 +1808,7 @@ sub draw_toolbar_input_checkbox {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<li class="toolbar nowrap">';
+	my $html = '<li class="toolbar nowrap ccbx">';
 
 	if ($options -> {label}) {
 		$html .= qq {<label for="$options">$$options{label}:</label>};

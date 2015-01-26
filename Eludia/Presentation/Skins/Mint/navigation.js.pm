@@ -1618,6 +1618,8 @@ function td_on_click (event) {
 
 	if (td.tagName != 'TD') return;
 
+	$('[type="checkbox"]', td).click ();
+
 	var tr = td;
 	while (tr && tr.tagName != 'TR') {
 		tr = tr.parentNode;
@@ -2659,6 +2661,9 @@ function init_page (options) {
 	}
 
 	$('A.k-button').on('dragstart', function(event) { event.preventDefault(); });
+	$('UL.filters > LI.ccbx').on('click', function (e) {
+		$('[type="checkbox"]', e.target).click ();
+	});
 
 	require (['/i/_skins/Mint/jquery.blockUI.js']);
 
