@@ -519,6 +519,10 @@ A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, 
 	border: 2px solid black;
 }
 
+.form-hidden-field {
+	display : none;
+}
+
 .form-very-active-inputs {
 	background-color: #fff!important;
 	font-size: 13px!important;
