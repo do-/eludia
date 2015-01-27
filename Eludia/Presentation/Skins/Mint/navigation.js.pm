@@ -2503,15 +2503,15 @@ function init_page (options) {
 				expanded_nodes[stored_expanded_nodes[i]] = true;
 			}
 		}
-		$(window).on('resize', function () {
+		var resizeTree = debounce (function () {
 			var ontouchcontentheight = $(window.parent.document).find('iframe').height() || $(window).height();
 			$('#touch_welt').css('height', ontouchcontentheight);
 			$('#__content_iframe').css('height', ontouchcontentheight);
-			setTimeout(function () {
-				var stw = $("#splitted_tree_window").data("kendoSplitter");
-				stw.size('#splitted_tree_window_left', "220px" );
-			}, 500)
-		})
+			var stw = $("#splitted_tree_window").data("kendoSplitter");
+			stw.size('#splitted_tree_window_left', "220px" );
+		}, 500);
+
+		$(window).on('resize', resizeTree);
 	}
 
 	activate_suggest_fields ();
@@ -2587,9 +2587,8 @@ function init_page (options) {
 		$(this).kendoChart(options);
 
 		var chart = $(this).data('kendoChart');
-		$(window).resize (function() {
-			chart.refresh();
-		});
+		var resizeChart = debounce (chart.refresh, 500);
+		$(window).resize (resizeChart);
 
 		$('input[name=svg_text_' + $(this).data('name') + ']').val(chart.svg());
 	});
@@ -2650,9 +2649,9 @@ function init_page (options) {
 		try {top.setCursor (top, 'wait')} catch (e) {};
 	});
 
-	$(window).on ('resize', function (event) {
-		setTimeout (refresh_table_slider_on_resize, 500) ;
-	});
+	var resizeTableSilder = debounce (refresh_table_slider_on_resize, 500);
+
+	$(window).on ('resize', resizeTableSilder);
 
 	$(window).on ('scroll', function (event) {try {tableSlider.cell_on ();} catch(e) {};});
 
@@ -2684,3 +2683,19 @@ function stringSetsEqual (set1, set2) {
 	}
 	return setsEqual;
 }
+
+function debounce (func, wait, immediate) {
+	var timeout, result;
+	return function() {
+		var context = this, args = arguments;
+		var later = function() {
+			timeout = null;
+			if (!immediate) result = func.apply(context, args);
+		};
+		var callNow = immediate && !timeout;
+		clearTimeout(timeout);
+		timeout = setTimeout(later, wait);
+		if (callNow) result = func.apply(context, args);
+		return result;
+	};
+};
