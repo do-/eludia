@@ -2818,6 +2818,7 @@ sub draw_super_table__only_table {
 		id          => $options -> {id_table},
 		fix_columns => $options -> {__fixed_cols} + 0,
 		fix_rows    => $options -> {fix_rows} + 0,
+		disable_reorder_columns => $options -> {disable_reorder_columns} ? $_JSON -> true : $_JSON -> false,
 		columns     => $columns,
 		total       => 0 + $options -> {pager} -> {total},
 		cnt         => 0 + $options -> {pager} -> {cnt},
