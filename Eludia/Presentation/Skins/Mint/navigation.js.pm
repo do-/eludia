@@ -2260,9 +2260,7 @@ function activate_suggest_fields (top_element) {
 		i.kendoAutoComplete({
 			minLength       : i.attr ('a-data-min-length') || 1,
 			filter          : 'contains',
-			suggest         : true,
 			dataTextField   : 'label',
-			highlightFirst  : true,
 			dataSource      : {
 				serverFiltering : true,
 				data: {
@@ -2296,10 +2294,14 @@ function activate_suggest_fields (top_element) {
 					});
 				}
 
-				var prev_id = $('#' + element_id + '__id').val();
+				var
+					id_element = $('#' + element_id + '__id'),
+					prev_id = id_element.val();
 
 				$('#' + element_id + '__label').val(label);
-				$('#' + element_id + '__id').val(id).trigger ('change');
+				id_element.val(id);
+				if (prev_id != id)
+					id_element.trigger ('change');
 				$('#' + element_name + '__suggest').val(id);
 
 				var onchange = i.attr ('a-data-change');
