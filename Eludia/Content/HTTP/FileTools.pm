@@ -64,7 +64,10 @@ sub download_file_header {
 		'attachment;filename' .
 		($ENV {HTTP_USER_AGENT} =~ /MSIE/ || $ENV {HTTP_USER_AGENT} =~ /chromeframe/ || $i18n -> {_charset} ne 'UTF-8' ?
 			'=' : "*=UTF-8''"
-		) . uri_escape (Encode::decode ($i18n -> {_charset}, $options -> {file_name}));
+		) . (
+			$i18n -> {_charset} eq 'UTF-8' ? uri_escape ($options -> {file_name}) : $options -> {file_name}
+		);
+
 
 	if ($content_length > 0) {
 		$r -> headers_out -> {'Content-Length'} = $content_length;
