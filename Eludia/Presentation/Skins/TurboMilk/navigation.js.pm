@@ -95,7 +95,7 @@ function clone_form_tr_for_this_plus_icon (i) {
 
 	}
 
-	var id = tr_old.attr ('id');
+	var id = tr_old.prop ('id');
 
 	var selector = "tr[id^='" + id + "']";
 
@@ -121,15 +121,15 @@ function clone_form_tr_for_this_plus_icon (i) {
 
 	});
 
-	tr_new.attr ('id', id + '_' + n);
+	tr_new.prop ('id', id + '_' + n);
 
 	var img = $('img:last', tr_new);
 
-	img.attr ('src', img.attr ('src').replace ('plus', 'minus'));
+	img.prop ('src', img.prop ('src').replace ('plus', 'minus'));
 
 	var td = $('td:first', tr_new);
 
-	td.text (img.attr ('lowsrc') + ' ' + (parseInt (img.attr ('name')) + n) + ':');
+	td.text (img.prop ('lowsrc') + ' ' + (parseInt (img.prop ('name')) + n) + ':');
 
 	$(':input', tr_new).each (function () {
 
@@ -1092,7 +1092,7 @@ function invoke_setSelectOption (a) {
 
 function setSelectOption (select, id, label) {
 
-	var max_len = $(select).attr('max_len') || window.max_len;
+	var max_len = $(select).prop('max_len') || window.max_len;
 
 	label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...');
 
@@ -3952,7 +3952,7 @@ dTree.prototype.s = function(id) {
 
 		}
 
-		$("a.nodeSel").attr ("class", "node");
+		$("a.nodeSel").prop ("class", "node");
 
 		eNew = document.getElementById("s" + this.obj + id);
 
@@ -4271,9 +4271,12 @@ function toggle_field (name, is_visible, is_clear_field) {
 	td_field.prev().toggle(is_visible);
 
 	var sibling = td_field.prev().prev().length? td_field.prev().prev() : td_field.next().next();
-	if (sibling.length) {
-		var colspan = sibling.attr('colSpan') + (is_visible? -2 : 2);
-		sibling.attr('colSpan', colspan);
+	if (sibling.length && sibling.is(":visible") === true) {
+		var colspan = sibling.prop('colSpan') + (
+			is_visible? -td_field.prop('colSpan') - 1 : td_field.prop('colSpan') + 1
+		);
+
+		sibling.prop('colSpan', colspan);
 	}
 
 	var tr = td_field.closest('tr');
@@ -4322,7 +4325,7 @@ function toggle_field_and_row (td_field, is_visible) {
 	if (td_field.next().next().length == 1){
 
 		var td_expand = td_field.next().next();
-		td_expand.attr('colSpan', is_visible ? 1 : 2 + cs);
+		td_expand.prop('colSpan', is_visible ? 1 : 2 + cs);
 
 		var is_row_visible = is_visible || td_expand.parent().children(':visible').length;
 		td_expand.parent().toggle(is_row_visible ? true : false);
@@ -4330,7 +4333,7 @@ function toggle_field_and_row (td_field, is_visible) {
 	} else if (td_field.prev().prev().length == 1){
 
 		var td_expand = td_field.prev().prev();
-		td_expand.attr('colSpan', is_visible ? 1 : 2 + cs);
+		td_expand.prop('colSpan', is_visible ? 1 : 2 + cs);
 
 		var is_row_visible = is_visible || td_expand.parent().children(':visible').length;
 		td_expand.parent().toggle(is_row_visible ? true : false);
