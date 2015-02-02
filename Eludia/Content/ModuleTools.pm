@@ -212,6 +212,18 @@ sub require_scripts_of_type ($) {
 
 	my $postfix = '/' . ucfirst $script_type;
 
+	my $checksum_kind = $script_type . '_scripts';
+
+	my $is_start_scripts = 1;
+
+	if ($preconf -> {db_store_checksums}) {
+
+		$is_start_scripts = sql_select_scalar (
+			"SELECT id FROM $conf->{systables}->{__checksums} WHERE id_checksum <> '_' AND kind = ?"
+			, $checksum_kind
+		);
+	}
+
 	foreach my $dir (grep {-d} map {$_ . $postfix} _INC ()) {
 
 		__profile_in ("require.scripts.$script_type" => {label => $dir});
@@ -255,9 +267,16 @@ sub require_scripts_of_type ($) {
 
 		}
 
-		my $checksum_kind = $script_type . '_scripts';
-
 		my ($needed_scripts, $new_checksums) = checksum_filter ($checksum_kind, '', $name2def);
+
+		if (!$is_start_scripts) {
+
+			checksum_write ($checksum_kind, $new_checksums);
+
+			__profile_out ("require.scripts.$script_type");
+
+			next;
+		}
 
 		if (%$needed_scripts == 0) {
 
@@ -267,7 +286,15 @@ sub require_scripts_of_type ($) {
 
 		}
 
-		foreach my $script (sort {$a -> {last_modified} <=> $b -> {last_modified}} grep {$needed_scripts -> {$_ -> {path}}} @scripts) {
+		@scripts = grep {$needed_scripts -> {$_ -> {path}}} @scripts;
+
+		@scripts = sort {
+			$DB_MODEL -> {tables} -> {$a -> {name}} -> {sql}
+					cmp $DB_MODEL -> {tables} -> {$b -> {name}} -> {sql}
+				|| $a -> {last_modified} <=> $b -> {last_modified}
+			} @scripts;
+
+		foreach my $script (@scripts) {
 
 			__profile_in ("require.scripts.$script_type.file", {label => $script -> {path}});
 
