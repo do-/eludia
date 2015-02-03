@@ -3573,6 +3573,8 @@ EOJS
 		};
 	}
 
+	$options -> {expand_on_select} ||= 0;
+
 	$js .= qq {
 
 
@@ -3582,7 +3584,7 @@ EOJS
 			collapse   : treeview_oncollapse,
 			template   : "# if (item.color) { # <span style='color: #= item.color #'>#= item.text #<span> # } else { # #= item.text # # } #",
 			select: function (e) {
-				treeview_onselect_node (e.node);
+				treeview_onselect_node (e.node, $$options{expand_on_select});
 			}
 
 		});
