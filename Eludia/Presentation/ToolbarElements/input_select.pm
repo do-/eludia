@@ -12,15 +12,17 @@ sub draw_toolbar_input_select {
 
 		check_href ($options -> {other});
 		$options -> {other} -> {href} =~ s{([\&\?])select\=\w+}{$1};
-		if ($options -> {other} -> {top}) {
-			unshift @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}, other => 1};
-		} else {
-			push @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}, other => 1};
-		}
 
+		if (0 == grep {$_ -> {other}} @{$options -> {values}}) {
+			if ($options -> {other} -> {top}) {
+				unshift @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}, other => 1};
+			} else {
+				push @{$options -> {values}}, {id => -1, label => $options -> {other} -> {label}, other => 1};
+			}
+		}
 	}
 
-	exists $options -> {empty} and unshift @{$options -> {values}}, {id => '', label => $options -> {empty}};
+	exists $options -> {empty} and 0 == grep {$_ -> {empty}} @{$options -> {values}} and unshift @{$options -> {values}}, {id => '', label => $options -> {empty}, empty => 1};
 
 	$options -> {value} ||= exists $_REQUEST {$options -> {name}} ? $_REQUEST {$options -> {name}} : '';
 
