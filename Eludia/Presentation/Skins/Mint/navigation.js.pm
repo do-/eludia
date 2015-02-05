@@ -2547,6 +2547,8 @@ function init_page (options) {
 	$('[data-type=datepicker]').each(function () {$(this).kendoDatePicker()});
 	$('[data-type=datetimepicker]').each(function () {$(this).kendoDateTimePicker()});
 
+	$('input[mask]').each (init_masked_text_box);
+
 	$('input[type=file]:not([data-upload-url]):not([is-native])').each(function () {
 		$(this).kendoUpload({
 			multiple : $(this).attr('data-ken-multiple') == 'true'
@@ -2666,6 +2668,25 @@ function init_page (options) {
 	});
 
 	require (['/i/_skins/Mint/jquery.blockUI.js']);
+
+}
+
+function init_masked_text_box () {
+
+	$(this).kendoMaskedTextBox({
+		mask:$(this).attr('mask')
+	});
+
+	if ($(this).data('type') == 'datepicker' || $(this).data('type') == 'datetimepicker') {
+		$(this).removeClass("k-textbox");
+
+		$(this).on('change', function () {
+			$(this).kendoMaskedTextBox({
+				mask:$(this).attr('mask'),
+			});
+			$(this).removeClass("k-textbox");
+		});
+	}
 
 }
 
