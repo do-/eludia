@@ -48,7 +48,7 @@
                 width     : optns.width,
                 height    : optns.height,
                 resizable : optns.resizable,
-//                position  : optns.position,
+                position  : optns.position,
                 closeText : '',
                 overlay   : {
                     opacity    : 0.5,
