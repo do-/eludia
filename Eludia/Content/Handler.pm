@@ -190,7 +190,7 @@ sub setup_request_params {
 
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 
-	if ($r -> header_in ('User-Agent') =~ /^Microsoft/) {
+	if ($r -> header_in ('User-Agent') =~ /^Microsoft/ && $ENV {REQUEST_URI} =~ /webdav/) {
 		$_REQUEST {type} = $_REQUEST_VERBATIM {type} = 'webdav';
 		$_REQUEST {method} = $ENV {REQUEST_METHOD};
 
