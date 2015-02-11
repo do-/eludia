@@ -369,6 +369,7 @@ sub setup_page {
 	my $page = {
 		subset => [],
 		menu   => [],
+		no_adjust_last_query_string => $_REQUEST {type} eq 'webdav',
 	};
 
 	$page -> {type} = $_REQUEST {type};
