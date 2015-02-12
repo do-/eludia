@@ -77,6 +77,11 @@ sub page_is_not_needed {
 
 	if ($ENV {REQUEST_METHOD} eq 'OPTIONS') {
 
+		if ($ENV {REQUEST_URI} !~/webdav/) {
+			handle_request_of_type_kickout (403);
+			return 1;
+		}
+
 		$r -> headers_out -> {'Allow'} = 'PROPFIND, DELETE, MKCOL, PUT, MOVE, COPY, PROPPATCH, LOCK, UNLOCK, OPTIONS, GET, HEAD, POST';
 		$r -> headers_out -> {'DAV'} = '1,2';
 		$r -> headers_out -> {'MS-Author-Via'} = 'DAV';
@@ -185,7 +190,7 @@ sub setup_request_params {
 
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 
-	if ($r -> header_in ('User-Agent') =~ /^Microsoft/) {
+	if ($r -> header_in ('User-Agent') =~ /^Microsoft/ && $ENV {REQUEST_URI} =~ /webdav/) {
 		$_REQUEST {type} = $_REQUEST_VERBATIM {type} = 'webdav';
 		$_REQUEST {method} = $ENV {REQUEST_METHOD};
 
@@ -364,6 +369,7 @@ sub setup_page {
 	my $page = {
 		subset => [],
 		menu   => [],
+		no_adjust_last_query_string => $_REQUEST {type} eq 'webdav',
 	};
 
 	$page -> {type} = $_REQUEST {type};
@@ -476,9 +482,11 @@ sub handle_error {
 
 sub handle_request_of_type_kickout {
 
+	my ($status_code) = @_;
+
 	if ($_REQUEST {type} eq 'webdav') {
 
-		$r -> status (401); # unauthorized
+		$r -> status ($status_code || 401); # unauthorized
 
 		send_http_header ();
 
