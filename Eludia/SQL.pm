@@ -1347,7 +1347,10 @@ sub assert {
 
 		foreach my $table (@tables) {
 
-			wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], {table => $table -> {name}}) if exists $table -> {columns};
+			wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], {table => $table -> {name}, table_def => $table}) if exists $table -> {columns};
+
+			wish (table_partitions => [$table -> {partition}]
+				, {table => $table -> {name}, table_def => $table}) if exists $table -> {partition};
 
 			wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})],    {table => $table -> {name}, table_def => $table}) if exists $table -> {keys};
 
@@ -1436,9 +1439,12 @@ sub require_wish ($) {
 
 		eval {require $key};
 
+		warn $@ if $@;
+
 		delete $INC {$key};
 
 	}
+
 
 	$INC_FRESH {"Wish::$_[0]"} = 1;
 

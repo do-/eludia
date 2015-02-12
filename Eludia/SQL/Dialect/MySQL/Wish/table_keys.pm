@@ -42,6 +42,7 @@ sub wish_to_explore_existing_table_keys {
 				name        => $name, 
 				global_name => $name,
 				parts       => [],
+				unique      => !$i -> {Non_unique},
 			});	
 
 			push @{$definition -> {parts}}, $part;
