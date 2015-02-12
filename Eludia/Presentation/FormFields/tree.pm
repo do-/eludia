@@ -10,7 +10,9 @@ sub draw_form_field_tree {
 
 	push @{$form_options -> {keep_params}}, $key;
 
-	my $v = $options -> {value} || $data -> {$options -> {name}};
+	my $selected = $options -> {value} || $data -> {$options -> {name}};
+
+	$selected && ref $selected eq 'ARRAY' or $selected = [$selected];
 
 	$options -> {href} ||= {__edit => $_REQUEST {__edit}};
 
@@ -38,9 +40,9 @@ sub draw_form_field_tree {
 			href     => $value -> {href},
 		};
 
-		$o -> {is_checkbox} = (grep {$_ eq $value -> {id}} @$v) > 0 ? 2 : 1 if $value -> {is_checkbox};
+		$o -> {is_checkbox} = $value -> {id} ~~ $selected ? 2 : 1 if $value -> {is_checkbox};
 
-		$o -> {is_radio}    = $v == $value -> {id} ? 2 : 1 if $value -> {is_radio};
+		$o -> {is_radio}    = $value -> {id} ~~ $selected ? 2 : 1 if $value -> {is_radio};
 
 		our $i = $value;
 

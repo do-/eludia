@@ -1618,6 +1618,8 @@ function td_on_click (event) {
 
 	if (td.tagName != 'TD') return;
 
+	$('[type="checkbox"]', td).click ();
+
 	var tr = td;
 	while (tr && tr.tagName != 'TR') {
 		tr = tr.parentNode;
@@ -2220,9 +2222,22 @@ function eludia_copy_clipboard (text, element) {
 }
 
 
-function poll_invisibles () {
+function poll_invisibles (form_name) {
 	var has_loading_iframes;
-	$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
+	if (browser_is_msie)
+		$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
+	else if (form_name) {
+		var __salt_element = $('form[name="' + form_name + '"] input[name="__salt"]'),
+			__salt = __salt_element.val ();
+		if (__salt) {
+			has_loading_iframes = 1;
+			if (__salt == getCookie ('download_salt')) {
+				has_loading_iframes = 0;
+				__salt_element.val (Math.random ());
+			}
+		}
+	}
+
 	if (!has_loading_iframes) {
 		window.clearInterval(poll_invisibles_interval_id);
 		poll_invisibles_interval_id = undefined;
@@ -2514,7 +2529,8 @@ function init_page (options) {
 				window.clearInterval (poll_invisibles_interval_id);
 				poll_invisibles_interval_id = undefined;
 			}
-			poll_invisibles_interval_id = window.setInterval(poll_invisibles, 1000);
+			var form_name = this.name;
+			poll_invisibles_interval_id = window.setInterval(function () {poll_invisibles (form_name)}, 1000);
 		});
 
 	}
@@ -2530,6 +2546,8 @@ function init_page (options) {
 
 	$('[data-type=datepicker]').each(function () {$(this).kendoDatePicker()});
 	$('[data-type=datetimepicker]').each(function () {$(this).kendoDateTimePicker()});
+
+	$('input[mask]').each (init_masked_text_box);
 
 	$('input[type=file]:not([data-upload-url]):not([is-native])').each(function () {
 		$(this).kendoUpload({
@@ -2644,7 +2662,31 @@ function init_page (options) {
 		options.on_load ();
 	}
 
+	$('A.k-button').on('dragstart', function(event) { event.preventDefault(); });
+	$('UL.filters > LI.ccbx').on('click', function (e) {
+		$('[type="checkbox"]', e.target).click ();
+	});
+
 	require (['/i/_skins/Mint/jquery.blockUI.js']);
+
+}
+
+function init_masked_text_box () {
+
+	$(this).kendoMaskedTextBox({
+		mask:$(this).attr('mask')
+	});
+
+	if ($(this).data('type') == 'datepicker' || $(this).data('type') == 'datetimepicker') {
+		$(this).removeClass("k-textbox");
+
+		$(this).on('change', function () {
+			$(this).kendoMaskedTextBox({
+				mask:$(this).attr('mask'),
+			});
+			$(this).removeClass("k-textbox");
+		});
+	}
 
 }
 
