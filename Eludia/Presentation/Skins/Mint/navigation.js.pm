@@ -906,10 +906,6 @@ function table_row_context_menu (e, tr) {
 		menuDiv.width (width);
 	}, 100);
 
-	var kill = window.setTimeout (function () {
-		menuDiv.remove ()
-	}, 1500);
-
 	menuDiv.hover (
 		function () {
 			window.clearTimeout (kill);
