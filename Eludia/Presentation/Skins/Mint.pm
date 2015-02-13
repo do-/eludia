@@ -3401,7 +3401,7 @@ sub lrt_finish {
 # 	}
 	if ($options -> {kind} eq 'link') {
 
-		$_SKIN -> lrt_print ('^:::2:::', qq|<a style="font-size: large;" href="javascript: document.location = '$href'">$banner</a>| . ':::$');
+		$_SKIN -> lrt_print ('^:::2:::', qq|<a style="font-size: large;" ontouchstart="window.location.href='$href'" href="$href">$banner</a>| . ':::$');
 
 	} else {
 
