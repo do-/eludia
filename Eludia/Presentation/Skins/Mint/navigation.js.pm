@@ -892,7 +892,6 @@ function table_row_context_menu (e, tr) {
 
 	menuDiv.hover (
 		function () {
-			window.clearTimeout (kill);
 			menuDiv.width (width);
 		},
 		function () {
