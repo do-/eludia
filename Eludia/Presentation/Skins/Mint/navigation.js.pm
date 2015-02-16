@@ -906,10 +906,6 @@ function table_row_context_menu (e, tr) {
 		menuDiv.width (width);
 	}, 100);
 
-	var kill = window.setTimeout (function () {
-		menuDiv.remove ()
-	}, 1500);
-
 	menuDiv.hover (
 		function () {
 			window.clearTimeout (kill);
@@ -1721,7 +1717,7 @@ TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 	}
 	else {
 		delta -= div.offsetHeight;
-		delta += td.offsetHeight;
+		delta += td.offsetHeight + 2;
 	}
 	if (delta > 0) div.scrollTop += delta;
 
@@ -2260,9 +2256,7 @@ function activate_suggest_fields (top_element) {
 		i.kendoAutoComplete({
 			minLength       : i.attr ('a-data-min-length') || 1,
 			filter          : 'contains',
-			suggest         : true,
 			dataTextField   : 'label',
-			highlightFirst  : true,
 			dataSource      : {
 				serverFiltering : true,
 				data: {
@@ -2296,10 +2290,14 @@ function activate_suggest_fields (top_element) {
 					});
 				}
 
-				var prev_id = $('#' + element_id + '__id').val();
+				var
+					id_element = $('#' + element_id + '__id'),
+					prev_id = id_element.val();
 
 				$('#' + element_id + '__label').val(label);
-				$('#' + element_id + '__id').val(id).trigger ('change');
+				id_element.val(id);
+				if (prev_id != id)
+					id_element.trigger ('change');
 				$('#' + element_name + '__suggest').val(id);
 
 				var onchange = i.attr ('a-data-change');
@@ -2475,9 +2473,7 @@ function init_page (options) {
 			$(".st-table-right-viewport").scroll(function() {tableSlider.cell_on ();});
 
 			if (typeof tableSlider.row === 'number' && tableSlider.rows.length > tableSlider.row) {
-				var view_row = tableSlider.rows.length > tableSlider.row + 1 ? tableSlider.row + 1 : tableSlider.row;
-				tableSlider.rows [view_row].scrollIntoView(false);
-				tableSlider.cell_on ();
+				tableSlider.scrollCellToVisibleTop ();
 			}
 
 		});
@@ -2503,15 +2499,15 @@ function init_page (options) {
 				expanded_nodes[stored_expanded_nodes[i]] = true;
 			}
 		}
-		$(window).on('resize', function () {
+		var resizeTree = debounce (function () {
 			var ontouchcontentheight = $(window.parent.document).find('iframe').height() || $(window).height();
 			$('#touch_welt').css('height', ontouchcontentheight);
 			$('#__content_iframe').css('height', ontouchcontentheight);
-			setTimeout(function () {
-				var stw = $("#splitted_tree_window").data("kendoSplitter");
-				stw.size('#splitted_tree_window_left', "220px" );
-			}, 500)
-		})
+			var stw = $("#splitted_tree_window").data("kendoSplitter");
+			stw.size('#splitted_tree_window_left', "220px" );
+		}, 500);
+
+		$(window).on('resize', resizeTree);
 	}
 
 	activate_suggest_fields ();
@@ -2589,9 +2585,8 @@ function init_page (options) {
 		$(this).kendoChart(options);
 
 		var chart = $(this).data('kendoChart');
-		$(window).resize (function() {
-			chart.refresh();
-		});
+		var resizeChart = debounce (chart.refresh, 500);
+		$(window).resize (resizeChart);
 
 		$('input[name=svg_text_' + $(this).data('name') + ']').val(chart.svg());
 	});
@@ -2652,9 +2647,9 @@ function init_page (options) {
 		try {top.setCursor (top, 'wait')} catch (e) {};
 	});
 
-	$(window).on ('resize', function (event) {
-		setTimeout (refresh_table_slider_on_resize, 500) ;
-	});
+	var resizeTableSilder = debounce (refresh_table_slider_on_resize, 500);
+
+	$(window).on ('resize', resizeTableSilder);
 
 	$(window).on ('scroll', function (event) {try {tableSlider.cell_on ();} catch(e) {};});
 
@@ -2705,3 +2700,19 @@ function stringSetsEqual (set1, set2) {
 	}
 	return setsEqual;
 }
+
+function debounce (func, wait, immediate) {
+	var timeout, result;
+	return function() {
+		var context = this, args = arguments;
+		var later = function() {
+			timeout = null;
+			if (!immediate) result = func.apply(context, args);
+		};
+		var callNow = immediate && !timeout;
+		clearTimeout(timeout);
+		timeout = setTimeout(later, wait);
+		if (callNow) result = func.apply(context, args);
+		return result;
+	};
+};

@@ -484,8 +484,7 @@ EOH
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
 
-		my $is_any_field_shown = 0 + grep {!$_ -> {off} && !$_ -> {draw_hidden}} @$row;
-		my $attributes = dump_attributes ({class => $is_any_field_shown? undef : 'form-hidden-field'});
+		my $attributes = dump_attributes (draw_form_row_attributes ($row));
 
 		$html .= qq{<tr id="$tr_id" $attributes>};
 		foreach (@$row) { $html .= $_ -> {html} };
@@ -503,6 +502,22 @@ EOH
 
 }
 
+################################################################################
+
+sub draw_form_row_attributes {
+
+	my ($row) = @_;
+
+	my $attributes = {};
+
+	my $is_any_field_shown = 0 + grep {!$_ -> {off} && !$_ -> {draw_hidden}} @$row;
+
+	if (!$is_any_field_shown) {
+		$attributes -> {class} = 'form-hidden-field';
+	}
+
+	return $attributes;
+}
 
 ################################################################################
 

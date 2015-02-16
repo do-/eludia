@@ -294,7 +294,10 @@ EOH
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
-		$html .= qq{<tr id="$tr_id">};
+
+		my $attributes = dump_attributes (draw_form_row_attributes ($row));
+
+		$html .= qq{<tr id="$tr_id" $attributes>};
 		foreach (@$row) { $html .= $_ -> {html} };
 		$html .= qq{</tr>};
 	}
@@ -307,6 +310,23 @@ EOH
 
 }
 
+
+################################################################################
+
+sub draw_form_row_attributes {
+
+	my ($row) = @_;
+
+	my $attributes = {};
+
+	my $is_any_field_shown = 0 + grep {!$_ -> {off} && !$_ -> {draw_hidden}} @$row;
+
+	if (!$is_any_field_shown) {
+		$attributes -> {class} = 'form-hidden-field';
+	}
+
+	return $attributes;
+}
 
 ################################################################################
 
@@ -3689,7 +3709,12 @@ sub dialog_close {
 			function load () {
 				var a = $a;
 				if (a.alert) alert (a.alert);
-				var w = window.parent.parent;
+
+				var w = window, i = 0;
+
+				for (;i < 5 && w.name != '_modal_iframe'; i ++)
+					w = w.parent;
+
 				w.returnValue = a.result;
 				w.parent.\$('DIV.modal_div').dialog ('close');
 			}
