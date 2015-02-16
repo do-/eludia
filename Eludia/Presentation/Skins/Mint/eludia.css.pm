@@ -129,6 +129,11 @@ ol, ul {list-style: none;}
 A.k-button {
 	line-height: 26px;
 }
+.k-button:hover, .k-state-hover, .k-textbox:hover {
+    -webkit-box-shadow: 0 0 7px 0 #67afe9 !important;
+    box-shadow: 0px 0px 7px 0px #67afe9 !important;
+    border-color: #67afe9 !important;
+}
 A.k-button:focus {
 	text-decoration: none;
 }
@@ -217,6 +222,10 @@ div.modal_div  > * {
 
 .st-table-pre-render select, .st-table-pre-render input[data-type="datepicker"] {
 	margin: 5px 15px !important;
+}
+
+table.st-fixed-table-right {
+	margin-bottom: 2px !important;
 }
 
 A.button, A.button:link, A.button:active, A.button:hover, A.button:visited {
@@ -477,6 +486,7 @@ A.form-deleted-deleted, A.form-deleted-deleted:link, A.form-deleted-deleted:hove
 .form-inner {
 	FONT-SIZE:  8pt;
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	white-space: nowrap;
 }
 
 td.form-active-inputs, td.form-passive-inputs {
