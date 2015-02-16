@@ -1717,7 +1717,7 @@ TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 	}
 	else {
 		delta -= div.offsetHeight;
-		delta += td.offsetHeight;
+		delta += td.offsetHeight + 2;
 	}
 	if (delta > 0) div.scrollTop += delta;
 
@@ -2471,9 +2471,7 @@ function init_page (options) {
 			$(".st-table-right-viewport").scroll(function() {tableSlider.cell_on ();});
 
 			if (typeof tableSlider.row === 'number' && tableSlider.rows.length > tableSlider.row) {
-				var view_row = tableSlider.rows.length > tableSlider.row + 1 ? tableSlider.row + 1 : tableSlider.row;
-				tableSlider.rows [view_row].scrollIntoView(false);
-				tableSlider.cell_on ();
+				tableSlider.scrollCellToVisibleTop ();
 			}
 
 		});
