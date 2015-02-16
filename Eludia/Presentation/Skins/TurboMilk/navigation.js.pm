@@ -4256,7 +4256,7 @@ function enableDropDownList(name, enable){
 	document.getElementById(name).disabled = !enable;
 }
 
-function toggle_field (name, is_visible, is_clear_field) {
+function toggle_field (name, is_visible, is_clear_field, clear_value) {
 
 	is_visible = is_visible > 0;
 
@@ -4270,21 +4270,39 @@ function toggle_field (name, is_visible, is_clear_field) {
 	td_field.toggle(is_visible);
 	td_field.prev().toggle(is_visible);
 
-	var sibling = td_field.prev().prev().length? td_field.prev().prev() : td_field.next().next();
-	if (sibling.length) {
-		var colspan = sibling.attr('colSpan') + (is_visible? -2 : 2);
-		sibling.attr('colSpan', colspan);
+	var td_field_cs = td_field.attr('colSpan');
+
+	if (is_visible) {
+
+		td_field.siblings().each (function() {
+			var colspan = $(this)[0].colSpan;
+			if (colspan > 1){
+				$(this)[0].colSpan = colspan - 2;
+				return false;
+			};
+		});
+
+	} else {
+
+		var sibling = td_field.siblings('td:visible:last');
+
+		if (sibling.length) {
+			var colspan = sibling.attr('colSpan') + (td_field_cs > 1 ? td_field_cs + 1 : 2);
+			sibling.attr('colSpan', colspan);
+			td_field.attr('colSpan', 1);
+		}
+
 	}
 
 	var tr = td_field.closest('tr');
 	tr.toggle(tr.children(':visible').length > 0);
 
 	if (is_clear_field) {
-		field.val(0);
+		clear_field (td_field, is_clear_field, clear_value);
 	}
 }
 
-function toggle_field_id (id, is_visible, is_clear_field) {
+function toggle_field_id (id, is_visible, is_clear_field, clear_value) {
 
 	is_visible = is_visible > 0;
 
@@ -4296,53 +4314,56 @@ function toggle_field_id (id, is_visible, is_clear_field) {
 	else if (document.getElementById('_' + id + '_select'))
 		full_id = '_' + id + '_select';
 	if(!full_id)
-		return 0;
+		return;
 	var td_field = $('[id=' + full_id + ']').closest('td');
 
 	if (td_field.is(":visible") === is_visible) {
 		return;
 	}
 
-	toggle_field_and_row(td_field, is_visible);
-
-	if (is_clear_field == 2)
-		document.getElementById(full_id).value = 0;
-	else if (is_clear_field == 1)
-		document.getElementById(full_id).value = "";
-	else if (is_clear_field == 3)
-		document.getElementById(full_id).checked = false;
-
-}
-
-function toggle_field_and_row (td_field, is_visible) {
-
 	td_field.toggle(is_visible);
 	td_field.prev().toggle(is_visible);
-	var cs = td_field[0].colSpan;
-	if (td_field.next().next().length == 1){
 
-		var td_expand = td_field.next().next();
-		td_expand.attr('colSpan', is_visible ? 1 : 2 + cs);
+	var td_field_cs = td_field.attr('colSpan');
 
-		var is_row_visible = is_visible || td_expand.parent().children(':visible').length;
-		td_expand.parent().toggle(is_row_visible ? true : false);
+	if (is_visible) {
 
-	} else if (td_field.prev().prev().length == 1){
-
-		var td_expand = td_field.prev().prev();
-		td_expand.attr('colSpan', is_visible ? 1 : 2 + cs);
-
-		var is_row_visible = is_visible || td_expand.parent().children(':visible').length;
-		td_expand.parent().toggle(is_row_visible ? true : false);
+		td_field.siblings().each (function() {
+			var colspan = $(this)[0].colSpan;
+			if (colspan > 1){
+				$(this)[0].colSpan = colspan - 2;
+				return false;
+			};
+		});
 
 	} else {
 
-		var is_row_visible = is_visible || td_field.parent().children(':visible').length;
-		td_field.parent().toggle(is_row_visible ? true : false);
+		var sibling = td_field.siblings('td:visible:last');
+
+		if (sibling.length) {
+			var colspan = sibling.attr('colSpan') + (td_field_cs > 1 ? td_field_cs + 1 : 2);
+			sibling.attr('colSpan', colspan);
+			td_field.attr('colSpan', 1);
+		}
 
 	}
+
+	var tr = td_field.closest('tr');
+	tr.toggle(tr.children(':visible').length > 0);
+
+	if (is_clear_field) {
+		clear_field (td_field, is_clear_field, clear_value);
+	}
+
 }
 
+function clear_field (td_field, is_clear_field, clear_value){
+
+	td_field.find("input[type='radio']:checked, input[type='checkbox']:checked").attr('checked', false);
+	td_field.find("select").attr('value', '');
+	td_field.find("input[type='text']").attr('value', clear_value);
+
+}
 
 // [Cookie] Returns ids of open nodes as a string
 
