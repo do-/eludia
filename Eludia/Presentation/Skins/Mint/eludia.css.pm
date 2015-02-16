@@ -486,6 +486,7 @@ A.form-deleted-deleted, A.form-deleted-deleted:link, A.form-deleted-deleted:hove
 .form-inner {
 	FONT-SIZE:  8pt;
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	white-space: nowrap;
 }
 
 td.form-active-inputs, td.form-passive-inputs {
