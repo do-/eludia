@@ -671,7 +671,10 @@ sub draw_form_field_banner {
 
 sub draw_form_field_button {
 	my ($_SKIN, $options, $data) = @_;
-	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex=$tabindex>};
+
+	my $tabindex = ++ $_REQUEST {__tabindex};
+
+	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">};
 }
 
 ################################################################################

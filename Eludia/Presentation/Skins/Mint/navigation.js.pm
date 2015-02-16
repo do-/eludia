@@ -27,35 +27,26 @@ if (!is_ua_mobile) {
 is_ua_mobile = 1;
 
 
-var scrollable_table_ids = [];
-var is_dirty = false;
-var scrollable_table_is_blocked = false;
-var tableSlider = new TableSlider ();
-var q_is_focused = false;
-var is_interface_is_locked = false;
-var left_right_blocked = false;
-var last_vert_menu = [];
-var questions_for_suggest = {};
-var lastClientHeight = 0;
-var lastClientWidth = 0;
-var lastKeyDownEvent = {};
-var expanded_nodes = {};
-var numerofforms = 0;
-var numeroftables = 0;
-var typeAheadInfo = {last:0,
-	accumString:"",
-	delay:500,
-	timeout:null,
-	reset:function () {this.last=0; this.accumString=""}
-};
-var kb_hooks = [{}, {}, {}, {}];
+var is_dirty = false,
+	scrollable_table_is_blocked = false,
+	tableSlider = new TableSlider (),
+	q_is_focused = false,
+	is_interface_is_locked = false,
+	left_right_blocked = false,
+	lastClientHeight = 0,
+	lastClientWidth = 0,
+	lastKeyDownEvent = {},
+	expanded_nodes = {},
+	kb_hooks = [{}, {}, {}, {}],
 
-var max_len = 50;
-var poll_invisibles_interval_id;
+	max_len = 50,
+	poll_invisibles_interval_id,
+	max_tabindex = 0;
 
 
 var request = {},
 	params = window.location.search.substr(1).split ('&');
+
 for (var i = 0; i < params.length; i++ ) {
 	var couple = params [i].split ('=');
 	request [couple [0]] = couple [1];
@@ -599,13 +590,6 @@ function focus_on_input (__focused_input) {
 }
 
 
-function tabOnEnter () {
-	if (window.event && window.event.keyCode == 13 && !window.event.ctrlKey && !window.event.altKey) {
-		window.event.keyCode = 9;
-	}
-}
-
-
 function adjust_kendo_selects(top_element) {
 
 	var setWidth = function (el) {
@@ -957,79 +941,6 @@ function __im_check () {
 
 }
 
-function typeAhead (noChange) { // borrowed from http://www.oreillynet.com/javascript/2003/09/03/examples/jsdhtmlcb_bonus2_example.html
-
-	var event = window.event;
-
-	if (!event || event.ctrlKey || event.altKey) return;
-
-	var keyCode = event.keyCode;
-
-	if (keyCode == 8) return typeAheadInfo.accumString = "";
-
-	if (keyCode == 13) return window.event.keyCode = 9;
-
-	var now = new Date ();
-
-	if (typeAheadInfo.accumString == "" || now - typeAheadInfo.last < typeAheadInfo.delay) {
-
-		var selectElem = event.srcElement;
-
-		var newChar = String.fromCharCode (keyCode).toUpperCase ();
-
-		typeAheadInfo.accumString += newChar;
-
-		var selectOptions = selectElem.options;
-
-		var txt;
-
-		var len = typeAheadInfo.accumString.length;
-
-		for (var i = 0; i < selectOptions.length; i++) {
-
-			txt = selectOptions [i].text.toUpperCase ();
-			if (typeAheadInfo.accumString > txt.substr (0, len)) continue;
-
-			if (selectElem.selectedIndex == i) break;
-
-			selectElem.selectedIndex = i;
-
-			if (txt.indexOf (typeAheadInfo.accumString) != 0) break;
-			if (noChange) {
-
-				selectElem.onclick = selectElem.onblur = function () {this.form.submit ()}
-
-			}
-			else {
-
-				selectElem.onchange ();
-
-			}
-
-			clearTimeout (typeAheadInfo.timeout);
-
-			typeAheadInfo.last = now;
-
-			typeAheadInfo.timeout = setTimeout ("typeAheadInfo.reset()", typeAheadInfo.delay);
-
-			return blockEvent ();
-
-		}
-
-	}
-	else {
-
-		clearTimeout (typeAheadInfo.timeout);
-
-	}
-
-	typeAheadInfo.reset ();
-
-	blockEvent ();
-
-	return true;
-
-}
 
 function activate_link (href, target, no_block_event) {
 
@@ -1341,7 +1252,7 @@ function handle_basic_navigation_keys () {
 		return;
 
 	var e = get_event (lastKeyDownEvent);
-	var keyCode = e.keyCode;
+	var keyCode = e.keyCode || e.which;
 	var i = 0;
 
 	if (e.altKey ) i += 2;
@@ -1354,13 +1265,27 @@ function handle_basic_navigation_keys () {
 		return blockEvent ();
 	}
 
-	if (keyCode == 8 && !q_is_focused) {
-		typeAheadInfo.accumString = "";
-//		blockEvent ();
-		return;
+	if (keyCode == 13 && !i && document.activeElement.tagName != 'TEXTAREA' && document.activeElement.tabIndex) {
+		var elements = $('[tabindex]'),
+			is_focused = false;
+		for (var j = document.activeElement.tabIndex + 1; j <= max_tabindex && !is_focused; j ++) {
+			elements.each (function () {
+				if (this.tabIndex == j) {
+					this.focus ()
+					is_focused = true;
+					return false;
+				}
+			})
+		}
+		if (is_focused) {
+			return blockEvent ();
+		}
 	}
 
-	tableSlider.handle_keyboard (keyCode);
+	if (code_alt_ctrl (115, 0, 0))
+		return blockEvent ();
+
+	return tableSlider.handle_keyboard (keyCode);
 
 }
 
@@ -2414,6 +2339,8 @@ function init_page (options) {
 
 	try {top.setCursor ();} catch (e) {};
 
+	max_tabindex = options.max_tabindex;
+
 	if (options.focus)
 		window.focus ();
 
@@ -2626,9 +2553,7 @@ function init_page (options) {
 
 	$(document).on ('keydown', function (event) {
 		lastKeyDownEvent = event;
-		handle_basic_navigation_keys ();
-		if (code_alt_ctrl (115, 0, 0))
-			return blockEvent ();
+		return handle_basic_navigation_keys ();
 	});
 
 	$(document).on ('keypress', function (event) {

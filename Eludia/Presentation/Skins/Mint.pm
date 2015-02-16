@@ -459,7 +459,9 @@ sub draw_form_field_button {
 
 	$_REQUEST {__libs} -> {kendo} -> {button} = 1;
 
-	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex=$tabindex>};
+	my $tabindex = ++ $_REQUEST {__tabindex};
+
+	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">};
 
 }
 
@@ -474,7 +476,6 @@ sub draw_form_field_string {
 	my $attributes = $options -> {attributes};
 
 	$attributes -> {onKeyPress} .= ';if (event.keyCode != 27) is_dirty=true;';
-	$attributes -> {onKeyDown}  .= ';tabOnEnter();';
 	$attributes -> {onFocus}    .= ';stibqif (true);';
 	$attributes -> {onBlur}     .= ';stibqif (false);';
 
@@ -547,7 +548,6 @@ sub draw_form_field_datetime {
 	my ($_SKIN, $options, $data) = @_;
 
 	$options -> {name} = '_' . $options -> {name};
-	$options -> {onKeyDown} ="tabOnEnter()";
 
 	return $_SKIN -> _draw_input_datetime ($options);
 
@@ -735,7 +735,7 @@ sub draw_form_field_password {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onKeyDown="tabOnEnter()" onFocus="stibqif (true)" onBlur="stibqif (false)">};
+	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onFocus="stibqif (true)" onBlur="stibqif (false)">};
 }
 
 ################################################################################
@@ -793,7 +793,7 @@ sub draw_form_field_checkbox {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">};
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true">};
 
 }
 
@@ -834,7 +834,6 @@ sub draw_form_field_radio {
 		$a -> {onBlur}    .= ";stibqif (true)";
 		$a -> {onClick}   .= $value -> {onclick} . ";is_dirty=true";
 		$a -> {onClick}   .= ";$options->{refresh_name}()" if $options -> {refresh_name};
-		$a -> {onKeyDown} .= ";tabOnEnter()";
 
 		$html .= '<td class="form-inner" width=1 nowrap="1">';
 
@@ -918,9 +917,7 @@ EOJS
 		<select
 			name="_$$options{name}"
 			$attributes
-			onKeyDown="tabOnEnter();"
 			onChange="is_dirty=true; $$options{onChange}"
-			onKeyPress="typeAhead(0);"
 			onKeyUp="var keyCode = event.keyCode || event.which; if (keyCode == 38 || keyCode == 40) this.onchange();"
 		>
 EOH
@@ -980,10 +977,13 @@ sub draw_form_field_combo {
 	check_href ($options -> {ds});
 
 	my $html = <<EOH;
-		<span style="white-space: nowrap;" id="input_$options->{name}"><input name="_$$options{name}" $attributes onKeyDown="tabOnEnter();" onChange="is_dirty=true; $$options{onChange}">
+		<span style="white-space: nowrap;" id="input_$options->{name}"><input name="_$$options{name}" $attributes onChange="is_dirty=true; $$options{onChange}">
 EOH
 
 	if (defined $options -> {other}) {
+
+		my $tabindex = ++ $_REQUEST {__tabindex};
+
 		$html .= <<EOH;
 			<input type="button" class="k-button" value="..."
 				onClick="open_vocabulary_from_combo (
@@ -1049,7 +1049,7 @@ sub draw_form_field_string_voc {
 	$options -> {attributes} ||= {};
 
 	$options -> {attributes} -> {onKeyPress} .= qq[;if (event.keyCode != 27) {is_dirty=true;document.getElementById('${options}_id').value = 0; }];
-	$options -> {attributes} -> {onKeyDown}  .= qq[;if (event.keyCode == 8 || event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; tabOnEnter();];
+	$options -> {attributes} -> {onKeyDown}  .= qq[;if (event.keyCode == 8 || event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; ];
 	$options -> {attributes} -> {onFocus}    .= ';stibqif (true);';
 	$options -> {attributes} -> {onBlur}     .= ';stibqif (false);';
 	$options -> {attributes} -> {onChange}   .= 'is_dirty=true;' . ( $options->{onChange} ? $options->{onChange} . ' try { event.cancelBubble = false } catch (e) {} try { event.returnValue = true } catch (e) {}': '');
@@ -1123,18 +1123,31 @@ sub draw_form_field_tree {
 	$_REQUEST {__on_load} .= <<EOJS;
  \$("#${name}_treeview").kendoTreeView ({
 	checkboxes: {
-		template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='_${name}_#=item.id#' value='1' #if(item.is_checkbox == 2){# checked #}#/> #}#"
+		template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input tabindex=-1 type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='_${name}_#=item.id#' value='1' #if(item.is_checkbox == 2){# checked #}#/> #}#"
 	},
 	dataSource: {
 		data : $data
-	}
+	},
+  navigate: function(e) {
+    console.log("Navigated to", e.node);
+  }
+});
+
+\$("DIV#${name}_treeview").focus (function () {
+	var treeview = \$(this).data('kendoTreeView'),
+		node = treeview.current();
+	node = node || \$(".k-first", this);
+	treeview.select(node);
+}).blur(function () {
+	\$(this).data('kendoTreeView').select(undefined);
 });
 EOJS
 
-	return qq {
-		<div style="height: $options->{height}px" id="${name}_treeview"></div>
-	};
+	my $tabindex = ++ $_REQUEST {__tabindex};
 
+	return qq {
+		<div style="height: $options->{height}px" id="${name}_treeview" tabindex="$tabindex"></div>
+	};
 
 }
 
@@ -1712,8 +1725,6 @@ EOJS
 
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
 	$options -> {attributes} -> {onFocus} = q|$.data (this, 'prev_value', this.selectedIndex);|;
-
-	$options -> {attributes} -> {onKeyPress} = 'typeAhead(1)';
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -2466,7 +2477,6 @@ EOJS
 		id="$id_select"
 		name="$$data{name}"
 		onChange="is_dirty=true; $$data{onChange}"
-		onkeypress='typeAhead();'
 		$multiple
 	};
 
@@ -2552,7 +2562,6 @@ sub draw_input_cell {
 	my $autocomplete;
 	my $attr_input = {
 		onBlur    => 'q_is_focused = false; left_right_blocked = false;',
-		onKeyDown => 'tabOnEnter();',
 		class     => 'k-textbox',
 	};
 	$attr_input -> {class} .= ' table-mandatory-inputs'
@@ -3133,6 +3142,7 @@ sub draw_page {
 		session_timeout        => !$preconf -> {no_keepalive} && $_REQUEST {sid} && 60000 * (($conf -> {session_timeout} ||= 30) - 0.5),
 		core_show_dump         => $preconf -> {core_show_dump},
 		help_url               => $_REQUEST {__help_url},
+		max_tabindex           => $_REQUEST {__tabindex},
 	};
 
 	$init_page_options = $_JSON -> encode ($init_page_options);
