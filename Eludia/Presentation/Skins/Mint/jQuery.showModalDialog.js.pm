@@ -27,6 +27,7 @@
             // create the iframe which will open target page
             var $frame = $('<iframe />');
             $frame.attr({
+                'id'        : 'iframe_' + Math.floor(Math.random() * 10000),
                 'src'       : optns.url,
                 'name'      : '_modal_iframe',
                 'scrolling' : optns.scrolling
@@ -65,6 +66,8 @@
                     // save the returnValue in options so that it is available in the callback function
                     optns.returnValue = $frame[0].contentWindow.window.returnValue;
                     optns.onClose();
+                    var that = this;
+                    setTimeout (function () {$(that).dialog ('destroy')}, 10);
                 },
                 resizeStop: function() { $frame.css("width", "100%"); }
             });
