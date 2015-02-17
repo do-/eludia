@@ -2104,9 +2104,13 @@ function treeview_onexpand (e) {
 }
 
 
-function treeview_onselect_node (node) {
+function treeview_onselect_node (node, expand_on_select) {
 
 	var treeview = $("#splitted_tree_window_left").data ("kendoTreeView");
+
+	if (expand_on_select == 1)
+		treeview.expand(node);
+
 	node = treeview.dataItem (node);
 	if (!node || !node.href) return;
 	var href = node.href;
