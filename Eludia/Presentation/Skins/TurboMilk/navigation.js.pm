@@ -4396,8 +4396,8 @@ function toggle_field_id (id, is_visible, is_clear_field, clear_value) {
 function clear_field (td_field, is_clear_field, clear_value){
 
 	td_field.find("input[type='radio']:checked, input[type='checkbox']:checked").prop('checked', false);
-	td_field.find("select").prop('value', '');
-	td_field.find("input[type='text']").prop('value', clear_value);
+	td_field.find("select").prop('value', clear_value ? clear_value : '');
+	td_field.find("input[type='text']").prop('value', clear_value ? clear_value : '');
 
 }
 
