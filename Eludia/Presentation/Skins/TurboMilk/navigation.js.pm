@@ -4267,6 +4267,12 @@ function toggle_field (name, is_visible, is_clear_field, clear_value) {
 		return;
 	}
 
+	var tr = td_field.closest('tr');
+
+	if (is_visible && tr.children(':visible').length == 0){
+		tr.toggle(is_visible);
+	}
+
 	td_field.toggle(is_visible);
 	td_field.prev().toggle(is_visible);
 
@@ -4274,19 +4280,31 @@ function toggle_field (name, is_visible, is_clear_field, clear_value) {
 
 	if (is_visible) {
 
-		td_field.siblings().each (function() {
+		var find_sibling = 0;
+		td_field.siblings('td:visible').each (function() {
 			var colspan = $(this)[0].colSpan;
 			if (colspan > 1){
 				$(this)[0].colSpan = colspan - 2;
+				find_sibling = 1;
 				return false;
 			};
 		});
+		if (!find_sibling){
+			td_field.siblings('td:not(visible)').each (function() {
+				var colspan = $(this)[0].colSpan;
+				if (colspan > 1){
+					$(this)[0].colSpan = 1;
+					td_field.attr('colSpan', td_field_cs + colspan - 1);
+					return false;
+				};
+			});
+		}
 
 	} else {
 
 		var sibling = td_field.siblings('td:visible:last');
 
-		if (sibling.length) {
+		if (sibling.length > 0) {
 			var colspan = sibling.attr('colSpan') + (td_field_cs > 1 ? td_field_cs + 1 : 2);
 			sibling.attr('colSpan', colspan);
 			td_field.attr('colSpan', 1);
@@ -4314,11 +4332,17 @@ function toggle_field_id (id, is_visible, is_clear_field, clear_value) {
 	else if (document.getElementById('_' + id + '_select'))
 		full_id = '_' + id + '_select';
 	if(!full_id)
-		return;
+		return 0;
 	var td_field = $('[id=' + full_id + ']').closest('td');
 
 	if (td_field.is(":visible") === is_visible) {
 		return;
+	}
+
+	var tr = td_field.closest('tr');
+
+	if (is_visible && tr.children(':visible').length == 0){
+		tr.toggle(is_visible);
 	}
 
 	td_field.toggle(is_visible);
@@ -4328,19 +4352,31 @@ function toggle_field_id (id, is_visible, is_clear_field, clear_value) {
 
 	if (is_visible) {
 
-		td_field.siblings().each (function() {
+		var find_sibling = 0;
+		td_field.siblings('td:visible').each (function() {
 			var colspan = $(this)[0].colSpan;
 			if (colspan > 1){
 				$(this)[0].colSpan = colspan - 2;
+				find_sibling = 1;
 				return false;
 			};
 		});
+		if (!find_sibling){
+			td_field.siblings('td:not(visible)').each (function() {
+				var colspan = $(this)[0].colSpan;
+				if (colspan > 1){
+					$(this)[0].colSpan = 1;
+					td_field.attr('colSpan', td_field_cs + colspan - 1);
+					return false;
+				};
+			});
+		}
 
 	} else {
 
 		var sibling = td_field.siblings('td:visible:last');
 
-		if (sibling.length) {
+		if (sibling.length > 0) {
 			var colspan = sibling.attr('colSpan') + (td_field_cs > 1 ? td_field_cs + 1 : 2);
 			sibling.attr('colSpan', colspan);
 			td_field.attr('colSpan', 1);
@@ -4360,8 +4396,8 @@ function toggle_field_id (id, is_visible, is_clear_field, clear_value) {
 function clear_field (td_field, is_clear_field, clear_value){
 
 	td_field.find("input[type='radio']:checked, input[type='checkbox']:checked").attr('checked', false);
-	td_field.find("select").attr('value', '');
-	td_field.find("input[type='text']").attr('value', clear_value);
+	td_field.find("select").attr('value', clear_value ? clear_value : '');
+	td_field.find("input[type='text']").attr('value', clear_value ? clear_value : '');
 
 }
 
