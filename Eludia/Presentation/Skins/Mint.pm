@@ -2294,17 +2294,7 @@ sub js_set_select_option {
 	return $_SO_VARIABLES -> {$a}
 		if $_SO_VARIABLES -> {$a};
 
-	my $var = "so_" . substr ('' . $item, 7, 7);
-	$var =~ s/\)$//;
-
-	my $i = 0;
-	while (index ($_REQUEST {__script}, "var $var") != -1) {
-		$var .= $i ++;
-	}
-
-	$_REQUEST {__script} .= " var $var = $a; ";
-
-	$_SO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption ($var)";
+	$_SO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption ($a)";
 
 	return $_SO_VARIABLES -> {$a};
 
@@ -3401,7 +3391,7 @@ sub lrt_finish {
 # 	}
 	if ($options -> {kind} eq 'link') {
 
-		$_SKIN -> lrt_print ('^:::2:::', qq|<a style="font-size: large;" href="javascript: document.location = '$href'">$banner</a>| . ':::$');
+		$_SKIN -> lrt_print ('^:::2:::', qq|<a style="font-size: large;" ontouchstart="window.location.href='$href'" href="$href">$banner</a>| . ':::$');
 
 	} else {
 
@@ -3605,6 +3595,8 @@ EOJS
 		};
 	}
 
+	$options -> {expand_on_select} ||= 0;
+
 	$js .= qq {
 
 
@@ -3614,7 +3606,7 @@ EOJS
 			collapse   : treeview_oncollapse,
 			template   : "# if (item.color) { # <span style='color: #= item.color #'>#= item.text #<span> # } else { # #= item.text # # } #",
 			select: function (e) {
-				treeview_onselect_node (e.node);
+				treeview_onselect_node (e.node, $$options{expand_on_select});
 			}
 
 		});
