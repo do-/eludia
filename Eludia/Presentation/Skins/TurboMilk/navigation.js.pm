@@ -811,7 +811,7 @@ function open_popup_menu (event, type, level) {
 	var menu_top  = event.clientY - 5 + document.body.scrollTop;
 	var menu_left = event.clientX - 5 + document.body.scrollLeft;
 
-	var is_offscreen = menu_top + $(div).height() > $(window).height();
+	var is_offscreen = menu_top + $(div).height() > $(document).height();
 	if (is_offscreen) {
 		menu_top = menu_top - $(div).height();
 	}
