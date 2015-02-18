@@ -1264,13 +1264,21 @@ function handle_basic_navigation_keys () {
 		return blockEvent ();
 	}
 
-	if (keyCode == 13 && !i && document.activeElement.tagName != 'TEXTAREA' && document.activeElement.tabIndex) {
+	if (
+		(keyCode == 13 || (e.originalEvent ? e.originalEvent.keyIdentifier : e.keyIdentifier) == 'Enter')
+		&& !i
+		&& document.activeElement.tagName != 'TEXTAREA'
+		&& document.activeElement.tagName != 'A'
+		&& document.activeElement.getAttribute ('type') != 'file'
+		&& document.activeElement.getAttribute ('type') != 'button'
+		&& document.activeElement.tabIndex
+	) {
 		var elements = $('[tabindex]'),
 			is_focused = false;
 		for (var j = document.activeElement.tabIndex + 1; j <= max_tabindex && !is_focused; j ++) {
 			elements.each (function () {
 				if (this.tabIndex == j) {
-					this.focus ()
+					$(this).focus ()
 					is_focused = true;
 					return false;
 				}
@@ -1580,13 +1588,13 @@ function td_on_click (event) {
 
 TableSlider.prototype.handle_keyboard = function (keyCode) {
 
-	if (scrollable_table_is_blocked) return;
+	if (scrollable_table_is_blocked) return true;
 
 	if (keyCode == 13) {									// Enter key
 
 		var cell = this.get_cell ();
 
-		if (!cell) return;
+		if (!cell) return true;
 
 		$(cell).trigger ('click');
 
@@ -1594,19 +1602,19 @@ TableSlider.prototype.handle_keyboard = function (keyCode) {
 
 	}
 
-	if (!this.cnt || keyCode < 37 || keyCode > 40) return;
+	if (!this.cnt || keyCode < 37 || keyCode > 40) return true;
 
 	var cnt = this.cnt;
 	var key = 'row';
 	var i   = keyCode % 2;
 
 	if (i) {
-		if (left_right_blocked) return;
+		if (left_right_blocked) return true;
 		var cnt = this.rows [this.row].cells.length;
 		var key = 'col';
 	}
 
-	if (!cnt) return;
+	if (!cnt) return true;
 
 	this [key] += (keyCode - 39 + i);
 	if (this [key] < 0) this [key]    = 0;

@@ -33,6 +33,8 @@ sub draw_toolbar_input_select {
 
 	$options -> {onChange} ||= 'submit();';
 
+	$options -> {tabindex} = ++ $_REQUEST {__tabindex};
+
 	return $_SKIN -> draw_toolbar_input_select ($options);
 
 }

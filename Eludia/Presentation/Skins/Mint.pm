@@ -1575,7 +1575,7 @@ EOH
 
 		$html .= <<EOH;
 
-			<a TABINDEX=-1 class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
 
 			<script>
 
@@ -1585,7 +1585,7 @@ EOH
 EOH
 	} else {
 		$html .= <<EOH;
-			<a TABINDEX=-1 class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
 EOH
 	}
 
@@ -1725,6 +1725,7 @@ EOJS
 
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
 	$options -> {attributes} -> {onFocus} = q|$.data (this, 'prev_value', this.selectedIndex);|;
+	$options -> {attributes} -> {tabindex} = $options -> {tabindex};
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -2002,6 +2003,7 @@ sub draw_toolbar_input_text {
 
 	$html .= <<EOH;
 		<input
+			tabindex=$$options{tabindex}
 			onKeyPress="$$options{onKeyPress};"
 			type=text
 			size=$$options{size}
@@ -2154,7 +2156,7 @@ sub draw_centered_toolbar_button {
 
 		$html .= <<EOH;
 
-			<a TABINDEX=-1 class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button" href="#" id="$id" target="$$options{target}" title="$$options{title}"><nobr>
 
 			<script>
 
@@ -2165,7 +2167,7 @@ EOH
 
 	} else {
 		$html .= <<EOH;
-			<a class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
+			<a tabindex=$options->{tabindex} class="k-button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}"><nobr>
 EOH
 	}
 
@@ -2422,7 +2424,7 @@ sub draw_checkbox_cell {
 
 	my $label = $data -> {label} ? '&nbsp;' . $data -> {label} : '';
 
-	return qq {<td $$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label</td>};
+	return qq {<td $$options{data} $attributes><input tabindex=$data->{tabindex} class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label</td>};
 
 }
 
@@ -2434,7 +2436,13 @@ sub draw_select_cell {
 
 	$_REQUEST {__libs} -> {kendo} -> {dropdownlist} = 1;
 
-	my $s_attributes -> {class} = "form-mandatory-inputs" if $data -> {mandatory};
+	my $s_attributes = {};
+
+	$s_attributes -> {class} = "form-mandatory-inputs"
+		if $data -> {mandatory};
+
+	$s_attributes -> {tabindex} = $data -> {tabindex};
+
 	$s_attributes = dump_attributes ($s_attributes);
 
 	my $attributes = dump_attributes ($data -> {attributes});
@@ -3920,6 +3928,8 @@ sub __adjust_form_field_select {
 sub __adjust_row_cell_style {
 
 	my ($data, $options) = @_;
+
+	$data -> {tabindex} = ++ $_REQUEST {__tabindex};
 
 	my $a = ($data -> {attributes} ||= {});
 

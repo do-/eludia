@@ -14,6 +14,9 @@ sub draw_toolbar_input_text {
 
 	$options -> {size} ||= 15;
 
+	$options -> {tabindex} = ++ $_REQUEST {__tabindex};
+
+
 	return $_SKIN -> draw_toolbar_input_text (@_);
 
 }

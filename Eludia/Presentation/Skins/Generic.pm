@@ -334,6 +334,7 @@ sub __adjust_button_href {
 	}
 
 	$options -> {id} ||= '' . $options;
+	$options -> {tabindex} = ++ $_REQUEST {__tabindex};;
 
 	if ((my $h = $options -> {hotkey}) && !$options -> {off}) {
 
@@ -350,6 +351,8 @@ sub __adjust_button_href {
 sub __adjust_row_cell_style {
 
 	my ($data, $options) = @_;
+
+	$data -> {tabindex} = ++ $_REQUEST {__tabindex};
 
 	my $a = ($data -> {attributes} ||= {});
 
