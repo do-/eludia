@@ -5,6 +5,11 @@ perl:
   - "5.14"
   - "5.10"
 
+install:
+  - export RELEASE_TESTING=1 AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=c HARNESS_TIMER=1
+  - cpanm --quiet --notest Devel::Cover::Report::Coveralls
+  - cpanm --quiet --notest --installdeps .
+
 before_script:
   - mysql -e 'create database eludia_test'
   - cd ..
@@ -15,4 +20,8 @@ before_script:
   - perl -MCwd -p -i -e 's/ELUDIA_PATH/\.\.\/eludia/g' conf/httpd.conf
   - perl -MCwd -p -i -e 's/APP_PATH/cwd/eg' conf/httpd.conf
 
-script: perl -I$(pwd)/../eludia -MEludia::Install -e "exit(test())"
+script:
+  - perl -I$(pwd)/../eludia -MDevel::Cover=-coverage,statement,branch,condition,path,subroutine -MEludia::Install -e "exit(test())"
+
+after_success:
+    - cover -report coveralls
