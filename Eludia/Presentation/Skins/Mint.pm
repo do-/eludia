@@ -1470,10 +1470,10 @@ sub draw_toolbar {
 	if ($_REQUEST {select}) {
 
 		my $button = {
-			icon    => 'cancel',
-			id      => 'cancel',
-			label   => $i18n -> {close},
-			href    => is_ua_mobile () ? "javaScript:var i = 0, w = parent; for (i = 0; i < 5 && w.name != '_modal_iframe'; i ++) w = w.parent; if (w.name == '_modal_iframe') w.parent.\$('DIV.modal_div').dialog ('close');" : "javaScript:window.parent.close();",
+			icon     => 'cancel',
+			label    => $i18n -> {close},
+			tabindex => -1,
+			href     => is_ua_mobile () ? "javaScript:var i = 0, w = parent; for (i = 0; i < 5 && w.name != '_modal_iframe'; i ++) w = w.parent; if (w.name == '_modal_iframe') w.parent.\$('DIV.modal_div').dialog ('close');" : "javaScript:window.parent.close();",
 		};
 
 		$button -> {html} = $_SKIN -> draw_toolbar_button ($button);
