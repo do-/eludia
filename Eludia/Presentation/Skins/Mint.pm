@@ -1772,9 +1772,8 @@ sub draw_toolbar_input_combo {
 
 	my ($values, $placeholder);
 	foreach my $value (@{$options -> {values}}) {
-		if (!$value -> {id}) {
+		if ($value -> {empty}) {
 			$placeholder = $value -> {label};
-			push @$values, $value;
 		} elsif ($value -> {id} != -1) {
 			push @$values, $value;
 		}
