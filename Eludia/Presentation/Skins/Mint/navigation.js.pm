@@ -170,6 +170,12 @@ function dialog_open (options) {
 	options.href  += '&_salt=' + Math.random ();
 	options.parent = window;
 
+	if (options.fullscreen) {
+		options.height = document.documentElement.clientHeight - 40;
+		options.width = document.documentElement.clientWidth - 20;
+		options.position =  {my: "left top", at: "left top", of: window};
+	}
+
 	var url = 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random ();
 
 	if ($.browser.webkit || $.browser.safari)
@@ -182,6 +188,7 @@ function dialog_open (options) {
 			url             : url,
 			height          : options.height || dialog_height,
 			width           : options.width || dialog_width,
+			position        : options.position || undefined,
 			resizable       : true,
 			scrolling       : 'no',
 			dialogArguments : options,
