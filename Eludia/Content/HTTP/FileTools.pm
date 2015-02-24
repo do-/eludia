@@ -60,10 +60,6 @@ sub download_file_header {
 	$r -> content_type ($type);
 	$options -> {file_name} =~ s/\?/_/g unless ($ENV {HTTP_USER_AGENT} =~ /MSIE 7/);
 
-	$options -> {inline} ||= $options -> {attachment}
-		|| substr($type, 0, 4) eq 'text'
-		|| $options -> {file_name} =~ /\.txt$/i;
-
 	$options -> {no_force_download} or $r -> headers_out -> {'Content-Disposition'} =
 		($options -> {inline} ? 'inline' : 'attachment')
 		. ';filename'
