@@ -601,15 +601,18 @@ function adjust_kendo_selects(top_element) {
 
 	var setWidth = function (el) {
 		var p = el.data("kendoDropDownList").popup.element;
-		var w = p.css("visibility","hidden").show().outerWidth() + 32;
-		p.hide().css("visibility","visible");
+		var w = p.css("visibility","hidden").outerWidth() + 32;
+		p.css("visibility","visible");
 		el.closest(".k-widget").width(w);
 	}
 
 	var select_tranform = function(){
 		var original_select = this;
-		$(original_select).kendoDropDownList({
+		$(original_select).addClass('k-group').kendoDropDownList({
 			height: 320,
+			popup : {
+				appendTo: $(body),
+			},
 			open: function (e) {
 
 				$.data (original_select, 'prev_value', this.selectedIndex);
@@ -634,7 +637,7 @@ function adjust_kendo_selects(top_element) {
 				}, 200);
 				return blockEvent();
 			}
-		}).data('kendoDropDownList'); //list.width('auto');
+		}).data('kendoDropDownList');
 		setWidth ($(original_select));
 	}
 
@@ -2359,6 +2362,12 @@ function init_page (options) {
 
 	try {top.setCursor ();} catch (e) {};
 
+	kendo.support.isRtl = function () {return false};
+	if (kendo.ui.DatePicker)
+		kendo.ui.DatePicker.prototype._reset = function () {};
+	if (kendo.ui.Select)
+		kendo.ui.Select.prototype._reset = function () {};
+
 	max_tabindex = options.max_tabindex;
 
 	if (options.focus)
@@ -2382,8 +2391,16 @@ function init_page (options) {
 						$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
 						adjust_kendo_selects (that);
-						$('[data-type=datepicker]', that).each(function () {$(this).kendoDatePicker()});
-						$('[data-type=datetimepicker]', that).each(function () {$(this).kendoDateTimePicker()});
+						$('[data-type=datepicker]', that).addClass('k-group').each(function () {$(this).kendoDatePicker({
+							popup: {
+								appendTo: $(body)
+							}
+						})});
+						$('[data-type=datetimepicker]', that).addClass('k-group').each(function () {$(this).kendoDateTimePicker({
+							popup: {
+								appendTo: $(body)
+							}
+						})});
 
 						if (tableSlider.get_cell ()) {
 							tableSlider.cell_off ();
