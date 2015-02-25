@@ -3440,8 +3440,8 @@ sub treeview_convert_nodes {
 			clipboard_text => $i -> {clipboard_text},
 			is_checkbox    => $n -> {is_checkbox},
 			is_radio       => $n -> {is_radio},
-			expanded       => $n -> {is_open} || $n -> {_io},
-			color          => $i -> {color},
+			expanded       => $n -> {is_open} || $n -> {_io} || $i -> {is_open},
+			color          => $n -> {color} || $i -> {color},
 		};
 
 		$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
@@ -3676,7 +3676,7 @@ sub draw_node {
 		title => $options -> {title} || $options -> {label},
 	};
 
-	map {$node -> {$_} = $options -> {$_} if $options -> {$_}} qw (target icon iconOpen is_checkbox is_radio clipboard_text);
+	map {$node -> {$_} = $options -> {$_} if $options -> {$_}} qw (target icon iconOpen is_checkbox is_radio clipboard_text color);
 
 	if ($options -> {title} && $options -> {title} ne $options -> {label}) {
 		$node -> {title} = $options -> {title};
