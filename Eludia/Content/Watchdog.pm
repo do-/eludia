@@ -45,6 +45,10 @@ sub notify_about_error {
 		}) if !internal_error_is_duplicate ($options -> {error});
 	}
 
+	if ($_REQUEST {__skin} eq 'STDERR') { # offline script
+		return $error_details . $options -> {error};
+	}
+
 	my @msg = ("[$id_error]");
 
 	!$preconf -> {testing} or !$blame or push @msg, "[$blame]";
