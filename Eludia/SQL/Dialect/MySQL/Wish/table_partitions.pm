@@ -4,7 +4,14 @@ sub wish_to_clarify_demands_for_table_partitions {
 
 	my ($i, $options) = @_;
 
-	$i -> {kind} = uc $i -> {kind};
+	$i -> {kind} = lc $i -> {kind};
+
+	if (ref $i -> {partitions} eq 'ARRAY') {
+
+		foreach (@{$i -> {partitions}}) {
+			$_ .= "";
+		}
+	}
 }
 
 ################################################################################
@@ -32,15 +39,17 @@ EOS
 
 			$i -> {partition_expression} or return;
 
-			my $name = $i -> {partition_expression};
+			my $name = lc $i -> {partition_expression};
+
+			$i -> {partition_method} = lc $i -> {partition_method};
 
 			if (exists $existing -> {$name}) {
 
-				if ($i -> {partition_method} eq 'HASH') {
+				if ($i -> {partition_method} eq 'hash') {
 					$existing -> {$name} -> {partitions}++;
 				}
 
-				if ($i -> {partition_method} eq 'RANGE') {
+				if ($i -> {partition_method} eq 'range') {
 					push @{$existing -> {$name} -> {partitions}}, $i -> {partition_description};
 				}
 
@@ -54,8 +63,8 @@ EOS
 
 			$existing -> {$name} = {
 				by   => $name,
-				kind => lc $i -> {partition_method},
-				partitions => $partition_list -> {lc $i -> {partition_method}},
+				kind => $i -> {partition_method},
+				partitions => $partition_list -> {$i -> {partition_method}},
 			};
 		}
 		, $options -> {table}
@@ -73,11 +82,13 @@ sub __genereate_sql_fragment_for_partition {
 
 	$i -> {SQL} and return;
 
-	$i -> {SQL} = "PARTITION BY " . uc $$i{kind} . "($$i{by}) ";
+	$i -> {SQL} = "PARTITION BY " . uc $i -> {kind} . "($$i{by}) ";
 
-	$i -> {kind} eq 'hash' and $i -> {SQL} .= "PARTITIONS $$i{partitions}";
+	if ($i -> {kind} eq 'hash') {
 
-	if (lc $i -> {kind} eq 'range') {
+		$i -> {SQL} .= "PARTITIONS $$i{partitions}";
+
+	} elsif ($i -> {kind} eq 'range') {
 
 		my $cnt = -1;
 
@@ -221,7 +232,7 @@ sub wish_to_actually_alter_table_partitions {
 
 	my $supported_kinds = ['hash', 'range'];
 
-	if ($partition -> {kind} ~~ $supported_kinds) {
+	if (!($partition -> {kind} ~~ $supported_kinds)) {
 		die "Wrong partition kind '$$partition{kind}' in table '$$options{table}'. Supported partition kinds: @$supported_kinds";
 	}
 
