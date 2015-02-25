@@ -156,19 +156,59 @@ sub __add_column_table_keys {
 		next
 			if !$i -> {unique} || $column ~~ $i -> {parts};
 
-		my $columns = join ', ', @{$i -> {parts}};
+		my $key_columns = join ', ', @{$i -> {parts}};
 
 		if ($i -> {name} eq 'PRIMARY') {
-			sql_do ("ALTER TABLE $table DROP PRIMARY KEY, ADD PRIMARY KEY ($columns, $column)");
+			sql_do ("ALTER TABLE $table DROP PRIMARY KEY, ADD PRIMARY KEY ($key_columns, $column)");
 			next;
 		}
 
 		sql_do (
-			"ALTER TABLE $table DROP KEY $$i{name}, ADD UNIQUE KEY $$i{name}($columns, $column)"
+			"ALTER TABLE $table DROP KEY $$i{name}, ADD UNIQUE KEY $$i{name}($key_columns, $column)"
 		);
 	}
 
 
+}
+
+#############################################################################
+
+sub __remove_column_table_keys {
+
+	my ($column, $table) = @_;
+
+	my %is_partitioning_column = ($column => 1);
+
+	foreach my $i (__get_table_keys ($table)) {
+
+		next
+			if !$i -> {unique} || !($column ~~ $i -> {parts});
+
+		my $key_columns = join ', ', grep {!$is_partitioning_column{$_}} @{$i -> {parts}};
+
+		if ($i -> {name} eq 'PRIMARY') {
+			sql_do ("ALTER TABLE $table DROP PRIMARY KEY, ADD PRIMARY KEY ($key_columns)");
+			next;
+		}
+
+		sql_do (
+			"ALTER TABLE $table DROP KEY $$i{name}, ADD UNIQUE KEY $$i{name}($key_columns)"
+		);
+	}
+
+}
+
+#############################################################################
+
+sub __drop_table_partitions {
+
+	my ($options) = @_;
+
+	sql_do ("ALTER TABLE $options->{table} REMOVE PARTITIONING");
+
+	my $columns = $options -> {table_def} -> {partition} -> {columns};
+
+	__remove_column_table_keys ($columns, $options -> {table});
 }
 
 #############################################################################
@@ -185,9 +225,19 @@ sub wish_to_actually_alter_table_partitions {
 		die "Wrong partition kind '$$partition{kind}' in table '$$options{table}'. Supported partition kinds: @$supported_kinds";
 	}
 
+	$partition -> {columns} ||= $partition -> {by};
+
+	my $partition_cnt = ref $partition -> {partitions} eq 'ARRAY'?
+		0 + @{$partition -> {partitions}} : $partition -> {partitions};
+
+	if (1 == $partition_cnt) {
+		__drop_table_partitions ($options);
+		return;
+	}
+
 	__genereate_sql_fragment_for_partition ($partition);
 
-	__add_column_table_keys ($partition -> {by}, $options -> {table});
+	__add_column_table_keys ($partition -> {columns}, $options -> {table});
 
 	sql_do ("ALTER TABLE $options->{table} $$partition{SQL}");
 }
