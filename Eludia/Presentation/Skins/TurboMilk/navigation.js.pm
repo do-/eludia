@@ -946,14 +946,22 @@ function open_popup_menu_for_toolbar_btn (event, type, id, level) {
 	}
 
 	var toolbar_button = document.getElementById (id);
-	var a_offset = $(toolbar_button).offset();
 
-	if (a_offset.top + $(div).height() + toolbar_button.clientHeight - document.body.scrollTop > $(document.body).height()) {
-		div.style.top  = a_offset.top - $(div).height() + 2;
-	} else {
-		div.style.top  = a_offset.top + toolbar_button.clientHeight - 2;
+	var button_offset = $(toolbar_button).offset();
+
+	var menu_top  = button_offset.top + document.body.scrollTop + toolbar_button.clientHeight - 2;
+
+	var button_bottom = menu_top + $(div).height() + toolbar_button.clientHeight;
+
+	var viewport_bottom = document.body.scrollTop + $(document.body).height();
+
+	if (button_bottom > viewport_bottom) {
+		menu_top = menu_top - $(div).height() - toolbar_button.clientHeight + 2;
 	}
-	div.style.left = a_offset.left + document.body.scrollLeft;
+
+	div.style.top = menu_top;
+
+	div.style.left = button_offset.left + document.body.scrollLeft;
 
 	if (div.children[0].style.width < toolbar_button.clientWidth)
 		div.children[0].style.width = toolbar_button.clientWidth;
