@@ -2047,7 +2047,7 @@ function treeview_onexpand (e) {
 }
 
 
-function treeview_onselect_node (node, expand_on_select) {
+function treeview_onselect_node (node, expand_on_select, e) {
 
 	var treeview = $("#splitted_tree_window_left").data ("kendoTreeView");
 
@@ -2055,17 +2055,27 @@ function treeview_onselect_node (node, expand_on_select) {
 		treeview.expand(node);
 
 	node = treeview.dataItem (node);
-	if (!node || !node.href) return;
+	if (!node || !node.href) return false;
 	var href = node.href;
 
-	var name = $("#splitted_tree_window_right").data('name');
-	$("#splitted_tree_window_right").html ("<iframe onload='this.style.visibility="+'"visible"'+"' style='visibility: hidden;' width=100% height=100% src='" + href + "' name='" + name + "' id='__content_iframe' application=yes scroll=no>");
+	var right_div = $("#splitted_tree_window_right"),
+		content_iframe = $('#__content_iframe', right_div);
+
+	if (content_iframe.length && content_iframe.get(0).contentWindow && content_iframe.get(0).contentWindow.is_dirty && !confirm (i18n.F5)) {
+		e.preventDefault ();
+		return blockEvent ();
+	}
+
+	var name = right_div.data('name');
+	right_div.html ("<iframe onload='this.style.visibility="+'"visible"'+"' style='visibility: hidden;' width=100% height=100% src='" + href + "' name='" + name + "' id='__content_iframe' application=yes scroll=no>");
 
 	/************************* add height in iframe *************************/
 	var heghtstr = $(window.parent.document.getElementById( "tabstrip" )).height();
 	if (heghtstr > 100){
 		$('#__content_iframe').css('height', heghtstr - 36);
 	}
+
+	return true;
 }
 
 

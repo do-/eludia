@@ -719,7 +719,7 @@ sub draw_form_field_text {
 			rows=$$options{rows}
 			cols=$$options{cols}
 			name="_$$options{name}"
-			onchange="is_dirty=true;"
+			onkeypress="is_dirty=true;"
 		>$$options{value}</textarea>
 EOH
 
@@ -3623,7 +3623,7 @@ EOJS
 			collapse   : treeview_oncollapse,
 			template   : "# if (item.color) { # <span style='color: #= item.color #'>#= item.text #<span> # } else { # #= item.text # # } #",
 			select: function (e) {
-				treeview_onselect_node (e.node, $$options{expand_on_select});
+				return treeview_onselect_node (e.node, $$options{expand_on_select}, e);
 			}
 
 		});
