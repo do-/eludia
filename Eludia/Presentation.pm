@@ -1306,7 +1306,7 @@ sub draw_centered_toolbar {
 
 	foreach my $i (@$list) {
 
-		$i -> {off} = !(grep {!$_ -> {off}} @{$i -> {items}}) if (exists $i -> {items} && @{$i -> {items}} > 0);
+		$i -> {off} ||= !(grep {!$_ -> {off}} @{$i -> {items}}) if (exists $i -> {items} && @{$i -> {items}} > 0);
 
 		next if $i -> {off};
 		$i -> {target} ||= $options -> {buttons_target};
