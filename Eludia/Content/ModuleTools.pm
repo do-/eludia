@@ -216,7 +216,7 @@ sub require_scripts_of_type ($) {
 
 	my $is_start_scripts = 1;
 
-	if ($preconf -> {db_store_checksums}) {
+	if ($preconf -> {db_store_checksums} && $script_type eq "updates") {
 
 		$is_start_scripts = sql_select_scalar (
 			"SELECT id FROM $conf->{systables}->{__checksums} WHERE id_checksum <> '_' AND kind = ?"
@@ -269,7 +269,7 @@ sub require_scripts_of_type ($) {
 
 		my ($needed_scripts, $new_checksums) = checksum_filter ($checksum_kind, '', $name2def);
 
-		if (!$is_start_scripts) {
+		if (!$is_start_scripts && $script_type eq "updates") {
 
 			checksum_write ($checksum_kind, $new_checksums);
 
