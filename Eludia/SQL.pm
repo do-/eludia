@@ -797,6 +797,10 @@ sub sql_do_relink {
 
 	my $moved_links_table = sql_table_name ($conf -> {systables} -> {__moved_links});
 
+	require_content "$table_name";
+
+	my $relink_cols = call_for_role ("get_${table_name}_dependent_objects_cols");
+
 	foreach my $old_id (@$old_ids) {
 
 warn "relink $table_name: $old_id -> $new_id";
@@ -815,6 +819,8 @@ warn "relink $table_name: $old_id -> $new_id";
 warn "relink $$column_def{table_name} ($$column_def{name}): $old_id -> $new_id";
 
 			if ($column_def -> {TYPE_NAME} =~ /int/) {
+
+				_hide_full_clones ($relink_cols, $column_def, $old_id, $new_id);
 
 				sql_do (<<EOS, $old_id);
 					INSERT INTO $moved_links_table
@@ -913,6 +919,7 @@ warn "undo relink $$column_def{table_name} ($$column_def{name}): $old_id";
 
 			if ($column_def -> {TYPE_NAME} =~ /int/) {
 				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = ? WHERE id IN ($ids)", $old_id);
+				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = -$$column_def{name} WHERE $$column_def{name} = ?", -$old_id);
 			}
 			else {
 				$old_id_ = $old_id . ',';
@@ -924,6 +931,71 @@ warn "undo relink $$column_def{table_name} ($$column_def{name}): $old_id";
 	}
 
 	delete $DB_MODEL -> {aliases};
+
+}
+
+################################################################################
+
+sub _hide_full_clones {
+
+	my ($relink_cols, $column_def, $old_id, $new_id) = @_;
+
+	@{$relink_cols -> {$column_def -> {table_name}}} > 0 or return;
+
+	my $ids = _check_ids ("$old_id, $new_id");
+
+	my $clones_ids;
+
+	if (sql_version() -> {string} =~ /mysql/i) {
+
+		my $group = 'GROUP BY ' . join (", ", map {"$$column_def{table_name}." . $_} @{$relink_cols -> {$column_def -> {table_name}}});
+
+		$clones_ids = join (',', sql_select_col (<<EOS));
+			SELECT
+				GROUP_CONCAT($$column_def{table_name}.id) AS ids
+			FROM
+				$$column_def{table_name}
+			WHERE
+				1 = 1
+			AND $$column_def{name} IN ($ids)
+			$group
+			HAVING
+				COUNT(*) > 1
+EOS
+
+	} else {
+
+		my $join = "LEFT JOIN $$column_def{table_name} AS clone_table_name ON $$column_def{table_name}.id <> clone_table_name.id AND "
+			. join (" AND ", map {"$$column_def{table_name}." . $_ . " = clone_table_name." . $_} @{$relink_cols -> {$column_def -> {table_name}}});
+
+		my $clones_ids;
+
+		sql_select_loop (<<EOS, sub { $clones_ids -> {$i -> {id}}++; });
+			SELECT
+				$$column_def{table_name}.id
+			FROM
+				$$column_def{table_name}
+			$join
+			WHERE
+				1 = 1
+			AND $$column_def{table_name}.$$column_def{name} IN ($ids)
+EOS
+
+		$clones_ids = join (',', grep { $clones_ids -> {$_} > 1 } keys %$clones_ids );
+
+	}
+
+	_check_ids ($clones_ids);
+
+	sql_do (<<EOU, $old_id);
+		UPDATE
+			$$column_def{table_name}
+		SET
+			$$column_def{name} = -$$column_def{name}
+		WHERE
+			id IN ($clones_ids)
+		AND $$column_def{name} = ?
+EOU
 
 }
 
