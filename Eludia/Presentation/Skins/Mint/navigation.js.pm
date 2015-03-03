@@ -1257,7 +1257,7 @@ function handle_basic_navigation_keys () {
 
 	}
 
-	if (is_interface_is_locked)
+	if (q_is_focused || is_interface_is_locked)
 		return;
 
 	var e = get_event (lastKeyDownEvent);
