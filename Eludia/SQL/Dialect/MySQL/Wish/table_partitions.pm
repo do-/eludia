@@ -82,7 +82,7 @@ sub __genereate_sql_fragment_for_partition {
 
 	$i -> {SQL} and return;
 
-	$i -> {SQL} = "PARTITION BY " . uc $i -> {kind} . "($$i{by}) ";
+	$i -> {SQL} = "PARTITION BY " . uc ($i -> {kind}) . "($$i{by}) ";
 
 	if ($i -> {kind} eq 'hash') {
 
