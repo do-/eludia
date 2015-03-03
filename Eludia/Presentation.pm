@@ -2454,14 +2454,10 @@ EOJS
 			};
 
 			$_REQUEST {__on_load} .= <<'EOJS';
-$("#check_all").click(function () {
-	if (!$("#check_all").is(":checked"))
-		$(".id_checkbox").children().removeAttr("checked");
-	else
-		$(".id_checkbox").children().attr("checked","checked");
-});
+				$(document).on("click", "#check_all", function() {
+					$(".id_checkbox").children().prop("checked", $(this).is(":checked"));
+				});
 EOJS
-
 		}
 
 		$_REQUEST {__multi_select_checkbox} = 1;
