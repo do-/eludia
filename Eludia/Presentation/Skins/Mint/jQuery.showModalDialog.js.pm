@@ -20,7 +20,7 @@
             $div.css({
                 'padding'                    : 0,
                 'margin'                     : 0,
-                'overflow'                   : 'auto',
+                'overflow'                   : 'hidden',
                 '-webkit-overflow-scrolling' :'touch'
             });
 
