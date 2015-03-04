@@ -1997,7 +1997,7 @@ sub draw_toolbar_input_tree {
 
 						if (div.is (':hidden')) {
 
-							var css      = select_1.offset (\$(document.body));
+							var css      = select_1.offset ();
 							css.top     += 20;
 
 							div.css  (css);
