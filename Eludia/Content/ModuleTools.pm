@@ -255,7 +255,9 @@ sub require_scripts_of_type ($) {
 
 			push @scripts, $script;
 
-			$name2def -> {$script -> {path}} = $script -> {last_modified};
+			if ($script -> {last_modified} > $name2def -> {$script -> {name}}) {
+				$name2def -> {$script -> {name}} = $script -> {last_modified};
+			}
 
 		}
 
@@ -286,7 +288,7 @@ sub require_scripts_of_type ($) {
 
 		}
 
-		@scripts = grep {$needed_scripts -> {$_ -> {path}}} @scripts;
+		@scripts = grep {$needed_scripts -> {$_ -> {name}}} @scripts;
 
 		@scripts = sort {
 			$DB_MODEL -> {tables} -> {$a -> {name}} -> {sql}
