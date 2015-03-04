@@ -458,6 +458,9 @@ sub draw_form {
 
 	$html .= $options -> {path};
 
+	my $tname = 'div_' . int(rand(10000));
+	$html .= "<div id=$tname style='VISIBILITY:hidden'>" if ($preconf -> {toggle_in_hidden_form});
+
 	$html .= _draw_bottom (@_);
 
 	$html .=  <<EOH;
@@ -494,7 +497,7 @@ EOH
 	$html .=  '</form></table>';
 
 	$html .= $options -> {bottom_toolbar};
-	$_REQUEST {__on_load} .= ';numerofforms++;';
+	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} ? "\$($tname).css('visibility','visible');" : "");
 
 #	$_REQUEST {__on_load} .= '$(document.forms["' . $options -> {name} . '"]).submit (function () {checkMultipleInputs (this)});';
 
@@ -3352,10 +3355,14 @@ EOH
 	my $enctype = $html =~ /\btype\=[\'\"]?file\b/ ?
 		'enctype="multipart/form-data"' : '';
 
-	$_REQUEST {__on_load} .= ';numeroftables++;';
+	my $tname = 'div_' . int(rand(10000));
+	my $div = $preconf -> {toggle_in_hidden_form} ? "<div id=$tname style='VISIBILITY:hidden'>" : "";
+
+	$_REQUEST {__on_load} .= ";numeroftables++;" . ($preconf -> {toggle_in_hidden_form} ? "\$($tname).css('visibility','visible');" : "");
 
 	return <<EOH . $html;
 
+		$div
 		$$options{title}
 		$$options{path}
 		$$options{top_toolbar}
