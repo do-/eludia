@@ -61,7 +61,7 @@ sub wish_to_explore_existing_table_columns {
 	my @pk_parts;
 
 	sql_select_loop (
-		"SHOW KEYS FROM $options->{table} WHERE Key_name = 'PRIMARY' AND Seq_in_index = 1"
+		"SHOW KEYS FROM $options->{table} WHERE Key_name = 'PRIMARY'"
 		, sub {
 			push @pk_parts, $i -> {Column_name};
 		}
