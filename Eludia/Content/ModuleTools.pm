@@ -314,9 +314,12 @@ sub require_scripts_of_type ($) {
 
 			} elsif ($i18n -> {_charset} ne 'UTF-8') {
 
+				loading_log "running $script->{path}...\n";
+
 				do $script -> {path};
 				die $@ if $@;
 
+				loading_log "complete $script->{path}.\n";
 			} else {
 
 				my $s = '';
