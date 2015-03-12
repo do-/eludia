@@ -216,7 +216,7 @@ sub require_scripts_of_type ($) {
 
 	my $is_start_scripts = 1;
 
-	if ($preconf -> {db_store_checksums}) {
+	if ($preconf -> {db_store_checksums} && $script_type eq "updates") {
 
 		$is_start_scripts = sql_select_scalar (
 			"SELECT id FROM $conf->{systables}->{__checksums} WHERE id_checksum <> '_' AND kind = ?"
@@ -255,7 +255,9 @@ sub require_scripts_of_type ($) {
 
 			push @scripts, $script;
 
-			$name2def -> {$script -> {path}} = $script -> {last_modified};
+			if ($script -> {last_modified} > $name2def -> {$script -> {name}}) {
+				$name2def -> {$script -> {name}} = $script -> {last_modified};
+			}
 
 		}
 
@@ -269,7 +271,7 @@ sub require_scripts_of_type ($) {
 
 		my ($needed_scripts, $new_checksums) = checksum_filter ($checksum_kind, '', $name2def);
 
-		if (!$is_start_scripts) {
+		if (!$is_start_scripts && $script_type eq "updates") {
 
 			checksum_write ($checksum_kind, $new_checksums);
 
@@ -286,7 +288,7 @@ sub require_scripts_of_type ($) {
 
 		}
 
-		@scripts = grep {$needed_scripts -> {$_ -> {path}}} @scripts;
+		@scripts = grep {$needed_scripts -> {$_ -> {name}}} @scripts;
 
 		@scripts = sort {
 			$DB_MODEL -> {tables} -> {$a -> {name}} -> {sql}
@@ -312,9 +314,12 @@ sub require_scripts_of_type ($) {
 
 			} elsif ($i18n -> {_charset} ne 'UTF-8') {
 
+				loading_log "running $script->{path}...\n";
+
 				do $script -> {path};
 				die $@ if $@;
 
+				loading_log "complete $script->{path}.\n";
 			} else {
 
 				my $s = '';
