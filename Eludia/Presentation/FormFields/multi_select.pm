@@ -14,6 +14,8 @@ sub draw_form_field_multi_select {
 
 	my $label = $options -> {label};
 	$label =~ s/<br>/ /g;
+	$label =~ s/<\/?b>//g;
+	$label =~ s/:$//g;
 	$label =~ s/\s+/ /g;
 
 	my $hasOnChangeEvent = 0 + (exists ($options -> {onChange}) && length ($options->{onChange}) > 0);
