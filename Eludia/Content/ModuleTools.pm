@@ -314,12 +314,12 @@ sub require_scripts_of_type ($) {
 
 			} elsif ($i18n -> {_charset} ne 'UTF-8') {
 
-				loading_log "running $script->{path}...\n";
+				$ENV {ELUDIA_SILENT} or warn "\n" . update_script_log_signature ($script) . "starting...\n";
 
 				do $script -> {path};
 				die $@ if $@;
 
-				loading_log "complete $script->{path}.\n";
+				$ENV {ELUDIA_SILENT} or warn update_script_log_signature ($script) . "finished.\n";
 			} else {
 
 				my $s = '';
@@ -345,6 +345,21 @@ sub require_scripts_of_type ($) {
 
 	return $__time;
 
+}
+
+################################################################################
+
+sub update_script_log_signature {
+
+	my ($script) = @_;
+
+	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime (time);
+
+	$year += 1900;
+
+	$mon ++;
+
+	return sprintf "[%04d-%02d-%02d %02d:%02d:%02d $$ $$script{path}] ", $year, $mon, $mday, $hour, $min, $sec;
 }
 
 ################################################################################
