@@ -1416,9 +1416,9 @@ TableSlider.prototype.cell_on = function () {
 	var c            = $(cell);
 	var table        = c.parents ('table').eq (0);
 	var div          = table.parents ('div').eq (0);
-	var offset       = div.offset ($(document.body));
+	var offset       = div.offset ();
 	var thead        = $('thead', table);
-	var css          = c.offset ($(document.body));
+	var css          = c.offset ();
 
 	css.width        = c.outerWidth ();
 
