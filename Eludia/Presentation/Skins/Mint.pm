@@ -1849,7 +1849,11 @@ sub draw_toolbar_input_checkbox {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<li class="toolbar nowrap ccbx">';
+	$options -> {attributes} -> {title} ||= $options -> {title} if $options -> {title};
+
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	my $html = qq{<li class="toolbar nowrap ccbx" $attributes>};
 
 	if ($options -> {label}) {
 		$html .= qq {<label for="$options">$$options{label}:</label>};
@@ -1986,7 +1990,11 @@ sub draw_toolbar_input_text {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<li nowrap class="toolbar">';
+	$options -> {attributes} -> {title} ||= $options -> {title} if $options -> {title};
+
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	my $html = qq{<li nowrap class="toolbar" $attributes>};
 
 	if ($options -> {label}) {
 		$html .= $options -> {label};
