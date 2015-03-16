@@ -3345,7 +3345,7 @@ sub draw_table {
 	}
 
 	$html .= <<EOH;
-			</tbody></table></div>$$options{toolbar}</td></form></tr></table>
+			</tbody></table>$$options{toolbar}</td></form></tr></table>
 		$menus
 
 EOH
@@ -3355,10 +3355,7 @@ EOH
 	my $enctype = $html =~ /\btype\=[\'\"]?file\b/ ?
 		'enctype="multipart/form-data"' : '';
 
-	my $tname = 'div_' . int(rand(10000));
-	my $div = $preconf -> {toggle_in_hidden_form} ? "<div id=$tname style='VISIBILITY:hidden'>" : "";
-
-	$_REQUEST {__on_load} .= ";numeroftables++;" . ($preconf -> {toggle_in_hidden_form} ? "\$($tname).css('visibility','visible');" : "");
+	$_REQUEST {__on_load} .= ";numeroftables++;";
 
 	return <<EOH . $html;
 
