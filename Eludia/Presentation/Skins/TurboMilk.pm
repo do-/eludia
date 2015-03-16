@@ -640,6 +640,8 @@ sub draw_form_field {
 		$a -> {colspan} = $field -> {colspan_label} if $field -> {colspan_label};
 		$a -> {width}   = $field -> {label_width}   if $field -> {label_width};
 		$a -> {title}   = $field -> {label_title}   if $field -> {label_title};
+		$a -> {title}   ||= $field -> {attributes} -> {title}
+			if exists $field -> {attributes} && exists $field -> {attributes} -> {title};
 
 		$html .= dump_tag (td => $a, $field -> {label});
 
