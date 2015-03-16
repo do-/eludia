@@ -129,7 +129,7 @@ sub FIRSTKEY {
 
 	my ($self) = @_;
 
-	my $self = keys %{$self};
+	$self = keys %{$self};
 
 	return scalar each %{$self};
 

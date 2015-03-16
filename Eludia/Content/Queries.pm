@@ -211,7 +211,7 @@ sub check___query {
 
 	}
 
-	our $_QUERY = sql_select_hash (<<EOS, $_REQUEST {id___query});
+	$_QUERY = sql_select_hash (<<EOS, $_REQUEST {id___query});
 		SELECT
 			q.*
 			, p.label AS parent_label
@@ -244,8 +244,8 @@ EOS
 			my ($y, $m, $d) = Date::Calc::Today;
 
 			my $q = sprintf ('%02d', $m - (($m - 1) % 3));
-			my $m = sprintf ('%02d', $m);
-			my $d = sprintf ('%02d', $d);
+			$m = sprintf ('%02d', $m);
+			$d = sprintf ('%02d', $d);
 
 			$filters -> {$key} =~ s|$i18n->{reduction_year}|$y|;
 			$filters -> {$key} =~ s|$i18n->{reduction_month}|$m|;
