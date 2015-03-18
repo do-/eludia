@@ -2,6 +2,8 @@ no warnings;
 
 ################################################################################
 
+sub css ($)    {$_REQUEST {__css} .= "\n$_[0]\n"; return ''}
+
 sub js ($)    {$_REQUEST {__script} .= ";\n$_[0];\n"; return ''}
 
 sub j  ($)    {js "\$(document).ready (function () { $_[0] })"}
