@@ -2372,11 +2372,15 @@ function init_page (options) {
 
 	try {top.setCursor ();} catch (e) {};
 
-	kendo.support.isRtl = function () {return false};
-	if (kendo.ui.DatePicker)
-		kendo.ui.DatePicker.prototype._reset = function () {};
-	if (kendo.ui.Select)
-		kendo.ui.Select.prototype._reset = function () {};
+	if (kendo.support)
+		kendo.support.isRtl = function () {return false};
+
+	if (kendo.ui) {
+		if (kendo.ui.DatePicker)
+			kendo.ui.DatePicker.prototype._reset = function () {};
+		if (kendo.ui.Select)
+			kendo.ui.Select.prototype._reset = function () {};
+	}
 
 	max_tabindex = options.max_tabindex;
 
