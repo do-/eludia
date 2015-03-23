@@ -934,7 +934,7 @@ sub recalculate_logon {
 	if ($_COOKIE {redirect_params}) {
 
 		my $VAR1;
-		eval {$VAR1 = $_JSON -> decode (MIME::Base64::decode ($_COOKIE {redirect_params}));};
+		eval {$VAR1 = $_JSON -> decode ($_COOKIE {redirect_params});};
 
 		foreach my $key (keys %$VAR1) { $_REQUEST {$key} = $VAR1 -> {$key} }
 

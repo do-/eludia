@@ -643,6 +643,8 @@ sub draw_form_field {
 		$a -> {colspan} = $field -> {colspan_label} if $field -> {colspan_label};
 		$a -> {width}   = $field -> {label_width}   if $field -> {label_width};
 		$a -> {title}   = $field -> {label_title}   if $field -> {label_title};
+		$a -> {title}   ||= $field -> {attributes} -> {title}
+			if exists $field -> {attributes} && exists $field -> {attributes} -> {title};
 
 		$html .= dump_tag (td => $a, $field -> {label});
 
@@ -2174,7 +2176,11 @@ sub draw_toolbar_input_checkbox {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<td class="toolbar" nowrap>';
+	$options -> {attributes} -> {title} ||= $options -> {title} if $options -> {title};
+
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	my $html = qq{<td class="toolbar" nowrap $attributes>};
 
 	if ($options -> {label}) {
 		$html .= qq {<label for="$options">$$options{label}</label>};
@@ -2183,7 +2189,7 @@ sub draw_toolbar_input_checkbox {
 
 	$html .= qq {<input id="$options" class=cbx type=checkbox value=1 $$options{checked} $$options{disabled} name="$$options{name}" onClick="$$options{onClick}">};
 
-	$html .= "<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
+	$html .= "</td><td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>";
 
 	return $html;
 
@@ -2216,7 +2222,11 @@ sub draw_toolbar_input_text {
 
 	my ($_SKIN, $options) = @_;
 
-	my $html = '<td nowrap class="toolbar" valign="middle">';
+	$options -> {attributes} -> {title} ||= $options -> {title} if $options -> {title};
+
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	my $html = qq{<td nowrap class="toolbar" valign="middle" $attributes>};
 
 	if ($options -> {label}) {
 		$html .= $options -> {label};
