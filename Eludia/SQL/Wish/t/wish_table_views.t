@@ -43,9 +43,9 @@ foreach my $view (@$views) {
 
 	my $sql_explain = sql_select_scalar ("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = database() AND TABLE_NAME = ?", $view -> {name});
 
-	is_deeply ($sql_explain, $view -> {name}, "view created: $$view{name}") or darn $sql_explain;
+	is_deeply ($sql_explain, $view -> {name}, "view created: $$view{name}") or darn [$view, $sql_explain];
 
-	my $cnt = sql_select_all ("SELECT name, cnt FROM ${table}_view");
+	my $cnt = sql_select_all ("SELECT name, cnt FROM $$view{name}");
 
 	is_deeply ($cnt, [{name => 'one', cnt => 2}, {name => 'two', cnt => 1}], "view select: $$view{name}") or darn $cnt;
 }
