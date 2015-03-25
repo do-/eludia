@@ -1406,7 +1406,7 @@ TableSlider.prototype.cell_off = function (cell) {
 }
 
 TableSlider.prototype.cell_on = debounce (function () {
-console.log ('cell_on');
+
 	if (this.isVirgin && this.row == 0 && this.initial_row == 0) return;
 
 	var cell         = this.get_cell ();
