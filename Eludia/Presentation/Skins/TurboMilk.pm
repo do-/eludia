@@ -3458,8 +3458,16 @@ sub draw_page {
 
 			<div style='display:none'>$_REQUEST{__menu_links}</div>
 
-			<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#888888" strokeweight="2px" filled="no" id="slider" />
-			<v:rect style='position:absolute; left:200px; top:300px; height:6px; width:6px; z-index:0; visibility:hidden' strokecolor="#ffffff" strokeweight="1px" filled="yes" fillcolor="#555555" id="slider_" />
+			<div style='position:absolute; left:0; top:0; height:100px; width:100px; z-index:100; display:none; pointer-events: none; border: solid #888888 2px;' id="slider" onContextMenu="
+				var c = tableSlider.get_cell ();
+				if (!c) return;
+				var tr = c.parentNode;
+				if (!tr) return;
+				var h = tr.oncontextmenu;
+				if (!h) return;
+				return h(event);
+			"></div>
+			<div style='position:absolute; left:0; top:0; height:4px; width:4px; z-index:101; display:none; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
 
 		};
 
