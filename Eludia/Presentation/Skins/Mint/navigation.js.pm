@@ -2668,7 +2668,7 @@ function init_page (options) {
 	var table_containers = $('div.eludia-table-container');
 
 	if (table_containers.length) {
-		require (['/i/mint/libs/SuperTable/supertable.js'], function (supertable) {
+		require (['/i/mint/libs/SuperTable/supertable.min.js'], function (supertable) {
 
 			table_containers.each (function() {
 				var that = this;
