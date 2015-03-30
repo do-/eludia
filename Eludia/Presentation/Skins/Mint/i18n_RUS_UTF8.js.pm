@@ -3,6 +3,8 @@ var i18n = {
 	choose_open_vocabulary: "Выбор из справочника",
 	request_sent : 'Запрос отправлен на сервер',
 	copy_clipboard: "Для копирования нажмите CTRL+C, потом ENTER"
+	count : 'Кол-во',
+	sum   : 'Сумма'
 };
 
 try{

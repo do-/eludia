@@ -1,5 +1,7 @@
 var i18n = {
 	F5: "Attention! You changed some field value(s). Reloading the page, will cause loss of that information. Still want to continue?"
+	count : 'Count',
+	sum   : 'Sum'
 };
 
 function i18n_calendar (Calendar) {
