@@ -1451,11 +1451,6 @@ TableSlider.prototype.removeSelectClass = function (td, selection_id, directions
 
 		delete data [selection_id] [direction];
 
-		if (Object.keys(data [selection_id]).length == 0) {
-			delete data [selection_id];
-			break;
-		}
-
 		var is_exist_direction = false;
 		for (var s in data) {
 			if (data [s] [direction]) {
@@ -1470,6 +1465,9 @@ TableSlider.prototype.removeSelectClass = function (td, selection_id, directions
 		}
 
 	}
+
+	if (Object.keys(data [selection_id]).length == 0)
+		delete data [selection_id];
 
 	$(td).data ('selections', data);
 
@@ -1552,7 +1550,9 @@ TableSlider.prototype.onContextMenu = function (event, self) {
 
 	if (tds.length) {
 
-		tds.removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').data ('selections', {});
+		tds.removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
+			$(this).data ('selections', {});
+		});
 		self.showStat ($(event.currentTarget).closest ('div.eludia-table-container'), '');
 
 		event.preventDefault ();
@@ -1571,7 +1571,10 @@ TableSlider.prototype.onMouseDown = function (event, self) {
 		return;
 
 	if (!event.ctrlKey)
-		$(event.currentTarget).find('td').removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').data ('selections', {});
+		$(event.currentTarget).find('td').removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
+			$(this).data ('selections', {});
+		});
+
 
 	var selection_id = event.timeStamp,
 		start = self.cell_location (event.target),
@@ -1606,8 +1609,8 @@ TOP:
 				for (var j = x1 > 0 ? x1 - 1 : 0; j <= x2 + 1 && j < matrix [i].length; j ++) {
 
 					if (i < y1 || i > y2 || j < x1 || j > x2) {
-						self.removeSelectClass (matrix [i][j], selection_id);
 						self.removeSelection (matrix [i][j], selection_id);
+						self.removeSelectClass (matrix [i][j], selection_id);
 
 						continue;
 					}
