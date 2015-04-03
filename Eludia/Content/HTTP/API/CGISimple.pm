@@ -287,9 +287,8 @@ sub parms {
 	my @names = $self -> {Q} -> param;
 
 	foreach my $name (@names) {
-		my @v = $self -> {Q} -> param ($name);
-		$vars {$name}        = $v [-1];
-		@v == 1 or $vars {$name . '[]'} = \@v;
+		my @v         = $self -> {Q} -> param ($name);
+		$vars {$name} = $v [-1];
 	}
 
 	return \%vars;
