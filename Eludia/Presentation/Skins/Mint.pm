@@ -2006,14 +2006,14 @@ sub draw_toolbar_input_text {
 
 	$options -> {attributes} ||= {};
 
-	$options -> {onKeyPress} ||= "if (event.keyCode == 13) {form.submit(); blockEvent ()}";
+	$options -> {onKeyPress} ||= "if (event.keyCode == 13 || event.keyIdentifier == 'Enter') {form.submit(); blockEvent ()}";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
 		<input
 			tabindex=$$options{tabindex}
-			onKeyPress="$$options{onKeyPress};"
+			onKeyDown="$$options{onKeyPress};"
 			type=text
 			size=$$options{size}
 			name=$$options{name}
