@@ -822,32 +822,6 @@ function setup_drop_down_button (id, data) {
 			dataSource: data,
 			orientation: 'vertical',
 			select: function (e) {
-				var selected_item = data [$(e.item).index()];
-				if (selected_item) {
-					var selected_url = selected_item.url;
-					if (selected_url) {
-						if (selected_url.match(/^javascript:/i)) {
-
-							var code = decodeURI (selected_url.substr (11));
-
-							if (selected_item.confirm) {
-								if (confirm (selected_item.confirm)) {
-									eval (code);
-								}
-							} else {
-								eval (code);
-							}
-						} else {
-							if (selected_item.confirm) {
-								if (!confirm (selected_item.confirm)) {
-									setCursor ();
-									menuDiv.remove ();
-									e.preventDefault();
-								}
-							}
-						}
-					}
-				}
 				menuDiv.remove ();
 			}
 		});
