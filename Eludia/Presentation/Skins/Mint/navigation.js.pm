@@ -1048,12 +1048,25 @@ function setAndSubmit (name, values) {
 
 	var form = document.forms [name];
 
-	var e = form.elements;
+	var elements = form.elements;
 
-	for (var i in values) e [i].value = values [i];
+	for (var i in values) {
+
+		if (elements [i] == undefined) {
+
+			$('<input>').attr({
+				type  : 'hidden',
+				name  : i,
+				value : values [i]
+			}).appendTo('form[name=form]');
+
+			continue;
+		}
+
+		elements [i].value = values [i];
+	}
 
 	form.submit ();
-
 }
 
 function checkMultipleInputs (f) {
