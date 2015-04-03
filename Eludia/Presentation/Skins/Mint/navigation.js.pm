@@ -2426,6 +2426,8 @@ function init_page (options) {
 				tableSlider.scrollCellToVisibleTop ();
 			}
 
+			$(document).click (function () {$('UL.menuFonDark').remove ()});
+
 		});
 	}
 
