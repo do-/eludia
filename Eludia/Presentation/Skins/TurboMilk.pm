@@ -459,7 +459,7 @@ sub draw_form {
 	$html .= $options -> {path};
 
 	my $tname = 'div_' . int(rand(10000));
-	$html .= "<div id=$tname style='VISIBILITY:hidden'>" if ($preconf -> {toggle_in_hidden_form});
+	$html .= "<div id=$tname style='VISIBILITY:hidden'>" if ($preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page});
 
 	$html .= _draw_bottom (@_);
 
@@ -494,10 +494,10 @@ EOH
 		$html .= qq{</tr>};
 	}
 
-	$html .=  '</form></table>';
+	$html .=  '</form></table>' . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? '</div>' : '');
 
 	$html .= $options -> {bottom_toolbar};
-	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} ? "\$($tname).css('visibility','visible');" : "");
+	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? "\$('#$tname').css('visibility','visible');" : "");
 
 #	$_REQUEST {__on_load} .= '$(document.forms["' . $options -> {name} . '"]).submit (function () {checkMultipleInputs (this)});';
 
@@ -3287,6 +3287,8 @@ sub draw_table {
 	$$options{toolbar} =~ s{\s+$}{}sm;
 
 	my $html = '';
+	my $tname = 'div_' . int(rand(10000));
+	$html = $preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page} ? "<div id=$tname style='VISIBILITY:hidden'>" : "<div>";
 
 	my %hidden = ();
 
@@ -3355,7 +3357,7 @@ sub draw_table {
 	}
 
 	$html .= <<EOH;
-			</tbody></table>$$options{toolbar}</td></form></tr></table>
+			</tbody></table></div>$$options{toolbar}</td></form></tr></table>
 		$menus
 
 EOH
@@ -3365,11 +3367,10 @@ EOH
 	my $enctype = $html =~ /\btype\=[\'\"]?file\b/ ?
 		'enctype="multipart/form-data"' : '';
 
-	$_REQUEST {__on_load} .= ";numeroftables++;";
+	$_REQUEST {__on_load} .= ";numeroftables++;" . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page} ? "\$('#$tname').css('visibility','visible');" : "");
 
 	return <<EOH . $html;
 
-		$div
 		$$options{title}
 		$$options{path}
 		$$options{top_toolbar}
