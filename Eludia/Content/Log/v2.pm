@@ -114,7 +114,7 @@ sub log_action_finish {
 	
 		$fields .= ', id_user_real = ?';
 	
-		push @values, $_USER -> {id__real};
+		push @values, $_USER -> {id__real} || $_USER -> {id};
 	
 	}
 
