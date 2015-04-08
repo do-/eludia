@@ -854,10 +854,10 @@ EOH
 
 	my $html = "<span id='form_field_file_head_$options->{name}'>";
 
-	$$options{value} ||= $data -> {file_name};
+	$$options{value} ||= $data -> {"$$options{name}_name"};
 
 	if ($options -> {can_edit}) {
-		if ($options -> {value} || ($data -> {file_name} && $data -> {file_path})) {
+		if ($options -> {value} || ($data -> {"$$options{name}_name"} && $data -> {"$$options{name}_path"})) {
 			$_REQUEST {__on_load} .= "\$('#file_input_$$options{name}').hide();";
 		} else {
 			$_REQUEST {__on_load} .= "\$('#file_name_$$options{name}').hide();";

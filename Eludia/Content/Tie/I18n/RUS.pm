@@ -30,6 +30,7 @@
 	choose                   => 'выбрать',
 	'close'                  => 'закрыть',
 	delete                   => 'удалить (Ctrl-Del)',
+	remove                   => 'удалить',
 	descending               => 'убывание',
 	download                 => 'скачать',
 	drop_filters             => 'очистить фильтры',
