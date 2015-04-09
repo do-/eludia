@@ -2199,10 +2199,21 @@ function activate_suggest_fields (top_element) {
 						data        : read_data,
 						dataType    : 'json'
 					},
+					parameterMap: function(data, type) {
+						var q = '';
+						if (data.filter && data.filter.filters && data.filter.filters [0] && data.filter.filters [0].value)
+							q = data.filter.filters [0].value;
+
+						var result = {};
+						result [$('#' + id).attr ('name') + '__label'] = q;
+
+						if (type == 'read') {
+							return result;
+						}
+					}
 				}
 			},
 			change          : function(e) {
-
 				var selected_item = this.current();
 				var id           = '',
 					label        = this.value(),
