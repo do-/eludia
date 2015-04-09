@@ -2264,12 +2264,15 @@ sub draw_table {
 
 			push @header_cells, $h;
 
-			if (($h -> {order} || $h -> {no_order})
-				&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}
-				&& $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord}) {
-				if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} > $max_ord) {
-					$max_ord = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
-				}
+			if ($h -> {order} || $h -> {no_order}) {
+				$_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} ||= {
+					'desc' => '',
+					'ord' => '',
+					'sort' => '',
+				};
+			}
+			if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} > $max_ord) {
+				$max_ord = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
 			}
 
 		}
@@ -2279,11 +2282,9 @@ sub draw_table {
 			push @_COLUMNS, $h;
 
 			if ($_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
-				if ($max_ord && ($h -> {order} || $h -> {no_order})
-					&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}
-					&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord}
-				) {
-					if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} == 0) {
+				if ($max_ord && ($h -> {order} || $h -> {no_order})) {
+					my $colunm_order = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}};
+					if ($colunm_order -> {ord} == 0) {
 						my $p = $h -> {parent};
 						while ($p -> {label}) {
 							$p -> {colspan} --;
@@ -2291,8 +2292,8 @@ sub draw_table {
 							$p = $p -> {parent};
 						}
 					} else {
-						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord})
-							: ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} * 1000);
+						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $colunm_order -> {ord})
+							: ($colunm_order -> {ord} * 1000);
 					}
 				} elsif (!$h -> {hidden}) {
 					if (keys %{$h -> {parent}}) {
