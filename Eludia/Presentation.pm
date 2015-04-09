@@ -2283,8 +2283,8 @@ sub draw_table {
 
 			if ($_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
 				if ($max_ord && ($h -> {order} || $h -> {no_order})) {
-					my $colunm_order = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}};
-					if ($colunm_order -> {ord} == 0) {
+					my $column_order = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}};
+					if ($column_order -> {ord} == 0) {
 						my $p = $h -> {parent};
 						while ($p -> {label}) {
 							$p -> {colspan} --;
@@ -2292,8 +2292,8 @@ sub draw_table {
 							$p = $p -> {parent};
 						}
 					} else {
-						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $colunm_order -> {ord})
-							: ($colunm_order -> {ord} * 1000);
+						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $column_order -> {ord})
+							: ($column_order -> {ord} * 1000);
 					}
 				} elsif (!$h -> {hidden}) {
 					if (keys %{$h -> {parent}}) {
