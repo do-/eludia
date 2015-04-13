@@ -1099,18 +1099,7 @@ sub draw_toolbar {
 
 					next if ($item -> {off});
 
-					check_href ($item);
-
-					if (
-						!(
-							$item -> {keep_esc} ||
-							(!exists $item -> {keep_esc} && $item -> {icon} eq 'cancel')
-						)
-					) {
-						$item -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
-					}
-
-					$item -> {confirm} = js_escape ($item -> {confirm}) if ($item -> {confirm});
+					$_SKIN -> __adjust_button ($item);
 
 					push @$items, $item;
 				}
@@ -1226,18 +1215,8 @@ sub draw_centered_toolbar_button {
 
 			next if ($item -> {off});
 
-			check_href ($item);
 
-			if (
-				!(
-					$item -> {keep_esc} ||
-					(!exists $item -> {keep_esc} && $item -> {icon} eq 'cancel')
-				)
-			) {
-				$item -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
-			}
-
-			$item -> {confirm} = js_escape ($item -> {confirm}) if ($item -> {confirm});
+			$_SKIN -> __adjust_button ($item);
 
 			push @$items, $item;
 		}
@@ -1261,32 +1240,7 @@ sub draw_centered_toolbar_button {
 
 	}
 
-	if ($options -> {preset}) {
-		my $preset = $conf -> {button_presets} -> {$options -> {preset}};
-		$options -> {hotkey}     ||= Storable::dclone ($preset -> {hotkey}) if $preset -> {hotkey};
-		$options -> {icon}       ||= $preset -> {icon};
-		$options -> {label}      ||= $i18n -> {$preset -> {label}};
-		$options -> {label}      ||= $preset -> {label};
-		$options -> {confirm}    = exists $options -> {confirm} ? $options -> {confirm} :
-			$i18n -> {$preset -> {confirm}} ? $i18n -> {$preset -> {confirm}} :
-			$preset -> {confirm};
-		$options -> {preconfirm} ||= $preset -> {preconfirm};
-	}
-
-	$options -> {href} = 'javaScript:' . $options -> {onclick} if $options -> {onclick};
-
-	check_href ($options);
-
-	if (
-		!(
-			$options -> {keep_esc} ||
-			(!exists $options -> {keep_esc} && $options -> {icon} eq 'cancel')
-		)
-	) {
-		$options -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
-	}
-
-	$_SKIN -> __adjust_button_href ($options);
+	$_SKIN -> __adjust_button ($options);
 
 	return $_SKIN -> draw_centered_toolbar_button (@_);
 

@@ -2354,7 +2354,7 @@ EOH
 
 		$html .= <<EOH;
 				<tr>
-					<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
+					<td nowrap id="$$type{id}" target="$$type{target}" onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
 				</tr>
 EOH
 

@@ -1562,6 +1562,13 @@ EOH
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
+		$html .= "<div style='display:none;'>";
+		map { $html .= <<EOH if $_ -> {hotkey};
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+EOH
+		} @{$options -> {items}};
+		$html .= "</div>";
+
 		$html .= "<script>var data_$id = " . $_JSON -> encode ([
 			map {
 				$_ -> {imageUrl} = _icon_path ($_ -> {icon}) if $_ -> {icon};
@@ -2162,6 +2169,13 @@ sub draw_centered_toolbar_button {
 			} @{$options -> {items}}
 		]);
 		$html .= "</script>";
+
+		$html .= "<div style='display:none;'>";
+		map { $html .= <<EOH if $_ -> {hotkey};
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+EOH
+		} @{$options -> {items}};
+		$html .= "</div>";
 
 		$html .= <<EOH;
 
