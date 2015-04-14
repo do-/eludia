@@ -1556,7 +1556,7 @@ sub draw_toolbar_button {
 		<li>
 EOH
 
-	if ($options -> {items}) {
+	if (@{$options -> {items}} > 0) {
 
 		$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
