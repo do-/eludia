@@ -2387,7 +2387,7 @@ function init_page (options) {
 					initial_data : tables_data [that.id],
 					el: $(that),
 					containerRender : function(model) {
-						$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+						$(that).find('tr[data-menu],td[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
 						adjust_kendo_selects (that);
 						$('[data-type=datepicker]', that).addClass('k-group').each(function () {$(this).kendoDatePicker({
