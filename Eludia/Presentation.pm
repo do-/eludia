@@ -1091,28 +1091,19 @@ sub draw_toolbar {
 
 			next if $button -> {off};
 
-			if (@{$button -> {items}}) {
+			my @items = grep { !$_ -> {off} } @{$button -> {items}};
 
-				my $items;
+			next if (!@items && @{$button -> {items}});
 
-				foreach my $item (@{$button -> {items}}) {
+			$button = @items [0] if (@items == 1);
 
-					next if ($item -> {off});
+			if (@items > 1) {
 
-					$_SKIN -> __adjust_button ($item);
+				map {$ _SKIN -> __adjust_button ($_); } @items;
 
-					push @$items, $item;
-				}
+				$button -> {items} = \@items;
 
-				if (!$items) {
-					next;
-				} elsif (@$items == 1) {
-					$button = $items -> [0];
-				} else {
-					$button -> {items} = $items;
-					$button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items});
-				}
-
+				eval { $button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items}); };
 
 			}
 
@@ -1207,36 +1198,19 @@ sub draw_centered_toolbar_button {
 
 	my ($options) = @_;
 
-	if (@{$options -> {items}}) {
+	my @items = grep { !$_ -> {off} } @{$options -> {items}};
 
-		my $items;
+	return '' if (!@items && @{$options -> {items}});
 
-		foreach my $item (@{$options -> {items}}) {
+	$_ [0] = $options = @items [0] if (@items == 1);
 
-			next if ($item -> {off});
+	if (@items > 1) {
 
+		map {$ _SKIN -> __adjust_button ($_); } @items;
 
-			$_SKIN -> __adjust_button ($item);
+		$options -> {items} = \@items;
 
-			push @$items, $item;
-		}
-
-		if (!$items) {
-
-			return '';
-
-		} elsif (@$items == 1) {
-
-			$_ [0] = $options = $items -> [0];
-
-		} else {
-
-			$options -> {items} = $items;
-
-			eval {$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});};
-
-		}
-
+		eval { $options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items}); };
 
 	}
 
