@@ -2056,7 +2056,7 @@ sub draw_toolbar_input_datetime {
 
 	my ($_SKIN, $options) = @_;
 
-	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
+	$options -> {onChange} ||= $options -> {onClose};
 	$options -> {onKeyPress} = "if (event.keyCode == 13) {this.form.submit()}";
 	$options -> {onChange}   = join ';', $options -> {onChange}, "submit ()"
 		if !$options -> {no_change_submit};
