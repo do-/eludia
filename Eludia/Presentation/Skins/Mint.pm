@@ -2153,7 +2153,7 @@ sub draw_centered_toolbar_button {
 
 	my $html = "<td nowrap>";
 
-	if ($options -> {items}) {
+	if (@{$options -> {items}} > 0) {
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
