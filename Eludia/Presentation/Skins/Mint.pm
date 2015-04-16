@@ -2327,10 +2327,17 @@ sub js_set_select_option {
 		question => $item -> {question},
 	});
 
+	$_REQUEST {__script} .= " select_options = {}; " unless $_REQUEST {__script} =~ /select_options = \{\}/;
+
 	return $_SO_VARIABLES -> {$a}
 		if $_SO_VARIABLES -> {$a};
 
-	$_SO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption ($a)";
+	my $var = "so_" . substr ('' . $item, 7, 7);
+	$var =~ s/\)$//;
+
+	$_REQUEST {__script} .= " select_options.$var = $a; ";
+
+	$_SO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption (select_options.$var)";
 
 	return $_SO_VARIABLES -> {$a};
 
