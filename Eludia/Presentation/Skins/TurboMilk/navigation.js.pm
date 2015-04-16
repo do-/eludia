@@ -1397,15 +1397,15 @@ TableSlider.prototype.get_cell = function () {
 
 TableSlider.prototype.cell_off = function (cell) {
 
-	$('#slider').css ('visibility', 'hidden');
+	$('#slider').css ('display', 'none');
 
-	$('#slider_').css ('visibility', 'hidden');
+	$('#slider_').css ('display', 'none');
 
 	return cell;
 
 }
 
-TableSlider.prototype.cell_on = function () {
+TableSlider.prototype.cell_on = debounce (function () {
 
 	if (this.isVirgin && this.row == 0 && this.initial_row == 0) return;
 
@@ -1444,16 +1444,19 @@ TableSlider.prototype.cell_on = function () {
 		|| css.top + css.height + ((div.scrollHeight > div.offsetHeight - 12) ? 16 : 0) > offset.top + div.outerHeight ()
 	) return this.cell_off (cell);
 
+	if (body.scrollTop)
+		css.top += body.scrollTop;
+
 	css.top        --;
 	css.left       --;
-	css.visibility = 'visible';
+	css.display = 'block';
 
 	$('#slider').css (css);
 
 	$('#slider_').css ({
 		left : css.left + css.width - 3,
 		top  : css.top  + css.height - 3,
-		'visibility': 'visible'
+		display : 'block'
 	});
 
 	if (this.last_cell_id != cell.uniqueID) focus_on_first_input (cell);
@@ -1462,7 +1465,9 @@ TableSlider.prototype.cell_on = function () {
 
 	return cell;
 
-}
+}, 500);
+
+
 
 function td_on_click () {
 
@@ -4535,3 +4540,19 @@ function stringSetsEqual (set1, set2) {
 	}
 	return setsEqual;
 }
+
+function debounce (func, wait, immediate) {
+	var timeout, result;
+	return function() {
+		var context = this, args = arguments;
+		var later = function() {
+			timeout = null;
+			if (!immediate) result = func.apply(context, args);
+		};
+		var callNow = immediate && !timeout;
+		clearTimeout(timeout);
+		timeout = setTimeout(later, wait);
+		if (callNow) result = func.apply(context, args);
+		return result;
+	};
+};

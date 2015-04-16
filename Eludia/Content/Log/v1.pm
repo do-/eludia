@@ -49,7 +49,7 @@ sub log_action_finish {
 
 		push @fields, 'id_user_real';
 
-		$_REQUEST {_id_user_real} = $_USER -> {id__real};
+		$_REQUEST {_id_user_real} = $_USER -> {id__real} || $_USER -> {id};
 
 	}
 

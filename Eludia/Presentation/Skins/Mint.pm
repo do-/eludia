@@ -1559,11 +1559,18 @@ sub draw_toolbar_button {
 		<li>
 EOH
 
-	if ($options -> {items}) {
+	if (@{$options -> {items}} > 0) {
 
 		$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
+
+		$html .= "<div style='display:none;'>";
+		map { $html .= <<EOH if $_ -> {hotkey};
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+EOH
+		} @{$options -> {items}};
+		$html .= "</div>";
 
 		$html .= "<script>var data_$id = " . $_JSON -> encode ([
 			map {
@@ -2009,14 +2016,14 @@ sub draw_toolbar_input_text {
 
 	$options -> {attributes} ||= {};
 
-	$options -> {onKeyPress} ||= "if (event.keyCode == 13) {form.submit(); blockEvent ()}";
+	$options -> {onKeyPress} ||= "if (event.keyCode == 13 || event.keyIdentifier == 'Enter') {form.submit(); blockEvent ()}";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
 		<input
 			tabindex=$$options{tabindex}
-			onKeyPress="$$options{onKeyPress};"
+			onKeyDown="$$options{onKeyPress};"
 			type=text
 			size=$$options{size}
 			name=$$options{name}
@@ -2149,7 +2156,7 @@ sub draw_centered_toolbar_button {
 
 	my $html = "<td nowrap>";
 
-	if ($options -> {items}) {
+	if (@{$options -> {items}} > 0) {
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
@@ -2165,6 +2172,13 @@ sub draw_centered_toolbar_button {
 			} @{$options -> {items}}
 		]);
 		$html .= "</script>";
+
+		$html .= "<div style='display:none;'>";
+		map { $html .= <<EOH if $_ -> {hotkey};
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+EOH
+		} @{$options -> {items}};
+		$html .= "</div>";
 
 		$html .= <<EOH;
 
@@ -2316,10 +2330,17 @@ sub js_set_select_option {
 		question => $item -> {question},
 	});
 
+	$_REQUEST {__script} .= " select_options = {}; " unless $_REQUEST {__script} =~ /select_options = \{\}/;
+
 	return $_SO_VARIABLES -> {$a}
 		if $_SO_VARIABLES -> {$a};
 
-	$_SO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption ($a)";
+	my $var = "so_" . substr ('' . $item, 7, 7);
+	$var =~ s/\)$//;
+
+	$_REQUEST {__script} .= " select_options.$var = $a; ";
+
+	$_SO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption (select_options.$var)";
 
 	return $_SO_VARIABLES -> {$a};
 

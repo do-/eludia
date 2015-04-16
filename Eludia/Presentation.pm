@@ -1093,39 +1093,19 @@ sub draw_toolbar {
 
 			next if $button -> {off};
 
-			if (@{$button -> {items}}) {
+			my @items = grep { !$_ -> {off} } @{$button -> {items}};
 
-				my $items;
+			next if (!@items && @{$button -> {items}});
 
-				foreach my $item (@{$button -> {items}}) {
+			$button = @items [0] if (@items == 1);
 
-					next if ($item -> {off});
+			if (@items > 1) {
 
-					check_href ($item);
+				map {$ _SKIN -> __adjust_button ($_); } @items;
 
-					if (
-						!(
-							$item -> {keep_esc} ||
-							(!exists $item -> {keep_esc} && $item -> {icon} eq 'cancel')
-						)
-					) {
-						$item -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
-					}
+				$button -> {items} = \@items;
 
-					$item -> {confirm} = js_escape ($item -> {confirm}) if ($item -> {confirm});
-
-					push @$items, $item;
-				}
-
-				if (!$items) {
-					next;
-				} elsif (@$items == 1) {
-					$button = $items -> [0];
-				} else {
-					$button -> {items} = $items;
-					$button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items});
-				}
-
+				eval { $button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items}); };
 
 			}
 
@@ -1220,75 +1200,23 @@ sub draw_centered_toolbar_button {
 
 	my ($options) = @_;
 
-	if (@{$options -> {items}}) {
+	my @items = grep { !$_ -> {off} } @{$options -> {items}};
 
-		my $items;
+	return '' if (!@items && @{$options -> {items}});
 
-		foreach my $item (@{$options -> {items}}) {
+	$_ [0] = $options = @items [0] if (@items == 1);
 
-			next if ($item -> {off});
+	if (@items > 1) {
 
-			check_href ($item);
+		map {$ _SKIN -> __adjust_button ($_); } @items;
 
-			if (
-				!(
-					$item -> {keep_esc} ||
-					(!exists $item -> {keep_esc} && $item -> {icon} eq 'cancel')
-				)
-			) {
-				$item -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
-			}
+		$options -> {items} = \@items;
 
-			$item -> {confirm} = js_escape ($item -> {confirm}) if ($item -> {confirm});
-
-			push @$items, $item;
-		}
-
-		if (!$items) {
-
-			return '';
-
-		} elsif (@$items == 1) {
-
-			$_ [0] = $options = $items -> [0];
-
-		} else {
-
-			$options -> {items} = $items;
-
-			eval {$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});};
-
-		}
-
+		eval { $options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items}); };
 
 	}
 
-	if ($options -> {preset}) {
-		my $preset = $conf -> {button_presets} -> {$options -> {preset}};
-		$options -> {hotkey}     ||= Storable::dclone ($preset -> {hotkey}) if $preset -> {hotkey};
-		$options -> {icon}       ||= $preset -> {icon};
-		$options -> {label}      ||= $i18n -> {$preset -> {label}};
-		$options -> {label}      ||= $preset -> {label};
-		$options -> {confirm}    = exists $options -> {confirm} ? $options -> {confirm} :
-			$i18n -> {$preset -> {confirm}} ? $i18n -> {$preset -> {confirm}} :
-			$preset -> {confirm};
-		$options -> {preconfirm} ||= $preset -> {preconfirm};
-	}
-
-	$options -> {href} = 'javaScript:' . $options -> {onclick} if $options -> {onclick};
-
-	check_href ($options);
-
-	if (
-		!(
-			$options -> {keep_esc} ||
-			(!exists $options -> {keep_esc} && $options -> {icon} eq 'cancel')
-		)
-	) {
-		$options -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
-	}
-
-	$_SKIN -> __adjust_button_href ($options);
+	$_SKIN -> __adjust_button ($options);
 
 	return $_SKIN -> draw_centered_toolbar_button (@_);
 
@@ -2266,12 +2194,15 @@ sub draw_table {
 
 			push @header_cells, $h;
 
-			if (($h -> {order} || $h -> {no_order})
-				&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}
-				&& $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord}) {
-				if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} > $max_ord) {
-					$max_ord = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
-				}
+			if ($h -> {order} || $h -> {no_order}) {
+				$_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} ||= {
+					'desc' => '',
+					'ord' => '',
+					'sort' => '',
+				};
+			}
+			if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} > $max_ord) {
+				$max_ord = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
 			}
 
 		}
@@ -2281,11 +2212,9 @@ sub draw_table {
 			push @_COLUMNS, $h;
 
 			if ($_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
-				if ($max_ord && ($h -> {order} || $h -> {no_order})
-					&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}
-					&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord}
-				) {
-					if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} == 0) {
+				if ($max_ord && ($h -> {order} || $h -> {no_order})) {
+					my $column_order = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}};
+					if ($column_order -> {ord} == 0) {
 						my $p = $h -> {parent};
 						while ($p -> {label}) {
 							$p -> {colspan} --;
@@ -2293,8 +2222,8 @@ sub draw_table {
 							$p = $p -> {parent};
 						}
 					} else {
-						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord})
-							: ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} * 1000);
+						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $column_order -> {ord})
+							: ($column_order -> {ord} * 1000);
 					}
 				} elsif (!$h -> {hidden}) {
 					if (keys %{$h -> {parent}}) {

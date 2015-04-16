@@ -283,6 +283,45 @@ EOJS
 
 ################################################################################
 
+sub __adjust_button {
+
+	my ($_SKIN, $options) = @_;
+
+	if ($options -> {preset}) {
+		my $preset = $conf -> {button_presets} -> {$options -> {preset}};
+		$options -> {hotkey}     ||= Storable::dclone ($preset -> {hotkey}) if $preset -> {hotkey};
+		$options -> {icon}       ||= $preset -> {icon};
+		$options -> {label}      ||= $i18n -> {$preset -> {label}};
+		$options -> {label}      ||= $preset -> {label};
+		$options -> {confirm}    = exists $options -> {confirm} ? $options -> {confirm} :
+			$i18n -> {$preset -> {confirm}} ? $i18n -> {$preset -> {confirm}} :
+			$preset -> {confirm};
+		$options -> {preconfirm} ||= $preset -> {preconfirm};
+	}
+
+	$options -> {id}     ||= '' . $options;
+	$options -> {target} ||= '_self';
+
+	$options -> {href} = 'javaScript:' . $options -> {onclick} if $options -> {onclick};
+
+	check_href ($options);
+
+	if (
+		!(
+			$options -> {keep_esc} ||
+			(!exists $options -> {keep_esc} && $options -> {icon} eq 'cancel')
+		)
+	) {
+		$options -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
+	}
+
+	$_SKIN -> __adjust_button_href ($options);
+
+	$options -> {confirm} = js_escape ($options -> {confirm}) if ($options -> {confirm});
+}
+
+################################################################################
+
 sub __adjust_button_href {
 
 	my ($_SKIN, $options) = @_;

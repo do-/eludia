@@ -459,7 +459,7 @@ sub draw_form {
 	$html .= $options -> {path};
 
 	my $tname = 'div_' . int(rand(10000));
-	$html .= "<div id=$tname style='VISIBILITY:hidden'>" if ($preconf -> {toggle_in_hidden_form});
+	$html .= "<div id=$tname style='VISIBILITY:hidden'>" if ($preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page});
 
 	$html .= _draw_bottom (@_);
 
@@ -494,10 +494,10 @@ EOH
 		$html .= qq{</tr>};
 	}
 
-	$html .=  '</form></table>';
+	$html .=  '</form></table>' . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? '</div>' : '');
 
 	$html .= $options -> {bottom_toolbar};
-	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} ? "\$($tname).css('visibility','visible');" : "");
+	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? "\$('#$tname').css('visibility','visible');" : "");
 
 #	$_REQUEST {__on_load} .= '$(document.forms["' . $options -> {name} . '"]).submit (function () {checkMultipleInputs (this)});';
 
@@ -2358,7 +2358,7 @@ EOH
 
 		$html .= <<EOH;
 				<tr>
-					<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
+					<td nowrap id="$$type{id}" target="$$type{target}" onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
 				</tr>
 EOH
 
@@ -3291,6 +3291,8 @@ sub draw_table {
 	$$options{toolbar} =~ s{\s+$}{}sm;
 
 	my $html = '';
+	my $tname = 'div_' . int(rand(10000));
+	$html = $preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page} ? "<div id=$tname style='VISIBILITY:hidden'>" : "<div>";
 
 	my %hidden = ();
 
@@ -3359,7 +3361,7 @@ sub draw_table {
 	}
 
 	$html .= <<EOH;
-			</tbody></table>$$options{toolbar}</td></form></tr></table>
+			</tbody></table></div>$$options{toolbar}</td></form></tr></table>
 		$menus
 
 EOH
@@ -3369,11 +3371,10 @@ EOH
 	my $enctype = $html =~ /\btype\=[\'\"]?file\b/ ?
 		'enctype="multipart/form-data"' : '';
 
-	$_REQUEST {__on_load} .= ";numeroftables++;";
+	$_REQUEST {__on_load} .= ";numeroftables++;" . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page} ? "\$('#$tname').css('visibility','visible');" : "");
 
 	return <<EOH . $html;
 
-		$div
 		$$options{title}
 		$$options{path}
 		$$options{top_toolbar}
@@ -3462,8 +3463,16 @@ sub draw_page {
 
 			<div style='display:none'>$_REQUEST{__menu_links}</div>
 
-			<v:rect style='position:absolute; left:200px; top:300px; height:100px; width:100px; z-index:0; visibility:hidden' strokecolor="#888888" strokeweight="2px" filled="no" id="slider" />
-			<v:rect style='position:absolute; left:200px; top:300px; height:6px; width:6px; z-index:0; visibility:hidden' strokecolor="#ffffff" strokeweight="1px" filled="yes" fillcolor="#555555" id="slider_" />
+			<div style='position:absolute; left:0; top:0; height:100px; width:100px; z-index:100; display:none; pointer-events: none; border: solid #888888 2px;' id="slider" onContextMenu="
+				var c = tableSlider.get_cell ();
+				if (!c) return;
+				var tr = c.parentNode;
+				if (!tr) return;
+				var h = tr.oncontextmenu;
+				if (!h) return;
+				return h(event);
+			"></div>
+			<div style='position:absolute; left:0; top:0; height:4px; width:4px; z-index:101; display:none; border: solid #888888 1px; background-color:white;' id="slider_" ><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=4 height=4 id="slider_"></div>
 
 		};
 
