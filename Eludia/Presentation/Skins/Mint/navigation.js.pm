@@ -1744,7 +1744,7 @@ TableSlider.prototype.calculateSelections = function () {
 
 }
 
-TableSlider.prototype.clear_row = function (row) {
+TableSlider.prototype.clear_rows = function (row) {
 	self.rows = [];
 }
 
