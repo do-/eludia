@@ -1568,7 +1568,13 @@ sub draw_toolbar_button {
 		<li>
 EOH
 
+	my $btn_r = '';
+
 	if (@{$options -> {items}} > 0) {
+
+		$btn_r = <<EOH;
+			<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:top;" border="0" hspace="0">
+EOH
 
 		$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
@@ -1617,6 +1623,7 @@ EOH
 
 	$html .= <<EOH;
 				$options->{label}</nobr>
+				$btn_r
 				</a>
 		</li>
 
@@ -2165,7 +2172,15 @@ sub draw_centered_toolbar_button {
 
 	my $html = "<td nowrap>";
 
+	my $btn_r = '';
+
 	if (@{$options -> {items}} > 0) {
+
+		$btn_r = <<EOH;
+			<nobr>
+				<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:middle;" border="0" hspace="0">
+			</nobr>
+EOH
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
@@ -2212,6 +2227,7 @@ EOH
 			<nobr class="smallizer_text">
 				$$options{label}
 			</nobr>
+			$btn_r
 		</a>
 	</td>
 	<td><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
