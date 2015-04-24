@@ -2213,10 +2213,21 @@ function activate_suggest_fields (top_element) {
 						data        : read_data,
 						dataType    : 'json'
 					},
+					parameterMap: function(data, type) {
+						var q = '';
+						if (data.filter && data.filter.filters && data.filter.filters [0] && data.filter.filters [0].value)
+							q = data.filter.filters [0].value;
+
+						var result = {};
+						result [$('#' + id).attr ('name') + '__label'] = q;
+
+						if (type == 'read') {
+							return result;
+						}
+					}
 				}
 			},
 			change          : function(e) {
-
 				var selected_item = this.current();
 				var id           = '',
 					label        = this.value(),
@@ -2390,7 +2401,7 @@ function init_page (options) {
 					initial_data : tables_data [that.id],
 					el: $(that),
 					containerRender : function(model) {
-						$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+						$(that).find('tr[data-menu],td[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
 						adjust_kendo_selects (that);
 						$('[data-type=datepicker]', that).addClass('k-group').each(function () {$(this).kendoDatePicker({

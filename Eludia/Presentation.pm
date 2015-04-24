@@ -2451,7 +2451,16 @@ EOJS
 
 		if (@{$i -> {__types}} > 0) {
 
-			$i -> {__menu} = draw_vert_menu ($i, $i -> {__types});
+			if (exists ($i -> {__menu}) && ref ($i -> {__menu}) eq '') {
+
+				$i -> {__menu} .= draw_vert_menu ($i, $i -> {__types});
+
+			} else {
+
+				$i -> {__menu} = draw_vert_menu ($i, $i -> {__types});
+
+			}
+
 
 		}
 

@@ -2399,6 +2399,14 @@ sub draw_text_cell {
 			unless $data -> {target} eq '_self';
 	}
 
+	if (@{$data -> {__context_menu}}) {
+
+		my $context_menu = $_JSON -> encode ($data -> {__context_menu});
+		$context_menu =~ s/\"/&quot;/g;
+		$data -> {attributes} -> {"data-menu"} = $context_menu;
+
+	}
+
 	my $html = dump_tag ('td', $data -> {attributes});
 
 	if ($data -> {__is_first_not_fixed_cell}) {
