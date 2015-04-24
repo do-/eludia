@@ -1,10 +1,10 @@
 sub draw_button_cell {
 
 	my ($options) = @_;
-	
+
 	return ''
-		if $_REQUEST {xls};	
-			
+		if $_REQUEST {xls};
+
 	check_href ($options);
 
 	if ($options -> {confirm}) {
@@ -15,7 +15,7 @@ sub draw_button_cell {
 	}
 
 	if (
-		! (	
+		! (
 			$options -> {keep_esc} ||
 			(!exists $options -> {keep_esc} && $options -> {icon} eq 'delete' && !$_REQUEST {id})
 		)
