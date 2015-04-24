@@ -42,7 +42,8 @@ var is_dirty = false,
 
 	max_len = 50,
 	poll_invisibles_interval_id,
-	max_tabindex = 0;
+	max_tabindex = 0,
+	supertables = [];
 
 
 var request = {},
@@ -2385,7 +2386,7 @@ function init_page (options) {
 				var table_url = '/?' + options.table_url + '&__only_table=' + that.id;
 				table_url = table_url + '&__table_cnt=' + table_containers.length;
 
-				new supertable({
+				supertables.push (new supertable({
 					tableUrl: table_url,
 					initial_data : tables_data [that.id],
 					el: $(that),
@@ -2420,7 +2421,7 @@ function init_page (options) {
 						}
 
 					}
-				})
+				}))
 			});
 
 			options.on_load ();
