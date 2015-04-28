@@ -570,10 +570,10 @@ sub draw_form_field_file {
 
 	my $html = "<span id='form_field_file_head_$options->{name}'>";
 
-	$$options{value} ||= $data -> {file_name};
+	$$options{value} ||= $data -> {"$$options{name}_name"};
 
 	if ($options -> {can_edit}) {
-		if ($options -> {value} || ($data -> {file_name} && $data -> {file_path})) {
+		if ($options -> {value} || ($data -> {"$$options{name}_name"} && $data -> {"$$options{name}_path"})) {
 			$_REQUEST {__on_load} .= "\$('#file_input_$$options{name}').hide();";
 		} else {
 			$_REQUEST {__on_load} .= "\$('#file_name_$$options{name}').hide();";
@@ -581,9 +581,21 @@ sub draw_form_field_file {
 
 		$html .= <<EOH;
 			<span id='file_name_$$options{name}'>
-				$$options{value}
-				<img id='img_$$options{name}' height=12 src='$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}' width=12 border=0 align=absmiddle'
-					onclick="javascript: \$('#file_input_$$options{name}').show(); \$('#file_name_$$options{name}').hide(); \$('#_file_clear_flag_for_$$options{name}').val(1);">
+				<ul class="k-upload-files k-reset">
+					<li class="k-file"">
+						<span class="k-progress" style="width: 100%;"></span>
+						<span class="k-icon k-i-xls"></span>
+						<span class="k-filename" title="$$options{value}">
+							$$options{value}
+						</span>
+						<strong class="k-upload-status">
+							<button type="button" class="k-button k-button-bare k-upload-action"
+								onclick="javascript: \$('#file_input_$$options{name}').show(); \$('#file_name_$$options{name}').hide(); \$('#_file_clear_flag_for_$$options{name}').val(1);">
+								<span class="k-icon k-i-close k-delete" title="$$i18n{remove}"></span>
+							</button>
+						</strong>
+					</li>
+				</ul>
 			</span>
 			<span id='file_input_$$options{name}'>
 EOH
@@ -1559,7 +1571,13 @@ sub draw_toolbar_button {
 		<li>
 EOH
 
+	my $btn_r = '';
+
 	if (@{$options -> {items}} > 0) {
+
+		$btn_r = <<EOH;
+			<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:top;" border="0" hspace="0">
+EOH
 
 		$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
@@ -1608,6 +1626,7 @@ EOH
 
 	$html .= <<EOH;
 				$options->{label}</nobr>
+				$btn_r
 				</a>
 		</li>
 
@@ -2156,7 +2175,15 @@ sub draw_centered_toolbar_button {
 
 	my $html = "<td nowrap>";
 
+	my $btn_r = '';
+
 	if (@{$options -> {items}} > 0) {
+
+		$btn_r = <<EOH;
+			<nobr>
+				<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:middle;" border="0" hspace="0">
+			</nobr>
+EOH
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
@@ -2203,6 +2230,7 @@ EOH
 			<nobr class="smallizer_text">
 				$$options{label}
 			</nobr>
+			$btn_r
 		</a>
 	</td>
 	<td><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>

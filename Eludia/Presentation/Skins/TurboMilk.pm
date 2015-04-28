@@ -858,10 +858,10 @@ EOH
 
 	my $html = "<span id='form_field_file_head_$options->{name}'>";
 
-	$$options{value} ||= $data -> {file_name};
+	$$options{value} ||= $data -> {"$$options{name}_name"};
 
 	if ($options -> {can_edit}) {
-		if ($options -> {value} || ($data -> {file_name} && $data -> {file_path})) {
+		if ($options -> {value} || ($data -> {"$$options{name}_name"} && $data -> {"$$options{name}_path"})) {
 			$_REQUEST {__on_load} .= "\$('#file_input_$$options{name}').hide();";
 		} else {
 			$_REQUEST {__on_load} .= "\$('#file_name_$$options{name}').hide();";
@@ -1864,7 +1864,13 @@ sub draw_toolbar_button {
 		$options -> {target} = '_self';
 	}
 
+	my $btn2_r = 'btn2_r';
+	my $btn2_r_width = 6;
+
 	if (@{$options -> {items}} > 0) {
+
+		$btn2_r = 'btn2_r_multi';
+		$btn2_r_width = 16;
 
 		$options -> {onclick} = "";
 		$options -> {href} = "#";
@@ -1895,7 +1901,7 @@ EOH
 	$html .= <<EOH;
 			</a></nobr></td>
 			<td class="bgr0" style="background-repeat:repeat-x" background="$_REQUEST{__static_url}/btn2_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><nobr>&nbsp;<a TABINDEX=-1 class=button href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}">$options->{label}</a></nobr></td>
-			<td width=6><img src="$_REQUEST{__static_url}/btn2_r.gif?$_REQUEST{__static_salt}" width="6" height="21" border="0"></td>
+			<td width=$btn2_r_width><img src="$_REQUEST{__static_url}/${btn2_r}.gif?$_REQUEST{__static_salt}" width="$btn2_r_width" height="21" border="0"></td>
 		</tr>
 		</table>
 		</td>
@@ -2416,7 +2422,13 @@ sub draw_centered_toolbar_button {
 
 	my $html = "<td nowrap background='$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}'>";
 
+	my $btn_r = 'btn_r';
+	my $btn_r_width = 6;
+
 	if (@{$options -> {items}} > 0) {
+
+		$btn_r = 'btn_r_multi';
+		$btn_r_width = 14;
 
 		$options -> {onclick} = "";
 		$options -> {href} = "#";
@@ -2439,7 +2451,7 @@ EOH
 					<td width=6><img src="$_REQUEST{__static_url}/btn_l.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
 					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}"><img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=1 align=absmiddle>${nbsp}</a></td>
 					<td background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="absmiddle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}" $title>$$options{label}</a>${nbsp}${nbsp}</td>
-					<td width=6><img src="$_REQUEST{__static_url}/btn_r.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
+					<td width=$btn_r_width><img src="$_REQUEST{__static_url}/${btn_r}.gif?$_REQUEST{__static_salt}" width="$btn_r_width" height="25" border="0"></td>
 				</tr>
 			</table>
 		</td>
