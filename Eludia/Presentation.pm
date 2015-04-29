@@ -2,6 +2,8 @@ no warnings;
 
 ################################################################################
 
+sub css ($)    {$_REQUEST {__css} .= "\n$_[0]\n"; return ''}
+
 sub js ($)    {$_REQUEST {__script} .= ";\n$_[0];\n"; return ''}
 
 sub j  ($)    {js "\$(document).ready (function () { $_[0] })"}
@@ -2129,7 +2131,10 @@ sub draw_table {
 
 	_adjust_table_options ($options, $list);
 
-	!exists $_REQUEST {__only_table} or $_REQUEST {__only_table} eq $options -> {id_table} or return '';
+	!exists $_REQUEST {__only_table}
+		or $_REQUEST {__only_table} eq $options -> {id_table}
+		or $_REQUEST {__only_field} && $_REQUEST {__only_table} eq $options -> {name}
+		or return '';
 
 	if ($options -> {super_table}) {
 
