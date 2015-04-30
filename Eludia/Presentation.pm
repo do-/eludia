@@ -1689,9 +1689,6 @@ sub draw_cells {
 				var url_options = '$url&__edited_cells_table=$_REQUEST{__edited_cells_table}&action=$$options{action}&type=$_REQUEST{type}&action_type=$$options{action_type}&id_edit_cell=${id_edit_cell}${id_type}&__only_table=$_REQUEST{__edited_cells_table}&__only_field=$id_cell';
 				open_edit_cell ('$id_cell', '$name', url_options, '$_REQUEST{__edited_cells_table}');
 EOJS
-			$cell -> {href}    = '';
-			$options -> {href} = '';
-
 			if ($_REQUEST {__only_field} && $_REQUEST {__only_field} eq $id_cell) {
 				$result = call_from_file ("Eludia/Presentation/TableCells/$cell->{type}.pm", "draw_$cell->{type}_cell", $cell, $options);
 				return {id => $id_cell, html => $result};
