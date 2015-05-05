@@ -2269,7 +2269,7 @@ sub draw_toolbar_input_datetime {
 
 	my ($_SKIN, $options) = @_;
 
-	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
+	$options -> {onClose}    = "debounce(function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }, 50)";
 	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {this.form.submit()}";
 
 	my $html = '<td class="toolbar" nowrap>';
