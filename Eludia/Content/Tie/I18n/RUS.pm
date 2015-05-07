@@ -2,7 +2,7 @@
 	_charset                 => 'windows-1251',
 	_calendar_lang           => 'ru',
 	_format_d                => '%d.%m.%Y',
-	_format_dt               => '%d.%m.%Y  %k:%M',
+	_format_dt               => '%d.%m.%Y %k:%M',
 	_lc                      => 'a-zа-яё',
 	_uc                      => 'A-ZА-ЯЁ',
 	Change                   => 'Изменить',

@@ -8,7 +8,10 @@ sub draw_form_field_date {
 
 	$options -> {format} ||= ($i18n -> {_format_d} || '%d.%m.%Y');
 
-	$options -> {size}   ||= 11;
+	unless ($options -> {size}) {
+		$options -> {size} = 11;
+		$options -> {attributes} -> {maxlength} = $options -> {size} - 1;
+	}
 
 	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/) {
 		$options -> {type} = 'string';
