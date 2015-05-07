@@ -665,7 +665,7 @@ sub draw_form_field {
 
 	$html .= dump_tag (td => $a, $field -> {html});
 
-	return $html;
+	return $html . ($options -> {label_tail} || '');
 
 }
 
@@ -683,7 +683,8 @@ sub draw_form_field_button {
 
 	my $tabindex = ++ $_REQUEST {__tabindex};
 
-	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">};
+	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">}
+		. ($options -> {label_tail} || '');
 }
 
 ################################################################################
@@ -705,7 +706,7 @@ sub draw_form_field_string {
 	$attributes -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
 	$attributes -> {type}        = 'text';
 
-	return dump_tag ('input', $attributes);
+	return dump_tag ('input', $attributes) . ($options -> {label_tail} || '');
 
 }
 
@@ -818,7 +819,8 @@ EOH
 		id    => "${id}__id",
 		name  => "_$options->{name}__id",
 		value => $options -> {value__id},
-	});
+	})
+	. ($options -> {label_tail} || '');
 
 }
 
@@ -832,7 +834,7 @@ sub draw_form_field_datetime {
 	$options -> {onKeyDown} ="tabOnEnter()";
 	$options -> {onClose}   = "function (cal) { cal.hide (); $$options{onClose}; }";
 
-	return $_SKIN -> _draw_input_datetime ($options);
+	return $_SKIN -> _draw_input_datetime ($options) . ($options -> {label_tail} || '');
 
 }
 
@@ -899,7 +901,7 @@ EOH
 
 	$html .= "</span>";
 
-	return $html;
+	return $html . ($options -> {label_tail} || '');
 
 }
 
@@ -970,7 +972,7 @@ EOH
 
 EOH
 
-	return <<EOH;
+	return <<EOH . ($options -> {label_tail} || '');
 
 		<input
 			type="hidden"
@@ -1160,7 +1162,7 @@ sub draw_form_field_static {
 
 	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
 
-	return "<span id='input_$$options{name}'>$html</span>";
+	return "<span id='input_$$options{name}'>$html</span>" . ($options -> {label_tail} || '');
 
 }
 
@@ -1172,7 +1174,8 @@ sub draw_form_field_checkbox {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">};
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">}
+		. ($options -> {label_tail} || '');
 
 }
 
@@ -1311,6 +1314,7 @@ EOH
 
 	$html .= '</select>';
 
+	$html .= $options -> {label_tail} || '';
 #	if (defined $options -> {other}) {
 #		$html .= <<EOH;
 #			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)}">

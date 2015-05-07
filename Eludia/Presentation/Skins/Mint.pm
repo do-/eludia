@@ -248,6 +248,8 @@ sub _draw_input_datetime {
 	</nobr>
 EOH
 
+	$html .=  ($options -> {label_tail} || '');
+
 	return $html;
 
 }
@@ -466,7 +468,8 @@ sub draw_form_field_button {
 
 	my $tabindex = ++ $_REQUEST {__tabindex};
 
-	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">};
+	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">}
+		. ($options -> {label_tail} || '');
 
 }
 
@@ -491,7 +494,7 @@ sub draw_form_field_string {
 	$attributes -> {mask}        = $options -> {mask}
 		if $options -> {mask};
 
-	return dump_tag ('input', $attributes);
+	return dump_tag ('input', $attributes) . ($options -> {label_tail} || '');
 
 }
 
@@ -540,8 +543,8 @@ sub draw_form_field_suggest {
 			name     => "_$options->{name}__id",
 			value    => $options -> {value__id},
 			onchange => $options -> {after},
-		});
-
+		})
+		. ($options -> {label_tail} || '');
 
 
 }
@@ -623,7 +626,7 @@ EOH
 
 	$html .= "</span>";
 
-	return $html;
+	return $html . ($options -> {label_tail} || '');
 
 }
 
@@ -798,7 +801,7 @@ sub draw_form_field_static {
 
 	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
 
-	return "<span id='input_$$options{name}'>$html</span>";
+	return "<span id='input_$$options{name}'>$html</span>" . ($options -> {label_tail} || '');
 
 }
 
@@ -810,8 +813,8 @@ sub draw_form_field_checkbox {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true">};
-
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true">}
+		. ($options -> {label_tail} || '');
 }
 
 ################################################################################
@@ -957,6 +960,8 @@ EOH
 
 	$html .= '</select>';
 
+	$html .= $options -> {label_tail} || '';
+
 	return $html;
 
 }
@@ -1019,6 +1024,8 @@ EOH
 	}
 
 	$html .= '</span>';
+
+	$html .= $options -> {label_tail} || '';
 
 	local $conf -> {portion} ||= 50;
 
