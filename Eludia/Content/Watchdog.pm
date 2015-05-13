@@ -82,7 +82,9 @@ sub error_detail_tail {
 
 	$error_tail .= "\n\n\$_REQUEST = " . Dumper (\%_REQUEST);
 
-	$error_tail .= "\n\n\$_USER = " . Dumper ($_USER);
+	$error_tail .= "\n\n\$_USER = " . Dumper ({
+		(map {$_ => $_USER -> {$_}} qw(id id__real label label__real))
+	});
 
 	return $error_tail;
 }
