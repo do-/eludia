@@ -823,7 +823,12 @@ function setup_drop_down_button (id, data) {
 			dataSource: data,
 			orientation: 'vertical',
 			select: function (e) {
+				var selected_url = data [$(e.item).index()].url;
+				if (selected_url.match(/^javascript:/)) {
+					eval (selected_url);
+				}
 				menuDiv.remove ();
+				return true;
 			}
 		});
 

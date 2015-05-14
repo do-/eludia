@@ -43,7 +43,7 @@ sub draw_text_cell {
 
 		if ($_REQUEST {select}) {
 
-			$data -> {href}   = js_set_select_option ('', {
+			$data -> {href} = $options -> {select_href} || js_set_select_option ('', {
 				id       => $i -> {id},
 				label    => $options -> {select_label},
 				question => $options -> {select_question},

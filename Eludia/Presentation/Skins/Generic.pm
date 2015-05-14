@@ -54,17 +54,17 @@ sub __adjust_form_field_string {
 
 	my $attributes = ($options -> {attributes} ||= {});
 
-	$attributes -> {value}        = \$options -> {value};
+	$attributes -> {value}        ||= \$options -> {value};
 
-	$attributes -> {name}         = '_' . $options -> {name};
+	$attributes -> {name}         ||= '_' . $options -> {name};
 
-	$attributes -> {size}         = ($options -> {size} ||= 120);
+	$attributes -> {size}         ||= ($options -> {size} ||= 120);
 
-	$attributes -> {maxlength}    = $options -> {max_len} || $options -> {size} || 255;
+	$attributes -> {maxlength}    ||= $options -> {max_len} || $options -> {size} || 255;
 
-	$attributes -> {autocomplete} = 'off' unless exists $attributes -> {autocomplete};
+	$attributes -> {autocomplete} ||= 'off' unless exists $attributes -> {autocomplete};
 
-	$attributes -> {id}           = 'input_' . $options -> {name};
+	$attributes -> {id}           ||= 'input_' . $options -> {name};
 
 }
 

@@ -11,17 +11,23 @@ sub draw_toolbar_input_datetime {
 	
 		if ($options -> {no_time}) {
 			$options -> {format}  ||= $i18n -> {_format_d} || '%d.%m.%Y';
-			$options -> {size}    ||= 11;
+			unless ($options -> {size}) {
+				$options -> {size} = 11;
+				$options -> {attributes} -> {maxlength} = $options -> {size} - 1;
+			}
 		}
 		else {
 			$options -> {format}  ||= $i18n -> {_format_dt} || '%d.%m.%Y %k:%M';
-			$options -> {size}    ||= 16;
+			unless ($options -> {size}) {
+				$options -> {size} = 17;
+				$options -> {attributes} -> {maxlength} = $options -> {size} - 1;
+			}
 		}
 	
 	}
 			
-	$options -> {attributes} -> {size}      = $options -> {size};
-	$options -> {attributes} -> {maxlength} = $options -> {size};
+	$options -> {attributes} -> {size}        = $options -> {size};
+	$options -> {attributes} -> {maxlength} ||= $options -> {size};
 
 	$options -> {value}      ||= $_REQUEST {$$options{name}};
 	$options -> {attributes} -> {value} = $options -> {value};

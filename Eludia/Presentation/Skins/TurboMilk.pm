@@ -399,6 +399,7 @@ sub _draw_input_datetime {
 
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
+
 	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
 
 	$options -> {attributes} -> {id} ||= 'input_calendar_trigger_' . $options -> {name};
@@ -2278,7 +2279,7 @@ sub draw_toolbar_input_datetime {
 
 	my ($_SKIN, $options) = @_;
 
-	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
+	$options -> {onClose}    = "debounce(function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }, 50)";
 	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {this.form.submit()}";
 
 	my $html = '<td class="toolbar" nowrap>';
