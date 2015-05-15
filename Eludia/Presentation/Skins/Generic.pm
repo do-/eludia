@@ -211,7 +211,7 @@ EOJS
 	my $href = $$h{href};
 	$href =~ s{^/}{};
 
-	$options -> {value_src} ||= 'this.value';
+	$options -> {value_src} ||= "(this.type == 'checkbox' ? this.checked ? 1 : 0 : this.value)";
 
 	my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}=this.value&__only_field=" . (join ',', @all_details) : <<EOJS;
 		activate_link (
@@ -254,11 +254,12 @@ EOJS
 				continue;
 			}
 
-			if (document.getElementsByName('_' + codetails[i]).length > 1) {
+			var el = document.getElementsByName('_' + codetails[i]);
+			if (el.length > 1) {
 
-				for (j=0; j < document.getElementsByName('_' + codetails[i]).length; j ++) {
+				for (j=0; j < el.length; j ++) {
 
-					r = document.getElementsByName('_' + codetails[i]) [j];
+					r = el [j];
 
 					if (r.checked) {
 						codetails_url += '&' + '_' + codetails[i] + '=' + r.value;
@@ -268,8 +269,9 @@ EOJS
 				continue;
 			}
 
-			if (document.getElementsByName('_' + codetails[i]).length == 1) {
-				codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementsByName('_' + codetails[i])[0].value;
+			if (el.length == 1) {
+				var value = el[0].type == 'checkbox' ? el[0].checked ? 1 : 0 : el[0].value;
+				codetails_url += '&' + '_' + codetails[i] + '=' + value;
 				continue;
 			}
 
