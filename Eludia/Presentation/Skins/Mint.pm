@@ -3582,7 +3582,7 @@ sub draw_tree {
 
 		};
 
-		return;
+		return {items => $list};
 	}
 
 	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
@@ -3666,7 +3666,9 @@ EOJS
 
 
 
-	} elsif ($options -> {active} == 2) {
+	} else {
+
+		$options -> {active} = 2;
 
 		my @params = @{$options -> {keep_params}} || keys %_REQUEST;
 		my $keep_params = join '&', map {"$_=$_REQUEST{$_}"} grep {$_ !~ /^__/i} @params;
