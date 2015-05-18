@@ -1075,31 +1075,35 @@ sub draw_form_field_string_voc {
 
 	if (defined $options -> {other}) {
 
-		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
-		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+		my $url = &{$_PACKAGE . 'dialog_open'} ({
+			href  => "$options->{other}->{href}&select=$options->{name}&$options->{other}->{cgi_tail}",
+			after => <<EOJS,
+				if (typeof result !== 'undefined' && result.result == 'ok') {
+					document.getElementById('${options}_label').value=result.label;
+					document.getElementById('${options}_id').value=result.id;
+$options->{onChange}
+				}
+				setCursor ();
+EOJS
+		});
+
+		$url =~ s/^javascript://i;
+		my $url_dialog_id = $_REQUEST {__dialog_cnt};
 
 		$options -> {other} -> {onChange} .= <<EOJS;
+			var q = document.getElementById('${options}_label').value;
 
-			var dialog_width = $options->{other}->{width};
-			var dialog_height = $options->{other}->{height};
+			if (@{[$i18n -> {_charset} eq 'windows-1251' ? 1 : 0]})
+				q = encode1251 (q);
 
-			var q = encode1251(document.getElementById('${options}_label').value);
+			re = /&_?salt=[\\d\\.]*/g;
+			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
 
-			if (\$.browser.webkit || \$.browser.safari)
-				\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
-			var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/Mint/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&$options->{other}->{param}=' + q + '&select=$options->{name}&$options->{other}->{cgi_tail}', parent:window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+			re = /&q=[^&]*/i;
+			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
 
-			if (\$.browser.webkit || \$.browser.safari)
-				\$.unblockUI ();
-			focus ();
-
-			if (result.result == 'ok') {
-				document.getElementById('${options}_label').value=result.label;
-				document.getElementById('${options}_id').value=result.id;
-$options->{onChange}
-			} else {
-				this.selectedIndex = 0;
-			}
+			dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&q=' + q;
+			$url
 EOJS
 	}
 
@@ -1466,7 +1470,6 @@ EOJS
 
 	my $url = &{$_PACKAGE . 'dialog_open'} ({
 		href  => $options -> {href} . '&multi_select=1',
-		title => $label,
 		after => $after,
 	});
 
@@ -1621,7 +1624,7 @@ EOH
 
 	if ($options -> {icon}) {
 		my $img_path = _icon_path ($options -> {icon});
-		$html .= qq {<img src="$img_path" alt="$label" border=0 hspace=0 style='vertical-align:middle;'>};
+		$html .= qq {<img src="$img_path" border=0 hspace=0 style='vertical-align:middle;'>};
 	}
 
 	$html .= <<EOH;
@@ -1980,7 +1983,7 @@ EOH
 
 	if ($options -> {icon}) {
 		my $img_path = _icon_path ($options -> {icon});
-		$html .= qq {<img src="$img_path" alt="$label" border=0 hspace=0 style='vertical-align:middle;'>};
+		$html .= qq {<img src="$img_path" border=0 hspace=0 style='vertical-align:middle;'>};
 	}
 
 	$html .= <<EOH;
@@ -2580,28 +2583,36 @@ sub draw_string_voc_cell {
 
 	if (defined $data -> {other}) {
 
-		$data -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
-		$data -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+		my $url = &{$_PACKAGE . 'dialog_open'} ({
+			href  => "$data->{other}->{href}&select=$data->{name}",
+			after => <<EOJS,
+				if (typeof result !== 'undefined' && result.result == 'ok') {
+					document.getElementById('$$data{name}_label').value=result.label;
+					document.getElementById('$$data{name}_id').value=result.id;
+				}
+				setCursor ();
+EOJS
+		});
+
+		$url =~ s/^javascript://i;
+		my $url_dialog_id = $_REQUEST {__dialog_cnt};
 
 		$data -> {other} -> {onChange} .= <<EOJS;
-			var dialog_width = $data->{other}->{width};
-			var dialog_height = $data->{other}->{height};
+			var q = document.getElementById('$$data{name}_label').value;
 
-			var q = encode1251(document.getElementById('$$data{name}_label').value);
+			if (@{[$i18n -> {_charset} eq 'windows-1251' ? 1 : 0]})
+				q = encode1251 (q);
 
-			if (\$.browser.webkit || \$.browser.safari)
-				\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
-			var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/Mint/dialog.html?@{[rand ()]}', {href: '$data->{other}->{href}&$data->{other}->{param}=' + q + '&select=$data->{name}', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+			re = /&_?salt=[\\d\\.]*/g;
+			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
 
-			if (\$.browser.webkit || \$.browser.safari)
-				\$.unblockUI ();
-			focus ();
+			re = /&q=[^&]*/i;
+			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
 
-			if (result.result == 'ok') {
-				document.getElementById('$$data{name}_label').value = result.label;
-				document.getElementById('$$data{name}_id').value = result.id;
-			}
+			dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&q=' + q;
+			$url
 EOJS
+
 	}
 
 	my $html = qq {<td $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" value="$$data{label}" name="$$data{name}_label" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
