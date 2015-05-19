@@ -10,5 +10,6 @@ columns => {
 },
 
 keys => {
-	ix => 'id_session',
+	ix     => 'id_session',
+	id_log => 'id_log',
 },
