@@ -530,7 +530,7 @@ sub new {
 
 	return bless ($self, $class) unless ($self -> {FH} && $self -> {FN});
 
-	eval { $self -> {Type} = $self -> {Q} -> uploadInfo ($self -> {FN}) -> {'Content-Type'}; };
+	eval { $self -> {Type} = $self -> {Q} -> upload_info ($self -> {FN}, 'mime') };
 
 	return bless ($self, $class) if $@;
 
