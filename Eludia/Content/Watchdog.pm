@@ -16,7 +16,7 @@ sub notify_about_error {
 
 	$error_details = $delimiter . "[$id_error][$options->{error_kind}]:\n" . $error_details;
 
-	print STDERR $error_details . $options -> {error};
+	print STDERR $error_details . $options -> {error} . "\n";
 
 	my $blame;
 
@@ -61,6 +61,53 @@ sub notify_about_error {
 
 ################################################################################
 
+sub notify_script_execution_time {
+
+	my ($scripts, $script_type) = @_;
+
+	return
+		if $ENV {ELUDIA_SILENT};
+
+	my $total_ms = 0;
+
+	foreach my $i (@$scripts) {
+		$total_ms += $i -> {execution_ms};
+	}
+
+	my $limit_ms = $preconf -> {core_warn_script_time} || 5000;
+
+	$total_ms > $limit_ms or return;
+
+	my $warning_subject = "[watchdog][$_NEW_PACKAGE][script] $script_type total execution time $total_ms ms is above threshold warning $limit_ms ms";
+
+	print STDERR "$warning_subject\n";
+
+	if ($preconf -> {mail} -> {admin}) {
+
+		my ($warning_details, @guessed_causers) = (internal_error_id () . "[script]:\n");
+
+		foreach my $i (@$scripts) {
+
+			$warning_details .= $i -> {path} . ': ' . $i -> {execution_ms} . " ms\n";
+
+			push @guessed_causers, guess_error_author_mail ({error_kind => 'script', file => $i -> {path}, line => 1});
+		}
+
+		my %unique_recipients;
+		foreach (@{$preconf -> {mail} -> {admin}}, map {$_ -> {mail}} @guessed_causers) {
+			$unique_recipients {$_} = 1;
+		}
+
+		send_mail ({
+			to      => [keys %unique_recipients],
+			subject => $warning_subject,
+			text    => $warning_details,
+		}) if !internal_error_is_duplicate ($warning_details);
+	}
+}
+
+################################################################################
+
 sub error_detail_tail {
 
 	my ($options) = @_;
@@ -95,11 +142,15 @@ sub guess_error_author_mail { # error author = last file commiter
 
 	my ($options) = @_;
 
-	$options -> {error_kind} eq 'sql'
-		or $options -> {error_kind} eq 'code'
+	$options -> {error_kind} ~~ ['sql', 'code', 'script']
 		or return ();
 
-	my ($file, $line) = $options -> {error} =~ /called at (\/.*lib\/.*\.pm) line (\d+)/;
+	my ($file, $line) = ($options -> {file}, $options -> {line});
+
+	if (!$file) {
+		($file, $line) = $options -> {error} =~ /called at (\/.*lib\/.*\.pm) line (\d+)/;
+	}
+
 	if (!$file) {
 		($file, $line) = $options -> {error} =~ /require (\/.*lib\/.*\.p[lm]) called at.*line (\d+)/;
 	}
@@ -130,7 +181,7 @@ sub _adjust_core_error_kind {
 
 	my ($options) = @_;
 
-	$options -> {error_kind} = "code";
+	$options -> {error_kind} ||= "code";
 
 	my $error_details;
 

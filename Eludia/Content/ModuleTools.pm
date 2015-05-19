@@ -224,6 +224,8 @@ sub require_scripts_of_type ($) {
 		);
 	}
 
+	my $script_durations;
+
 	foreach my $dir (grep {-d} map {$_ . $postfix} _INC ()) {
 
 		__profile_in ("require.scripts.$script_type" => {label => $dir});
@@ -298,6 +300,8 @@ sub require_scripts_of_type ($) {
 
 		foreach my $script (@scripts) {
 
+			__on_start_script ($script, $script_type);
+
 			__profile_in ("require.scripts.$script_type.file", {label => $script -> {path}});
 
 			if ($script_type eq 'model') {
@@ -314,12 +318,12 @@ sub require_scripts_of_type ($) {
 
 			} elsif ($i18n -> {_charset} ne 'UTF-8') {
 
-				$ENV {ELUDIA_SILENT} or warn "\n" . update_script_log_signature ($script) . "starting...\n";
 
 				do $script -> {path};
+
 				die $@ if $@;
 
-				$ENV {ELUDIA_SILENT} or warn update_script_log_signature ($script) . "finished.\n";
+
 			} else {
 
 				my $s = '';
@@ -335,7 +339,12 @@ sub require_scripts_of_type ($) {
 
 			__profile_out ("require.scripts.$script_type.file");
 
+			__on_end_script ($script, $script_type);
+
+			push @$script_durations, $script;
+
 		}
+
 
 		checksum_write ($checksum_kind, $new_checksums);
 
@@ -343,13 +352,44 @@ sub require_scripts_of_type ($) {
 
 	}
 
+	notify_script_execution_time ($script_durations, $script_type);
+
 	return $__time;
 
 }
 
 ################################################################################
 
-sub update_script_log_signature {
+sub __on_start_script {
+
+	my ($script, $script_type) = @_;
+
+	return
+		if $ENV {ELUDIA_SILENT};
+
+	warn "\n" . script_log_signature ($script) . "starting...\n";
+
+	$script -> {__start_time} = time ();
+}
+
+################################################################################
+
+sub __on_end_script {
+
+	my ($script, $script_type) = @_;
+
+	return
+		if $ENV {ELUDIA_SILENT};
+
+	$script -> {execution_ms} = int (1000 * (time() - delete $script -> {__start_time}));
+
+	warn script_log_signature ($script) . "finished ($$script{execution_ms} ms)\n";
+
+}
+
+################################################################################
+
+sub script_log_signature {
 
 	my ($script) = @_;
 
