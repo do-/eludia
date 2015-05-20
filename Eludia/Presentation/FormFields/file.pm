@@ -4,7 +4,7 @@ sub draw_form_field_file {
 	
 	$_REQUEST {__form_options} {enctype} = 'multipart/form-data';
 
-	$options -> {size} ||= 60;
+	$options -> {size} ||= 40;
 	
 	adjust_form_field_options ($options);
 

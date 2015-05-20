@@ -6,6 +6,10 @@ sub draw_toolbar_pager {
 	$options -> {total}   ||= $_REQUEST {__page_content} -> {cnt};
 	$options -> {cnt}     ||= 0 + @$list;
 
+	if (!$options -> {total} && !$options -> {empty_label}) {
+		return '';
+	}
+
 	$options -> {start} = $_REQUEST {start} || 0;
 
 	$conf -> {kb_options_pager} ||= $conf -> {kb_options_buttons};

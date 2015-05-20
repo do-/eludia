@@ -376,7 +376,8 @@ sub draw_form_field {
 
 	if ($field -> {type} eq 'banner') {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
-		return qq{<td class='form-$$field{state}-banner' $colspan nowrap align=center>$$field{html}</td>};
+		my $class = join ' ', grep {$_} "form-$$field{state}-banner", $field -> {class};
+		return qq{<td class='$class' $colspan nowrap align=center>$$field{html}</td>};
 	}
 	elsif ($field -> {type} eq 'article') {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
@@ -429,13 +430,15 @@ sub draw_form_field {
 		$a -> {width}   = $field -> {label_width}   if $field -> {label_width};
 		$a -> {title}   = $field -> {label_title}   if $field -> {label_title};
 		$a -> {title}   ||= $field -> {attributes} -> {title}
-			if exists $field -> {attributes} && exists $field -> {attributes} -> {title};
+			if exists $field -> {attributes} && $field -> {attributes} -> {title};
 
 		$html .= dump_tag (td => $a, $field -> {label});
 
 	}
 
 	my $a = {class  => $class . ($field -> {fake} == -1 ? 'deleted' : 'inputs')};
+	$a -> {title}   ||= $field -> {attributes} -> {title}
+		if exists $field -> {attributes} && $field -> {attributes} -> {title};
 
 	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
 	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
@@ -567,10 +570,10 @@ sub draw_form_field_file {
 
 	my $html = "<span id='form_field_file_head_$options->{name}'>";
 
-	$$options{value} ||= $data -> {file_name};
+	$$options{value} ||= $data -> {"$$options{name}_name"};
 
 	if ($options -> {can_edit}) {
-		if ($options -> {value} || ($data -> {file_name} && $data -> {file_path})) {
+		if ($options -> {value} || ($data -> {"$$options{name}_name"} && $data -> {"$$options{name}_path"})) {
 			$_REQUEST {__on_load} .= "\$('#file_input_$$options{name}').hide();";
 		} else {
 			$_REQUEST {__on_load} .= "\$('#file_name_$$options{name}').hide();";
@@ -578,9 +581,21 @@ sub draw_form_field_file {
 
 		$html .= <<EOH;
 			<span id='file_name_$$options{name}'>
-				$$options{value}
-				<img id='img_$$options{name}' height=12 src='$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}' width=12 border=0 align=absmiddle'
-					onclick="javascript: \$('#file_input_$$options{name}').show(); \$('#file_name_$$options{name}').hide(); \$('#_file_clear_flag_for_$$options{name}').val(1);">
+				<ul class="k-upload-files k-reset">
+					<li class="k-file"">
+						<span class="k-progress" style="width: 100%;"></span>
+						<span class="k-icon k-i-xls"></span>
+						<span class="k-filename" title="$$options{value}">
+							$$options{value}
+						</span>
+						<strong class="k-upload-status">
+							<button type="button" class="k-button k-button-bare k-upload-action"
+								onclick="javascript: \$('#file_input_$$options{name}').show(); \$('#file_name_$$options{name}').hide(); \$('#_file_clear_flag_for_$$options{name}').val(1);">
+								<span class="k-icon k-i-close k-delete" title="$$i18n{remove}"></span>
+							</button>
+						</strong>
+					</li>
+				</ul>
 			</span>
 			<span id='file_input_$$options{name}'>
 EOH
@@ -1060,31 +1075,35 @@ sub draw_form_field_string_voc {
 
 	if (defined $options -> {other}) {
 
-		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
-		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+		my $url = &{$_PACKAGE . 'dialog_open'} ({
+			href  => "$options->{other}->{href}&select=$options->{name}&$options->{other}->{cgi_tail}",
+			after => <<EOJS,
+				if (typeof result !== 'undefined' && result.result == 'ok') {
+					document.getElementById('${options}_label').value=result.label;
+					document.getElementById('${options}_id').value=result.id;
+$options->{onChange}
+				}
+				setCursor ();
+EOJS
+		});
+
+		$url =~ s/^javascript://i;
+		my $url_dialog_id = $_REQUEST {__dialog_cnt};
 
 		$options -> {other} -> {onChange} .= <<EOJS;
+			var q = document.getElementById('${options}_label').value;
 
-			var dialog_width = $options->{other}->{width};
-			var dialog_height = $options->{other}->{height};
+			if (@{[$i18n -> {_charset} eq 'windows-1251' ? 1 : 0]})
+				q = encode1251 (q);
 
-			var q = encode1251(document.getElementById('${options}_label').value);
+			re = /&_?salt=[\\d\\.]*/g;
+			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
 
-			if (\$.browser.webkit || \$.browser.safari)
-				\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
-			var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/Mint/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&$options->{other}->{param}=' + q + '&select=$options->{name}&$options->{other}->{cgi_tail}', parent:window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+			re = /&q=[^&]*/i;
+			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
 
-			if (\$.browser.webkit || \$.browser.safari)
-				\$.unblockUI ();
-			focus ();
-
-			if (result.result == 'ok') {
-				document.getElementById('${options}_label').value=result.label;
-				document.getElementById('${options}_id').value=result.id;
-$options->{onChange}
-			} else {
-				this.selectedIndex = 0;
-			}
+			dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&q=' + q;
+			$url
 EOJS
 	}
 
@@ -1451,7 +1470,6 @@ EOJS
 
 	my $url = &{$_PACKAGE . 'dialog_open'} ({
 		href  => $options -> {href} . '&multi_select=1',
-		title => $label,
 		after => $after,
 	});
 
@@ -1556,11 +1574,24 @@ sub draw_toolbar_button {
 		<li>
 EOH
 
-	if ($options -> {items}) {
+	my $btn_r = '';
+
+	if (@{$options -> {items}} > 0) {
+
+		$btn_r = <<EOH;
+			<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:top;" border="0" hspace="0">
+EOH
 
 		$_REQUEST {__libs} -> {kendo} -> {menu} = 1;
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
+
+		$html .= "<div style='display:none;'>";
+		map { $html .= <<EOH if $_ -> {hotkey};
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+EOH
+		} @{$options -> {items}};
+		$html .= "</div>";
 
 		$html .= "<script>var data_$id = " . $_JSON -> encode ([
 			map {
@@ -1593,11 +1624,12 @@ EOH
 
 	if ($options -> {icon}) {
 		my $img_path = _icon_path ($options -> {icon});
-		$html .= qq {<img src="$img_path" alt="$label" border=0 hspace=0 style='vertical-align:middle;'>};
+		$html .= qq {<img src="$img_path" border=0 hspace=0 style='vertical-align:middle;'>};
 	}
 
 	$html .= <<EOH;
 				$options->{label}</nobr>
+				$btn_r
 				</a>
 		</li>
 
@@ -1951,7 +1983,7 @@ EOH
 
 	if ($options -> {icon}) {
 		my $img_path = _icon_path ($options -> {icon});
-		$html .= qq {<img src="$img_path" alt="$label" border=0 hspace=0 style='vertical-align:middle;'>};
+		$html .= qq {<img src="$img_path" border=0 hspace=0 style='vertical-align:middle;'>};
 	}
 
 	$html .= <<EOH;
@@ -2037,7 +2069,7 @@ sub draw_toolbar_input_datetime {
 
 	my ($_SKIN, $options) = @_;
 
-	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
+	$options -> {onChange} ||= $options -> {onClose};
 	$options -> {onKeyPress} = "if (event.keyCode == 13) {this.form.submit()}";
 	$options -> {onChange}   = join ';', $options -> {onChange}, "submit ()"
 		if !$options -> {no_change_submit};
@@ -2146,7 +2178,15 @@ sub draw_centered_toolbar_button {
 
 	my $html = "<td nowrap>";
 
-	if ($options -> {items}) {
+	my $btn_r = '';
+
+	if (@{$options -> {items}} > 0) {
+
+		$btn_r = <<EOH;
+			<nobr>
+				<img src="$_REQUEST{__static_url}/btn_r_multi.gif?$_REQUEST{__static_salt}" width="14" style="vertical-align:middle;" border="0" hspace="0">
+			</nobr>
+EOH
 
 		my $id = substr ("$$options{id}", 5, (length "$$options{id}") - 6);
 
@@ -2162,6 +2202,13 @@ sub draw_centered_toolbar_button {
 			} @{$options -> {items}}
 		]);
 		$html .= "</script>";
+
+		$html .= "<div style='display:none;'>";
+		map { $html .= <<EOH if $_ -> {hotkey};
+			<a href="$$_{href}" id="$$_{id}" target="$$_{target}" title=''>
+EOH
+		} @{$options -> {items}};
+		$html .= "</div>";
 
 		$html .= <<EOH;
 
@@ -2186,6 +2233,7 @@ EOH
 			<nobr class="smallizer_text">
 				$$options{label}
 			</nobr>
+			$btn_r
 		</a>
 	</td>
 	<td><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=10 border=0></td>
@@ -2313,10 +2361,17 @@ sub js_set_select_option {
 		question => $item -> {question},
 	});
 
+	$_REQUEST {__script} .= " select_options = {}; " unless $_REQUEST {__script} =~ /select_options = \{\}/;
+
 	return $_SO_VARIABLES -> {$a}
 		if $_SO_VARIABLES -> {$a};
 
-	$_SO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption ($a)";
+	my $var = "so_" . substr ('' . $item, 7, 7);
+	$var =~ s/\)$//;
+
+	$_REQUEST {__script} .= " select_options.$var = $a; ";
+
+	$_SO_VARIABLES -> {$a} = "javaScript:invoke_setSelectOption (select_options.$var)";
 
 	return $_SO_VARIABLES -> {$a};
 
@@ -2348,6 +2403,14 @@ sub draw_text_cell {
 		$data -> {attributes} -> {"data-href"} = $data -> {href};
 		$data -> {attributes} -> {"data-href-target"} = $data -> {target}
 			unless $data -> {target} eq '_self';
+	}
+
+	if (@{$data -> {__context_menu}}) {
+
+		my $context_menu = $_JSON -> encode ($data -> {__context_menu});
+		$context_menu =~ s/\"/&quot;/g;
+		$data -> {attributes} -> {"data-menu"} = $context_menu;
+
 	}
 
 	my $html = dump_tag ('td', $data -> {attributes});
@@ -2520,28 +2583,36 @@ sub draw_string_voc_cell {
 
 	if (defined $data -> {other}) {
 
-		$data -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
-		$data -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
+		my $url = &{$_PACKAGE . 'dialog_open'} ({
+			href  => "$data->{other}->{href}&select=$data->{name}",
+			after => <<EOJS,
+				if (typeof result !== 'undefined' && result.result == 'ok') {
+					document.getElementById('$$data{name}_label').value=result.label;
+					document.getElementById('$$data{name}_id').value=result.id;
+				}
+				setCursor ();
+EOJS
+		});
+
+		$url =~ s/^javascript://i;
+		my $url_dialog_id = $_REQUEST {__dialog_cnt};
 
 		$data -> {other} -> {onChange} .= <<EOJS;
-			var dialog_width = $data->{other}->{width};
-			var dialog_height = $data->{other}->{height};
+			var q = document.getElementById('$$data{name}_label').value;
 
-			var q = encode1251(document.getElementById('$$data{name}_label').value);
+			if (@{[$i18n -> {_charset} eq 'windows-1251' ? 1 : 0]})
+				q = encode1251 (q);
 
-			if (\$.browser.webkit || \$.browser.safari)
-				\$.blockUI ({fadeIn: 0, message: '<h1>$i18n->{choose_open_vocabulary}</h1>'});
-			var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/Mint/dialog.html?@{[rand ()]}', {href: '$data->{other}->{href}&$data->{other}->{param}=' + q + '&select=$data->{name}', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
+			re = /&_?salt=[\\d\\.]*/g;
+			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
 
-			if (\$.browser.webkit || \$.browser.safari)
-				\$.unblockUI ();
-			focus ();
+			re = /&q=[^&]*/i;
+			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
 
-			if (result.result == 'ok') {
-				document.getElementById('$$data{name}_label').value = result.label;
-				document.getElementById('$$data{name}_id').value = result.id;
-			}
+			dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&q=' + q;
+			$url
 EOJS
+
 	}
 
 	my $html = qq {<td $attributes><nobr><span style="white-space: nowrap"><input onFocus="q_is_focused = true; left_right_blocked = true;" onBlur="q_is_focused = false; left_right_blocked = false;" type="text" value="$$data{label}" name="$$data{name}_label" id="$$data{name}_label" maxlength="$$data{max_len}" size="$$data{size}"> }
@@ -3097,7 +3168,9 @@ sub draw_page {
 
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 
-	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">}   foreach (@{$_REQUEST {__include_css}});
+	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">\n}   foreach (@{$_REQUEST {__include_css}});
+
+	$_REQUEST {__head_links} .= dump_tag (style => {}, $_REQUEST {__css}) . "\n" if $_REQUEST {__css};
 
 	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js'>\n</script>"                          foreach (@{$_REQUEST {__include_js}});
 
@@ -3509,7 +3582,7 @@ sub draw_tree {
 
 		};
 
-		return;
+		return {items => $list};
 	}
 
 	$_REQUEST {__libs} -> {kendo} -> {treeview} = 1;
@@ -3593,7 +3666,9 @@ EOJS
 
 
 
-	} elsif ($options -> {active} == 2) {
+	} else {
+
+		$options -> {active} = 2;
 
 		my @params = @{$options -> {keep_params}} || keys %_REQUEST;
 		my $keep_params = join '&', map {"$_=$_REQUEST{$_}"} grep {$_ !~ /^__/i} @params;

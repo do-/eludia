@@ -41,7 +41,7 @@ sub notify_about_error {
 		send_mail ({
 			to      => [keys %unique_recipients],
 			subject => $subject,
-			text    => $error_details . $options -> {error},
+			text    => $error_details . $options -> {error} . error_detail_tail ($options),
 		}) if !internal_error_is_duplicate ($options -> {error});
 	}
 
@@ -57,6 +57,36 @@ sub notify_about_error {
 		$i18n -> {try_again} : $i18n -> {internal_error});
 
 	return join ("\n", @msg);
+}
+
+################################################################################
+
+sub error_detail_tail {
+
+	my ($options) = @_;
+
+	return ''
+		if $options -> {error_kind} ne 'code';
+
+	local %_REQUEST = %_REQUEST_VERBATIM;
+
+	delete $_REQUEST {error};
+
+	foreach $key (keys %_REQUEST) {
+		delete $_REQUEST {$key} if $key =~ m/^__/;
+	}
+
+	my $error_tail;
+
+	local $Data::Dumper::Terse = 1;
+
+	$error_tail .= "\n\n\$_REQUEST = " . Dumper (\%_REQUEST);
+
+	$error_tail .= "\n\n\$_USER = " . Dumper ({
+		(map {$_ => $_USER -> {$_}} qw(id id__real label label__real))
+	});
+
+	return $error_tail;
 }
 
 ################################################################################

@@ -287,9 +287,8 @@ sub parms {
 	my @names = $self -> {Q} -> param;
 
 	foreach my $name (@names) {
-		my @v = $self -> {Q} -> param ($name);
-		$vars {$name}        = $v [-1];
-		@v == 1 or $vars {$name . '[]'} = \@v;
+		my @v         = $self -> {Q} -> param ($name);
+		$vars {$name} = $v [-1];
 	}
 
 	return \%vars;
@@ -531,7 +530,7 @@ sub new {
 
 	return bless ($self, $class) unless ($self -> {FH} && $self -> {FN});
 
-	eval { $self -> {Type} = $self -> {Q} -> uploadInfo ($self -> {FN}) -> {'Content-Type'}; };
+	eval { $self -> {Type} = $self -> {Q} -> upload_info ($self -> {FN}, 'mime') };
 
 	return bless ($self, $class) if $@;
 

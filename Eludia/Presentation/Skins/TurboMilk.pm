@@ -399,6 +399,7 @@ sub _draw_input_datetime {
 
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
+
 	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
 
 	$options -> {attributes} -> {id} ||= 'input_calendar_trigger_' . $options -> {name};
@@ -459,7 +460,7 @@ sub draw_form {
 	$html .= $options -> {path};
 
 	my $tname = 'div_' . int(rand(10000));
-	$html .= "<div id=$tname style='VISIBILITY:hidden'>" if ($preconf -> {toggle_in_hidden_form});
+	$html .= "<div id=$tname style='VISIBILITY:hidden'>" if ($preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page});
 
 	$html .= _draw_bottom (@_);
 
@@ -494,10 +495,10 @@ EOH
 		$html .= qq{</tr>};
 	}
 
-	$html .=  '</form></table>';
+	$html .=  '</form></table>' . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? '</div>' : '');
 
 	$html .= $options -> {bottom_toolbar};
-	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} ? "\$($tname).css('visibility','visible');" : "");
+	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? "\$('#$tname').css('visibility','visible');" : "");
 
 #	$_REQUEST {__on_load} .= '$(document.forms["' . $options -> {name} . '"]).submit (function () {checkMultipleInputs (this)});';
 
@@ -586,7 +587,8 @@ sub draw_form_field {
 
 	if ($field -> {type} eq 'banner') {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
-		return qq{<td class='form-$$field{state}-banner' $colspan nowrap align=center>$$field{html}</td>};
+		my $class = join ' ', grep {$_} "form-$$field{state}-banner", $field -> {class};
+		return qq{<td class='$class' $colspan nowrap align=center>$$field{html}</td>};
 	}
 	elsif ($field -> {type} eq 'article') {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
@@ -619,7 +621,7 @@ sub draw_form_field {
 
 		$a     -> {lowsrc} = $field -> {plus};
 
-		$field -> {html } .= dump_tag (img => $a);
+		$field -> {html} .= dump_tag (img => $a);
 
 	}
 
@@ -644,13 +646,16 @@ sub draw_form_field {
 		$a -> {width}   = $field -> {label_width}   if $field -> {label_width};
 		$a -> {title}   = $field -> {label_title}   if $field -> {label_title};
 		$a -> {title}   ||= $field -> {attributes} -> {title}
-			if exists $field -> {attributes} && exists $field -> {attributes} -> {title};
+			if exists $field -> {attributes} && $field -> {attributes} -> {title};
 
 		$html .= dump_tag (td => $a, $field -> {label});
 
 	}
 
 	my $a = {class  => $class . ($field -> {fake} == -1 ? 'deleted' : 'inputs')};
+
+	$a -> {title}   ||= $field -> {attributes} -> {title}
+		if exists $field -> {attributes} && $field -> {attributes} -> {title};
 
 	if ($field -> {draw_hidden}) {
 		$a -> {class} .= ' form-hidden-field';
@@ -854,10 +859,10 @@ EOH
 
 	my $html = "<span id='form_field_file_head_$options->{name}'>";
 
-	$$options{value} ||= $data -> {file_name};
+	$$options{value} ||= $data -> {"$$options{name}_name"};
 
 	if ($options -> {can_edit}) {
-		if ($options -> {value} || ($data -> {file_name} && $data -> {file_path})) {
+		if ($options -> {value} || ($data -> {"$$options{name}_name"} && $data -> {"$$options{name}_path"})) {
 			$_REQUEST {__on_load} .= "\$('#file_input_$$options{name}').hide();";
 		} else {
 			$_REQUEST {__on_load} .= "\$('#file_name_$$options{name}').hide();";
@@ -1860,7 +1865,13 @@ sub draw_toolbar_button {
 		$options -> {target} = '_self';
 	}
 
+	my $btn2_r = 'btn2_r';
+	my $btn2_r_width = 6;
+
 	if (@{$options -> {items}} > 0) {
+
+		$btn2_r = 'btn2_r_multi';
+		$btn2_r_width = 16;
 
 		$options -> {onclick} = "";
 		$options -> {href} = "#";
@@ -1891,7 +1902,7 @@ EOH
 	$html .= <<EOH;
 			</a></nobr></td>
 			<td class="bgr0" style="background-repeat:repeat-x" background="$_REQUEST{__static_url}/btn2_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><nobr>&nbsp;<a TABINDEX=-1 class=button href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}">$options->{label}</a></nobr></td>
-			<td width=6><img src="$_REQUEST{__static_url}/btn2_r.gif?$_REQUEST{__static_salt}" width="6" height="21" border="0"></td>
+			<td width=$btn2_r_width><img src="$_REQUEST{__static_url}/${btn2_r}.gif?$_REQUEST{__static_salt}" width="$btn2_r_width" height="21" border="0"></td>
 		</tr>
 		</table>
 		</td>
@@ -2268,7 +2279,7 @@ sub draw_toolbar_input_datetime {
 
 	my ($_SKIN, $options) = @_;
 
-	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
+	$options -> {onClose}    = "debounce(function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }, 50)";
 	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {this.form.submit()}";
 
 	my $html = '<td class="toolbar" nowrap>';
@@ -2354,7 +2365,7 @@ EOH
 
 		$html .= <<EOH;
 				<tr>
-					<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
+					<td nowrap id="$$type{id}" target="$$type{target}" onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
 				</tr>
 EOH
 
@@ -2412,7 +2423,13 @@ sub draw_centered_toolbar_button {
 
 	my $html = "<td nowrap background='$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}'>";
 
+	my $btn_r = 'btn_r';
+	my $btn_r_width = 6;
+
 	if (@{$options -> {items}} > 0) {
+
+		$btn_r = 'btn_r_multi';
+		$btn_r_width = 14;
 
 		$options -> {onclick} = "";
 		$options -> {href} = "#";
@@ -2435,7 +2452,7 @@ EOH
 					<td width=6><img src="$_REQUEST{__static_url}/btn_l.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
 					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}"><img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=1 align=absmiddle>${nbsp}</a></td>
 					<td background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="absmiddle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}" $title>$$options{label}</a>${nbsp}${nbsp}</td>
-					<td width=6><img src="$_REQUEST{__static_url}/btn_r.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
+					<td width=$btn_r_width><img src="$_REQUEST{__static_url}/${btn_r}.gif?$_REQUEST{__static_salt}" width="$btn_r_width" height="25" border="0"></td>
 				</tr>
 			</table>
 		</td>
@@ -2738,6 +2755,15 @@ sub draw_text_cell {
 	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
 
 	$data -> {attributes} -> {title} .= $label_tail;
+
+	if ($data -> {__context_menu}) {
+
+		$_SKIN -> {__current_row} -> {__menu} .= $data -> {__context_menu};
+
+		$data -> {attributes} -> {"oncontextmenu"} = "open_popup_menu(event, '$data'); blockEvent (); return false;";
+
+	}
+
 
 	my $has_href = $data -> {href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 
@@ -3287,6 +3313,8 @@ sub draw_table {
 	$$options{toolbar} =~ s{\s+$}{}sm;
 
 	my $html = '';
+	my $tname = 'div_' . int(rand(10000));
+	$html = $preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page} ? "<div id=$tname style='VISIBILITY:hidden'>" : "<div>";
 
 	my %hidden = ();
 
@@ -3343,7 +3371,7 @@ sub draw_table {
 
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
 				$menus .= $i -> {__menu};
-				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent ();"};
+				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent (); return false;"};
 			}
 
 			$html .= '>';
@@ -3355,7 +3383,7 @@ sub draw_table {
 	}
 
 	$html .= <<EOH;
-			</tbody></table>$$options{toolbar}</td></form></tr></table>
+			</tbody></table></div>$$options{toolbar}</td></form></tr></table>
 		$menus
 
 EOH
@@ -3365,11 +3393,10 @@ EOH
 	my $enctype = $html =~ /\btype\=[\'\"]?file\b/ ?
 		'enctype="multipart/form-data"' : '';
 
-	$_REQUEST {__on_load} .= ";numeroftables++;";
+	$_REQUEST {__on_load} .= ";numeroftables++;" . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page} ? "\$('#$tname').css('visibility','visible');" : "");
 
 	return <<EOH . $html;
 
-		$div
 		$$options{title}
 		$$options{path}
 		$$options{top_toolbar}
@@ -3641,7 +3668,9 @@ EOH
 
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 
-	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">}         foreach (@{$_REQUEST {__include_css}});
+	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">\n}         foreach (@{$_REQUEST {__include_css}});
+
+	$_REQUEST {__head_links} .= dump_tag (style => {}, $_REQUEST {__css}) . "\n" if $_REQUEST {__css};
 
 	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}'>\n</script>" foreach (@{$_REQUEST {__include_js}});
 

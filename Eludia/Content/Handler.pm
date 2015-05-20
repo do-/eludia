@@ -783,6 +783,10 @@ sub action_finish {
 
 	log_action_finish ();
 
+	if ($_REQUEST {error} && $preconf -> {core_dbl_click_protection} && $_REQUEST {_id_log}) {
+		sql_do ("DELETE FROM $conf->{systables}->{__action_log} WHERE id_log = ?", $_REQUEST {_id_log});
+	}
+
 	return handler_finish ();
 
 }

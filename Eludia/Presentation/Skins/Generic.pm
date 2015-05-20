@@ -54,17 +54,17 @@ sub __adjust_form_field_string {
 
 	my $attributes = ($options -> {attributes} ||= {});
 
-	$attributes -> {value}        = \$options -> {value};
+	$attributes -> {value}        ||= \$options -> {value};
 
-	$attributes -> {name}         = '_' . $options -> {name};
+	$attributes -> {name}         ||= '_' . $options -> {name};
 
-	$attributes -> {size}         = ($options -> {size} ||= 120);
+	$attributes -> {size}         ||= ($options -> {size} ||= 120);
 
-	$attributes -> {maxlength}    = $options -> {max_len} || $options -> {size} || 255;
+	$attributes -> {maxlength}    ||= $options -> {max_len} || $options -> {size} || 255;
 
-	$attributes -> {autocomplete} = 'off' unless exists $attributes -> {autocomplete};
+	$attributes -> {autocomplete} ||= 'off' unless exists $attributes -> {autocomplete};
 
-	$attributes -> {id}           = 'input_' . $options -> {name};
+	$attributes -> {id}           ||= 'input_' . $options -> {name};
 
 }
 
@@ -211,7 +211,7 @@ EOJS
 	my $href = $$h{href};
 	$href =~ s{^/}{};
 
-	$options -> {value_src} ||= 'this.value';
+	$options -> {value_src} ||= "(this.type == 'checkbox' ? this.checked ? 1 : 0 : this.value)";
 
 	my $onchange = $_REQUEST {__windows_ce} ? "loadSlaveDiv ('$$h{href}&__only_form=this.form.name&_$$options{name}=this.value&__only_field=" . (join ',', @all_details) : <<EOJS;
 		activate_link (
@@ -254,11 +254,12 @@ EOJS
 				continue;
 			}
 
-			if (document.getElementsByName('_' + codetails[i]).length > 1) {
+			var el = document.getElementsByName('_' + codetails[i]);
+			if (el.length > 1) {
 
-				for (j=0; j < document.getElementsByName('_' + codetails[i]).length; j ++) {
+				for (j=0; j < el.length; j ++) {
 
-					r = document.getElementsByName('_' + codetails[i]) [j];
+					r = el [j];
 
 					if (r.checked) {
 						codetails_url += '&' + '_' + codetails[i] + '=' + r.value;
@@ -268,8 +269,9 @@ EOJS
 				continue;
 			}
 
-			if (document.getElementsByName('_' + codetails[i]).length == 1) {
-				codetails_url += '&' + '_' + codetails[i] + '=' + document.getElementsByName('_' + codetails[i])[0].value;
+			if (el.length == 1) {
+				var value = el[0].type == 'checkbox' ? el[0].checked ? 1 : 0 : el[0].value;
+				codetails_url += '&' + '_' + codetails[i] + '=' + value;
 				continue;
 			}
 
@@ -279,6 +281,45 @@ EOJS
 
 EOJS
 
+}
+
+################################################################################
+
+sub __adjust_button {
+
+	my ($_SKIN, $options) = @_;
+
+	if ($options -> {preset}) {
+		my $preset = $conf -> {button_presets} -> {$options -> {preset}};
+		$options -> {hotkey}     ||= Storable::dclone ($preset -> {hotkey}) if $preset -> {hotkey};
+		$options -> {icon}       ||= $preset -> {icon};
+		$options -> {label}      ||= $i18n -> {$preset -> {label}};
+		$options -> {label}      ||= $preset -> {label};
+		$options -> {confirm}    = exists $options -> {confirm} ? $options -> {confirm} :
+			$i18n -> {$preset -> {confirm}} ? $i18n -> {$preset -> {confirm}} :
+			$preset -> {confirm};
+		$options -> {preconfirm} ||= $preset -> {preconfirm};
+	}
+
+	$options -> {id}     ||= '' . $options;
+	$options -> {target} ||= '_self';
+
+	$options -> {href} = 'javaScript:' . $options -> {onclick} if $options -> {onclick};
+
+	check_href ($options);
+
+	if (
+		!(
+			$options -> {keep_esc} ||
+			(!exists $options -> {keep_esc} && $options -> {icon} eq 'cancel')
+		)
+	) {
+		$options -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
+	}
+
+	$_SKIN -> __adjust_button_href ($options);
+
+	$options -> {confirm} = js_escape ($options -> {confirm}) if ($options -> {confirm});
 }
 
 ################################################################################
