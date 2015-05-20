@@ -84,13 +84,20 @@ sub notify_script_execution_time {
 
 	if ($preconf -> {mail} -> {admin}) {
 
-		my ($warning_details, @guessed_causers) = (internal_error_id () . "[script]:\n");
+		my ($warning_details, @guessed_causers) = ("[" . internal_error_id () . "][script]:\n");
+
+		@$scripts = sort {$b -> {execution_ms} <=> $a -> {execution_ms}} @$scripts;
 
 		foreach my $i (@$scripts) {
 
-			$warning_details .= $i -> {path} . ': ' . $i -> {execution_ms} . " ms\n";
+			my @script_authors = guess_error_author_mail ({error_kind => 'script', file => $i -> {path}, line => 1});
 
-			push @guessed_causers, guess_error_author_mail ({error_kind => 'script', file => $i -> {path}, line => 1});
+			my $blame = !@script_authors? ""
+				: (" (blame " . join (', ', map {$_ -> {label}} @script_authors) . ")");
+
+			$warning_details .= $i -> {execution_ms} . ' ms ' . $i -> {path} . " $blame\n";
+
+			push @guessed_causers, @script_authors;
 		}
 
 		my %unique_recipients;
