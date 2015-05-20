@@ -4202,6 +4202,8 @@ EOH
 		if (win.d.selectedNode == null || win.d.selectedFound) {
 			win.d.openTo ($options->{selected_node}, true);
 		}
+		var eNew = ifr.contentWindow.document.getElementById("sd" + win.d.selectedNode);
+		eNew.className = "nodeSel";
 EOO
 	})
 EOH
