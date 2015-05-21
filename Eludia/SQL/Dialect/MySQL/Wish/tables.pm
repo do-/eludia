@@ -80,8 +80,11 @@ sub wish_to_update_demands_for_tables {
 			
 		%$i = map {$_ => $i -> {$_}} qw (name REMARKS);
 
-	}
+		# a comment for the table 60 characters before MySQL 5.5.3 cause unnecessary altering tables
+		$options -> {__remarks_full} = $i -> {REMARKS};
 
+		$i -> {REMARKS} = substr ($i -> {REMARKS}, 0, 60);
+	}
 }
 
 #############################################################################
@@ -89,6 +92,8 @@ sub wish_to_update_demands_for_tables {
 sub wish_to_schedule_modifications_for_tables {
 
 	my ($old, $new, $todo, $options) = @_;
+
+	$new -> {REMARKS} = delete $options -> {__remarks_full};
 
 	push @{$todo -> {comment}}, $new;
 
