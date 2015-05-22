@@ -1994,7 +1994,7 @@ function treeview_oncontextmenu (e) {
 		var href = $(element).attr('href');
 		var url = a[i].url;
 		if (a[i].clipboard_text) {
-			eludia_copy_clipboard (a[i].clipboard_text, element);
+			eludia_copy_clipboard_init (a[i].clipboard_text, element);
 			a[i].target = 'invisible';
 		} else if ( url && /^javascript:/.test(href)){
 			$(element).attr('href', url);
@@ -2145,7 +2145,7 @@ function eludia_is_flash_installed () {
 	return navigator.plugins['Shockwave Flash'];
 }
 
-function eludia_copy_clipboard (text, element) {
+function eludia_copy_clipboard_init (text, element) {
 
 	if (!eludia_is_flash_installed() || !element) {
 
@@ -2156,8 +2156,8 @@ function eludia_copy_clipboard (text, element) {
 
 	$(element).attr('data-clipboard-text', text);
 
-	require ('/i/_skins/Mint/ZeroClipboard.min.js', function (zero_clipboard) {
-		zero_clipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
+	require (['/i/_skins/Mint/ZeroClipboard.min.js'], function (ZeroClipboard) {
+		ZeroClipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
 
 		var clip = new ZeroClipboard(element);
 
@@ -2572,6 +2572,19 @@ function init_page (options) {
 
 		$('input[name=svg_text_' + $(this).data('name') + ']').val(chart.svg());
 	});
+
+	if ($('.eludia-clipboard').length) {
+		require (['/i/_skins/Mint/ZeroClipboard.min.js'], function (ZeroClipboard) {
+			ZeroClipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
+
+			var client = new ZeroClipboard($('.eludia-clipboard'));
+
+			client.on('aftercopy', function(event) {
+				alert ('Скопировал: ' + event.data['text/plain']);
+			});
+		});
+	}
+
 
 	if (top.localStorage && top.localStorage ['message']) {
 		require(['kendo.notification.min'], function() {

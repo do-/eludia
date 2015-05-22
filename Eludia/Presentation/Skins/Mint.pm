@@ -763,6 +763,16 @@ sub draw_form_field_static {
 
 	my $html = '';
 
+	$options -> {attributes} ||= {
+		id => $options -> {id} || "input_$$options{name}",
+	};
+
+	if ($options -> {clipboard} && !$_REQUEST {__only_field}) {
+		$options -> {attributes} -> {class} = "eludia-clipboard";
+		$options -> {attributes} -> {"data-clipboard-text"} = $options -> {clipboard};
+		$options -> {href} ='#';
+	}
+
 	if ($options -> {href}) {
 		my $state = $_REQUEST {__read_only} ? 'passive' : 'active';
 		$options -> {a_class} ||= "form-$state-inputs";
@@ -809,7 +819,9 @@ sub draw_form_field_static {
 		$html .= qq{<a href="#" onclick="$options->{history}->{onclick}" title="$options->{history}->{title}"><img style="border:0;vertical-align:middle;" src="$history_icon" /></a>};
 	}
 
-	return "<span id='input_$$options{name}'>$html</span>";
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	return "<span $attributes>$html</span>";
 
 }
 
