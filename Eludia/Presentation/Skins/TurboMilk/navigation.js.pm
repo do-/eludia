@@ -4516,7 +4516,12 @@ function eludia_is_flash_installed () {
 
 function eludia_copy_clipboard (text, element) {
 
-	window.prompt(top.i18n.copy_clipboard, text);
+	if (typeof(clipboardData) == 'undefined') { // non IE
+		return window.prompt(top.i18n.copy_clipboard, text);
+	}
+
+	clipboardData.setData('Text', text);
+	setCursor();
 }
 
 function blockui (message, poll) {
