@@ -2149,7 +2149,7 @@ function eludia_copy_clipboard_init (text, element) {
 
 	if (!eludia_is_flash_installed() || !element) {
 
-		$(element).attr('href', 'javascript: window.prompt(\''+ i18n.copy_clipboard + '\', \'' + text + '\')');
+		$(element).attr('href', 'javascript: window.prompt(\''+ i18n.clipboard_help + '\', \'' + text + '\')');
 
 		return;
 	};
@@ -2580,7 +2580,7 @@ function init_page (options) {
 			var client = new ZeroClipboard($('.eludia-clipboard'));
 
 			client.on('aftercopy', function(event) {
-				alert ('Скопировал: ' + event.data['text/plain']);
+				alert (i18n.clipboard_copied + ' ' + event.data['text/plain']);
 			});
 		});
 	}

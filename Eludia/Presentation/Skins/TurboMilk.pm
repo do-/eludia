@@ -1109,6 +1109,18 @@ sub draw_form_field_static {
 
 	my ($_SKIN, $options, $data) = @_;
 
+
+	$options -> {attributes} ||= {
+		id => $options -> {id} || "input_$$options{name}",
+	};
+
+	if ($options -> {clipboard} && !$_REQUEST {__only_field}) {
+		$options -> {attributes} -> {class} = "eludia-clipboard";
+		$options -> {attributes} -> {"data-clipboard-text"} = $options -> {clipboard};
+		$options -> {attributes} -> {onclick} = "javascript: eludia_copy_clipboard(\$(this).data('clipboard-text'), this);";
+		$options -> {href} = "#";
+	}
+
 	my $html = '';
 
 	if ($options -> {href}) {
@@ -1161,7 +1173,9 @@ sub draw_form_field_static {
 
 	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
 
-	return "<span id='input_$$options{name}'>$html</span>";
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	return "<span $attributes>$html</span>";
 
 }
 
