@@ -4521,8 +4521,9 @@ function eludia_copy_clipboard (text, element) {
 	}
 
 	clipboardData.setData('Text', text);
-	setCursor();
-	alert(top.i18n.clipboard_copied + ' ' + text);
+
+	// HACK: do not reset cursor
+	window.__original_alert(top.i18n.clipboard_copied + ' ' + text);
 }
 
 function blockui (message, poll) {
