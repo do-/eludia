@@ -1110,9 +1110,8 @@ sub draw_form_field_static {
 	my ($_SKIN, $options, $data) = @_;
 
 
-	$options -> {attributes} ||= {
-		id => $options -> {id} || "input_$$options{name}",
-	};
+	$options -> {attributes} ||= {};
+	$options -> {attributes} -> {id} ||= $options -> {id} || "input_$$options{name}";
 
 	if ($options -> {clipboard} && !$_REQUEST {__only_field}) {
 		$options -> {attributes} -> {class} = "eludia-clipboard";
