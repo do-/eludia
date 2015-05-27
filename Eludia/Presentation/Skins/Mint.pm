@@ -156,6 +156,7 @@ sub draw_window_title {
 
 		$_REQUEST {__script} .= <<EOJ;
 			top.document.title = '$$options{label}';
+			top.title_set = 1;
 EOJ
 		return '';
 
