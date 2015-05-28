@@ -1160,7 +1160,7 @@ sub draw_form_field_static {
 		$html .= '</a>';
 	}
 
-	if ($options -> {history} && !$options -> {history} -> {off}) {
+	if (exists $options -> {history} && $options -> {history} -> {href} && !$options -> {history} -> {off}) {
 
 		my $history_icon = _icon_path ($options -> {history} -> {icon});
 

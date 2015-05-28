@@ -808,7 +808,7 @@ sub draw_form_field_static {
 
 	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
 
-	if ($options -> {history} && !$options -> {history} -> {off}) {
+	if (exists $options -> {history} && $options -> {history} -> {href} && !$options -> {history} -> {off}) {
 
 		my $history_icon = _icon_path ($options -> {history} -> {icon});
 
