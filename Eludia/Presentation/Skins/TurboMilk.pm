@@ -2185,8 +2185,9 @@ EOH
 
 		my $attributes = dump_attributes ($value -> {attributes});
 
-		$html .= qq {<option value="$$value{id}" $$value{selected} $attributes>$$value{label}</option>};
+		$value -> {label} = ('&nbsp;&nbsp;&nbsp;' x $value -> {level}) . $value -> {label};
 
+		$html .= qq {<option value="$$value{id}" $$value{selected} $attributes>$$value{label}</option>};
 	}
 
 	$html .= '</select></td><td class="toolbar">&nbsp;&nbsp;&nbsp;</td>';
