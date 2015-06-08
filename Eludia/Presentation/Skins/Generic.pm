@@ -483,20 +483,6 @@ sub __adjust_toolbar_btn_vert_menu_item {
 
 			"activate_link('$$type{href}', '$$type{target}')";
 
-		if ($type -> {confirm}) {
-
-			my $condition = 'confirm(' . js_escape ($type -> {confirm}) . ')';
-
-			if ($type -> {preconfirm}) {
-
-				$condition = "!$type->{preconfirm}||($type->{preconfirm}&&$condition)";
-
-			}
-
-			$type -> {onclick} = " if($condition){$type->{onclick}}";
-
-		}
-
 		$type -> {onclick} = "hideSubMenusForToolbarBtn(0);" . $type -> {onclick};
 
 
