@@ -10,7 +10,10 @@ sub draw_form_field_datetime {
 		
 		($i18n -> {_format_dt} || '%d.%m.%Y %k:%M') ;
 
-	$options -> {size}   ||= length ($options -> {format}) + 3 - ($options -> {format} =~ y{ }{ });
+	unless ($options -> {size}) {
+		$options -> {size} = length ($options -> {format}) + 4 - ($options -> {format} =~ y{ }{ });
+		$options -> {attributes} -> {maxlength} = $options -> {size} - 1;
+	}
 
 	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/) {
 		$options -> {type} = 'string';

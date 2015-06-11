@@ -645,3 +645,5 @@ a.hint {
     -ms-user-select: none;
     user-select: none;
 }
+
+.zeroclipboard-is-hover { cursor:pointer !important; }

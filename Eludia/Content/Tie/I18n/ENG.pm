@@ -2,7 +2,7 @@
 	_charset                 => 'windows-1252',
 	_calendar_lang           => 'en',
 	_format_d                => '%d.%m.%Y',
-	_format_dt               => '%d.%m.%Y  %k:%M',
+	_format_dt               => '%d.%m.%Y %k:%M',
 	_lc                      => 'a-z',
 	_uc                      => 'A-Z',
 	Exit                     => 'Exit',

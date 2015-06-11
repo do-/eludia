@@ -246,6 +246,7 @@ sub do_download_DEFAULT { # загрузка файла
 		size_column => $name . '_size',
 		type_column => $name . '_type',
 		path_column => $name . '_path',
+		no_force_download => $_REQUEST {no_force_download},
 	};
 
 	$options -> {body_column} = $name . '_body' if $DB_MODEL -> {tables} -> {$_REQUEST {type}} -> {columns} -> {$name . '_body'};

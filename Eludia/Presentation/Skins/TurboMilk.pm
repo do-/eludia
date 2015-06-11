@@ -286,6 +286,7 @@ sub draw_window_title {
 
 		$_REQUEST {__script} .= <<EOJ;
 			top.document.title = '$$options{label}';
+			top.title_set = 1;
 EOJ
 		return '';
 
@@ -399,6 +400,7 @@ sub _draw_input_datetime {
 
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
+
 	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
 
 	$options -> {attributes} -> {id} ||= 'input_calendar_trigger_' . $options -> {name};
@@ -1110,6 +1112,17 @@ sub draw_form_field_static {
 
 	my ($_SKIN, $options, $data) = @_;
 
+
+	$options -> {attributes} ||= {};
+	$options -> {attributes} -> {id} ||= $options -> {id} || "input_$$options{name}";
+
+	if ($options -> {clipboard} && !$_REQUEST {__only_field}) {
+		$options -> {attributes} -> {class} = "eludia-clipboard";
+		$options -> {attributes} -> {"data-clipboard-text"} = $options -> {clipboard};
+		$options -> {attributes} -> {onclick} = "javascript: eludia_copy_clipboard(\$(this).data('clipboard-text'), this);";
+		$options -> {href} = "#";
+	}
+
 	my $html = '';
 
 	if ($options -> {href}) {
@@ -1149,7 +1162,7 @@ sub draw_form_field_static {
 		$html .= '</a>';
 	}
 
-	if ($options -> {history} && !$options -> {history} -> {off}) {
+	if (exists $options -> {history} && $options -> {history} -> {href} && !$options -> {history} -> {off}) {
 
 		my $history_icon = _icon_path ($options -> {history} -> {icon});
 
@@ -1162,7 +1175,9 @@ sub draw_form_field_static {
 
 	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
 
-	return "<span id='input_$$options{name}'>$html</span>" . ($options -> {label_tail} || '');
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	return "<span $attributes>$html</span>" . ($options -> {label_tail} || '');
 
 }
 
@@ -2174,8 +2189,9 @@ EOH
 
 		my $attributes = dump_attributes ($value -> {attributes});
 
-		$html .= qq {<option value="$$value{id}" $$value{selected} $attributes>$$value{label}</option>};
+		$value -> {label} = ('&nbsp;&nbsp;&nbsp;' x $value -> {level}) . $value -> {label};
 
+		$html .= qq {<option value="$$value{id}" $$value{selected} $attributes>$$value{label}</option>};
 	}
 
 	$html .= '</select></td><td class="toolbar">&nbsp;&nbsp;&nbsp;</td>';
@@ -2282,7 +2298,7 @@ sub draw_toolbar_input_datetime {
 
 	my ($_SKIN, $options) = @_;
 
-	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
+	$options -> {onClose}    = "debounce(function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }, 50)";
 	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {this.form.submit()}";
 
 	my $html = '<td class="toolbar" nowrap>';
@@ -2758,6 +2774,15 @@ sub draw_text_cell {
 	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
 
 	$data -> {attributes} -> {title} .= $label_tail;
+
+	if ($data -> {__context_menu}) {
+
+		$_SKIN -> {__current_row} -> {__menu} .= $data -> {__context_menu};
+
+		$data -> {attributes} -> {"oncontextmenu"} = "open_popup_menu(event, '$data'); blockEvent (); return false;";
+
+	}
+
 
 	my $has_href = $data -> {href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 
@@ -3365,7 +3390,7 @@ sub draw_table {
 
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
 				$menus .= $i -> {__menu};
-				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent ();"};
+				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent (); return false;"};
 			}
 
 			$html .= '>';
@@ -4196,6 +4221,8 @@ EOH
 		if (win.d.selectedNode == null || win.d.selectedFound) {
 			win.d.openTo ($options->{selected_node}, true);
 		}
+		var eNew = ifr.contentWindow.document.getElementById("sd" + win.d.selectedNode);
+		eNew.className = "nodeSel";
 EOO
 	})
 EOH

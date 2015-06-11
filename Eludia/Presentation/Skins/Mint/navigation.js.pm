@@ -823,7 +823,12 @@ function setup_drop_down_button (id, data) {
 			dataSource: data,
 			orientation: 'vertical',
 			select: function (e) {
+				var selected_url = data [$(e.item).index()].url;
+				if (selected_url.match(/^javascript:/)) {
+					eval (selected_url);
+				}
 				menuDiv.remove ();
+				return true;
 			}
 		});
 
@@ -1989,7 +1994,7 @@ function treeview_oncontextmenu (e) {
 		var href = $(element).attr('href');
 		var url = a[i].url;
 		if (a[i].clipboard_text) {
-			eludia_copy_clipboard (a[i].clipboard_text, element);
+			eludia_copy_clipboard_init (a[i].clipboard_text, element);
 			a[i].target = 'invisible';
 		} else if ( url && /^javascript:/.test(href)){
 			$(element).attr('href', url);
@@ -2140,19 +2145,19 @@ function eludia_is_flash_installed () {
 	return navigator.plugins['Shockwave Flash'];
 }
 
-function eludia_copy_clipboard (text, element) {
+function eludia_copy_clipboard_init (text, element) {
 
 	if (!eludia_is_flash_installed() || !element) {
 
-		$(element).attr('href', 'javascript: window.prompt(\''+ i18n.copy_clipboard + '\', \'' + text + '\')');
+		$(element).attr('href', 'javascript: window.prompt(\''+ i18n.clipboard_help + '\', \'' + text + '\')');
 
 		return;
 	};
 
 	$(element).attr('data-clipboard-text', text);
 
-	require ('/i/_skins/Mint/ZeroClipboard.min.js', function (zero_clipboard) {
-		zero_clipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
+	require (['/i/_skins/Mint/ZeroClipboard.min.js'], function (ZeroClipboard) {
+		ZeroClipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
 
 		var clip = new ZeroClipboard(element);
 
@@ -2213,10 +2218,21 @@ function activate_suggest_fields (top_element) {
 						data        : read_data,
 						dataType    : 'json'
 					},
+					parameterMap: function(data, type) {
+						var q = '';
+						if (data.filter && data.filter.filters && data.filter.filters [0] && data.filter.filters [0].value)
+							q = data.filter.filters [0].value;
+
+						var result = {};
+						result [$('#' + id).attr ('name') + '__label'] = q;
+
+						if (type == 'read') {
+							return result;
+						}
+					}
 				}
 			},
 			change          : function(e) {
-
 				var selected_item = this.current();
 				var id           = '',
 					label        = this.value(),
@@ -2390,7 +2406,7 @@ function init_page (options) {
 					initial_data : tables_data [that.id],
 					el: $(that),
 					containerRender : function(model) {
-						$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+						$(that).find('tr[data-menu],td[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
 						adjust_kendo_selects (that);
 						$('[data-type=datepicker]', that).addClass('k-group').each(function () {$(this).kendoDatePicker({
@@ -2556,6 +2572,19 @@ function init_page (options) {
 
 		$('input[name=svg_text_' + $(this).data('name') + ']').val(chart.svg());
 	});
+
+	if ($('.eludia-clipboard').length) {
+		require (['/i/_skins/Mint/ZeroClipboard.min.js'], function (ZeroClipboard) {
+			ZeroClipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
+
+			var client = new ZeroClipboard($('.eludia-clipboard'));
+
+			client.on('aftercopy', function(event) {
+				alert (i18n.clipboard_copied + ' ' + event.data['text/plain']);
+			});
+		});
+	}
+
 
 	if (top.localStorage && top.localStorage ['message']) {
 		require(['kendo.notification.min'], function() {

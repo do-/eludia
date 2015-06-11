@@ -1084,3 +1084,5 @@ div.grey-submit a:hover {color:#222323;text-decoration:underline;}
 .dtree .clip {
 	overflow: hidden;
 }
+
+.zeroclipboard-is-hover { cursor:pointer !important; }
