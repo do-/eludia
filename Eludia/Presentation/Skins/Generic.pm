@@ -664,6 +664,8 @@ sub draw_form_field__only_field {
 
 		if ($field -> {type} eq 'date' || $field -> {type} eq 'datetime') {
 
+			$field -> {no_reload_dirty} += 0;
+
 			$_REQUEST{__on_load} .= " load_$field->{name} (); ";
 
 			$_REQUEST {__script} .= <<EOJS;
@@ -671,6 +673,7 @@ sub draw_form_field__only_field {
 					var doc = window.parent.document;
 					var element = doc.getElementById ('input$field->{name}');
 					if (!element) return;
+					if ($field->{no_reload_dirty} && element.is_dirty) return;
 					element.value = '$field->{value}';
 				}
 EOJS

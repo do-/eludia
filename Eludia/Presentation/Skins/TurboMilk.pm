@@ -401,7 +401,7 @@ sub _draw_input_datetime {
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
 
-	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
+	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) this.is_dirty = is_dirty = true';
 
 	$options -> {attributes} -> {id} ||= 'input_calendar_trigger_' . $options -> {name};
 
