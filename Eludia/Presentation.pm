@@ -2209,7 +2209,7 @@ sub draw_table {
 
 		push @_COLUMNS, $h;
 
-		if ($_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
+		if ($conf -> {core_store_table_order} && !$options -> {no_order} && $_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
 			if ($max_ord && ($h -> {order} || $h -> {no_order})) {
 				my $column_order = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}};
 				if ($column_order -> {ord} == 0) {
@@ -2219,11 +2219,11 @@ sub draw_table {
 						$p -> {hidden} = 1 if $p -> {colspan} == 0;
 						$p = $p -> {parent};
 					}
-				} elsif ($conf -> {core_store_table_order} && !$options -> {no_order}) {
+				} else {
 					$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $column_order -> {ord})
 						: ($column_order -> {ord} * 1000);
 				}
-			} elsif (!$h -> {hidden} && $conf -> {core_store_table_order} && !$options -> {no_order}) {
+			} elsif (!$h -> {hidden}) {
 				if (keys %{$h -> {parent}}) {
 					if ($h -> {parent} -> {ord} > 0) {
 						$h -> {parent} -> {children_ord} ||= @{$h -> {parent} -> {children}};
@@ -2239,9 +2239,9 @@ sub draw_table {
 
 			$h -> {__hidden} = $h -> {hidden};
 
-			$h -> {parent} -> {ord} ||= 0 if ($conf -> {core_store_table_order} && !$options -> {no_order} && defined $h -> {parent} -> {order} || defined $h -> {parent} -> {no_order});
+			$h -> {parent} -> {ord} ||= 0 if (defined $h -> {parent} -> {order} || defined $h -> {parent} -> {no_order});
 
-			$h -> {hidden}   = 1 if $conf -> {core_store_table_order} && !$options -> {no_order} && ($h -> {ord} == 0 || defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0);
+			$h -> {hidden}   = 1 if $h -> {ord} == 0 || defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0;
 		}
 
 		$h -> {filters} = [];
