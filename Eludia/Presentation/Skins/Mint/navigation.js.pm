@@ -2709,3 +2709,7 @@ function debounce (func, wait, immediate) {
 		return result;
 	};
 };
+
+function tabOnEnter () {
+	void (0);
+}
