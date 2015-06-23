@@ -2305,7 +2305,7 @@ sub draw_table {
 		$_REQUEST {ids} ||= '-1';
 
 		$_REQUEST {__script} .= <<EOS;
-var href = '$href->{href}';
+var href = "$href->{href}";
 var ids = '$_REQUEST{ids}';
 EOS
 
