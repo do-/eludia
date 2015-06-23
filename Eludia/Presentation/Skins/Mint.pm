@@ -2910,6 +2910,7 @@ sub draw_super_table__only_table {
 	}
 
 	my $is_set_all_headers_width  = 1;
+
 	local $settings = exists $_QUERY -> {content} -> {columns}? $_QUERY -> {content} -> {columns} : {};
 
 	my $_adjust_cell_hash = sub {
@@ -2967,7 +2968,7 @@ sub draw_super_table__only_table {
 		id          => $options -> {id_table},
 		fix_columns => $options -> {__fixed_cols} + 0,
 		fix_rows    => $options -> {fix_rows} + 0,
-		disable_reorder_columns => $options -> {disable_reorder_columns} ? $_JSON -> true : $_JSON -> false,
+		disable_reorder_columns => $options -> {no_order} || $options -> {disable_reorder_columns} ? $_JSON -> true : $_JSON -> false,
 		columns     => $columns,
 		total       => 0 + $options -> {pager} -> {total},
 		cnt         => 0 + $options -> {pager} -> {cnt},

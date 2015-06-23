@@ -2175,85 +2175,81 @@ sub draw_table {
 
 	my @old_headers = @$headers;
 
-	if ($conf -> {core_store_table_order} && !$options -> {no_order}) {
+	our @_ORDER = ();
+	our @_COLUMNS = ();
+	our %_ORDER = ();
 
-		our @_ORDER = ();
-		our @_COLUMNS = ();
-		our %_ORDER = ();
+	my @header_cells = ();
 
-		my @header_cells = ();
+	my $is_exists_subheaders;
+	my $max_ord;
 
-		my $is_exists_subheaders;
-		my $max_ord;
+	$headers = get_table_header_field ($headers);
 
-		$headers = get_table_header_field ($headers);
+	foreach my $h (@$headers) {
 
-		foreach my $h (@$headers) {
+		ref $h eq HASH or ($h = {label => $h});
 
-			ref $h eq HASH or ($h = {label => $h});
+		push @header_cells, $h;
 
-			push @header_cells, $h;
-
-			if ($h -> {order} || $h -> {no_order}) {
-				$_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} ||= {
-					'desc' => '',
-					'ord' => '',
-					'sort' => '',
-				};
-			}
-			if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} > $max_ord) {
-				$max_ord = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
-			}
-
+		if ($h -> {order} || $h -> {no_order}) {
+			$_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} ||= {
+				'desc' => '',
+				'ord' => '',
+				'sort' => '',
+			};
+		}
+		if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} > $max_ord) {
+			$max_ord = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
 		}
 
-		foreach my $h (@header_cells) {
+	}
 
-			push @_COLUMNS, $h;
+	foreach my $h (@header_cells) {
 
-			if ($_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
-				if ($max_ord && ($h -> {order} || $h -> {no_order})) {
-					my $column_order = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}};
-					if ($column_order -> {ord} == 0) {
-						my $p = $h -> {parent};
-						while ($p -> {label}) {
-							$p -> {colspan} --;
-							$p -> {hidden} = 1 if $p -> {colspan} == 0;
-							$p = $p -> {parent};
-						}
-					} else {
-						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $column_order -> {ord})
-							: ($column_order -> {ord} * 1000);
+		push @_COLUMNS, $h;
+
+		if ($conf -> {core_store_table_order} && !$options -> {no_order} && $_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
+			if ($max_ord && ($h -> {order} || $h -> {no_order})) {
+				my $column_order = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}};
+				if ($column_order -> {ord} == 0) {
+					my $p = $h -> {parent};
+					while ($p -> {label}) {
+						$p -> {colspan} --;
+						$p -> {hidden} = 1 if $p -> {colspan} == 0;
+						$p = $p -> {parent};
 					}
-				} elsif (!$h -> {hidden}) {
-					if (keys %{$h -> {parent}}) {
-						if ($h -> {parent} -> {ord} > 0) {
-							$h -> {parent} -> {children_ord} ||= @{$h -> {parent} -> {children}};
-							$h -> {parent} -> {children_ord} ++;
-							$h -> {ord} = $h -> {parent} -> {ord} + $h -> {parent} -> {children_ord};
-						}
-					} else {
-						$max_ord ++;
-						$h -> {ord} = $max_ord * 1000;
+				} else {
+					$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $column_order -> {ord})
+						: ($column_order -> {ord} * 1000);
+				}
+			} elsif (!$h -> {hidden}) {
+				if (keys %{$h -> {parent}}) {
+					if ($h -> {parent} -> {ord} > 0) {
+						$h -> {parent} -> {children_ord} ||= @{$h -> {parent} -> {children}};
+						$h -> {parent} -> {children_ord} ++;
+						$h -> {ord} = $h -> {parent} -> {ord} + $h -> {parent} -> {children_ord};
 					}
-
+				} else {
+					$max_ord ++;
+					$h -> {ord} = $max_ord * 1000;
 				}
 
-				$h -> {__hidden} = $h -> {hidden};
-
-				$h -> {parent} -> {ord} ||= 0 if (defined $h -> {parent} -> {order} || defined $h -> {parent} -> {no_order});
-
-				$h -> {hidden}   = 1 if ($h -> {ord} == 0 || defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0);
 			}
 
-			$h -> {filters} = [];
+			$h -> {__hidden} = $h -> {hidden};
 
-			push @_ORDER, $h;
+			$h -> {parent} -> {ord} ||= 0 if (defined $h -> {parent} -> {order} || defined $h -> {parent} -> {no_order});
 
-			$_ORDER {$h -> {order} || $h -> {no_order}} = $h
-				if ($h -> {order} || $h -> {no_order});
-
+			$h -> {hidden}   = 1 if $h -> {ord} == 0 || defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0;
 		}
+
+		$h -> {filters} = [];
+
+		push @_ORDER, $h;
+
+		$_ORDER {$h -> {order} || $h -> {no_order}} = $h
+			if ($h -> {order} || $h -> {no_order});
 
 	}
 
@@ -2332,9 +2328,7 @@ EOJS
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
 
-	if ($conf -> {core_store_table_order} && !$options -> {no_order}) {
-		fix___query ();
-	}
+	fix___query ();
 
 	if (ref $options -> {path} eq ARRAY) {
 		$options -> {path} = draw_path ($options, $options -> {path});
