@@ -61,8 +61,6 @@ sub setup_page_content {
 ################################################################################
 
 sub fix___query {
-warn 'fix___query';
-darn \@_ORDER;
 
 	$conf -> {core_store_table_order} or return;
 
