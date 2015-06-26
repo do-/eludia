@@ -46,15 +46,15 @@ sub wish_to_actually_modify_table_data {
 
 	$statement .= ' DELAYED' if $options -> {delayed};
 
-	foreach my $items_package (values(%{$packages_by_column_set})) {
+	foreach my $key (keys %$packages_by_column_set) {
 
-		my @cols = keys %{$items_package -> [0]};
+		my @cols = split /,/, $key;
 
-		my $sql = "$statement $options->{table} (" . (join ',', @cols) . ")VALUES";
+		my @values;
 
-		foreach my $i (@$items_package) { $sql .= '(' . (join ',', map {$db -> quote ($i -> {$_})} @cols) . '),' }
+		foreach my $i (@{$packages_by_column_set->{$key}}) { push @values, '(' . (join ',', map {$db -> quote ($i -> {$_})} @cols) . ')' }
 
-		chop $sql;
+		my $sql = "$statement $options->{table} (" . (join ',', @cols) . ")VALUES" . (join ',', @values);
 
 		sql_do ($sql);
 
