@@ -3556,6 +3556,7 @@ sub treeview_convert_nodes {
 			is_radio       => $n -> {is_radio},
 			expanded       => $n -> {is_open} || $n -> {_io} || $i -> {is_open},
 			color          => $n -> {color} || $i -> {color},
+			encoded        => $_JSON -> false,
 		};
 
 		$nn -> {imageUrl} = _icon_path ($n -> {icon}) if $n -> {icon};
