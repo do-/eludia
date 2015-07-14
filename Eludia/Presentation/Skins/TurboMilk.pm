@@ -2380,8 +2380,6 @@ EOH
 			$type -> {label} .= "&nbsp;$label";
 		}
 
-		$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
-
 		$html .= <<EOH;
 				<tr>
 					<td nowrap id="$$type{id}" target="$$type{target}" onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
