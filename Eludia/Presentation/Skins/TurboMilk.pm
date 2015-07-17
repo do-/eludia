@@ -466,7 +466,6 @@ sub draw_form {
 	$html .= _draw_bottom (@_);
 
 	$html .=  <<EOH;
-		<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 			<form
 				name="$$options{name}"
 				target="$$options{target}"
@@ -485,6 +484,10 @@ EOH
 
 	);
 
+	$html .=  <<EOH;
+			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
+EOH
+
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
@@ -496,7 +499,7 @@ EOH
 		$html .= qq{</tr>};
 	}
 
-	$html .=  '</form></table>' . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? '</div>' : '');
+	$html .=  '</table></form>' . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? '</div>' : '');
 
 	$html .= $options -> {bottom_toolbar};
 	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? "\$('#$tname').css('visibility','visible');" : "");
@@ -1236,8 +1239,7 @@ sub draw_form_field_select {
 	my ($_SKIN, $options, $data) = @_;
 
 	$options -> {attributes} ||= {};
-	my $id = $options -> {id} || "_$options->{name}_select";
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
+	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
 
 	if (@{$options -> {values}} == 0 && defined ($options -> {empty}) && defined ($options -> {other})) {
 		$options -> {attributes} -> {onClick} .= ";if (this.length == 2) {this.selectedIndex=1; this.onchange();}";
@@ -1250,49 +1252,22 @@ sub draw_form_field_select {
 
 	if (defined $options -> {other}) {
 
-		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
-		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
-
-		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
-
-		my ($confirm_js_if, $confirm_js_else) = $options -> {no_confirm} ? ('', '')
-			: (
-				"if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {",
-				"} else {this.selectedIndex = 0}"
-			);
+		$options -> {other} -> {width}  ||= 'dialog_width';
+		$options -> {other} -> {height} ||= 'dialog_height';
 
 		$options -> {onChange} .= <<EOJS;
 
 			if (this.options[this.selectedIndex].value == -1) {
 
-				$confirm_js_if
-
-					var dialog_width  = $options->{other}->{width};
-					var dialog_height = $options->{other}->{height};
-
-					try {
-
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(), parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-
-						focus ();
-
-						if (result.result == 'ok') {
-
-							setSelectOption (this, result.id, result.label);
-
-						} else {
-
-							this.selectedIndex = 0;
-
-						}
-
-					} catch (e) {
-
-						this.selectedIndex = 0;
-
+				open_vocabulary_from_select (
+					this,
+					{
+						message       : i18n.choose_open_vocabulary,
+						href          : '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(),
+						dialog_width  : $options->{other}->{width},
+						dialog_height : $options->{other}->{height}
 					}
-
-				$confirm_js_else
+				);
 
 			}
 EOJS
@@ -1302,7 +1277,6 @@ EOJS
 	my $html = <<EOH;
 		<select
 			name="_$$options{name}"
-			id="$id"
 			$attributes
 			onKeyDown="tabOnEnter();"
 			onChange="is_dirty=true; $$options{onChange}"
@@ -1330,14 +1304,6 @@ EOH
 	$html .= '</select>';
 
 	$html .= $options -> {label_tail} || '';
-#	if (defined $options -> {other}) {
-#		$html .= <<EOH;
-#			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)}">
-#				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="$_REQUEST{__static_url}/0.html" application="yes">
-#				</iframe>
-#			</div>
-#EOH
-#	}
 
 	return $html;
 
@@ -2127,44 +2093,28 @@ sub draw_toolbar_input_select {
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
 
-		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+		$options -> {onChange} =~ s/submit\(\);$//;
 
-		$options -> {no_confirm} += 0;
-
-		$options -> {onChange} = <<EOJS . $options -> {onChange} . '}';
+		$options -> {onChange} .= <<EOJS;
 
 			if (this.options[this.selectedIndex].value == -1) {
 
-				if ($$options{no_confirm} || window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-
-					try {
-
-						var dialog_width = $options->{other}->{width};
-						var dialog_height = $options->{other}->{height};
-
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-
-						focus ();
-
-						if (result.result == 'ok') {
-							setSelectOption (this, result.id, result.label);
-							submit ();
-						} else {
-							this.selectedIndex = 0;
-							submit ();
-						}
-					} catch (e) {
-						this.selectedIndex = 0;
-						submit ();
+				open_vocabulary_from_select (
+					this,
+					{
+						message       : i18n.choose_open_vocabulary,
+						href          : '$options->{other}->{href}&select=$name&salt=' + Math.random(),
+						dialog_width  : $options->{other}->{width},
+						dialog_height : $options->{other}->{height},
+						title         : '$i18n->{voc_title}'
 					}
+				);
 
-				} else {
-
-					this.selectedIndex = 0;
-					submit ();
-
-				}
 			} else {
+
+				this.form.submit ();
+
+			}
 EOJS
 	}
 
@@ -2172,8 +2122,6 @@ EOJS
 
 	$options -> {max_len} += 0;
 	$options -> {attributes} -> {max_len} = $options -> {max_len};
-
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
 
@@ -2679,7 +2627,7 @@ EOH
 				<td nowrap onclick="$$type{onclick}" class="vert-menu" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}">
 						<table width="100%" cellspacing=0 cellpadding=0 border=0><tr>
 							<td align="left" nowrap style="font-family: Tahoma, 'MS Sans Serif'; font-weight: normal; font-size: 8pt; color: #ffffff;">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
-							<td align="right" style="font-family: Marlett; font-weight: normal; font-size: 8pt; color: #ffffff;">8</td>
+							<td align="right" style="font-size: 8pt; color: #ffffff;padding-right:5px">&raquo;</td>
 						</tr></table>
 				</td>
 EOH
@@ -3498,6 +3446,13 @@ sub draw_page {
 	}
 	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
 
+		unless ($r -> headers_in -> {'User-Agent'} =~ /MSIE (\d+)|Trident/) {
+			$_REQUEST {__head_links} .= <<EOH
+<link href="$_REQUEST{__static_url}/jquery-ui.min.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet">
+<script src="$_REQUEST{__static_url}/jquery-ui.min.js?$_REQUEST{__static_salt}"></script>
+<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js?$_REQUEST{__static_salt}"></script>
+EOH
+		}
 		$body .= qq {
 
 			<div style='display:none'>$_REQUEST{__menu_links}</div>

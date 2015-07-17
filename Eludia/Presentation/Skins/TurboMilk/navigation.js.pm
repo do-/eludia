@@ -18,6 +18,15 @@ return(!i||i!==r&&!b.contains(r,i))&&(e.type=o.origType,n=o.handler.apply(this,a
  * Date: 30-03-2014
  */!function(a,b){"use strict";var c,d;if(a.uaMatch=function(a){a=a.toLowerCase();var b=/(opr)[\/]([\w.]+)/.exec(a)||/(chrome)[ \/]([\w.]+)/.exec(a)||/(version)[ \/]([\w.]+).*(safari)[ \/]([\w.]+)/.exec(a)||/(webkit)[ \/]([\w.]+)/.exec(a)||/(opera)(?:.*version|)[ \/]([\w.]+)/.exec(a)||/(msie) ([\w.]+)/.exec(a)||a.indexOf("trident")>=0&&/(rv)(?::| )([\w.]+)/.exec(a)||a.indexOf("compatible")<0&&/(mozilla)(?:.*? rv:([\w.]+)|)/.exec(a)||[],c=/(ipad)/.exec(a)||/(iphone)/.exec(a)||/(android)/.exec(a)||/(windows phone)/.exec(a)||/(win)/.exec(a)||/(mac)/.exec(a)||/(linux)/.exec(a)||/(cros)/i.exec(a)||[];return{browser:b[3]||b[1]||"",version:b[2]||"0",platform:c[0]||""}},c=a.uaMatch(b.navigator.userAgent),d={},c.browser&&(d[c.browser]=!0,d.version=c.version,d.versionNumber=parseInt(c.version)),c.platform&&(d[c.platform]=!0),(d.android||d.ipad||d.iphone||d["windows phone"])&&(d.mobile=!0),(d.cros||d.mac||d.linux||d.win)&&(d.desktop=!0),(d.chrome||d.opr||d.safari)&&(d.webkit=!0),d.rv){var e="msie";c.browser=e,d[e]=!0}if(d.opr){var f="opera";c.browser=f,d[f]=!0}if(d.safari&&d.android){var g="android";c.browser=g,d[g]=!0}d.name=c.browser,d.platform=c.platform,a.browser=d}(jQuery,window);
 
+var is_ua_mobile = /mobile|android/i.test (navigator.userAgent);
+var dialog_width,
+	dialog_height;
+
+$(document).ready (function () {
+	dialog_width = is_ua_mobile  ? top.innerWidth - 20  : (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - 50;
+	dialog_height = is_ua_mobile ? top.innerHeight - 100 : (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) - 50;
+});
+
 var scrollable_table_ids = [];
 var is_dirty = false;
 var scrollable_table_is_blocked = false;
@@ -213,35 +222,148 @@ function dialog_open (options) {
 	options.before = options.before || function (){};
 	options.before();
 
+	options.after = options.after || function (result){};
+
 	options.href   = options.href.replace(/\#?\&_salt=[\d\.]+$/, '');
 	options.href  += '&_salt=' + Math.random ();
 	options.parent = window;
 
+	if (options.fullscreen) {
+		options.height = document.documentElement.clientHeight - 40;
+		options.width = document.documentElement.clientWidth - 20;
+		options.position =  {my: "left top", at: "left top", of: window};
+	}
+
+	var url = 'http://' + window.location.host + '/i/_skins/TurboMilk/dialog.html?' + Math.random ();
+
+	if ($.browser.webkit || $.browser.safari)
+		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
+
+	if (!window.showModalDialog) {
+		$.showModalDialog({
+			url             : url,
+			height          : options.height || dialog_height,
+			width           : options.width || dialog_width,
+			position        : options.position || undefined,
+			resizable       : true,
+			scrolling       : 'no',
+			dialogArguments : options,
+			onClose: function () {
+				var result = this.returnValue || {result : 'esc'};
+				$.unblockUI ();
+				options.after(result);
+			}
+		});
+
+		return;
+	}
+
 	var width  = options.width  || (screen.availWidth - (screen.availWidth <= 800 ? 50 : 100));
 	var height = options.height || (screen.availHeight - (screen.availHeight <= 600 ? 50 : 100));
 
-	var url = 'http://' + window.location.host + '/i/_skins/TurboMilk/dialog.html?' + Math.random ();
 	var result = window.showModalDialog(url, options, options.options + ';dialogWidth=' + width + 'px;dialogHeight=' + height + 'px');
 	result = result || {result : 'esc'};
 
-//	if (result.result == 'ok')
-//		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
-
-	options.after = options.after || function (result){};
 	options.after(result);
+
+	if ($.browser.webkit || $.browser.safari)
+		$.unblockUI ();
 
 	setCursor ();
 
+	return result;
 }
 
-function close_multi_select_window (ret) {
-	var w = window, i = 0;
+
+function open_vocabulary_from_select (s, options) {
+
+	if ($.browser.webkit || $.browser.safari)
+		$.blockUI ({fadeIn: 0, message: '<h1>' + options.message + '</h1>'});
+
+	try {
+
+
+		if (!window.showModalDialog) {
+
+			 $.showModalDialog({
+				url             : window.location.protocol + '//' + window.location.host + window.location.pathname + '/i/_skins/TurboMilk/dialog.html?' + Math.random(),
+				height          : dialog_height,
+				width           : dialog_width,
+				resizable       : true,
+				scrolling       : 'no',
+				dialogArguments : {href: options.href, parent: window},
+				onClose: function () {
+
+					var result = this.returnValue || {result : 'close'};
+
+					if (result.result == 'ok') {
+
+						setSelectOption (s, result.id, result.label);
+
+					} else {
+
+						s.selectedIndex = 0;
+						window.focus ();
+						s.focus ();
+						$(s).trigger ('change');
+
+					}
+
+					if ($.browser.webkit || $.browser.safari)
+						$.unblockUI ();
+
+				}
+			});
+
+
+		} else {
+
+			var result = window.showModalDialog (
+				window.location.protocol + '//' + window.location.host + window.location.pathname + '/i/_skins/TurboMilk/dialog.html?' + Math.random(),
+				{href: options.href, parent: window},
+				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
+			);
+
+			window.focus ();
+			s.focus ();
+
+			if (result.result == 'ok') {
+
+				setSelectOption (s, result.id, result.label);
+
+			} else {
+
+				s.selectedIndex = 0;
+				$(s).trigger ('change');
+
+			}
+
+			if ($.browser.webkit || $.browser.safari)
+				$.unblockUI ();
+
+		}
+
+	} catch (e) {
+
+		s.selectedIndex = 0;
+		window.focus ();
+		s.focus ();
+		$(s).trigger ('change');
+
+		if ($.browser.webkit || $.browser.safari)
+			$.unblockUI ();
+	}
+
+}
+
+function close_multi_select_window (ret, win) {
+	var w = win || window, i = 0;
 	for (;i < 5 && w.name != '_modal_iframe'; i ++)
 		w = w.parent;
 	if (w.name == '_modal_iframe') {
 		if (ret)
 			w.returnValue = ret;
-		w.parent.$('DIV.modal_div').dialog ('close');
+		w.parent.$('.modal_div').dialog ('close');
 	} else {
 		if (ret)
 			top.returnValue = ret;
@@ -1130,8 +1252,13 @@ function setSelectOption (select, id, label) {
 
 	var option = document.createElement ("OPTION");
 	select.options.add (option);
-	option.innerText = label;
 	option.value = id;
+	if ($.browser.mozilla) {
+		option.textContent = label;
+	}
+	else {
+		option.innerText = label;
+	}
 	select.selectedIndex = select.options.length - 1;
 	window.focus ();
 	select.focus ();

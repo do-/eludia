@@ -931,8 +931,6 @@ sub draw_form_field_select {
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
 
-		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
-
 		$options -> {onChange} = <<EOJS;
 
 			if (this.options[this.selectedIndex].value == -1) {
