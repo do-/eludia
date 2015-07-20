@@ -359,6 +359,9 @@ BODY {
 	COLOR: #000000;
 	background-color: #FFFFFF
 }
+FORM {
+	margin: 0px;
+}
 
 .header_0 {
 	FONT-WEIGHT: bold;
