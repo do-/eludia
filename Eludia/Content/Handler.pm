@@ -75,9 +75,14 @@ sub page_is_not_needed {
 
 	setup_request_params     (@_);
 
+	if ($ENV {REQUEST_METHOD} eq 'PROPFIND' && !$_REQUEST {query} && user_agent () -> {msoffice}) {
+		handle_request_of_type_kickout (405);
+		return 1;
+	}
+
 	if ($ENV {REQUEST_METHOD} eq 'OPTIONS') {
 
-		if ($ENV {REQUEST_URI} !~/webdav/) {
+		if (!user_agent () -> {msoffice} || !$_REQUEST {query}) {
 			handle_request_of_type_kickout (403);
 			return 1;
 		}
@@ -197,11 +202,11 @@ sub setup_request_params {
 
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 
-	if ($r -> header_in ('User-Agent') =~ /^Microsoft/ && $ENV {REQUEST_URI} =~ /webdav/) {
+	if (user_agent () -> {msoffice} && $ENV {REQUEST_URI} =~ /webdav/i) {
 		$_REQUEST {type} = $_REQUEST_VERBATIM {type} = 'webdav';
 		$_REQUEST {method} = $ENV {REQUEST_METHOD};
 
-		$_REQUEST {query} ||= $ENV {'REQUEST_URI'};
+		$_REQUEST {query} ||= $ENV {REQUEST_URI};
 		$_REQUEST {query} =~ s/\/webdav\///;
 		$_REQUEST {query} =~ s/^([a-z0-9]+)_(\d+)_//;
 		$_COOKIE {client_cookie} = $1;

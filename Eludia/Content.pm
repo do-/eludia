@@ -411,6 +411,12 @@ sub user_agent {
 
 	}
 
+	if ($src =~ /MSOffice/i || $src =~ /Microsoft Office/ || $src =~ /Microsoft-WebDAV-MiniRedir/i) {
+
+		$result -> {msoffice} = 1;
+
+	}
+
 	return $result;
 
 }
