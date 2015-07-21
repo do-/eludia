@@ -2945,14 +2945,13 @@ sub draw_select_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	my $s_attributes -> {class} = "form-mandatory-inputs" if $data -> {mandatory};
-
 	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
 
 	$data -> {attributes} -> {title} .= $label_tail;
 
+	my $s_attributes = dump_attributes ({ class => "form-mandatory-inputs" }) if $data -> {mandatory};
+
 	my $attributes = dump_attributes ($data -> {attributes});
-	$s_attributes = dump_attributes ($s_attributes);
 
 	my $multiple = $data -> {rows} > 1 ? "multiple size=$$data{rows}" : '';
 
