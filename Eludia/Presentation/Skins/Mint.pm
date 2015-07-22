@@ -1498,9 +1498,12 @@ EOJS
 		setCursor ();
 EOJS
 
+	$after .= ";$$options{after}" if $options -> {after};
+
 	my $url = &{$_PACKAGE . 'dialog_open'} ({
-		href  => $options -> {href} . '&multi_select=1',
-		after => $after,
+		href   => $options -> {href} . '&multi_select=1',
+		after  => $after,
+		before => $options -> {before},
 	});
 
 	$url =~ s/^javascript://i;
