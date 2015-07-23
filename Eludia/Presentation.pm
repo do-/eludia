@@ -592,7 +592,7 @@ sub adjust_esc {
 		&& !$_REQUEST{__from_table}
 		&& !(ref $data eq HASH && $data -> {fake} > 0)
 	) {
-		$options -> {esc} = create_url (
+		$options -> {esc} ||= create_url (
 			__last_query_string => $_REQUEST {__last_last_query_string},
 			__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 		);
