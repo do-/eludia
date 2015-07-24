@@ -86,6 +86,13 @@ sub page_is_not_needed {
 		$r -> headers_out -> {'DAV'} = '1,2';
 		$r -> headers_out -> {'MS-Author-Via'} = 'DAV';
 		$r -> headers_out -> {'Content-Length'} = '0';
+
+		if ($preconf -> {core_cors}) {
+			$r -> headers_out -> {'Access-Control-Allow-Origin'} = $preconf -> {core_cors};
+			$r -> headers_out -> {'Access-Control-Allow-Credentials'} = 'true';
+			$r -> headers_out -> {'Access-Control-Allow-Headers'} = 'Origin, X-Requested-With, Content-Type, Accept, Cookie';
+		}
+
 		send_http_header ();
 		$_REQUEST {__response_sent} = 1;
 
