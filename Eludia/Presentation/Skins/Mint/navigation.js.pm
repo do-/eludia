@@ -2398,13 +2398,11 @@ function init_page (options) {
 
 			table_containers.each (function() {
 				var that = this;
-				var table_url = '/?' + options.table_url + '&__only_table=' + that.id;
-				table_url = table_url + '&__table_cnt=' + table_containers.length;
 
 				new supertable({
-					tableUrl: table_url,
-					initial_data : tables_data [that.id],
-					el: $(that),
+					tableUrl        : '/?' + tables_data [that.id]['table_url'] + '&__only_table=' + that.id + '&__table_cnt=' + table_containers.length,
+					initial_data    : tables_data [that.id],
+					el              : $(that),
 					containerRender : function(model) {
 						$(that).find('tr[data-menu],td[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);

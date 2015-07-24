@@ -338,6 +338,8 @@ sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
 
 	$_QUERY = undef;
 
+	delete $_REQUEST {action};
+
 	my $page = setup_page ();
 
 	$page -> {no_adjust_last_query_string} = 1;

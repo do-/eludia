@@ -31,9 +31,10 @@ sub is_ua_mobile {
 sub options {
 
 	return {
-		core_unblock_navigation => $preconf -> {core_unblock_navigation},
-		static_path             => '/i/mint/',
-		skip_menu_ajusting      => 1,
+		core_unblock_navigation      => $preconf -> {core_unblock_navigation},
+		static_path                  => '/i/mint/',
+		skip_menu_ajusting           => 1,
+		table_columns_order_editable => 1,
 	};
 
 }
@@ -2980,6 +2981,7 @@ sub draw_super_table__only_table {
 			rows    => 0,
 		},
 		script      => $_REQUEST {__only_table} ? $_REQUEST {__script} . ';' . $_REQUEST {__on_load} : '',
+		table_url   => $_SKIN -> table_url () . ($options -> {is_not_first_table_on_page} ? '&is_not_first_table_on_page=1' : ''),
 	};
 
 	return $_JSON -> encode ($table);
@@ -3245,7 +3247,6 @@ sub draw_page {
 	} . $_REQUEST {__head_links};
 
 	my $init_page_options = {
-		table_url              => $_SKIN -> table_url (),
 		__scrollable_table_row => $_REQUEST {__scrollable_table_row} ||= 0,
 		focus                  => !$_REQUEST {__no_focus},
 		__focused_input        => $_REQUEST {__focused_input},

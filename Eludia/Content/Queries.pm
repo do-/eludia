@@ -8,6 +8,9 @@ sub setup_page_content {
 	delete $_REQUEST {__the_table};
 
 	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
+# Call it unless content function does'nt called order () or sql ()
+	check___query ()
+		unless $_QUERY;
 
 	$_REQUEST {__allow_check___query} = 0;
 
@@ -30,10 +33,10 @@ sub setup_page_content {
 	$_REQUEST {id___query} ||= sql_select_id (
 
 		$conf -> {systables} -> {__queries} => {
-			id_user     => $_USER -> {id},
-			type        => $_REQUEST {type},
-			label       => '',
-			order_context		=> $_REQUEST {__order_context} || '',
+			id_user       => $_USER -> {id},
+			type          => $_REQUEST {type},
+			label         => '',
+			order_context => $_REQUEST {__order_context} || '',
 		}, ['id_user', 'type', 'label', 'order_context'],
 
 	);
@@ -62,21 +65,23 @@ sub setup_page_content {
 
 sub fix___query {
 
+	my ($id_table) = @_;
+
 	$conf -> {core_store_table_order} or return;
 
 	$_REQUEST {__order_context} ||= '';
 
-	@_ORDER > 0 or return;
+	@_COLUMNS > 0 or return;
 
 	if ($_REQUEST {id___query}) {
 
-		my $is_there_some_order;
+		delete $_QUERY -> {content} -> {columns};
 
-		foreach my $o (@_ORDER) {
+		foreach my $o (@_COLUMNS) {
 
 			next unless ($o -> {order} || $o -> {no_order});
 
-			$is_there_some_order ||= $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {ord};
+			$_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {ord} = $o -> {ord};
 
 			foreach my $filter (@{$o -> {filters}}) {
 
@@ -86,7 +91,7 @@ sub fix___query {
 
 		}
 
-		$is_there_some_order or return;
+		keys %{$_QUERY -> {content} -> {columns}} or return;
 
 		my $id___query = $_REQUEST {id___query};
 
@@ -94,27 +99,27 @@ sub fix___query {
 
 			$conf -> {systables} -> {__queries} => {
 
-				fake		=> 0,
-				id_user		=> $_USER -> {id},
-				type		=> $_REQUEST {type},
-				-dump		=> Dumper ($_QUERY -> {content}),
-				label		=> '',
-				order_context	=> $_REQUEST {__order_context},
+				fake          => 0,
+				id_user       => $_USER -> {id},
+				type          => $_REQUEST {type},
+				-dump         => Dumper ($_QUERY -> {content}),
+				label         => '',
+				order_context => $_REQUEST {__order_context},
+				id_table      => $id_table,
 
-			}, ['id_user', 'type', 'label', 'order_context'],
+			}, [qw (id_user type label order_context id_table)],
 
 		);
 
 		!$id___query or $_REQUEST {id___query} == $id___query or sql_do ("UPDATE $conf->{systables}->{__queries} SET parent = ? WHERE id = ?", $id___query, $_REQUEST {id___query});
 
-	}
-	else {
+	} else {
 
 		my $content = {filters => {}, columns => {}};
 
 		my %n;
 
-		foreach my $o (@_ORDER) {
+		foreach my $o (@_COLUMNS) {
 
 			next unless ($o -> {order} || $o -> {no_order} || $o -> {parent} -> {order} || $o -> {parent} -> {no_order});
 
@@ -133,14 +138,15 @@ sub fix___query {
 
 			$conf -> {systables} -> {__queries} => {
 
-				fake        => 0,
-				id_user     => $_USER -> {id},
-				type        => $_REQUEST {type},
-				-dump       => Dumper ($content),
-				label       => '',
-				order_context		=> $_REQUEST {__order_context},
+				fake          => 0,
+				id_user       => $_USER -> {id},
+				type          => $_REQUEST {type},
+				-dump         => Dumper ($content),
+				label         => '',
+				order_context => $_REQUEST {__order_context},
+				id_table      => $id_table,
 
-			}, ['id_user', 'type', 'label', 'order_context'],
+			}, [qw (id_user type label order_context id_table)],
 
 		);
 
@@ -152,12 +158,14 @@ sub fix___query {
 
 sub check___query {
 
+	my ($id_table) = @_;
+
 	return if $_QUERY;
 
 	$_REQUEST {__allow_check___query} or return;
 
 	$conf -> {core_store_table_order} or return;
-
+# Don't setup wrong $_REQUEST {__the_table} in sql_select_hash
 	local $_REQUEST {__the_table} = $_REQUEST {__the_table};
 
 	$_REQUEST {__order_context} ||= '';
@@ -174,9 +182,9 @@ sub check___query {
 	else {
 
 		if ($SQL_VERSION -> {driver} eq 'Oracle') {
-			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label IS NULL AND id_user = ? AND type = ? AND order_context" . ($_REQUEST {__order_context} ? ' = ?' : ' IS NULL'), $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context} || ());
+			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label IS NULL AND id_user = ? AND type = ? AND order_context" . ($_REQUEST {__order_context} ? ' = ?' : ' IS NULL') . ($id_table ? ' AND id_table = ?' : ' AND id_table IS NULL'), $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context} || (), $id_table || ());
 		} else {
-			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?", $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context});
+			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?" . ($id_table ? ' AND id_table = ?' : ' AND id_table IS NULL'), $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context}, $id_table || ());
 		}
 
 	}
@@ -209,18 +217,13 @@ sub check___query {
 
 		);
 
-	}
+		$_QUERY -> {parent_label}  = delete $_QUERY -> {label};
+		$_QUERY -> {id_user}       = $_USER -> {id};
+		$_QUERY -> {order_context} = $_REQUEST {__order_context};
+		$_QUERY -> {fake}          = 0;
 
-	$_QUERY = sql_select_hash (<<EOS, $_REQUEST {id___query});
-		SELECT
-			q.*
-			, p.label AS parent_label
-		FROM
-			$conf->{systables}->{__queries} AS q
-			LEFT JOIN $conf->{systables}->{__queries} AS p ON q.parent = p.id
-		WHERE
-			q.id = ?
-EOS
+
+	}
 
 	my $VAR1;
 
@@ -477,20 +480,20 @@ sub draw_item_of___queries {
 	my $cells_cnt = [];
 	my $composite_columns_cnt = -1;
 
-	for (my $i = 0; $i < @_ORDER; $i++) {
+	for (my $i = 0; $i < @_COLUMNS; $i++) {
 
-		my $o = $_ORDER [$i];
+		my $o = $_COLUMNS [$i];
 
 		$o -> {order} ||= $o -> {no_order};
 
 		next unless ($o -> {order} || $o -> {no_order});
 
 		next
-			if $o -> {__hidden} || $o -> {hidden};
+			if $o -> {__hidden};
 
-		if ($_ORDER [$i - 1] -> {colspan}) {
+		if ($_COLUMNS [$i - 1] -> {colspan}) {
 
-			push @$cells_cnt, $_ORDER [$i - 1] -> {colspan};
+			push @$cells_cnt, $_COLUMNS [$i - 1] -> {colspan};
 
 			if ($cells_cnt -> [$composite_columns_cnt + 1]) {
 
@@ -546,14 +549,14 @@ sub draw_item_of___queries {
 							label => $i18n -> {column_order},
 							size  => 2,
 							name  => $o -> {order} . '_ord',
-							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord},
+							value => $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {ord},
 							off   => $o -> {no_column},
 						},
 						{
 							label => $i18n -> {sorting},
 							size  => 2,
 							name  => $o -> {order} . '_sort',
-							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {sort},
+							value => $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {sort},
 							off   => $o -> {no_column} || $o -> {no_order},
 						},
 						{
@@ -561,7 +564,7 @@ sub draw_item_of___queries {
 							type  => 'select',
 							values => [{id => 1, label => $i18n -> {descending}}],
 							empty => $i18n -> {ascending},
-							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {desc},
+							value => $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {desc},
 							off   => $o -> {no_column} || $o -> {no_order},
 						},
 						{
