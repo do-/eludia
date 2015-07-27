@@ -168,7 +168,7 @@ sub check___query {
 # Don't setup wrong $_REQUEST {__the_table} in sql_select_hash
 	local $_REQUEST {__the_table} = $_REQUEST {__the_table};
 
-	$_REQUEST {__order_context} ||= '';
+	$_REQUEST {__order_context} ||= $_REQUEST {id} ? 'id' : '';
 
 	if ($_REQUEST {id___query} == -1) {
 

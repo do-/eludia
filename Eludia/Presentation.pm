@@ -1539,7 +1539,7 @@ sub draw_cells {
 
 	if ($conf -> {core_store_table_order} && !$_REQUEST {__no_order}) {
 
-		for (my $i = 0; $i < @_COLUMNS; $i ++) {
+		for (my $i = 0; $i < @_COLUMNS && $i < @$row; $i ++) {
 
 			next
 				if $_COLUMNS [$i] -> {children};
@@ -1865,7 +1865,7 @@ sub get_composite_table_headers {
 
 	if ($cnt == 0 && $colspan > 0) {
 		return {
-			headers => [map {{label => ''}} (1 .. $colspan)],
+			headers => [map {my $id = get_super_table_cell_id ({}); {label => '', id => $id, no_order => $id}} (1 .. $colspan)],
 		}
 	}
 
