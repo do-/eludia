@@ -2044,7 +2044,7 @@ sub set_body_table_cells_ord {
 
 	foreach my $cell (@$sorted_header_row) {
 		if ($cell -> {children}) {
-			set_body_table_cells_ord ($cell -> {children}, $showing_ord);
+			set_body_table_cells_ord ($cell -> {children});
 		} else {
 			$COLUMNS_BY_ORDER {$cell -> {ord_source_code}} ||= $showing_ord ++;
 		}
