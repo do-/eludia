@@ -485,7 +485,7 @@ sub draw_form_field_string {
 	my $attributes = $options -> {attributes};
 
 	$attributes -> {onKeyPress} .= ';if (event.keyCode != 27) is_dirty=true;';
-	$attributes -> {onFocus}    .= ';stibqif (true);';
+	$attributes -> {onFocus}    .= ';stibqif (true, false);';
 	$attributes -> {onBlur}     .= ';stibqif (false);';
 
 	$attributes -> {class}      .= ' k-textbox ';
@@ -611,7 +611,7 @@ EOH
 				name="_$$options{name}"
 				size=$$options{size}
 				$attributes
-				onFocus="stibqif (true);"
+				onFocus="stibqif (true, false);"
 				onBlur="stibqif (false);"
 				onChange="is_dirty=true; $$options{onChange}"
 				onKeyDown="if (event.keyCode != 9) return false;"
@@ -735,7 +735,7 @@ sub draw_form_field_text {
 	return <<EOH;
 		<textarea
 			$attributes
-			onFocus="stibqif (true);"
+			onFocus="stibqif (true, false);"
 			onBlur="stibqif (false);"
 			rows=$$options{rows}
 			cols=$$options{cols}
@@ -756,7 +756,7 @@ sub draw_form_field_password {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onFocus="stibqif (true)" onBlur="stibqif (false)">};
+	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onFocus="stibqif (true, false)" onBlur="stibqif (false)">};
 }
 
 ################################################################################
@@ -873,7 +873,7 @@ sub draw_form_field_radio {
 		$a -> {name}       = '_' . $options -> {name};
 		$a -> {value}      = $value -> {id};
 		$a -> {id}         = ''  . $value;
-		$a -> {onFocus}   .= ";stibqif (true)";
+		$a -> {onFocus}   .= ";stibqif (true, false)";
 		$a -> {onBlur}    .= ";stibqif (true)";
 		$a -> {onClick}   .= $value -> {onclick} . ";is_dirty=true";
 		$a -> {onClick}   .= ";$options->{refresh_name}()" if $options -> {refresh_name};
@@ -1003,8 +1003,8 @@ sub draw_form_field_combo {
 
 	$options->{max_len} ||= 0;
 
-	$options -> {attributes} -> {onFocus}   .= ";stibqif (true,true)";
-	$options -> {attributes} -> {onBlur}    .= ";stibqif (true,false)";
+	$options -> {attributes} -> {onFocus}   .= ";stibqif (true,false)";
+	$options -> {attributes} -> {onBlur}    .= ";stibqif (false)";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -1097,7 +1097,7 @@ sub draw_form_field_string_voc {
 
 	$options -> {attributes} -> {onKeyPress} .= qq[;if (event.keyCode != 27) {is_dirty=true;document.getElementById('${options}_id').value = 0; }];
 	$options -> {attributes} -> {onKeyDown}  .= qq[;if (event.keyCode == 8 || event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; ];
-	$options -> {attributes} -> {onFocus}    .= ';stibqif (true);';
+	$options -> {attributes} -> {onFocus}    .= ';stibqif (true, false);';
 	$options -> {attributes} -> {onBlur}     .= ';stibqif (false);';
 	$options -> {attributes} -> {onChange}   .= 'is_dirty=true;' . ( $options->{onChange} ? $options->{onChange} . ' try { event.cancelBubble = false } catch (e) {} try { event.returnValue = true } catch (e) {}': '');
 
