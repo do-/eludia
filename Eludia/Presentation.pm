@@ -2093,7 +2093,7 @@ sub draw_table {
 
 	$options -> {headers} = $headers;
 
-	my $is_table_columns_order_editable = $_SKIN -> {options} -> {table_columns_order_editable};
+	my $is_table_columns_order_editable = $options -> {custom__edit_query} || $_SKIN -> {options} -> {table_columns_order_editable};
 	foreach my $top_toolbar_field (@{$options -> {top_toolbar}}) {
 
 		last

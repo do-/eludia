@@ -7,6 +7,10 @@ sub setup_page_content {
 	$_REQUEST {__allow_check___query} = 1;
 	delete $_REQUEST {__the_table};
 
+	our @_COLUMNS = ();
+	our %_ORDER = ();
+	our $_QUERY = undef;
+
 	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
 # Call it unless content function does'nt called order () or sql ()
 	check___query ()
