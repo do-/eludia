@@ -271,7 +271,7 @@ function dialog_open (options) {
 
 	setCursor ();
 
-	return result;
+	return void (0);
 }
 
 
