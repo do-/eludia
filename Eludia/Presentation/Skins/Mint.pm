@@ -4051,8 +4051,8 @@ sub __adjust_row_cell_style {
 
 	unless ($a -> {style}) {
 
-		if ($data -> {bgcolor} || $options -> {bgcolor}) {
-			$a -> {style} = "background-color: " . ($data -> {bgcolor} || $options -> {bgcolor});
+		if ($data -> {bgcolor} || $data -> {attributes} -> {bgcolor} || $options -> {bgcolor}) {
+			$a -> {style} = "background-color: " . ($data -> {bgcolor} || $data -> {attributes} -> {bgcolor} || $options -> {bgcolor});
 		} else {
 			delete $a -> {style};
 		}
