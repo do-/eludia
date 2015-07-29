@@ -79,13 +79,20 @@ sub fix___query {
 
 	if ($_REQUEST {id___query}) {
 
-		delete $_QUERY -> {content} -> {columns};
+		my $columns = delete $_QUERY -> {content} -> {columns};
 
 		foreach my $o (@_COLUMNS) {
 
 			next unless ($o -> {order} || $o -> {no_order});
 
-			$_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {ord} = $o -> {ord};
+			$_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} = {
+				ord    => $o -> {ord},
+				id     => $columns -> {$o -> {order} || $o -> {no_order}} -> {id},
+				width  => $columns -> {$o -> {order} || $o -> {no_order}} -> {width},
+				height => $columns -> {$o -> {order} || $o -> {no_order}} -> {height},
+				sort   => $columns -> {$o -> {order} || $o -> {no_order}} -> {sort},
+				desc   => $columns -> {$o -> {order} || $o -> {no_order}} -> {desc},
+			} ;
 
 			foreach my $filter (@{$o -> {filters}}) {
 

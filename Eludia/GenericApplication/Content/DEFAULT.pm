@@ -283,15 +283,34 @@ sub do_undelete_DEFAULT { # восстановление
 
 ################################################################################
 
-sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
+sub _do_update_dimensions_DEFAULT { # сохранение ширин колонок
 
-	my $columns = $_JSON -> decode ($_REQUEST {columns});
+	my ($columns) = @_;
 
 	foreach my $column (@$columns) {
 
 		$column -> {id_query} = $_REQUEST {id___query};
+
+		if (@{$column -> {group}}) {
+			_do_update_dimensions_DEFAULT ($column -> {group});
+			delete $column -> {group};
+		}
+
 		set_column_props ($column);
+
 	}
+
+
+}
+
+################################################################################
+
+sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
+
+	my $columns = $_JSON -> decode ($_REQUEST {columns});
+
+	_do_update_dimensions_DEFAULT ($columns);
+
 	my $query = sql_select_hash ("SELECT parent, dump FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
 	if ($query -> {parent}) {
 		sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ? AND id_user = ?", $query -> {dump}, $query -> {parent}, $_USER -> {id});
@@ -302,11 +321,9 @@ sub do_update_dimensions_DEFAULT { # сохранение ширин колонок
 
 ################################################################################
 
-sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
+sub _do_update_columns_DEFAULT { # сохранение ширин колонок
 
-	setup_json ();
-
-	my $columns = $_JSON -> decode ($_REQUEST {columns});
+	my ($columns) = @_;
 
 	my $ord = 1;
 	foreach my $column (@$columns) {
@@ -327,8 +344,25 @@ sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
 			$column -> {width}  ? (width  => $column -> {width})  : (),
 			$column -> {height} ? (height => $column -> {height}) : (),
 		});
+
+		if (@{$column -> {group}}) {
+			_do_update_columns_DEFAULT ($column -> {group});
+		}
+
 		$ord++;
 	}
+
+}
+
+################################################################################
+
+sub do_update_columns_DEFAULT { # переставили колонки, поменяли сортировку
+
+	setup_json ();
+
+	my $columns = $_JSON -> decode ($_REQUEST {columns});
+
+	_do_update_columns_DEFAULT ($columns);
 
 	my ($parent, $dump) = sql_select_array ("SELECT parent, dump FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query} || 0);
 

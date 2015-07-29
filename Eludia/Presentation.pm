@@ -1539,16 +1539,20 @@ sub draw_cells {
 
 	if ($conf -> {core_store_table_order} && !$_REQUEST {__no_order}) {
 
-		for (my $i = 0; $i < @_COLUMNS && $i < @$row; $i ++) {
+		my $j = 0;
+
+		for (my $i = 0; $i < @_COLUMNS && $j < @$row; $i ++) {
 
 			next
 				if $_COLUMNS [$i] -> {children};
 
-			$row -> [$i] = {label => $row -> [$i]} unless ref $row -> [$i] eq HASH;
+			$row -> [$j] = {label => $row -> [$j]} unless ref $row -> [$j] eq HASH;
 
-			$row -> [$i] -> {ord} ||= $COLUMNS_BY_ORDER {$i};
+			$row -> [$j] -> {ord} ||= $COLUMNS_BY_ORDER {$j};
 
-			$row -> [$i] -> {hidden} ||= $_COLUMNS [$i] -> {hidden};
+			$row -> [$j] -> {hidden} ||= $_COLUMNS [$i] -> {hidden};
+
+			$j ++;
 
 		}
 
@@ -1760,7 +1764,7 @@ sub order_cells {
 		push @result, $cell;
 	}
 
-	return @result if 0 == %ord;
+	return @result if $_REQUEST {__no_order} || 0 == %ord;
 
 	my $n = 1;
 
@@ -1863,7 +1867,7 @@ sub get_composite_table_headers {
 	my $cnt = @{$headers -> [$i]};
 	$options -> {level_indexes} -> [$i] ||= 0;
 
-	if ($cnt == 0 && $colspan > 0) {
+	if ($cnt == 0 && $colspan > 0 && $colspan != 65535) {
 		return {
 			headers => [map {my $id = get_super_table_cell_id ({}); {label => '', id => $id, no_order => $id}} (1 .. $colspan)],
 		}
@@ -1885,8 +1889,7 @@ sub get_composite_table_headers {
 			});
 
 			for (my $k = 0; $k < @{$result -> {headers}}; $k++) {
-
-				$result -> {headers} -> [$k] -> {parent} = $headers -> [$i] -> [$j];
+				$result -> {headers} -> [$k] -> {parent} ||= $headers -> [$i] -> [$j];
 				push @{$headers -> [$i] -> [$j] -> {children}}, $result -> {headers} -> [$k];
 				$headers -> [$i] -> [$j] -> {has_child} ++;
 
@@ -1899,7 +1902,7 @@ sub get_composite_table_headers {
 
 	}
 
-	return {headers => $result_headers, count => ($j - $f)};
+	return {headers => $result_headers};
 
 }
 
@@ -1957,15 +1960,20 @@ sub _load_super_table_dimensions {
 	my $max_fixed_cols_cnt = 0;
 
 	ref $headers -> [0] eq ARRAY or $headers = [$headers];
+# Duplicate header to fix programmer's bug: use same hash to describe multiple header cells
+	my $header_copy = [];
 
-	foreach my $row (@$headers) {
+	for (my $i = 0; $i < @$headers; $i ++) {
 
+		my $row = $headers -> [$i];
 		my $fixed_cols_cnt = 0;
 
-		for (my $i = 0; $i < @$row; $i ++) {
+		for (my $j = 0; $j < @$row; $j ++) {
 
-			ref $row -> [$i] eq HASH or $row -> [$i] = {label => $row -> [$i]};
-			my $cell = $row -> [$i];
+			ref $row -> [$j] eq HASH or $row -> [$j] = {label => $row -> [$j]};
+			my $cell = {%{$row -> [$j]}};
+
+			push @{$header_copy -> [$i]}, $cell;
 
 			$fixed_cols_cnt ++ if $cell -> {no_scroll};
 
@@ -1979,10 +1987,22 @@ sub _load_super_table_dimensions {
 
 			$cell -> {width} = $cell_dimensions -> {width};
 			$cell -> {height} = $cell_dimensions -> {height};
+			$cell -> {sort}   = $cell -> {order} && (
+				$_REQUEST {order} eq $cell -> {order}
+				|| !$_REQUEST {order} && $column_dimensions -> {$cell -> {id}} -> {sort}
+			);
+			if ($cell -> {sort} && $_REQUEST {order} eq $cell -> {order}) {
+				$cell -> {$_REQUEST {desc} ? 'desc' : 'asc'} = 1;
+			} elsif ($cell -> {sort}) {
+				$cell -> {$column_dimensions -> {$cell -> {id}} -> {desc} ? 'desc' : 'asc'} = 1;
+			}
+
 		}
 
 		$fixed_cols_cnt <= $max_fixed_cols_cnt or $max_fixed_cols_cnt = $fixed_cols_cnt;
 	}
+
+	@{$headers} = @{$header_copy};
 
 	$options -> {__fixed_cols} ||= $max_fixed_cols_cnt;
 }
@@ -2043,8 +2063,9 @@ sub set_body_table_cells_ord {
 	my $sorted_header_row = [sort {$a -> {ord} <=> $b -> {ord}} @$header_row];
 
 	foreach my $cell (@$sorted_header_row) {
+
 		if ($cell -> {children}) {
-			set_body_table_cells_ord ($cell -> {children});
+			set_body_table_cells_ord ([grep {$_ -> {parent} eq $cell} @{$cell -> {children}}]);
 		} else {
 			$COLUMNS_BY_ORDER {$cell -> {ord_source_code}} ||= $showing_ord ++;
 		}
@@ -2093,13 +2114,14 @@ sub draw_table {
 
 	$options -> {headers} = $headers;
 
-	my $is_table_columns_order_editable = $options -> {custom__edit_query} || $_SKIN -> {options} -> {table_columns_order_editable};
+	my $is_table_columns_order_editable = $_SKIN -> {options} -> {table_columns_order_editable};
+	my $is_table_columns_showing_editable = $options -> {custom__edit_query};
 	foreach my $top_toolbar_field (@{$options -> {top_toolbar}}) {
 
 		last
-			if $is_table_columns_order_editable;
+			if $is_table_columns_showing_editable;
 
-		$is_table_columns_order_editable ||= ref $top_toolbar_field eq HASH
+		$is_table_columns_showing_editable ||= ref $top_toolbar_field eq HASH
 			&& exists $top_toolbar_field -> {href}
 			&& (
 				ref $top_toolbar_field -> {href} eq HASH && $top_toolbar_field -> {href} -> {__edit_query} == 1
@@ -2119,8 +2141,20 @@ sub draw_table {
 		$_REQUEST {__allow_check___query} = 0;
 	}
 
-	$options -> {no_order} = !$is_table_columns_order_editable
+	$options -> {no_order} = !($is_table_columns_order_editable || $is_table_columns_showing_editable)
 		unless exists $options -> {no_order};
+
+# Check broken $_QUERY -> {content} -> {columns} because of application code modification
+	if ($is_table_columns_order_editable && !$is_table_columns_showing_editable) {
+		foreach my $column (keys %{$_QUERY -> {content} -> {columns}}) {
+			if (!$_QUERY -> {content} -> {columns} -> {$column} -> {ord}) {
+				$options -> {no_order} = 1;
+				delete $_REQUEST {id___query};
+				$_QUERY = undef;
+				last;
+			}
+		}
+	}
 
 	if ($options -> {no_order}) {
 		$_REQUEST {__no_order} = 1;
@@ -2166,7 +2200,10 @@ sub draw_table {
 			$h -> {__hidden} = $h -> {hidden};
 
 			$h -> {hidden}   = 1
-				if $h -> {ord} == 0 || defined $h -> {parent} && defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0;
+				if $is_table_columns_showing_editable && (
+					$h -> {ord} == 0
+					|| defined $h -> {parent} && defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0
+				);
 		}
 
 		$h -> {filters} = [];

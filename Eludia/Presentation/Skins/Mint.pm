@@ -2812,6 +2812,38 @@ sub draw_table_header_cell {
 
 ####################################################################
 
+sub rebuild_supertable_columns {
+
+	my ($headers) = @_;
+
+	my $result;
+
+	foreach $cell (@$headers) {
+		unless ($processed_cells {$cell}) {
+			my $group = rebuild_supertable_columns ($cell -> {children} || []);
+			push @$result, {
+				id => $cell -> {id},
+				sort => $cell -> {sort},
+				asc => $cell -> {asc},
+				desc => $cell -> {desc},
+			};
+			$result -> [-1] -> {group} = $group
+				if @$group;
+			$result -> [-1] -> {width} = $cell -> {width}
+				if $cell -> {width};
+			$is_set_all_headers_width = 0
+				unless $cell -> {width};
+
+			$processed_cells {$cell} = 1;
+		};
+	};
+
+	return $result;
+
+}
+
+####################################################################
+
 sub draw_super_table__only_table {
 
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
@@ -2834,7 +2866,6 @@ sub draw_super_table__only_table {
 		my $tr_cnt = 0;
 
 		foreach my $tr (@{$i -> {__trs}}) {
-
 
 			my $attributes = {};
 
@@ -2870,100 +2901,9 @@ sub draw_super_table__only_table {
 
 	$html .= '</tbody></table>';
 
-	my $columns = [];
-
-	my $header_rows = $options -> {headers};
-
-	ref $header_rows -> [0] eq ARRAY or $header_rows = [$header_rows];
-
-	my $matrix;
-
-	for (my $row = 0; $row < @$header_rows; $row ++) {
-		foreach my $cell (@{$header_rows -> [$row]}) {
-			my $col = @{$matrix -> [$row]};
-			$cell -> {id} ||= "coord_$row_$col";
-			my $cell_cnt_to_insert = $cell -> {colspan} || 1;
-			for (my $i = 0; $i < $col && $cell_cnt_to_insert > 0; $i ++) {
-				if (!defined ($matrix -> [$row] -> [$i])) {
-					$matrix -> [$row] -> [$i] = $cell;
-					$cell_cnt_to_insert --;
-				}
-			}
-			push @{$matrix -> [$row]}, ($cell) x $cell_cnt_to_insert
-				if $cell_cnt_to_insert > 0;
-			for (my $rowspan = 1; $rowspan < $cell -> {rowspan}; $rowspan ++) {
-				$matrix -> [$row + $rowspan] -> [$col + rowspan] = $cell;
-			}
-		}
-	}
-
-	for (my $row = 1; $row < @$matrix; $row ++) {
-		for (my $col = 0; $col < @{$matrix -> [$row]}; $col ++) {
-			my $cell = $matrix -> [$row] -> [$col];
-
-
-			my $parent = $matrix -> [$row - 1] -> [$col];
-			unless ($cell -> {id} eq $parent -> {id}) {
-				$cell -> {parent} = $parent;
-			}
-
-		}
-	}
-
-	my $is_set_all_headers_width  = 1;
-
-	local $settings = exists $_QUERY -> {content} -> {columns}? $_QUERY -> {content} -> {columns} : {};
-
-	my $_adjust_cell_hash = sub {
-
-		my ($column) = @_;
-
-		$column -> {id} = $column -> {order} || $column -> {no_order} || $column -> {id},
-
-		$column -> {sortable} = $column -> {order} && (
-			$_REQUEST {order} eq $column -> {id}
-			|| !$_REQUEST {order} && $settings -> {$column -> {id}} -> {sort}
-		);
-
-		my $sort_direction = $settings -> {$column -> {id}} -> {desc} ? "desc" : "asc";
-
-		my $width = $settings -> {$column -> {id}} -> {width} || undef;
-
-		return {
-			id                                       => $column -> {id},
-			($width ? (width                         => $width) : ()),
-			($column -> {sortable}? (sort            => "1") : ()),
-			($column -> {sortable}? ($sort_direction => "1") : ()),
-			($column -> {group} ? (group             => $column -> {group}) : ()),
-		}
-
-	};
-
-
-	for (my $row = 0; $row < @$matrix - 1; $row ++) {
-		for (my $col = 0; $col < @{$matrix -> [$row]}; $col ++) {
-			my $cell = $matrix -> [$row] -> [$col];
-			foreach my $child (@{$matrix -> [$row + 1]}) {
-				if ($child -> {parent} -> {id} eq $cell -> {id} && !grep {$child -> {id} eq $_ -> {id}} @{$cell -> {group}}) {
-					push @{$cell -> {group}}, $_adjust_cell_hash -> ($child);
-					$is_set_all_headers_width = 0
-						unless $child -> {width};
-				}
-			}
-		}
-	}
-
-	foreach my $cell (@{$matrix -> [0]}) {
-		if (!grep {$cell -> {id} eq $_ -> {id}} @$columns) {
-			push @$columns, $_adjust_cell_hash -> ($cell);
-			$is_set_all_headers_width = 0
-				unless $cell -> {width};
-		}
-	}
-
-	$is_set_all_headers_width = 0
-		unless @{$matrix -> [0]};
-
+	local %processed_cells = ();
+	local $is_set_all_headers_width = 1;
+	my $columns = rebuild_supertable_columns (\@{$_PACKAGE . '_COLUMNS'});
 
 	my $table = {
 		id          => $options -> {id_table},
