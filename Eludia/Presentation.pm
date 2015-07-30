@@ -1898,7 +1898,14 @@ sub get_composite_table_headers {
 
 		}
 
-		$colspan -= $headers -> [$i] -> [$j] -> {colspan} || 1;
+		$colspan -= $headers -> [$i] -> [$j] -> {colspan} || 1
+			unless $headers -> [$i] -> [$j] -> {hidden};
+
+# Get all tail children with hidden == 1
+		if ($colspan == 0 && $options -> {level_indexes} -> [$i] + 1 < $cnt && $headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {hidden}) {
+			$colspan ++;
+		}
+
 
 	}
 
@@ -2143,7 +2150,6 @@ sub draw_table {
 
 	$options -> {no_order} = !($is_table_columns_order_editable || $is_table_columns_showing_editable)
 		unless exists $options -> {no_order};
-
 # Check broken $_QUERY -> {content} -> {columns} because of application code modification
 	if ($is_table_columns_order_editable && !$is_table_columns_showing_editable) {
 		foreach my $column (keys %{$_QUERY -> {content} -> {columns}}) {

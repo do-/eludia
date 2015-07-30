@@ -2832,7 +2832,7 @@ sub rebuild_supertable_columns {
 			$result -> [-1] -> {width} = $cell -> {width}
 				if $cell -> {width};
 			$is_set_all_headers_width = 0
-				unless $cell -> {width};
+				unless $cell -> {width} || $cell -> {hidden};
 
 			$processed_cells {$cell} = 1;
 		};

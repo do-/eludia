@@ -135,7 +135,11 @@ sub fix___query {
 			next unless ($o -> {order} || $o -> {no_order} || $o -> {parent} -> {order} || $o -> {parent} -> {no_order});
 
 			my $parent = exists $o -> {parent} ? ($o -> {parent} -> {order} || $o -> {parent} -> {no_order}) : '';
-			$content -> {columns} -> {$o -> {order} || $o -> {no_order}} = {ord => ++ $n {$parent}};
+			$content -> {columns} -> {$o -> {order} || $o -> {no_order}} = {
+				ord    => ++ $n {$parent},
+				width  => $o -> {width},
+				height => $o -> {height},
+			};
 
 			foreach my $filter (@{$o -> {filters}}) {
 
