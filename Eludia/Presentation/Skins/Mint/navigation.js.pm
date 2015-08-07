@@ -182,8 +182,6 @@ function dialog_open (options) {
 	if ($.browser.webkit || $.browser.safari)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
 
-	var result;
-
 	if (is_ua_mobile) {
 		$.showModalDialog({
 			url             : url,
