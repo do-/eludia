@@ -152,21 +152,9 @@ sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
 
-	if ($_REQUEST {select}) {
-
-		$_REQUEST {__script} .= <<EOJ;
-			top.document.title = '$$options{label}';
-			top.title_set = 1;
-EOJ
-		return '';
-
-	} else {
-
-		return <<EOH
-			<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="table_title"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
+	return $_REQUEST {select} ? '' : <<EOH;
+		<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="table_title"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
 EOH
-
-	}
 
 }
 
