@@ -1900,10 +1900,21 @@ sub get_composite_table_headers {
 		}
 
 		$colspan -= $headers -> [$i] -> [$j] -> {colspan} || 1
-			unless $headers -> [$i] -> [$j] -> {hidden};
+			if !$headers -> [$i] -> [$j] -> {hidden}
+				|| $headers -> [$i] -> [$j] -> {parent} eq $headers -> [$i - 1] -> [$options -> {level_indexes} -> [$i - 1]] -> {id};
 
-# Get all tail children with hidden == 1
-		if ($colspan == 0 && $options -> {level_indexes} -> [$i] + 1 < $cnt && $headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {hidden}) {
+# Get tail children with hidden == 1
+		if (
+			$colspan == 0
+			&& $options -> {level_indexes} -> [$i] + 1 < $cnt
+			&& $headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {hidden}
+			&& (
+				!$headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {parent}
+				||
+				$headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {parent} eq $headers -> [$i - 1] -> [$options -> {level_indexes} -> [$i - 1]] -> {id}
+			)
+		) {
+
 			$colspan ++;
 		}
 
