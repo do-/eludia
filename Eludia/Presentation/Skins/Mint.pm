@@ -153,21 +153,9 @@ sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
 
-	if ($_REQUEST {select}) {
-
-		$_REQUEST {__script} .= <<EOJ;
-			top.document.title = '$$options{label}';
-			top.title_set = 1;
-EOJ
-		return '';
-
-	} else {
-
-		return <<EOH
-			<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="table_title"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
+	return $_REQUEST {select} ? '' : <<EOH;
+		<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="table_title"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
 EOH
-
-	}
 
 }
 
@@ -486,7 +474,7 @@ sub draw_form_field_string {
 	my $attributes = $options -> {attributes};
 
 	$attributes -> {onKeyPress} .= ';if (event.keyCode != 27) is_dirty=true;';
-	$attributes -> {onFocus}    .= ';stibqif (true);';
+	$attributes -> {onFocus}    .= ';stibqif (true, false);';
 	$attributes -> {onBlur}     .= ';stibqif (false);';
 
 	$attributes -> {class}      .= ' k-textbox ';
@@ -612,7 +600,7 @@ EOH
 				name="_$$options{name}"
 				size=$$options{size}
 				$attributes
-				onFocus="stibqif (true);"
+				onFocus="stibqif (true, false);"
 				onBlur="stibqif (false);"
 				onChange="is_dirty=true; $$options{onChange}"
 				onKeyDown="if (event.keyCode != 9) return false;"
@@ -736,7 +724,7 @@ sub draw_form_field_text {
 	return <<EOH;
 		<textarea
 			$attributes
-			onFocus="stibqif (true);"
+			onFocus="stibqif (true, false);"
 			onBlur="stibqif (false);"
 			rows=$$options{rows}
 			cols=$$options{cols}
@@ -757,7 +745,7 @@ sub draw_form_field_password {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onFocus="stibqif (true)" onBlur="stibqif (false)">};
+	return qq {<input type="password" name="_$$options{name}" size="$$options{size}" onKeyPress="if (event.keyCode != 27) is_dirty=true" $attributes onFocus="stibqif (true, false)" onBlur="stibqif (false)">};
 }
 
 ################################################################################
@@ -874,7 +862,7 @@ sub draw_form_field_radio {
 		$a -> {name}       = '_' . $options -> {name};
 		$a -> {value}      = $value -> {id};
 		$a -> {id}         = ''  . $value;
-		$a -> {onFocus}   .= ";stibqif (true)";
+		$a -> {onFocus}   .= ";stibqif (true, false)";
 		$a -> {onBlur}    .= ";stibqif (true)";
 		$a -> {onClick}   .= $value -> {onclick} . ";is_dirty=true";
 		$a -> {onClick}   .= ";$options->{refresh_name}()" if $options -> {refresh_name};
@@ -931,8 +919,6 @@ sub draw_form_field_select {
 
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
-
-		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
 
 		$options -> {onChange} = <<EOJS;
 
@@ -1004,8 +990,8 @@ sub draw_form_field_combo {
 
 	$options->{max_len} ||= 0;
 
-	$options -> {attributes} -> {onFocus}   .= ";stibqif (true,true)";
-	$options -> {attributes} -> {onBlur}    .= ";stibqif (true,false)";
+	$options -> {attributes} -> {onFocus}   .= ";stibqif (true,false)";
+	$options -> {attributes} -> {onBlur}    .= ";stibqif (false)";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -1098,7 +1084,7 @@ sub draw_form_field_string_voc {
 
 	$options -> {attributes} -> {onKeyPress} .= qq[;if (event.keyCode != 27) {is_dirty=true;document.getElementById('${options}_id').value = 0; }];
 	$options -> {attributes} -> {onKeyDown}  .= qq[;if (event.keyCode == 8 || event.keyCode == 46) {is_dirty=true;document.getElementById('${options}_id').value = 0;}; ];
-	$options -> {attributes} -> {onFocus}    .= ';stibqif (true);';
+	$options -> {attributes} -> {onFocus}    .= ';stibqif (true, false);';
 	$options -> {attributes} -> {onBlur}     .= ';stibqif (false);';
 	$options -> {attributes} -> {onChange}   .= 'is_dirty=true;' . ( $options->{onChange} ? $options->{onChange} . ' try { event.cancelBubble = false } catch (e) {} try { event.returnValue = true } catch (e) {}': '');
 
@@ -1499,9 +1485,12 @@ EOJS
 		setCursor ();
 EOJS
 
+	$after .= ";$$options{after}" if $options -> {after};
+
 	my $url = &{$_PACKAGE . 'dialog_open'} ({
-		href  => $options -> {href} . '&multi_select=1',
-		after => $after,
+		href   => $options -> {href} . '&multi_select=1',
+		after  => $after,
+		before => $options -> {before},
 	});
 
 	$url =~ s/^javascript://i;
@@ -3989,8 +3978,8 @@ sub __adjust_row_cell_style {
 
 	unless ($a -> {style}) {
 
-		if ($data -> {bgcolor} || $options -> {bgcolor}) {
-			$a -> {style} = "background-color: " . ($data -> {bgcolor} || $options -> {bgcolor});
+		if ($data -> {bgcolor} || $data -> {attributes} -> {bgcolor} || $options -> {bgcolor}) {
+			$a -> {style} = "background-color: " . ($data -> {bgcolor} || $data -> {attributes} -> {bgcolor} || $options -> {bgcolor});
 		} else {
 			delete $a -> {style};
 		}

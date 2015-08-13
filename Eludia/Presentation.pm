@@ -514,6 +514,8 @@ sub check_href {
 
 	}
 
+	map { $url .= "&${_}=$_REQUEST{$_}" } grep { $_ =~ /^__select_type_/ } keys %_REQUEST if $_REQUEST {select};
+
 	$options -> {href} = $url;
 
 	return $url;
@@ -592,7 +594,7 @@ sub adjust_esc {
 		&& !$_REQUEST{__from_table}
 		&& !(ref $data eq HASH && $data -> {fake} > 0)
 	) {
-		$options -> {esc} = create_url (
+		$options -> {esc} ||= create_url (
 			__last_query_string => $_REQUEST {__last_last_query_string},
 			__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 		);
@@ -787,9 +789,8 @@ sub draw_form {
 
 	foreach my $key (keys %_REQUEST) {
 
-		$key =~ /^__checkboxes_/ or next;
-
-		push @keep_params, {name => $key, value => $_REQUEST {$key} };
+		push @keep_params, {name => $key, value => $_REQUEST {$key} }
+			if ($_REQUEST {select} && $key =~ /^__select_type_/ || $key =~ /^__checkboxes_/);
 
 	}
 
@@ -1322,7 +1323,7 @@ sub draw_ok_esc_toolbar {
 				label    => $options -> {choose_select_label} || $data -> {label},
 				question => $data -> {question},
 			}),
-			off   => (!$_REQUEST {__read_only} || !$_REQUEST {select}),
+			off   => (!$_REQUEST {__read_only} || !$_REQUEST {select}) || $_REQUEST {"__select_type_" . $_REQUEST {select}} ne $_REQUEST {type},
 		},
 		@{$options -> {additional_buttons}},
 		{
@@ -2806,6 +2807,9 @@ sub draw_page {
 	setup_skin ();
 
 	$_SKIN -> {options} -> {no_presentation} and return $_SKIN -> draw_page ($page);
+
+	$_REQUEST {"__select_type_" . $_REQUEST {select}} = $_REQUEST {type}
+		if ($_REQUEST {select} && !$_REQUEST {"__select_type_" . $_REQUEST {select}} && $_REQUEST {id});
 
 	$_REQUEST {__read_only} = 0 if $_REQUEST {__only_field};
 
