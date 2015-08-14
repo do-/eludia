@@ -1890,7 +1890,7 @@ sub get_composite_table_headers {
 			});
 
 			for (my $k = 0; $k < @{$result -> {headers}}; $k++) {
-				$result -> {headers} -> [$k] -> {parent} ||= $headers -> [$i] -> [$j];
+				$result -> {headers} -> [$k] -> {parent_header} ||= $headers -> [$i] -> [$j];
 				push @{$headers -> [$i] -> [$j] -> {children}}, $result -> {headers} -> [$k];
 				$headers -> [$i] -> [$j] -> {has_child} ++;
 
@@ -2086,7 +2086,7 @@ sub set_body_table_cells_ord {
 		$cell -> {hidden} and next;
 
 		if ($cell -> {children}) {
-			set_body_table_cells_ord ([grep {$_ -> {parent} eq $cell} @{$cell -> {children}}]);
+			set_body_table_cells_ord ([grep {$_ -> {parent_header} eq $cell} @{$cell -> {children}}]);
 		} else {
 			$COLUMNS_BY_ORDER {$cell -> {ord_source_code}} ||= $showing_ord ++;
 		}
@@ -2203,12 +2203,13 @@ sub draw_table {
 
 			if ($column_order -> {ord} == 0) {
 
-				my $p = $h -> {parent};
+				my $p = $h -> {parent_header};
 
 				while ($p -> {label}) {
+
 					$p -> {colspan} --;
 					$p -> {hidden} = 1 if $p -> {colspan} == 0;
-					$p = $p -> {parent};
+					$p = $p -> {parent_header};
 				}
 
 			} else {
@@ -2222,7 +2223,7 @@ sub draw_table {
 			$h -> {hidden}   = 1
 				if $is_table_columns_showing_editable && (
 					$h -> {ord} == 0
-					|| defined $h -> {parent} && defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0
+					|| defined $h -> {parent_header} && defined $h -> {parent_header} -> {ord} && $h -> {parent_header} -> {ord} == 0
 				);
 		}
 
