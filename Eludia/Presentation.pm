@@ -2083,6 +2083,8 @@ sub set_body_table_cells_ord {
 
 	foreach my $cell (@$sorted_header_row) {
 
+		$cell -> {hidden} and next;
+
 		if ($cell -> {children}) {
 			set_body_table_cells_ord ([grep {$_ -> {parent} eq $cell} @{$cell -> {children}}]);
 		} else {
