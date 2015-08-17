@@ -1771,6 +1771,15 @@ sub order_cells {
 
 	for (my $i = 0; $i < @result; $i++) {
 
+		if ($result [$i] -> {parent_header} && $result [$i] -> {parent_header} -> {ord}) {
+
+			$result [$i] -> {ord} = $result [$i] -> {parent_header} -> {ord}
+
+				+ $result [$i] -> {ord} / 1000 + $i / 10000;
+
+			next;
+		}
+
 		if ($result [$i] -> {ord}) {
 
 			$result [$i] -> {ord} += $i / 1000;
