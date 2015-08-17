@@ -132,9 +132,9 @@ sub fix___query {
 
 		foreach my $o (@_COLUMNS) {
 
-			next unless ($o -> {order} || $o -> {no_order} || $o -> {parent} -> {order} || $o -> {parent} -> {no_order});
+			next unless ($o -> {order} || $o -> {no_order} || $o -> {parent_header} -> {order} || $o -> {parent_header} -> {no_order});
 
-			my $parent = exists $o -> {parent} ? ($o -> {parent} -> {order} || $o -> {parent} -> {no_order}) : '';
+			my $parent = exists $o -> {parent_header} ? ($o -> {parent_header} -> {order} || $o -> {parent_header} -> {no_order}) : '';
 			$content -> {columns} -> {$o -> {order} || $o -> {no_order}} = {
 				ord    => ++ $n {$parent},
 				width  => $o -> {width},
@@ -591,8 +591,8 @@ sub draw_item_of___queries {
 						{
 							name  => $o -> {order} . '_parent',
 							type  => 'hidden',
-							value => "_$o->{parent}->{order}_ord",
-							off   => $o -> {no_column} || $o -> {no_order} || !$o -> {mandatory} || !$o->{parent}->{order},
+							value => "_$o->{parent_header}->{order}_ord",
+							off   => $o -> {no_column} || $o -> {no_order} || !$o -> {mandatory} || !$o -> {parent_header} -> {order},
 						},
 						{
 							type  => 'static',
