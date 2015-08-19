@@ -114,12 +114,12 @@ sub check_version_by_git {
 
 	$head =~ /^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/sm or return check_version_by_git_files ();
 
-        return sprintf ("%02d.%02d.%02d.%s",
-        	$4 - 2000,
-        	1 + (index ('JanFebMarAprMayJunJulAugSepOctNovDec', $2) / 3),
-        	$3,
-        	$1,
-        );
+	return sprintf ("%02d.%02d.%02d.%s",
+		$4 - 2000,
+		1 + (index ('JanFebMarAprMayJunJulAugSepOctNovDec', $2) / 3),
+		$3,
+		$1,
+	);
 
 }
 

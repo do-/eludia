@@ -699,9 +699,9 @@ sub call_for_role {
 	$default_sub_name =~ s{_$page_type$}{_DEFAULT};
 
 	my $name_to_call =
-		exists $$_PACKAGE {$full_sub_name}    ? $full_sub_name :
-		exists $$_PACKAGE {$sub_name}         ? $sub_name :
-		exists $$_PACKAGE {$default_sub_name} ? $default_sub_name :
+		defined $$_PACKAGE {$full_sub_name}    ? $full_sub_name :
+		defined $$_PACKAGE {$sub_name}         ? $sub_name :
+		defined $$_PACKAGE {$default_sub_name} ? $default_sub_name :
 		undef;
 
 	if ($name_to_call) {

@@ -46,8 +46,17 @@ sub select__info {
 
 	setup_skin ();
 
-	my $git_path = $^O eq 'MSWin32' ? '"C:\Program Files (x86)\Git\bin\git.exe"' : `which git`;
-	chomp $git_path;
+	my $git_path;
+	if ($^O eq 'MSWin32') {
+		if (-e 'C:\Program Files (x86)\Git\bin\git.exe') {
+			$git_path = '"C:\Program Files (x86)\Git\bin\git.exe"';
+		} else {
+			$git_path = '"C:\Program Files\Git\bin\git.exe"';
+		}
+	} else {
+		$git_path = `which git`;
+		chomp $git_path;
+	}
 
 	my $application_package = "";
 

@@ -182,8 +182,6 @@ function dialog_open (options) {
 	if ($.browser.webkit || $.browser.safari)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
 
-	var result;
-
 	if (is_ua_mobile) {
 		$.showModalDialog({
 			url             : url,
@@ -1994,7 +1992,7 @@ function treeview_oncontextmenu (e) {
 		var href = $(element).attr('href');
 		var url = a[i].url;
 		if (a[i].clipboard_text) {
-			eludia_copy_clipboard (a[i].clipboard_text, element);
+			eludia_copy_clipboard_init (a[i].clipboard_text, element);
 			a[i].target = 'invisible';
 		} else if ( url && /^javascript:/.test(href)){
 			$(element).attr('href', url);
@@ -2145,19 +2143,19 @@ function eludia_is_flash_installed () {
 	return navigator.plugins['Shockwave Flash'];
 }
 
-function eludia_copy_clipboard (text, element) {
+function eludia_copy_clipboard_init (text, element) {
 
 	if (!eludia_is_flash_installed() || !element) {
 
-		$(element).attr('href', 'javascript: window.prompt(\''+ i18n.copy_clipboard + '\', \'' + text + '\')');
+		$(element).attr('href', 'javascript: window.prompt(\''+ i18n.clipboard_help + '\', \'' + text + '\')');
 
 		return;
 	};
 
 	$(element).attr('data-clipboard-text', text);
 
-	require ('/i/_skins/Mint/ZeroClipboard.min.js', function (zero_clipboard) {
-		zero_clipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
+	require (['/i/_skins/Mint/ZeroClipboard.min.js'], function (ZeroClipboard) {
+		ZeroClipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
 
 		var clip = new ZeroClipboard(element);
 
@@ -2573,6 +2571,19 @@ function init_page (options) {
 		$('input[name=svg_text_' + $(this).data('name') + ']').val(chart.svg());
 	});
 
+	if ($('.eludia-clipboard').length) {
+		require (['/i/_skins/Mint/ZeroClipboard.min.js'], function (ZeroClipboard) {
+			ZeroClipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
+
+			var client = new ZeroClipboard($('.eludia-clipboard'));
+
+			client.on('aftercopy', function(event) {
+				alert (i18n.clipboard_copied + ' ' + event.data['text/plain']);
+			});
+		});
+	}
+
+
 	if (top.localStorage && top.localStorage ['message']) {
 		require(['kendo.notification.min'], function() {
 			var notification = $("#notification", top.document).data("kendoNotification");
@@ -2696,3 +2707,7 @@ function debounce (func, wait, immediate) {
 		return result;
 	};
 };
+
+function tabOnEnter () {
+	void (0);
+}

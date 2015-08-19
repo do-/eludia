@@ -483,20 +483,6 @@ sub __adjust_toolbar_btn_vert_menu_item {
 
 			"activate_link('$$type{href}', '$$type{target}')";
 
-		if ($type -> {confirm}) {
-
-			my $condition = 'confirm(' . js_escape ($type -> {confirm}) . ')';
-
-			if ($type -> {preconfirm}) {
-
-				$condition = "!$type->{preconfirm}||($type->{preconfirm}&&$condition)";
-
-			}
-
-			$type -> {onclick} = " if($condition){$type->{onclick}}";
-
-		}
-
 		$type -> {onclick} = "hideSubMenusForToolbarBtn(0);" . $type -> {onclick};
 
 
@@ -678,6 +664,8 @@ sub draw_form_field__only_field {
 
 		if ($field -> {type} eq 'date' || $field -> {type} eq 'datetime') {
 
+			$field -> {no_reload_dirty} += 0;
+
 			$_REQUEST{__on_load} .= " load_$field->{name} (); ";
 
 			$_REQUEST {__script} .= <<EOJS;
@@ -685,6 +673,7 @@ sub draw_form_field__only_field {
 					var doc = window.parent.document;
 					var element = doc.getElementById ('input$field->{name}');
 					if (!element) return;
+					if ($field->{no_reload_dirty} && element.is_dirty) return;
 					element.value = '$field->{value}';
 				}
 EOJS

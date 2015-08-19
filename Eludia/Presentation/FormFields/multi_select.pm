@@ -49,12 +49,13 @@ EOJS
 
 	}
 
-	$after .= "} void (0);";
+	$after .= "};$$options{after}; void (0);";
 
 	my $url = dialog_open ({
 		href  => $options -> {href} . '&multi_select=1',
 		title => $label,
 		after => $after,
+		before => $options -> {before},
 	});
 
 	$url =~ s/^javascript://i;

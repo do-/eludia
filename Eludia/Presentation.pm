@@ -514,6 +514,8 @@ sub check_href {
 
 	}
 
+	map { $url .= "&${_}=$_REQUEST{$_}" } grep { $_ =~ /^__select_type_/ } keys %_REQUEST if $_REQUEST {select};
+
 	$options -> {href} = $url;
 
 	return $url;
@@ -592,7 +594,7 @@ sub adjust_esc {
 		&& !$_REQUEST{__from_table}
 		&& !(ref $data eq HASH && $data -> {fake} > 0)
 	) {
-		$options -> {esc} = create_url (
+		$options -> {esc} ||= create_url (
 			__last_query_string => $_REQUEST {__last_last_query_string},
 			__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 		);
@@ -787,9 +789,8 @@ sub draw_form {
 
 	foreach my $key (keys %_REQUEST) {
 
-		$key =~ /^__checkboxes_/ or next;
-
-		push @keep_params, {name => $key, value => $_REQUEST {$key} };
+		push @keep_params, {name => $key, value => $_REQUEST {$key} }
+			if ($_REQUEST {select} && $key =~ /^__select_type_/ || $key =~ /^__checkboxes_/);
 
 	}
 
@@ -1322,7 +1323,7 @@ sub draw_ok_esc_toolbar {
 				label    => $options -> {choose_select_label} || $data -> {label},
 				question => $data -> {question},
 			}),
-			off   => (!$_REQUEST {__read_only} || !$_REQUEST {select}),
+			off   => (!$_REQUEST {__read_only} || !$_REQUEST {select}) || $_REQUEST {"__select_type_" . $_REQUEST {select}} ne $_REQUEST {type},
 		},
 		@{$options -> {additional_buttons}},
 		{
@@ -2175,85 +2176,81 @@ sub draw_table {
 
 	my @old_headers = @$headers;
 
-	if ($conf -> {core_store_table_order} && !$options -> {no_order}) {
+	our @_ORDER = ();
+	our @_COLUMNS = ();
+	our %_ORDER = ();
 
-		our @_ORDER = ();
-		our @_COLUMNS = ();
-		our %_ORDER = ();
+	my @header_cells = ();
 
-		my @header_cells = ();
+	my $is_exists_subheaders;
+	my $max_ord;
 
-		my $is_exists_subheaders;
-		my $max_ord;
+	$headers = get_table_header_field ($headers);
 
-		$headers = get_table_header_field ($headers);
+	foreach my $h (@$headers) {
 
-		foreach my $h (@$headers) {
+		ref $h eq HASH or ($h = {label => $h});
 
-			ref $h eq HASH or ($h = {label => $h});
+		push @header_cells, $h;
 
-			push @header_cells, $h;
-
-			if ($h -> {order} || $h -> {no_order}) {
-				$_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} ||= {
-					'desc' => '',
-					'ord' => '',
-					'sort' => '',
-				};
-			}
-			if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} > $max_ord) {
-				$max_ord = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
-			}
-
+		if ($h -> {order} || $h -> {no_order}) {
+			$_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} ||= {
+				'desc' => '',
+				'ord' => '',
+				'sort' => '',
+			};
+		}
+		if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} > $max_ord) {
+			$max_ord = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
 		}
 
-		foreach my $h (@header_cells) {
+	}
 
-			push @_COLUMNS, $h;
+	foreach my $h (@header_cells) {
 
-			if ($_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
-				if ($max_ord && ($h -> {order} || $h -> {no_order})) {
-					my $column_order = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}};
-					if ($column_order -> {ord} == 0) {
-						my $p = $h -> {parent};
-						while ($p -> {label}) {
-							$p -> {colspan} --;
-							$p -> {hidden} = 1 if $p -> {colspan} == 0;
-							$p = $p -> {parent};
-						}
-					} else {
-						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $column_order -> {ord})
-							: ($column_order -> {ord} * 1000);
+		push @_COLUMNS, $h;
+
+		if ($conf -> {core_store_table_order} && !$options -> {no_order} && $_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
+			if ($max_ord && ($h -> {order} || $h -> {no_order})) {
+				my $column_order = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}};
+				if ($column_order -> {ord} == 0) {
+					my $p = $h -> {parent};
+					while ($p -> {label}) {
+						$p -> {colspan} --;
+						$p -> {hidden} = 1 if $p -> {colspan} == 0;
+						$p = $p -> {parent};
 					}
-				} elsif (!$h -> {hidden}) {
-					if (keys %{$h -> {parent}}) {
-						if ($h -> {parent} -> {ord} > 0) {
-							$h -> {parent} -> {children_ord} ||= @{$h -> {parent} -> {children}};
-							$h -> {parent} -> {children_ord} ++;
-							$h -> {ord} = $h -> {parent} -> {ord} + $h -> {parent} -> {children_ord};
-						}
-					} else {
-						$max_ord ++;
-						$h -> {ord} = $max_ord * 1000;
+				} else {
+					$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $column_order -> {ord})
+						: ($column_order -> {ord} * 1000);
+				}
+			} elsif (!$h -> {hidden}) {
+				if (keys %{$h -> {parent}}) {
+					if ($h -> {parent} -> {ord} > 0) {
+						$h -> {parent} -> {children_ord} ||= @{$h -> {parent} -> {children}};
+						$h -> {parent} -> {children_ord} ++;
+						$h -> {ord} = $h -> {parent} -> {ord} + $h -> {parent} -> {children_ord};
 					}
-
+				} else {
+					$max_ord ++;
+					$h -> {ord} = $max_ord * 1000;
 				}
 
-				$h -> {__hidden} = $h -> {hidden};
-
-				$h -> {parent} -> {ord} ||= 0 if (defined $h -> {parent} -> {order} || defined $h -> {parent} -> {no_order});
-
-				$h -> {hidden}   = 1 if ($h -> {ord} == 0 || defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0);
 			}
 
-			$h -> {filters} = [];
+			$h -> {__hidden} = $h -> {hidden};
 
-			push @_ORDER, $h;
+			$h -> {parent} -> {ord} ||= 0 if (defined $h -> {parent} -> {order} || defined $h -> {parent} -> {no_order});
 
-			$_ORDER {$h -> {order} || $h -> {no_order}} = $h
-				if ($h -> {order} || $h -> {no_order});
-
+			$h -> {hidden}   = 1 if $h -> {ord} == 0 || defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0;
 		}
+
+		$h -> {filters} = [];
+
+		push @_ORDER, $h;
+
+		$_ORDER {$h -> {order} || $h -> {no_order}} = $h
+			if ($h -> {order} || $h -> {no_order});
 
 	}
 
@@ -2305,7 +2302,7 @@ sub draw_table {
 		$_REQUEST {ids} ||= '-1';
 
 		$_REQUEST {__script} .= <<EOS;
-var href = '$href->{href}';
+var href = "$href->{href}";
 var ids = '$_REQUEST{ids}';
 EOS
 
@@ -2332,9 +2329,7 @@ EOJS
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
 
-	if ($conf -> {core_store_table_order} && !$options -> {no_order}) {
-		fix___query ();
-	}
+	fix___query ();
 
 	if (ref $options -> {path} eq ARRAY) {
 		$options -> {path} = draw_path ($options, $options -> {path});
@@ -2842,6 +2837,9 @@ sub draw_page {
 	setup_skin ();
 
 	$_SKIN -> {options} -> {no_presentation} and return $_SKIN -> draw_page ($page);
+
+	$_REQUEST {"__select_type_" . $_REQUEST {select}} = $_REQUEST {type}
+		if ($_REQUEST {select} && !$_REQUEST {"__select_type_" . $_REQUEST {select}} && $_REQUEST {id});
 
 	$_REQUEST {__read_only} = 0 if $_REQUEST {__only_field};
 
