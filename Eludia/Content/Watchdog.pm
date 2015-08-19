@@ -88,16 +88,32 @@ sub notify_script_execution_time {
 
 		@$scripts = sort {$b -> {execution_ms} <=> $a -> {execution_ms}} @$scripts;
 
+
+		my $is_need_blame;
+
+		$preconf -> {core_warn_script_time_top} ||= 5;
+
+		if ($preconf -> {core_warn_script_time_top}) {
+			for (my $i = 0; $i < $preconf -> {core_warn_script_time_top} && $i < @$scripts; $i++) {
+				$is_need_blame -> {$scripts -> [$i] -> {name}} = 1;
+			}
+		}
+
 		foreach my $i (@$scripts) {
 
-			my @script_authors = guess_error_author_mail ({error_kind => 'script', file => $i -> {path}, line => 1});
+			$warning_details .= $i -> {execution_ms} . ' ms ' . $i -> {path};
 
-			my $blame = !@script_authors? ""
-				: (" (blame " . join (', ', map {$_ -> {label}} @script_authors) . ")");
+			if ($is_need_blame -> {$i -> {name}}) {
 
-			$warning_details .= $i -> {execution_ms} . ' ms ' . $i -> {path} . " $blame\n";
+				my @script_authors = guess_error_author_mail ({error_kind => 'script', file => $i -> {path}, line => 1});
 
-			push @guessed_causers, @script_authors;
+				$warning_details .= !@script_authors? ""
+					: (" (blame " . join (', ', map {$_ -> {label}} @script_authors) . ")");
+
+				push @guessed_causers, @script_authors;
+			}
+
+			$warning_details .= "\n";
 		}
 
 		my %unique_recipients;
