@@ -255,23 +255,21 @@ sub sql_query_tables {
 
 	my ($sql) = @_;
 
-	$sql =~ s/#.*$//i;
+	$sql =~ s/^\s+//ig;
 
-	eval "require SQL::Statement"; # libsql-statement-perl
+	$sql =~ s/\s+#.*$//i;
 
-	$@ and return ();
+	$sql =~ s/\s+/ /ig;
 
-	my $parser = SQL::Parser -> new ('AnyData', {PrintError => 0, RaiseError => 0});
+	$sql =~ s/^(SELECT|DELETE).*FROM //i;
 
-	$parser -> feature ('reserved_words', 'NO', 0);
+	$sql =~ s/^INSERT INTO //i;
 
-	my $st = SQL::Statement -> new ($sql, $parser);
+	$sql =~ s/^UPDATE //i;
 
-	$st && $st -> command () or return ();
+	my ($table) = $sql =~ /(\w+) /i;
 
-	my @tables = $st -> tables ();
-
-	return (map {$_ -> name ()} @tables);
+	return ($table);
 }
 
 ################################################################################
