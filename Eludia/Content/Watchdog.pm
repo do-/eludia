@@ -14,7 +14,7 @@ sub notify_about_error {
 
 	my $id_error = internal_error_id ();
 
-	$error_details = $delimiter . "[$id_error][$options->{error_kind}]:\n" . $error_details;
+	$error_details = $delimiter . "[$id_error][$options->{error_kind}]$$options{error_tags}:\n" . $error_details;
 
 	print STDERR $error_details . $options -> {error} . "\n";
 
@@ -34,7 +34,7 @@ sub notify_about_error {
 		$blame = !@guessed_causers? ""
 			: "blame " . join (', ', map {$_ -> {label}} @guessed_causers);
 
-		my $subject = "[watchdog][$_NEW_PACKAGE][$options->{error_kind}]";
+		my $subject = "[watchdog][$_NEW_PACKAGE][$options->{error_kind}]$$options{error_tags}";
 
 		!$blame or $subject .= " $blame";
 
@@ -214,6 +214,8 @@ sub _adjust_core_error_kind {
 
 		$options -> {error_kind} = "sql";
 
+		$options -> {error_tags} .= join '', map {"[$_]"} sql_query_tables ($options -> {sql});
+
 		$error_details .= $options -> {sql} . "\n";
 
 		if (@{$options -> {params}}) {
@@ -245,6 +247,31 @@ sub _adjust_core_error_kind {
 	}
 
 	return $error_details;
+}
+
+################################################################################
+
+sub sql_query_tables {
+
+	my ($sql) = @_;
+
+	$sql =~ s/#.*$//i;
+
+	eval "require SQL::Statement"; # libsql-statement-perl
+
+	$@ and return ();
+
+	my $parser = SQL::Parser -> new ('AnyData', {PrintError => 0, RaiseError => 0});
+
+	$parser -> feature ('reserved_words', 'NO', 0);
+
+	my $st = SQL::Statement -> new ($sql, $parser);
+
+	$st && $st -> command () or return ();
+
+	my @tables = $st -> tables ();
+
+	return (map {$_ -> name ()} @tables);
 }
 
 ################################################################################
