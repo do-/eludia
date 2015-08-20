@@ -204,17 +204,20 @@ sub _adjust_core_error_kind {
 
 	my ($options) = @_;
 
-	$options -> {error_kind} ||= "code";
-
 	my $error_details;
 
 	my $subdelimiter = "\n" . ('-' x 80) . "\n";
 
+	if ($options -> {error} =~ /Invalid response/i || $options -> {error} =~ /server has gone away/i) {
+		$options -> {error_kind} ||= "network";
+	}
+
 	if ($options -> {sql}) {
 
-		$options -> {error_kind} = "sql";
+		$options -> {error_kind} eq 'network'
+			or $options -> {error_tags} .= join '', map {"[$_]"} sql_query_tables ($options -> {sql});
 
-		$options -> {error_tags} .= join '', map {"[$_]"} sql_query_tables ($options -> {sql});
+		$options -> {error_kind} ||= "sql";
 
 		$error_details .= $options -> {sql} . "\n";
 
@@ -230,10 +233,6 @@ sub _adjust_core_error_kind {
 		}
 	}
 
-	if ($options -> {error} =~ /Invalid response/i) {
-		$options -> {error_kind} = "network";
-	}
-
 	if ($options -> {error} =~ /Unknown column/i || $options -> {error} =~ /Duplicate entry/i) {
 		$options -> {error_kind} = "model";
 	}
@@ -245,6 +244,8 @@ sub _adjust_core_error_kind {
 
 		$options -> {error_kind} = "file";
 	}
+
+	$options -> {error_kind} ||= "code";
 
 	return $error_details;
 }
