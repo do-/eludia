@@ -78,7 +78,7 @@ sub notify_script_execution_time {
 
 	$total_ms > $limit_ms or return;
 
-	my $warning_subject = "[watchdog][$_NEW_PACKAGE][script] $script_type total execution time $total_ms ms is above threshold warning $limit_ms ms";
+	my $warning_subject = "[watchdog][$_NEW_PACKAGE][script] $script_type $total_ms ms is above threshold warning $limit_ms ms";
 
 	print STDERR "$warning_subject\n";
 
