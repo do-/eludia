@@ -2370,6 +2370,7 @@ EOJS
 				label      => '<input type="checkbox" id="check_all" class="row-cell">',
 				attributes => {width => '1%'},
 				rowspan    => $headers_rowspan,
+				ord        => -10,
 			};
 
 			$_REQUEST {__on_load} .= <<'EOJS';
