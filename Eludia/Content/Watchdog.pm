@@ -208,7 +208,11 @@ sub _adjust_core_error_kind {
 
 	my $subdelimiter = "\n" . ('-' x 80) . "\n";
 
-	if ($options -> {error} =~ /Invalid response/i || $options -> {error} =~ /server has gone away/i) {
+	if ($options -> {error} =~ /Invalid response/i
+		|| $options -> {error} =~ /server has gone away/i
+		|| $options -> {error} =~ /Can't connect/i
+		|| $options -> {error} =~ /Lost connection/i
+	) {
 		$options -> {error_kind} ||= "network";
 	}
 
