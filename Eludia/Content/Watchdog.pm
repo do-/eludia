@@ -268,7 +268,9 @@ sub sql_query_tables {
 
 	$sql =~ s/^UPDATE //i;
 
-	my ($table) = $sql =~ /(\w+) /i;
+	$sql =~ s/^CREATE TABLE //i;
+
+	my ($table) = $sql =~ /(\w+)/i;
 
 	return ($table);
 }
