@@ -219,7 +219,7 @@ sub _adjust_core_error_kind {
 	if ($options -> {sql}) {
 
 		$options -> {error_kind} eq 'network'
-			or $options -> {error_tags} .= join '', map {"[$_]"} sql_query_tables ($options -> {sql});
+			or $options -> {error_tags} .= '[' . sql_query_table ($options -> {sql}) . ']';
 
 		$options -> {error_kind} ||= "sql";
 
@@ -256,7 +256,7 @@ sub _adjust_core_error_kind {
 
 ################################################################################
 
-sub sql_query_tables {
+sub sql_query_table {
 
 	my ($sql) = @_;
 
@@ -276,7 +276,7 @@ sub sql_query_tables {
 
 	my ($table) = $sql =~ /(\w+)/i;
 
-	return ($table);
+	return $table;
 }
 
 ################################################################################
