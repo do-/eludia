@@ -262,13 +262,15 @@ sub sql_query_table {
 
 	$sql =~ s/^\s+//ig;
 
-	$sql =~ s/\s+#.*$//i;
+	$sql =~ s/\s*#.*$//i;
 
 	$sql =~ s/\s+/ /ig;
 
 	$sql =~ s/^(SELECT|DELETE).*FROM //i;
 
 	$sql =~ s/^INSERT INTO //i;
+
+	$sql =~ s/^REPLACE INTO //i;
 
 	$sql =~ s/^UPDATE //i;
 
