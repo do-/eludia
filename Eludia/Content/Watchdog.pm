@@ -45,6 +45,8 @@ sub notify_about_error {
 		}) if !internal_error_is_duplicate ($options -> {error});
 	}
 
+	try_to_repair_error ($options);
+
 	if ($_REQUEST {__skin} eq 'STDERR') { # offline script
 		return $error_details . $options -> {error};
 	}
@@ -57,6 +59,51 @@ sub notify_about_error {
 		$i18n -> {try_again} : $i18n -> {internal_error});
 
 	return join ("\n", @msg);
+}
+
+################################################################################
+
+sub try_to_repair_error {
+
+	my ($options) = @_;
+
+	if ($options -> {sql}) {
+
+		my ($table, $column) = $options -> {error} =~ /Unknown column '(\w+)\.(\w+)\'/i;
+
+		repair_table_model ($table);
+	}
+}
+
+################################################################################
+
+sub repair_table_model {
+
+	my ($tables) = @_;
+
+	$tables or return;
+
+	ref $tables eq 'ARRAY' or $tables = [$tables];
+
+	my $table_names = join ',', @$tables;
+
+	$ENV {ELUDIA_SILENT} or print STDERR "\n\n" . script_log_signature ()
+		. "refresh model for tables: $table_names...\n";
+
+	sql_weave_model ($DB_MODEL);
+
+	$model_update -> assert (
+
+		prefix => 'application model#',
+
+		default_columns => $DB_MODEL -> {default_columns},
+
+		tables => {
+			(map {$_ => $DB_MODEL -> {tables} -> {$_} } @$tables),
+		},
+	);
+
+	$ENV {ELUDIA_SILENT} or print STDERR script_log_signature () . "refresh model done\n";
 }
 
 ################################################################################
