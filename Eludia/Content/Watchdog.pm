@@ -73,7 +73,7 @@ sub try_to_repair_error {
 
 		my ($database, $missing_table) = $options -> {error} =~ /Table '(\w+)\.(\w+)' doesn't exist/i;
 
-		repair_table_model ($missing_table || $missing_column_table);
+		repair_table_model ($missing_table || $missing_column_table || sql_query_table ($options -> {sql}));
 	}
 }
 
