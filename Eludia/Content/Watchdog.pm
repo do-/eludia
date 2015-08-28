@@ -67,6 +67,10 @@ sub try_to_repair_error {
 
 	my ($options) = @_;
 
+	$_REQUEST {__was_repair_attempt} and return;
+
+	$_REQUEST {__was_repair_attempt} = 1;
+
 	if ($options -> {sql}) {
 
 		my ($missing_column_table, $column) = $options -> {error} =~ /Unknown column '(\w+)\.(\w+)'/i;
@@ -324,6 +328,8 @@ sub sql_query_table {
 	$sql =~ s/^UPDATE //i;
 
 	$sql =~ s/^CREATE TABLE //i;
+
+	$sql =~ s/^ALTER TABLE //i;
 
 	my ($table) = $sql =~ /(\w+)/i;
 
