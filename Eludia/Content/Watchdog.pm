@@ -42,6 +42,7 @@ sub notify_about_error {
 			to      => [keys %unique_recipients],
 			subject => $subject,
 			text    => $error_details . $options -> {error} . error_detail_tail ($options),
+			log     => 'info',
 		}) if !internal_error_is_duplicate ($options -> {error});
 	}
 
@@ -178,6 +179,7 @@ sub notify_script_execution_time {
 			to      => [keys %unique_recipients],
 			subject => $warning_subject,
 			text    => $warning_details,
+			log     => 'info',
 		}) if !internal_error_is_duplicate ($warning_details);
 	}
 }

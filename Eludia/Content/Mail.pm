@@ -43,7 +43,11 @@ sub send_mail {
 	$signature   .= $options -> {subject};
 	$signature   .= " / $options->{href}" if $options -> {href};
 
-	$time = __log ($time, " $signature" . Dumper ($options));
+	if ($options -> {log} ne 'info') {
+
+		$time = __log ($time, " $signature" . Dumper ($options));
+
+	}
 
 	my @to_char = ();
 	my @to_num  = ();
