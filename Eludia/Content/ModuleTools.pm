@@ -148,6 +148,7 @@ sub require_model {
 		default_columns => {
 			id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
 			fake => {TYPE_NAME  => 'bigint'},
+			(%{call_for_role ('core_default_columns')}),
 		},
 
 	};
