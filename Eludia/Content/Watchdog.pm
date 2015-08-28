@@ -105,7 +105,7 @@ sub repair_table_model {
 		default_columns => $DB_MODEL -> {default_columns},
 
 		tables => {
-			(map {$_ => $DB_MODEL -> {tables} -> {$_} } @$tables),
+			(map {$_ => $DB_MODEL -> {tables} -> {$_} } grep {$DB_MODEL -> {tables} -> {$_}} @$tables),
 		},
 	);
 
