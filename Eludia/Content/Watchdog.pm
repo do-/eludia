@@ -69,9 +69,11 @@ sub try_to_repair_error {
 
 	if ($options -> {sql}) {
 
-		my ($table, $column) = $options -> {error} =~ /Unknown column '(\w+)\.(\w+)\'/i;
+		my ($missing_column_table, $column) = $options -> {error} =~ /Unknown column '(\w+)\.(\w+)'/i;
 
-		repair_table_model ($table);
+		my ($database, $missing_table) = $options -> {error} =~ /Table '(\w+)\.(\w+)' doesn't exist/i;
+
+		repair_table_model ($missing_table || $missing_column_table);
 	}
 }
 
