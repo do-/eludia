@@ -935,15 +935,20 @@ sub draw_form_field {
 
 	if ($_REQUEST {__only_field}) {
 
-		my @fields = split (',', $_REQUEST {__only_field});
+		my $fields = [split (',', $_REQUEST {__only_field})];
 
 		if ($field -> {type} eq 'hgroup') {
 			my $html = '';
 			foreach (@{$field -> {items}}) {$html .= draw_form_field ($_, $data)}
 			return $html;
 		}
+		elsif ($field -> {type} eq 'radio' && !($field -> {name} ~~ $fields)) {
+			my $html = '';
+			foreach (@{$field -> {values}}) {$html .= draw_form_field ($_, $data)}
+			return $html;
+		}
 		else {
-			(grep {$_ eq $field -> {name}} @fields) > 0 or return '';
+			(grep {$_ eq $field -> {name}} @$fields) > 0 or return '';
 		}
 
 	}
