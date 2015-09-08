@@ -14,7 +14,13 @@ sub draw_hash {
 
 	my ($_SKIN, $h) = @_;
 
-	$_REQUEST {__content_type} ||= 'text/plain; charset=' . $i18n -> {_charset};
+	$_REQUEST {__content_type} ||= 'application/json; charset=' . $i18n -> {_charset};
+
+	if ($preconf -> {core_cors}) {
+		$r -> headers_out -> {'Access-Control-Allow-Origin'} = $preconf -> {core_cors};
+		$r -> headers_out -> {'Access-Control-Allow-Credentials'} = 'true';
+		$r -> headers_out -> {'Access-Control-Allow-Headers'} = 'Origin, X-Requested-With, Content-Type, Accept, Cookie';
+	}
 
 	$_JSON -> encode ($h);
 

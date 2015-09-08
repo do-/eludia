@@ -31,6 +31,10 @@ sub set_cookie {
 
 	push @{$r -> {_headers} -> {'Set-Cookie'}}, $cookie -> as_string;
 
+	if ($preconf -> {core_cors}) {
+		push @{$r -> {_headers} -> {'Cookie'}}, $cookie -> as_string;
+	}
+
 }
 
 ################################################################################

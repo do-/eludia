@@ -3121,7 +3121,6 @@ sub out_json ($) {
 	$data = $_JSON -> encode ($data) if ref ($data);
 
 	out_html ({}, $data);
-
 }
 
 ################################################################################
@@ -3184,6 +3183,12 @@ sub out_html {
 	$r -> headers_out -> {'X-Powered-By'} = 'Eludia/' . $Eludia::VERSION;
 
 	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
+
+	if ($preconf -> {core_cors}) {
+		$r -> headers_out -> {'Access-Control-Allow-Origin'} = $preconf -> {core_cors};
+		$r -> headers_out -> {'Access-Control-Allow-Credentials'} = 'true';
+		$r -> headers_out -> {'Access-Control-Allow-Headers'} = 'Origin, X-Requested-With, Content-Type, Accept, Cookie';
+	}
 
 	send_http_header ();
 
