@@ -639,7 +639,7 @@ sub sql_select_id {
 
 		$table_model -> {columns} -> {$key} ||= $DB_MODEL -> {default_columns} -> {$key};
 
-		exists $table_model -> {columns} -> {$key} or die "sql_select_id: Unknown column '$table_safe.$key'";
+		defined $table_model -> {columns} -> {$key} or die "sql_select_id: Unknown column '$table_safe.$key'";
 
 		$values -> {$key} = $values -> {$key} eq '' ? undef : $values -> {$key} + 0
 			if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*int.*/);
@@ -722,7 +722,7 @@ sub sql_select_id {
 
 			$table_model -> {columns} -> {$key} ||= $DB_MODEL -> {default_columns} -> {$key};
 
-			exists $table_model -> {columns} -> {$key} or die "sql_select_id: Unknown column '$table_safe.$key'";
+			defined $table_model -> {columns} -> {$key} or die "sql_select_id: Unknown column '$table_safe.$key'";
 
 			($forced -> {$key} && $values -> {$key} ne $record -> {$key}) or $record -> {$key} eq '' or next;
 
