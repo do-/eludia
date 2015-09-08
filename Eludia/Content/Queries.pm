@@ -129,6 +129,7 @@ sub fix___query {
 		my $content = {filters => {}, columns => {}};
 
 		my %n;
+		my $is_exist_default_ords = 0 + grep {$_ -> {ord}} @_COLUMNS;
 
 		foreach my $o (@_COLUMNS) {
 
@@ -136,9 +137,11 @@ sub fix___query {
 
 			my $parent = exists $o -> {parent_header} ? ($o -> {parent_header} -> {order} || $o -> {parent_header} -> {no_order}) : '';
 			$content -> {columns} -> {$o -> {order} || $o -> {no_order}} = {
-				ord    => ++ $n {$parent},
+				ord    => $is_exist_default_ords ? 0 + $o -> {ord} : ++ $n {$parent},
 				width  => $o -> {width},
 				height => $o -> {height},
+				sort   => $o -> {sort},
+				desc   => $o -> {desc},
 			};
 
 			foreach my $filter (@{$o -> {filters}}) {
@@ -371,7 +374,7 @@ sub do_update___queries {
 		};
 
 		$content -> {columns} -> {$order} = {
-			ord  => $_REQUEST {"_${order}_ord"},
+			ord  => $_REQUEST {"_${order}_ord"} || 0,
 			sort => $_REQUEST {"_${order}_sort"},
 			desc => $_REQUEST {"_${order}_desc"},
 		};
@@ -468,7 +471,7 @@ sub set_column_props {
 	my $settings = get___query_settings ($options -> {id_query});
 
 	foreach my $key (keys %$options) {
-		next if $key =~ /^id/;
+		next if $key =~ /^id_/;
 		$settings -> {columns} -> {$options -> {id}} -> {$key} = $options -> {$key};
 	}
 

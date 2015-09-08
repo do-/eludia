@@ -1540,20 +1540,26 @@ sub draw_cells {
 
 	if ($conf -> {core_store_table_order} && !$_REQUEST {__no_order}) {
 
-		my $j = 0;
+		my ($i, $j, $k) = (0, 0, 0);
 
-		for (my $i = 0; $i < @_COLUMNS && $j < @$row; $i ++) {
+		while ($i < @_COLUMNS && $j < @$row) {
 
-			next
-				if $_COLUMNS [$i] -> {children};
+			if ($_COLUMNS [$i] -> {children}) {
+				$i ++;
+				next;
+			}
+
+
+			if ($row -> [$j] -> {hidden}) {
+				$j ++;
+				next;
+			}
 
 			$row -> [$j] = {label => $row -> [$j]} unless ref $row -> [$j] eq HASH;
 
-			$row -> [$j] -> {ord} ||= $COLUMNS_BY_ORDER {$j};
+			$row -> [$j] -> {ord} ||= $COLUMNS_BY_ORDER {$k};
 
-			$row -> [$j] -> {hidden} ||= $_COLUMNS [$i] -> {hidden};
-
-			$j ++;
+			$i ++; $j ++; $k ++;
 
 		}
 
@@ -2001,7 +2007,8 @@ sub _load_super_table_dimensions {
 			ref $row -> [$j] eq HASH or $row -> [$j] = {label => $row -> [$j]};
 			my $cell = {%{$row -> [$j]}};
 
-			push @{$header_copy -> [$i]}, $cell;
+			push @{$header_copy -> [$i]}, $cell
+				unless $cell -> {hidden};
 
 			$fixed_cols_cnt ++ if $cell -> {no_scroll};
 
@@ -2173,7 +2180,8 @@ sub draw_table {
 
 	$options -> {no_order} = !($is_table_columns_order_editable || $is_table_columns_showing_editable)
 		unless exists $options -> {no_order};
-# Check broken $_QUERY -> {content} -> {columns} because of application code modification
+
+# Check broken $_QUERY -> {content} -> {columns} because of application code modification. If !$is_table_columns_showing_editable all columns should have ord
 	if ($is_table_columns_order_editable && !$is_table_columns_showing_editable) {
 		foreach my $column (keys %{$_QUERY -> {content} -> {columns}}) {
 			if (!$_QUERY -> {content} -> {columns} -> {$column} -> {ord}) {
@@ -2199,22 +2207,45 @@ sub draw_table {
 
 	@_COLUMNS = @$flat_headers;
 
+	my $is_exist_default_ords = 0 + grep {$_ -> {ord}} @$flat_headers;
+
 	foreach my $h (@$flat_headers) {
 
-		$h -> {ord_source_code} = $ord_source_code ++
+		$h -> {ord_source_code} ||= $ord_source_code ++
 			unless $h -> {children};
 
 		if (
-			$conf -> {core_store_table_order} && !$options -> {no_order} && $_REQUEST {id___query}
+			$conf -> {core_store_table_order} && !$options -> {no_order} && ($is_exist_default_ords || $_REQUEST {id___query})
 		) {
 
-			my $column_order = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}};
+			my $column_order = $_REQUEST {id___query} ? $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} : undef;
 
-			if ($column_order -> {ord} == 0) {
+			if (!defined ($column_order) || !defined ($column_order -> {ord})) {
 
+				if ($_REQUEST {id___query} && $h -> {parent_header}) {
+
+					my $max_ord;
+
+					foreach (@{$h -> {parent_header} -> {children}}) {
+						$max_ord = $_ -> {ord}
+							if $_ -> {ord} > $max_ord;
+					}
+
+					$h -> {ord} = $max_ord;
+
+				} elsif ($_REQUEST {id___query}) {
+
+					$h -> {ord} = $ord_source_code;
+
+				}
+
+			} elsif ($column_order -> {ord} == 0) {
+
+				$h -> {ord} = 0;
 				my $p = $h -> {parent_header};
 
 				while ($p -> {label}) {
+
 
 					$p -> {colspan} --;
 					$p -> {hidden} = 1 if $p -> {colspan} == 0;
@@ -2247,7 +2278,7 @@ sub draw_table {
 	local $showing_ord = 1;
 
 	set_body_table_cells_ord ($headers -> [0])
-		if $conf -> {core_store_table_order} && !$options -> {no_order} && $_REQUEST {id___query};
+		if $conf -> {core_store_table_order} && !$options -> {no_order} && ($is_exist_default_ords || $_REQUEST {id___query});
 
 	$options -> {type}   ||= $_REQUEST{type};
 
