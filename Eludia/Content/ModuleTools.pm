@@ -143,13 +143,18 @@ sub require_model {
 
 	sql_assert_core_tables ();
 
+	my $default_columns = {
+		id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
+		fake => {TYPE_NAME  => 'bigint'},
+	};
+
+	if ($preconf -> {core_uuid_default_column}) {
+		$default_columns -> {uuid} = {TYPE_NAME => 'varchar', COLUMN_SIZE => 36};
+	}
+
 	our $DB_MODEL ||= {
 
-		default_columns => {
-			id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-			fake => {TYPE_NAME  => 'bigint'},
-			(%{call_for_role ('core_default_columns')}),
-		},
+		default_columns => $default_columns,
 
 	};
 
