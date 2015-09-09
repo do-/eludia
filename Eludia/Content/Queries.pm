@@ -509,18 +509,6 @@ sub draw_item_of___queries {
 		next
 			if $o -> {__hidden};
 
-		if ($_COLUMNS [$i - 1] -> {colspan}) {
-
-			push @$cells_cnt, $_COLUMNS [$i - 1] -> {colspan};
-
-			if ($cells_cnt -> [$composite_columns_cnt + 1]) {
-
-				$composite_columns_cnt++;
-
-			}
-
-		}
-
 		my @f;
 
 		if (exists $o -> {type} && $o -> {type} eq 'banner') {
@@ -534,26 +522,14 @@ sub draw_item_of___queries {
 
 		} else {
 
-			if ($cells_cnt -> [$composite_columns_cnt]) {
+			my $current_o = $o;
 
-				for (my $j = 0; $j <= $composite_columns_cnt; $j++) {
+			while ($current_o -> {parent_header}) {
 					push @f, {
 						type => 'static',
 						label_off => 1,
 					};
-				}
-
-				unless ($o -> {colspan}) {
-					for (my $i = 0; $i < @$cells_cnt; $i++) {
-						$cells_cnt -> [$i]--;
-					}
-				}
-
-				while ($cells_cnt -> [$composite_columns_cnt] == 0 && $composite_columns_cnt >= 0) {
-					$composite_columns_cnt--;
-					pop @$cells_cnt;
-				}
-
+					$current_o = $current_o -> {parent_header};
 			}
 
 			push @f, (
