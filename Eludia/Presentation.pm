@@ -1557,6 +1557,7 @@ sub draw_cells {
 
 			$row -> [$j] = {label => $row -> [$j]} unless ref $row -> [$j] eq HASH;
 
+			$row -> [$j] -> {hidden} ||= $_COLUMNS [$i] -> {hidden};
 			$row -> [$j] -> {ord} ||= $COLUMNS_BY_ORDER {$k};
 
 			$i ++; $j ++; $k ++;
