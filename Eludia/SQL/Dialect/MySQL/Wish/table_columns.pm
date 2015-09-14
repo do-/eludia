@@ -34,6 +34,7 @@ sub wish_to_clarify_demands_for_table_columns {
 		
 		$i -> {DECIMAL_DIGITS} ||= 0;
 		
+		$i -> {COLUMN_DEF} = sprintf ("%.$$i{DECIMAL_DIGITS}f", $i -> {COLUMN_DEF});
 	}
 		
 	if ($i -> {TYPE_NAME} eq 'VARCHAR') {
