@@ -1,20 +1,20 @@
 use Test::More tests => 8;
 
 
-my $table = 'testtesttesttable1';
+my $table_name = 'testtesttesttable1';
 
 sub cleanup {
 
 	eval {sql_do ('DROP SEQUENCE   "OOC_aXe1X8jLRbZrxPDakPPnvw"')};
 	eval {sql_do ('DROP CONSTRAINT "OOC_U827OA4bdWC6DX6NSDReww"')};
-	eval {sql_do ("DROP TABLE $table")};
+	eval {sql_do ("DROP TABLE $table_name")};
 }
 
 cleanup ();
 
 my @tables = ({
 
-	name    => $table,
+	name    => $table_name,
 
 	columns => {
 
@@ -36,16 +36,21 @@ my @tables = ({
 
 wish (tables => Storable::dclone \@tables, {});
 
+local $DB_MODEL = {tables => {}};
+
 foreach my $table (@tables) {
 
 	wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], {table => $table -> {name}});
 
 	wish (table_data => $table -> {data}, {table => $table -> {name}});
+
+	$DB_MODEL -> {tables} -> {$table_name} = $table;
 }
+
 
 ################################################################################
 
-my $id_result = sql_select_id ($table => {
+my $id_result = sql_select_id ($table_name => {
 		name  => 'ten',
 		fake  => -1,
 		label => 'The Ten overwritten',
@@ -63,7 +68,7 @@ is_stored ("sql_select_id existed 'ten' no update", [
 
 ################################################################################
 
-my $id_result = sql_select_id ($table => {
+my $id_result = sql_select_id ($table_name => {
 		name  => 'ten',
 		fake  => -1,
 		-label => 'The Ten overwritten',
@@ -81,7 +86,7 @@ is_stored ("sql_select_id existed 'ten' overwrite", [
 
 ################################################################################
 
-my $id_result = sql_select_id ($table => {
+my $id_result = sql_select_id ($table_name => {
 		name   => 'ten',
 		fake   => 0,
 		-label => 'New ten',
@@ -102,7 +107,7 @@ is_stored ("sql_select_id new 'ten' insert", [
 
 my $error = '-1';
 eval {
-	$error = sql_select_id ($table => {
+	$error = sql_select_id ($table_name => {
 			name   => 'ten',
 			-label  => 'New ten broken',
 			fake   => 0,
@@ -127,7 +132,7 @@ sub is_stored {
 
 	my ($name, $data) = @_;
 
-	my $sql_data = sql_select_all ("SELECT * FROM $table ORDER BY id");
+	my $sql_data = sql_select_all ("SELECT * FROM $table_name ORDER BY id");
 
 	my $result = is_deeply ($sql_data, $data, $name) or darn [$sql_data, $data];
 
