@@ -42,7 +42,8 @@ var is_dirty = false,
 
 	max_len = 50,
 	poll_invisibles_interval_id,
-	max_tabindex = 0;
+	max_tabindex = 0,
+	supertables = [];
 
 
 var request = {},
@@ -2397,10 +2398,10 @@ function init_page (options) {
 			table_containers.each (function() {
 				var that = this;
 
-				new supertable({
+				supertables.push (new supertable({
 					tableUrl        : '/?' + tables_data [that.id]['table_url'] + '&__only_table=' + that.id + '&__table_cnt=' + table_containers.length,
-					initial_data    : tables_data [that.id],
-					el              : $(that),
+					initial_data : tables_data [that.id],
+					el: $(that),
 					containerRender : function(model) {
 						$(that).find('tr[data-menu],td[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
@@ -2432,7 +2433,7 @@ function init_page (options) {
 						}
 
 					}
-				})
+				}))
 			});
 
 			options.on_load ();
