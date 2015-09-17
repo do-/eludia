@@ -637,6 +637,10 @@ sub sql_select_id {
 
 	foreach my $key (keys %$values) {
 
+		$table_model -> {columns} -> {$key} ||= $DB_MODEL -> {default_columns} -> {$key};
+
+		defined $table_model -> {columns} -> {$key} or die "sql_select_id: Unknown column '$table_safe.$key'";
+
 		$values -> {$key} = $values -> {$key} eq '' ? undef : $values -> {$key} + 0
 			if ($table_model -> {columns} -> {$key} -> {TYPE_NAME} =~ /.*int.*/);
 
@@ -715,6 +719,10 @@ sub sql_select_id {
 		my $table_model = $DB_MODEL -> {tables} -> {$table_safe};
 
 		foreach my $key (keys %$values) {
+
+			$table_model -> {columns} -> {$key} ||= $DB_MODEL -> {default_columns} -> {$key};
+
+			defined $table_model -> {columns} -> {$key} or die "sql_select_id: Unknown column '$table_safe.$key'";
 
 			($forced -> {$key} && $values -> {$key} ne $record -> {$key}) or $record -> {$key} eq '' or next;
 

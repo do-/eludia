@@ -505,6 +505,7 @@ sub draw_form_field_suggest {
 	my $attr_input = $options -> {attributes};
 	my $id = $options -> {name} || 'suggest';
 
+	${$attr_input -> {value}}          ||= $options -> {value__id};
 	$attr_input -> {id}                  = $id;
 	$attr_input -> {size}              ||= $options -> {size} || 60;
 	$attr_input -> {"data-role"}         = "autocomplete";

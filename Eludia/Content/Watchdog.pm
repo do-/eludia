@@ -14,9 +14,9 @@ sub notify_about_error {
 
 	my $id_error = internal_error_id ();
 
-	$error_details = $delimiter . "[$id_error][$options->{error_kind}]:\n" . $error_details;
+	$error_details = $delimiter . "[$id_error][$options->{error_kind}]$$options{error_tags}:\n" . $error_details;
 
-	print STDERR $error_details . $options -> {error};
+	print STDERR $error_details . $options -> {error} . "\n";
 
 	my $blame;
 
@@ -34,7 +34,7 @@ sub notify_about_error {
 		$blame = !@guessed_causers? ""
 			: "blame " . join (', ', map {$_ -> {label}} @guessed_causers);
 
-		my $subject = "[watchdog][$_NEW_PACKAGE][$options->{error_kind}]";
+		my $subject = "[watchdog][$_NEW_PACKAGE][$options->{error_kind}]$$options{error_tags}";
 
 		!$blame or $subject .= " $blame";
 
@@ -42,8 +42,11 @@ sub notify_about_error {
 			to      => [keys %unique_recipients],
 			subject => $subject,
 			text    => $error_details . $options -> {error} . error_detail_tail ($options),
+			log     => 'info',
 		}) if !internal_error_is_duplicate ($options -> {error});
 	}
+
+	try_to_repair_error ($options);
 
 	if ($_REQUEST {__skin} eq 'STDERR') { # offline script
 		return $error_details . $options -> {error};
@@ -57,6 +60,128 @@ sub notify_about_error {
 		$i18n -> {try_again} : $i18n -> {internal_error});
 
 	return join ("\n", @msg);
+}
+
+################################################################################
+
+sub try_to_repair_error {
+
+	my ($options) = @_;
+
+	$_REQUEST {__was_repair_attempt} and return;
+
+	$_REQUEST {__was_repair_attempt} = 1;
+
+	if ($options -> {sql}) {
+
+		my ($missing_column_table, $column) = $options -> {error} =~ /Unknown column '(\w+)\.(\w+)'/i;
+
+		my ($database, $missing_table) = $options -> {error} =~ /Table '(\w+)\.(\w+)' doesn't exist/i;
+
+		repair_table_model ($missing_table || $missing_column_table || sql_query_table ($options -> {sql}));
+	}
+}
+
+################################################################################
+
+sub repair_table_model {
+
+	my ($tables) = @_;
+
+	$tables or return;
+
+	ref $tables eq 'ARRAY' or $tables = [$tables];
+
+	my $table_names = join ',', @$tables;
+
+	$ENV {ELUDIA_SILENT} or print STDERR "\n\n" . script_log_signature ()
+		. "refresh model for tables: $table_names...\n";
+
+	sql_weave_model ($DB_MODEL);
+
+	$model_update -> assert (
+
+		prefix => 'application model#',
+
+		default_columns => $DB_MODEL -> {default_columns},
+
+		tables => {
+			(map {$_ => $DB_MODEL -> {tables} -> {$_} } grep {$DB_MODEL -> {tables} -> {$_}} @$tables),
+		},
+	);
+
+	$ENV {ELUDIA_SILENT} or print STDERR script_log_signature () . "refresh model done\n";
+}
+
+################################################################################
+
+sub notify_script_execution_time {
+
+	my ($scripts, $script_type) = @_;
+
+	return
+		if $ENV {ELUDIA_SILENT};
+
+	my $total_ms = 0;
+
+	foreach my $i (@$scripts) {
+		$total_ms += $i -> {execution_ms};
+	}
+
+	my $limit_ms = $preconf -> {core_warn_script_time} || 5000;
+
+	$total_ms > $limit_ms or return;
+
+	my $warning_subject = "[watchdog][$_NEW_PACKAGE][script] $script_type $total_ms ms is above threshold warning $limit_ms ms";
+
+	print STDERR "$warning_subject\n";
+
+	if ($preconf -> {mail} -> {admin}) {
+
+		my ($warning_details, @guessed_causers) = ("[" . internal_error_id () . "][script]:\n");
+
+		@$scripts = sort {$b -> {execution_ms} <=> $a -> {execution_ms}} @$scripts;
+
+
+		my $is_need_blame;
+
+		$preconf -> {core_warn_script_time_top} ||= 5;
+
+		if ($preconf -> {core_warn_script_time_top}) {
+			for (my $i = 0; $i < $preconf -> {core_warn_script_time_top} && $i < @$scripts; $i++) {
+				$is_need_blame -> {$scripts -> [$i] -> {name}} = 1;
+			}
+		}
+
+		foreach my $i (@$scripts) {
+
+			$warning_details .= $i -> {execution_ms} . ' ms ' . $i -> {path};
+
+			if ($is_need_blame -> {$i -> {name}}) {
+
+				my @script_authors = guess_error_author_mail ({error_kind => 'script', file => $i -> {path}, line => 1});
+
+				$warning_details .= !@script_authors? ""
+					: (" (blame " . join (', ', map {$_ -> {label}} @script_authors) . ")");
+
+				push @guessed_causers, @script_authors;
+			}
+
+			$warning_details .= "\n";
+		}
+
+		my %unique_recipients;
+		foreach (@{$preconf -> {mail} -> {admin}}, map {$_ -> {mail}} @guessed_causers) {
+			$unique_recipients {$_} = 1;
+		}
+
+		send_mail ({
+			to      => [keys %unique_recipients],
+			subject => $warning_subject,
+			text    => $warning_details,
+			log     => 'info',
+		}) if !internal_error_is_duplicate ($warning_details);
+	}
 }
 
 ################################################################################
@@ -95,11 +220,15 @@ sub guess_error_author_mail { # error author = last file commiter
 
 	my ($options) = @_;
 
-	$options -> {error_kind} eq 'sql'
-		or $options -> {error_kind} eq 'code'
+	$options -> {error_kind} ~~ ['sql', 'code', 'script']
 		or return ();
 
-	my ($file, $line) = $options -> {error} =~ /called at (\/.*lib\/.*\.pm) line (\d+)/;
+	my ($file, $line) = ($options -> {file}, $options -> {line});
+
+	if (!$file) {
+		($file, $line) = $options -> {error} =~ /called at (\/.*lib\/.*\.pm) line (\d+)/;
+	}
+
 	if (!$file) {
 		($file, $line) = $options -> {error} =~ /require (\/.*lib\/.*\.p[lm]) called at.*line (\d+)/;
 	}
@@ -130,15 +259,24 @@ sub _adjust_core_error_kind {
 
 	my ($options) = @_;
 
-	$options -> {error_kind} = "code";
-
 	my $error_details;
 
 	my $subdelimiter = "\n" . ('-' x 80) . "\n";
 
+	if ($options -> {error} =~ /Invalid response/i
+		|| $options -> {error} =~ /server has gone away/i
+		|| $options -> {error} =~ /Can't connect/i
+		|| $options -> {error} =~ /Lost connection/i
+	) {
+		$options -> {error_kind} ||= "network";
+	}
+
 	if ($options -> {sql}) {
 
-		$options -> {error_kind} = "sql";
+		$options -> {error_kind} eq 'network'
+			or $options -> {error_tags} .= '[' . sql_query_table ($options -> {sql}) . ']';
+
+		$options -> {error_kind} ||= "sql";
 
 		$error_details .= $options -> {sql} . "\n";
 
@@ -154,10 +292,6 @@ sub _adjust_core_error_kind {
 		}
 	}
 
-	if ($options -> {error} =~ /Invalid response/i) {
-		$options -> {error_kind} = "network";
-	}
-
 	if ($options -> {error} =~ /Unknown column/i || $options -> {error} =~ /Duplicate entry/i) {
 		$options -> {error_kind} = "model";
 	}
@@ -170,7 +304,38 @@ sub _adjust_core_error_kind {
 		$options -> {error_kind} = "file";
 	}
 
+	$options -> {error_kind} ||= "code";
+
 	return $error_details;
+}
+
+################################################################################
+
+sub sql_query_table {
+
+	my ($sql) = @_;
+
+	$sql =~ s/^\s+//ig;
+
+	$sql =~ s/\s*#.*$//i;
+
+	$sql =~ s/\s+/ /ig;
+
+	$sql =~ s/^(SELECT|DELETE).*FROM //i;
+
+	$sql =~ s/^INSERT INTO //i;
+
+	$sql =~ s/^REPLACE INTO //i;
+
+	$sql =~ s/^UPDATE //i;
+
+	$sql =~ s/^CREATE TABLE //i;
+
+	$sql =~ s/^ALTER TABLE //i;
+
+	my ($table) = $sql =~ /(\w+)/i;
+
+	return $table;
 }
 
 ################################################################################

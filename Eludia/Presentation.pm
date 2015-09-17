@@ -57,6 +57,7 @@ sub __d {
 		if ($data -> {$_} =~ s/(\d\d\d\d)-(\d\d)-(\d\d)/$3.$2.$1/ or $data -> {$_} =~ m{(\d\d)\.(\d\d)\.(\d\d\d\d)}) {
 
 			$data -> {$_} =~ s{00\.00\.0000}{};
+			$data -> {$_} =~ s{31\.12\.9999(\s00:00:00)?}{};
 			$data -> {$_} =~ s{(:\d+)\.\d+$}{$1};
 		}
 	}
@@ -936,20 +937,20 @@ sub draw_form_field {
 
 	if ($_REQUEST {__only_field}) {
 
-		my @fields = split (',', $_REQUEST {__only_field});
+		my $fields = [split (',', $_REQUEST {__only_field})];
 
 		if ($field -> {type} eq 'hgroup') {
 			my $html = '';
 			foreach (@{$field -> {items}}) {$html .= draw_form_field ($_, $data)}
 			return $html;
 		}
-		elsif ($field -> {type} eq 'radio') {
+		elsif ($field -> {type} eq 'radio' && !($field -> {name} ~~ $fields)) {
 			my $html = '';
 			foreach (@{$field -> {values}}) {$html .= draw_form_field ($_, $data)}
 			return $html;
 		}
 		else {
-			(grep {$_ eq $field -> {name}} @fields) > 0 or return '';
+			(grep {$_ eq $field -> {name}} @$fields) > 0 or return '';
 		}
 
 	}
@@ -3153,7 +3154,6 @@ sub out_json ($) {
 	$data = $_JSON -> encode ($data) if ref ($data);
 
 	out_html ({}, $data);
-
 }
 
 ################################################################################
@@ -3216,6 +3216,12 @@ sub out_html {
 	$r -> headers_out -> {'X-Powered-By'} = 'Eludia/' . $Eludia::VERSION;
 
 	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
+
+	if ($preconf -> {core_cors}) {
+		$r -> headers_out -> {'Access-Control-Allow-Origin'} = $preconf -> {core_cors};
+		$r -> headers_out -> {'Access-Control-Allow-Credentials'} = 'true';
+		$r -> headers_out -> {'Access-Control-Allow-Headers'} = 'Origin, X-Requested-With, Content-Type, Accept, Cookie';
+	}
 
 	send_http_header ();
 
