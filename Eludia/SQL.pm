@@ -1268,9 +1268,11 @@ sub sql_safe_execute {
 
 	$dbh ||= $db;
 
-	my $sql = $dbh -> {Statement};
+	$_REQUEST {sql_query} = $dbh -> {Statement};
 
-	die "#_#:" . notify_about_error ({error => $error, sql => $sql, params => $params});
+	$_REQUEST {sql_params} = $params;
+
+	die $error;
 }
 
 ################################################################################

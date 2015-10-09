@@ -526,15 +526,11 @@ sub __adjust_vert_menu_item {
 
 sub draw_error_page {
 
-	my ($_SKIN, $page) = @_;
+	my ($_SKIN, $page, $error) = @_;
 
 	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
 
-	my $data = $_JSON -> encode ([$_REQUEST {error}]);
-
-	$_REQUEST {__script} = <<EOJ;
-		function on_load () {
-EOJ
+	my $data = $_JSON -> encode ([$error -> {label}]);
 
 	if ($page -> {error_field}) {
 		$_REQUEST{__script} .= <<EOJ;
@@ -543,6 +539,32 @@ EOJ
 EOJ
 	}
 
+	my $head_links;
+
+	if ($error -> {kind}) {
+
+		my $label = $error -> {kind} eq 'sql lock error'? $i18n -> {try_again} : $i18n -> {internal_error};
+
+		my $options = {
+			email   => $preconf -> {support_email},
+			subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
+			title   => $i18n -> {internal_error},
+			details => $error -> {label} . "\n" . $error -> {error},
+			label   => $label,
+			href    => "$_REQUEST{__static_url}/error.html?",
+			height  => 280,
+			width   => 510,
+		};
+
+		$options = $_JSON -> encode ($options);
+
+
+		$head_links .= q|<script src="/i/_skins/TurboMilk/navigation.js"></script>|;
+
+		$_REQUEST{__script} .= "\n dialog_open ($options)\n setCursor ();\n";
+
+		$_REQUEST {__no_back} = 1;
+	}
 
 	if ($preconf -> {core_dbl_click_protection}) {
 		$_REQUEST{__script} .= <<EOJ;
@@ -572,16 +594,21 @@ EOJ
 
 	$_REQUEST {__no_back} or $_REQUEST {__script} .= "\n if (window.name != 'invisible') {history.go (-1)}\n";
 
-	$_REQUEST {__script} .= <<EOJ;
+	$error -> {kind} or $_REQUEST {__script} .= <<EOJ;
 			var data = $data;
 			alert (data [0]);
 			try {window.parent.setCursor ()} catch (e) {}
 			window.parent.document.body.style.cursor = 'default';
 			try {window.parent.poll_invisibles ()} catch (e) {}
-		}
 EOJ
 
-	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};
+	$_REQUEST {__script} = <<EOJ;
+function on_load () {
+$_REQUEST{__script}
+}
+EOJ
+
+	return qq{<html><head>$head_links<script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};
 
 }
 

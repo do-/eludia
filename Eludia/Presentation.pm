@@ -2908,35 +2908,31 @@ sub draw_page {
 
 sub draw_error_page {
 
-	my $page = $_[0];
+	my ($page, $error) = @_;
 
-	$_REQUEST {error} ||= $_[1];
 
-	if ($_REQUEST {error} =~ s{^\#([\w-]+)\#\:}{}) {
+	if ($error -> {label} =~ s{^\#([\w-]+)\#\:}{}i) {
 
 		$page -> {error_field} = $1;
 
-		($_REQUEST {error}) = split / at/sm, $_REQUEST {error};
+		($error -> {label}) = split / at/sm, $error -> {label};
 
-	}
-	elsif ($_REQUEST {error} =~ /called at/) {
+	} elsif (!$error -> {kind}) {
 
-		$_REQUEST {error} = notify_about_error ($_REQUEST {error});
-
-	} else {
-
-		Carp::cluck ($_REQUEST {error});
+		Carp::cluck ($error -> {label});
 
 	}
 
-	$_REQUEST {error} = $i18n -> {$_REQUEST {error}}
-		if $_REQUEST {error};
+	$error -> {label} = $i18n -> {$error -> {label}}
+		if $error -> {label};
+
+	$_REQUEST {error} ||= $error -> {label};
 
 	setup_skin ();
 
 	$_REQUEST {__response_started} and $_REQUEST {error} =~ s{\n}{<br>}gsm and return $_REQUEST {error};
 
-	return $_SKIN -> draw_error_page ($page);
+	return $_SKIN -> draw_error_page ($page, $error);
 
 }
 

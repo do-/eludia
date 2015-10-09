@@ -64,7 +64,7 @@
 	wrong_sec                => 'Invalid seconds',
 	empty_file               => q[Cannot upload empty file],
 	try_again                => "Action has failed. Please try again.",
-	internal_error           => "An internal error occurred.\nPlease contact technical support.",
+	internal_error           => "An internal error occurred.",
 	authorization            => 'Authorization',
 	login                    => 'login',
 	execute_logon            => 'enter',

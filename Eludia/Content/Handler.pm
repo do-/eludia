@@ -484,7 +484,16 @@ sub handle_error {
 
 	my ($page) = @_;
 
-	out_html ({}, draw_error_page ($page));
+	my $error = investigate_error ($_REQUEST {error}, $_REQUEST {sql_query}, $_REQUEST {sql_params});
+
+	out_html ({}, draw_error_page ($page, $error));
+
+	if ($error -> {kind}) {
+
+		notify_about_error ($error);
+
+		try_to_repair_error ($error);
+	}
 
 	return action_finish ();
 
