@@ -547,7 +547,7 @@ EOJ
 
 		my $options = {
 			email   => $preconf -> {support_email},
-			subject => "Ð¢ÐµÑ…Ð¿Ð¾Ð´Ð´ÐµÑ€Ð¶ÐºÐ° ($$preconf{about_name}). ÐžÑˆÐ¸Ð±ÐºÐ° Ð¾Ñ‚ $$_USER{label}",
+			subject => "Òåõïîääåðæêà ($$preconf{about_name}). Îøèáêà îò $$_USER{label}",
 			title   => $i18n -> {internal_error},
 			details => $error -> {label} . "\n" . $error -> {error},
 			label   => $label,
