@@ -11,7 +11,7 @@ sub notify_about_error {
 
 	$error_details = $delimiter . "$$options{label}:\n$$options{error}";
 
-	print STDERR $options -> {error} . "\n";
+	log_error ($options);
 
 	my $blame;
 
@@ -120,6 +120,22 @@ sub repair_table_model {
 	);
 
 	$ENV {ELUDIA_SILENT} or print STDERR script_log_signature () . "refresh model done\n";
+}
+
+################################################################################
+
+sub log_error {
+
+	my ($options) = @_;
+
+	print STDERR $options -> {error} . "\n";
+
+	my $log = $preconf -> {_} -> {logs} . 'fatal.log';
+
+	my $delimiter = "\n" . ('=' x 80) . "\n";
+	open (F, ">>$log") or die "Can't write to $log:$1\n";
+	print F "$delimiter$$options{label}:\n$$options{error}";
+	close F;
 }
 
 ################################################################################
