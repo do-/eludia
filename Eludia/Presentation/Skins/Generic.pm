@@ -561,7 +561,7 @@ EOJ
 
 		$head_links .= q|<script src="/i/_skins/TurboMilk/navigation.js"></script>|;
 
-		$_REQUEST{__script} .= "\n dialog_open ($options)\n setCursor ();\n";
+		$_REQUEST{__script} .= "\n var options = $options; options.after = function() {history.go(-1)}; dialog_open (options)\n setCursor ();\n";
 
 		$_REQUEST {__no_back} = 1;
 	}

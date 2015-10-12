@@ -693,7 +693,9 @@ sub handle_request_of_type_showing {
 	setup_page_content ($page)
 		unless ($_REQUEST {__only_menu} || !$_REQUEST_VERBATIM {type} && !$_REQUEST_VERBATIM {__subset});
 
-	return handler_finish () if $_REQUEST {__response_sent} && !$_REQUEST {error};
+	return handle_error ($page) if $_REQUEST {error};
+
+	return handler_finish () if $_REQUEST {__response_sent};
 
 	out_html ({}, draw_page ($page));
 

@@ -12,6 +12,9 @@ sub setup_page_content {
 	our $_QUERY = undef;
 
 	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
+
+	$@ and return $_REQUEST {error} = $@;
+
 # Call it unless content function does'nt called order () or sql ()
 	check___query ()
 		unless $_QUERY;
