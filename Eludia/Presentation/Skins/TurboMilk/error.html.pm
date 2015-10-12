@@ -48,6 +48,9 @@
 					$('#error_detail').val(dialogArguments.details);
 				}
 
+				if (dialogArguments.label) {
+					$('#error_message_area').text(dialogArguments.label);
+				}
 				$('#mail_support').attr('href', support_mailto_href(dialogArguments));
 			}
 		</script>
@@ -56,7 +59,11 @@
 		<div style="float: left">
 			<img src="/i/_skins/TurboMilk/error.png?salt=43" class="help-image"></img>
 		</div>
-		<p>Произошла внутренняя ошибка. Сообщение о ней уже отправлено в службу техподдержки и мы приступили к ее исправлению.</p>
+		<p>
+		<span id="error_message_area">
+			Произошла внутренняя ошибка.
+		</span>
+		</p>
 		<p>
 			<a href="#" id="toggle_detail" onclick="toggle_detail();">Показать подробности ошибки</a>
 		</p>
@@ -68,8 +75,10 @@
 		</p>
 		<span id="mail_support_area">
 			<p>
-				Для более быстрого решения проблемы Вы можете отправить письмо в техподдержку с подробным описанием
+				<span id="error_hint_area">
+					Для более быстрого решения проблемы Вы можете отправить письмо в техподдержку с подробным описанием
 				Ваших действий до появления ошибки (опишите их до системной информации об ошибке).
+				</span>
 			</p>
 			<p>
 				<a id="mail_support" href="#" >Отправить e-mail в службу технической поддержки</a>

@@ -543,7 +543,15 @@ EOJ
 
 	if ($error -> {kind}) {
 
-		my $label = $error -> {kind} eq 'sql lock error'? $i18n -> {try_again} : $i18n -> {internal_error};
+		my $label;
+
+		if ($error -> {kind} eq "sql lock error") {
+			$label = $i18n -> {try_again}
+		} else {
+			$label = $i18n -> {internal_error} . (
+				$preconf -> {mail} -> {admin}? (" "  . $i18n -> {internal_error_we_know}) : ""
+			);
+		}
 
 		my $options = {
 			email   => $preconf -> {support_email},

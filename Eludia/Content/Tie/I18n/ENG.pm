@@ -65,6 +65,7 @@
 	empty_file               => q[Cannot upload empty file],
 	try_again                => "Action has failed. Please try again.",
 	internal_error           => "An internal error occurred.",
+	internal_error_we_know   => "Technical support was notified and we are fixing it.",
 	authorization            => 'Authorization',
 	login                    => 'login',
 	execute_logon            => 'enter',
