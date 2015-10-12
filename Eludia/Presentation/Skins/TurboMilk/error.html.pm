@@ -13,6 +13,9 @@
 				width: auto;
 				margin-right: 20px;
 			}
+			#error_detail_area {
+				margin: 5px;
+			}
 		</style>
 		<script src="/i/_skins/TurboMilk/navigation.js"></script>
 		<script>
@@ -59,7 +62,7 @@
 		</p>
 		<p>
 			<span id="error_detail_area" style="display: none">
-				<textarea id="error_detail" rows="7" cols="57"></textarea>
+				<textarea id="error_detail" rows="8" cols="57"></textarea>
 			</span>
 			<p></p>
 		</p>
