@@ -554,7 +554,7 @@ EOJ
 		}
 
 		my $options = {
-			email   => $preconf -> {support_email},
+			email   => $preconf -> {mail}? $preconf -> {mail} -> {support} : '',
 			subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
 			title   => $i18n -> {internal_error},
 			details => $error -> {label} . "\n" . $error -> {error},
