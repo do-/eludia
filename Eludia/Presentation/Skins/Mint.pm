@@ -362,6 +362,55 @@ EOH
 
 ################################################################################
 
+sub draw_fatal_error_page {
+
+	my ($_SKIN, $page, $error) = @_;
+
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+
+	my $options = {
+		email   => $preconf -> {mail}? $preconf -> {mail} -> {support} : '',
+		subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
+		title   => $i18n -> {internal_error},
+		details => $error -> {label} . "\n" . $error -> {error},
+		label   => $error -> {msg},
+		href    => "$_REQUEST{__static_url}/error.html?",
+		height  => 290,
+		width   => 510,
+	};
+
+	$options = $_JSON -> encode ($options);
+
+	$_REQUEST {__script} .= <<EOJS;
+
+	var parent_frame = parent;
+
+	var top_w = parent_frame.ancestor_window_with_child('eludia-application-iframe')
+
+	var eludia_frame = top_w.child.contentWindow;
+
+	var options = $options;
+
+	options.after = function() {
+		parent_frame.unblockui();
+	};
+
+	if (eludia_frame.dialog_open) {
+		eludia_frame.dialog_open (options);
+	} else {
+		alert (options.label);
+		if (window.name != 'invisible') {history.go (-1)};
+	}
+EOJS
+
+	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";
+
+	return qq{<html><head>$_REQUEST{__head_links}</head><body></body></html>};
+
+}
+
+################################################################################
+
 sub draw_form_field {
 
 	my ($_SKIN, $field, $data) = @_;
