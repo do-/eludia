@@ -29,9 +29,9 @@
 			function support_mailto_href(options) {
 				var href = 'mailto:' + options.email + '?';
 				href = href + 'subject=' + encodeURIComponent(options.subject);
-				href = href + '&body=' + encodeURIComponent(options.details);
+				href = href + '&body=' + encodeURIComponent("Пожалуйста, подробно опишите Ваши действия до появления ошибки здесь:\n\n\n" + options.details);
 
-				var uri_max_length = 2000;
+				var uri_max_length = 1700;
 				href = href.substring(0, uri_max_length);
 
 				return href;
