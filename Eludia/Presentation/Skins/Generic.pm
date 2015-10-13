@@ -521,6 +521,14 @@ sub __adjust_vert_menu_item {
 	}
 
 }
+################################################################################
+
+sub draw_fatal_error_page {
+
+	my ($_SKIN, $page, $error) = @_;
+
+	return draw_error_page ($_SKIN, $page, $error);
+}
 
 ################################################################################
 
@@ -530,7 +538,7 @@ sub draw_error_page {
 
 	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
 
-	my $data = $_JSON -> encode ([$error -> {label}]);
+	my $data = $_JSON -> encode ([$error -> {msg}]);
 
 	if ($page -> {error_field}) {
 		$_REQUEST{__script} .= <<EOJ;
@@ -539,40 +547,6 @@ sub draw_error_page {
 EOJ
 	}
 
-	my $head_links;
-
-	if ($error -> {kind}) {
-
-		my $label;
-
-		if ($error -> {kind} eq "sql lock error") {
-			$label = $i18n -> {try_again}
-		} else {
-			$label = $i18n -> {internal_error} . (
-				$preconf -> {mail} -> {admin}? (" "  . $i18n -> {internal_error_we_know}) : ""
-			);
-		}
-
-		my $options = {
-			email   => $preconf -> {mail}? $preconf -> {mail} -> {support} : '',
-			subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
-			title   => $i18n -> {internal_error},
-			details => $error -> {label} . "\n" . $error -> {error},
-			label   => $label,
-			href    => "$_REQUEST{__static_url}/error.html?",
-			height  => 280,
-			width   => 510,
-		};
-
-		$options = $_JSON -> encode ($options);
-
-
-		$head_links .= q|<script src="/i/_skins/TurboMilk/navigation.js"></script>|;
-
-		$_REQUEST{__script} .= "\n var options = $options; options.after = function() {history.go(-1)}; dialog_open (options)\n setCursor ();\n";
-
-		$_REQUEST {__no_back} = 1;
-	}
 
 	if ($preconf -> {core_dbl_click_protection}) {
 		$_REQUEST{__script} .= <<EOJ;
@@ -602,7 +576,7 @@ EOJ
 
 	$_REQUEST {__no_back} or $_REQUEST {__script} .= "\n if (window.name != 'invisible') {history.go (-1)}\n";
 
-	$error -> {kind} or $_REQUEST {__script} .= <<EOJ;
+	$_REQUEST {__script} .= <<EOJ;
 			var data = $data;
 			alert (data [0]);
 			try {window.parent.setCursor ()} catch (e) {}
@@ -616,7 +590,7 @@ $_REQUEST{__script}
 }
 EOJ
 
-	return qq{<html><head>$head_links<script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};
+	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};
 
 }
 

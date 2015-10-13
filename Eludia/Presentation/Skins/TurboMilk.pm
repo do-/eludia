@@ -583,6 +583,49 @@ EOH
 
 }
 
+
+################################################################################
+
+sub draw_fatal_error_page {
+
+	my ($_SKIN, $page, $error) = @_;
+
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+
+	my $head_links;
+
+	if ($error -> {kind}) {
+
+		my $options = {
+			email   => $preconf -> {mail}? $preconf -> {mail} -> {support} : '',
+			subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
+			title   => $i18n -> {internal_error},
+			details => $error -> {label} . "\n" . $error -> {error},
+			label   => $error -> {msg},
+			href    => "$_REQUEST{__static_url}/error.html?",
+			height  => 280,
+			width   => 510,
+		};
+
+		$options = $_JSON -> encode ($options);
+
+		$head_links .= qq|<script src="/i/_skins/$_REQUEST{__skin}/navigation.js"></script>|;
+
+		$_REQUEST{__script} .= "\n var options = $options; options.after = function() {history.go(-1)}; dialog_open (options)\n setCursor ();\n";
+
+	}
+
+
+	$_REQUEST {__script} = <<EOJ;
+function on_load () {
+$_REQUEST{__script}
+}
+EOJ
+
+	return qq{<html><head>$head_links<script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};
+
+}
+
 ################################################################################
 
 sub draw_form_field {

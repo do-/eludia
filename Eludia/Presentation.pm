@@ -2932,6 +2932,11 @@ sub draw_error_page {
 
 	$_REQUEST {__response_started} and $_REQUEST {error} =~ s{\n}{<br>}gsm and return $_REQUEST {error};
 
+	if ($error -> {kind}) {
+
+		return $_SKIN -> draw_fatal_error_page ($page, $error);
+	}
+
 	return $_SKIN -> draw_error_page ($page, $error);
 
 }

@@ -61,9 +61,20 @@ sub investigate_error {
 
 	my $id_error = internal_error_id ();
 
+	my $msg;
+
+	if ($error -> {kind} eq "sql lock error") {
+		$msg = $i18n -> {try_again}
+	} else {
+		$msg = $i18n -> {internal_error} . (
+			$preconf -> {mail} -> {admin}? (" "  . $i18n -> {internal_error_we_know}) : ""
+		);
+	}
+
 	return {
 		label => "[$id_error]$$options{error_tags}",
 		error => $error_details . $options -> {error},
+		msg   => $msg,
 		kind  => $options -> {error_kind},
 		tags  => $options -> {error_tags},
 		sql   => $options -> {sql},
