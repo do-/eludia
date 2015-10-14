@@ -50,6 +50,16 @@ sub investigate_error {
 
 	ref $options eq 'HASH' or $options = {error => $options, sql => $sql, params => $params};
 
+	if ($options -> {error} =~ s/^\#([\w-]+)\#\://) {
+
+		my ($label) = split / at/sm, $options -> {error};
+
+		return {
+			field => $1,
+			label => $label,
+		};
+	}
+
 	if ($options -> {error} !~ /called at/) {
 
 		return {

@@ -538,7 +538,7 @@ sub draw_error_page {
 
 	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
 
-	my $data = $_JSON -> encode ([$error -> {msg}]);
+	my $data = $_JSON -> encode ([$error -> {label}]);
 
 	if ($page -> {error_field}) {
 		$_REQUEST{__script} .= <<EOJ;

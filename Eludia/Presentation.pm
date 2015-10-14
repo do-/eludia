@@ -2911,13 +2911,7 @@ sub draw_error_page {
 	my ($page, $error) = @_;
 
 
-	if ($error -> {label} =~ s{^\#([\w-]+)\#\:}{}i) {
-
-		$page -> {error_field} = $1;
-
-		($error -> {label}) = split / at/sm, $error -> {label};
-
-	} elsif (!$error -> {kind}) {
+	if (!$error -> {kind} && !$error -> {field}) {
 
 		Carp::cluck ($error -> {label});
 
@@ -2927,6 +2921,8 @@ sub draw_error_page {
 		if $error -> {label};
 
 	$_REQUEST {error} ||= $error -> {label};
+
+	$page -> {error_field} = $error -> {field};
 
 	setup_skin ();
 
