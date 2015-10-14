@@ -2910,6 +2910,7 @@ sub draw_error_page {
 
 	my ($page, $error) = @_;
 
+	ref $error or $error = investigate_error ({error => $error});
 
 	if (!$error -> {kind} && !$error -> {field}) {
 
@@ -2928,7 +2929,7 @@ sub draw_error_page {
 
 	$_REQUEST {__response_started} and $_REQUEST {error} =~ s{\n}{<br>}gsm and return $_REQUEST {error};
 
-	if ($error -> {kind}) {
+	if (!$error -> {field}) {
 
 		return $_SKIN -> draw_fatal_error_page ($page, $error);
 	}
