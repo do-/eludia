@@ -525,9 +525,7 @@ sub __adjust_vert_menu_item {
 
 sub draw_fatal_error_page {
 
-	my ($_SKIN, $page, $error) = @_;
-
-	return draw_error_page ($_SKIN, $page, $error);
+	return draw_error_page (@_);
 }
 
 ################################################################################
