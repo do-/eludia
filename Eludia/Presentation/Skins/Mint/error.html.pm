@@ -29,13 +29,13 @@
 			function support_mailto_href(options) {
 				var href = 'mailto:' + options.email + '?';
 				href = href + 'subject=' + encodeURIComponent(options.subject);
-				href = href + '&body=' + encodeURIComponent("Пожалуйста, подробно опишите Ваши действия до появления ошибки здесь:\n\n\n" + options.details);
-
-				var uri_max_length = 1000;
-				href = href.substring(0, uri_max_length);
+				href = href + '&body=' + encodeURIComponent(
+					"Пожалуйста, подробно опишите Ваши действия до появления ошибки здесь:\n\n\n" + options.label
+				);
 
 				return href;
 			}
+
 
 			function on_load(){
 
@@ -51,8 +51,8 @@
 					$('#error_detail').val(dialogArguments.details);
 				}
 
-				if (dialogArguments.label) {
-					$('#error_message_area').text(dialogArguments.label);
+				if (dialogArguments.msg) {
+					$('#error_message_area').text(dialogArguments.msg);
 				}
 				$('#mail_support').attr('href', support_mailto_href(dialogArguments));
 			}
