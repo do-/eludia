@@ -31,7 +31,7 @@
 				href = href + 'subject=' + encodeURIComponent(options.subject);
 				href = href + '&body=' + encodeURIComponent("Пожалуйста, подробно опишите Ваши действия до появления ошибки здесь:\n\n\n" + options.details);
 
-				var uri_max_length = 1700;
+				var uri_max_length = 1000;
 				href = href.substring(0, uri_max_length);
 
 				return href;
