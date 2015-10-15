@@ -2912,12 +2912,6 @@ sub draw_error_page {
 
 	ref $error or $error = investigate_error ({error => $error});
 
-	if (!$error -> {kind} && !$error -> {field}) {
-
-		Carp::cluck ($error -> {label});
-
-	}
-
 	$error -> {label} = $i18n -> {$error -> {label}}
 		if $error -> {label};
 
@@ -2929,7 +2923,7 @@ sub draw_error_page {
 
 	$_REQUEST {__response_started} and $_REQUEST {error} =~ s{\n}{<br>}gsm and return $_REQUEST {error};
 
-	if (!$error -> {field}) {
+	if ($error -> {kind}) {
 
 		return $_SKIN -> draw_fatal_error_page ($page, $error);
 	}
