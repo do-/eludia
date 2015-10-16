@@ -17,7 +17,7 @@
 				margin: 5px;
 			}
 		</style>
-		<script src="/i/_skins/TurboMilk/navigation.js"></script>
+		<script src="/i/mint/libs/KendoUI/js/jquery.min.js"></script>
 		<script>
 			function toggle_detail() {
 				$("#error_detail_area").toggle();
@@ -45,6 +45,7 @@
 					document.title = dialogArguments.title;
 					title_set = 1;
 				}
+
 				window.returnValue = {'result': 'esc'};
 
 				if(dialogArguments.details) {
@@ -60,7 +61,7 @@
 	</head>
 	<body onLoad="on_load()" style="background-color : #efefef">
 		<div style="float: left">
-			<img src="/i/_skins/TurboMilk/error.png?salt=43" class="help-image"></img>
+			<img src="/i/_skins/Mint/error.png" class="help-image"></img>
 		</div>
 		<p>
 		<span id="error_message_area">
