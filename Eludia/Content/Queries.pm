@@ -360,6 +360,8 @@ sub do_update___queries {
 
 	my @order = ();
 
+	my $is_any_column_shown = 0;
+
 	foreach my $key (keys %_REQUEST) {
 
 		$key =~ /^_(.+)_ord$/ or next;
@@ -379,6 +381,8 @@ sub do_update___queries {
 			desc => $_REQUEST {"_${order}_desc"},
 		};
 
+		$is_any_column_shown ||= $_REQUEST {"_${order}_ord"};
+
 		if ($_REQUEST {"_${order}_sort"}) {
 
 			$order [ $_REQUEST {"_${order}_sort"} ]  = $order;
@@ -387,6 +391,9 @@ sub do_update___queries {
 		}
 
 	}
+
+	$is_any_column_shown
+		or croak "#_#:$i18n->{any_column_is_mandatory}";
 
 	$content -> {order} = join ', ', grep { $_ } @order;
 

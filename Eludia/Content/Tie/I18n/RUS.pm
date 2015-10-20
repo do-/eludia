@@ -20,6 +20,7 @@
 	column                   => 'Колонка',
 	column_order             => 'показ',
 	columns_and_filters      => 'СТОЛБЦЫ И ФИЛЬТРЫ',
+	any_column_is_mandatory  => 'Необходимо вывести в список хотя одну из колонок',
 	confirm_close_vocabulary => 'Вы выбрали',
 	confirm_delete           => 'Удалить эту запись, вы уверены?',
 	confirm_esc              => 'Уйти без сохранения данных?',
