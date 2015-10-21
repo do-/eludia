@@ -2233,11 +2233,12 @@ sub draw_table {
 							if $_ -> {ord} > $max_ord;
 					}
 
-					$h -> {ord} = $max_ord;
+					$h -> {ord} = $max_ord || 0;
+					my $p = $h -> {parent_header};
 
-				} elsif ($_REQUEST {id___query}) {
-
-					$h -> {ord} = $ord_source_code;
+					if ($max_ord == 0 && $p -> {label}) {
+						$p -> {hidden} = 1;
+					}
 
 				}
 
@@ -2247,8 +2248,6 @@ sub draw_table {
 				my $p = $h -> {parent_header};
 
 				while ($p -> {label}) {
-
-
 					$p -> {colspan} --;
 					$p -> {hidden} = 1 if $p -> {colspan} == 0;
 					$p = $p -> {parent_header};
