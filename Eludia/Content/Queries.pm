@@ -104,6 +104,15 @@ sub fix___query {
 
 		keys %{$_QUERY -> {content} -> {columns}} or return;
 
+		foreach my $column (keys %$columns) { # missing columns will be shown as new, hide them
+
+			next
+				if exists $_QUERY -> {content} -> {columns} -> {$column};
+
+			$_QUERY -> {content} -> {columns} -> {$column} -> {ord} = 0;
+
+		}
+
 		my $id___query = $_REQUEST {id___query};
 
 		$_REQUEST {id___query} = sql_select_id (
