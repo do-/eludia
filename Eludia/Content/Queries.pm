@@ -104,6 +104,15 @@ sub fix___query {
 
 		keys %{$_QUERY -> {content} -> {columns}} or return;
 
+		foreach my $column (keys %$columns) { # missing columns will be shown as new, hide them
+
+			next
+				if exists $_QUERY -> {content} -> {columns} -> {$column};
+
+			$_QUERY -> {content} -> {columns} -> {$column} -> {ord} = 0;
+
+		}
+
 		my $id___query = $_REQUEST {id___query};
 
 		$_REQUEST {id___query} = sql_select_id (
@@ -360,6 +369,8 @@ sub do_update___queries {
 
 	my @order = ();
 
+	my $is_any_column_shown = 0;
+
 	foreach my $key (keys %_REQUEST) {
 
 		$key =~ /^_(.+)_ord$/ or next;
@@ -379,6 +390,8 @@ sub do_update___queries {
 			desc => $_REQUEST {"_${order}_desc"},
 		};
 
+		$is_any_column_shown ||= $_REQUEST {"_${order}_ord"};
+
 		if ($_REQUEST {"_${order}_sort"}) {
 
 			$order [ $_REQUEST {"_${order}_sort"} ]  = $order;
@@ -387,6 +400,9 @@ sub do_update___queries {
 		}
 
 	}
+
+	$is_any_column_shown
+		or croak "#_#:$i18n->{any_column_is_mandatory}";
 
 	$content -> {order} = join ', ', grep { $_ } @order;
 

@@ -40,6 +40,7 @@
 	log_on                   => 'log on',
 	column_order             => 'showing',
 	columns_and_filters      => 'COLUMNS AND FILTERS',
+	any_column_is_mandatory  => 'It is required to show a column',
 	confirm_open_vocabulary  => 'Open the vocabulary window?',
 	confirm_close_vocabulary => 'Your choice is',
 	choose_open_vocabulary   => 'Open the vocabulary window',
