@@ -66,6 +66,10 @@ sub __adjust_form_field_string {
 
 	$attributes -> {id}           ||= 'input_' . $options -> {name};
 
+	if ($options -> {disabled}) {
+		$attributes -> {readonly} = 'readonly';
+		$attributes -> {class} .= ' disabled';
+	}
 }
 
 ################################################################################

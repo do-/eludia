@@ -1721,6 +1721,11 @@ function enableDropDownList(name, enable){
 	document.getElementById(name).disabled = !enable;
 }
 
+function enable_input(name, enable) {
+	var field = $('[name=_' + name + ']' + ',#input_' + name);
+	field.prop('readonly', !enable).toggleClass('disabled', !enable);
+}
+
 function toggle_field (name, is_visible, is_clear_field) {
 
 	is_visible = is_visible > 0;
