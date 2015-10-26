@@ -1833,7 +1833,7 @@ sub draw_table_header_cell {
 
 	check_title ($cell);
 
-	if ($cell -> {order}) {
+	if ($cell -> {order} && !defined $cell -> {href}) {
 
 		$cell -> {href} = {
 			order                    => $cell -> {order},
