@@ -2209,7 +2209,7 @@ sub draw_table {
 
 	@_COLUMNS = @$flat_headers;
 
-	my $is_exist_default_ords = 0 + grep {$_ -> {ord}} @$flat_headers;
+	my $is_exist_default_ords = 0 + grep {$_ -> {ord} || $_ -> {ord_fixed}} @$flat_headers;
 
 	foreach my $h (@$flat_headers) {
 
@@ -2222,7 +2222,11 @@ sub draw_table {
 
 			my $column_order = $_REQUEST {id___query} ? $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} : undef;
 
-			if (!defined ($column_order) || !defined ($column_order -> {ord})) {
+			if ($h -> {ord_fixed}) {
+
+				$h -> {ord} = $h -> {ord_fixed};
+
+			} elsif (!defined ($column_order) || !defined ($column_order -> {ord})) {
 
 				if ($_REQUEST {id___query} && $h -> {parent_header}) {
 
