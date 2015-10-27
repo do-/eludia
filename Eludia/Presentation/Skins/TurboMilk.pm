@@ -698,6 +698,8 @@ sub draw_form_field_string {
 
 	my ($_SKIN, $options) = @_;
 
+	my $attributes = $options -> {attributes};
+
 	$attributes -> {onKeyUp}    .= $options -> {onKeyUp};
 	$attributes -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
 	$attributes -> {onKeyDown}  .= ';tabOnEnter();';
