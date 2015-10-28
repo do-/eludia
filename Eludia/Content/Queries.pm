@@ -129,7 +129,7 @@ sub fix___query {
 		my $content = {filters => {}, columns => {}};
 
 		my %n;
-		my $is_exist_default_ords = 0 + grep {$_ -> {ord}} @_COLUMNS;
+		my $is_exist_default_ords = 0 + grep {$_ -> {ord} || $_ -> {ord_fixed}} @_COLUMNS;
 
 		foreach my $o (@_COLUMNS) {
 
@@ -514,7 +514,7 @@ sub draw_item_of___queries {
 		next unless ($o -> {order} || $o -> {no_order});
 
 		next
-			if $o -> {__hidden};
+			if $o -> {__hidden} || $o -> {ord_fixed};
 
 		my @f;
 
