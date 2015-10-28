@@ -981,6 +981,10 @@ input.table-mandatory-inputs {
 	padding-right: 3px;
 }
 
+input.disabled {
+	background: #eeeeee;
+}
+
 td.toolbar {
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
