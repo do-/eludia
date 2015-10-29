@@ -38,6 +38,10 @@ sub notify_about_error {
 
 		!$blame or $subject .= " $blame";
 
+		$_REQUEST {__was_notify_about_error} and return;
+
+		$_REQUEST {__was_notify_about_error} = 1;
+
 		send_mail ({
 			to      => [keys %unique_recipients],
 			subject => $subject,

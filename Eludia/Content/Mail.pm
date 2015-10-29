@@ -231,17 +231,19 @@ sub send_mail {
 
 	}
 
+	my $errors;
+
 	foreach my $to (@real_to) {
 
 		next if $smtp -> recipient ($to, {Notify => ['FAILURE', 'DELAY'], SkipBad => 0});
 
 		$smtp -> quit;
 
-		$SIG {__DIE__} = 'DEFAULT';
-
-		die ("The mail address '$to' is rejected by the SMTP server $preconf->{mail}->{host}\n");
+		$errors .= "The mail address '$to' is rejected by the SMTP server $preconf->{mail}->{host}\n";
 
 	}
+
+	notify_about_error ($errors) if $errors;
 
 	$smtp -> data ();
 
