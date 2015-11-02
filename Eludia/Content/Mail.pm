@@ -132,25 +132,30 @@ sub send_mail {
 		$options -> {href} =~ /^http/ or $options -> {href} = ($server_name =~ /^http/ ? $server_name : "http://$server_name") . $options -> {href};
 	}
 
+	my $text = $options -> {text};
+
 	if ($options -> {template}) {
 		our $DATA = $options -> {data} if $options -> {data};
 		$DATA -> {href} = $options -> {href};
-		$options -> {text} = fill_in_template ($options -> {template}, '', {no_print => 1});
+		$text = fill_in_template ($options -> {template}, '', {no_print => 1});
 		undef $DATA if $options -> {data};
 	}
 	elsif ($options -> {href}) {
 		$options -> {href} = "<br><br><a href='$$options{href}'>$$options{href}</a>" if $options -> {content_type} eq 'text/html';
-		$options -> {text} .= "\n\n" . $options -> {href};
+		$text .= "\n\n" . $options -> {href};
 	}
 
 	if ($options -> {signature}) {
 
-		$options -> {signature} = '<br><br>' . $options -> {signature} if $options -> {content_type} eq 'text/html';
-		$options -> {text} .= "\n\n" . $options -> {signature};
+		my $delimeter = "\n\n";
+
+		$delimeter .= '<br><br>' if $options -> {content_type} eq 'text/html';
+
+		$text .= $delimeter . $options -> {signature};
 	}
 
-	my $text = encode_base64 (
-		($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ($options -> {body_charset}, $options -> {text}) : $options -> {text})
+	$text = encode_base64 (
+		($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ($options -> {body_charset}, $text) : $text)
 		. "\n"
 		. $options -> {text_tail}
 	);
