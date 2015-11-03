@@ -45,7 +45,7 @@
 	wrong_min                => 'Format de date inconnu',
 	wrong_sec                => 'Format de date inconnu',
 	try_again                => "Echec de l'action. Veuillez essayer a nouveau.",
-	internal_error           => "Une erreur interne s'est produite.\nS'il vous plait contacter le support technique.",
+	internal_error           => "Une erreur interne s'est produite.",
 	empty_file               => q[Ne pouvez pas telecharger des fichiers vides],
 	authorization            => 'Connexion',
 	login                    => 'login',

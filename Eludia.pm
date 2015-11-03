@@ -312,6 +312,8 @@ sub check_application_directory {
 
 	$preconf -> {_} -> {docroot} = $docroot;
 
+	$preconf -> {_} -> {logs} = $docroot . '../logs/';
+
 	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs', 'i/_mbox', 'i/_mbox/by_user') {
 
 		loading_log "  checking ${docroot}${subdir}...";

@@ -42,17 +42,25 @@ sub draw_page {
 
 ################################################################################
 
+sub draw_fatal_error_page {
+
+	return draw_error_page (@_);
+
+}
+
+################################################################################
+
 sub draw_error_page {
 
-	my ($_SKIN, $page) = @_;
+	my ($_SKIN, $page, $error) = @_;
 
 	return $_SKIN -> draw_hash ({
 
-		message => $_REQUEST {error},
+		message => $error -> {label},
 
 		message_type => 'error',
 
-		field   => $page -> {error_field},
+		field   => $error -> {field},
 
 	});
 

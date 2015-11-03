@@ -525,20 +525,22 @@ sub __adjust_vert_menu_item {
 	}
 
 }
+################################################################################
+
+sub draw_fatal_error_page {
+
+	return draw_error_page (@_);
+}
 
 ################################################################################
 
 sub draw_error_page {
 
-	my ($_SKIN, $page) = @_;
+	my ($_SKIN, $page, $error) = @_;
 
 	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
 
-	my $data = $_JSON -> encode ([$_REQUEST {error}]);
-
-	$_REQUEST {__script} = <<EOJ;
-		function on_load () {
-EOJ
+	my $data = $_JSON -> encode ([$error -> {label}]);
 
 	if ($page -> {error_field}) {
 		$_REQUEST{__script} .= <<EOJ;
@@ -582,7 +584,12 @@ EOJ
 			try {window.parent.setCursor ()} catch (e) {}
 			window.parent.document.body.style.cursor = 'default';
 			try {window.parent.poll_invisibles ()} catch (e) {}
-		}
+EOJ
+
+	$_REQUEST {__script} = <<EOJ;
+function on_load () {
+$_REQUEST{__script}
+}
 EOJ
 
 	return qq{<html><head><script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};

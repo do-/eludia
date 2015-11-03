@@ -7,16 +7,11 @@ sub notify_about_error {
 
 	ref $options eq 'HASH' or $options = {error => $options};
 
-
 	my $delimiter = "\n" . ('=' x 80) . "\n";
 
-	my $error_details = _adjust_core_error_kind ($options);
+	$error_details = $delimiter . "$$options{label}:\n$$options{error}";
 
-	my $id_error = internal_error_id ();
-
-	$error_details = $delimiter . "[$id_error][$options->{error_kind}]$$options{error_tags}:\n" . $error_details;
-
-	print STDERR $error_details . $options -> {error} . "\n";
+	log_error ($options);
 
 	my $blame;
 
@@ -34,7 +29,7 @@ sub notify_about_error {
 		$blame = !@guessed_causers? ""
 			: "blame " . join (', ', map {$_ -> {label}} @guessed_causers);
 
-		my $subject = "[watchdog][$_NEW_PACKAGE][$options->{error_kind}]$$options{error_tags}";
+		my $subject = "[watchdog][$_NEW_PACKAGE]$options->{tags}";
 
 		!$blame or $subject .= " $blame";
 
@@ -45,25 +40,60 @@ sub notify_about_error {
 		send_mail ({
 			to      => [keys %unique_recipients],
 			subject => $subject,
-			text    => $error_details . $options -> {error} . error_detail_tail ($options),
+			text    => $error_details . error_detail_tail ($options),
 			log     => 'info',
 		}) if !internal_error_is_duplicate ($options -> {error});
 	}
+}
 
-	try_to_repair_error ($options);
+################################################################################
 
-	if ($_REQUEST {__skin} eq 'STDERR') { # offline script
-		return $error_details . $options -> {error};
+sub investigate_error {
+
+	my ($options, $sql, $params) = @_;
+
+	ref $options eq 'HASH' or $options = {error => $options, sql => $sql, params => $params};
+
+	if ($options -> {error} =~ s/^\#([\w-]+)\#\://) {
+
+		my ($label) = split / at/sm, $options -> {error};
+
+		return {
+			field => $1,
+			label => $label,
+		};
 	}
 
-	my @msg = ("[$id_error]");
+	if ($options -> {error} !~ /called at/) {
 
-	!$preconf -> {testing} or !$blame or push @msg, "[$blame]";
+		return {
+			label => $options -> {error},
+		};
+	}
 
-	push @msg, ($options -> {error_kind} eq 'sql lock error'?
-		$i18n -> {try_again} : $i18n -> {internal_error});
+	my $error_details = _adjust_core_error_kind ($options);
 
-	return join ("\n", @msg);
+	my $id_error = internal_error_id ();
+
+	my $msg;
+
+	if ($error -> {kind} eq "sql lock error") {
+		$msg = $i18n -> {try_again}
+	} else {
+		$msg = $i18n -> {internal_error} . (
+			$preconf -> {mail} -> {admin}? (" "  . $i18n -> {internal_error_we_know}) : ""
+		);
+	}
+
+	return {
+		label => "[$id_error]$$options{error_tags}",
+		error => $error_details . $options -> {error},
+		msg   => $msg,
+		kind  => $options -> {error_kind},
+		tags  => $options -> {error_tags},
+		sql   => $options -> {sql},
+		params => $options -> {params},
+	};
 }
 
 ################################################################################
@@ -115,6 +145,22 @@ sub repair_table_model {
 	);
 
 	$ENV {ELUDIA_SILENT} or print STDERR script_log_signature () . "refresh model done\n";
+}
+
+################################################################################
+
+sub log_error {
+
+	my ($options) = @_;
+
+	print STDERR $options -> {error} . "\n";
+
+	my $log = $preconf -> {_} -> {logs} . 'fatal.log';
+
+	my $delimiter = "\n" . ('=' x 80) . "\n";
+	open (F, ">>$log") or die "Can't write to $log:$1\n";
+	print F "$delimiter$$options{label}:\n$$options{error}";
+	close F;
 }
 
 ################################################################################
@@ -195,9 +241,11 @@ sub error_detail_tail {
 	my ($options) = @_;
 
 	return ''
-		if $options -> {error_kind} ne 'code';
+		if $options -> {kind} ne 'code';
 
 	local %_REQUEST = %_REQUEST_VERBATIM;
+
+	local %_REQUEST = %_REQUEST;
 
 	delete $_REQUEST {error};
 
@@ -309,6 +357,8 @@ sub _adjust_core_error_kind {
 	}
 
 	$options -> {error_kind} ||= "code";
+
+	$options -> {error_tags} = '[' . $options -> {error_kind} . ']' . $options -> {error_tags};
 
 	return $error_details;
 }
