@@ -681,7 +681,7 @@ sub dialog_open {
 
 sub xls_filename {
 	
-	my $filename = $_REQUEST {type};
+	my $filename = 'eludia_' . $_REQUEST {type};
 
 	if ($conf -> {report_date_in_filename}) {
 		my $generation_date = sprintf ("%04d-%02d-%02d_%02d-%02d", Date::Calc::Today_and_Now);
