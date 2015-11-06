@@ -681,9 +681,8 @@ sub dialog_open {
 
 sub xls_filename {
 	
-	my $filename = $_REQUEST {__page_title};
-	$filename =~ s/[\"\?\:\s\\\/]+/_/gs;
-	
+	my $filename = $_REQUEST {type};
+
 	if ($conf -> {report_date_in_filename}) {
 		my $generation_date = sprintf ("%04d-%02d-%02d_%02d-%02d", Date::Calc::Today_and_Now);
 		$filename .= "_($generation_date)";
