@@ -699,7 +699,11 @@ sub handle_request_of_type_showing {
 
 	return handler_finish () if $_REQUEST {__response_sent};
 
-	out_html ({}, draw_page ($page));
+	my $html = draw_page ($page);
+
+	return handle_error ($page) if $_REQUEST {error};
+
+	out_html ({}, $html);
 
 	return handler_finish ();
 
