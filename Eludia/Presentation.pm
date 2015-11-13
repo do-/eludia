@@ -1095,9 +1095,11 @@ sub draw_toolbar {
 
 			next if $button -> {off};
 
-			my @items = grep { !$_ -> {off} } @{$button -> {items}};
-
-			next if (!@items && @{$button -> {items}});
+			my @items;
+			if (exists $button -> {items}) {
+				@items = grep { !$_ -> {off} } @{$button -> {items}};
+				next unless @items;
+			}
 
 			$button = @items [0] if (@items == 1);
 
@@ -1202,9 +1204,11 @@ sub draw_centered_toolbar_button {
 
 	my ($options) = @_;
 
-	my @items = grep { !$_ -> {off} } @{$options -> {items}};
-
-	return '' if (!@items && @{$options -> {items}});
+	my @items;
+	if (exists $options -> {items}) {
+		@items = grep { !$_ -> {off} } @{$options -> {items}};
+		return '' unless @items;
+	}
 
 	$_ [0] = $options = @items [0] if (@items == 1);
 
