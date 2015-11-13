@@ -1096,7 +1096,7 @@ sub draw_toolbar {
 			next if $button -> {off};
 
 			my @items;
-			if (exists $button -> {items}) {
+			if (defined $button -> {items}) {
 				@items = grep { !$_ -> {off} } @{$button -> {items}};
 				next unless @items;
 			}
@@ -1205,7 +1205,7 @@ sub draw_centered_toolbar_button {
 	my ($options) = @_;
 
 	my @items;
-	if (exists $options -> {items}) {
+	if (defined $options -> {items}) {
 		@items = grep { !$_ -> {off} } @{$options -> {items}};
 		return '' unless @items;
 	}
