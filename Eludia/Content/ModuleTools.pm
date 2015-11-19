@@ -621,9 +621,10 @@ sub require_fresh {
 			my $label = $';
 			$label =~ s{[\r\n]+$}{}gsm;
 
-			my $action = $sub =~ /^(do|validate)_/ ? $' : '';
+			my $action = $sub =~ /^(do|validate)_/ ? $'
+				: $sub =~ /^(get_item_of|select)/ ? '' : undef;
 
-			$_ACTIONS -> {_actions} -> {$type} -> {$action} = $label;
+			defined $action and $_ACTIONS -> {_actions} -> {$type} -> {$action} = $label;
 
 		}
 
