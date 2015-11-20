@@ -187,7 +187,7 @@ sub FETCH_ {
 
 					ref $v ne HASH or !exists $v -> {off} or !$v -> {off} or next;
 
-					$VAR1 -> {$object} -> {$key} ||= $v;
+					$VAR1 -> {$object} -> {$key} = $v;
 
 				}
 
