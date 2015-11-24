@@ -1105,7 +1105,7 @@ sub draw_toolbar {
 
 			if (@items > 1) {
 
-				map {$ _SKIN -> __adjust_button ($_); } @items;
+				map { $_ -> {parent} = 1; $_SKIN -> __adjust_button ($_); } @items;
 
 				$button -> {items} = \@items;
 
@@ -1214,7 +1214,7 @@ sub draw_centered_toolbar_button {
 
 	if (@items > 1) {
 
-		map {$ _SKIN -> __adjust_button ($_); } @items;
+		map { $_ -> {parent} = 1; $_SKIN -> __adjust_button ($_); } @items;
 
 		$options -> {items} = \@items;
 

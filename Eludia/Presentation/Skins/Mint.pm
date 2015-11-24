@@ -2226,24 +2226,6 @@ sub draw_centered_toolbar_button {
 		$img_path = _icon_path ($options -> {icon});
 	}
 
-	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
-
-		unless ($options -> {href} =~ /^javaScript\:/i) {
-
-			$options -> {target} ||= '_self';
-
-			$options -> {href} =~ s{\%}{\%25}g;
-
-			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
-
-			$options -> {target} = '_self';
-
-		}
-
-		$options -> {href} =~ s/\bnope\b/blockui ('', 1);nope/;
-
-	}
-
 	my $nbsp = $options -> {label} ? '&nbsp;' : '';
 
 	my $html = "<td nowrap>";
