@@ -378,6 +378,8 @@ sub __adjust_button_href {
 
 	}
 
+	$_SKIN -> __adjust_button_blockui ($options);
+
 	$options -> {id} ||= '' . $options;
 	$options -> {tabindex} = ++ $_REQUEST {__tabindex};;
 
@@ -386,6 +388,32 @@ sub __adjust_button_href {
 		$h -> {data} = $options -> {id};
 
 		hotkey ($h);
+
+	}
+
+}
+
+################################################################################
+
+sub __adjust_button_blockui {
+
+	my ($_SKIN, $options) = @_;
+
+	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
+
+		unless ($options -> {href} =~ /^javaScript\:/i) {
+
+			$options -> {target} ||= '_self';
+
+			$options -> {href} =~ s{\%}{\%25}g;
+
+			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
+
+			$options -> {target} = '_self';
+
+		}
+
+		$options -> {href} =~ s/\bnope\b/blockui ('', 1);nope/;
 
 	}
 
