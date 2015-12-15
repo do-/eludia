@@ -2169,13 +2169,13 @@ sub draw_table {
 			&& (
 				ref $top_toolbar_field -> {href} eq HASH && $top_toolbar_field -> {href} -> {__edit_query} == 1
 				|| $top_toolbar_field -> {href} =~ /\b__edit_query\b/
-			);
+			) || $_REQUEST {multi_select};
 
 	}
 
 	$options -> {is_not_first_table_on_page} = $_REQUEST {is_not_first_table_on_page};
 
-	if (@_COLUMNS) {
+	if (@_COLUMNS && !$_REQUEST {multi_select}) {
 		$options -> {is_not_first_table_on_page} = 1;
 		delete $_REQUEST {id___query};
 		$_QUERY = undef;
