@@ -2158,7 +2158,7 @@ sub draw_table {
 	$options -> {headers} = $headers;
 
 	my $is_table_columns_order_editable = $_SKIN -> {options} -> {table_columns_order_editable};
-	my $is_table_columns_showing_editable = $options -> {custom__edit_query};
+	my $is_table_columns_showing_editable = $options -> {custom__edit_query} || $_REQUEST {multi_select};
 	foreach my $top_toolbar_field (@{$options -> {top_toolbar}}) {
 
 		last
@@ -2169,7 +2169,7 @@ sub draw_table {
 			&& (
 				ref $top_toolbar_field -> {href} eq HASH && $top_toolbar_field -> {href} -> {__edit_query} == 1
 				|| $top_toolbar_field -> {href} =~ /\b__edit_query\b/
-			) || $_REQUEST {multi_select};
+			);
 
 	}
 
