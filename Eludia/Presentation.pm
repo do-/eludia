@@ -2364,7 +2364,7 @@ EOJS
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
 
-	fix___query ($options -> {is_not_first_table_on_page} ? $options -> {id_table} : ());
+	fix___query ($options -> {is_not_first_table_on_page} ? $options -> {id_table} : ()) unless ($_REQUEST {multi_select});
 
 	if (ref $options -> {path} eq ARRAY) {
 		$options -> {path} = draw_path ($options, $options -> {path});
