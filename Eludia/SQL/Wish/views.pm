@@ -20,12 +20,12 @@ sub wish_to_clarify_demands_for_views {
 
 	foreach my $line (split /\n/, $view -> {_src}) {
 
-		if ($line =~ /^\s*columns\s*=\>/) {
+		if ($line =~ /^\s*columns\s*=\>\s*\{/) {
 			$is_columns_section = 1;
 			next;
 		}
 
-		if ($is_columns_section && $line =~ /^\s*\},?/) {
+		if ($is_columns_section && $line =~ /^\s*\},?\s*$/) {
 			last;
 		}
 
