@@ -2158,7 +2158,7 @@ sub draw_table {
 	$options -> {headers} = $headers;
 
 	my $is_table_columns_order_editable = $_SKIN -> {options} -> {table_columns_order_editable};
-	my $is_table_columns_showing_editable = $options -> {custom__edit_query};
+	my $is_table_columns_showing_editable = $options -> {custom__edit_query} || $_REQUEST {multi_select};
 	foreach my $top_toolbar_field (@{$options -> {top_toolbar}}) {
 
 		last
@@ -2175,7 +2175,7 @@ sub draw_table {
 
 	$options -> {is_not_first_table_on_page} = $_REQUEST {is_not_first_table_on_page};
 
-	if (@_COLUMNS) {
+	if (@_COLUMNS && !$_REQUEST {multi_select}) {
 		$options -> {is_not_first_table_on_page} = 1;
 		delete $_REQUEST {id___query};
 		$_QUERY = undef;
@@ -2364,7 +2364,7 @@ EOJS
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
 
-	fix___query ($options -> {is_not_first_table_on_page} ? $options -> {id_table} : ());
+	fix___query ($options -> {is_not_first_table_on_page} ? $options -> {id_table} : ()) unless ($_REQUEST {multi_select});
 
 	if (ref $options -> {path} eq ARRAY) {
 		$options -> {path} = draw_path ($options, $options -> {path});
