@@ -2158,9 +2158,12 @@ sub draw_table {
 	$options -> {headers} = $headers;
 
 	my $is_table_columns_order_editable = $_SKIN -> {options} -> {table_columns_order_editable};
-	my $is_table_columns_showing_editable = $options -> {custom__edit_query};
+	my $is_table_columns_showing_editable = $options -> {custom__edit_query} || $_REQUEST {first_table_columns_showing_editable};
+
 	foreach my $top_toolbar_field (@{$options -> {top_toolbar}}) {
 
+		$_REQUEST {first_table_columns_showing_editable} = 1
+			if ($is_table_columns_showing_editable && $_REQUEST {multi_select});
 		last
 			if $is_table_columns_showing_editable;
 
