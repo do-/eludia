@@ -202,6 +202,8 @@ sub setup_request_params {
 
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 
+	delete $_REQUEST {__script};
+
 	if (user_agent () -> {msoffice} && $ENV {REQUEST_URI} =~ /webdav/i) {
 		$_REQUEST {type} = $_REQUEST_VERBATIM {type} = 'webdav';
 		$_REQUEST {method} = $ENV {REQUEST_METHOD};
