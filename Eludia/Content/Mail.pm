@@ -154,6 +154,10 @@ sub send_mail {
 		$text .= $delimeter . $options -> {signature};
 	}
 
+	if ($options -> {content_type} eq 'text/html' && $text !~ /<html/) {
+		$text = "<html><body>$text</body></html>";
+	}
+
 	$text = encode_base64 (
 		($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ($options -> {body_charset}, $text) : $text)
 		. "\n"
