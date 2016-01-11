@@ -1,4 +1,5 @@
 use Net::SMTP;
+use Email::Date::Format qw(email_date);
 
 ################################################################################
 
@@ -32,6 +33,8 @@ sub __log {
 sub send_mail {
 
 	my ($options) = @_;
+
+	$options -> {dt} ||= email_date ();
 
 	my $time = time;
 
@@ -266,6 +269,7 @@ From: $from
 Return-Path: $from
 To: $to
 Subject: $subject
+Date: $$options{dt}
 Content-type: $envelope_content_type;
 	Boundary="0__=4CBBE500DFA7329E8f9e8a93df938690918c4CBBE500DFA7329E"
 Content-Disposition: inline
