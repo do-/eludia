@@ -40,7 +40,9 @@ sub vld_snils {
 		$n [7] * 2  +
 		$n [8] * 1;
 
-	$checksum = $checksum == 100 || $checksum == 101 ? 0 : $checksum % 101;
+	$checksum = $checksum % 101;
+
+	$checksum = $checksum == 100 ? 0 : $checksum;
 
 	$checksum == 0 + substr ($value, 9, 2) or $name1 ? die "#$name1#:$i18n->{snils_checksum_fail}" : return $i18n -> {snils_checksum_fail};
 
