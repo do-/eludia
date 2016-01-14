@@ -2140,6 +2140,8 @@ EOJS
 
 	$options -> {attributes} ||= {};
 
+	my $title = [grep{$_ -> {id} == $options -> {value}} @{$options -> {values}}] -> [0] -> {title};
+
 	$options -> {max_len} += 0;
 	$options -> {attributes} -> {max_len} = $options -> {max_len};
 
@@ -2150,7 +2152,7 @@ EOJS
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
-		<select name="$name" id="${name}_select" $read_only $attributes>
+		<select name="$name" id="${name}_select" title='$title' $read_only $attributes>
 EOH
 
 	foreach my $value (@{$options -> {values}}) {
