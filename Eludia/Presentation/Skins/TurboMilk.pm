@@ -3333,8 +3333,8 @@ sub draw_table {
 
 			$html .= "<tr id='$$i{__tr_id}'";
 
+			$menus .= $i -> {__menu};
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
-				$menus .= $i -> {__menu};
 				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent (); return false;"};
 			}
 
