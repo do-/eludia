@@ -2908,7 +2908,12 @@ sub draw_page {
 		$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
 	};
 
-	$@ and return draw_error_page ($page, $@);
+	if ($@) {
+
+		$_REQUEST {error} ||= $@;
+
+		return draw_error_page ($page, $@);
+	}
 
 	$_REQUEST {__only_field} ? $_SKIN -> draw_page__only_field ($page) : $_SKIN -> draw_page ($page);
 
