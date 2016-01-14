@@ -3697,8 +3697,9 @@ EOH
 
 	} . $_REQUEST {__head_links};
 
-	if (user_agent () -> {msie} > 9) {
-		$_REQUEST {__head_links}  = qq|<meta http-equiv="X-UA-Compatible" content="IE=5">\n| . $_REQUEST {__head_links};
+	if (user_agent () -> {msie} > 9 || $_REQUEST {__x_ua_compatible}) {
+		my $content_ie = $_REQUEST {__x_ua_compatible} || 5;
+		$_REQUEST {__head_links}  = qq|<meta http-equiv="X-UA-Compatible" content="IE=$content_ie">\n| . $_REQUEST {__head_links};
 	}
 
 	if ($body !~ /^\s*\<frameset/ism) {
