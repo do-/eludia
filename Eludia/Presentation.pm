@@ -2251,6 +2251,9 @@ sub draw_table {
 						$p -> {hidden} = 1;
 					}
 
+				} elsif ($_REQUEST {id___query}) {
+# The column did not exist before (may be it was hidden (8086))
+					$h -> {ord} = $h -> {ord_source_code};
 				}
 
 			} elsif ($column_order -> {ord} == 0) {
