@@ -3335,8 +3335,8 @@ sub draw_table {
 
 			$html .= "<tr id='$$i{__tr_id}'";
 
+			$menus .= $i -> {__menu};
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
-				$menus .= $i -> {__menu};
 				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent (); return false;"};
 			}
 
@@ -3699,8 +3699,9 @@ EOH
 
 	} . $_REQUEST {__head_links};
 
-	if (user_agent () -> {msie} > 9) {
-		$_REQUEST {__head_links}  = qq|<meta http-equiv="X-UA-Compatible" content="IE=5">\n| . $_REQUEST {__head_links};
+	if (user_agent () -> {msie} > 9 || $_REQUEST {__x_ua_compatible}) {
+		my $content_ie = $_REQUEST {__x_ua_compatible} || 5;
+		$_REQUEST {__head_links}  = qq|<meta http-equiv="X-UA-Compatible" content="IE=$content_ie">\n| . $_REQUEST {__head_links};
 	}
 
 	if ($body !~ /^\s*\<frameset/ism) {
