@@ -202,6 +202,8 @@ sub setup_request_params {
 
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 
+	delete $_REQUEST {__script};
+
 	if (user_agent () -> {msoffice} && $ENV {REQUEST_URI} =~ /webdav/i) {
 		$_REQUEST {type} = $_REQUEST_VERBATIM {type} = 'webdav';
 		$_REQUEST {method} = $ENV {REQUEST_METHOD};
@@ -484,7 +486,7 @@ sub handle_error {
 
 	my ($page) = @_;
 
-	my $error = investigate_error ($_REQUEST {error}, $_REQUEST {sql_query}, $_REQUEST {sql_params});
+	my $error = investigate_error ($_REQUEST {error}, delete $_REQUEST {sql_query}, delete $_REQUEST {sql_params});
 
 	out_html ({}, draw_error_page ($page, $error));
 
@@ -697,7 +699,11 @@ sub handle_request_of_type_showing {
 
 	return handler_finish () if $_REQUEST {__response_sent};
 
-	out_html ({}, draw_page ($page));
+	my $html = draw_page ($page);
+
+	return handle_error ($page) if $_REQUEST {error};
+
+	out_html ({}, $html);
 
 	return handler_finish ();
 
