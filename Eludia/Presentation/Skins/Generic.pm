@@ -224,6 +224,8 @@ EOJS
 			window.form.name +
 			'&_$$options{name}=' +
 			$options->{value_src} +
+			'&__src_field=' +
+			'$$options{name}' +
 			codetails_url +
 			tab
 
