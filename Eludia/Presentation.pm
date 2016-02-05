@@ -2933,6 +2933,11 @@ sub draw_error_page {
 	$error -> {label} = $i18n -> {$error -> {label}}
 		if $error -> {label};
 
+	if ($_REQUEST {__lrt_time}) {
+		lrt_finish ($error -> {msg}, create_url (action => undef));
+		return '';
+	}
+
 	$_REQUEST {error} ||= $error -> {label};
 
 	$page -> {error_field} = $error -> {field};
