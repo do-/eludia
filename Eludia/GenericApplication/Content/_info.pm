@@ -60,7 +60,7 @@ sub select__info {
 
 	my $application_package = "";
 
-	foreach my $library_path (@$PACKAGE_ROOT) {
+	foreach my $library_path (@{Storable::dclone($PACKAGE_ROOT)}) {
 
 		$application_package .= "$library_path";
 
