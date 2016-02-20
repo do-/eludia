@@ -2212,7 +2212,7 @@ sub draw_table {
 	our %_ORDER = ();
 
 	my $flat_headers = (get_composite_table_headers ({headers => $headers})) -> {headers};
-	my $ord_source_code = 1;
+	my $ord_source_code = 0;
 
 	@_COLUMNS = @$flat_headers;
 
