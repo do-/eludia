@@ -82,6 +82,14 @@ sub fix___query {
 
 	if ($_REQUEST {id___query}) {
 
+		foreach my $key (keys %{$_QUERY -> {content} -> {columns}}) {
+			next if $_QUERY -> {content} -> {columns} -> {$key} -> {show} != 1;
+			unless ($key ~~ [map {$_ -> {id}} @_COLUMNS]) {
+				$_QUERY -> {content} -> {columns} -> {$key} -> {order} = $key;
+				push @_COLUMNS, $_QUERY -> {content} -> {columns} -> {$key};
+			}
+		}
+
 		my $columns = delete $_QUERY -> {content} -> {columns};
 
 		foreach my $o (@_COLUMNS) {
@@ -95,6 +103,7 @@ sub fix___query {
 				height => $columns -> {$o -> {order} || $o -> {no_order}} -> {height},
 				sort   => $columns -> {$o -> {order} || $o -> {no_order}} -> {sort},
 				desc   => $columns -> {$o -> {order} || $o -> {no_order}} -> {desc},
+				show   => $o -> {show},
 			} ;
 
 			foreach my $filter (@{$o -> {filters}}) {
@@ -145,6 +154,7 @@ sub fix___query {
 				height => $o -> {height},
 				sort   => $o -> {sort},
 				desc   => $o -> {desc},
+				show   => $o -> {show},
 			};
 
 			foreach my $filter (@{$o -> {filters}}) {
@@ -416,6 +426,16 @@ sub do_update___queries {
 
 		$content -> {filters} -> {$filter} = $_REQUEST {$key} || '';
 
+	}
+
+	my $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id});
+
+	my $VAR1;
+
+	eval $_QUERY -> {dump};
+
+	foreach my $col (keys %{$VAR1 -> {columns}}) {
+		$content -> {columns} -> {$col} -> {show} = $VAR1 -> {columns} -> {$col} -> {show} if (exists $content -> {columns} -> {$col});
 	}
 
 	sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", Dumper ($content), $_REQUEST {id});
