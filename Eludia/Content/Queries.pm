@@ -83,9 +83,10 @@ sub fix___query {
 	if ($_REQUEST {id___query}) {
 
 		foreach my $key (keys %{$_QUERY -> {content} -> {columns}}) {
-			next if $_QUERY -> {content} -> {columns} -> {$key} -> {show} != 1;
+			next if $_QUERY -> {content} -> {columns} -> {$key} -> {no_hidden} != 1;
 			unless ($key ~~ [map {$_ -> {id}} @_COLUMNS]) {
 				$_QUERY -> {content} -> {columns} -> {$key} -> {order} = $key;
+				$_QUERY -> {content} -> {columns} -> {$key} -> {hidden} = 1;
 				push @_COLUMNS, $_QUERY -> {content} -> {columns} -> {$key};
 			}
 		}
@@ -97,13 +98,13 @@ sub fix___query {
 			next unless ($o -> {order} || $o -> {no_order});
 
 			$_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} = {
-				ord    => $o -> {ord},
-				id     => $columns -> {$o -> {order} || $o -> {no_order}} -> {id},
-				width  => $columns -> {$o -> {order} || $o -> {no_order}} -> {width},
-				height => $columns -> {$o -> {order} || $o -> {no_order}} -> {height},
-				sort   => $columns -> {$o -> {order} || $o -> {no_order}} -> {sort},
-				desc   => $columns -> {$o -> {order} || $o -> {no_order}} -> {desc},
-				show   => $o -> {show},
+				ord       => $o -> {ord},
+				id        => $columns -> {$o -> {order} || $o -> {no_order}} -> {id},
+				width     => $columns -> {$o -> {order} || $o -> {no_order}} -> {width},
+				height    => $columns -> {$o -> {order} || $o -> {no_order}} -> {height},
+				sort      => $columns -> {$o -> {order} || $o -> {no_order}} -> {sort},
+				desc      => $columns -> {$o -> {order} || $o -> {no_order}} -> {desc},
+				no_hidden => $o -> {no_hidden},
 			} ;
 
 			foreach my $filter (@{$o -> {filters}}) {
@@ -149,12 +150,12 @@ sub fix___query {
 
 			my $parent = exists $o -> {parent_header} ? ($o -> {parent_header} -> {order} || $o -> {parent_header} -> {no_order}) : '';
 			$content -> {columns} -> {$o -> {order} || $o -> {no_order}} = {
-				ord    => $is_exist_default_ords ? 0 + $o -> {ord} : ++ $n {$parent},
-				width  => $o -> {width},
-				height => $o -> {height},
-				sort   => $o -> {sort},
-				desc   => $o -> {desc},
-				show   => $o -> {show},
+				ord       => $is_exist_default_ords ? 0 + $o -> {ord} : ++ $n {$parent},
+				width     => $o -> {width},
+				height    => $o -> {height},
+				sort      => $o -> {sort},
+				desc      => $o -> {desc},
+				no_hidden => $o -> {no_hidden},
 			};
 
 			foreach my $filter (@{$o -> {filters}}) {
@@ -435,7 +436,7 @@ sub do_update___queries {
 	eval $_QUERY -> {dump};
 
 	foreach my $col (keys %{$VAR1 -> {columns}}) {
-		$content -> {columns} -> {$col} -> {show} = $VAR1 -> {columns} -> {$col} -> {show} if (exists $content -> {columns} -> {$col});
+		$content -> {columns} -> {$col} -> {no_hidden} = $VAR1 -> {columns} -> {$col} -> {no_hidden} if (exists $content -> {columns} -> {$col});
 	}
 
 	sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", Dumper ($content), $_REQUEST {id});
@@ -537,7 +538,7 @@ sub draw_item_of___queries {
 		next unless ($o -> {order} || $o -> {no_order});
 
 		next
-			if $o -> {__hidden} || $o -> {ord_fixed};
+			if $o -> {__hidden} && !$o -> {no_hidden} || $o -> {ord_fixed};
 
 		my @f;
 
@@ -553,7 +554,7 @@ sub draw_item_of___queries {
 		} else {
 
 			my $current_o = $o;
-
+			my $no_hidden_title = $o -> {no_hidden_title} || 'Не отображается в текущем режиме';
 			while ($current_o -> {parent_header}) {
 					push @f, {
 						type => 'static',
@@ -564,8 +565,9 @@ sub draw_item_of___queries {
 
 			push @f, (
 				{
-					label 		=> $o -> {title} || $o -> {label},
+					label 		=> ($o -> {hidden}  ? "<img src='$_REQUEST{__static_url}/status_102.gif' title = '$no_hidden_title' > " : '') . ($o -> {title} || $o -> {label}),
 					type  		=> 'hgroup',
+					label_title => $o -> {hidden}  ? $no_hidden_title : '',
 					nobr		=> 1,
 					cell_width	=> '50%',
 					items => [
