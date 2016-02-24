@@ -565,9 +565,9 @@ sub draw_item_of___queries {
 
 			push @f, (
 				{
-					label 		=> ($o -> {hidden}  ? "<img src='$_REQUEST{__static_url}/status_102.gif' title = '$no_hidden_title' > " : '') . ($o -> {title} || $o -> {label}),
+					label 		=> ($o -> {hidden} && $o -> {no_hidden} ? "<img src='$_REQUEST{__static_url}/status_102.gif' title = '$no_hidden_title' > " : '') . ($o -> {title} || $o -> {label}),
 					type  		=> 'hgroup',
-					label_title => $o -> {hidden}  ? $no_hidden_title : '',
+					label_title => $o -> {hidden} && $o -> {no_hidden} ? $no_hidden_title : '',
 					nobr		=> 1,
 					cell_width	=> '50%',
 					items => [
