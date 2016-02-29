@@ -2279,7 +2279,7 @@ sub draw_table {
 				if $is_table_columns_showing_editable && (
 					$h -> {ord} == 0
 					|| defined $h -> {parent_header} && defined $h -> {parent_header} -> {ord} && $h -> {parent_header} -> {ord} == 0
-				) && !$h -> {no_hidden};
+				);
 		}
 
 		$h -> {filters} = [];
