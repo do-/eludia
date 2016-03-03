@@ -3401,7 +3401,7 @@ sub lrt_print {
 
 	close OUT;
 
-	$r -> print (' ' x 100);
+	$r -> print (' ' x 100) if $r;
 
 }
 
