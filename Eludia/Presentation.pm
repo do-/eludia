@@ -2014,7 +2014,7 @@ sub _load_super_table_dimensions {
 			my $cell = {%{$row -> [$j]}};
 
 			push @{$header_copy -> [$i]}, $cell
-				unless $cell -> {hidden};
+				unless $cell -> {hidden} && !$_REQUEST {__edit_query};
 
 			$fixed_cols_cnt ++ if $cell -> {no_scroll};
 
