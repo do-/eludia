@@ -1555,7 +1555,7 @@ sub draw_cells {
 			}
 
 
-			if ($row -> [$j] -> {hidden}) {
+			if ($row -> [$j] -> {hidden} || $row -> [$j] -> {icon}) {
 				$j ++;
 				next;
 			}
