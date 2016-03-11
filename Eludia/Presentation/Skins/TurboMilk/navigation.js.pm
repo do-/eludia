@@ -286,7 +286,7 @@ function open_vocabulary_from_select (s, options) {
 		if (!window.showModalDialog) {
 
 			 $.showModalDialog({
-				url             : window.location.protocol + '//' + window.location.host + window.location.pathname + '/i/_skins/TurboMilk/dialog.html?' + Math.random(),
+				url             : window.location.protocol + '//' + window.location.host + '/i/_skins/TurboMilk/dialog.html?' + Math.random(),
 				height          : dialog_height,
 				width           : dialog_width,
 				resizable       : true,
@@ -319,7 +319,7 @@ function open_vocabulary_from_select (s, options) {
 		} else {
 
 			var result = window.showModalDialog (
-				window.location.protocol + '//' + window.location.host + window.location.pathname + '/i/_skins/TurboMilk/dialog.html?' + Math.random(),
+				window.location.protocol + '//' + window.location.host + '/i/_skins/TurboMilk/dialog.html?' + Math.random(),
 				{href: options.href, parent: window},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
