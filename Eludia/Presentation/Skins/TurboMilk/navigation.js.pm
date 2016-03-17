@@ -1124,7 +1124,7 @@ function setAndSubmit (name, values) {
 				type  : 'hidden',
 				name  : i,
 				value : values [i]
-			}).appendTo('form[name=form]');
+			}).appendTo('form[name=' + name + ']');
 
 			continue;
 		}
