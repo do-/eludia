@@ -117,6 +117,17 @@ sub try_to_repair_error {
 
 ################################################################################
 
+sub exists_sql_table {
+
+	my ($table)	 = @_;
+
+	$table && keys %{$DB_MODEL -> {tables} -> {$table}} or return 0;
+
+	return keys %{$DB_MODEL -> {tables} -> {$table} -> {columns}} > 0;
+}
+
+################################################################################
+
 sub repair_table_model {
 
 	my ($tables) = @_;
@@ -125,7 +136,7 @@ sub repair_table_model {
 
 	ref $tables eq 'ARRAY' or $tables = [$tables];
 
-	@$tables = grep {0 < keys %{$DB_MODEL -> {tables} -> {$_}}} @$tables;
+	@$tables = grep {exists_sql_table ($_)} @$tables;
 
 	@$tables or return;
 
