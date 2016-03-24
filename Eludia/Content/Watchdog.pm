@@ -125,6 +125,10 @@ sub repair_table_model {
 
 	ref $tables eq 'ARRAY' or $tables = [$tables];
 
+	@$tables = grep {0 < keys %{$DB_MODEL -> {tables} -> {$_}}} @$tables;
+
+	@$tables or return;
+
 	my $table_names = join ',', @$tables;
 
 	$ENV {ELUDIA_SILENT} or print STDERR "\n\n" . script_log_signature ()
