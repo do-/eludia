@@ -4489,6 +4489,8 @@ function toggle_field_id (id, is_visible, is_clear_field, clear_value) {
 		full_id = '_' + id + '_span';
 	else if (document.getElementById('_' + id + '_select'))
 		full_id = '_' + id + '_select';
+	else if (document.getElementById('_' + id + '__suggest'))
+		full_id = '_' + id + '__suggest';
 	if(!full_id)
 		return 0;
 	var td_field = $('[id=' + full_id + ']').closest('td');
@@ -4556,14 +4558,6 @@ function clear_field (td_field, is_clear_field, clear_value){
 	td_field.find("input[type='radio']:checked, input[type='checkbox']:checked").prop('checked', false);
 	td_field.find("select").prop('value', clear_value ? clear_value : '');
 	td_field.find("input[type='text']").prop('value', clear_value ? clear_value : '');
-
-}
-
-function clear_field (td_field, is_clear_field, clear_value){
-
-	td_field.find("input[type='radio']:checked, input[type='checkbox']:checked").attr('checked', false);
-	td_field.find("select").attr('value', clear_value ? clear_value : '');
-	td_field.find("input[type='text']").attr('value', clear_value ? clear_value : '');
 
 }
 

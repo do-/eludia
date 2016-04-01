@@ -1763,6 +1763,10 @@ function toggle_field_id (id, is_visible,is_clear_field) {
 		full_id = '_' + id + '_span';
 	else if (document.getElementById('_' + id + '_select'))
 		full_id = '_' + id + '_select';
+	else if (document.getElementById('_' + id + '__suggest'))
+		full_id = '_' + id + '__suggest';
+	else if (document.getElementById(id))
+		full_id = id;
 	if(!full_id)
 		return 0;
 	var td_field = $('[id=' + full_id + ']').closest('td');

@@ -770,7 +770,7 @@ sub draw_form_field_suggest {
 
 	};
 
-	my $id = '' . $options;
+	my $id = $options -> {name} || 'suggest';
 
 	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
