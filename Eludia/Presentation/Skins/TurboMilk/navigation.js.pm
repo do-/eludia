@@ -234,7 +234,7 @@ function dialog_open (options) {
 		options.position =  {my: "left top", at: "left top", of: window};
 	}
 
-	var url = 'http://' + window.location.host + '/i/_skins/TurboMilk/dialog.html?' + Math.random ();
+	var url = window.location.protocol + '//' + window.location.host + '/i/_skins/TurboMilk/dialog.html?' + Math.random();
 
 	if ($.browser.webkit || $.browser.safari)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
