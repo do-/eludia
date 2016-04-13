@@ -1595,7 +1595,9 @@ EOH
 			$tabindex ++;
 			$n ++;
 
-			$html .= qq {<td class="form-inner"><input id="$value" $subattr class=cbx type="checkbox" name="_$$options{name}_$$value{id}" value="1" $checked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;<label for="$value">$$value{label}</value> $subhtml</td>};
+			my $disabled = $value -> {disabled} ? 'disabled' : '';
+
+			$html .= qq {<td class="form-inner"><input id="$value" $subattr class=cbx type="checkbox" name="_$$options{name}_$$value{id}" value="1" $checked onChange="is_dirty=true" tabindex=$tabindex $disabled>&nbsp;<label for="$value">$$value{label}</value> $subhtml</td>};
 			$html .= '</tr><tr>' unless $n % $options -> {cols};
 
 		}
