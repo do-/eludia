@@ -142,7 +142,7 @@ sub fix___query {
 		my $content = {filters => {}, columns => {}};
 
 		my %n;
-		my $is_exist_default_ords = 0 + grep {$_ -> {ord} || $_ -> {ord_fixed}} @_COLUMNS;
+		my $is_exist_default_ords = 0 + grep {defined $_ -> {ord} || $_ -> {ord_fixed}} @_COLUMNS;
 
 		foreach my $o (@_COLUMNS) {
 
