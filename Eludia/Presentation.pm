@@ -995,9 +995,9 @@ sub draw_form_field {
 
 	$field -> {colspan} ||= $_REQUEST {__max_cols} - 1;
 
-	$field -> {state}     = $data -> {fake} == -1 ? 'deleted' : $_REQUEST {__read_only} ? 'passive' : 'active';
+	$field -> {state}   ||= $data -> {fake} == -1 ? 'deleted' : $_REQUEST {__read_only} ? 'passive' : 'active';
 
-	$field -> {label_width} = '20%' unless $field -> {is_slave};
+	$field -> {label_width} ||= '20%' unless $field -> {is_slave};
 
 	$_REQUEST {__no_navigation} ||= $_REQUEST {__only_field};
 
