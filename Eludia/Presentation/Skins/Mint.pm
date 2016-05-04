@@ -969,6 +969,7 @@ sub draw_form_field_select {
 
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'dialog_width';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'dialog_height';
+		$options -> {other} -> {title}  ||= $i18n->{voc_title};
 
 		$options -> {onChange} = <<EOJS;
 
@@ -981,7 +982,7 @@ sub draw_form_field_select {
 						href          : '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(),
 						dialog_width  : $options->{other}->{width},
 						dialog_height : $options->{other}->{height},
-						title         : '$i18n->{voc_title}'
+						title         : '$options->{other}->{title}'
 					}
 				);
 
