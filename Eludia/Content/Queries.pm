@@ -1,3 +1,4 @@
+
 ################################################################################
 
 sub setup_page_content {
@@ -48,7 +49,7 @@ sub setup_page_content {
 
 	);
 
-	require_both '__queries';
+	require_both ('__queries');
 
 	$_REQUEST {__allow_check___query} = 1;
 
@@ -119,23 +120,10 @@ sub fix___query {
 
 		my $id___query = $_REQUEST {id___query};
 
-		$_REQUEST {id___query} = sql_select_id (
+		set_dump_if_need__query ($_QUERY -> {content}, $id_table);
 
-			$conf -> {systables} -> {__queries} => {
-
-				fake          => 0,
-				id_user       => $_USER -> {id},
-				type          => $_REQUEST {type},
-				-dump         => Dumper ($_QUERY -> {content}),
-				label         => '',
-				order_context => $_REQUEST {__order_context},
-				id_table      => $id_table,
-
-			}, [qw (id_user type label order_context id_table)],
-
-		);
-
-		!$id___query or $_REQUEST {id___query} == $id___query or sql_do ("UPDATE $conf->{systables}->{__queries} SET parent = ? WHERE id = ?", $id___query, $_REQUEST {id___query});
+		!$id___query or $_REQUEST {id___query} == $id___query
+			or set___query ($_REQUEST {id___query}, {parent => $id___query});
 
 	} else {
 
@@ -166,19 +154,47 @@ sub fix___query {
 
 		}
 
-		$_REQUEST {id___query} = sql_select_id (
+		set_dump_if_need__query ($content, $id_table);
+
+	}
+
+}
+
+################################################################################
+
+sub set_dump_if_need__query {
+
+	my ($content, $id_table) = @_;
+
+	my $dump = Dumper ($content);
+
+	my $query = get___query (0, $id_table);
+
+	if ($query -> {id}) {
+
+		$_REQUEST {id___query} = $query -> {id};
+
+		if ($dump ne $query -> {dump}) {
+
+			set___query ($_REQUEST {id___query}, {dump => $dump});
+
+		}
+
+	} else {
+
+		$_REQUEST {id___query} = sql_do_insert (
 
 			$conf -> {systables} -> {__queries} => {
 
 				fake          => 0,
 				id_user       => $_USER -> {id},
 				type          => $_REQUEST {type},
-				-dump         => Dumper ($content),
+				dump          => $dump,
 				label         => '',
 				order_context => $_REQUEST {__order_context},
 				id_table      => $id_table,
 
-			}, [qw (id_user type label order_context id_table)],
+			}
 
 		);
 
@@ -213,10 +229,12 @@ sub check___query {
 	}
 	else {
 
-		if ($SQL_VERSION -> {driver} eq 'Oracle') {
-			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label IS NULL AND id_user = ? AND type = ? AND order_context" . ($_REQUEST {__order_context} ? ' = ?' : ' IS NULL') . ($id_table ? ' AND id_table = ?' : ' AND id_table IS NULL'), $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context} || (), $id_table || ());
-		} else {
-			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?" . ($id_table ? ' AND id_table = ?' : ' AND id_table IS NULL'), $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context}, $id_table || ());
+		unless ($_REQUEST {id___query}) {
+
+			my $query = get___query (0, $id_table);
+
+			$_REQUEST {id___query} = $query -> {id};
+
 		}
 
 	}
@@ -464,29 +482,73 @@ sub do_update___queries {
 
 ################################################################################
 
-sub get___query_settings {
+sub get___query {
 
-	my ($id_query) = @_;
+	my ($id_query, $id_table) = @_;
 
-	my $query = sql_select_hash ($conf -> {systables} -> {__queries} => $id_query);
+	my ($filter, @params);
 
-	my $VAR1;
-	eval $query -> {dump};
+	if ($id_query) {
 
-	return $VAR1;
+		$filter = ' id = ?';
+		push @params, $id_query;
+
+	} else {
+
+		$filter = ' fake = 0 AND id_user = ? AND type = ?';
+		push @params, $_USER -> {id}, $_REQUEST {type};
+
+		if ($SQL_VERSION -> {driver} eq 'Oracle') {
+
+			$filter .= ' AND label IS NULL';
+
+			if ($_REQUEST {__order_context}) {
+				$filter .= ' AND order_context = ?';
+				push @params, $_REQUEST {__order_context};
+			} else {
+				$filter .= ' AND order_context IS NULL';
+			}
+
+		} else {
+
+			$filter .= " AND label = '' AND order_context = ?";
+			push @params, $_REQUEST {__order_context};
+
+		}
+
+		if ($id_table) {
+			$filter .= ' AND id_table = ?';
+			push @params, $id_table;
+		} else {
+			$filter .= ' AND id_table IS NULL';
+		}
+
+	}
+
+	return sql_select_hash (
+		"SELECT * FROM $conf->{systables}->{__queries} WHERE $filter",
+		@params
+	);
+
 }
 
 ################################################################################
 
-sub set___query_settings {
+sub set___query {
 
-	my ($id_query, $settings) = @_;
+	my ($id_query, $values) = @_;
 
 	$id_query or return;
 
+	my ($set, @params);
+	foreach my $field (keys %$values) {
+		$set .= ($set ? ',' : '') . "$field = ?";
+		push @params, $values -> {$field};
+	}
+
 	sql_do (
-		"UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?"
-		, Dumper ($settings)
+		"UPDATE $conf->{systables}->{__queries} SET $set WHERE id = ?"
+		, @params
 		, $id_query
 	);
 }
@@ -499,14 +561,17 @@ sub set_column_props {
 
 	$options -> {id_query} or return;
 
-	my $settings = get___query_settings ($options -> {id_query});
+	my $query = get___query ($options -> {id_query});
+	my $VAR1;
+	eval $query -> {dump};
+	my $settings = $VAR1;
 
 	foreach my $key (keys %$options) {
 		next if $key =~ /^id_/;
 		$settings -> {columns} -> {$options -> {id}} -> {$key} = $options -> {$key};
 	}
 
-	set___query_settings ($options -> {id_query}, $settings);
+	set___query ($options -> {id_query}, {dump => Dumper ($settings)});
 }
 
 ################################################################################
