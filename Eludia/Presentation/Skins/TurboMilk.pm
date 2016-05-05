@@ -1334,7 +1334,9 @@ EOH
 	}
 
 	foreach my $value (@{$options -> {values}}) {
-		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
+		$value -> {label} = ('&nbsp;&nbsp;&nbsp;' x $value -> {level}) . $value -> {label};
+		my $disabled = $value -> {disabled} ? "disabled=true" : '';
+		$html .= qq {<option value="$$value{id}" $$value{selected} $disabled>$$value{label}</option>\n};
 	}
 
 	if (defined $options -> {other} && !$options -> {other} -> {on_top}) {
