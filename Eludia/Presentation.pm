@@ -2244,7 +2244,7 @@ sub draw_table {
 							if $_ -> {ord} > $max_ord;
 					}
 
-					$h -> {ord} = $max_ord || 0;
+					$h -> {ord} = $max_ord || 0 if ( !defined $h -> {ord} );
 					my $p = $h -> {parent_header};
 
 					if ($max_ord == 0 && $p -> {label}) {
@@ -2253,7 +2253,7 @@ sub draw_table {
 
 				} elsif ($_REQUEST {id___query}) {
 # The column did not exist before (may be it was hidden (8086))
-					$h -> {ord} = $h -> {ord_source_code};
+					$h -> {ord} = $h -> {ord_source_code} if ( !defined $h -> {ord} );
 				}
 
 			} elsif ($column_order -> {ord} == 0) {
