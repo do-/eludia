@@ -238,8 +238,6 @@ sub _draw_input_datetime {
 	</nobr>
 EOH
 
-	$html .=  ($options -> {label_tail} || '');
-
 	return $html;
 
 }
