@@ -314,6 +314,8 @@ sub check_application_directory {
 
 	$preconf -> {_} -> {logs} = $docroot . '../logs/';
 
+	$preconf -> {core_docroot_mode} = '0777' unless $preconf -> {core_docroot_mode} =~ /[0-7]{4}/;
+
 	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs', 'i/_mbox', 'i/_mbox/by_user') {
 
 		loading_log "  checking ${docroot}${subdir}...";
@@ -324,7 +326,7 @@ sub check_application_directory {
 
 			-d $dir or mkdir $dir;
 
-			chmod 0777, $dir;
+			chmod oct($preconf->{core_docroot_mode}), $dir;
 
 		};
 
