@@ -1726,6 +1726,8 @@ TableSlider.prototype.showStat = function (div, text) {
 
 TableSlider.prototype.calculateSelections = function () {
 
+	var self = this;
+
 	$('div.eludia-table-container').each (function () {
 		var count = 0,
 			sum = 0;
