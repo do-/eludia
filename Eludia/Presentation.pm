@@ -1528,7 +1528,7 @@ sub draw_cells {
 
 	my $result = '';
 
-	delete $options -> {href} if $options -> {is_total};
+	delete $options -> {href} if $options -> {is_total} || $_REQUEST {select} && $options -> {no_select_href};
 
 	if ($options -> {href}) {
 		check_href ($options) ;
