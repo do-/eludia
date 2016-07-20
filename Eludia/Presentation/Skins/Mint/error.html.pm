@@ -48,13 +48,19 @@
 
 				window.returnValue = {'result': 'esc'};
 
-				if(dialogArguments.details) {
+				if(dialogArguments.details)
 					$('#error_detail').val(dialogArguments.details);
-				}
-
-				if (dialogArguments.msg) {
+				if (dialogArguments.msg)
 					$('#error_message_area').text(dialogArguments.msg);
-				}
+				if (dialogArguments.show_error_detail)
+					$('#toggle_detail').text(dialogArguments.show_error_detail);
+				if (dialogArguments.error_hint_area)
+					$('#error_hint_area').text(dialogArguments.error_hint_area);
+				if (dialogArguments.mail_support)
+					$('#mail_support').text(dialogArguments.mail_support);
+				if (dialogArguments.close)
+					$('#button_close').text(dialogArguments.close);
+
 				$('#mail_support').attr('href', support_mailto_href(dialogArguments));
 			}
 		</script>

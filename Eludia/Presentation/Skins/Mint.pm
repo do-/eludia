@@ -378,6 +378,10 @@ sub draw_fatal_error_page {
 		href    => "$_REQUEST{__static_url}/error.html?",
 		height  => 290,
 		width   => 510,
+		close   => $i18n -> {close},
+		show_error_detail => $i18n -> {show_error_detail},
+		error_hint_area   => $i18n -> {error_hint_area},
+		mail_support      => $i18n -> {mail_support},
 	};
 
 	$options = $_JSON -> encode ($options);
