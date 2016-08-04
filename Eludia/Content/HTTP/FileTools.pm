@@ -60,7 +60,7 @@ sub download_file_header {
 	$r -> content_type ($type);
 	$options -> {file_name} =~ s/\?/_/g unless ($ENV {HTTP_USER_AGENT} =~ /MSIE 7/);
 
-	my $filename = "=" . $options -> {file_name};
+	my $filename = '="' . $options -> {file_name};
 
 	if ($i18n -> {_charset} eq 'UTF-8' || $ENV {HTTP_USER_AGENT} =~ /MSIE (\d+)/ && $1 > 9) {
 
@@ -73,7 +73,7 @@ sub download_file_header {
 	$options -> {no_force_download} or $r -> headers_out -> {'Content-Disposition'} =
 		($options -> {inline} ? 'inline' : 'attachment')
 		. ';filename'
-		. $filename;
+		. $filename . '"';
 
 
 	if ($content_length > 0) {
