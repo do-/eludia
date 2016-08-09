@@ -2991,6 +2991,7 @@ sub lrt_start {
 
 	$_REQUEST {__response_started} = 1;
 	$_REQUEST {__response_sent} = 1;
+	$_REQUEST {__is_lrt} = 1;
 
 	$_SKIN -> lrt_start (@_);
 
