@@ -369,7 +369,7 @@ sub vld_ogrn {
 	local $SIG {__DIE__} = 'DEFAULT';
 
 	$_REQUEST {$name} =~ /^\d+$/ or return "#$name#:$i18n->{ogrn_digits_fail}";
-	$_REQUEST {$name} =~ /^[12]/    or die "#$name#:$i18n->{ogrn_first_digit_fail}";
+	$_REQUEST {$name} =~ /^[125]/    or die "#$name#:$i18n->{ogrn_first_digit_fail}";
 
 	if (length $_REQUEST {$name} == 13) {
 		(substr ($_REQUEST {$name}, 0, 12) % 11) % 10 == substr ($_REQUEST {$name}, -1, 1) or return "#$name#:$i18n->{ogrn_checksum_fail}";
