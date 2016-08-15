@@ -57,7 +57,7 @@ sub handler {
 	__profile_out ('handler.request' => {label => "type='$_REQUEST_VERBATIM{type}' id='$_REQUEST_VERBATIM{id}' action='$_REQUEST_VERBATIM{action}' id_user='$_USER->{id}'"}); warn "\n";
 
 	if ($_REQUEST {__suicide}) {
-		$r -> print (' ' x 8192);
+		$r -> print (' ' x 8192) if $_REQUEST {__lrt_log};
 		CORE::exit (0);
 	}
 

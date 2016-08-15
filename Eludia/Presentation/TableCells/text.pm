@@ -43,11 +43,18 @@ sub draw_text_cell {
 
 		if ($_REQUEST {select}) {
 
-			$data -> {href} = $options -> {select_href} || js_set_select_option ('', {
-				id       => $i -> {id},
-				label    => $options -> {select_label},
-				question => $options -> {select_question},
-			});
+			if ($options -> {no_select_href}) {
+
+				delete $data -> {href};
+
+			} else {
+
+				$data -> {href} = $options -> {select_href} || js_set_select_option ('', {
+					id       => $i -> {id},
+					label    => $options -> {select_label},
+					question => $options -> {select_question},
+				});
+			}
 
 		}
 
