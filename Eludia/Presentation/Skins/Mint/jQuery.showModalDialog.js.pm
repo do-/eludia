@@ -20,7 +20,7 @@
             $div.css({
                 'padding'                    : 0,
                 'margin'                     : 0,
-                'overflow'                   : 'auto',
+                'overflow'                   : 'hidden',
                 '-webkit-overflow-scrolling' :'touch'
             });
 
@@ -74,8 +74,8 @@
 
             // set the width of the frame to 100% right after the dialog was created
             // it will not work setting it before the dialog was created
-            $div.css("width", optns.width + 'px');
-            $div.css("height", optns.height + 'px');
+            $div.css("width", (optns.width - 8) + 'px');
+            $div.css("height", (optns.height - 8) + 'px');
             $frame.css("width", "100%");
             $frame.css("height", "100%");
 

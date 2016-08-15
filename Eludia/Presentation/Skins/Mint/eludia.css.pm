@@ -651,6 +651,9 @@ input.k-textbox.form-mandatory-inputs, span.form-mandatory-inputs .k-dropdown-wr
 	background-color: #F7F7AD!important;
 }
 
+input.disabled {
+	background: #eeeeee !important;
+}
 
 td.toolbar {
 	FONT-SIZE: 8pt;
@@ -684,3 +687,5 @@ a.hint {
     -ms-user-select: none;
     user-select: none;
 }
+
+.zeroclipboard-is-hover { cursor:pointer !important; }

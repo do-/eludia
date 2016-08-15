@@ -286,6 +286,7 @@ sub draw_window_title {
 
 		$_REQUEST {__script} .= <<EOJ;
 			top.document.title = '$$options{label}';
+			top.title_set = 1;
 EOJ
 		return '';
 
@@ -399,7 +400,8 @@ sub _draw_input_datetime {
 
 	$options -> {onClose}    ||= 'null';
 	$options -> {onKeyDown}  ||= 'null';
-	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) is_dirty=true';
+
+	$options -> {onKeyPress} ||= 'if (window.event.keyCode != 27) this.is_dirty = is_dirty = true';
 
 	$options -> {attributes} -> {id} ||= 'input_calendar_trigger_' . $options -> {name};
 
@@ -459,12 +461,11 @@ sub draw_form {
 	$html .= $options -> {path};
 
 	my $tname = 'div_' . int(rand(10000));
-	$html .= "<div id=$tname style='VISIBILITY:hidden'>" if ($preconf -> {toggle_in_hidden_form});
+	$html .= "<div id=$tname style='VISIBILITY:hidden'>" if ($preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page});
 
 	$html .= _draw_bottom (@_);
 
 	$html .=  <<EOH;
-		<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
 			<form
 				name="$$options{name}"
 				target="$$options{target}"
@@ -483,6 +484,10 @@ EOH
 
 	);
 
+	$html .=  <<EOH;
+			<table cellspacing=0 width="100%" style="border-style:solid; border-top-width: 1px; border-left-width: 1px; border-bottom-width: 0px; border-right-width: 0px; border-color: #d6d3ce;">
+EOH
+
 	foreach my $row (@{$options -> {rows}}) {
 		my $tr_id = $row -> [0] -> {tr_id};
 		$tr_id = 'tr_' . Digest::MD5::md5_hex ('' . $row) if 3 == length $tr_id;
@@ -494,10 +499,10 @@ EOH
 		$html .= qq{</tr>};
 	}
 
-	$html .=  '</form></table>';
+	$html .=  '</table></form>' . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? '</div>' : '');
 
 	$html .= $options -> {bottom_toolbar};
-	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} ? "\$($tname).css('visibility','visible');" : "");
+	$_REQUEST {__on_load} .= ";numerofforms++;" . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST {__only_page} ? "\$('#$tname').css('visibility','visible');" : "");
 
 #	$_REQUEST {__on_load} .= '$(document.forms["' . $options -> {name} . '"]).submit (function () {checkMultipleInputs (this)});';
 
@@ -578,6 +583,54 @@ EOH
 
 }
 
+
+################################################################################
+
+sub draw_fatal_error_page {
+
+	my ($_SKIN, $page, $error) = @_;
+
+	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
+
+	my $head_links;
+
+	if ($error -> {kind}) {
+
+		my $options = {
+			email   => $preconf -> {mail}? $preconf -> {mail} -> {support} : '',
+			subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
+			title   => $i18n -> {internal_error},
+			details => $error -> {label} . "\n" . $error -> {error},
+			msg     => $error -> {msg},
+			label   => $error -> {label},
+			href    => "$_REQUEST{__static_url}/error.html?",
+			height  => 280,
+			width   => 510,
+			close   => $i18n -> {close},
+			show_error_detail => $i18n -> {show_error_detail},
+			error_hint_area   => $i18n -> {error_hint_area},
+			mail_support      => $i18n -> {mail_support},
+		};
+
+		$options = $_JSON -> encode ($options);
+
+		$head_links .= qq|<script src="/i/_skins/$_REQUEST{__skin}/navigation.js"></script>|;
+
+		$_REQUEST{__script} .= "\n var options = $options; options.after = function() {history.go(-1)}; dialog_open (options)\n setCursor ();\n";
+
+	}
+
+
+	$_REQUEST {__script} = <<EOJ;
+function on_load () {
+$_REQUEST{__script}
+}
+EOJ
+
+	return qq{<html><head>$head_links<script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};
+
+}
+
 ################################################################################
 
 sub draw_form_field {
@@ -586,7 +639,8 @@ sub draw_form_field {
 
 	if ($field -> {type} eq 'banner') {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
-		return qq{<td class='form-$$field{state}-banner' $colspan nowrap align=center>$$field{html}</td>};
+		my $class = join ' ', grep {$_} "form-$$field{state}-banner", $field -> {class};
+		return qq{<td class='$class' $colspan nowrap align=center>$$field{html}</td>};
 	}
 	elsif ($field -> {type} eq 'article') {
 		my $colspan     = 'colspan=' . ($field -> {colspan} + 1);
@@ -619,7 +673,7 @@ sub draw_form_field {
 
 		$a     -> {lowsrc} = $field -> {plus};
 
-		$field -> {html } .= dump_tag (img => $a);
+		$field -> {html} .= dump_tag (img => $a);
 
 	}
 
@@ -644,13 +698,16 @@ sub draw_form_field {
 		$a -> {width}   = $field -> {label_width}   if $field -> {label_width};
 		$a -> {title}   = $field -> {label_title}   if $field -> {label_title};
 		$a -> {title}   ||= $field -> {attributes} -> {title}
-			if exists $field -> {attributes} && exists $field -> {attributes} -> {title};
+			if exists $field -> {attributes} && $field -> {attributes} -> {title};
 
 		$html .= dump_tag (td => $a, $field -> {label});
 
 	}
 
 	my $a = {class  => $class . ($field -> {fake} == -1 ? 'deleted' : 'inputs')};
+
+	$a -> {title}   ||= $field -> {attributes} -> {title}
+		if exists $field -> {attributes} && $field -> {attributes} -> {title};
 
 	if ($field -> {draw_hidden}) {
 		$a -> {class} .= ' form-hidden-field';
@@ -661,7 +718,7 @@ sub draw_form_field {
 
 	$html .= dump_tag (td => $a, $field -> {html});
 
-	return $html;
+	return $html . ($options -> {label_tail} || '');
 
 }
 
@@ -679,7 +736,8 @@ sub draw_form_field_button {
 
 	my $tabindex = ++ $_REQUEST {__tabindex};
 
-	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">};
+	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">}
+		. ($options -> {label_tail} || '');
 }
 
 ################################################################################
@@ -689,10 +747,6 @@ sub draw_form_field_string {
 	my ($_SKIN, $options) = @_;
 
 	my $attributes = $options -> {attributes};
-	if ($options -> {disabled}) {
-		$attributes -> {readonly} = 'readonly';
-		$attributes -> {style} .= '; background-color: #eeeeee;';
-	}
 
 	$attributes -> {onKeyUp}    .= $options -> {onKeyUp};
 	$attributes -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
@@ -701,7 +755,7 @@ sub draw_form_field_string {
 	$attributes -> {onBlur}     .= ';scrollable_table_is_blocked = false; q_is_focused = false;';
 	$attributes -> {type}        = 'text';
 
-	return dump_tag ('input', $attributes);
+	return dump_tag ('input', $attributes) . ($options -> {label_tail} || '');
 
 }
 
@@ -720,7 +774,7 @@ sub draw_form_field_suggest {
 
 	};
 
-	my $id = '' . $options;
+	my $id = $options -> {name} || 'suggest';
 
 	$options -> {attributes} -> {onKeyPress} .= ';if (window.event.keyCode != 27) is_dirty=true;';
 	$options -> {attributes} -> {onKeyDown}  .= ';tabOnEnter();';
@@ -814,7 +868,8 @@ EOH
 		id    => "${id}__id",
 		name  => "_$options->{name}__id",
 		value => $options -> {value__id},
-	});
+	})
+	. ($options -> {label_tail} || '');
 
 }
 
@@ -828,7 +883,7 @@ sub draw_form_field_datetime {
 	$options -> {onKeyDown} ="tabOnEnter()";
 	$options -> {onClose}   = "function (cal) { cal.hide (); $$options{onClose}; }";
 
-	return $_SKIN -> _draw_input_datetime ($options);
+	return $_SKIN -> _draw_input_datetime ($options) . ($options -> {label_tail} || '');
 
 }
 
@@ -854,10 +909,10 @@ EOH
 
 	my $html = "<span id='form_field_file_head_$options->{name}'>";
 
-	$$options{value} ||= $data -> {file_name};
+	$$options{value} ||= $data -> {"$$options{name}_name"};
 
 	if ($options -> {can_edit}) {
-		if ($options -> {value} || ($data -> {file_name} && $data -> {file_path})) {
+		if ($options -> {value} || ($data -> {"$$options{name}_name"} && $data -> {"$$options{name}_path"})) {
 			$_REQUEST {__on_load} .= "\$('#file_input_$$options{name}').hide();";
 		} else {
 			$_REQUEST {__on_load} .= "\$('#file_name_$$options{name}').hide();";
@@ -895,7 +950,7 @@ EOH
 
 	$html .= "</span>";
 
-	return $html;
+	return $html . ($options -> {label_tail} || '');
 
 }
 
@@ -966,7 +1021,7 @@ EOH
 
 EOH
 
-	return <<EOH;
+	return <<EOH . ($options -> {label_tail} || '');
 
 		<input
 			type="hidden"
@@ -1104,6 +1159,17 @@ sub draw_form_field_static {
 
 	my ($_SKIN, $options, $data) = @_;
 
+
+	$options -> {attributes} ||= {};
+	$options -> {attributes} -> {id} ||= $options -> {id} || "input_$$options{name}";
+
+	if ($options -> {clipboard} && !$_REQUEST {__only_field}) {
+		$options -> {attributes} -> {class} = "eludia-clipboard";
+		$options -> {attributes} -> {"data-clipboard-text"} = $options -> {clipboard};
+		$options -> {attributes} -> {onclick} = "javascript: eludia_copy_clipboard(\$(this).data('clipboard-text'), this);";
+		$options -> {href} = "#";
+	}
+
 	my $html = '';
 
 	if ($options -> {href}) {
@@ -1143,7 +1209,7 @@ sub draw_form_field_static {
 		$html .= '</a>';
 	}
 
-	if ($options -> {history} && !$options -> {history} -> {off}) {
+	if (exists $options -> {history} && $options -> {history} -> {href} && !$options -> {history} -> {off}) {
 
 		my $history_icon = _icon_path ($options -> {history} -> {icon});
 
@@ -1156,7 +1222,9 @@ sub draw_form_field_static {
 
 	$html .= dump_hiddens ([$options -> {hidden_name} => $options ->{hidden_value}]) if $options -> {add_hidden};
 
-	return "<span id='input_$$options{name}'>$html</span>";
+	my $attributes = dump_attributes ($options -> {attributes});
+
+	return "<span $attributes>$html</span>" . ($options -> {label_tail} || '');
 
 }
 
@@ -1168,7 +1236,8 @@ sub draw_form_field_checkbox {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">};
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true" onKeyDown="tabOnEnter()">}
+		. ($options -> {label_tail} || '');
 
 }
 
@@ -1214,8 +1283,7 @@ sub draw_form_field_select {
 	my ($_SKIN, $options, $data) = @_;
 
 	$options -> {attributes} ||= {};
-	my $id = $options -> {id} || "_$options->{name}_select";
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
+	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
 
 	if (@{$options -> {values}} == 0 && defined ($options -> {empty}) && defined ($options -> {other})) {
 		$options -> {attributes} -> {onClick} .= ";if (this.length == 2) {this.selectedIndex=1; this.onchange();}";
@@ -1228,49 +1296,22 @@ sub draw_form_field_select {
 
 	if (defined $options -> {other}) {
 
-		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
-		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
-
-		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
-
-		my ($confirm_js_if, $confirm_js_else) = $options -> {no_confirm} ? ('', '')
-			: (
-				"if (window.confirm ('$$i18n{confirm_open_vocabulary}')) {",
-				"} else {this.selectedIndex = 0}"
-			);
+		$options -> {other} -> {width}  ||= 'dialog_width';
+		$options -> {other} -> {height} ||= 'dialog_height';
 
 		$options -> {onChange} .= <<EOJS;
 
 			if (this.options[this.selectedIndex].value == -1) {
 
-				$confirm_js_if
-
-					var dialog_width  = $options->{other}->{width};
-					var dialog_height = $options->{other}->{height};
-
-					try {
-
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(), parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-
-						focus ();
-
-						if (result.result == 'ok') {
-
-							setSelectOption (this, result.id, result.label);
-
-						} else {
-
-							this.selectedIndex = 0;
-
-						}
-
-					} catch (e) {
-
-						this.selectedIndex = 0;
-
+				open_vocabulary_from_select (
+					this,
+					{
+						message       : i18n.choose_open_vocabulary,
+						href          : '$options->{other}->{href}&select=$options->{name}&salt=' + Math.random(),
+						dialog_width  : $options->{other}->{width},
+						dialog_height : $options->{other}->{height}
 					}
-
-				$confirm_js_else
+				);
 
 			}
 EOJS
@@ -1280,7 +1321,6 @@ EOJS
 	my $html = <<EOH;
 		<select
 			name="_$$options{name}"
-			id="$id"
 			$attributes
 			onKeyDown="tabOnEnter();"
 			onChange="is_dirty=true; $$options{onChange}"
@@ -1298,7 +1338,9 @@ EOH
 	}
 
 	foreach my $value (@{$options -> {values}}) {
-		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
+		my $label = ('&nbsp;&nbsp;&nbsp;' x $value -> {level}) . $value -> {label};
+		my $disabled = $value -> {disabled} ? "disabled=true" : '';
+		$html .= qq {<option value="$$value{id}" $$value{selected} $disabled>$label</option>\n};
 	}
 
 	if (defined $options -> {other} && !$options -> {other} -> {on_top}) {
@@ -1307,14 +1349,7 @@ EOH
 
 	$html .= '</select>';
 
-#	if (defined $options -> {other}) {
-#		$html .= <<EOH;
-#			<div id="_$$options{name}_div" style="{position:absolute; display:none; width:expression(getElementById('_$$options{name}_select').offsetParent.offsetWidth - 10)}">
-#				<iframe name="_$$options{name}_iframe" id="_$$options{name}_iframe" width=100% height=${$$options{other}}{height} src="$_REQUEST{__static_url}/0.html" application="yes">
-#				</iframe>
-#			</div>
-#EOH
-#	}
+	$html .= $options -> {label_tail} || '';
 
 	return $html;
 
@@ -1566,7 +1601,9 @@ EOH
 			$tabindex ++;
 			$n ++;
 
-			$html .= qq {<td class="form-inner"><input id="$value" $subattr class=cbx type="checkbox" name="_$$options{name}_$$value{id}" value="1" $checked onChange="is_dirty=true" tabindex=$tabindex>&nbsp;<label for="$value">$$value{label}</value> $subhtml</td>};
+			my $disabled = $value -> {disabled} ? 'disabled' : '';
+
+			$html .= qq {<td class="form-inner"><input id="$value" $subattr class=cbx type="checkbox" name="_$$options{name}_$$value{id}" value="1" $checked onChange="is_dirty=true" tabindex=$tabindex $disabled>&nbsp;<label for="$value">$$value{label}</value> $subhtml</td>};
 			$html .= '</tr><tr>' unless $n % $options -> {cols};
 
 		}
@@ -1840,27 +1877,13 @@ sub draw_toolbar_button {
 
 	my $html = '<td class="bgr0">';
 
-	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
-
-		unless ($options -> {href} =~ /^javaScript\:/i) {
-
-			$options -> {target} ||= '_self';
-
-			$options -> {href} =~ s{\%}{\%25}g;
-
-			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
-
-		}
-
-		my $code = "\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\\'$_REQUEST{__static_url}/busy.gif\\'> $i18n->{request_sent}</h2>'})";
-		$code .= ";window.setInterval(poll_invisibles, 100);" if $options -> {target} eq 'invisible';
-
-		$options -> {href} =~ s/\bnope\b/$code;nope/;
-
-		$options -> {target} = '_self';
-	}
+	my $btn2_r = 'btn2_r';
+	my $btn2_r_width = 6;
 
 	if (@{$options -> {items}} > 0) {
+
+		$btn2_r = 'btn2_r_multi';
+		$btn2_r_width = 16;
 
 		$options -> {onclick} = "";
 		$options -> {href} = "#";
@@ -1891,7 +1914,7 @@ EOH
 	$html .= <<EOH;
 			</a></nobr></td>
 			<td class="bgr0" style="background-repeat:repeat-x" background="$_REQUEST{__static_url}/btn2_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><nobr>&nbsp;<a TABINDEX=-1 class=button href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}">$options->{label}</a></nobr></td>
-			<td width=6><img src="$_REQUEST{__static_url}/btn2_r.gif?$_REQUEST{__static_salt}" width="6" height="21" border="0"></td>
+			<td width=$btn2_r_width><img src="$_REQUEST{__static_url}/${btn2_r}.gif?$_REQUEST{__static_salt}" width="$btn2_r_width" height="21" border="0"></td>
 		</tr>
 		</table>
 		</td>
@@ -2098,53 +2121,37 @@ sub draw_toolbar_input_select {
 		$options -> {other} -> {width}  ||= $conf -> {core_modal_dialog_width} || 'screen.availWidth - (screen.availWidth <= 800 ? 50 : 100)';
 		$options -> {other} -> {height} ||= $conf -> {core_modal_dialog_height} || 'screen.availHeight - (screen.availHeight <= 600 ? 50 : 100)';
 
-		$options -> {no_confirm} ||= $conf -> {core_no_confirm_other};
+		$options -> {onChange} =~ s/submit\(\);$//;
 
-		$options -> {no_confirm} += 0;
-
-		$options -> {onChange} = <<EOJS . $options -> {onChange} . '}';
+		$options -> {onChange} .= <<EOJS;
 
 			if (this.options[this.selectedIndex].value == -1) {
 
-				if ($$options{no_confirm} || window.confirm ('$$i18n{confirm_open_vocabulary}')) {
-
-					try {
-
-						var dialog_width = $options->{other}->{width};
-						var dialog_height = $options->{other}->{height};
-
-						var result = window.showModalDialog ('$ENV{SCRIPT_URI}/i/_skins/TurboMilk/dialog.html?@{[rand ()]}', {href: '$options->{other}->{href}&select=$name', parent: window}, 'status:no;resizable:yes;help:no;dialogWidth:' + dialog_width + 'px;dialogHeight:' + dialog_height + 'px');
-
-						focus ();
-
-						if (result.result == 'ok') {
-							setSelectOption (this, result.id, result.label);
-							submit ();
-						} else {
-							this.selectedIndex = 0;
-							submit ();
-						}
-					} catch (e) {
-						this.selectedIndex = 0;
-						submit ();
+				open_vocabulary_from_select (
+					this,
+					{
+						message       : i18n.choose_open_vocabulary,
+						href          : '$options->{other}->{href}&select=$name&salt=' + Math.random(),
+						dialog_width  : $options->{other}->{width},
+						dialog_height : $options->{other}->{height},
+						title         : '$i18n->{voc_title}'
 					}
+				);
 
-				} else {
-
-					this.selectedIndex = 0;
-					submit ();
-
-				}
 			} else {
+
+				this.form.submit ();
+
+			}
 EOJS
 	}
 
 	$options -> {attributes} ||= {};
 
+	my $title = [grep{$_ -> {id} == $options -> {value}} @{$options -> {values}}] -> [0] -> {title};
+
 	$options -> {max_len} += 0;
 	$options -> {attributes} -> {max_len} = $options -> {max_len};
-
-	$options -> {attributes} -> {style} ||= 'visibility:expression(select_visibility())' if msie_less_7;
 
 	$options -> {attributes} -> {onChange} = $options -> {onChange};
 
@@ -2153,15 +2160,16 @@ EOJS
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	$html .= <<EOH;
-		<select name="$name" id="${name}_select" $read_only $attributes>
+		<select name="$name" id="${name}_select" title='$title' $read_only $attributes>
 EOH
 
 	foreach my $value (@{$options -> {values}}) {
 
 		my $attributes = dump_attributes ($value -> {attributes});
 
-		$html .= qq {<option value="$$value{id}" $$value{selected} $attributes>$$value{label}</option>};
+		$value -> {label} = ('&nbsp;&nbsp;&nbsp;' x $value -> {level}) . $value -> {label};
 
+		$html .= qq {<option value="$$value{id}" $$value{selected} $attributes>$$value{label}</option>};
 	}
 
 	$html .= '</select></td><td class="toolbar">&nbsp;&nbsp;&nbsp;</td>';
@@ -2268,7 +2276,7 @@ sub draw_toolbar_input_datetime {
 
 	my ($_SKIN, $options) = @_;
 
-	$options -> {onClose}    = "function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }";
+	$options -> {onClose}    = "debounce(function (cal) { cal.hide (); $$options{onClose}; cal.params.inputField.form.submit () }, 50)";
 	$options -> {onKeyPress} ||= "if (window.event.keyCode == 13) {this.form.submit()}";
 
 	my $html = '<td class="toolbar" nowrap>';
@@ -2350,11 +2358,9 @@ EOH
 			$type -> {label} .= "&nbsp;$label";
 		}
 
-		$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
-
 		$html .= <<EOH;
 				<tr>
-					<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
+					<td nowrap id="$$type{id}" target="$$type{target}" onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="toolbar-btn-vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
 				</tr>
 EOH
 
@@ -2388,31 +2394,17 @@ sub draw_centered_toolbar_button {
 		$img_path = _icon_path ($options -> {icon});
 	}
 
-	if ($preconf -> {core_blockui_on_submit} && $options -> {blockui}) {
-
-		unless ($options -> {href} =~ /^javaScript\:/i) {
-
-			$options -> {target} ||= '_self';
-
-			$options -> {href} =~ s{\%}{\%25}g;
-
-			$options -> {href} = qq {javascript: nope('$options->{href}','$options->{target}')};
-
-		}
-
-		my $code = "\$.blockUI ({onBlock: function(){ is_interface_is_locked = true; }, onUnblock: function(){ is_interface_is_locked = false; }, fadeIn: 0, message: '<h2><img src=\\'$_REQUEST{__static_url}/busy.gif\\'> $i18n->{request_sent}</h2>'})";
-		$code .= ";window.setInterval(poll_invisibles, 100);" if $options -> {target} eq 'invisible';
-
-		$options -> {href} =~ s/\bnope\b/blockui ('', 1);nope/;
-
-		$options -> {target} = '_self';
-	}
-
 	my $nbsp = $options -> {label} ? '&nbsp;' : '';
 
 	my $html = "<td nowrap background='$_REQUEST{__static_url}/cnt_tbr_bg.gif?$_REQUEST{__static_salt}'>";
 
+	my $btn_r = 'btn_r';
+	my $btn_r_width = 6;
+
 	if (@{$options -> {items}} > 0) {
+
+		$btn_r = 'btn_r_multi';
+		$btn_r_width = 14;
 
 		$options -> {onclick} = "";
 		$options -> {href} = "#";
@@ -2435,7 +2427,7 @@ EOH
 					<td width=6><img src="$_REQUEST{__static_url}/btn_l.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
 					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}"><img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=1 align=absmiddle>${nbsp}</a></td>
 					<td background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="absmiddle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}" $title>$$options{label}</a>${nbsp}${nbsp}</td>
-					<td width=6><img src="$_REQUEST{__static_url}/btn_r.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
+					<td width=$btn_r_width><img src="$_REQUEST{__static_url}/${btn_r}.gif?$_REQUEST{__static_salt}" width="$btn_r_width" height="25" border="0"></td>
 				</tr>
 			</table>
 		</td>
@@ -2639,13 +2631,13 @@ EOH
 				$type -> {onclick} = "eludia_copy_clipboard ('$$type{clipboard_text}')";
 			}
 
-			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree});
+			$type -> {onclick} =~ s{'_self'\)$}{'_body_iframe'\)} unless ($_REQUEST {__tree} || $_REQUEST {can_close_window});
 
 			my $td = $type -> {items} ? <<EOH : qq{<td nowrap onclick="$$type{onclick}" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}" class="vert-menu">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>};
 				<td nowrap onclick="$$type{onclick}" class="vert-menu" onmouseover="$$type{onhover}" onmouseout="$$type{onmouseout}">
 						<table width="100%" cellspacing=0 cellpadding=0 border=0><tr>
 							<td align="left" nowrap style="font-family: Tahoma, 'MS Sans Serif'; font-weight: normal; font-size: 8pt; color: #ffffff;">&nbsp;&nbsp;$$type{label}&nbsp;&nbsp;</td>
-							<td align="right" style="font-family: Marlett; font-weight: normal; font-size: 8pt; color: #ffffff;">8</td>
+							<td align="right" style="font-size: 8pt; color: #ffffff;padding-right:5px">&raquo;</td>
 						</tr></table>
 				</td>
 EOH
@@ -2738,6 +2730,15 @@ sub draw_text_cell {
 	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
 
 	$data -> {attributes} -> {title} .= $label_tail;
+
+	if ($data -> {__context_menu}) {
+
+		$_SKIN -> {__current_row} -> {__menu} .= $data -> {__context_menu};
+
+		$data -> {attributes} -> {"oncontextmenu"} = "open_popup_menu(event, '$data'); blockEvent (); return false;";
+
+	}
+
 
 	my $has_href = $data -> {href} && ($_REQUEST {__read_only} || !$_REQUEST {id} || $options -> {read_only});
 
@@ -2902,14 +2903,13 @@ sub draw_select_cell {
 
 	my ($_SKIN, $data, $options) = @_;
 
-	my $s_attributes -> {class} = "form-mandatory-inputs" if $data -> {mandatory};
-
 	my $label_tail = $data -> {label_tail} ? '&nbsp;' . $data -> {label_tail} : '';
 
 	$data -> {attributes} -> {title} .= $label_tail;
 
+	my $s_attributes = dump_attributes ({ class => "form-mandatory-inputs" }) if $data -> {mandatory};
+
 	my $attributes = dump_attributes ($data -> {attributes});
-	$s_attributes = dump_attributes ($s_attributes);
 
 	my $multiple = $data -> {rows} > 1 ? "multiple size=$$data{rows}" : '';
 
@@ -3287,6 +3287,8 @@ sub draw_table {
 	$$options{toolbar} =~ s{\s+$}{}sm;
 
 	my $html = '';
+	my $tname = 'div_' . int(rand(10000));
+	$html = $preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page} ? "<div id=$tname style='VISIBILITY:hidden'>" : "<div>";
 
 	my %hidden = ();
 
@@ -3341,9 +3343,9 @@ sub draw_table {
 
 			$html .= "<tr id='$$i{__tr_id}'";
 
+			$menus .= $i -> {__menu};
 			if (@{$i -> {__types}} && $conf -> {core_hide_row_buttons} > -1 && !$_REQUEST {lpt}) {
-				$menus .= $i -> {__menu};
-				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent ();"};
+				$html  .= qq{ oncontextmenu="open_popup_menu(event, '$i'); blockEvent (); return false;"};
 			}
 
 			$html .= '>';
@@ -3355,7 +3357,7 @@ sub draw_table {
 	}
 
 	$html .= <<EOH;
-			</tbody></table>$$options{toolbar}</td></form></tr></table>
+			</tbody></table></div>$$options{toolbar}</td></form></tr></table>
 		$menus
 
 EOH
@@ -3365,11 +3367,10 @@ EOH
 	my $enctype = $html =~ /\btype\=[\'\"]?file\b/ ?
 		'enctype="multipart/form-data"' : '';
 
-	$_REQUEST {__on_load} .= ";numeroftables++;";
+	$_REQUEST {__on_load} .= ";numeroftables++;" . ($preconf -> {toggle_in_hidden_form} && !$_REQUEST{__only_page} ? "\$('#$tname').css('visibility','visible');" : "");
 
 	return <<EOH . $html;
 
-		$div
 		$$options{title}
 		$$options{path}
 		$$options{top_toolbar}
@@ -3454,6 +3455,13 @@ sub draw_page {
 	}
 	elsif (($parameters -> {__subset} || $parameters -> {type}) && !$_REQUEST {__top}) {
 
+		unless ($r -> headers_in -> {'User-Agent'} =~ /MSIE (\d+)|Trident/) {
+			$_REQUEST {__head_links} .= <<EOH
+<link href="$_REQUEST{__static_url}/jquery-ui.min.css?$_REQUEST{__static_salt}" type="text/css" rel="stylesheet">
+<script src="$_REQUEST{__static_url}/jquery-ui.min.js?$_REQUEST{__static_salt}"></script>
+<script src="$_REQUEST{__static_url}/jQuery.showModalDialog.js?$_REQUEST{__static_salt}"></script>
+EOH
+		}
 		$body .= qq {
 
 			<div style='display:none'>$_REQUEST{__menu_links}</div>
@@ -3641,7 +3649,9 @@ EOH
 
 	$_REQUEST {__script}     .= "\nvar $_ = " . $_JSON -> encode ($js_var -> {$_}) . ";\n"                              foreach (keys %$js_var);
 
-	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">}         foreach (@{$_REQUEST {__include_css}});
+	$_REQUEST {__head_links} .= qq{<link  href='$_REQUEST{__static_site}/i/$_.css' type="text/css" rel="stylesheet">\n}         foreach (@{$_REQUEST {__include_css}});
+
+	$_REQUEST {__head_links} .= dump_tag (style => {}, $_REQUEST {__css}) . "\n" if $_REQUEST {__css};
 
 	$_REQUEST {__head_links} .= "<script src='$_REQUEST{__static_site}/i/${_}.js?$_REQUEST{__static_salt}'>\n</script>" foreach (@{$_REQUEST {__include_js}});
 
@@ -3697,8 +3707,9 @@ EOH
 
 	} . $_REQUEST {__head_links};
 
-	if (user_agent () -> {msie} > 9) {
-		$_REQUEST {__head_links}  = qq|<meta http-equiv="X-UA-Compatible" content="IE=5">\n| . $_REQUEST {__head_links};
+	if (user_agent () -> {msie} > 9 || $_REQUEST {__x_ua_compatible}) {
+		my $content_ie = $_REQUEST {__x_ua_compatible} || 5;
+		$_REQUEST {__head_links}  = qq|<meta http-equiv="X-UA-Compatible" content="IE=$content_ie">\n| . $_REQUEST {__head_links};
 	}
 
 	if ($body !~ /^\s*\<frameset/ism) {
@@ -4173,6 +4184,8 @@ EOH
 		if (win.d.selectedNode == null || win.d.selectedFound) {
 			win.d.openTo ($options->{selected_node}, true);
 		}
+		var eNew = ifr.contentWindow.document.getElementById("sd" + win.d.selectedNode);
+		eNew.className = "nodeSel";
 EOO
 	})
 EOH

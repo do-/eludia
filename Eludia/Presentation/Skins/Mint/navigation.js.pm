@@ -13,6 +13,7 @@
  * Date: 30-03-2014
  */!function(a,b){"use strict";var c,d;if(a.uaMatch=function(a){a=a.toLowerCase();var b=/(opr)[\/]([\w.]+)/.exec(a)||/(chrome)[ \/]([\w.]+)/.exec(a)||/(version)[ \/]([\w.]+).*(safari)[ \/]([\w.]+)/.exec(a)||/(webkit)[ \/]([\w.]+)/.exec(a)||/(opera)(?:.*version|)[ \/]([\w.]+)/.exec(a)||/(msie) ([\w.]+)/.exec(a)||a.indexOf("trident")>=0&&/(rv)(?::| )([\w.]+)/.exec(a)||a.indexOf("compatible")<0&&/(mozilla)(?:.*? rv:([\w.]+)|)/.exec(a)||[],c=/(ipad)/.exec(a)||/(iphone)/.exec(a)||/(android)/.exec(a)||/(windows phone)/.exec(a)||/(win)/.exec(a)||/(mac)/.exec(a)||/(linux)/.exec(a)||/(cros)/i.exec(a)||[];return{browser:b[3]||b[1]||"",version:b[2]||"0",platform:c[0]||""}},c=a.uaMatch(b.navigator.userAgent),d={},c.browser&&(d[c.browser]=!0,d.version=c.version,d.versionNumber=parseInt(c.version)),c.platform&&(d[c.platform]=!0),(d.android||d.ipad||d.iphone||d["windows phone"])&&(d.mobile=!0),(d.cros||d.mac||d.linux||d.win)&&(d.desktop=!0),(d.chrome||d.opr||d.safari)&&(d.webkit=!0),d.rv){var e="msie";c.browser=e,d[e]=!0}if(d.opr){var f="opera";c.browser=f,d[f]=!0}if(d.safari&&d.android){var g="android";c.browser=g,d[g]=!0}d.name=c.browser,d.platform=c.platform,a.browser=d}(jQuery,window);
 
+var select_options = {};
 var browser_is_msie = $.browser.msie;
 var is_dialog_blockui = $.browser.webkit || $.browser.safari;
 
@@ -41,7 +42,8 @@ var is_dirty = false,
 
 	max_len = 50,
 	poll_invisibles_interval_id,
-	max_tabindex = 0;
+	max_tabindex = 0,
+	supertables = [];
 
 
 var request = {},
@@ -176,12 +178,10 @@ function dialog_open (options) {
 		options.position =  {my: "left top", at: "left top", of: window};
 	}
 
-	var url = 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random ();
+	var url = window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random();
 
 	if ($.browser.webkit || $.browser.safari)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
-
-	var result;
 
 	if (is_ua_mobile) {
 		$.showModalDialog({
@@ -246,7 +246,7 @@ function open_vocabulary_from_select (s, options) {
 		if (is_ua_mobile) {
 
 			 $.showModalDialog({
-				url             : 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				url             : window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				height          : dialog_height,
 				width           : dialog_width,
 				resizable       : true,
@@ -281,7 +281,7 @@ function open_vocabulary_from_select (s, options) {
 		} else {
 
 			var result = window.showModalDialog (
-				'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window, title: options.title},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
@@ -353,7 +353,7 @@ function open_vocabulary_from_combo (combo, options) {
 			 var me = this;
 
 			 $.showModalDialog({
-				url             : 'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				url             : window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				height          : dialog_height,
 				width           : dialog_width,
 				resizable       : true,
@@ -377,7 +377,7 @@ function open_vocabulary_from_combo (combo, options) {
 		} else {
 
 			var result = window.showModalDialog (
-				'http://' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
+				window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window, title: options.title},
 				'status:no;resizable:yes;help:no;dialogWidth:' + options.dialog_width + 'px;dialogHeight:' + options.dialog_height + 'px'
 			);
@@ -822,33 +822,12 @@ function setup_drop_down_button (id, data) {
 			dataSource: data,
 			orientation: 'vertical',
 			select: function (e) {
-				var selected_item = data [$(e.item).index()];
-				if (selected_item) {
-					var selected_url = selected_item.url;
-					if (selected_url) {
-						if (selected_url.match(/^javascript:/i)) {
-
-							var code = decodeURI (selected_url.substr (11));
-
-							if (selected_item.confirm) {
-								if (confirm (selected_item.confirm)) {
-									eval (code);
-								}
-							} else {
-								eval (code);
-							}
-						} else {
-							if (selected_item.confirm) {
-								if (!confirm (selected_item.confirm)) {
-									setCursor ();
-									menuDiv.remove ();
-									e.preventDefault();
-								}
-							}
-						}
-					}
+				var selected_url = data [$(e.item).index()].url;
+				if (selected_url.match(/^javascript:/)) {
+					eval (selected_url);
 				}
 				menuDiv.remove ();
+				return true;
 			}
 		});
 
@@ -1048,12 +1027,25 @@ function setAndSubmit (name, values) {
 
 	var form = document.forms [name];
 
-	var e = form.elements;
+	var elements = form.elements;
 
-	for (var i in values) e [i].value = values [i];
+	for (var i in values) {
+
+		if (elements [i] == undefined) {
+
+			$('<input>').attr({
+				type  : 'hidden',
+				name  : i,
+				value : values [i]
+			}).appendTo('form[name=' + name + ']');
+
+			continue;
+		}
+
+		elements [i].value = values [i];
+	}
 
 	form.submit ();
-
 }
 
 function checkMultipleInputs (f) {
@@ -2012,6 +2004,11 @@ function enableDropDownList(name, enable){
 	document.getElementById(name).disabled = !enable;
 }
 
+function enable_input(name, enable) {
+	var field = $('[name=_' + name + ']' + ',#input_' + name);
+	field.prop('readonly', !enable).toggleClass('disabled', !enable);
+}
+
 function toggle_field (name, is_visible, is_clear_field) {
 
 	is_visible = is_visible > 0;
@@ -2049,6 +2046,10 @@ function toggle_field_id (id, is_visible,is_clear_field) {
 		full_id = '_' + id + '_span';
 	else if (document.getElementById('_' + id + '_select'))
 		full_id = '_' + id + '_select';
+	else if (document.getElementById('_' + id + '__suggest'))
+		full_id = '_' + id + '__suggest';
+	else if (document.getElementById(id))
+		full_id = id;
 	if(!full_id)
 		return 0;
 	var td_field = $('[id=' + full_id + ']').closest('td');
@@ -2284,7 +2285,7 @@ function treeview_oncontextmenu (e) {
 		var href = $(element).attr('href');
 		var url = a[i].url;
 		if (a[i].clipboard_text) {
-			eludia_copy_clipboard (a[i].clipboard_text, element);
+			eludia_copy_clipboard_init (a[i].clipboard_text, element);
 			a[i].target = 'invisible';
 		} else if ( url && /^javascript:/.test(href)){
 			$(element).attr('href', url);
@@ -2435,19 +2436,19 @@ function eludia_is_flash_installed () {
 	return navigator.plugins['Shockwave Flash'];
 }
 
-function eludia_copy_clipboard (text, element) {
+function eludia_copy_clipboard_init (text, element) {
 
 	if (!eludia_is_flash_installed() || !element) {
 
-		$(element).attr('href', 'javascript: window.prompt(\''+ i18n.copy_clipboard + '\', \'' + text + '\')');
+		$(element).attr('href', 'javascript: window.prompt(\''+ i18n.clipboard_help + '\', \'' + text + '\')');
 
 		return;
 	};
 
 	$(element).attr('data-clipboard-text', text);
 
-	require ('/i/_skins/Mint/ZeroClipboard.min.js', function (zero_clipboard) {
-		zero_clipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
+	require (['/i/_skins/Mint/ZeroClipboard.min.js'], function (ZeroClipboard) {
+		ZeroClipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
 
 		var clip = new ZeroClipboard(element);
 
@@ -2508,10 +2509,21 @@ function activate_suggest_fields (top_element) {
 						data        : read_data,
 						dataType    : 'json'
 					},
+					parameterMap: function(data, type) {
+						var q = '';
+						if (data.filter && data.filter.filters && data.filter.filters [0] && data.filter.filters [0].value)
+							q = data.filter.filters [0].value;
+
+						var result = {};
+						result [$('#' + id).attr ('name') + '__label'] = q;
+
+						if (type == 'read') {
+							return result;
+						}
+					}
 				}
 			},
 			change          : function(e) {
-
 				var selected_item = this.current();
 				var id           = '',
 					label        = this.value(),
@@ -2677,15 +2689,13 @@ function init_page (options) {
 
 			table_containers.each (function() {
 				var that = this;
-				var table_url = '/?' + options.table_url + '&__only_table=' + that.id;
-				table_url = table_url + '&__table_cnt=' + table_containers.length;
 
-				new supertable({
-					tableUrl: table_url,
+				supertables.push (new supertable({
+					tableUrl        : '/?' + tables_data [that.id]['table_url'] + '&__only_table=' + that.id + '&__table_cnt=' + table_containers.length,
 					initial_data : tables_data [that.id],
 					el: $(that),
 					containerRender : function(model) {
-						$(that).find('tr[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
+						$(that).find('tr[data-menu],td[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
 						adjust_kendo_selects (that);
 						$('[data-type=datepicker]', that).addClass('k-group').each(function () {$(this).kendoDatePicker({
@@ -2714,7 +2724,7 @@ function init_page (options) {
 
 
 					}
-				})
+				}))
 			});
 
 			options.on_load ();
@@ -2732,6 +2742,8 @@ function init_page (options) {
 			if (typeof tableSlider.row === 'number' && tableSlider.rows.length > tableSlider.row) {
 				tableSlider.scrollCellToVisibleTop ();
 			}
+
+			$(document).click (function () {$('UL.menuFonDark').remove ()});
 
 		});
 	}
@@ -2847,6 +2859,19 @@ function init_page (options) {
 
 		$('input[name=svg_text_' + $(this).data('name') + ']').val(chart.svg());
 	});
+
+	if ($('.eludia-clipboard').length) {
+		require (['/i/_skins/Mint/ZeroClipboard.min.js'], function (ZeroClipboard) {
+			ZeroClipboard.config( { swfPath: '/i/_skins/Mint/ZeroClipboard.swf' } );
+
+			var client = new ZeroClipboard($('.eludia-clipboard'));
+
+			client.on('aftercopy', function(event) {
+				alert (i18n.clipboard_copied + ' ' + event.data['text/plain']);
+			});
+		});
+	}
+
 
 	if (top.localStorage && top.localStorage ['message']) {
 		require(['kendo.notification.min'], function() {
@@ -2965,3 +2990,7 @@ function debounce (func, wait, immediate) {
 		return result;
 	};
 };
+
+function tabOnEnter () {
+	void (0);
+}

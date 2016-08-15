@@ -505,7 +505,7 @@ WITH tree(id) AS (
 	SELECT
 		subtree.id
 	FROM
-		kladr as subtree
+		$table_name as subtree
 		, tree
 	WHERE
 		subtree.fake = 0
@@ -592,12 +592,14 @@ sub sql_do_insert {
 		sql_do (<<EOS, $_REQUEST {sid});
 			UPDATE
 				$table_name
-				LEFT JOIN $conf->{systables}->{sessions} ON $table_name.fake = $conf->{systables}->{sessions}.id
 			SET
 				$table_name.fake = ?
+			FROM
+				$table_name
+			LEFT JOIN $conf->{systables}->{sessions} ON $table_name.fake = $conf->{systables}->{sessions}.id
 			WHERE
 				$table_name.fake > 0
-				AND $conf->{systables}->{sessions}.id_user IS NULL
+			AND $conf->{systables}->{sessions}.id_user IS NULL
 EOS
 
 		### get my least fake id (maybe ex-orphan, maybe not)

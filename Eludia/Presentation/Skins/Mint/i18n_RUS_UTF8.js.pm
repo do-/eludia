@@ -5,6 +5,8 @@ var i18n = {
 	copy_clipboard: "Для копирования нажмите CTRL+C, потом ENTER"
 	count : 'Кол-во',
 	sum   : 'Сумма'
+	clipboard_help: "Для копирования нажмите CTRL+C, потом ENTER",
+	clipboard_copied: "Скопировал"
 };
 
 try{

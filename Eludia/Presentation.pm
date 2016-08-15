@@ -2,6 +2,8 @@ no warnings;
 
 ################################################################################
 
+sub css ($)    {$_REQUEST {__css} .= "\n$_[0]\n"; return ''}
+
 sub js ($)    {$_REQUEST {__script} .= ";\n$_[0];\n"; return ''}
 
 sub j  ($)    {js "\$(document).ready (function () { $_[0] })"}
@@ -55,6 +57,7 @@ sub __d {
 		if ($data -> {$_} =~ s/(\d\d\d\d)-(\d\d)-(\d\d)/$3.$2.$1/ or $data -> {$_} =~ m{(\d\d)\.(\d\d)\.(\d\d\d\d)}) {
 
 			$data -> {$_} =~ s{00\.00\.0000}{};
+			$data -> {$_} =~ s{31\.12\.9999(\s00:00:00)?}{};
 			$data -> {$_} =~ s{(:\d+)\.\d+$}{$1};
 		}
 	}
@@ -512,6 +515,8 @@ sub check_href {
 
 	}
 
+	map { $url .= "&${_}=$_REQUEST{$_}" } grep { $_ =~ /^__select_type_/ } keys %_REQUEST if $_REQUEST {select};
+
 	$options -> {href} = $url;
 
 	return $url;
@@ -590,7 +595,7 @@ sub adjust_esc {
 		&& !$_REQUEST{__from_table}
 		&& !(ref $data eq HASH && $data -> {fake} > 0)
 	) {
-		$options -> {esc} = create_url (
+		$options -> {esc} ||= create_url (
 			__last_query_string => $_REQUEST {__last_last_query_string},
 			__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 		);
@@ -785,9 +790,8 @@ sub draw_form {
 
 	foreach my $key (keys %_REQUEST) {
 
-		$key =~ /^__checkboxes_/ or next;
-
-		push @keep_params, {name => $key, value => $_REQUEST {$key} };
+		push @keep_params, {name => $key, value => $_REQUEST {$key} }
+			if ($_REQUEST {select} && $key =~ /^__select_type_/ || $key =~ /^__checkboxes_/);
 
 	}
 
@@ -933,20 +937,20 @@ sub draw_form_field {
 
 	if ($_REQUEST {__only_field}) {
 
-		my @fields = split (',', $_REQUEST {__only_field});
+		my $fields = [split (',', $_REQUEST {__only_field})];
 
 		if ($field -> {type} eq 'hgroup') {
 			my $html = '';
 			foreach (@{$field -> {items}}) {$html .= draw_form_field ($_, $data)}
 			return $html;
 		}
-		elsif ($field -> {type} eq 'radio') {
+		elsif ($field -> {type} eq 'radio' && !($field -> {name} ~~ $fields)) {
 			my $html = '';
 			foreach (@{$field -> {values}}) {$html .= draw_form_field ($_, $data)}
 			return $html;
 		}
 		else {
-			(grep {$_ eq $field -> {name}} @fields) > 0 or return '';
+			(grep {$_ eq $field -> {name}} @$fields) > 0 or return '';
 		}
 
 	}
@@ -1091,39 +1095,21 @@ sub draw_toolbar {
 
 			next if $button -> {off};
 
-			if (@{$button -> {items}}) {
+			my @items;
+			if (defined $button -> {items}) {
+				@items = grep { !$_ -> {off} } @{$button -> {items}};
+				next unless @items;
+			}
 
-				my $items;
+			$button = @items [0] if (@items == 1);
 
-				foreach my $item (@{$button -> {items}}) {
+			if (@items > 1) {
 
-					next if ($item -> {off});
+				map { $_ -> {parent} = 1; $_SKIN -> __adjust_button ($_); } @items;
 
-					check_href ($item);
+				$button -> {items} = \@items;
 
-					if (
-						!(
-							$item -> {keep_esc} ||
-							(!exists $item -> {keep_esc} && $item -> {icon} eq 'cancel')
-						)
-					) {
-						$item -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
-					}
-
-					$item -> {confirm} = js_escape ($item -> {confirm}) if ($item -> {confirm});
-
-					push @$items, $item;
-				}
-
-				if (!$items) {
-					next;
-				} elsif (@$items == 1) {
-					$button = $items -> [0];
-				} else {
-					$button -> {items} = $items;
-					$button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items});
-				}
-
+				eval { $button -> {__menu} = draw_toolbar_button_vert_menu ($button -> {items}, $button -> {items}); };
 
 			}
 
@@ -1218,75 +1204,25 @@ sub draw_centered_toolbar_button {
 
 	my ($options) = @_;
 
-	if (@{$options -> {items}}) {
+	my @items;
+	if (defined $options -> {items}) {
+		@items = grep { !$_ -> {off} } @{$options -> {items}};
+		return '' unless @items;
+	}
 
-		my $items;
+	$_ [0] = $options = @items [0] if (@items == 1);
 
-		foreach my $item (@{$options -> {items}}) {
+	if (@items > 1) {
 
-			next if ($item -> {off});
+		map { $_ -> {parent} = 1; $_SKIN -> __adjust_button ($_); } @items;
 
-			check_href ($item);
+		$options -> {items} = \@items;
 
-			if (
-				!(
-					$item -> {keep_esc} ||
-					(!exists $item -> {keep_esc} && $item -> {icon} eq 'cancel')
-				)
-			) {
-				$item -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
-			}
-
-			$item -> {confirm} = js_escape ($item -> {confirm}) if ($item -> {confirm});
-
-			push @$items, $item;
-		}
-
-		if (!$items) {
-
-			return '';
-
-		} elsif (@$items == 1) {
-
-			$_ [0] = $options = $items -> [0];
-
-		} else {
-
-			$options -> {items} = $items;
-
-			eval {$options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items});};
-
-		}
-
+		eval { $options -> {__menu} = draw_toolbar_button_vert_menu ($options -> {items}, $options -> {items}); };
 
 	}
 
-	if ($options -> {preset}) {
-		my $preset = $conf -> {button_presets} -> {$options -> {preset}};
-		$options -> {hotkey}     ||= Storable::dclone ($preset -> {hotkey}) if $preset -> {hotkey};
-		$options -> {icon}       ||= $preset -> {icon};
-		$options -> {label}      ||= $i18n -> {$preset -> {label}};
-		$options -> {label}      ||= $preset -> {label};
-		$options -> {confirm}    = exists $options -> {confirm} ? $options -> {confirm} :
-			$i18n -> {$preset -> {confirm}} ? $i18n -> {$preset -> {confirm}} :
-			$preset -> {confirm};
-		$options -> {preconfirm} ||= $preset -> {preconfirm};
-	}
-
-	$options -> {href} = 'javaScript:' . $options -> {onclick} if $options -> {onclick};
-
-	check_href ($options);
-
-	if (
-		!(
-			$options -> {keep_esc} ||
-			(!exists $options -> {keep_esc} && $options -> {icon} eq 'cancel')
-		)
-	) {
-		$options -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
-	}
-
-	$_SKIN -> __adjust_button_href ($options);
+	$_SKIN -> __adjust_button ($options);
 
 	return $_SKIN -> draw_centered_toolbar_button (@_);
 
@@ -1392,7 +1328,7 @@ sub draw_ok_esc_toolbar {
 				label    => $options -> {choose_select_label} || $data -> {label},
 				question => $data -> {question},
 			}),
-			off   => (!$_REQUEST {__read_only} || !$_REQUEST {select}),
+			off   => (!$_REQUEST {__read_only} || !$_REQUEST {select}) || $_REQUEST {"__select_type_" . $_REQUEST {select}} ne $_REQUEST {type},
 		},
 		@{$options -> {additional_buttons}},
 		{
@@ -1592,7 +1528,7 @@ sub draw_cells {
 
 	my $result = '';
 
-	delete $options -> {href} if $options -> {is_total};
+	delete $options -> {href} if $options -> {is_total} || $_REQUEST {select} && $options -> {no_select_href};
 
 	if ($options -> {href}) {
 		check_href ($options) ;
@@ -1605,49 +1541,32 @@ sub draw_cells {
 
 	$options -> {__fixed_cols} = 0;
 
-	my $row = [];
-	foreach my $cell (@{$_[0]}) {
-		push @$row, $cell
-			unless $cell -> {hidden};
-	}
+	my $row = $_ [0];
 
 	if ($conf -> {core_store_table_order} && !$_REQUEST {__no_order}) {
 
-		my $max_ord = 0;
-		foreach my $i (@_COLUMNS) {
-			$max_ord = $i -> {ord} if $max_ord < $i -> {ord} && !$i -> {hidden};
-		}
-		my $power = length ($max_ord) - 1;
-		my @__COLUMNS;
-		foreach my $i (@_COLUMNS) {
-			if ($i -> {has_child}) {
-				push @__COLUMNS, {has_child => 1};
+		my ($i, $j, $k) = (0, 0, 0);
+
+		while ($i < @_COLUMNS && $j < @$row) {
+
+			if ($_COLUMNS [$i] -> {children}) {
+				$i ++;
 				next;
 			}
-			my $i_power = length ($i -> {ord}) - 1;
-			$i_power = int ($i_power / 3)
-				if $i_power % 3;
-			my $ii = {%$i};
-			$ii -> {ord} *= 1 . (0 x ($power - $i_power))
-				unless $i_power == $power;
-			push @__COLUMNS, $ii;
-		}
 
-		for (my ($i, $j) = 0; $i < @__COLUMNS; $i ++) {
 
-			my $h = $__COLUMNS [$i];
-
-			ref $h eq HASH && !$h -> {has_child} or next;
-
-			last if $j >= @$row;
+			if ($row -> [$j] -> {hidden} || $row -> [$j] -> {icon}) {
+				$j ++;
+				next;
+			}
 
 			$row -> [$j] = {label => $row -> [$j]} unless ref $row -> [$j] eq HASH;
 
-			$row -> [$j] -> {ord} ||= $__COLUMNS [$i] -> {ord};
+			$row -> [$j] -> {hidden} ||= $_COLUMNS [$i] -> {hidden};
+			$row -> [$j] -> {ord} ||= $COLUMNS_BY_ORDER {$k};
 
-			$row -> [$j] -> {hidden} ||= $__COLUMNS [$i] -> {hidden};
+			$i ++; $j ++; $k ++;
 
-			$j++;
 		}
 
 	}
@@ -1759,9 +1678,6 @@ sub draw_cells {
 				var url_options = '$url&__edited_cells_table=$_REQUEST{__edited_cells_table}&action=$$options{action}&type=$_REQUEST{type}&action_type=$$options{action_type}&id_edit_cell=${id_edit_cell}${id_type}&__only_table=$_REQUEST{__edited_cells_table}&__only_field=$id_cell';
 				open_edit_cell ('$id_cell', '$name', url_options, '$_REQUEST{__edited_cells_table}');
 EOJS
-			$cell -> {href}    = '';
-			$options -> {href} = '';
-
 			if ($_REQUEST {__only_field} && $_REQUEST {__only_field} eq $id_cell) {
 				$result = call_from_file ("Eludia/Presentation/TableCells/$cell->{type}.pm", "draw_$cell->{type}_cell", $cell, $options);
 				return {id => $id_cell, html => $result};
@@ -1861,11 +1777,20 @@ sub order_cells {
 		push @result, $cell;
 	}
 
-	return @result if 0 == %ord;
+	return @result if $_REQUEST {__no_order} || 0 == %ord;
 
 	my $n = 1;
 
 	for (my $i = 0; $i < @result; $i++) {
+
+		if ($result [$i] -> {parent_header} && $result [$i] -> {parent_header} -> {ord}) {
+
+			$result [$i] -> {ord} = $result [$i] -> {parent_header} -> {ord}
+
+				+ $result [$i] -> {ord} / 1000 + $i / 10000;
+
+			next;
+		}
 
 		if ($result [$i] -> {ord}) {
 
@@ -1912,7 +1837,7 @@ sub draw_table_header_cell {
 
 	check_title ($cell);
 
-	if ($cell -> {order}) {
+	if ($cell -> {order} && !defined $cell -> {href}) {
 
 		$cell -> {href} = {
 			order                    => $cell -> {order},
@@ -1948,31 +1873,6 @@ sub draw_table_header_cell {
 
 }
 
-###############################################################################
-
-sub get_table_header_field {
-
-	my ($headers) = @_;
-
-	ref $headers -> [0] eq ARRAY or $headers = [$headers];
-
-	my $source_headers = [];
-	foreach my $row (@$headers) {
-		my $source_row = [];
-		foreach my $cell (@$row) {
-			push @$source_row, $cell
-				unless $cell -> {hidden};
-		}
-		push @$source_headers, $source_row
-			if @$source_row;
-	}
-
-
-	my $result_headers = get_composite_table_headers ({headers => $source_headers});
-
-	return $result_headers -> {headers};
-}
-
 
 ###############################################################################
 
@@ -1989,9 +1889,9 @@ sub get_composite_table_headers {
 	my $cnt = @{$headers -> [$i]};
 	$options -> {level_indexes} -> [$i] ||= 0;
 
-	if ($cnt == 0 && $colspan > 0) {
+	if ($cnt == 0 && $colspan > 0 && $colspan != 65535) {
 		return {
-			headers => [map {{label => ''}} (1 .. $colspan)],
+			headers => [map {my $id = get_super_table_cell_id ({}); {label => '', id => $id, no_order => $id}} (1 .. $colspan)],
 		}
 	}
 
@@ -2011,8 +1911,7 @@ sub get_composite_table_headers {
 			});
 
 			for (my $k = 0; $k < @{$result -> {headers}}; $k++) {
-
-				$result -> {headers} -> [$k] -> {parent} = $headers -> [$i] -> [$j];
+				$result -> {headers} -> [$k] -> {parent_header} ||= $headers -> [$i] -> [$j];
 				push @{$headers -> [$i] -> [$j] -> {children}}, $result -> {headers} -> [$k];
 				$headers -> [$i] -> [$j] -> {has_child} ++;
 
@@ -2021,29 +1920,29 @@ sub get_composite_table_headers {
 
 		}
 
-		$colspan -= $headers -> [$i] -> [$j] -> {colspan} || 1;
+		$colspan -= $headers -> [$i] -> [$j] -> {colspan} || 1
+			if !$headers -> [$i] -> [$j] -> {hidden} || ($headers -> [$i] -> [$j] -> {no_hidden} && $_REQUEST {__edit_query})
+				|| $headers -> [$i] -> [$j] -> {parent} eq $headers -> [$i - 1] -> [$options -> {level_indexes} -> [$i - 1]] -> {id};
 
-	}
+# Get tail children with hidden == 1
+		if (
+			$colspan == 0
+			&& $options -> {level_indexes} -> [$i] + 1 < $cnt
+			&& ($headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {hidden} && !($headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {no_hidden} && $_REQUEST {__edit_query}))
+			&& (
+				!$headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {parent}
+				||
+				$headers -> [$i] -> [$options -> {level_indexes} -> [$i] + 1] -> {parent} eq $headers -> [$i - 1] -> [$options -> {level_indexes} -> [$i - 1]] -> {id}
+			)
+		) {
 
-	return {headers => $result_headers, count => ($j - $f)};
+			$colspan ++;
 
-}
-
-################################################################################
-
-sub is_not_possible_order {
-
-	my ($headers) = @_;
-
-	foreach my $h (@{$headers}) {
-		if (ref $h eq ARRAY) {
-			return 1 if is_not_possible_order ($h);
-		} else {
-			return 1 unless ref $h eq HASH && ($h -> {order} || $h -> {no_order});
 		}
+
 	}
 
-	return 0;
+	return {headers => $result_headers};
 
 }
 
@@ -2096,29 +1995,28 @@ sub _load_super_table_dimensions {
 	if ($options -> {no_resize}) {
 		return;
 	}
-
-	check___query ();
-
-	my $settings = get___query_settings ($_REQUEST {id___query});
-
-	my $column_dimensions = $settings -> {columns};
+	my $column_dimensions = $_QUERY -> {content} -> {columns};
 
 	my $max_fixed_cols_cnt = 0;
 
 	ref $headers -> [0] eq ARRAY or $headers = [$headers];
+# Duplicate header to fix programmer's bug: use same hash to describe multiple header cells
+	my $header_copy = [];
 
-	foreach my $row (@$headers) {
+	for (my $i = 0; $i < @$headers; $i ++) {
 
+		my $row = $headers -> [$i];
 		my $fixed_cols_cnt = 0;
 
-		for (my $i = 0; $i < @$row; $i ++) {
+		for (my $j = 0; $j < @$row; $j ++) {
 
-			ref $row -> [$i] eq HASH or $row -> [$i] = {label => $row -> [$i]};
-			my $cell = $row -> [$i];
+			ref $row -> [$j] eq HASH or $row -> [$j] = {label => $row -> [$j]};
+			my $cell = {%{$row -> [$j]}};
+
+			push @{$header_copy -> [$i]}, $cell
+				unless $cell -> {hidden} && !$_REQUEST {__edit_query};
 
 			$fixed_cols_cnt ++ if $cell -> {no_scroll};
-
-			next if $cell -> {off};
 
 			$cell -> {id} ||= get_super_table_cell_id ($cell);
 			$cell -> {order}
@@ -2130,10 +2028,22 @@ sub _load_super_table_dimensions {
 
 			$cell -> {width} = $cell_dimensions -> {width};
 			$cell -> {height} = $cell_dimensions -> {height};
+			$cell -> {sort}   = $cell -> {order} && (
+				$_REQUEST {order} eq $cell -> {order}
+				|| !$_REQUEST {order} && $column_dimensions -> {$cell -> {id}} -> {sort}
+			);
+			if ($cell -> {sort} && $_REQUEST {order} eq $cell -> {order}) {
+				$cell -> {$_REQUEST {desc} ? 'desc' : 'asc'} = 1;
+			} elsif ($cell -> {sort}) {
+				$cell -> {$column_dimensions -> {$cell -> {id}} -> {desc} ? 'desc' : 'asc'} = 1;
+			}
+
 		}
 
 		$fixed_cols_cnt <= $max_fixed_cols_cnt or $max_fixed_cols_cnt = $fixed_cols_cnt;
 	}
+
+	@{$headers} = @{$header_copy};
 
 	$options -> {__fixed_cols} ||= $max_fixed_cols_cnt;
 }
@@ -2187,6 +2097,27 @@ sub _adjust_super_table_headers {
 
 ################################################################################
 
+sub set_body_table_cells_ord {
+
+	my ($header_row) = @_;
+
+	my $sorted_header_row = [sort {$a -> {ord} <=> $b -> {ord}} @$header_row];
+
+	foreach my $cell (@$sorted_header_row) {
+
+		$cell -> {hidden} and next;
+
+		if ($cell -> {children}) {
+			set_body_table_cells_ord ([grep {$_ -> {parent_header} eq $cell} @{$cell -> {children}}]);
+		} else {
+			$COLUMNS_BY_ORDER {$cell -> {ord_source_code}} ||= $showing_ord ++;
+		}
+	}
+
+}
+
+################################################################################
+
 sub draw_table {
 
 	return '' if $_REQUEST {__only_form};
@@ -2195,22 +2126,17 @@ sub draw_table {
 
 	unless (ref $_[0] eq CODE or (ref $_[0] eq ARRAY and ref $_[0] -> [0] eq CODE)) {
 		$headers = shift;
+		ref $headers -> [0] eq ARRAY or ($headers = [$headers]);
 	}
 
 	my ($tr_callback, $list, $options) = @_;
 
 	_adjust_table_options ($options, $list);
 
-	!exists $_REQUEST {__only_table} or $_REQUEST {__only_table} eq $options -> {id_table} or return '';
-
-	if ($options -> {super_table}) {
-
-		_load_super_table_dimensions ($options, $headers, $list);
-
-		_adjust_super_table_headers ($options, $headers);
-
-		$options -> {headers} = $headers;
-	}
+	!exists $_REQUEST {__only_table}
+		or $_REQUEST {__only_table} eq $options -> {id_table}
+		or $_REQUEST {__only_field} && $_REQUEST {__only_table} eq $options -> {name}
+		or return '';
 
 	my $table_label = exists $options -> {title} && $options -> {title} ?
 		$options -> {title} -> {label} : $options -> {name};
@@ -2225,17 +2151,56 @@ sub draw_table {
 
 	}
 
-	my $__edit_query = 0;
+	_load_super_table_dimensions ($options, $headers, $list);
+
+	_adjust_super_table_headers ($options, $headers);
+
+	$options -> {headers} = $headers;
+
+	my $is_table_columns_order_editable = $_SKIN -> {options} -> {table_columns_order_editable};
+	my $is_table_columns_showing_editable = $options -> {custom__edit_query} || $_REQUEST {first_table_columns_showing_editable};
+
 	foreach my $top_toolbar_field (@{$options -> {top_toolbar}}) {
-		$__edit_query = 1 if ref $top_toolbar_field eq HASH
+
+		$_REQUEST {first_table_columns_showing_editable} = 1
+			if ($is_table_columns_showing_editable && $_REQUEST {multi_select});
+		last
+			if $is_table_columns_showing_editable;
+
+		$is_table_columns_showing_editable ||= ref $top_toolbar_field eq HASH
 			&& exists $top_toolbar_field -> {href}
 			&& (
 				ref $top_toolbar_field -> {href} eq HASH && $top_toolbar_field -> {href} -> {__edit_query} == 1
 				|| $top_toolbar_field -> {href} =~ /\b__edit_query\b/
 			);
+
 	}
 
-	$options -> {no_order} = !$__edit_query && is_not_possible_order ($headers) unless (exists $options -> {no_order});
+	$options -> {is_not_first_table_on_page} = $_REQUEST {is_not_first_table_on_page};
+
+	if (@_COLUMNS && !$_REQUEST {multi_select}) {
+		$options -> {is_not_first_table_on_page} = 1;
+		delete $_REQUEST {id___query};
+		$_QUERY = undef;
+		$_REQUEST {__allow_check___query} = 1;
+		check___query ($options -> {id_table});
+		$_REQUEST {__allow_check___query} = 0;
+	}
+
+	$options -> {no_order} = !($is_table_columns_order_editable || $is_table_columns_showing_editable)
+		unless exists $options -> {no_order};
+
+# Check broken $_QUERY -> {content} -> {columns} because of application code modification. If !$is_table_columns_showing_editable all columns should have ord
+	if ($is_table_columns_order_editable && !$is_table_columns_showing_editable) {
+		foreach my $column (keys %{$_QUERY -> {content} -> {columns}}) {
+			if (!$_QUERY -> {content} -> {columns} -> {$column} -> {ord}) {
+				$options -> {no_order} = 1;
+				delete $_REQUEST {id___query};
+				$_QUERY = undef;
+				last;
+			}
+		}
+	}
 
 	if ($options -> {no_order}) {
 		$_REQUEST {__no_order} = 1;
@@ -2243,88 +2208,92 @@ sub draw_table {
 		delete $_REQUEST {__no_order};
 	}
 
-	my @old_headers = @$headers;
+	our @_COLUMNS = ();
+	our %_ORDER = ();
 
-	if ($conf -> {core_store_table_order} && !$options -> {no_order}) {
+	my $flat_headers = (get_composite_table_headers ({headers => $headers})) -> {headers};
+	my $ord_source_code = 0;
 
-		our @_ORDER = ();
-		our @_COLUMNS = ();
-		our %_ORDER = ();
+	@_COLUMNS = @$flat_headers;
 
-		my @header_cells = ();
+	my $is_exist_default_ords = 0 + grep {$_ -> {ord} || $_ -> {ord_fixed}} @$flat_headers;
 
-		my $is_exists_subheaders;
-		my $max_ord;
+	foreach my $h (@$flat_headers) {
 
-		$headers = get_table_header_field ($headers);
+		$h -> {ord_source_code} ||= $ord_source_code ++
+			unless $h -> {children};
 
-		foreach my $h (@$headers) {
+		if (
+			$conf -> {core_store_table_order} && !$options -> {no_order} && ($is_exist_default_ords || $_REQUEST {id___query})
+		) {
 
-			ref $h eq HASH or ($h = {label => $h});
+			my $column_order = $_REQUEST {id___query} ? $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} : undef;
 
-			push @header_cells, $h;
+			if ($h -> {ord_fixed}) {
 
-			if (($h -> {order} || $h -> {no_order})
-				&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}
-				&& $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord}) {
-				if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} > $max_ord) {
-					$max_ord = $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord};
-				}
-			}
+				$h -> {ord} = $h -> {ord_fixed};
 
-		}
+			} elsif (!defined ($column_order) || !defined ($column_order -> {ord})) {
 
-		foreach my $h (@header_cells) {
+				if ($_REQUEST {id___query} && $h -> {parent_header}) {
 
-			push @_COLUMNS, $h;
+					my $max_ord;
 
-			if ($_REQUEST {id___query} && !$_REQUEST {__edit_query}) {
-				if ($max_ord && ($h -> {order} || $h -> {no_order})
-					&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}}
-					&& exists $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord}
-				) {
-					if ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} == 0) {
-						my $p = $h -> {parent};
-						while ($p -> {label}) {
-							$p -> {colspan} --;
-							$p -> {hidden} = 1 if $p -> {colspan} == 0;
-							$p = $p -> {parent};
-						}
-					} else {
-						$h -> {ord} = $h -> {parent} -> {ord} > 0 ? (($h -> {parent} -> {ord}) + $_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord})
-							: ($_QUERY -> {content} -> {columns} -> {$h -> {order} || $h -> {no_order}} -> {ord} * 1000);
-					}
-				} elsif (!$h -> {hidden}) {
-					if (keys %{$h -> {parent}}) {
-						if ($h -> {parent} -> {ord} > 0) {
-							$h -> {parent} -> {children_ord} ||= @{$h -> {parent} -> {children}};
-							$h -> {parent} -> {children_ord} ++;
-							$h -> {ord} = $h -> {parent} -> {ord} + $h -> {parent} -> {children_ord};
-						}
-					} else {
-						$max_ord ++;
-						$h -> {ord} = $max_ord * 1000;
+					foreach (@{$h -> {parent_header} -> {children}}) {
+						$max_ord = $_ -> {ord}
+							if $_ -> {ord} > $max_ord;
 					}
 
+					$h -> {ord} = $max_ord || 0 if ( !defined $h -> {ord} );
+					my $p = $h -> {parent_header};
+
+					if ($max_ord == 0 && $p -> {label}) {
+						$p -> {hidden} = 1;
+					}
+
+				} elsif ($_REQUEST {id___query}) {
+# The column did not exist before (may be it was hidden (8086))
+					$h -> {ord} = $h -> {ord_source_code} if ( !defined $h -> {ord} );
 				}
 
-				$h -> {__hidden} = $h -> {hidden};
+			} elsif ($column_order -> {ord} == 0) {
 
-				$h -> {parent} -> {ord} ||= 0 if (defined $h -> {parent} -> {order} || defined $h -> {parent} -> {no_order});
+				$h -> {ord} = 0;
+				my $p = $h -> {parent_header};
 
-				$h -> {hidden}   = 1 if ($h -> {ord} == 0 || defined $h -> {parent} -> {ord} && $h -> {parent} -> {ord} == 0);
+				while ($p -> {label}) {
+					$p -> {colspan} --;
+					$p -> {hidden} = 1 if $p -> {colspan} == 0;
+					$p = $p -> {parent_header};
+				}
+
+			} else {
+
+				$h -> {ord} = $column_order -> {ord};
+
 			}
+# Save original hidden value for draw_item_of___queries
+			$h -> {__hidden} = $h -> {hidden};
 
-			$h -> {filters} = [];
-
-			push @_ORDER, $h;
-
-			$_ORDER {$h -> {order} || $h -> {no_order}} = $h
-				if ($h -> {order} || $h -> {no_order});
-
+			$h -> {hidden}   = 1
+				if $is_table_columns_showing_editable && (
+					$h -> {ord} == 0
+					|| defined $h -> {parent_header} && defined $h -> {parent_header} -> {ord} && $h -> {parent_header} -> {ord} == 0
+				);
 		}
+
+		$h -> {filters} = [];
+
+		$_ORDER {$h -> {order} || $h -> {no_order}} = $h
+			if $h -> {order} || $h -> {no_order};
 
 	}
+
+	local %COLUMNS_BY_ORDER = ();
+	local $showing_ord = 1;
+
+	set_body_table_cells_ord ($headers -> [0])
+		if $conf -> {core_store_table_order} && !$options -> {no_order} && ($is_exist_default_ords || $_REQUEST {id___query});
 
 	$options -> {type}   ||= $_REQUEST{type};
 
@@ -2374,7 +2343,7 @@ sub draw_table {
 		$_REQUEST {ids} ||= '-1';
 
 		$_REQUEST {__script} .= <<EOS;
-var href = '$href->{href}';
+var href = "$href->{href}";
 var ids = '$_REQUEST{ids}';
 EOS
 
@@ -2401,9 +2370,7 @@ EOJS
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
 
-	if ($conf -> {core_store_table_order} && !$options -> {no_order}) {
-		fix___query ();
-	}
+	fix___query ($options -> {is_not_first_table_on_page} && !$_REQUEST {multi_select} ? $options -> {id_table} : ());
 
 	if (ref $options -> {path} eq ARRAY) {
 		$options -> {path} = draw_path ($options, $options -> {path});
@@ -2423,7 +2390,7 @@ EOJS
 			label => '..',
 			href  => $url,
 			no_select_href => 1,
-			colspan => 0 + @$headers,
+			colspan => 0 + @$flat_headers,
 		});
 
 		$scrollable_row_id ++;
@@ -2433,8 +2400,6 @@ EOJS
 		hotkey ({code => Esc, data => 'dotdot'});
 
 	}
-
-	$headers = \@old_headers;
 
 	if ($_REQUEST {multi_select}
 		&& ($preconf -> {core_multi_select_checkbox} || $options -> {multi_select_checkbox})
@@ -2451,6 +2416,7 @@ EOJS
 				label      => '<input type="checkbox" id="check_all" class="row-cell">',
 				attributes => {width => '1%'},
 				rowspan    => $headers_rowspan,
+				ord        => -10,
 			};
 
 			$_REQUEST {__on_load} .= <<'EOJS';
@@ -2522,7 +2488,16 @@ EOJS
 
 		if (@{$i -> {__types}} > 0) {
 
-			$i -> {__menu} = draw_vert_menu ($i, $i -> {__types});
+			if (exists ($i -> {__menu}) && ref ($i -> {__menu}) eq '') {
+
+				$i -> {__menu} .= draw_vert_menu ($i, $i -> {__types});
+
+			} else {
+
+				$i -> {__menu} = draw_vert_menu ($i, $i -> {__types});
+
+			}
+
 
 		}
 
@@ -2903,6 +2878,9 @@ sub draw_page {
 
 	$_SKIN -> {options} -> {no_presentation} and return $_SKIN -> draw_page ($page);
 
+	$_REQUEST {"__select_type_" . $_REQUEST {select}} = $_REQUEST {type}
+		if ($_REQUEST {select} && !$_REQUEST {"__select_type_" . $_REQUEST {select}} && $_REQUEST {id});
+
 	$_REQUEST {__read_only} = 0 if $_REQUEST {__only_field};
 
 	if (ref $page -> {content} eq HASH) {
@@ -2933,7 +2911,12 @@ sub draw_page {
 		$page  -> {menu}         = draw_menu ($page -> {menu}, $page -> {highlighted_type}, {lpt => $lpt});
 	};
 
-	$@ and return draw_error_page ($page, $@);
+	if ($@) {
+
+		$_REQUEST {error} ||= $@;
+
+		return draw_error_page ($page, $@);
+	}
 
 	$_REQUEST {__only_field} ? $_SKIN -> draw_page__only_field ($page) : $_SKIN -> draw_page ($page);
 
@@ -2943,35 +2926,32 @@ sub draw_page {
 
 sub draw_error_page {
 
-	my $page = $_[0];
+	my ($page, $error) = @_;
 
-	$_REQUEST {error} ||= $_[1];
+	ref $error or $error = investigate_error ({error => $error});
 
-	if ($_REQUEST {error} =~ s{^\#([\w-]+)\#\:}{}) {
+	$error -> {label} = $i18n -> {$error -> {label}}
+		if $error -> {label};
 
-		$page -> {error_field} = $1;
-
-		($_REQUEST {error}) = split / at/sm, $_REQUEST {error};
-
-	}
-	elsif ($_REQUEST {error} =~ /called at/) {
-
-		$_REQUEST {error} = notify_about_error ($_REQUEST {error});
-
-	} else {
-
-		Carp::cluck ($_REQUEST {error});
-
+	if ($_REQUEST {__lrt_time}) {
+		lrt_finish ($error -> {msg}, create_url (action => undef));
+		return '';
 	}
 
-	$_REQUEST {error} = $i18n -> {$_REQUEST {error}}
-		if $_REQUEST {error};
+	$_REQUEST {error} ||= $error -> {label};
+
+	$page -> {error_field} = $error -> {field};
 
 	setup_skin ();
 
 	$_REQUEST {__response_started} and $_REQUEST {error} =~ s{\n}{<br>}gsm and return $_REQUEST {error};
 
-	return $_SKIN -> draw_error_page ($page);
+	if ($error -> {kind}) {
+
+		return $_SKIN -> draw_fatal_error_page ($page, $error);
+	}
+
+	return $_SKIN -> draw_error_page ($page, $error);
 
 }
 
@@ -2988,18 +2968,33 @@ sub draw_redirect_page {
 ################################################################################
 
 sub lrt_print {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_print (@_);
 }
 
 ################################################################################
 
 sub lrt_println {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_println (@_);
 }
 
 ################################################################################
 
 sub lrt_ok {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_ok (@_);
 }
 
@@ -3011,6 +3006,7 @@ sub lrt_start {
 
 	$_REQUEST {__response_started} = 1;
 	$_REQUEST {__response_sent} = 1;
+	$_REQUEST {__lrt_log} = [];
 
 	$_SKIN -> lrt_start (@_);
 
@@ -3050,8 +3046,10 @@ sub lrt_finish {
 
 	}
 
+
 	$_SKIN -> lrt_finish ($banner, $href, $options);
 
+	return delete $_REQUEST {__lrt_log};
 }
 
 ################################################################################
@@ -3189,7 +3187,6 @@ sub out_json ($) {
 	$data = $_JSON -> encode ($data) if ref ($data);
 
 	out_html ({}, $data);
-
 }
 
 ################################################################################
@@ -3252,6 +3249,12 @@ sub out_html {
 	$r -> headers_out -> {'X-Powered-By'} = 'Eludia/' . $Eludia::VERSION;
 
 	$r -> headers_out -> {'P3P'} = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"';
+
+	if ($preconf -> {core_cors}) {
+		$r -> headers_out -> {'Access-Control-Allow-Origin'} = $preconf -> {core_cors};
+		$r -> headers_out -> {'Access-Control-Allow-Credentials'} = 'true';
+		$r -> headers_out -> {'Access-Control-Allow-Headers'} = 'Origin, X-Requested-With, Content-Type, Accept, Cookie';
+	}
 
 	send_http_header ();
 

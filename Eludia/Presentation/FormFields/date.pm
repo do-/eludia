@@ -8,7 +8,17 @@ sub draw_form_field_date {
 
 	$options -> {format} ||= ($i18n -> {_format_d} || '%d.%m.%Y');
 
-	$options -> {size}   ||= 11;
+	unless ($options -> {size}) {
+		$options -> {size} = 11;
+		$options -> {attributes} -> {maxlength} = $options -> {size} - 1;
+	}
+
+	if (defined $options -> {detail}) {
+
+		$options -> {value_src} = "\$('#input_$options->{name}')[0].value";
+		$options -> {onClose} .= js_detail ($options);
+
+	}
 
 	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/) {
 		$options -> {type} = 'string';

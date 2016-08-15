@@ -1,4 +1,5 @@
 use Net::SMTP;
+use Email::Date::Format qw(email_date);
 
 ################################################################################
 
@@ -33,6 +34,8 @@ sub send_mail {
 
 	my ($options) = @_;
 
+	$options -> {dt} ||= email_date ();
+
 	my $time = time;
 
 	my $to = $options -> {to};
@@ -43,7 +46,11 @@ sub send_mail {
 	$signature   .= $options -> {subject};
 	$signature   .= " / $options->{href}" if $options -> {href};
 
-	$time = __log ($time, " $signature" . Dumper ($options));
+	if ($options -> {log} ne 'info') {
+
+		$time = __log ($time, " $signature" . Dumper ($options));
+
+	}
 
 	my @to_char = ();
 	my @to_num  = ();
@@ -128,25 +135,34 @@ sub send_mail {
 		$options -> {href} =~ /^http/ or $options -> {href} = ($server_name =~ /^http/ ? $server_name : "http://$server_name") . $options -> {href};
 	}
 
+	my $text = $options -> {text};
+
 	if ($options -> {template}) {
 		our $DATA = $options -> {data} if $options -> {data};
 		$DATA -> {href} = $options -> {href};
-		$options -> {text} = fill_in_template ($options -> {template}, '', {no_print => 1});
+		$text = fill_in_template ($options -> {template}, '', {no_print => 1});
 		undef $DATA if $options -> {data};
 	}
 	elsif ($options -> {href}) {
 		$options -> {href} = "<br><br><a href='$$options{href}'>$$options{href}</a>" if $options -> {content_type} eq 'text/html';
-		$options -> {text} .= "\n\n" . $options -> {href};
+		$text .= "\n\n" . $options -> {href};
 	}
 
 	if ($options -> {signature}) {
 
-		$options -> {signature} = '<br><br>' . $options -> {signature} if $options -> {content_type} eq 'text/html';
-		$options -> {text} .= "\n\n" . $options -> {signature};
+		my $delimeter = "\n\n";
+
+		$delimeter .= '<br><br>' if $options -> {content_type} eq 'text/html';
+
+		$text .= $delimeter . $options -> {signature};
 	}
 
-	my $text = encode_base64 (
-		($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ($options -> {body_charset}, $options -> {text}) : $options -> {text})
+	if ($options -> {content_type} eq 'text/html' && $text !~ /<html/) {
+		$text = "<html><body>$text</body></html>";
+	}
+
+	$text = encode_base64 (
+		($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ($options -> {body_charset}, $text) : $text)
 		. "\n"
 		. $options -> {text_tail}
 	);
@@ -213,7 +229,7 @@ sub send_mail {
 
 	$time = __log ($time, " $signature: connected to $preconf->{mail}->{host}, ready to send mail");
 
-	$smtp -> mail ($options -> {from} -> {address});
+	$smtp -> mail ($options -> {from} -> {mail} || $options -> {from} -> {address});
 
 	my @real_to = @to;
 
@@ -227,17 +243,19 @@ sub send_mail {
 
 	}
 
+	my $errors;
+
 	foreach my $to (@real_to) {
 
 		next if $smtp -> recipient ($to, {Notify => ['FAILURE', 'DELAY'], SkipBad => 0});
 
 		$smtp -> quit;
 
-		$SIG {__DIE__} = 'DEFAULT';
-
-		die ("The mail address '$to' is rejected by the SMTP server $preconf->{mail}->{host}\n");
+		$errors .= "The mail address '$to' is rejected by the SMTP server $preconf->{mail}->{host}\n";
 
 	}
+
+	notify_about_error ($errors) if $errors;
 
 	$smtp -> data ();
 
@@ -251,6 +269,7 @@ From: $from
 Return-Path: $from
 To: $to
 Subject: $subject
+Date: $$options{dt}
 Content-type: $envelope_content_type;
 	Boundary="0__=4CBBE500DFA7329E8f9e8a93df938690918c4CBBE500DFA7329E"
 Content-Disposition: inline

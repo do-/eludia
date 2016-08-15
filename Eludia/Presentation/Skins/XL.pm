@@ -126,7 +126,7 @@ sub draw_form_field {
 	}
 				
 	my $colspan     = $field -> {colspan}     ? 'colspan=' . $field -> {colspan}     : '';
-		
+
 	my $style = $field -> {picture} ? 'style="mso-number-format:' . $_SKIN -> _picture ($field -> {picture}) . '"' : '';
 
 	my $colspan_label = $field -> {colspan_label} ? 'colspan=' . $field -> {colspan_label} : '';
@@ -681,9 +681,8 @@ sub dialog_open {
 
 sub xls_filename {
 	
-	my $filename = $_REQUEST {__page_title};
-	$filename =~ s/[\"\?\:\s\\\/]+/_/gs;
-	
+	my $filename = 'eludia_' . $_REQUEST {type};
+
 	if ($conf -> {report_date_in_filename}) {
 		my $generation_date = sprintf ("%04d-%02d-%02d_%02d-%02d", Date::Calc::Today_and_Now);
 		$filename .= "_($generation_date)";

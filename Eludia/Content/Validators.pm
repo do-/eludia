@@ -42,6 +42,8 @@ sub vld_snils {
 
 	$checksum = $checksum % 101;
 
+	$checksum = $checksum == 100 ? 0 : $checksum;
+
 	$checksum == 0 + substr ($value, 9, 2) or $name1 ? die "#$name1#:$i18n->{snils_checksum_fail}" : return $i18n -> {snils_checksum_fail};
 
 	$_REQUEST {$name1} = substr ($value, 0, 3)
@@ -367,7 +369,7 @@ sub vld_ogrn {
 	local $SIG {__DIE__} = 'DEFAULT';
 
 	$_REQUEST {$name} =~ /^\d+$/ or return "#$name#:$i18n->{ogrn_digits_fail}";
-	$_REQUEST {$name} =~ /^[12]/    or die "#$name#:$i18n->{ogrn_first_digit_fail}";
+	$_REQUEST {$name} =~ /^[125]/    or die "#$name#:$i18n->{ogrn_first_digit_fail}";
 
 	if (length $_REQUEST {$name} == 13) {
 		(substr ($_REQUEST {$name}, 0, 12) % 11) % 10 == substr ($_REQUEST {$name}, -1, 1) or return "#$name#:$i18n->{ogrn_checksum_fail}";

@@ -34,6 +34,8 @@ sub wish_to_clarify_demands_for_table_columns {
 		
 		$i -> {DECIMAL_DIGITS} ||= 0;
 		
+		$i -> {COLUMN_DEF} = sprintf ("%.$$i{DECIMAL_DIGITS}f", $i -> {COLUMN_DEF})
+			if defined $i -> {COLUMN_DEF};
 	}
 		
 	if ($i -> {TYPE_NAME} eq 'VARCHAR') {
@@ -82,6 +84,7 @@ sub wish_to_explore_existing_table_columns {
 				, numeric_scale
 				, character_maximum_length
 				, extra
+				, column_type
 			FROM 
 				information_schema.columns 
 			WHERE 
@@ -106,8 +109,14 @@ sub wish_to_explore_existing_table_columns {
 				NULLABLE   => ($i -> {is_nullable} eq 'NO' ? 0 : 1),
 
 			};
-			
+
 			$def -> {_EXTRA} = $i -> {extra} if $i -> {extra};
+
+			if ($i -> {column_type} =~ /unsigned/) {
+
+				$def -> {_EXTRA} = 'unsigned' . ($def -> {_EXTRA} ? " $def->{_EXTRA}" :'');
+
+			}
 			
 			$def -> {_PK}    = 1             if $name eq $pk;
 
@@ -119,7 +128,7 @@ sub wish_to_explore_existing_table_columns {
 			}
 			elsif ($def -> {TYPE_NAME} eq 'VARBINARY') {
 			
-				$def -> {COLUMN_DEF}     = $i -> {character_maximum_length};
+				$def -> {COLUMN_SIZE}    = $i -> {character_maximum_length};
 			
 			}
 			elsif ($def -> {TYPE_NAME} =~ /CHAR$/) {
@@ -130,6 +139,7 @@ sub wish_to_explore_existing_table_columns {
 			elsif ($def -> {TYPE_NAME} eq 'TIMESTAMP') {
 			
 				$def -> {COLUMN_DEF}     = undef;
+				$def -> {_EXTRA}         = undef;
 			
 			}
 		

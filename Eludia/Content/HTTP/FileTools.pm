@@ -60,14 +60,20 @@ sub download_file_header {
 	$r -> content_type ($type);
 	$options -> {file_name} =~ s/\?/_/g unless ($ENV {HTTP_USER_AGENT} =~ /MSIE 7/);
 
+	my $filename = "=" . $options -> {file_name};
+
+	if ($i18n -> {_charset} eq 'UTF-8' || $ENV {HTTP_USER_AGENT} =~ /MSIE (\d+)/ && $1 > 9) {
+
+		$options -> {file_name} = decode ($i18n -> {_charset}, $options -> {file_name})
+			unless Encode::is_utf8 ($options -> {file_name});
+
+		$filename = "*=UTF-8''" . uri_escape (encode ('UTF-8', $options -> {file_name}));
+	}
+
 	$options -> {no_force_download} or $r -> headers_out -> {'Content-Disposition'} =
 		($options -> {inline} ? 'inline' : 'attachment')
 		. ';filename'
-		. ($ENV {HTTP_USER_AGENT} =~ /MSIE/ || $ENV {HTTP_USER_AGENT} =~ /chromeframe/ || $i18n -> {_charset} ne 'UTF-8' ?
-			'=' : "*=UTF-8''"
-		) . (
-			$i18n -> {_charset} eq 'UTF-8' ? uri_escape ($options -> {file_name}) : $options -> {file_name}
-		);
+		. $filename;
 
 
 	if ($content_length > 0) {

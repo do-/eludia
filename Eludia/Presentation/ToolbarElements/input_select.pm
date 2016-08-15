@@ -27,8 +27,10 @@ sub draw_toolbar_input_select {
 	$options -> {value} ||= exists $_REQUEST {$options -> {name}} ? $_REQUEST {$options -> {name}} : '';
 
 	foreach my $value (@{$options -> {values}}) {
+		$value -> {title}    = $value -> {label};
 		$value -> {label}    = trunc_string ($value -> {label}, $options -> {max_len});
 		$value -> {selected} = !$value -> {other} && $value -> {id} eq $options -> {value} ? 'selected' : '';
+		delete $value -> {title} if ($value -> {title} eq $value -> {label});
 	}
 
 	$options -> {onChange} ||= 'submit();';

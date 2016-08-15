@@ -505,13 +505,11 @@ sub sql {
 	my @columns = _sql_list_fields ($1, $root);
 
 	my $from   = "\nFROM\n $root";
-	my $inner_from = $from;
 	my $where  = "\nWHERE  1=1";
 	my $having = "\nHAVING 1=1";
 	my $order;
 	my $limit;
 	my @join_params   = ();
-	my @inner_join_params = ();
 	my @where_params  = ();
 	my @having_params = ();
 
@@ -662,16 +660,6 @@ sub sql {
 
 			$found = 1;
 
-#			if ($table -> {join} !~ /^LEFT/) {
-
-				$inner_from .= "\n $table->{join} $table->{name}";
-				$inner_from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
-				$inner_from .= " ON ($table->{on} $sql_filters->{where})";
-
-				push @inner_join_params, @{$sql_filters -> {where_params}};
-
-#			}
-
 		}
 
 		if (!$found && $table -> {filters}) {
@@ -723,16 +711,6 @@ sub sql {
 
 				push @join_params, @{$sql_filters -> {where_params}};
 
-#				if ($table -> {join} !~ /^LEFT/) {
-
-					$inner_from .= "\n $table->{join} $table->{name}";
-					$inner_from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
-					$inner_from .= " ON ($table->{alias}.$referring_field_name = $t->{name}.id $sql_filters->{where})";
-
-					push @inner_join_params, @{$sql_filters -> {where_params}};
-
-#				}
-
 				if ($sql_filters -> {having_params}) {
 
 					$having .= $sql_filters -> {having};
@@ -782,13 +760,6 @@ sub sql {
 				$from .= "\n $table->{join} $table->{name}";
 				$from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
 
-				if ($table -> {join} !~ /^LEFT/) {
-
-					$inner_from .= "\n $table->{join} $table->{name}";
-					$inner_from .= " $table->{alias}" if $table -> {name} ne $table -> {alias};
-
-				}
-
 				$t -> {alias} ||= $t -> {name};
 
 				if ($table -> {filters}) {
@@ -796,14 +767,6 @@ sub sql {
 					my $sql_filters = _sql_filters ($table -> {alias}, $table -> {filters});
 					$from .= " ON ($t->{alias}.$referring_field_name = $table->{alias}.id $sql_filters->{where})";
 					push @join_params, @{$sql_filters -> {where_params}};
-
-					if ($table -> {join} !~ /^LEFT/) {
-
-						$inner_from .= " ON ($t->{alias}.$referring_field_name = $table->{alias}.id $sql_filters->{where})";
-
-						push @inner_join_params, @{$sql_filters -> {where_params}};
-
-					}
 
 					if ($sql_filters -> {having_params}) {
 
@@ -816,12 +779,6 @@ sub sql {
 				else {
 
 					$from .= " ON $t->{alias}.$referring_field_name = $table->{alias}.id";
-
-					if ($table -> {join} !~ /^LEFT/) {
-
-						$inner_from .= " ON $t->{alias}.$referring_field_name = $table->{alias}.id";
-
-					}
 
 				}
 
@@ -1066,7 +1023,7 @@ sub sql {
 
 				my $sql_cnt = "SELECT COUNT(*)\n "
 
-					. $inner_from
+					. $from
 
 					. $where
 

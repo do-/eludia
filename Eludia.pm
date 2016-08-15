@@ -39,7 +39,7 @@ sub check_constants {
 
 	our $_INHERITABLE_PARAMETER_NAMES    = {map {$_ => 1} qw (__this_query_string __last_query_string __last_scrollable_table_row __no_navigation __tree __infty __popup __no_infty)};
 
-	our $_NONINHERITABLE_PARAMETER_NAMES = {map {$_ => 1} qw (lang salt sid password error id___query)};
+	our $_NONINHERITABLE_PARAMETER_NAMES = {map {$_ => 1} qw (lang salt sid password error id___query columns)};
 
 	our @_OVERRIDING_PARAMETER_NAMES     = qw (select __no_navigation __tree __last_query_string);
 
@@ -114,12 +114,12 @@ sub check_version_by_git {
 
 	$head =~ /^commit (\w+).+Date\:\s+\S+\s+(\S+)\s+(\d+)\s[\d\:]+\s(\d+)/sm or return check_version_by_git_files ();
 
-        return sprintf ("%02d.%02d.%02d.%s",
-        	$4 - 2000,
-        	1 + (index ('JanFebMarAprMayJunJulAugSepOctNovDec', $2) / 3),
-        	$3,
-        	$1,
-        );
+	return sprintf ("%02d.%02d.%02d.%s",
+		$4 - 2000,
+		1 + (index ('JanFebMarAprMayJunJulAugSepOctNovDec', $2) / 3),
+		$3,
+		$1,
+	);
 
 }
 
@@ -312,6 +312,10 @@ sub check_application_directory {
 
 	$preconf -> {_} -> {docroot} = $docroot;
 
+	$preconf -> {_} -> {logs} = $docroot . '../logs/';
+
+	$preconf -> {core_docroot_mode} = '0777' unless $preconf -> {core_docroot_mode} =~ /^[0-7]{4}$/;
+
 	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs', 'i/_mbox', 'i/_mbox/by_user') {
 
 		loading_log "  checking ${docroot}${subdir}...";
@@ -322,7 +326,7 @@ sub check_application_directory {
 
 			-d $dir or mkdir $dir;
 
-			chmod 0777, $dir;
+			chmod oct($preconf->{core_docroot_mode}), $dir;
 
 		};
 
