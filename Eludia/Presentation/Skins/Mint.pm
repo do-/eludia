@@ -3874,7 +3874,7 @@ sub draw_suggest_page {
 
 	my ($_SKIN, $data) = @_;
 
-	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
+	$_REQUEST {__content_type} ||= 'application/json; charset=' . $i18n -> {_charset};;
 
 	my $a = $_JSON -> encode ([map {{id => $_ -> {id}, label => $_ -> {label}}} @$data]);
 
