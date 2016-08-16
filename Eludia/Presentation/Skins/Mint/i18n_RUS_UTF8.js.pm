@@ -4,7 +4,7 @@ var i18n = {
 	request_sent : 'Запрос отправлен на сервер',
 	copy_clipboard: "Для копирования нажмите CTRL+C, потом ENTER",
 	count : 'Кол-во',
-	sum   : 'Сумма'
+	sum   : 'Сумма',
 	clipboard_help: "Для копирования нажмите CTRL+C, потом ENTER",
 	clipboard_copied: "Скопировал"
 };
