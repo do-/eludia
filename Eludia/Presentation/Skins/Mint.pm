@@ -1727,9 +1727,12 @@ sub draw_toolbar_input_tree {
 	my $value = $options -> {label};
 	$value =~ s/\"/\\"/g;
 
+	my $enable = $options -> {attributes} -> {disabled} ? '0' : '1';
+
 	$options -> {height} ||= 400;
 	$options -> {width}  ||= 600;
 	my $dropdown_width = $options -> {max_len} * 3;
+
 	$_REQUEST {__script} .= <<EOJS;
 var ${id}_changed = 0;
 EOJS
@@ -1755,14 +1758,11 @@ require (['/i/mint/libs/kendo.web.ext.js'], function () {
 		}
 	});
 	\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
+	${id}_el.data('kendoExtDropDownTreeView').dropDownList().enable(!!$enable);
 });
 EOJS
 
-
 	return qq|<li class="toolbar nowrap"><div id="$id"></div></li>|;
-
-
-
 }
 
 ################################################################################
