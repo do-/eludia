@@ -40,10 +40,10 @@ sub check_configuration_for_application {
 
 		}
 
-		if ($s =~ /PerlHandler\s+([\w\:]+)/) {
+		if ($s =~ /PerlHandler\s+((\w+(\:\:\w+)*?)(\:\:\w+)?)$/) {
 
-			$package = $1;
-			my $handler = $package;
+			$package = $2;
+			my $handler = $1;
 			$handler    =~ /\:\:/ or $handler .= '::handler';
 
 			$main::configs -> {$app} -> {handler_src}  .= "\n \$ENV{SCRIPT_NAME} =~ m{^$last_location} ? $handler (\@_) : ";
