@@ -1961,6 +1961,8 @@ sub draw_toolbar_input_tree {
 
 	my $nodes = $_JSON -> encode (\@nodes);
 
+	my $attributes = dump_attributes ($options -> {attributes});
+
 	return qq {
 
 		<td class="toolbar" nowrap>
@@ -2004,7 +2006,7 @@ sub draw_toolbar_input_tree {
 		</div>
 
 
-				<select id="${id}_select_1"
+				<select id="${id}_select_1" $attributes
 
 					onDblClick="
 
