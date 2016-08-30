@@ -40,7 +40,7 @@ sub check_configuration_for_application {
 
 		}
 
-		if ($s =~ /PerlHandler\s+((\w+(\:\:\w+)*?)(\:\:\w+)?)$/) {
+		if ($s =~ /PerlHandler\s+((\w+(\:\:\w+)*?)(\:\:\w+)?)\r?$/) {
 
 			$package = $2;
 			my $handler = $1;
