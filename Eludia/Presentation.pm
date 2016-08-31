@@ -2934,7 +2934,7 @@ sub draw_error_page {
 		if $error -> {label};
 
 	if ($_REQUEST {__lrt_time}) {
-		lrt_finish ($error -> {msg}, create_url (action => undef));
+		lrt_finish ($error -> {label}, create_url (action => undef));
 		return '';
 	}
 
