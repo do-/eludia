@@ -441,6 +441,8 @@ sub _draw_input_datetime {
 
 EOH
 
+	$html .=  ($options -> {label_tail} || '');
+
 	return $html;
 
 }
@@ -883,7 +885,7 @@ sub draw_form_field_datetime {
 	$options -> {onKeyDown} ="tabOnEnter()";
 	$options -> {onClose}   = "function (cal) { cal.hide (); $$options{onClose}; }";
 
-	return $_SKIN -> _draw_input_datetime ($options) . ($options -> {label_tail} || '');
+	return $_SKIN -> _draw_input_datetime ($options);
 
 }
 
@@ -2872,7 +2874,6 @@ sub draw_datetime_cell {
 
 	my $html = ($options -> {editor} ? '<div' : '<td')
 		. " $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data)
-		. "$label_tail"
 		. ($options -> {editor} ? '</div>' : '</td>');
 
 	return $html;

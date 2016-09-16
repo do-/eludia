@@ -499,7 +499,7 @@ sub draw_form_field {
 
 	$html .= dump_tag (td => $a, $field -> {html});
 
-	return $html . ($options -> {label_tail} || '');
+	return $html;
 
 }
 
@@ -609,7 +609,7 @@ sub draw_form_field_datetime {
 
 	$options -> {name} = '_' . $options -> {name};
 
-	return $_SKIN -> _draw_input_datetime ($options) . ($options -> {label_tail} || '');
+	return $_SKIN -> _draw_input_datetime ($options);
 
 }
 
@@ -2550,7 +2550,7 @@ sub draw_datetime_cell {
 
 	local $options -> {name} = $data -> {name};
 
-	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "$label_tail</td>";
+	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "</td>";
 
 }
 
