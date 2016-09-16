@@ -1,4 +1,3 @@
-
 define(
 	['kendo.core.min'],
 	function (){

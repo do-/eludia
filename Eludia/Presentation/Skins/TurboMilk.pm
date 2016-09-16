@@ -606,6 +606,10 @@ sub draw_fatal_error_page {
 			href    => "$_REQUEST{__static_url}/error.html?",
 			height  => 280,
 			width   => 510,
+			close   => $i18n -> {close},
+			show_error_detail => $i18n -> {show_error_detail},
+			error_hint_area   => $i18n -> {error_hint_area},
+			mail_support      => $i18n -> {mail_support},
 		};
 
 		$options = $_JSON -> encode ($options);
@@ -1957,6 +1961,8 @@ sub draw_toolbar_input_tree {
 
 	my $nodes = $_JSON -> encode (\@nodes);
 
+	my $attributes = dump_attributes ($options -> {attributes});
+
 	return qq {
 
 		<td class="toolbar" nowrap>
@@ -2000,7 +2006,7 @@ sub draw_toolbar_input_tree {
 		</div>
 
 
-				<select id="${id}_select_1"
+				<select id="${id}_select_1" $attributes
 
 					onDblClick="
 

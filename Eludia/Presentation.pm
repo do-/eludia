@@ -1528,7 +1528,7 @@ sub draw_cells {
 
 	my $result = '';
 
-	delete $options -> {href} if $options -> {is_total};
+	delete $options -> {href} if $options -> {is_total} || $_REQUEST {select} && $options -> {no_select_href};
 
 	if ($options -> {href}) {
 		check_href ($options) ;
@@ -2934,7 +2934,7 @@ sub draw_error_page {
 		if $error -> {label};
 
 	if ($_REQUEST {__lrt_time}) {
-		lrt_finish ($error -> {msg}, create_url (action => undef));
+		lrt_finish ($error -> {label}, create_url (action => undef));
 		return '';
 	}
 
@@ -2968,18 +2968,33 @@ sub draw_redirect_page {
 ################################################################################
 
 sub lrt_print {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_print (@_);
 }
 
 ################################################################################
 
 sub lrt_println {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_println (@_);
 }
 
 ################################################################################
 
 sub lrt_ok {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_ok (@_);
 }
 
@@ -2991,6 +3006,7 @@ sub lrt_start {
 
 	$_REQUEST {__response_started} = 1;
 	$_REQUEST {__response_sent} = 1;
+	$_REQUEST {__lrt_log} = [];
 
 	$_SKIN -> lrt_start (@_);
 
@@ -3030,8 +3046,10 @@ sub lrt_finish {
 
 	}
 
+
 	$_SKIN -> lrt_finish ($banner, $href, $options);
 
+	return delete $_REQUEST {__lrt_log};
 }
 
 ################################################################################

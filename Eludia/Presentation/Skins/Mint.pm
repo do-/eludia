@@ -153,10 +153,20 @@ sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
 
-	return $_REQUEST {select} ? '' : <<EOH;
-		<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="table_title"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
+	if ($_REQUEST {select}) {
+
+		$_REQUEST {__script} .= <<EOJ;
+			top.document.title = '$$options{label}';
+EOJ
+		return '';
+
+	} else {
+
+		return <<EOH
+			<table class="table-title" cellspacing=0 cellpadding=0 width="100%"><tr><td><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td><td class="table-stat"></td></tr></table>
 EOH
 
+	}
 }
 
 ################################################################################
@@ -376,6 +386,10 @@ sub draw_fatal_error_page {
 		href    => "$_REQUEST{__static_url}/error.html?",
 		height  => 290,
 		width   => 510,
+		close   => $i18n -> {close},
+		show_error_detail => $i18n -> {show_error_detail},
+		error_hint_area   => $i18n -> {error_hint_area},
+		mail_support      => $i18n -> {mail_support},
 	};
 
 	$options = $_JSON -> encode ($options);
@@ -1725,9 +1739,12 @@ sub draw_toolbar_input_tree {
 	my $value = $options -> {label};
 	$value =~ s/\"/\\"/g;
 
+	my $enable = $options -> {attributes} -> {disabled} ? '0' : '1';
+
 	$options -> {height} ||= 400;
 	$options -> {width}  ||= 600;
 	my $dropdown_width = $options -> {max_len} * 3;
+
 	$_REQUEST {__script} .= <<EOJS;
 var ${id}_changed = 0;
 EOJS
@@ -1753,14 +1770,11 @@ require (['/i/mint/libs/kendo.web.ext.js'], function () {
 		}
 	});
 	\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
+	${id}_el.data('kendoExtDropDownTreeView').dropDownList().enable(!!$enable);
 });
 EOJS
 
-
 	return qq|<li class="toolbar nowrap"><div id="$id"></div></li>|;
-
-
-
 }
 
 ################################################################################
@@ -3859,7 +3873,7 @@ sub draw_suggest_page {
 
 	my ($_SKIN, $data) = @_;
 
-	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
+	$_REQUEST {__content_type} ||= 'application/json; charset=' . $i18n -> {_charset};;
 
 	my $a = $_JSON -> encode ([map {{id => $_ -> {id}, label => $_ -> {label}}} @$data]);
 

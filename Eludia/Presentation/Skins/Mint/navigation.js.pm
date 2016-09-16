@@ -30,7 +30,7 @@ is_ua_mobile = 1;
 
 var is_dirty = false,
 	scrollable_table_is_blocked = false,
-	tableSlider = new TableSlider (),
+	tableSlider,
 	q_is_focused = false,
 	is_interface_is_locked = false,
 	left_right_blocked = false,
@@ -1199,8 +1199,6 @@ function focus_on_first_input (td) {
 
 	if (!td) return blur_all_inputs ();
 
-	last_cell_id = td;
-
 	$('input', td).each (function () {
 		try {
 			this.focus  ();
@@ -1294,7 +1292,8 @@ function handle_basic_navigation_keys () {
 	if (code_alt_ctrl (115, 0, 0))
 		return blockEvent ();
 
-	return tableSlider.handle_keyboard (keyCode);
+	if (tableSlider)
+		tableSlider.handle_keyboard (keyCode);
 
 }
 
@@ -1361,55 +1360,436 @@ function show_size(obj) {
 }
 
 
-function refresh_table_slider_on_resize () {
-
-	var d = document.body;
-
-	if (lastClientHeight == d.clientHeight && lastClientWidth == d.clientWidth) return;
-
-	tableSlider.cell_on ();
-
-	lastClientHeight = d.clientHeight;
-	lastClientWidth  = d.clientWidth;
-
-}
-
 function TableSlider (initial_row) {
 
 	this.rows = [];
 	this.row = 0;
 	this.col = 0;
-	this.last_cell_id = null;
 
+	this.is_selecting = false;
+
+}
+
+TableSlider.prototype.cell_location = function (td) {
+
+	var matrix = this.rows;
+
+    for (var i = 0; i < matrix.length; i ++) {
+
+        for (var j = 0; j < matrix [i].length; j ++) {
+
+            if (td.isSameNode (matrix [i][j]))
+
+                return {
+                    x : j,
+                    y : i,
+                    colspan : $(td).prop ('colspan'),
+                    rowspan : $(td).prop ('rowspan')
+                };
+
+        }
+    }
+
+    return undefined;
+
+}
+
+TableSlider.prototype.addSelectClass = function (td, selection_id, directions) {
+
+	var data = $(td).data ('selections');
+
+	data = data || {};
+
+	data [selection_id] = data [selection_id] || {};
+
+	if (!directions) {
+		directions = ['top', 'right', 'bottom', 'left'];
+	} else {
+		directions = [directions];
+	}
+
+	for (var i = 0; i < directions.length; i ++) {
+
+		var direction = directions [i];
+
+		data [selection_id] [direction] = 1;
+
+		$(td).addClass('selected-' + direction);
+
+	}
+
+	$(td).data ('selections', data);
+
+}
+
+TableSlider.prototype.removeSelectClass = function (td, selection_id, directions) {
+
+	var data = $(td).data ('selections');
+
+	data = data || {};
+
+
+	data [selection_id] = data [selection_id] || {};
+
+	if (!directions) {
+		directions = ['top', 'right', 'bottom', 'left'];
+	} else {
+		directions = [directions];
+	}
+
+	for (var i = 0; i < directions.length; i ++) {
+
+		var direction = directions [i];
+
+		delete data [selection_id] [direction];
+
+		var is_exist_direction = false;
+		for (var s in data) {
+			if (data [s] [direction]) {
+				is_exist_direction = true;
+				break;
+			}
+		}
+		if (!is_exist_direction) {
+
+			$(td).removeClass('selected-' + direction);
+
+		}
+
+	}
+
+	if (Object.keys(data [selection_id]).length == 0)
+		delete data [selection_id];
+
+	$(td).data ('selections', data);
+
+}
+
+TableSlider.prototype.addSelection = function (td, selection_id) {
+
+	var data = $(td).data ('selections');
+
+	data = data || {};
+
+	data [selection_id] = data [selection_id] || {};
+
+	data [selection_id] ['selected'] = 1;
+
+	$(td).addClass('selected');
+
+	$(td).data ('selections', data);
+
+}
+
+
+TableSlider.prototype.removeSelection = function (td, selection_id) {
+
+	var data = $(td).data ('selections');
+
+	data = data || {};
+
+	delete data [selection_id];
+
+	var is_exist_selection = false;
+	for (var s in data) {
+		if (data [s] ['selected']) {
+			is_exist_selection = true;
+			break;
+		}
+	}
+	if (!is_exist_selection) {
+
+		$(td).removeClass('selected');
+
+	}
+
+	$(td).data ('selections', data);
+
+}
+
+TableSlider.prototype.onClick = function (event, self) {
+
+	if (event.target.tagName != 'TD' || !event.ctrlKey)
+		return;
+
+	self.cell_off ();
+
+	var selection_id = event.timeStamp,
+		start = self.cell_location (event.target),
+		matrix = self.rows;
+
+	if (!$(matrix [start.y][start.x]).hasClass ('selected')) {
+
+		self.addSelectClass (matrix [start.y][start.x], selection_id);
+		self.addSelection (matrix [start.y][start.x], selection_id);
+
+		self.calculateSelections ();
+
+	}
+
+	event.preventDefault ();
+
+	return false;
+
+}
+
+TableSlider.prototype.onContextMenu = function (event, self) {
+
+	if (event.target.tagName != 'TD')
+		return;
+
+	var tds = $('td.selected', event.currentTarget);
+
+	if (tds.length) {
+
+		tds.removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
+			$(this).data ('selections', {});
+		});
+		self.showStat ($(event.currentTarget).closest ('div.eludia-table-container'), '');
+
+		event.preventDefault ();
+
+		return false;
+
+	}
+
+	return true;
+
+}
+
+TableSlider.prototype.onMouseDown = function (event, self) {
+
+	if (event.target.tagName != 'TD' || event.which != 1)
+		return;
+
+	if (!event.ctrlKey)
+		$(event.currentTarget).find('td').removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
+			$(this).data ('selections', {});
+		});
+
+
+	var selection_id = event.timeStamp,
+		start = self.cell_location (event.target),
+		matrix = self.rows;
+
+	$(event.currentTarget).mouseover(function (event) {
+
+		if (event.target.tagName != 'TD')
+			return;
+
+		self.cell_off ();
+
+		var td = event.target,
+			finish = self.cell_location (td);
+
+		$(this).addClass ('selected');
+
+		var x1 = Math.min(start.x, finish.x);
+		var y1 = Math.min(start.y, finish.y);
+		var x2 = Math.max(start.x + start.colspan - 1, finish.x + finish.colspan - 1);
+		var y2 = Math.max(start.y + start.rowspan - 1, finish.y + finish.rowspan - 1);
+
+		var should_be_restarted;
+
+		do {
+
+			should_be_restarted = false;
+
+TOP:
+			for (var i = y1 > 0 ? y1 - 1 : 0; i <= y2 + 1 && i < matrix.length; i ++) {
+
+				for (var j = x1 > 0 ? x1 - 1 : 0; j <= x2 + 1 && j < matrix [i].length; j ++) {
+
+					if (i < y1 || i > y2 || j < x1 || j > x2) {
+						self.removeSelection (matrix [i][j], selection_id);
+						self.removeSelectClass (matrix [i][j], selection_id);
+
+						continue;
+					}
+
+					self.addSelection (matrix [i][j], selection_id);
+
+					if (i == y1)
+						self.addSelectClass (matrix [i][j], selection_id, 'top');
+					else
+						self.removeSelectClass (matrix [i][j], selection_id, 'top');
+
+					if (i == y2)
+						self.addSelectClass (matrix [i][j], selection_id, 'bottom');
+					else
+						self.removeSelectClass (matrix [i][j], selection_id, 'bottom');
+
+					if (j == x1)
+						self.addSelectClass (matrix [i][j], selection_id, 'left');
+					else
+						self.removeSelectClass (matrix [i][j], selection_id, 'left');
+
+					if (j == x2)
+						self.addSelectClass (matrix [i][j], selection_id, 'right');
+					else
+						self.removeSelectClass (matrix [i][j], selection_id, 'right');
+
+
+					var shift_x_left = 0,
+						shift_x_right = 0,
+						shift_y_up = 0,
+						shift_y_down = 0;
+
+					if ($(matrix [i][j]).prop ('colspan') > 1) {
+
+						for (var k = x1 - 1; k >= 0; k --) {
+							if (matrix [i][j].isSameNode (matrix [i][k]))
+								shift_x_left ++;
+							else {
+								break;
+							}
+						}
+
+						for (var k = x2 + 1; k < matrix [i].length; k ++) {
+							if (matrix [i][j].isSameNode (matrix [i][k]))
+								shift_x_right ++;
+							else {
+								break;
+							}
+						}
+
+
+						for (var k = y1 - 1; k >= 0; k --) {
+							if (matrix [i][j].isSameNode (matrix [k][j]))
+								shift_y_up ++;
+							else {
+								break;
+							}
+						}
+
+						for (var k = y2 + 1; k < matrix.length; k ++) {
+							if (matrix [i][j].isSameNode (matrix [k][j]))
+								shift_y_down ++;
+							else {
+								break;
+							}
+						}
+
+					}
+
+					if (shift_x_left || shift_x_right || shift_y_up || shift_y_down) {
+						x1 = x1 - shift_x_left;
+						x2 = x2 + shift_x_right;
+						y1 = y1 - shift_y_up;
+						y2 = y2 + shift_y_down;
+						should_be_restarted = true;
+
+						break TOP;
+
+					}
+
+				}
+
+			}
+
+		} while (should_be_restarted);
+
+	});
+
+	var table = event.currentTarget;
+
+	$(document).mouseup(function (event) {
+
+		$(table).unbind('mouseover');
+		$(table).removeClass ('selected');
+		$(document).unbind('mouseup');
+
+		self.calculateSelections ();
+
+		return false;
+
+	});
+
+}
+
+TableSlider.prototype.showStat = function (div, text) {
+
+	var title = $(div).closest ('form').prevAll ('.table-title');
+
+	if (title.length)
+		$('.table-stat', title).text (text);
+
+}
+
+TableSlider.prototype.calculateSelections = function () {
+
+	var self = this;
+
+	$('div.eludia-table-container').each (function () {
+		var count = 0,
+			sum = 0;
+		$('div.st-table-right-viewport table.st-fixed-table-right td.selected').each (function () {
+			count ++;
+			var text = this.innerText.replace (/\s+/, '');
+			text = text.replace (/,/, '.');
+
+			if (Number(text) == text)
+				sum = sum + Number(text);
+		});
+
+		self.showStat (this, count ? i18n.count + ': ' + count + ', ' + i18n.sum + ': ' + sum : '');
+
+	});
+
+}
+
+TableSlider.prototype.clear_rows = function (row) {
+	self.rows = [];
 }
 
 TableSlider.prototype.set_row = function (row) {
 
-	$('.eludia-table-container').each (function (n) {
+	self = this;
+	var matrix = self.rows;
 
-		var trs = '.st-table-right-viewport tr';
+	$('div.st-table-right-viewport table.st-fixed-table-right').each (function (n) {
 
-		$(trs, this).each (function (i) {
+		var table = this,
+			matrix_i = matrix.length;
 
-			if ($(this).hasClass("st-table-widths-row"))
-				return;
 
-			tableSlider.rows.push (this);
+		for (var i = 0; i < table.rows.length; i ++) {
 
-			$('td', this).each (function (j) {
+			if ($(table.rows [i]).hasClass("st-table-widths-row"))
+				continue;
 
-				$(this).on ('click contextmenu', td_on_click);
+			var offset_x = 0;
 
-			})
+			for (var j = 0; j < table.rows [i].cells.length; j ++) {
+				matrix [matrix_i] = matrix [matrix_i] || [];
 
-		});
+				while (matrix [matrix_i].length > offset_x && typeof matrix [matrix_i][offset_x] !== 'undefined')
+					offset_x ++;
+
+				for (var k = 0; k < $(table.rows [i].cells [j]).prop ('colspan'); k ++) {
+					for (var l = 0; l < $(table.rows [i].cells [j]).prop ('rowspan'); l ++) {
+						matrix [matrix_i + l] = matrix [matrix_i + l] || [];
+						matrix [matrix_i + l][offset_x] = table.rows [i].cells [j];
+					}
+					offset_x ++;
+				}
+
+			}
+
+			matrix_i ++;
+
+		}
+
+		$(table).on ('mousedown', function (event) {self.onMouseDown (event, self);});
+		$(table).on ('click', function (event) {self.onClick (event, self);});
+		$(table).on ('contextmenu', function (event) {self.onContextMenu (event, self);});
 
 	});
 
-	this.cnt      = this.rows.length;
+	self.cnt      = self.rows.length;
 
-	if (row < this.cnt) {
-		this.row = row;
+	if (row < self.cnt) {
+		self.row = row;
 	}
 
 }
@@ -1422,132 +1802,38 @@ TableSlider.prototype.get_cell = function () {
 
 	if (!the_row) return null;
 
-	var cells = the_row.cells;
-
-	if (!cells) return null;
-
-	return cells [Math.min (this.col, cells.length - 1)];
+	return the_row [Math.min (this.col, the_row.length - 1)];
 
 }
 
 TableSlider.prototype.cell_off = function (cell) {
 
-	$('#slider').css ('display', 'none');
-
-	$('#slider_').css ('display', 'none');
+	$('table.st-fixed-table-right td.selected-single').removeClass ('selected-single');
 
 	return cell;
 
 }
 
-TableSlider.prototype.cell_on = function () {
+TableSlider.prototype.cell_on = function (cell) {
 
-	if (this.isVirgin && this.row == 0 && this.initial_row == 0) return;
-
-	var cell         = this.get_cell ();
+	cell         = cell || this.get_cell ();
 
 	if (!cell) return;
 
-	if (!is_scrolled_into_view (cell))
-		return this.cell_off (cell);
-
-	var c            = $(cell);
-	var a            = $('a', c).get (0);
-	var table        = c.closest ('table');
-	var div          = table.closest ('div.st-table-right-viewport');
-	var offset       = div.offset ();
-	var css          = c.offset ();
-
-	css.width        = c.outerWidth ();
-
-	var overlap      = css.left - offset.left - 1;
-	if (overlap < 0) {
-		css.left  -= overlap;
-		css.width += overlap;
-	}
-
-	if (css.width < 1) return this.cell_off (cell);
-
-	var cell_right   = css.left + css.width;
-	var div_right    = offset.left + div.outerWidth () - 16;
-	var overlap      = cell_right - div_right;
-	if (overlap > 0) css.width -= overlap;
-
-	if (css.width < 1) return this.cell_off (cell);
-
-	css.height       = c.outerHeight ();
-	css.cursor       = a == null ? 'default' : 'pointer';
-	$('#slider').click (a == null ? null : function (event) {
-
-		$('a', tableSlider.get_cell ()).each ( function () {
-
-			a_click (this, event)
-
-		})
-
-	})
-
-	$('#slider').dblclick (function (event) {
-
-		$(tableSlider.get_cell ()).dblclick ();
-
-	})
-
-	if (
-		css.top < offset.top
-		|| css.top + css.height + ((div.scrollHeight > div.offsetHeight - 12) ? 16 : 0) > offset.top + div.outerHeight ()
-	) return this.cell_off (cell);
-
-	css.top        --;
-	css.left       --;
-	css.display = 'block';
-
-
-	$('#slider_').css ({
-		left       : css.left + css.width  - 2,
-		top        : css.top  + css.height - 2,
-		display : 'block'
-	});
-
-	css.width  ++;
-	css.height ++;
-
-	$('#slider').css (css);
-//	if (this.last_cell_id != cell) focus_on_first_input (cell);
-
-	this.last_cell_id = cell;
+	$('table.st-fixed-table-right td.selected').removeClass ('selected-top selected-right selected-bottom selected-left selected');
+	$(cell).addClass ('selected-single');
 
 	return cell;
 
 }
 
-function is_scrolled_into_view(elem) {
-	var div           = $(elem).closest ('div.st-table-right-viewport').get(0);
-	var divViewTop    = div.scrollTop;
-	var divViewBottom = divViewTop + div.offsetHeight;
-
-	var elemTop       = elem.offsetTop;
-	var elemBottom    = elemTop + elem.offsetHeight + 2;
-
-	var docViewTop    = $(window).scrollTop();
-	var docViewBottom = docViewTop + Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-	var elemDocTop    = $(elem).offset ().top;
-	var elemDocBottom = elemDocTop + elem.offsetHeight + 2;
-
-	return ((elemBottom >= divViewTop) && (elemTop <= divViewBottom)
-		&& (elemBottom <= divViewBottom) &&  (elemTop >= divViewTop))
-		&& ((elemDocBottom >= docViewTop) && (elemDocTop <= docViewBottom)
-		&& (elemDocBottom <= docViewBottom) &&  (elemDocTop >= docViewTop));
-}
-
-
 function td_on_click (event) {
 
-	event = get_event (event);
-	var td = browser_is_msie ? event.srcElement : event.target;
+	var td = event.target;
 
 	if (td.tagName != 'TD') return;
 
+	focus_on_first_input (td);
 	$('[type="checkbox"]', td).click ();
 
 	var tr = td;
@@ -1563,9 +1849,6 @@ function td_on_click (event) {
 		tableSlider.col ++;
 	};
 
-
-
-
 	for (i = 0; i < tableSlider.cnt; i ++) {
 
 		if (tableSlider.rows [i] != tr) continue;
@@ -1576,13 +1859,9 @@ function td_on_click (event) {
 
 	}
 
-	var cell = tableSlider.get_cell ();
+	tableSlider.cell_off ();
 
-	tableSlider.cell_on (cell);
-
-//	if (tableSlider.last_cell_id != cell) focus_on_first_input (cell);
-
-	tableSlider.last_cell_id = cell;
+	tableSlider.cell_on ();
 
 	return true;
 
@@ -1612,13 +1891,17 @@ TableSlider.prototype.handle_keyboard = function (keyCode) {
 
 	if (i) {
 		if (left_right_blocked) return true;
-		var cnt = this.rows [this.row].cells.length;
+		var cnt = this.rows [this.row].length;
 		var key = 'col';
 	}
 
 	if (!cnt) return true;
 
-	this [key] += (keyCode - 39 + i);
+	var currentNode = this.rows [this.row][this.col];
+	do {
+		this [key] += (keyCode - 39 + i);
+	} while (this [key] > 0 && this [key] < cnt && currentNode.isSameNode (this.rows [this.row][this.col]));
+
 	if (this [key] < 0) this [key]    = 0;
 	if (this [key] >= cnt) this [key] = cnt - 1;
 
@@ -1650,7 +1933,7 @@ TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 		delta += 8;
 	}
 	else {
-		delta -= div.offsetHeight;
+		delta -= div.clientHeight;
 		delta += td.offsetHeight + 2;
 	}
 	if (delta > 0) div.scrollTop += delta;
@@ -1659,7 +1942,7 @@ TableSlider.prototype.scrollCellToVisibleTop = function (force_top) {
 	if (delta > 0) div.scrollLeft -= delta;
 
 	var delta = td.offsetLeft - div.scrollLeft;
-	delta -= div.offsetWidth;
+	delta -= div.clientWidth;
 	delta += td.offsetWidth;
 	if (delta > 0) div.scrollLeft += delta;
 
@@ -2426,13 +2709,6 @@ function init_page (options) {
 							}
 						})});
 
-						if (tableSlider.get_cell ()) {
-							tableSlider.cell_off ();
-							tableSlider = new TableSlider ();
-							tableSlider.set_row (0);
-							tableSlider.cell_on ();
-						}
-
 						try {
 							var script = model.get ('script');
 							if (script)
@@ -2441,12 +2717,19 @@ function init_page (options) {
 							console.log(e.message);
 						}
 
+						if (tableSlider) {
+							tableSlider.clear_rows ();
+							tableSlider.set_row (0);
+						}
+
+
 					}
 				}))
 			});
 
 			options.on_load ();
 
+			tableSlider = new TableSlider ();
 			tableSlider.set_row (parseInt (options.__scrollable_table_row));
 
 			$(body).scroll(function() {
@@ -2454,9 +2737,7 @@ function init_page (options) {
 					var popup = $(this).data("kendoPopup");
 					popup.close();
 				});
-				tableSlider.cell_on ();
 			});
-			$(".st-table-right-viewport").scroll(function() {tableSlider.cell_on ();});
 
 			if (typeof tableSlider.row === 'number' && tableSlider.rows.length > tableSlider.row) {
 				tableSlider.scrollCellToVisibleTop ();
@@ -2645,12 +2926,6 @@ function init_page (options) {
 		setCursor (window, 'wait');
 		try {top.setCursor (top, 'wait')} catch (e) {};
 	});
-
-	var resizeTableSilder = debounce (refresh_table_slider_on_resize, 500);
-
-	$(window).on ('resize', resizeTableSilder);
-
-	$(window).on ('scroll', function (event) {try {tableSlider.cell_on ();} catch(e) {};});
 
 	if (table_containers.length == 0) {
 		options.on_load ();
