@@ -497,9 +497,9 @@ sub draw_form_field {
 	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
 	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
 
-	$html .= dump_tag (td => $a, $field -> {html});
+	$html .= dump_tag (td => $a, $field -> {html} . ($field -> {label_tail} || ''));
 
-	return $html . ($options -> {label_tail} || '');
+	return $html;
 
 }
 
@@ -520,8 +520,7 @@ sub draw_form_field_button {
 
 	my $tabindex = ++ $_REQUEST {__tabindex};
 
-	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">}
-		. ($options -> {label_tail} || '');
+	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">};
 
 }
 
@@ -546,7 +545,7 @@ sub draw_form_field_string {
 	$attributes -> {mask}        = $options -> {mask}
 		if $options -> {mask};
 
-	return dump_tag ('input', $attributes) . ($options -> {label_tail} || '');
+	return dump_tag ('input', $attributes);
 
 }
 
@@ -595,8 +594,7 @@ sub draw_form_field_suggest {
 			name     => "_$options->{name}__id",
 			value    => $options -> {value__id},
 			onchange => $options -> {after},
-		})
-		. ($options -> {label_tail} || '');
+		});
 
 
 }
@@ -678,7 +676,7 @@ EOH
 
 	$html .= "</span>";
 
-	return $html . ($options -> {label_tail} || '');
+	return $html;
 
 }
 
@@ -702,7 +700,7 @@ EOJS
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return <<EOH . ($options -> {label_tail} || '');
+	return <<EOH;
 
 		<input
 			type="hidden"
@@ -875,7 +873,7 @@ sub draw_form_field_static {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return "<span $attributes>$html</span>" . ($options -> {label_tail} || '');
+	return "<span $attributes>$html</span>";
 
 }
 
@@ -887,8 +885,7 @@ sub draw_form_field_checkbox {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true">}
-		. ($options -> {label_tail} || '');
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true">};
 }
 
 ################################################################################
@@ -1033,8 +1030,6 @@ EOH
 
 	$html .= '</select>';
 
-	$html .= $options -> {label_tail} || '';
-
 	return $html;
 
 }
@@ -1097,8 +1092,6 @@ EOH
 	}
 
 	$html .= '</span>';
-
-	$html .= $options -> {label_tail} || '';
 
 	local $conf -> {portion} ||= 50;
 
