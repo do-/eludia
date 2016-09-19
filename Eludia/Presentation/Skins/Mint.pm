@@ -2114,7 +2114,7 @@ sub draw_toolbar_input_text {
 
 	$options -> {attributes} ||= {};
 
-	$options -> {onKeyPress} ||= "if (event.keyCode == 13 || event.keyIdentifier == 'Enter') {form.submit(); blockEvent ()}";
+	$options -> {onKeyPress} ||= "if (event.keyCode == 13 || event.key == 'Enter') {form.submit(); blockEvent ()}";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 

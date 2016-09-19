@@ -1265,7 +1265,7 @@ function handle_basic_navigation_keys () {
 	}
 
 	if (
-		(keyCode == 13 || (e.originalEvent ? e.originalEvent.keyIdentifier : e.keyIdentifier) == 'Enter')
+		(keyCode == 13 || (e.originalEvent ? e.originalEvent.key : e.key) == 'Enter')
 		&& !i
 		&& document.activeElement.tagName != 'TEXTAREA'
 		&& document.activeElement.tagName != 'A'
