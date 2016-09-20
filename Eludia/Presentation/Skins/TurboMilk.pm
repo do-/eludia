@@ -1065,6 +1065,7 @@ sub draw_form_field_hgroup {
 		next if $item -> {off};
 		$html .= $item -> {label} if $item -> {label};
 		$html .= $item -> {html};
+		$html .= $item -> {label_tail} if $item -> {label_tail};
 		$html .= '&nbsp;' unless $options -> {no_nbsp};
 	}
 
