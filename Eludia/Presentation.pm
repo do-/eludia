@@ -172,9 +172,19 @@ sub trunc_string {
 
 	my $has_ext_chars = $s =~ /(\&[a-z]+)|(\&#\d+)/;
 
+	my $encode_table = $has_ext_chars ? {map {decode_entities($_) => $_} $s =~ /(&#\d+;)/g} : {};
+
 	$s = decode_entities ($s) if $has_ext_chars;
+
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-	$s = encode_entities ($s, "<>‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars && $i18n -> {_charset} ne 'UTF-8';
+
+	if ($has_ext_chars && $i18n -> {_charset} ne 'UTF-8') {
+
+		$s = encode_entities ($s, "<>‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
+
+		$s =~ s/(\X)/$encode_table->{$1} || $1/ge;
+
+	}
 
 	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
 
