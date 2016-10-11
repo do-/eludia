@@ -11,7 +11,8 @@ sub draw_button_cell {
 		my $salt = rand;
 		my $msg = js_escape ($options -> {confirm});
 		$options -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$options{href}', '_self')} else {document.body.style.cursor = 'default'; nop ();}];
+		my $target = $options -> {target} || '_self';
+		$options -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$options{href}', '$target')} else {document.body.style.cursor = 'default'; nop ();}];
 	}
 
 	if (
