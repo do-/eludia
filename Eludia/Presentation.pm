@@ -172,9 +172,19 @@ sub trunc_string {
 
 	my $has_ext_chars = $s =~ /(\&[a-z]+)|(\&#\d+)/;
 
+	my $encode_table = $has_ext_chars ? {map {decode_entities($_) => $_} $s =~ /(&#\d+;)/g} : {};
+
 	$s = decode_entities ($s) if $has_ext_chars;
+
 	$s = substr ($s, 0, $len - 3) . '...' if length $s > $len;
-	$s = encode_entities ($s, "<>‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»") if $has_ext_chars && $i18n -> {_charset} ne 'UTF-8';
+
+	if ($has_ext_chars && $i18n -> {_charset} ne 'UTF-8') {
+
+		$s = encode_entities ($s, "<>‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
+
+		$s =~ s/(\X)/$encode_table->{$1} || $1/ge;
+
+	}
 
 	$_REQUEST {__trunc_string} -> {$s, $len} = $s;
 
@@ -2934,7 +2944,7 @@ sub draw_error_page {
 		if $error -> {label};
 
 	if ($_REQUEST {__lrt_time}) {
-		lrt_finish ($error -> {msg}, create_url (action => undef));
+		lrt_finish ($error -> {label}, create_url (action => undef));
 		return '';
 	}
 
@@ -2968,18 +2978,33 @@ sub draw_redirect_page {
 ################################################################################
 
 sub lrt_print {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_print (@_);
 }
 
 ################################################################################
 
 sub lrt_println {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_println (@_);
 }
 
 ################################################################################
 
 sub lrt_ok {
+
+	if (index ($_[0], ':::') == -1) {
+		push @{$_REQUEST {__lrt_log}}, $_[0];
+	}
+
 	$_SKIN -> lrt_ok (@_);
 }
 
@@ -2991,6 +3016,7 @@ sub lrt_start {
 
 	$_REQUEST {__response_started} = 1;
 	$_REQUEST {__response_sent} = 1;
+	$_REQUEST {__lrt_log} = [];
 
 	$_SKIN -> lrt_start (@_);
 
@@ -3030,8 +3056,10 @@ sub lrt_finish {
 
 	}
 
+
 	$_SKIN -> lrt_finish ($banner, $href, $options);
 
+	return delete $_REQUEST {__lrt_log};
 }
 
 ################################################################################

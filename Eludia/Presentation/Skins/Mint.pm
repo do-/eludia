@@ -153,10 +153,20 @@ sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
 
-	return $_REQUEST {select} ? '' : <<EOH;
-		<table cellspacing=0 cellpadding=0 width="100%"><tr><td class="table_title"><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td></tr></table>
+	if ($_REQUEST {select}) {
+
+		$_REQUEST {__script} .= <<EOJ;
+			top.document.title = '$$options{label}';
+EOJ
+		return '';
+
+	} else {
+
+		return <<EOH
+			<table class="table-title" cellspacing=0 cellpadding=0 width="100%"><tr><td><img src="$_REQUEST{__static_url}/0.gif?$_REQUEST{__static_salt}" width=1 height=29 align=absmiddle>&nbsp;&nbsp;&nbsp;$$options{label}</td><td class="table-stat"></td></tr></table>
 EOH
 
+	}
 }
 
 ################################################################################
@@ -237,8 +247,6 @@ sub _draw_input_datetime {
 		>
 	</nobr>
 EOH
-
-	$html .=  ($options -> {label_tail} || '');
 
 	return $html;
 
@@ -489,9 +497,9 @@ sub draw_form_field {
 	$a -> {colspan} = $field -> {colspan}    if $field -> {colspan};
 	$a -> {width}   = $field -> {cell_width} if $field -> {cell_width};
 
-	$html .= dump_tag (td => $a, $field -> {html});
+	$html .= dump_tag (td => $a, $field -> {html} . ($field -> {label_tail} || ''));
 
-	return $html . ($options -> {label_tail} || '');
+	return $html;
 
 }
 
@@ -512,8 +520,7 @@ sub draw_form_field_button {
 
 	my $tabindex = ++ $_REQUEST {__tabindex};
 
-	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">}
-		. ($options -> {label_tail} || '');
+	return qq {<input type="button" name="_$$options{name}" value="$$options{value}" onClick="$$options{onclick}" tabindex="$tabindex">};
 
 }
 
@@ -538,7 +545,7 @@ sub draw_form_field_string {
 	$attributes -> {mask}        = $options -> {mask}
 		if $options -> {mask};
 
-	return dump_tag ('input', $attributes) . ($options -> {label_tail} || '');
+	return dump_tag ('input', $attributes);
 
 }
 
@@ -587,8 +594,7 @@ sub draw_form_field_suggest {
 			name     => "_$options->{name}__id",
 			value    => $options -> {value__id},
 			onchange => $options -> {after},
-		})
-		. ($options -> {label_tail} || '');
+		});
 
 
 }
@@ -601,7 +607,7 @@ sub draw_form_field_datetime {
 
 	$options -> {name} = '_' . $options -> {name};
 
-	return $_SKIN -> _draw_input_datetime ($options) . ($options -> {label_tail} || '');
+	return $_SKIN -> _draw_input_datetime ($options);
 
 }
 
@@ -670,7 +676,7 @@ EOH
 
 	$html .= "</span>";
 
-	return $html . ($options -> {label_tail} || '');
+	return $html;
 
 }
 
@@ -694,7 +700,7 @@ EOJS
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return <<EOH . ($options -> {label_tail} || '');
+	return <<EOH;
 
 		<input
 			type="hidden"
@@ -745,6 +751,7 @@ sub draw_form_field_hgroup {
 		next if $item -> {off};
 		$html .= $item -> {label} if $item -> {label};
 		$html .= $item -> {html};
+		$html .= $item -> {label_tail} if $item -> {label_tail};
 		$html .= '&nbsp;';
 	}
 
@@ -867,7 +874,7 @@ sub draw_form_field_static {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return "<span $attributes>$html</span>" . ($options -> {label_tail} || '');
+	return "<span $attributes>$html</span>";
 
 }
 
@@ -879,8 +886,7 @@ sub draw_form_field_checkbox {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
-	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true">}
-		. ($options -> {label_tail} || '');
+	return qq {<input class=cbx type="checkbox" name="_$$options{name}" id="input_$$options{name}" $attributes $checked value=1 onChange="is_dirty=true">};
 }
 
 ################################################################################
@@ -1025,8 +1031,6 @@ EOH
 
 	$html .= '</select>';
 
-	$html .= $options -> {label_tail} || '';
-
 	return $html;
 
 }
@@ -1089,8 +1093,6 @@ EOH
 	}
 
 	$html .= '</span>';
-
-	$html .= $options -> {label_tail} || '';
 
 	local $conf -> {portion} ||= 50;
 
@@ -1731,9 +1733,12 @@ sub draw_toolbar_input_tree {
 	my $value = $options -> {label};
 	$value =~ s/\"/\\"/g;
 
+	my $enable = $options -> {attributes} -> {disabled} ? '0' : '1';
+
 	$options -> {height} ||= 400;
 	$options -> {width}  ||= 600;
 	my $dropdown_width = $options -> {max_len} * 3;
+
 	$_REQUEST {__script} .= <<EOJS;
 var ${id}_changed = 0;
 EOJS
@@ -1759,14 +1764,11 @@ require (['/i/mint/libs/kendo.web.ext.js'], function () {
 		}
 	});
 	\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
+	${id}_el.data('kendoExtDropDownTreeView').dropDownList().enable(!!$enable);
 });
 EOJS
 
-
 	return qq|<li class="toolbar nowrap"><div id="$id"></div></li>|;
-
-
-
 }
 
 ################################################################################
@@ -2113,7 +2115,7 @@ sub draw_toolbar_input_text {
 
 	$options -> {attributes} ||= {};
 
-	$options -> {onKeyPress} ||= "if (event.keyCode == 13 || event.keyIdentifier == 'Enter') {form.submit(); blockEvent ()}";
+	$options -> {onKeyPress} ||= "if (event.keyCode == 13 || event.key == 'Enter') {form.submit(); blockEvent ()}";
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
@@ -2542,7 +2544,7 @@ sub draw_datetime_cell {
 
 	local $options -> {name} = $data -> {name};
 
-	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "$label_tail</td>";
+	return "<td $$options{data} $attributes>" . $_SKIN -> _draw_input_datetime ($data) . "</td>";
 
 }
 
@@ -3865,7 +3867,7 @@ sub draw_suggest_page {
 
 	my ($_SKIN, $data) = @_;
 
-	$_REQUEST {__content_type} ||= 'application/json; charset=windows-1251';
+	$_REQUEST {__content_type} ||= 'application/json; charset=' . $i18n -> {_charset};;
 
 	my $a = $_JSON -> encode ([map {{id => $_ -> {id}, label => $_ -> {label}}} @$data]);
 
