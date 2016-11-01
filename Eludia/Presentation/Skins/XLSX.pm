@@ -172,14 +172,12 @@ sub draw_form_field {
 	if ($field -> {italic} || $field -> {html} =~ /<i>/) {
 		$format_record -> set_italic ();
 	}
+
 	# if ($field -> {font_size}) {
 	# 	$format_record -> set_size($field -> {font_size});
 	# }
 
-	$field -> {html} =~ s/&nbsp;/ /ig;
-	$field -> {html} =~ s/<\/?span.*?>//ig;
-	$field -> {html} =~ s/\<br\/?\>$//ig;
-	$field -> {html} =~ s/\<br\/?\>/\n/ig;
+	$field -> {html} = processing_string ($field -> {html});
 
 	if (($field -> {colspan}) > 1){
 		my %info_row = (
@@ -258,7 +256,7 @@ sub draw_form_field_hgroup {
 		next if $item -> {off};
 		$html .= $item -> {label} if $item -> {label};
 		$html .= $item -> {html};
-		$html .= '&nbsp;';
+		$html .= ' ';
 	}
 
 	return $html;
@@ -549,7 +547,7 @@ sub draw_text_cell {
 	my $txt = '';
 	unless ($data -> {off}) {
 		$txt = $data -> {label};
-		$txt =~ s/&rArr;/ \=\> /ig;
+
 		# if ($data -> {no_nobr}) {};
 
 		if ($data -> {bold} || $options -> {bold} || $options -> {is_total} || $txt =~ /<b>/) {
@@ -565,10 +563,8 @@ sub draw_text_cell {
 		}
 	}
 	my $attr = $data -> {attributes};
-	$txt =~ s/<\/?b>//ig;
-	$txt =~ s/<\/?nobr>//ig;
-	$txt =~ s/\<br\/?\>$//ig;
-	$txt =~ s/\<br\/?\>/\n/ig;
+
+	$txt = processing_string ($txt);
 
 	my $rowspan = 1;
 	my $colspan = 1;
@@ -666,9 +662,7 @@ sub draw_table_header_cell {
 
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
-	$cell -> {label} =~ s/\<br\/?\>/\n/ig;
-	$cell -> {label} =~ s/&nbsp;/ /ig;
-	$cell -> {label} =~ s/&rArr;/ \=\> /ig;
+	$cell -> {label} = processing_string($cell -> {label});
 
 	my $rowspan = $cell -> {attributes} -> {rowspan};
 	my $colspan = $cell -> {attributes} -> {colspan};
@@ -993,5 +987,25 @@ sub write_as_string {
 sub decode_rus{
 	my $worksheet = shift;
     return $worksheet -> write ($_[0], $_[1], decode ("cp-1251", $_[2]), $_[3]);
+}
+
+################################################################################
+
+sub processing_string{
+	my $string = @_[0];
+
+	$string =~ s/<\/?[b, i]>//ig;
+	$string =~ s/<\/?nobr>//ig;
+	$string =~ s/<\/?span.*?>//ig;
+
+	$string =~ s/&nbsp;/ /ig;
+	$string =~ s/\<br\/?\>$//ig;
+	$string =~ s/\<br\/?\>/\n/ig;
+	$string =~ s/&rArr;/ \=\> /ig;
+
+	$string =~ s/&#x([a-fA-F0-9]+);/"&#". hex($1) .";"/ge;
+	$string =~ s/&#([0-9]+);/chr($1)." "/ge;
+
+	return $string;
 }
 1;
