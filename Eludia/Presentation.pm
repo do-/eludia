@@ -1827,7 +1827,7 @@ sub draw_table_header_row {
 
 	my ($cells) = @_;
 
-	if ($_REQUEST {xls}){
+	if ($_REQUEST {xlsx}){
 		$_REQUEST {__xl_row} += 1;
 		$_REQUEST {__xl_col} = 0;
 	}
