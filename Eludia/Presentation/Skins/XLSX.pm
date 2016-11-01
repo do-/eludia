@@ -64,11 +64,11 @@ sub draw_window_title {
 	    font   => 'Arial',
 	);
 
-	my $right_width = $worksheet -> {__xl_col_widths} -> [0];
+	my $right_width = $worksheet -> {__col_widths} -> [0];
 
 	$worksheet -> write ($_REQUEST {__xl_row}, 0, $$options{label}, $window_title_format);
 
-	$worksheet -> {__xl_col_widths} -> [0] = $right_width;
+	$worksheet -> {__col_widths} -> [0] = $right_width;
 
 	$_REQUEST {__xl_row} += 1;
 
@@ -132,9 +132,9 @@ sub draw_form_field {
 	if ($field -> {type} eq 'banner') {
 		$format_record -> set_align ('center');
 
-		my $right_width = $worksheet -> {__xl_col_widths} -> [$_REQUEST {__xl_col}];
+		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
 		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan},  $$field{html}, $format_record);
-		$worksheet -> {__xl_col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
+		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 
 		$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $field -> {colspan};
 
@@ -188,11 +188,11 @@ sub draw_form_field {
 			"row"       => $_REQUEST {__xl_row},
 			"colspan"   => $field -> {colspan},
 		);
-		push (@{$worksheet -> {__xl_row_height}}, \%info_row);
+		push (@{$worksheet -> {__row_height}}, \%info_row);
 
-		my $right_width = $worksheet -> {__xl_col_widths} -> [$_REQUEST {__xl_col}];
+		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
 		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan} -1,  $$field{html}, $format_record);
-		$worksheet -> {__xl_col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
+		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 
 		$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $field -> {colspan};
 	}
@@ -584,11 +584,11 @@ sub draw_text_cell {
 			"indent"    => $data -> {level},
 		);
 
-		push (@{$worksheet -> {__xl_row_height}}, \%info_row);
+		push (@{$worksheet -> {__row_height}}, \%info_row);
 
-		my $right_width = $worksheet -> {__xl_col_widths} -> [$_REQUEST {__xl_col}];
+		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
 		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan -1, $_REQUEST {__xl_col} + $colspan - 1,  $txt, $format);
-		$worksheet -> {__xl_col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
+		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 	}
 	else{
 		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $txt, $format);
@@ -694,7 +694,7 @@ sub draw_table_header_cell {
 				$i++;
 			}
 		}
-		$right_width = $worksheet -> {__xl_col_widths} -> [$_REQUEST {__xl_col}];
+		$right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
 	}
 
 	if ($rowspan != 1 || $colspan != 1){
@@ -705,7 +705,7 @@ sub draw_table_header_cell {
 	}
 
 	if ($cell -> {children}) {
-		$worksheet -> {__xl_col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
+		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 	}
 
 	$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $colspan;
@@ -798,7 +798,7 @@ sub xlsx_filename {
 ####################################################################
 
 sub start_page {
-	$_REQUEST {__xl_file_name} = File::Spec -> tmpdir() . '/eludia_' . $_REQUEST {type} . "_$_REQUEST{sid}_$_REQUEST{__salt}.xlsx";
+	$_REQUEST {__xl_file_name} = File::Spec -> tmpdir() . "/eludia_$_REQUEST{type}_$_REQUEST{sid}_$_REQUEST{__salt}.xlsx";
 
 	open (OUT, '>' . $_REQUEST {__xl_file_name}) or die "Can't open $_REQUEST{__file_name}: $!\n";
 	binmode OUT;
@@ -845,20 +845,20 @@ sub draw_page {
 
 	$_REQUEST {__xl_row} += 2;
 
-	my $right_width = $worksheet -> {__xl_col_widths} -> [0];
+	my $right_width = $worksheet -> {__col_widths} -> [0];
 
 	$worksheet -> write ($_REQUEST {__xl_row}, 0, $_USER -> {label});
 
 	$_REQUEST {__xl_row} += 2;
 	$worksheet -> write ($_REQUEST {__xl_row}, 0, @{[ sprintf ('%02d.%02d.%04d %02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4]) ]}, $footer_format);
 
-	$worksheet -> {__xl_col_widths} -> [0] = $right_width;
+	$worksheet -> {__col_widths} -> [0] = $right_width;
 
 	$_REQUEST {__response_sent} = 1;
 
 	autofit_columns(36); # 36 - максимально допустимая ширина столбца
 
-	if ($worksheet -> {__xl_row_height}) {
+	if ($worksheet -> {__row_height}) {
 		autoheight_rows ();
 	}
 
@@ -881,13 +881,13 @@ sub draw_page {
 sub autoheight_rows{
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
-	foreach $row (@{$worksheet -> {__xl_row_height}}) {
+	foreach $row (@{$worksheet -> {__row_height}}) {
 		my $text = $row -> {text};
 		my $height_row = 0;
 
 		my $sum_width = 0;
 		for (my $i = 0; $i <$row -> {colspan}; $i++){
-			$sum_width += $worksheet -> {__xl_col_widths} -> [$row -> {col} + $i];
+			$sum_width += $worksheet -> {__col_widths} -> [$row -> {col} + $i];
 		}
 
 		if ($row -> {indent}) {
@@ -920,10 +920,10 @@ sub autofit_columns {
      		align     => 'vjustify',
      );
 
-     for my $width (@{$worksheet -> {__xl_col_widths}}) {
+     for my $width (@{$worksheet -> {__col_widths}}) {
           if ($width > $max_width) {
             	$worksheet -> set_column ($col, $col, $max_width, $format);
-				$worksheet -> {__xl_col_widths} -> [$col] = $max_width;
+				$worksheet -> {__col_widths} -> [$col] = $max_width;
           }
           else {
                $worksheet -> set_column ($col, $col, $width);
@@ -959,13 +959,13 @@ sub store_string_widths {
     # We store the string width as data in the Worksheet object. We use
     # a double underscore key name to avoid conflicts with future names.
     #
-    my $old_width    = $worksheet -> {__xl_col_widths} -> [$col];
+    my $old_width    = $worksheet -> {__col_widths} -> [$col];
     my $string_width = string_width ($token);
 
     if (not defined $old_width or $string_width > $old_width) {
         # You may wish to set a minimum column width as follows.
         #return undef if $string_width < 10;
-        $worksheet -> {__xl_col_widths} -> [$col] = $string_width;
+        $worksheet -> {__col_widths} -> [$col] = $string_width;
     }
     # Return control to write();
 
