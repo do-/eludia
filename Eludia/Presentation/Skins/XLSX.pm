@@ -3,6 +3,7 @@ package Eludia::Presentation::Skins::XLSX;
 use Data::Dumper;
 use Excel::Writer::XLSX;
 use Encode;
+use File::Spec qw(tmpdir);
 
 BEGIN {
 	require Eludia::Presentation::Skins::Generic;
@@ -54,18 +55,18 @@ sub draw_window_title {
 
 	$_REQUEST {__xl_row} += 2;
 
-	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name( $_REQUEST{__sheet_name} );
+	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name ($_REQUEST {__sheet_name});
 
-	my $window_title_format = $_REQUEST {__workbook} -> add_format(
-	    bold  => 1,
+	my $window_title_format = $_REQUEST {__workbook} -> add_format (
+	    bold   => 1,
 	    italic => 1,
-	    size  => 12,
-	    font => 'Arial',
+	    size   => 12,
+	    font   => 'Arial',
 	);
 
 	my $right_width = $worksheet -> {__col_widths} -> [0];
 
-	$worksheet -> write($_REQUEST {__xl_row}, 0, $$options{label}, $window_title_format);
+	$worksheet -> write ($_REQUEST {__xl_row}, 0, $$options{label}, $window_title_format);
 
 	$worksheet -> {__col_widths} -> [0] = $right_width;
 
@@ -119,20 +120,20 @@ sub draw_path {
 sub draw_form_field {
 	my ($_SKIN, $field, $data) = @_;
 
-	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name( $_REQUEST{__sheet_name} );
+	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name ($_REQUEST {__sheet_name});
 
-	my $format_record = $_REQUEST {__workbook} -> add_format(
+	my $format_record = $_REQUEST {__workbook} -> add_format (
 		text_wrap => 1,
-     	border => 1,
-     	valign => 'bottom',
-    	align  => 'left',
+     	border    => 1,
+     	valign    => 'bottom',
+    	align     => 'left',
 	);
 
 	if ($field -> {type} eq 'banner') {
-		$format_record -> set_align('center');
+		$format_record -> set_align ('center');
 
 		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
-		$worksheet -> merge_range($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan},  $$field{html}, $format_record);
+		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan},  $$field{html}, $format_record);
 		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 
 		$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $field -> {colspan};
@@ -144,32 +145,32 @@ sub draw_form_field {
 	}
 
 
-	if ($field -> {picture}){
+	if ($field -> {picture}) {
 		my $picture = $_SKIN -> _picture ($field -> {picture});
-		$format_record -> set_num_format( $picture );
+		$format_record -> set_num_format ($picture);
 	}
 	elsif ($field -> {html} =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
-		$format_record -> set_num_format('m/d/yy' );
-		$format_record -> set_align('right');
+		$format_record -> set_num_format ('m/d/yy');
+		$format_record -> set_align ('right');
 	}
 	elsif ($field -> {html} =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:?\d?\d?$/) {
-		$format_record -> set_num_format( 'm/d/yy h:mm' );
-		$format_record -> set_align('right');
+		$format_record -> set_num_format ('m/d/yy h:mm');
+		$format_record -> set_align ('right');
 	}
 	elsif (!$field -> {no_nobr}) {
-		$format_record -> set_num_format( '@' );
+		$format_record -> set_num_format ('@');
 	}
 
 
-	$worksheet -> write( $_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $$field{label}, $header_form_format);
+	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $$field{label}, $header_form_format);
 
 	$_REQUEST {__xl_col}++;
 
 	if ($field -> {bold} || $field -> {html} =~ /bold/ || $field -> {html} =~ /<b>/) {
-		$format_record -> set_bold();
+		$format_record -> set_bold ();
 	}
 	if ($field -> {italic} || $field -> {html} =~ /<i>/) {
-		$format_record -> set_italic();
+		$format_record -> set_italic ();
 	}
 	# if ($field -> {font_size}) {
 	# 	$format_record -> set_size($field -> {font_size});
@@ -190,13 +191,13 @@ sub draw_form_field {
 		push (@{$worksheet -> {__row_height}}, \%info_row);
 
 		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
-		$worksheet -> merge_range($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan} -1,  $$field{html}, $format_record);
+		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan} -1,  $$field{html}, $format_record);
 		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 
 		$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $field -> {colspan};
 	}
 	else{
-		$worksheet -> write( $_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $$field{html}, $format_record);
+		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $$field{html}, $format_record);
 		$_REQUEST {__xl_col}++;
 	}
 
@@ -504,64 +505,63 @@ sub _picture {
 
 sub draw_text_cell {
 	my ($_SKIN, $data, $options) = @_;
-	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name( $_REQUEST{__sheet_name} );
+	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name ($_REQUEST {__sheet_name});
 
-	my $format = $_REQUEST {__workbook} -> add_format(
+	my $format = $_REQUEST {__workbook} -> add_format (
 		text_wrap => 1,
-     	border => 1,
+     	border    => 1,
 	);
 
 
-	if ($data -> {label}){
+	if ($data -> {label}) {
 
-		if ($data -> {attributes} -> {align}){
-			$format -> set_align($data -> {attributes} -> {align});
+		if ($data -> {attributes} -> {align}) {
+			$format -> set_align ($data -> {attributes} -> {align});
 		}
-
 
 		if ($data -> {picture}) {
 			my $picture = $_SKIN -> _picture ($data -> {picture});
-			$format -> set_num_format( $picture );
+			$format -> set_num_format ($picture);
 		}
 		elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
-			$format -> set_num_format('m/d/yy' );
-			$format -> set_align('right');
+			$format -> set_num_format ('m/d/yy');
+			$format -> set_align ('right');
 		}
 		elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:?\d?\d?$/) {
-			$format -> set_num_format( 'm/d/yy h:mm' );
-			$format -> set_align('right');
+			$format -> set_num_format ('m/d/yy h:mm');
+			$format -> set_align ('right');
 		}
 		elsif (!$data -> {no_nobr}) {
-			$format -> set_num_format( '@' );
+			$format -> set_num_format ('@');
 		}
 	}
 
 	if ($data -> {bgcolor} ||= $data -> {attributes} -> {bgcolor}) {
-		$format -> set_bg_color($data -> {bgcolor});
+		$format -> set_bg_color ($data -> {bgcolor});
 	}
 	if ($data -> {fgcolor} ||= $data -> {attributes} -> {fgcolor}) {
-		$format -> set_color($data -> {fgcolor});
+		$format -> set_color ($data -> {fgcolor});
 	}
-	if ($data -> {level}){
-		$format -> set_indent($data -> {level});
+	if ($data -> {level}) {
+		$format -> set_indent ($data -> {level});
 	}
 
 	my $txt = '';
-	unless($data -> {off}){
+	unless ($data -> {off}) {
 		$txt = $data -> {label};
 		$txt =~ s/&rArr;/ \=\> /ig;
 		# if ($data -> {no_nobr}) {};
 
 		if ($data -> {bold} || $options -> {bold} || $options -> {is_total} || $txt =~ /<b>/) {
-			$format -> set_bold();
+			$format -> set_bold ();
 		}
 
 		if ($data -> {italic} || $options -> {italic}) {
-			$format -> set_italic();
+			$format -> set_italic ();
 		}
 
 		if ($data -> {strike} || $options -> {strike}) {
-			$format -> set_font_strikeout();
+			$format -> set_font_strikeout ();
 		}
 	}
 	my $attr = $data -> {attributes};
@@ -573,9 +573,9 @@ sub draw_text_cell {
 	my $rowspan = 1;
 	my $colspan = 1;
 
-	if ($data -> {colspan}){ $colspan = $data -> {colspan}; }
+	if ($data -> {colspan}) { $colspan = $data -> {colspan}; }
 
-	if (($rowspan != 1) || ($colspan != 1)){
+	if ($rowspan != 1 || $colspan != 1){
 		my %info_row = (
 			"text"	    => $txt,
 			"col"       => $_REQUEST {__xl_col},
@@ -587,11 +587,11 @@ sub draw_text_cell {
 		push (@{$worksheet -> {__row_height}}, \%info_row);
 
 		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
-		$worksheet -> merge_range($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan -1, $_REQUEST {__xl_col} + $colspan - 1,  $txt, $format);
+		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan -1, $_REQUEST {__xl_col} + $colspan - 1,  $txt, $format);
 		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 	}
 	else{
-		$worksheet -> write( $_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $txt, $format);
+		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $txt, $format);
 	}
 
 	$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $colspan;
@@ -664,7 +664,7 @@ sub draw_table_header_cell {
 
 	my $right_width;
 
-	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name( $_REQUEST{__sheet_name} );
+	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name ($_REQUEST {__sheet_name});
 
 	$cell -> {label} =~ s/\<br\/?\>/\n/ig;
 	$cell -> {label} =~ s/&nbsp;/ /ig;
@@ -677,35 +677,35 @@ sub draw_table_header_cell {
 		return ''; # подзаголовки уже обработали
 	}
 
-	if ($cell -> {children}){
+	if ($cell -> {children}) {
 		my $arr = $cell -> {children};
 		my $i = 0;
 		my $old_ord = 0;
 
-		foreach (@$arr){
-			unless( $_ -> {hidden} || $_ -> {off} || (!$_ -> {label} && $conf -> {core_hide_row_buttons} == 2)){
-				if (($_ -> {ord} == undef) || ($_ -> {ord} == $old_ord)){
-					$worksheet -> write($_REQUEST {__xl_row} + $rowspan, $_REQUEST {__xl_col} + $i,   $_ -> {label}, $header_table_format);
+		foreach (@$arr) {
+			unless ($_ -> {hidden} || $_ -> {off} || (!$_ -> {label} && $conf -> {core_hide_row_buttons} == 2)) {
+				if ($_ -> {ord} == undef || $_ -> {ord} == $old_ord) {
+					$worksheet -> write ($_REQUEST {__xl_row} + $rowspan, $_REQUEST {__xl_col} + $i,   $_ -> {label}, $header_table_format);
 				}
 				else{
-					$worksheet -> write($_REQUEST {__xl_row} + $rowspan, $_REQUEST {__xl_col} + $_ -> {ord} - 1, $_ -> {label}, $header_table_format);
+					$worksheet -> write ($_REQUEST {__xl_row} + $rowspan, $_REQUEST {__xl_col} + $_ -> {ord} - 1, $_ -> {label}, $header_table_format);
 					$old_ord = $_ -> {ord};
 				}
 				$i++;
 			}
 		}
-		$right_width = $worksheet->{__col_widths}->[$_REQUEST {__xl_col}];
+		$right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
 	}
 
-	if (($rowspan != 1) || ($colspan != 1)){
-		$worksheet -> merge_range($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan - 1, $_REQUEST {__xl_col} + $colspan - 1, $cell -> {label}, $header_table_format);
+	if ($rowspan != 1 || $colspan != 1){
+		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan - 1, $_REQUEST {__xl_col} + $colspan - 1, $cell -> {label}, $header_table_format);
 	}
 	else {
-		$worksheet -> write($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $cell -> {label}, $header_table_format);
+		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $cell -> {label}, $header_table_format);
 	}
 
-	if ($cell -> {children}){
-		$worksheet->{__col_widths}->[$_REQUEST {__xl_col}] = $right_width;
+	if ($cell -> {children}) {
+		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 	}
 
 	$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $colspan;
@@ -718,7 +718,7 @@ sub draw_table_header_cell {
 
 sub start_table {
 	my ($_SKIN, $options) = @_;
-	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name( $_REQUEST{__sheet_name} );
+	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name ($_REQUEST {__sheet_name});
 	return '';
 
 }
@@ -798,70 +798,79 @@ sub xlsx_filename {
 ####################################################################
 
 sub start_page {
-	$_REQUEST {__file_name} = 'eludia_' . $_REQUEST {type} . "_$_REQUEST{sid}.xlsx";
-	my $workbook = Excel::Writer::XLSX -> new( $preconf -> {_} -> {docroot} . 'i/upload/' . $_REQUEST {__file_name});
+	# $_REQUEST {__file_name} = $preconf -> {_} -> {docroot} . 'i/upload/eludia_' . $_REQUEST {type} . "_$_REQUEST{sid}.xlsx";
+	$_REQUEST {__file_name} = File::Spec -> tmpdir() . '/eludia_' . $_REQUEST {type} . "_$_REQUEST{sid}_$_REQUEST{__salt}.xlsx";
 
-	$_REQUEST{__sheet_name} = substr('eludia_' . $_REQUEST {type}, 0, 31);
-	my $worksheet = $workbook -> add_worksheet($_REQUEST{__sheet_name});
+	open (OUT, '>' . $_REQUEST {__file_name}) or die "Can't open $_REQUEST{__file_name}:$!\n";
+	binmode OUT;
+	flock (OUT, LOCK_EX);
+
+	my $workbook = Excel::Writer::XLSX -> new (\*OUT);
+
+	$_REQUEST {__sheet_name} = substr ('eludia_' . $_REQUEST {type}, 0, 31);
+	my $worksheet = $workbook -> add_worksheet ($_REQUEST {__sheet_name});
 
 	$_REQUEST {__workbook}  = $workbook;
 	$_REQUEST {__xl_row} = 0;
-	$_REQUEST{__xl_col} = 0;
+	$_REQUEST {__xl_col} = 0;
 
-	$worksheet->add_write_handler(qr[[А-Яа-я]], \&decode_rus);
-	$worksheet->add_write_handler(qr[\w], \&store_string_widths);
-	$worksheet->add_write_handler(qr[^0[^.,]], \&write_as_string);
+	$worksheet -> add_write_handler (qr[[А-Яа-я]], \&decode_rus);
+	$worksheet -> add_write_handler (qr[\w], \&store_string_widths);
+	$worksheet -> add_write_handler (qr[^0[^.,]], \&write_as_string);
 
-	$header_table_format = $workbook -> add_format(
+	$header_table_format = $workbook -> add_format (
 		text_wrap => 1,
-     	border => 1,
-     	bold  => 1,
-     	valign => 'vcenter',
-    	align  => 'center',
+     	border    => 1,
+     	bold      => 1,
+     	valign    => 'vcenter',
+    	align     => 'center',
 	);
 
-	$header_form_format = $workbook -> add_format(
+	$header_form_format = $workbook -> add_format (
 		text_wrap => 1,
-     	border => 1,
-     	bold  => 1,
-     	valign => 'bottom',
-    	align  => 'right',
+     	border    => 1,
+     	bold      => 1,
+     	valign    => 'bottom',
+    	align     => 'right',
 	);
 
-	$footer_format = $workbook -> add_format(
-    	align  => 'right',
+	$footer_format = $workbook -> add_format (
+    	align     => 'right',
 	);
 }
 
 ################################################################################
 
 sub draw_page {
-	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name( $_REQUEST{__sheet_name} );
+	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name ($_REQUEST {__sheet_name});
 
-	$_REQUEST {__xl_row} +=2;
+	$_REQUEST {__xl_row} += 2;
 
-	my $right_width = $worksheet->{__col_widths}->[0];
+	my $right_width = $worksheet -> {__col_widths} -> [0];
 
-	$worksheet -> write( $_REQUEST {__xl_row}, 0, $_USER->{label});
+	$worksheet -> write ($_REQUEST {__xl_row}, 0, $_USER -> {label});
 
-	$_REQUEST {__xl_row} +=2;
-	$worksheet -> write( $_REQUEST {__xl_row}, 0, @{[ sprintf ('%02d.%02d.%04d %02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4]) ]}, $footer_format);
+	$_REQUEST {__xl_row} += 2;
+	$worksheet -> write ($_REQUEST {__xl_row}, 0, @{[ sprintf ('%02d.%02d.%04d %02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4]) ]}, $footer_format);
 
-	$worksheet->{__col_widths}->[0] = $right_width;
+	$worksheet -> {__col_widths} -> [0] = $right_width;
 
 	$_REQUEST {__response_sent} = 1;
 
 	autofit_columns(36); # 36 - максимально допустимая ширина столбца
 
-	if ($worksheet -> {__row_height}){
-		autoheight_rows();
+	if ($worksheet -> {__row_height}) {
+		autoheight_rows ();
 	}
 
-	$_REQUEST {__workbook} -> close();
+	$_REQUEST {__workbook} -> close ();
+
+	flock (OUT, LOCK_UN);
+	close OUT;
 
 	&{"${_PACKAGE}download_file"} ({
-		path      => $preconf -> {_} -> {docroot} . 'i/upload/' . $_REQUEST {__file_name},
-		file_name => @{[xlsx_filename()]},
+		path      => $_REQUEST {__file_name},
+		file_name => @{[xlsx_filename ()]},
 		delete    => 1,
 	});
 }
@@ -871,9 +880,9 @@ sub draw_page {
 ################################################################################
 
 sub autoheight_rows{
-	my $worksheet = $_REQUEST {__workbook} ->get_worksheet_by_name( $_REQUEST{__sheet_name} );
+	my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name ($_REQUEST {__sheet_name});
 
-	foreach $row (@{$worksheet -> {__row_height}}){
+	foreach $row (@{$worksheet -> {__row_height}}) {
 		my $text = $row -> {text};
 		my $height_row = 0;
 
@@ -882,17 +891,20 @@ sub autoheight_rows{
 			$sum_width += $worksheet -> {__col_widths} -> [$row -> {col} + $i];
 		}
 
-		if ($row -> {indent}) { $sum_width = $sum_width - ($row -> {indent}); }
+		if ($row -> {indent}) {
+			$sum_width = $sum_width - ($row -> {indent});
+		}
 
 		my $end_substring = index $text, "\n";
-		while ($end_substring != -1){
+		while ($end_substring != -1) {
 			my $substring = substr $text, 0, $end_substring + 1, '';
-			$height_row	+= int( ($end_substring / $sum_width) + 1);
+			$height_row	+= int ($end_substring / $sum_width + 1);
 			$end_substring = index $text, "\n";
 		}
 
-		$height_row	+= int( ((length $text) / $sum_width ) + 1);
-		$worksheet -> set_row($row -> {row}, 15 * $height_row);
+		$height_row	+= int ((length $text) / $sum_width + 1);
+
+		$worksheet -> set_row ($row -> {row}, 15 * $height_row);
 	}
 	return '';
 }
@@ -900,22 +912,22 @@ sub autoheight_rows{
 ################################################################################
 
 sub autofit_columns {
-     my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name( $_REQUEST{__sheet_name} );
+     my $worksheet = $_REQUEST {__workbook} -> get_worksheet_by_name ($_REQUEST {__sheet_name});
      my $max_width = shift;
      my $col = 0;
 
-     my $format = $_REQUEST {__workbook} -> add_format(
+     my $format = $_REQUEST {__workbook} -> add_format (
      		text_wrap => 1,
-     		align => 'vjustify',
+     		align     => 'vjustify',
      );
 
-     for my $width (@{$worksheet->{__col_widths}}) {
+     for my $width (@{$worksheet -> {__col_widths}}) {
           if ($width > $max_width) {
-            	$worksheet -> set_column($col, $col, $max_width, $format);
+            	$worksheet -> set_column ($col, $col, $max_width, $format);
 				$worksheet -> {__col_widths} -> [$col] = $max_width;
           }
           else {
-               $worksheet -> set_column($col, $col, $width);
+               $worksheet -> set_column ($col, $col, $width);
           }
           $col++;
     }
@@ -949,7 +961,7 @@ sub store_string_widths {
     # a double underscore key name to avoid conflicts with future names.
     #
     my $old_width    = $worksheet -> {__col_widths} -> [$col];
-    my $string_width = string_width($token);
+    my $string_width = string_width ($token);
 
     if (not defined $old_width or $string_width > $old_width) {
         # You may wish to set a minimum column width as follows.
@@ -974,13 +986,13 @@ sub string_width {
 
 sub write_as_string {
 	my $worksheet = shift;
-    return $worksheet -> write_string( @_ );
+    return $worksheet -> write_string (@_);
 }
 
 ################################################################################
 
 sub decode_rus{
 	my $worksheet = shift;
-    return $worksheet -> write( $_[0], $_[1], decode("cp-1251", $_[2]), $_[3]);
+    return $worksheet -> write ($_[0], $_[1], decode ("cp-1251", $_[2]), $_[3]);
 }
 1;
