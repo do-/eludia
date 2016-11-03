@@ -25,11 +25,9 @@ sub options {
 ################################################################################
 
 sub register_hotkey {
-
 	my ($_SKIN, $hashref) = @_;
 	$hashref -> {label} =~ s{\&}{}gsm;
 	return undef;
-
 }
 
 ################################################################################
@@ -103,16 +101,13 @@ sub draw_form {
 	my ($_SKIN, $options) = @_;
 	$_REQUEST {__xl_row} += 2;
 	return '';
-
 }
 
 ################################################################################
 
 sub draw_path {
-
 	my ($_SKIN, $options, $list) = @_;
 	return '';
-
 }
 
 ################################################################################
@@ -247,9 +242,7 @@ sub draw_form_field_hidden {
 ################################################################################
 
 sub draw_form_field_hgroup {
-
 	my ($_SKIN, $options, $data) = @_;
-
 	my $html = '';
 
 	foreach my $item (@{$options -> {items}}) {
@@ -260,16 +253,13 @@ sub draw_form_field_hgroup {
 	}
 
 	return $html;
-
 }
 
 ################################################################################
 
 sub draw_form_field_text {
-
 	my ($_SKIN, $options, $data) = @_;
 	return $options -> {value};
-
 }
 
 ################################################################################
@@ -297,7 +287,6 @@ sub draw_form_field_static {
 		$html .= ($options -> {value});
 	}
 	return $html;
-
 }
 
 ################################################################################
@@ -476,7 +465,6 @@ sub js_set_select_option {
 ################################################################################
 
 sub _picture {
-
 	my ($_SKIN, $picture) = @_;
 
 	unless ($_SKIN -> {pictures} -> {$picture}) {
@@ -496,7 +484,6 @@ sub _picture {
 		}
 	}
 	return $_SKIN -> {pictures} -> {$picture};
-
 }
 
 ################################################################################
@@ -656,9 +643,9 @@ sub draw_table_header_row {
 
 sub draw_table_header_cell {
 	my ($_SKIN, $cell) = @_;
-	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);
 
 	my $right_width;
+	my $child_headers;
 
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
@@ -667,28 +654,12 @@ sub draw_table_header_cell {
 	my $rowspan = $cell -> {attributes} -> {rowspan};
 	my $colspan = $cell -> {attributes} -> {colspan};
 
+	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);
+
 	if ($cell -> {parent_header}) {
-		return ''; # подзаголовки уже обработали
-	}
-
-	if ($cell -> {children}) {
-		my $arr = $cell -> {children};
-		my $i = 0;
-		my $old_ord = 0;
-
-		foreach (@$arr) {
-			unless ($_ -> {hidden} || $_ -> {off} || (!$_ -> {label} && $conf -> {core_hide_row_buttons} == 2)) {
-				if ($_ -> {ord} == undef || $_ -> {ord} == $old_ord) {
-					$worksheet -> write ($_REQUEST {__xl_row} + $rowspan, $_REQUEST {__xl_col} + $i,   $_ -> {label}, $header_table_format);
-				}
-				else{
-					$worksheet -> write ($_REQUEST {__xl_row} + $rowspan, $_REQUEST {__xl_col} + $_ -> {ord} - 1, $_ -> {label}, $header_table_format);
-					$old_ord = $_ -> {ord};
-				}
-				$i++;
-			}
-		}
-		$right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
+		my $position = shift @child_headers;
+		$worksheet -> write ($position -> {row}, $position -> {col}, $cell -> {label}, $header_table_format);
+		return '';
 	}
 
 	if ($rowspan != 1 || $colspan != 1){
@@ -698,14 +669,16 @@ sub draw_table_header_cell {
 		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $cell -> {label}, $header_table_format);
 	}
 
-	if ($cell -> {children}) {
+	if ($cell -> {has_child}) {
 		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
+		for (my $i = 0; $i < $cell -> {has_child}; $i++) {
+			push @child_headers, {row => $_REQUEST {__xl_row} + $rowspan, col => $_REQUEST {__xl_col} + $i};
+		}
 	}
 
 	$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $colspan;
 
 	return '';
-
 }
 
 ####################################################################
@@ -714,7 +687,6 @@ sub start_table {
 	my ($_SKIN, $options) = @_;
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 	return '';
-
 }
 
 ####################################################################
@@ -738,16 +710,13 @@ sub draw_table_row {
 sub draw_table {
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
 	return '';
-
 }
 
 ################################################################################
 
 sub draw_one_cell_table {
-
 	my ($_SKIN, $options, $body) = @_;
 	return '';
-
 }
 
 ################################################################################
@@ -760,25 +729,20 @@ sub draw_error_page {
 ################################################################################
 
 sub dialog_close {
-
 	my ($_SKIN, $options, $body) = @_;
 	return '';
-
 }
 
 ################################################################################
 
 sub dialog_open {
-
 	my ($_SKIN, $options, $body) = @_;
 	return '';
-
 }
 
 ################################################################################
 
 sub xlsx_filename {
-
 	my $filename = 'eludia_' . $_REQUEST {type};
 
 	if ($conf -> {report_date_in_filename}) {
@@ -807,7 +771,7 @@ sub start_page {
 	$_REQUEST {__xl_row} = 0;
 	$_REQUEST {__xl_col} = 0;
 
-	$worksheet -> add_write_handler (qr[[А-Яа-я]], \&decode_rus);
+	$worksheet -> add_write_handler (qr[[А-Яа-я№]], \&decode_rus);
 	$worksheet -> add_write_handler (qr[\w], \&store_string_widths);
 	$worksheet -> add_write_handler (qr[^0[^.,]], \&write_as_string);
 
@@ -905,31 +869,30 @@ sub autoheight_rows{
 ################################################################################
 
 sub autofit_columns {
-     my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
-     my $max_width = shift;
-     my $col = 0;
+    my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
+    my $max_width = shift;
+    my $col = 0;
 
-     my $format = $_REQUEST {__xl_workbook} -> add_format (
-     		text_wrap => 1,
-     		align     => 'vjustify',
-     );
+    my $format = $_REQUEST {__xl_workbook} -> add_format (
+    	text_wrap => 1,
+    	align     => 'vjustify',
+    );
 
-     for my $width (@{$worksheet -> {__col_widths}}) {
-          if ($width > $max_width) {
-            	$worksheet -> set_column ($col, $col, $max_width, $format);
-				$worksheet -> {__col_widths} -> [$col] = $max_width;
-          }
-          else {
-               $worksheet -> set_column ($col, $col, $width);
-          }
-          $col++;
+    for my $width (@{$worksheet -> {__col_widths}}) {
+        if ($width > $max_width) {
+          	$worksheet -> set_column ($col, $col, $max_width, $format);
+			$worksheet -> {__col_widths} -> [$col] = $max_width;
+        }
+        else {
+            $worksheet -> set_column ($col, $col, $width);
+        }
+        $col++;
     }
 }
 
 ################################################################################
 
 sub store_string_widths {
-
     my $worksheet = shift;
     my $col       = $_[1];
     my $token     = $_[2];
@@ -962,7 +925,6 @@ sub store_string_widths {
         $worksheet -> {__col_widths} -> [$col] = $string_width;
     }
     # Return control to write();
-
     return undef;
 }
 
