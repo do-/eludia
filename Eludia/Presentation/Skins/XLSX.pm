@@ -152,6 +152,9 @@ sub draw_form_field {
 		$format_record -> set_num_format ('m/d/yy h:mm');
 		$format_record -> set_align ('right');
 	}
+	elsif ($field -> {html} =~ /^\d+$/) {
+		$format_record -> set_align ('right');
+	}
 	elsif (!$field -> {no_nobr}) {
 		$format_record -> set_num_format ('@');
 	}
@@ -497,6 +500,11 @@ sub draw_text_cell {
      	border    => 1,
 	);
 
+	foreach (@{$worksheet -> {__united_cells} -> {$_REQUEST {__xl_row}}}) {
+		if ($_ == $_REQUEST {__xl_col}){
+			$_REQUEST {__xl_col} ++;
+		}
+	}
 
 	if ($data -> {label}) {
 
@@ -535,8 +543,6 @@ sub draw_text_cell {
 	unless ($data -> {off}) {
 		$txt = $data -> {label};
 
-		# if ($data -> {no_nobr}) {};
-
 		if ($data -> {bold} || $options -> {bold} || $options -> {is_total} || $txt =~ /<b>/) {
 			$format -> set_bold ();
 		}
@@ -557,6 +563,7 @@ sub draw_text_cell {
 	my $colspan = 1;
 
 	if ($data -> {colspan}) { $colspan = $data -> {colspan}; }
+	if ($data -> {rowspan}) { $rowspan = $data -> {rowspan}; }
 
 	if ($rowspan != 1 || $colspan != 1){
 		my %info_row = (
@@ -569,9 +576,24 @@ sub draw_text_cell {
 
 		push (@{$worksheet -> {__row_height}}, \%info_row);
 
-		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
-		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan -1, $_REQUEST {__xl_col} + $colspan - 1,  $txt, $format);
-		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
+		if ($rowspan != 1) {
+			for (my $i = 0; $i < $rowspan; $i++) {
+				my $key = $_REQUEST {__xl_row} + $i;
+				unless ($worksheet -> {__united_cells} -> {$key}) {
+					$worksheet -> {__united_cells} -> {$key} = [];
+				}
+				push ($worksheet -> {__united_cells} -> {$key}, $_REQUEST {__xl_col});
+			}
+		}
+
+		if ((length $txt > 30) || ($colspan != 1)) {
+			my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
+			$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan -1, $_REQUEST {__xl_col} + $colspan - 1,  $txt, $format);
+			$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
+		}
+		else {
+			$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan -1, $_REQUEST {__xl_col} + $colspan - 1,  $txt, $format);
+		}
 	}
 	else{
 		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $txt, $format);
@@ -931,7 +953,7 @@ sub store_string_widths {
 ################################################################################
 
 sub string_width {
-	if ((length $_[0]) < 8){
+	if ((length $_[0]) < 9){
 		return  ((length $_[0]) + 2);
 	}
     return  1.2 * length $_[0];
