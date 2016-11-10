@@ -159,6 +159,7 @@ sub draw_form_field {
 		$format_record -> set_num_format ('@');
 	}
 
+	$field -> {label} = processing_string ($field -> {label});
 
 	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $$field{label}, $header_form_format);
 
@@ -469,6 +470,7 @@ sub js_set_select_option {
 
 sub _picture {
 	my ($_SKIN, $picture) = @_;
+	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
 	unless ($_SKIN -> {pictures} -> {$picture}) {
 
@@ -486,6 +488,14 @@ sub _picture {
 			$_SKIN -> {pictures} -> {$picture} = $integer;
 		}
 	}
+
+	my $ind = index $_SKIN -> {pictures} -> {$picture}, ("." || ",");
+	if ($ind != -1) {
+		my $str = $_SKIN -> {pictures} -> {$picture};
+		$worksheet -> {__fraction} -> {flag} = 1;
+		$worksheet -> {__fraction} -> {length} = (length $str) - $ind;
+	}
+
 	return $_SKIN -> {pictures} -> {$picture};
 }
 
@@ -559,11 +569,8 @@ sub draw_text_cell {
 
 	$txt = processing_string ($txt);
 
-	my $rowspan = 1;
-	my $colspan = 1;
-
-	if ($data -> {colspan}) { $colspan = $data -> {colspan}; }
-	if ($data -> {rowspan}) { $rowspan = $data -> {rowspan}; }
+	my $rowspan = $data -> {rowspan} ? $data -> {rowspan} : 1;
+	my $colspan = $data -> {colspan} ? $data -> {colspan} : 1;
 
 	if ($rowspan != 1 || $colspan != 1){
 		my %info_row = (
@@ -586,7 +593,7 @@ sub draw_text_cell {
 			}
 		}
 
-		if ((length $txt > 30) || ($colspan != 1)) {
+		if (length $txt > $_REQUEST {__xl_max_width_col} / $_REQUEST {__xl_width_ratio} || $colspan != 1) {
 			my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
 			$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan -1, $_REQUEST {__xl_col} + $colspan - 1,  $txt, $format);
 			$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
@@ -666,10 +673,10 @@ sub draw_table_header_row {
 sub draw_table_header_cell {
 	my ($_SKIN, $cell) = @_;
 
-	my $right_width;
-	my $child_headers;
-
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
+
+	my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
+	my $child_headers;
 
 	$cell -> {label} = processing_string($cell -> {label});
 
@@ -686,6 +693,9 @@ sub draw_table_header_cell {
 
 	if ($rowspan != 1 || $colspan != 1){
 		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan - 1, $_REQUEST {__xl_col} + $colspan - 1, $cell -> {label}, $header_table_format);
+		unless (length $cell -> {label} < $_REQUEST {__xl_max_width_col} / $_REQUEST {__xl_width_ratio} / 2  && $colspan == 1 || !($cell -> {label} =~ /" "/))  {
+			$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
+		}
 	}
 	else {
 		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $cell -> {label}, $header_table_format);
@@ -731,6 +741,7 @@ sub draw_table_row {
 
 sub draw_table {
 	my ($_SKIN, $tr_callback, $list, $options) = @_;
+	$_REQUEST {__xl_row} += 2;
 	return '';
 }
 
@@ -793,6 +804,14 @@ sub start_page {
 	$_REQUEST {__xl_row} = 0;
 	$_REQUEST {__xl_col} = 0;
 
+	$_REQUEST {__xl_max_width_col} = 36; # 36 - максимально допустимая ширина столбца
+	$_REQUEST {__xl_width_ratio} = 1.2;
+
+	%{$worksheet -> {__fraction}} =(
+		flag   => 0,
+		length => 0,
+	);
+
 	$worksheet -> add_write_handler (qr[[А-Яа-я№]], \&decode_rus);
 	$worksheet -> add_write_handler (qr[\w], \&store_string_widths);
 	$worksheet -> add_write_handler (qr[^0[^.,]], \&write_as_string);
@@ -823,20 +842,17 @@ sub start_page {
 sub draw_page {
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
-	$_REQUEST {__xl_row} += 2;
-
 	my $right_width = $worksheet -> {__col_widths} -> [0];
 
 	$worksheet -> write ($_REQUEST {__xl_row}, 0, $_USER -> {label});
 
 	$_REQUEST {__xl_row} += 2;
 	$worksheet -> write ($_REQUEST {__xl_row}, 0, @{[ sprintf ('%02d.%02d.%04d %02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4]) ]}, $footer_format);
-
 	$worksheet -> {__col_widths} -> [0] = $right_width;
 
 	$_REQUEST {__response_sent} = 1;
 
-	autofit_columns(36); # 36 - максимально допустимая ширина столбца
+	autofit_columns ($_REQUEST {__xl_max_width_col});
 
 	if ($worksheet -> {__row_height}) {
 		autoheight_rows ();
@@ -881,7 +897,7 @@ sub autoheight_rows{
 			$end_substring = index $text, "\n";
 		}
 
-		$height_row	+= int ((length $text) / $sum_width + 1);
+		$height_row	+= int ((length $text) / $sum_width + 1.07);
 
 		$worksheet -> set_row ($row -> {row}, 15 * $height_row);
 	}
@@ -946,6 +962,7 @@ sub store_string_widths {
         #return undef if $string_width < 10;
         $worksheet -> {__col_widths} -> [$col] = $string_width;
     }
+
     # Return control to write();
     return undef;
 }
@@ -953,10 +970,30 @@ sub store_string_widths {
 ################################################################################
 
 sub string_width {
-	if ((length $_[0]) < 9){
-		return  ((length $_[0]) + 2);
+	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
+	my $length_string;
+
+	if ($worksheet -> {__fraction} -> {flag} == 1) {
+
+		if ((index $_[0], "." ) != -1) {
+			$length_string = index $_[0], "." ;
+		}
+		else {
+			$length_string = length $_[0];
+		}
+
+		$length_string = $length_string + $worksheet -> {__fraction} -> {length};
+		$worksheet -> {__fraction} -> {flag} = 0;
 	}
-    return  1.2 * length $_[0];
+	else {
+		$length_string = length $_[0];
+	}
+
+	if ($length_string < $_REQUEST {__xl_max_width_col} / 4) {
+		return  $length_string + 2;
+	}
+
+	return  $_REQUEST {__xl_width_ratio} * $length_string;
 }
 
 ################################################################################
@@ -981,6 +1018,7 @@ sub processing_string{
 	$string =~ s/<\/?[b, i]>//ig;
 	$string =~ s/<\/?nobr>//ig;
 	$string =~ s/<\/?span.*?>//ig;
+	$string =~ s/<\/?a.*?>//ig;
 
 	$string =~ s/&nbsp;/ /ig;
 	$string =~ s/\<br\/?\>$//ig;

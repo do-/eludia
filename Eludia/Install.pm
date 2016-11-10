@@ -133,6 +133,8 @@ sub valuable_modules () {
 		'Date::Calc',
 		'DBI',
 		'Digest::MD5',
+		'Encode',
+		'Excel::Writer::XLSX',
 		'FCGI',
 		'HTML::GenerateUtil',
 		'HTML::Parser',

@@ -1827,7 +1827,7 @@ sub draw_table_header_row {
 
 	my ($cells) = @_;
 
-	if ($_REQUEST {xlsx}){
+	if ($_REQUEST {xls}){
 		$_REQUEST {__xl_row} += 1;
 		$_REQUEST {__xl_col} = 0;
 	}
@@ -3308,15 +3308,8 @@ sub setup_skin {
 
 	}
 
-	if ($_REQUEST {xls}) {
 
-		$_REQUEST {__core_skin} ||= $_REQUEST {__skin};
-
-		$_REQUEST {__skin} = 'XL';
-
-	}
-
-	if ($_REQUEST {xlsx}) {
+	if ($_REQUEST {xls} || $_REQUEST {xlsx}) {
 
 		$_REQUEST {__core_skin} ||= $_REQUEST {__skin};
 
