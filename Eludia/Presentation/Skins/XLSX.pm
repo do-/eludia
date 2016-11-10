@@ -804,8 +804,8 @@ sub start_page {
 	$_REQUEST {__xl_row} = 0;
 	$_REQUEST {__xl_col} = 0;
 
-	$_REQUEST {__xl_max_width_col} = 36; # 36 - максимально допустимая ширина столбца
-	$_REQUEST {__xl_width_ratio} = 1.2;
+	$_REQUEST {__xl_max_width_col} = 36; # максимально допустимая ширина столбца в символах
+	$_REQUEST {__xl_width_ratio} = 1.2; # коэффициент для определения ширины стобца
 
 	%{$worksheet -> {__fraction}} =(
 		flag   => 0,
