@@ -3308,12 +3308,18 @@ sub setup_skin {
 
 	}
 
-
 	if ($_REQUEST {xls} || $_REQUEST {xlsx}) {
 
 		$_REQUEST {__core_skin} ||= $_REQUEST {__skin};
 
-		$_REQUEST {__skin} = 'XLSX';
+		if ($preconf -> {xlsx_print}) {
+
+			$_REQUEST {__skin} = 'XLSX';
+		}
+		else {
+
+			$_REQUEST {__skin} = 'XL';
+		}
 
 	}
 
