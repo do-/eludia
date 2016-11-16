@@ -127,9 +127,15 @@ sub draw_form_field {
 	if ($field -> {type} eq 'banner') {
 		$format_record -> set_align ('center');
 
+		$field -> {html} = processing_string ($field -> {html});
+
 		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
 		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan},  $field -> {html}, $format_record);
 		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
+
+		if ($field -> {html} =~ /\n/) {
+			push_info_row ($field -> {html}, $field -> {colspan});
+		}
 
 		$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $field -> {colspan};
 
@@ -164,6 +170,13 @@ sub draw_form_field {
 
 	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $field -> {label}, $header_form_format);
 
+	if ($field -> {label} =~ /\n/) {
+		my $new_length = width_string_with_linebreak ($field -> {label});
+		if ($new_length > $right_width) {
+			$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $new_length * $_REQUEST {__xl_width_ratio};
+		}
+	}
+
 	$_REQUEST {__xl_col}++;
 
 	if ($field -> {bold} || $field -> {html} =~ /bold/ || $field -> {html} =~ /<b>/) {
@@ -180,13 +193,7 @@ sub draw_form_field {
 	$field -> {html} = processing_string ($field -> {html});
 
 	if (($field -> {colspan}) > 1){
-		my %info_row = (
-			"text"      => $field -> {html},
-			"col"       => $_REQUEST {__xl_col},
-			"row"       => $_REQUEST {__xl_row},
-			"colspan"   => $field -> {colspan},
-		);
-		push (@{$worksheet -> {__row_height}}, \%info_row);
+		push_info_row ($field -> {html}, $field -> {colspan});
 
 		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
 		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan} -1,  $field -> {html}, $format_record);
@@ -577,15 +584,7 @@ sub draw_text_cell {
 	my $colspan = $data -> {colspan} ? $data -> {colspan} : 1;
 
 	if ($rowspan != 1 || $colspan != 1){
-		my %info_row = (
-			"text"	    => $txt,
-			"col"       => $_REQUEST {__xl_col},
-			"row"       => $_REQUEST {__xl_row},
-			"colspan"   => $colspan,
-			"indent"    => $data -> {level},
-		);
-
-		push (@{$worksheet -> {__row_height}}, \%info_row);
+		push_info_row ($txt, $colspan, $data -> {level});
 
 		if ($rowspan != 1) {
 			for (my $i = 0; $i < $rowspan; $i++) {
@@ -716,12 +715,19 @@ sub draw_table_header_cell {
 
 	if ($rowspan != 1 || $colspan != 1){
 		$worksheet -> merge_range ($row, $col, $row + $rowspan - 1, $col + $colspan - 1, $cell -> {label}, $header_table_format);
-		unless (length $cell -> {label} < $_REQUEST {__xl_max_width_col} / $_REQUEST {__xl_width_ratio} / 2  && $colspan == 1 || !($cell -> {label} =~ /" "/))  {
+		if ($colspan > 1)  {
 			$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 		}
 	}
 	else {
 		$worksheet -> write ($row, $col, $cell -> {label}, $header_table_format);
+	}
+
+	if ($cell -> {label} =~ /\n/) {
+		my $new_length = width_string_with_linebreak ($cell -> {label});
+		if ($new_length > $right_width) {
+			$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $new_length * $_REQUEST {__xl_width_ratio};
+		}
 	}
 
 	my $i = 1;
@@ -902,6 +908,22 @@ sub draw_page {
 # FOR AUTOFIT
 ################################################################################
 
+sub push_info_row {
+	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
+
+	my %info_row = (
+		"text"	    => $_[0],
+		"col"       => $_REQUEST {__xl_col},
+		"row"       => $_REQUEST {__xl_row},
+		"colspan"   => $_[1] || 1,
+		"indent"    => $_[2],
+	);
+
+	push (@{$worksheet -> {__row_height}}, \%info_row);
+}
+
+################################################################################
+
 sub autoheight_rows{
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
@@ -1025,6 +1047,33 @@ sub string_width {
 	}
 
 	return  $_REQUEST {__xl_width_ratio} * $length_string;
+}
+
+################################################################################
+
+sub width_string_with_linebreak {
+	my $text = $_[0];
+
+	my $end_substring = index $text, "\n";
+	my $max_len = 0;
+	my $substring;
+
+	while (length $text != 0) {
+		if ($end_substring == -1) {
+			$end_substring = length $text;
+		}
+
+		$substring = substr $text, 0, $end_substring, '';
+
+		my $len = length $substring;
+		$text =~ s/\n//;
+		$end_substring = index $text, "\n";
+		if ($len > $max_len) {
+			$max_len = $len;
+		}
+	}
+
+	return $max_len;
 }
 
 ################################################################################
