@@ -128,7 +128,7 @@ sub draw_form_field {
 		$format_record -> set_align ('center');
 
 		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
-		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan},  $$field{html}, $format_record);
+		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan},  $field -> {html}, $format_record);
 		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 
 		$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $field -> {colspan};
@@ -152,16 +152,17 @@ sub draw_form_field {
 		$format_record -> set_num_format ('m/d/yy h:mm');
 		$format_record -> set_align ('right');
 	}
-	elsif ($field -> {html} =~ /^\d+$/) {
-		$format_record -> set_align ('right');
-	}
 	elsif (!$field -> {no_nobr}) {
 		$format_record -> set_num_format ('@');
 	}
 
+	if ($field -> {html} =~ /^\d+(\,|\.)\d+$/) {
+		$format_record -> set_align ('right');
+	}
+
 	$field -> {label} = processing_string ($field -> {label});
 
-	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $$field{label}, $header_form_format);
+	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $field -> {label}, $header_form_format);
 
 	$_REQUEST {__xl_col}++;
 
@@ -188,13 +189,13 @@ sub draw_form_field {
 		push (@{$worksheet -> {__row_height}}, \%info_row);
 
 		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
-		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan} -1,  $$field{html}, $format_record);
+		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan} -1,  $field -> {html}, $format_record);
 		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 
 		$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $field -> {colspan};
 	}
 	else{
-		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $$field{html}, $format_record);
+		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $field -> {html}, $format_record);
 		$_REQUEST {__xl_col}++;
 	}
 
@@ -525,6 +526,9 @@ sub draw_text_cell {
 		if ($data -> {picture}) {
 			my $picture = $_SKIN -> _picture ($data -> {picture});
 			$format -> set_num_format ($picture);
+			if (!($picture =~ /\./)) {
+				$data -> {label} =~ s/\..*//gi
+			}
 		}
 		elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
 			$format -> set_num_format ('m/d/yy');
@@ -622,6 +626,9 @@ sub draw_radio_cell {
 
 sub draw_checkbox_cell {
 	my ($_SKIN, $data, $options) = @_;
+	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
+	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, " ", $simple_cell_format);
+	$_REQUEST {__xl_col} += 1;
 	return '';
 }
 
@@ -666,7 +673,6 @@ sub draw_table_header {
 sub draw_table_header_row {
 	my ($_SKIN, $data_cells, $html_cells) = @_;
 	return $html;
-
 }
 ################################################################################
 
@@ -676,36 +682,58 @@ sub draw_table_header_cell {
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
 	my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
-	my $child_headers;
 
 	$cell -> {label} = processing_string($cell -> {label});
+
+	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);
 
 	my $rowspan = $cell -> {attributes} -> {rowspan};
 	my $colspan = $cell -> {attributes} -> {colspan};
 
-	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);
+	my $col = $_REQUEST {__xl_col};
+	my $row = $_REQUEST {__xl_row};
 
-	if ($cell -> {parent_header}) {
-		my $position = shift @child_headers;
-		$worksheet -> write ($position -> {row}, $position -> {col}, $cell -> {label}, $header_table_format);
-		return '';
+	if (!$worksheet -> {__map_str} -> {$row}) {
+		$worksheet -> {__map_str} -> {$row} = [];
+	}
+
+	if (!$cell -> {parent_header}) {
+		for (my $i = 0; $i < $colspan; $i++) {
+			push $worksheet -> {__map_str} -> {$row}, 1;
+		}
+	}
+	else {
+		my $i = $col;
+		while ($worksheet -> {__map_str} -> {$row} [$i] != 0) {
+
+			$i++;
+		}
+		$col = $i;
+		for (my $j = 0; $j < $colspan; $j++) {
+			$worksheet -> {__map_str} -> {$row} [$col + $j] = 1;
+		}
 	}
 
 	if ($rowspan != 1 || $colspan != 1){
-		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan - 1, $_REQUEST {__xl_col} + $colspan - 1, $cell -> {label}, $header_table_format);
+		$worksheet -> merge_range ($row, $col, $row + $rowspan - 1, $col + $colspan - 1, $cell -> {label}, $header_table_format);
 		unless (length $cell -> {label} < $_REQUEST {__xl_max_width_col} / $_REQUEST {__xl_width_ratio} / 2  && $colspan == 1 || !($cell -> {label} =~ /" "/))  {
 			$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 		}
 	}
 	else {
-		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $cell -> {label}, $header_table_format);
+		$worksheet -> write ($row, $col, $cell -> {label}, $header_table_format);
 	}
 
-	if ($cell -> {has_child}) {
-		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
-		for (my $i = 0; $i < $cell -> {has_child}; $i++) {
-			push @child_headers, {row => $_REQUEST {__xl_row} + $rowspan, col => $_REQUEST {__xl_col} + $i};
+	my $i = 1;
+	while ($i <= $rowspan) {
+		if (!$worksheet -> {__map_str} -> {$row + $i}) {
+			$worksheet -> {__map_str} -> {$row + $i} = [];
 		}
+		for (my $j = 0; $j < $colspan; $j++) {
+			my $k = $i == $rowspan ? 0 : 1;
+			push $worksheet -> {__map_str} -> {$row + $i}, $k;
+		}
+		$i++;
 	}
 
 	$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $colspan;
@@ -805,7 +833,7 @@ sub start_page {
 	$_REQUEST {__xl_col} = 0;
 
 	$_REQUEST {__xl_max_width_col} = 36; # максимально допустимая ширина столбца в символах
-	$_REQUEST {__xl_width_ratio} = 1.2; # коэффициент для определения ширины стобца
+	$_REQUEST {__xl_width_ratio} = 1.2; # коэффициент для определения ширины столбца
 
 	%{$worksheet -> {__fraction}} =(
 		flag   => 0,
@@ -832,8 +860,8 @@ sub start_page {
     	align     => 'right',
 	);
 
-	$footer_format = $workbook -> add_format (
-    	align     => 'right',
+	$simple_cell_format = $workbook -> add_format (
+		border    => 1,
 	);
 }
 
@@ -847,7 +875,7 @@ sub draw_page {
 	$worksheet -> write ($_REQUEST {__xl_row}, 0, $_USER -> {label});
 
 	$_REQUEST {__xl_row} += 2;
-	$worksheet -> write ($_REQUEST {__xl_row}, 0, @{[ sprintf ('%02d.%02d.%04d %02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4]) ]}, $footer_format);
+	$worksheet -> write ($_REQUEST {__xl_row}, 0, @{[ sprintf ('%02d.%02d.%04d %02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4]) ]});
 	$worksheet -> {__col_widths} -> [0] = $right_width;
 
 	$_REQUEST {__response_sent} = 1;
@@ -877,7 +905,7 @@ sub draw_page {
 sub autoheight_rows{
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
-	foreach $row (@{$worksheet -> {__row_height}}) {
+	foreach my $row (@{$worksheet -> {__row_height}}) {
 		my $text = $row -> {text};
 		my $height_row = 0;
 
@@ -974,7 +1002,6 @@ sub string_width {
 	my $length_string;
 
 	if ($worksheet -> {__fraction} -> {flag} == 1) {
-
 		if ((index $_[0], "." ) != -1) {
 			$length_string = index $_[0], "." ;
 		}
@@ -983,6 +1010,7 @@ sub string_width {
 		}
 
 		$length_string = $length_string + $worksheet -> {__fraction} -> {length};
+
 		$worksheet -> {__fraction} -> {flag} = 0;
 	}
 	else {
@@ -991,6 +1019,9 @@ sub string_width {
 
 	if ($length_string < $_REQUEST {__xl_max_width_col} / 4) {
 		return  $length_string + 2;
+	}
+	if ($_[0] =~ /^\d+(\,|\.)\d+$/) {
+		return  ($_REQUEST {__xl_width_ratio} + 0.1) * $length_string;
 	}
 
 	return  $_REQUEST {__xl_width_ratio} * $length_string;
@@ -1015,11 +1046,6 @@ sub decode_rus{
 sub processing_string{
 	my $string = @_[0];
 
-	$string =~ s/<\/?[b, i]>//ig;
-	$string =~ s/<\/?nobr>//ig;
-	$string =~ s/<\/?span.*?>//ig;
-	$string =~ s/<\/?a.*?>//ig;
-
 	$string =~ s/&nbsp;/ /ig;
 	$string =~ s/\<br\/?\>$//ig;
 	$string =~ s/\<br\/?\>/\n/ig;
@@ -1027,6 +1053,8 @@ sub processing_string{
 
 	$string =~ s/&#x([a-fA-F0-9]+);/"&#". hex($1) .";"/ge;
 	$string =~ s/&#([0-9]+);/chr($1)." "/ge;
+
+	$string =~ s/<[^>]*>//ig;
 
 	return $string;
 }
