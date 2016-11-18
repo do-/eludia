@@ -162,7 +162,7 @@ sub draw_form_field {
 		$format_record -> set_num_format ('@');
 	}
 
-	if ($field -> {html} =~ /^\d+(\,|\.)\d+$/) {
+	if ($field -> {html} =~ /^\-?\d+(\,|\.)\d+$/) {
 		$format_record -> set_align ('right');
 	}
 
@@ -486,10 +486,13 @@ sub _picture {
 		my $sep   = $conf -> {number_format} -> {-thousands_sep};
 
 		my ($integer, $fraction) = split /$point/, $picture;
+		$integer =~ s{$sep}{\,}g;
 
 		if ($fraction){
 			$integer =~ s{(.*)\#}{${1}0}; #
+
 			$fraction =~ y{#}{0}; #
+
 			$_SKIN -> {pictures} -> {$picture} = join ('.', $integer, $fraction);
 		}
 		else{
@@ -512,6 +515,7 @@ sub _picture {
 sub draw_text_cell {
 	my ($_SKIN, $data, $options) = @_;
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
+	my $txt = '';
 
 	my $format = $_REQUEST {__xl_workbook} -> add_format (
 		text_wrap => 1,
@@ -524,29 +528,48 @@ sub draw_text_cell {
 		}
 	}
 
-	if ($data -> {label}) {
-
+	if (defined ($data -> {label}) && !($data -> {off})) {
 		if ($data -> {attributes} -> {align}) {
 			$format -> set_align ($data -> {attributes} -> {align});
 		}
 
-		if ($data -> {picture}) {
-			my $picture = $_SKIN -> _picture ($data -> {picture});
-			$format -> set_num_format ($picture);
-			if (!($picture =~ /\./)) {
-				$data -> {label} =~ s/\..*//gi
+		if ($data -> {attributes} -> {title}) {
+			$txt = $data -> {attributes} -> {title};
+		}
+		else {
+			$txt = $data -> {label};
+		}
+
+		if (length $txt > 0) {
+			if ($data -> {picture}) {
+				my $picture = $_SKIN -> _picture ($data -> {picture});
+				$format -> set_num_format ($picture);
+
+				if (!($picture =~ /\./)) {
+					$txt =~ s/\..*//gi;
+				}
 			}
-		}
-		elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
-			$format -> set_num_format ('m/d/yy');
-			$format -> set_align ('right');
-		}
-		elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:?\d?\d?$/) {
-			$format -> set_num_format ('m/d/yy h:mm');
-			$format -> set_align ('right');
-		}
-		elsif (!$data -> {no_nobr}) {
-			$format -> set_num_format ('@');
+			elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
+				$format -> set_num_format ('m/d/yy');
+				$format -> set_align ('right');
+			}
+			elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:?\d?\d?$/) {
+				$format -> set_num_format ('m/d/yy h:mm');
+				$format -> set_align ('right');
+			}
+			elsif (!$data -> {no_nobr}) {
+				$format -> set_num_format ('@');
+			}
+
+			if ($data -> {bold} || $options -> {bold} || $options -> {is_total} || $txt =~ /<b>/) {
+				$format -> set_bold ();
+			}
+			if ($data -> {italic} || $options -> {italic}) {
+				$format -> set_italic ();
+			}
+			if ($data -> {strike} || $options -> {strike}) {
+				$format -> set_font_strikeout ();
+			}
 		}
 	}
 
@@ -560,31 +583,12 @@ sub draw_text_cell {
 		$format -> set_indent ($data -> {level});
 	}
 
-	my $txt = '';
-	unless ($data -> {off}) {
-		$txt = $data -> {label};
-
-		if ($data -> {bold} || $options -> {bold} || $options -> {is_total} || $txt =~ /<b>/) {
-			$format -> set_bold ();
-		}
-
-		if ($data -> {italic} || $options -> {italic}) {
-			$format -> set_italic ();
-		}
-
-		if ($data -> {strike} || $options -> {strike}) {
-			$format -> set_font_strikeout ();
-		}
-	}
-	my $attr = $data -> {attributes};
-
 	$txt = processing_string ($txt);
 
 	my $rowspan = $data -> {rowspan} ? $data -> {rowspan} : 1;
 	my $colspan = $data -> {colspan} ? $data -> {colspan} : 1;
 
 	if ($rowspan != 1 || $colspan != 1){
-		push_info_row ($txt, $colspan, $data -> {level});
 
 		if ($rowspan != 1) {
 			for (my $i = 0; $i < $rowspan; $i++) {
@@ -594,6 +598,9 @@ sub draw_text_cell {
 				}
 				push ($worksheet -> {__united_cells} -> {$key}, $_REQUEST {__xl_col});
 			}
+		}
+		else {
+			push_info_row ($txt, $colspan, $data -> {level});
 		}
 
 		if (length $txt > $_REQUEST {__xl_max_width_col} / $_REQUEST {__xl_width_ratio} || $colspan != 1) {
@@ -1042,7 +1049,7 @@ sub string_width {
 	if ($length_string < $_REQUEST {__xl_max_width_col} / 4) {
 		return  $length_string + 2;
 	}
-	if ($_[0] =~ /^\d+(\,|\.)\d+$/) {
+	if ($_[0] =~ /^\-?\d+(\,|\.)\d+$/) {
 		return  ($_REQUEST {__xl_width_ratio} + 0.1) * $length_string;
 	}
 
