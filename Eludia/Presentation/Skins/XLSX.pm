@@ -162,7 +162,7 @@ sub draw_form_field {
 		$format_record -> set_num_format ('@');
 	}
 
-	if ($field -> {html} =~ /^\-?\d+(\,|\.)\d+$/) {
+	if ($field -> {html} =~ /^\-?\d+\.\d+$/) {
 		$format_record -> set_align ('right');
 	}
 
@@ -533,7 +533,7 @@ sub draw_text_cell {
 			$format -> set_align ($data -> {attributes} -> {align});
 		}
 
-		if ($data -> {attributes} -> {title}) {
+		if ($data -> {attributes} -> {title} && $data -> {picture}) {
 			$txt = $data -> {attributes} -> {title};
 		}
 		else {
@@ -549,13 +549,17 @@ sub draw_text_cell {
 					$txt =~ s/\..*//gi;
 				}
 			}
-			elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
+			elsif ($txt =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
 				$format -> set_num_format ('m/d/yy');
 				$format -> set_align ('right');
 			}
-			elsif ($data -> {label} =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:?\d?\d?$/) {
+			elsif ($txt =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:?\d?\d?$/) {
 				$format -> set_num_format ('m/d/yy h:mm');
 				$format -> set_align ('right');
+			}
+			elsif ($txt =~ /^\d{19,20}$/) {
+				$format -> set_num_format ('####################');
+				$format -> set_align ('left');
 			}
 			elsif (!$data -> {no_nobr}) {
 				$format -> set_num_format ('@');
@@ -599,11 +603,8 @@ sub draw_text_cell {
 				push ($worksheet -> {__united_cells} -> {$key}, $_REQUEST {__xl_col});
 			}
 		}
-		else {
-			push_info_row ($txt, $colspan, $data -> {level});
-		}
 
-		if (length $txt > $_REQUEST {__xl_max_width_col} / $_REQUEST {__xl_width_ratio} || $colspan != 1) {
+		if (length $txt > $_REQUEST {__xl_max_width_col} || $colspan != 1) {
 			my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
 			$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row} + $rowspan -1, $_REQUEST {__xl_col} + $colspan - 1,  $txt, $format);
 			$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
@@ -614,6 +615,10 @@ sub draw_text_cell {
 	}
 	else{
 		$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $txt, $format);
+	}
+
+	if ($rowspan == 1 && ((length $txt) > $_REQUEST {__xl_max_width_col})) {
+		push_info_row ($txt, $colspan, $data -> {level});
 	}
 
 	$_REQUEST {__xl_col} = $_REQUEST {__xl_col} + $colspan;
@@ -687,8 +692,6 @@ sub draw_table_header_cell {
 
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
-	my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
-
 	$cell -> {label} = processing_string($cell -> {label});
 
 	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);
@@ -720,10 +723,12 @@ sub draw_table_header_cell {
 		}
 	}
 
+	my $right_width = $worksheet -> {__col_widths} -> [$col];
+
 	if ($rowspan != 1 || $colspan != 1){
 		$worksheet -> merge_range ($row, $col, $row + $rowspan - 1, $col + $colspan - 1, $cell -> {label}, $header_table_format);
 		if ($colspan > 1)  {
-			$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
+			$worksheet -> {__col_widths} -> [$col] = $right_width;
 		}
 	}
 	else {
@@ -733,7 +738,7 @@ sub draw_table_header_cell {
 	if ($cell -> {label} =~ /\n/) {
 		my $new_length = width_string_with_linebreak ($cell -> {label});
 		if ($new_length > $right_width) {
-			$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $new_length * $_REQUEST {__xl_width_ratio};
+			$worksheet -> {__col_widths} -> [$col] = $new_length * $_REQUEST {__xl_width_ratio};
 		}
 	}
 
@@ -846,7 +851,7 @@ sub start_page {
 	$_REQUEST {__xl_col} = 0;
 
 	$_REQUEST {__xl_max_width_col} = 36; # максимально допустимая ширина столбца в символах
-	$_REQUEST {__xl_width_ratio} = 1.2; # коэффициент для определения ширины столбца
+	$_REQUEST {__xl_width_ratio} = 1.21; # коэффициент для определения ширины столбца
 
 	%{$worksheet -> {__fraction}} =(
 		flag   => 0,
@@ -895,7 +900,7 @@ sub draw_page {
 
 	autofit_columns ($_REQUEST {__xl_max_width_col});
 
-	if ($worksheet -> {__row_height}) {
+	if ($worksheet -> {__info_row}) {
 		autoheight_rows ();
 	}
 
@@ -926,7 +931,7 @@ sub push_info_row {
 		"indent"    => $_[2],
 	);
 
-	push (@{$worksheet -> {__row_height}}, \%info_row);
+	push (@{$worksheet -> {__info_row}}, \%info_row);
 }
 
 ################################################################################
@@ -934,9 +939,10 @@ sub push_info_row {
 sub autoheight_rows{
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
-	foreach my $row (@{$worksheet -> {__row_height}}) {
+	foreach my $row (@{$worksheet -> {__info_row}}) {
 		my $text = $row -> {text};
 		my $height_row = 0;
+		my $num_row = $row -> {row};
 
 		my $sum_width = 0;
 		for (my $i = 0; $i <$row -> {colspan}; $i++){
@@ -956,7 +962,10 @@ sub autoheight_rows{
 
 		$height_row	+= int ((length $text) / $sum_width + 1.07);
 
-		$worksheet -> set_row ($row -> {row}, 15 * $height_row);
+		if (!$worksheet -> {__row_height} -> {$num_row} || $worksheet -> {__row_height} -> {$num_row} < $height_row) {
+			$worksheet -> {__row_height} -> {$num_row} = $height_row;
+			$worksheet -> set_row ($num_row, 15 * $height_row);
+		}
 	}
 	return '';
 }
@@ -1049,7 +1058,7 @@ sub string_width {
 	if ($length_string < $_REQUEST {__xl_max_width_col} / 4) {
 		return  $length_string + 2;
 	}
-	if ($_[0] =~ /^\-?\d+(\,|\.)\d+$/) {
+	if ($_[0] =~ /^\-?\d+\.\d+$/) {
 		return  ($_REQUEST {__xl_width_ratio} + 0.1) * $length_string;
 	}
 
@@ -1103,8 +1112,13 @@ sub processing_string{
 	my $string = @_[0];
 
 	$string =~ s/&nbsp;/ /ig;
+	$string =~ s/&quot;/\"/ig;
+
+	$string =~ s/&laquo;/chr(171)/ige;
+	$string =~ s/&raquo;/chr(187)/ige;
+
 	$string =~ s/\<br\/?\>$//ig;
-	$string =~ s/\<br\/?\>/\n/ig;
+	$string =~ s/\<(b|h)r\/?\>/\n/ig;
 	$string =~ s/&rArr;/ \=\> /ig;
 
 	$string =~ s/&#x([a-fA-F0-9]+);/"&#". hex($1) .";"/ge;
