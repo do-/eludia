@@ -847,7 +847,7 @@ sub start_page {
 
 	my $workbook = Excel::Writer::XLSX -> new (\*OUT);
 
-	$_REQUEST {__xl_sheet_name} = substr ('eludia_' . $_REQUEST {type}, 0, 31);
+	$_REQUEST {__xl_sheet_name} ||= substr ('eludia_' . $_REQUEST {type}, 0, 31);
 	my $worksheet = $workbook -> add_worksheet ($_REQUEST {__xl_sheet_name});
 
 	$_REQUEST {__xl_workbook}  = $workbook;
