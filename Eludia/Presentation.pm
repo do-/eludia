@@ -3312,15 +3312,7 @@ sub setup_skin {
 
 		$_REQUEST {__core_skin} ||= $_REQUEST {__skin};
 
-		if ($preconf -> {xlsx_print}) {
-
-			$_REQUEST {__skin} = 'XLSX';
-		}
-		else {
-
-			$_REQUEST {__skin} = 'XL';
-		}
-
+		$_REQUEST {__skin} = $preconf -> {xlsx_print} || $_REQUEST {xlsx}? 'XLSX' : 'XL';
 	}
 
 	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
