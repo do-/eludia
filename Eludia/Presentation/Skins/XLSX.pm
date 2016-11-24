@@ -915,23 +915,24 @@ sub start_page {
 ################################################################################
 
 sub draw_page {
-	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
-	my $right_width = $worksheet -> {__col_widths} -> [0];
+	my @worksheets = $_REQUEST {__xl_workbook} -> sheets();
 
-	$worksheet -> write ($_REQUEST {__xl_row}, 0, $_USER -> {label}, $simple_format);
+	foreach my $worksheet (@worksheets) {
 
-	$_REQUEST {__xl_row} += 2;
-	$worksheet -> write ($_REQUEST {__xl_row}, 0, @{[ sprintf ('%02d.%02d.%04d %02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4]) ]}, $simple_format);
-	$worksheet -> {__col_widths} -> [0] = $right_width;
+		my $right_width = $worksheet -> {__col_widths} -> [0];
 
-	$_REQUEST {__response_sent} = 1;
 
-	autofit_columns ($_REQUEST {__xl_max_width_col});
+		$worksheet -> {__col_widths} -> [0] = $right_width;
 
-	if ($worksheet -> {__info_row}) {
-		autoheight_rows ();
+		autofit_columns ($worksheet, $_REQUEST {__xl_max_width_col});
+
+		if ($worksheet -> {__info_row}) {
+			autoheight_rows ($worksheet);
+		}
 	}
+
+	write_signature_xl ($worksheets [-1]);
 
 	$_REQUEST {__xl_workbook} -> close ();
 
@@ -943,6 +944,24 @@ sub draw_page {
 		file_name => @{[xlsx_filename ()]},
 		delete    => 1,
 	});
+}
+
+################################################################################
+
+sub write_signature_xl {
+
+	my ($worksheet) = @_;
+
+	$worksheet -> write ($_REQUEST {__xl_row}, 0, $_USER -> {label}, $simple_format);
+
+	$_REQUEST {__xl_row} += 2;
+
+	$worksheet -> write (
+		$_REQUEST {__xl_row}
+		, 0
+		, @{[ sprintf ('%02d.%02d.%04d %02d:%02d', (Date::Calc::Today_and_Now) [2,1,0,3,4]) ]}
+		, $simple_format
+	);
 }
 
 ################################################################################
@@ -965,8 +984,9 @@ sub push_info_row {
 
 ################################################################################
 
-sub autoheight_rows{
-	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
+sub autoheight_rows {
+
+	my ($worksheet) = @_;
 
 	foreach my $row (@{$worksheet -> {__info_row}}) {
 		my $text = $row -> {text};
@@ -1002,8 +1022,9 @@ sub autoheight_rows{
 ################################################################################
 
 sub autofit_columns {
-    my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
-    my $max_width = shift;
+
+    my ($worksheet, $max_width) = @_;
+
     my $col = 0;
 
     my $format = $_REQUEST {__xl_workbook} -> add_format (
