@@ -836,6 +836,30 @@ sub xlsx_filename {
 	return "$filename.xlsx";
 }
 
+################################################################################
+
+sub add_worksheet {
+
+	my ($_SKIN, $sheet_name) = @_;
+
+	$sheet_name = substr ($sheet_name, 0, 31);
+	$sheet_name = decode ($i18n -> {_charset}, $sheet_name);
+	$_REQUEST {__xl_sheet_name} = $sheet_name;
+
+	my $worksheet = $_REQUEST {__xl_workbook} -> add_worksheet ($sheet_name);
+
+	$_REQUEST {__xl_row} = 0;
+	$_REQUEST {__xl_col} = 0;
+	%{$worksheet -> {__fraction}} = (
+		flag   => 0,
+		length => 0,
+	);
+
+	$worksheet -> add_write_handler (qr[[А-Яа-я№]], \&decode_rus);
+	$worksheet -> add_write_handler (qr[\w], \&store_string_widths);
+	$worksheet -> add_write_handler (qr[^0[^.,]], \&write_as_string);
+}
+
 ####################################################################
 
 sub start_page {
@@ -846,27 +870,17 @@ sub start_page {
 	flock (OUT, LOCK_EX);
 
 	my $workbook = Excel::Writer::XLSX -> new (\*OUT);
+	$_REQUEST {__xl_workbook}  = $workbook;
 
 	$_REQUEST {__xl_sheet_name} ||= substr ('eludia_' . $_REQUEST {type}, 0, 31);
-	my $worksheet = $workbook -> add_worksheet ($_REQUEST {__xl_sheet_name});
 
-	$_REQUEST {__xl_workbook}  = $workbook;
-	$_REQUEST {__xl_row} = 0;
-	$_REQUEST {__xl_col} = 0;
+	$_SKIN -> add_worksheet ($_REQUEST {__xl_sheet_name});
 
 	$_REQUEST {__xl_max_width_col} = $_REQUEST {__xl_max_width_col} || $preconf -> {xlsx_max_width_col} || 36; # максимально допустимая ширина столбца в символах, если строка длиннее - перенос
 	$_REQUEST {__xl_width_ratio} = $_REQUEST {__xl_width_ratio} || $preconf -> {xlsx_width_ratio} || 1.4; # коэффициент для определения ширины столбца (ширина символа в excel-единицах)
 	$_REQUEST {__xl_coef_autoheight_rows} = $_REQUEST {__xl_coef_autoheight_rows} || $preconf -> {xlsx_coef_autoheight_rows} || 1; # коэффициент для определения высоты строки в функции autoheight_rows ( рекомендуется от 1 до 1.1)
 	$_REQUEST {__xl_font} = $_REQUEST {__xl_font} || $preconf -> {xlsx_font} || 'Arial';
 
-	%{$worksheet -> {__fraction}} = (
-		flag   => 0,
-		length => 0,
-	);
-
-	$worksheet -> add_write_handler (qr[[А-Яа-я№]], \&decode_rus);
-	$worksheet -> add_write_handler (qr[\w], \&store_string_widths);
-	$worksheet -> add_write_handler (qr[^0[^.,]], \&write_as_string);
 
 	$header_table_format = $workbook -> add_format (
 		text_wrap => 1,
@@ -1117,9 +1131,15 @@ sub write_as_string {
 
 ################################################################################
 
-sub decode_rus{
+sub decode_rus {
+
 	my $worksheet = shift;
-    return $worksheet -> write ($_[0], $_[1], decode ("cp-1251", $_[2]), $_[3]);
+
+	my ($row, $col, $label, @args) = @_;
+
+	$label = decode ($i18n -> {_charset}, $label);
+
+    return $worksheet -> write ($row, $col, $label, @args);
 }
 
 ################################################################################
