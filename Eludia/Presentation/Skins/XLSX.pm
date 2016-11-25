@@ -171,7 +171,7 @@ sub draw_form_field {
 
 	$field -> {label} = processing_string ($field -> {label});
 
-	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $field -> {label}, $header_form_format);
+	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $field -> {label}, $_REQUEST{__xl_format} -> {form_header});
 
 	if ($field -> {label} =~ /\n/) {
 		my $new_length = width_string_with_linebreak ($field -> {label});
@@ -562,7 +562,7 @@ sub draw_text_cell {
 				$format -> set_align ('right');
 			}
 			elsif ($txt =~ /^\d{19,20}$/) {
-				$format -> set_num_format ('####################');
+				$format -> set_num_format ('#' x 20);
 				$format -> set_align ('left');
 			}
 			elsif (!$data -> {no_nobr}) {
@@ -642,7 +642,7 @@ sub draw_radio_cell {
 sub draw_checkbox_cell {
 	my ($_SKIN, $data, $options) = @_;
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
-	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, " ", $simple_border_format);
+	$worksheet -> write ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, " ", $_REQUEST{__xl_format} -> {simple_border});
 	$_REQUEST {__xl_col} += 1;
 	return '';
 }
@@ -680,14 +680,14 @@ sub draw_row_button {
 
 sub draw_table_header {
 	my ($_SKIN, $data_rows, $html_rows) = @_;
-	return $html;
+	return '';
 }
 
 ####################################################################
 
 sub draw_table_header_row {
 	my ($_SKIN, $data_cells, $html_cells) = @_;
-	return $html;
+	return '';
 }
 ################################################################################
 
@@ -730,13 +730,13 @@ sub draw_table_header_cell {
 	my $right_width = $worksheet -> {__col_widths} -> [$col];
 
 	if ($rowspan != 1 || $colspan != 1){
-		$worksheet -> merge_range ($row, $col, $row + $rowspan - 1, $col + $colspan - 1, $cell -> {label}, $header_table_format);
+		$worksheet -> merge_range ($row, $col, $row + $rowspan - 1, $col + $colspan - 1, $cell -> {label}, $_REQUEST{__xl_format} -> {table_header});
 		if ($colspan > 1)  {
 			$worksheet -> {__col_widths} -> [$col] = $right_width;
 		}
 	}
 	else {
-		$worksheet -> write ($row, $col, $cell -> {label}, $header_table_format);
+		$worksheet -> write ($row, $col, $cell -> {label}, $_REQUEST{__xl_format} -> {table_header});
 	}
 
 	if ($cell -> {label} =~ /\n/) {
@@ -806,7 +806,7 @@ sub draw_one_cell_table {
 
 sub draw_error_page {
 	my ($_SKIN, $page) = @_;
-	return $message;
+	return '';
 }
 
 ################################################################################
@@ -877,12 +877,12 @@ sub start_page {
 	$_SKIN -> add_worksheet ($_REQUEST {__xl_sheet_name});
 
 	$_REQUEST {__xl_max_width_col} = $_REQUEST {__xl_max_width_col} || $preconf -> {xlsx_max_width_col} || 36; # максимально допустимая ширина столбца в символах, если строка длиннее - перенос
-	$_REQUEST {__xl_width_ratio} = $_REQUEST {__xl_width_ratio} || $preconf -> {xlsx_width_ratio} || 1.4; # коэффициент для определения ширины столбца (ширина символа в excel-единицах)
+	$_REQUEST {__xl_width_ratio} = $_REQUEST {__xl_width_ratio} || $preconf -> {xlsx_width_ratio} || 1.35; # коэффициент для определения ширины столбца (ширина символа в excel-единицах)
 	$_REQUEST {__xl_coef_autoheight_rows} = $_REQUEST {__xl_coef_autoheight_rows} || $preconf -> {xlsx_coef_autoheight_rows} || 1; # коэффициент для определения высоты строки в функции autoheight_rows ( рекомендуется от 1 до 1.1)
 	$_REQUEST {__xl_font} = $_REQUEST {__xl_font} || $preconf -> {xlsx_font} || 'Arial';
 
 
-	$header_table_format = $workbook -> add_format (
+	$_REQUEST{__xl_format} -> {table_header} = $workbook -> add_format (
 		text_wrap => 1,
      	border    => 1,
      	bold      => 1,
@@ -891,7 +891,7 @@ sub start_page {
     	font      => $_REQUEST {__xl_font},
 	);
 
-	$header_form_format = $workbook -> add_format (
+	$_REQUEST{__xl_format} -> {form_header} = $workbook -> add_format (
 		text_wrap => 1,
      	border    => 1,
      	bold      => 1,
@@ -900,12 +900,12 @@ sub start_page {
     	font      => $_REQUEST {__xl_font},
 	);
 
-	$simple_border_format = $workbook -> add_format (
+	$_REQUEST{__xl_format} -> {simple_border} = $workbook -> add_format (
 		border    => 1,
 		font      => $_REQUEST {__xl_font},
 	);
 
-	$simple_format = $workbook -> add_format (
+	$_REQUEST{__xl_format} -> {simple} = $workbook -> add_format (
 		font      => $_REQUEST {__xl_font},
 	);
 
@@ -1001,7 +1001,7 @@ sub autoheight_rows {
 		if ($row -> {indent}) {
 			$sum_width = $sum_width - $row -> {indent};
 		}
-
+# $sum_width = $sum_width / $_REQUEST {__xl_width_ratio};
 		my $end_substring = index $text, "\n";
 		while ($end_substring != -1) {
 			my $substring = substr $text, 0, $end_substring + 1, '';
@@ -1010,7 +1010,11 @@ sub autoheight_rows {
 		}
 
 		$height_row	+= int ((length $text) / $sum_width + $_REQUEST {__xl_coef_autoheight_rows});
+if ($row -> {col} == 6) {
+	warn $num_row, ": ", length $text, ' | 36: ', (length $text) / $sum_width,  ' *** 29: ', (length $text) / 29, ' *** 28: ', (length $text) / 28, ' *** 26,67: ', (length $text) / ( $sum_width / $_REQUEST {__xl_width_ratio});
+	# warn $num_row, ": ", length $text, ' | 36: ', (length $text) / $sum_width, ' ** 30: ', (length $text) / 30, ' ** 29: ', (length $text) / 29, ' ** 28: ', (length $text) / 28, ' ** 27: ', (length $text) / 27, ' ** 26: ', (length $text) / 26, ' ** 25: ', (length $text) / 25;
 
+}
 		if (!$worksheet -> {__row_height} -> {$num_row} || $worksheet -> {__row_height} -> {$num_row} < $height_row) {
 			$worksheet -> {__row_height} -> {$num_row} = $height_row;
 			$worksheet -> set_row ($num_row, 15 * $height_row);
