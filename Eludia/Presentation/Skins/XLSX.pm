@@ -129,6 +129,7 @@ sub draw_form_field {
 
 	if ($field -> {type} eq 'banner') {
 		$format_record -> set_align ('center');
+		$format_record -> set_bold ();
 
 		$field -> {html} = processing_string ($field -> {html});
 
@@ -828,7 +829,10 @@ sub dialog_open {
 ################################################################################
 
 sub xlsx_filename {
-	my $filename = 'eludia_' . $_REQUEST {type};
+
+	my ($options) = @_;
+
+	my $filename = $options -> {filename} || 'eludia_' . $_REQUEST {type};
 
 	if ($conf -> {report_date_in_filename}) {
 		my $generation_date = sprintf ("%04d-%02d-%02d_%02d-%02d", Date::Calc::Today_and_Now);
@@ -844,9 +848,28 @@ sub add_worksheet {
 
 	my ($_SKIN, $sheet_name) = @_;
 
-	$sheet_name = substr ($sheet_name, 0, 31);
+	my $NAME_MAX_WIDTH = 31;
+	$sheet_name = substr ($sheet_name, 0, $NAME_MAX_WIDTH);
 	$sheet_name = decode ($i18n -> {_charset}, $sheet_name);
 	$_REQUEST {__xl_sheet_name} = $sheet_name;
+
+	my @sheets = $_REQUEST {__xl_workbook} -> sheets();
+
+	my $first_sheet = @sheets == 1? $sheets [0] : 0;
+	if ($first_sheet) {
+		write_signature_xl ($first_sheet);
+	}
+
+	my $uniq_names = {
+		map {$_ -> get_name () => 1} @sheets,
+	};
+
+	my ($cnt, $uniq_sheet_name) = (0, $sheet_name);
+	while ($uniq_names -> {$uniq_sheet_name}) {
+		$cnt ++;
+		$uniq_sheet_name = substr ($sheet_name, 0, $NAME_MAX_WIDTH - length($cnt) - 1) . '_' . $cnt;
+	}
+	$sheet_name = $uniq_sheet_name;
 
 	my $worksheet = $_REQUEST {__xl_workbook} -> add_worksheet ($sheet_name);
 
@@ -918,15 +941,28 @@ sub start_page {
 
 sub draw_page {
 
+	my ($_SKIN, $options) = @_;
+
 	my @worksheets = $_REQUEST {__xl_workbook} -> sheets();
 
 	foreach my $worksheet (@worksheets) {
+
+		my $right_width = $worksheet -> {__col_widths} -> [0];
+
+
+		$worksheet -> {__col_widths} -> [0] = $right_width;
 
 		autofit_columns ($worksheet, $_REQUEST {__xl_max_width_col});
 
 		if ($worksheet -> {__info_row}) {
 			autoheight_rows ($worksheet);
 		}
+	}
+
+	$is_single_sheet = @worksheets == 1;
+
+	if ($is_single_sheet) {
+		write_signature_xl ($worksheets [0]);
 	}
 
 	write_signature_xl ($worksheets [-1]);
@@ -938,7 +974,7 @@ sub draw_page {
 
 	&{"${_PACKAGE}download_file"} ({
 		path      => $_REQUEST {__xl_file_name},
-		file_name => @{[xlsx_filename ()]},
+		file_name => xlsx_filename ($options),
 		delete    => 1,
 	});
 }
