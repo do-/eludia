@@ -53,8 +53,6 @@ sub draw_window_title {
 
 	return '' if ($_REQUEST {__no_draw_window_title});
 
-	$_REQUEST {__xl_row} += 2;
-
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 
 	my $window_title_format = $_REQUEST {__xl_workbook} -> add_format (
@@ -122,19 +120,17 @@ sub draw_form_field {
 	my $format_record = $_REQUEST {__xl_workbook} -> add_format (
 		text_wrap => 1,
      	border    => 1,
-     	valign    => 'bottom',
+     	valign    => 'top',
     	align     => 'left',
     	font      => $_REQUEST {__xl_font},
+    	size      => $_REQUEST {__xl_font_size},
 	);
 
 	if ($field -> {type} eq 'banner') {
-		$format_record -> set_align ('center');
-		$format_record -> set_bold ();
-
 		$field -> {html} = processing_string ($field -> {html});
 
 		my $right_width = $worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}];
-		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan},  $field -> {html}, $format_record);
+		$worksheet -> merge_range ($_REQUEST {__xl_row}, $_REQUEST {__xl_col}, $_REQUEST {__xl_row}, $_REQUEST {__xl_col} + $field -> {colspan},  $field -> {html}, $_REQUEST {__xl_format} -> {table_header});
 		$worksheet -> {__col_widths} -> [$_REQUEST {__xl_col}] = $right_width;
 
 		if ($field -> {html} =~ /\n/) {
@@ -158,7 +154,7 @@ sub draw_form_field {
 		$format_record -> set_num_format ('m/d/yy');
 		$format_record -> set_align ('right');
 	}
-	elsif ($field -> {html} =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:?\d?\d?$/) {
+	elsif ($field -> {html} =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d(:\d\d)?$/) {
 		$format_record -> set_num_format ('m/d/yy h:mm');
 		$format_record -> set_align ('right');
 	}
@@ -166,7 +162,7 @@ sub draw_form_field {
 		$format_record -> set_num_format ('@');
 	}
 
-	if ($field -> {html} =~ /^\-?\d+\.\d+$/) {
+	if ($field -> {html} =~ /^(\-|\+)?\d+(\.?\d+|)$/) {
 		$format_record -> set_align ('right');
 	}
 
@@ -189,11 +185,8 @@ sub draw_form_field {
 	}
 	if ($field -> {italic} || $field -> {html} =~ /<i>/) {
 		$format_record -> set_italic ();
+		$field -> {italic} ||= 1;
 	}
-
-	# if ($field -> {font_size}) {
-	# 	$format_record -> set_size($field -> {font_size});
-	# }
 
 	$field -> {html} = processing_string ($field -> {html});
 
@@ -525,7 +518,10 @@ sub draw_text_cell {
 	my $format = $_REQUEST {__xl_workbook} -> add_format (
 		text_wrap => 1,
      	border    => 1,
+     	valign	  => 'top',
+		align 	  => 'left',
      	font      => $_REQUEST {__xl_font},
+     	size      => $_REQUEST {__xl_font_size},
 	);
 
 	foreach (@{$worksheet -> {__united_cells} -> {$_REQUEST {__xl_row}}}) {
@@ -544,6 +540,10 @@ sub draw_text_cell {
 		}
 		else {
 			$txt = $data -> {label};
+		}
+
+		if ($txt =~ /^(\-|\+)?\d+(\.?\d+|)$/) {
+			$format -> set_align ('right');
 		}
 
 		if (length $txt > 0) {
@@ -844,14 +844,31 @@ sub xlsx_filename {
 
 ################################################################################
 
-sub add_worksheet {
+sub xlsx_sheetname {
 
-	my ($_SKIN, $sheet_name) = @_;
+	my ($workbook, $sheet_name) = @_;
 
 	my $NAME_MAX_WIDTH = 31;
 	$sheet_name = substr ($sheet_name, 0, $NAME_MAX_WIDTH);
 	$sheet_name = decode ($i18n -> {_charset}, $sheet_name);
-	$_REQUEST {__xl_sheet_name} = $sheet_name;
+
+	my $uniq_names = {
+		map {$_ -> get_name () => 1} $workbook -> sheets(),
+	};
+
+	my ($cnt, $uniq_sheet_name) = (0, $sheet_name);
+	while ($uniq_names -> {$uniq_sheet_name}) {
+		$cnt ++;
+		$uniq_sheet_name = substr ($sheet_name, 0, $NAME_MAX_WIDTH - length($cnt) - 1) . '_' . $cnt;
+	}
+
+	return $uniq_sheet_name;
+}
+
+################################################################################
+
+sub add_worksheet {
+	my ($_SKIN, $sheet_name) = @_;
 
 	my @sheets = $_REQUEST {__xl_workbook} -> sheets();
 
@@ -860,17 +877,7 @@ sub add_worksheet {
 		write_signature_xl ($first_sheet);
 	}
 
-	my $uniq_names = {
-		map {$_ -> get_name () => 1} @sheets,
-	};
-
-	my ($cnt, $uniq_sheet_name) = (0, $sheet_name);
-	while ($uniq_names -> {$uniq_sheet_name}) {
-		$cnt ++;
-		$uniq_sheet_name = substr ($sheet_name, 0, $NAME_MAX_WIDTH - length($cnt) - 1) . '_' . $cnt;
-	}
-	$sheet_name = $uniq_sheet_name;
-
+	$_REQUEST {__xl_sheet_name} = $sheet_name = xlsx_sheetname ($_REQUEST {__xl_workbook}, $sheet_name);
 	my $worksheet = $_REQUEST {__xl_workbook} -> add_worksheet ($sheet_name);
 
 	$_REQUEST {__xl_row} = 0;
@@ -903,35 +910,41 @@ sub start_page {
 
 	$_REQUEST {__xl_max_width_col} = $_REQUEST {__xl_max_width_col} || $preconf -> {xlsx_max_width_col} || 36; # максимально допустимая ширина столбца в excel-единицах, если строка длиннее - перенос
 	$_REQUEST {__xl_width_ratio} = $_REQUEST {__xl_width_ratio} || $preconf -> {xlsx_width_ratio} || 1.4; # коэффициент для определения ширины столбца (ширина символа в excel-единицах), для шрифта Arial не меньше 1.4
-	$_REQUEST {__xl_coef_autoheight_rows} = $_REQUEST {__xl_coef_autoheight_rows} || $preconf -> {xlsx_coef_autoheight_rows} || 1.1; # коэффициент для определения высоты строки в функции autoheight_rows, больше 1 (чем больше коэффициент, тем больше вероятность появления дополнительных пустых строчек)
+	$_REQUEST {__xl_coef_autoheight_rows} = $_REQUEST {__xl_coef_autoheight_rows} || $preconf -> {xlsx_coef_autoheight_rows} || 0.93; # коэффициент для определения высоты строки в функции autoheight_rows, для нежирного Arial 10 = 0.93, Arial 11 = 1.02 (чем больше коэффициент, тем больше вероятность появления дополнительных пустых строчек)
+	$_REQUEST {__xl_coef_autoheight_rows_bold} = $_REQUEST {__xl_coef_autoheight_rows_bold} || $preconf -> {xlsx_coef_autoheight_rows_bold} || 1.02; # коэффициент для определения высоты строки в функции autoheight_rows, для жирного Arial 10 = 1, Arial 11 = 1.1  (чем больше коэффициент, тем больше вероятность появления дополнительных пустых строчек)
+
 	$_REQUEST {__xl_font} = $_REQUEST {__xl_font} || $preconf -> {xlsx_font} || 'Arial';
+	$_REQUEST {__xl_font_size} ||= 10;
 
-
-	$_REQUEST{__xl_format} -> {table_header} = $workbook -> add_format (
+	$_REQUEST {__xl_format} -> {table_header} = $workbook -> add_format (
 		text_wrap => 1,
      	border    => 1,
      	bold      => 1,
      	valign    => 'vcenter',
     	align     => 'center',
     	font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
 	);
 
-	$_REQUEST{__xl_format} -> {form_header} = $workbook -> add_format (
+	$_REQUEST {__xl_format} -> {form_header} = $workbook -> add_format (
 		text_wrap => 1,
      	border    => 1,
      	bold      => 1,
-     	valign    => 'bottom',
-    	align     => 'right',
+     	valign    => 'top',
+    	align     => 'left',
     	font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
 	);
 
-	$_REQUEST{__xl_format} -> {simple_border} = $workbook -> add_format (
+	$_REQUEST {__xl_format} -> {simple_border} = $workbook -> add_format (
 		border    => 1,
 		font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
 	);
 
-	$_REQUEST{__xl_format} -> {simple} = $workbook -> add_format (
+	$_REQUEST {__xl_format} -> {simple} = $workbook -> add_format (
 		font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
 	);
 
 	return $options;
@@ -959,12 +972,6 @@ sub draw_page {
 		}
 	}
 
-	$is_single_sheet = @worksheets == 1;
-
-	if ($is_single_sheet) {
-		write_signature_xl ($worksheets [0]);
-	}
-
 	write_signature_xl ($worksheets [-1]);
 
 	$_REQUEST {__xl_workbook} -> close ();
@@ -985,9 +992,11 @@ sub write_signature_xl {
 
 	my ($worksheet) = @_;
 
+	$_REQUEST {__xl_row} ++;
+
 	$worksheet -> write ($_REQUEST {__xl_row}, 0, $_USER -> {label}, $_REQUEST{__xl_format} -> {simple});
 
-	$_REQUEST {__xl_row} += 2;
+	$_REQUEST {__xl_row} ++;
 
 	$worksheet -> write (
 		$_REQUEST {__xl_row},
@@ -1036,7 +1045,7 @@ sub autoheight_rows {
 			$sum_width = $sum_width - $row -> {indent};
 		}
 
-		$sum_width = $sum_width / $_REQUEST {__xl_coef_autoheight_rows}; # определяем максимальное количество символов в 1 строке
+		$sum_width = $row -> {bold}? ($sum_width / $_REQUEST {__xl_coef_autoheight_rows_bold}) : ($sum_width / $_REQUEST {__xl_coef_autoheight_rows}); # определяем максимальное количество символов в 1 строке в зависимости от жирности шрифта
 
 		while (length $text != 0) {
 			if (length $text > $sum_width) {
@@ -1045,14 +1054,18 @@ sub autoheight_rows {
 				substr $text, 0, length $&, '';
 			}
 			else {
-				$text = '';
+				if ($text =~ /.+(\n|$)/) {
+					substr $text, 0, length $&, '';
+				}
+				else {
+					$text = '';
+				}
 			}
 			$amount_lines++;
 		}
 
-		my $height_row = $row -> {bold}? 15.75 : 15;
-
-		if (!$worksheet -> {__row_height} -> {$num_row} || $worksheet -> {__row_height} -> {$num_row} < $amount_lines) {
+		my $height_row = 13; # для Arial 10 =13, Arial 11 =15
+		if ($amount_lines > 1 && (!$worksheet -> {__row_height} -> {$num_row} || $worksheet -> {__row_height} -> {$num_row} < $amount_lines)) {
 			$worksheet -> {__row_height} -> {$num_row} = $amount_lines;
 			$worksheet -> set_row ($num_row, $height_row * $amount_lines);
 		}
