@@ -113,6 +113,7 @@ sub draw_path {
 ################################################################################
 
 sub draw_form_field {
+
 	my ($_SKIN, $field, $data) = @_;
 
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
@@ -563,9 +564,8 @@ sub draw_text_cell {
 				$format -> set_num_format ('m/d/yy h:mm');
 				$format -> set_align ('right');
 			}
-			elsif ($txt =~ /^\d{19,20}$/) {
+			elsif ($txt =~ /^\d{12,20}$/) {
 				$format -> set_num_format ('#' x 20);
-				$format -> set_align ('left');
 			}
 			elsif (!$data -> {no_nobr}) {
 				$format -> set_num_format ('@');
@@ -895,12 +895,17 @@ sub add_worksheet {
 ####################################################################
 
 sub start_page {
-	$_REQUEST {__xl_file_name} = File::Spec -> tmpdir() . "/eludia_$_REQUEST{type}_$_REQUEST{sid}_$_REQUEST{__salt}.xlsx";
+
+	$_REQUEST {__salt} ||= int(rand () * time ());
+
+	my $tmpdir = File::Spec -> tmpdir();
+	$_REQUEST {__xl_file_name} = "$tmpdir/eludia_$_REQUEST{type}_$_REQUEST{sid}_$_REQUEST{__salt}.xlsx";
 
 	open (OUT, '>' . $_REQUEST {__xl_file_name}) or die "Can't open $_REQUEST{__file_name}: $!\n";
 	binmode OUT;
 	flock (OUT, LOCK_EX);
 
+	chdir $tmpdir; # HACK: offline Can't cd to /root
 	my $workbook = Excel::Writer::XLSX -> new (\*OUT);
 	$_REQUEST {__xl_workbook}  = $workbook;
 
@@ -972,12 +977,20 @@ sub draw_page {
 		}
 	}
 
-	write_signature_xl ($worksheets [-1]);
+	$is_single_sheet = @worksheets == 1;
+
+	if ($is_single_sheet) {
+		write_signature_xl ($worksheets [0]);
+	}
 
 	$_REQUEST {__xl_workbook} -> close ();
 
 	flock (OUT, LOCK_UN);
 	close OUT;
+
+	if ($options -> {to_file}) {
+		return $_REQUEST {__xl_file_name};
+	}
 
 	&{"${_PACKAGE}download_file"} ({
 		path      => $_REQUEST {__xl_file_name},
