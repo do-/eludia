@@ -856,6 +856,15 @@ sub _adjust_field {
 
 	$field -> {data_source} and $field -> {values} ||= ($data -> {$field -> {data_source}} ||= sql_select_vocabulary ($field -> {data_source}));
 
+
+	if (ref $_REQUEST {__field_hints} eq 'HASH') {
+		$field -> {hint} ||= $_REQUEST {__field_hints} -> {$field -> {name}} -> {hint};
+	}
+
+	if ($field -> {hint}) {
+		$field -> {label_title} = $field -> {attributes} -> {title} = $field -> {hint};
+	}
+
 	return $field;
 
 }
