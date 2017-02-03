@@ -1,0 +1,27 @@
+language: perl
+
+perl:
+  - "5.16"
+  - "5.14"
+  - "5.10"
+
+install:
+  - export RELEASE_TESTING=1 AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=c HARNESS_TIMER=1
+  - cpanm --quiet --notest Devel::Cover::Report::Coveralls
+  - cpanm --quiet --notest --installdeps .
+
+before_script:
+  - mysql -e 'create database eludia_test'
+  - cd ..
+  - git clone https://github.com/do-/default-eludia.pm-application.git
+  - cd default-eludia.pm-application
+  - mkdir conf
+  - cp ../eludia/.travis_httpd.conf conf/httpd.conf
+  - perl -MCwd -p -i -e 's/ELUDIA_PATH/\.\.\/eludia/g' conf/httpd.conf
+  - perl -MCwd -p -i -e 's/APP_PATH/cwd/eg' conf/httpd.conf
+
+script:
+  - perl -I$(pwd)/../eludia -MDevel::Cover=-coverage,statement,branch,condition,path,subroutine -MEludia::Install -e "exit(test())"
+
+after_success:
+    - cover -report coveralls

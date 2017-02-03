@@ -16,6 +16,7 @@ sub fake_select {
 			{id => '-1', label => 'Óäàë¸ííûå'},
 		],
 		empty   => 'Àêòèâíûå',
+		off     => $options -> {off},
 	}
 	
 }
@@ -94,7 +95,7 @@ sub fill_in {
    		
 		checkbox => {TYPE_NAME => 'tinyint', NULLABLE => 0, COLUMN_DEF  =>  0 },
    		
-		radio    => {TYPE_NAME => 'tinyint', NULLABLE => 0, COLUMN_DEF  => -1 },
+		radio    => {TYPE_NAME => 'tinyint', NULLABLE => 0, COLUMN_DEF  => 0 },
 
 		select   => {TYPE_NAME => 'int'},
 

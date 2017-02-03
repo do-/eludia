@@ -3,7 +3,7 @@ sub draw_form_field_static {
 	my ($options, $data) = @_;
 
 	$options -> {crlf} ||= '; ';
-		
+
 	if ($options -> {add_hidden}) {
 		$options -> {hidden_name}  ||= '_' . $options -> {name};
 		$options -> {hidden_value} = $data -> {$options -> {name}}
@@ -11,22 +11,22 @@ sub draw_form_field_static {
 		$options -> {hidden_value} = $options -> {value}
 			if !defined $options -> {hidden_value} && defined $options -> {value};
 		$options -> {hidden_value} =~ s/\"/\&quot\;/gsm; #";
-	}	
+	}
 
 
-	if ($options -> {href} && (!$_REQUEST {__edit} || $options -> {active_href}) && !$_REQUEST {xls} && !$_REQUEST {__only_field}) {
+	if ($options -> {href} && ((!$_REQUEST {__edit} && !$_REQUEST {__edit_table})  || $options -> {active_href}) && !$_REQUEST {xls} && !$_REQUEST {__only_field}) {
 		check_href ($options);
 	}
 	else {
 		delete $options -> {href};
 	}
-	
+
 	my $value = defined $options -> {value} ? $options -> {value} : $data -> {$options -> {name}};
 
 	my $static_value = '';
-	
+
 	if (($options -> {field} || '') =~ /^(\w+)\.(\w+)$/) {
-			
+
 		$options -> {values} = [map {{
 			type   => 'static',
 			id     => $_ -> {id},
@@ -35,21 +35,21 @@ sub draw_form_field_static {
 			target => 'invisible',
 			fake   => $_ -> {fake},
 		}} @{sql_select_all ("SELECT * FROM $1 WHERE fake = 0 AND $2 = ? ORDER BY id", $data -> {id})}];
-		
+
 		$value = [map {$_ -> {id}} @{$options -> {values}}];
-	
+
 	}
-	
+
 	if (ref $value eq ARRAY) {
-	
-		my %v = (map {$_ => 1} @$value);		
+
+		my %v = (map {$_ => 1} @$value);
 
 		foreach my $item (@{$options -> {values}}) {
-		
+
 			$v {$item -> {id}} or next;
-			
+
 			if ($item -> {type} || $item -> {name}) {
-			
+
 				if ($static_value) {
 
 					$static_value =~ s{\s+$}{}sm;
@@ -65,12 +65,12 @@ sub draw_form_field_static {
 				$static_value .= $item -> {type} =~ /^(hgroup|multi_select)$/ ?
 					draw_form_field_of_type ($item, $data)
 					: draw_form_field_static ($item, $data);
-			
+
 			}
 			else {
-				
+
 				$static_value ||= [];
-			
+
 				push @$static_value, $item if $v {$item -> {id}};
 
 				foreach my $ppv (@{$item -> {items}}) {
@@ -82,34 +82,34 @@ sub draw_form_field_static {
 					}
 					push @$static_value, $ppv if $v {$ppv -> {id}} || $ppv -> {no_checkbox};
 				}
-				
+
 			}
 
 		}
-		
-			
+
+
 	}
 	else {
-	
+
 		if (ref $options -> {values} eq ARRAY) {
-		
-			my $item = undef;			
-					
+
+			my $item = undef;
+
 			if (defined $value && $value ne '') {
-			
+
 				my $tied = tied @{$options -> {values}};
-					
+
 				if ($tied && !$tied -> {body}) {
-				
+
 					if ($value && $value != -1) {
 						my $record = $tied -> _select_hash ($value);
 						$static_value = $record -> {label};
 						$options -> {fake} = $record -> {fake};
-					}	
-				
+					}
+
 				}
 				else {
-			
+
 					if ($value == 0) {
 
 						foreach (@{$options -> {values}}) {
@@ -136,11 +136,11 @@ sub draw_form_field_static {
 						}
 
 					}
-					
+
 				}
-			
-			}			
-			
+
+			}
+
 			if (($item -> {type} ||= '') eq 'hgroup') {
 				$item -> {read_only} = 1;
 				$static_value .= ' ';
@@ -162,7 +162,7 @@ sub draw_form_field_static {
 			$static_value = $options -> {values} -> {$value};
 		}
 		elsif (ref $options -> {values} eq CODE) {
-		
+
 			if ($data -> {id}) {
 
 				if ($value == 0) {
@@ -181,11 +181,11 @@ sub draw_form_field_static {
 
 				}
 
-			}		
-		
+			}
+
 		}
 		else {
-		
+
 			if (defined $options -> {value}) {
 
 				$static_value = $options -> {value};
@@ -197,7 +197,7 @@ sub draw_form_field_static {
 				$options -> {fake} = $data if ($options -> {name} =~ /\W/);
 
 				foreach my $chunk (split /\W+/, $options -> {name}) {
-					$static_value = $static_value -> {$chunk};					
+					$static_value = $static_value -> {$chunk};
 					$options -> {fake} = $options -> {fake} -> {$chunk} if ($options -> {name} =~ /\W/ && defined $options -> {fake} -> {$chunk} && ref $options -> {fake} -> {$chunk} eq 'HASH');
 				}
 
@@ -206,15 +206,15 @@ sub draw_form_field_static {
 			}
 
 		}
-		
-	}		
-	
+
+	}
+
 	if ($static_value) {
-	
+
 		$static_value = format_picture ($static_value, $options -> {picture}) if $options -> {picture};
 
 		$static_value =~ s/\n/\<br\>/gsm;
-	
+
 	}
 
 	$options -> {value} = $static_value;
@@ -222,7 +222,7 @@ sub draw_form_field_static {
 	delete $options -> {values};
 
 	return $_SKIN -> draw_form_field_static (@_);
-			
+
 }
 
 1;

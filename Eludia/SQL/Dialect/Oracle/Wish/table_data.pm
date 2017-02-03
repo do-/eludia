@@ -13,12 +13,19 @@ sub wish_to_actually_create_table_data {
 	}
 	else {
 
-		my @cols = ();
+
+		my $uniq_cols;
+		foreach my $record (@$items) {
+			foreach my $column (keys %$record) {
+				$uniq_cols -> {$column} = 1;
+			}
+		}
+
 		my @prms = ();
+		my @cols = keys %$uniq_cols;
 
-		foreach my $col (keys %{$items -> [0]}) {
+		foreach my $col (@cols) {
 
-			push @cols, $col;
 			push @prms, [ map {$_ -> {$col}} @$items];
 
 		}

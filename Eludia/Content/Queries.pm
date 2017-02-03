@@ -3,15 +3,25 @@
 sub setup_page_content {
 
 	my ($page) = @_;
-	
+
 	$_REQUEST {__allow_check___query} = 1;
 	delete $_REQUEST {__the_table};
 
+	our @_COLUMNS = ();
+	our %_ORDER = ();
+	our $_QUERY = undef;
+
 	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
+
+	$@ and return $_REQUEST {error} = $@;
+
+# Call it unless content function does'nt called order () or sql ()
+	check___query ()
+		unless $_QUERY;
 
 	$_REQUEST {__allow_check___query} = 0;
 
-	$@ and return $_REQUEST {error} = $@;	
+	$@ and return $_REQUEST {error} = $@;
 
 	$_USER -> {id} and !$_REQUEST {__only_menu} and $_REQUEST {__edit_query} or return;
 
@@ -30,27 +40,31 @@ sub setup_page_content {
 	$_REQUEST {id___query} ||= sql_select_id (
 
 		$conf -> {systables} -> {__queries} => {
-			id_user     => $_USER -> {id},
-			type        => $_REQUEST {type},
-			label       => '',
-			order_context		=> $_REQUEST {__order_context} || '',
-		}, ['id_user', 'type', 'label'],
+			id_user       => $_USER -> {id},
+			type          => $_REQUEST {type},
+			label         => '',
+			order_context => $_REQUEST {__order_context} || '',
+		}, ['id_user', 'type', 'label', 'order_context'],
 
 	);
 
 	require_both '__queries';
 
+	$_REQUEST {__allow_check___query} = 1;
+
 	check___query ();
 
+	$_REQUEST {__allow_check___query} = 0;
+
 	$_REQUEST {type} = $page -> {type} = '__queries';
-	
+
 	$_REQUEST {id}   = $_REQUEST {id___query};
-		
+
 	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role ('get_item_of___queries', $page -> {content}) };
 
-	$@ and return $_REQUEST {error} = $@;	
+	$@ and return $_REQUEST {error} = $@;
 
-	delete $_REQUEST {__skin};	
+	delete $_REQUEST {__skin};
 
 }
 
@@ -58,100 +72,136 @@ sub setup_page_content {
 
 sub fix___query {
 
-	$conf -> {core_store_table_order} or return;	
+	my ($id_table) = @_;
+
+	$conf -> {core_store_table_order} or return;
 
 	$_REQUEST {__order_context} ||= '';
-	
-	@_ORDER > 0 or return;
+
+	@_COLUMNS > 0 or return;
 
 	if ($_REQUEST {id___query}) {
-	
-		my $is_there_some_order;
 
-		foreach my $o (@_ORDER) {
-		
-			$is_there_some_order ||= $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord};
-		
+		foreach my $key (keys %{$_QUERY -> {content} -> {columns}}) {
+			next if $_QUERY -> {content} -> {columns} -> {$key} -> {no_hidden} != 1;
+			unless ($key ~~ [map {$_ -> {id}} @_COLUMNS]) {
+				$_QUERY -> {content} -> {columns} -> {$key} -> {order} = $key;
+				$_QUERY -> {content} -> {columns} -> {$key} -> {hidden} = 1;
+				push @_COLUMNS, $_QUERY -> {content} -> {columns} -> {$key};
+			}
+		}
+
+		my $columns = delete $_QUERY -> {content} -> {columns};
+
+		foreach my $o (@_COLUMNS) {
+
+			next unless ($o -> {order} || $o -> {no_order});
+
+			$_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} = {
+				ord       => $o -> {ord},
+				id        => $columns -> {$o -> {order} || $o -> {no_order}} -> {id},
+				width     => $columns -> {$o -> {order} || $o -> {no_order}} -> {width},
+				height    => $columns -> {$o -> {order} || $o -> {no_order}} -> {height},
+				sort      => $columns -> {$o -> {order} || $o -> {no_order}} -> {sort},
+				desc      => $columns -> {$o -> {order} || $o -> {no_order}} -> {desc},
+				no_hidden => $o -> {no_hidden},
+			} ;
+
 			foreach my $filter (@{$o -> {filters}}) {
-			
+
 				$_QUERY -> {content} -> {filters} -> {$filter -> {name}} = $_REQUEST {$filter -> {name}};
 
 			}
 
 		}
-		
-		$is_there_some_order or return;
-			
+
+		keys %{$_QUERY -> {content} -> {columns}} or return;
+
 		my $id___query = $_REQUEST {id___query};
 
 		$_REQUEST {id___query} = sql_select_id (
-	
-			$conf -> {systables} -> {__queries} => {
-	
-				fake		=> 0,
-				id_user		=> $_USER -> {id},
-				type		=> $_REQUEST {type},
-				-dump		=> Dumper ($_QUERY -> {content}),
-				label		=> '',
-				order_context	=> $_REQUEST {__order_context},
-	
-			}, ['id_user', 'type', 'label', 'order_context'],
-	
-		);
-			
-		!$id___query or $_REQUEST {id___query} == $id___query or sql_do ("UPDATE $conf->{systables}->{__queries} SET parent = ? WHERE id = ?", $id___query, $_REQUEST {id___query});
-		
-	} 
-	else {
-	
-		my $content = {filters => {}, columns => {}};
-		
-		my %n;
 
-		foreach my $o (@_ORDER) {
-		
-			my $parent = exists $o -> {parent} ? $o -> {parent} -> {order} : '';
-			$content -> {columns} -> {$o -> {order}} = {ord => ++ $n {$parent}};
+			$conf -> {systables} -> {__queries} => {
+
+				fake          => 0,
+				id_user       => $_USER -> {id},
+				type          => $_REQUEST {type},
+				-dump         => Dumper ($_QUERY -> {content}),
+				label         => '',
+				order_context => $_REQUEST {__order_context},
+				id_table      => $id_table,
+
+			}, [qw (id_user type label order_context id_table)],
+
+		);
+
+		!$id___query or $_REQUEST {id___query} == $id___query or sql_do ("UPDATE $conf->{systables}->{__queries} SET parent = ? WHERE id = ?", $id___query, $_REQUEST {id___query});
+
+	} else {
+
+		my $content = {filters => {}, columns => {}};
+
+		my %n;
+		my $is_exist_default_ords = 0 + grep {$_ -> {ord} || $_ -> {ord_fixed}} @_COLUMNS;
+
+		foreach my $o (@_COLUMNS) {
+
+			next unless ($o -> {order} || $o -> {no_order} || $o -> {parent_header} -> {order} || $o -> {parent_header} -> {no_order});
+
+			my $parent = exists $o -> {parent_header} ? ($o -> {parent_header} -> {order} || $o -> {parent_header} -> {no_order}) : '';
+			$content -> {columns} -> {$o -> {order} || $o -> {no_order}} = {
+				ord       => $is_exist_default_ords ? 0 + $o -> {ord} : ++ $n {$parent},
+				width     => $o -> {width},
+				height    => $o -> {height},
+				sort      => $o -> {sort},
+				desc      => $o -> {desc},
+				no_hidden => $o -> {no_hidden},
+			};
 
 			foreach my $filter (@{$o -> {filters}}) {
-			
+
 				$content -> {filters} -> {$filter -> {name}} = $_REQUEST {$filter -> {name}};
 
 			}
 
 		}
 
-		sql_select_id (
+		$_REQUEST {id___query} = sql_select_id (
 
 			$conf -> {systables} -> {__queries} => {
 
-				fake        => 0,
-				id_user     => $_USER -> {id},
-				type        => $_REQUEST {type},
-				-dump       => Dumper ($content),
-				label       => '',
-				order_context		=> $_REQUEST {__order_context},
+				fake          => 0,
+				id_user       => $_USER -> {id},
+				type          => $_REQUEST {type},
+				-dump         => Dumper ($content),
+				label         => '',
+				order_context => $_REQUEST {__order_context},
+				id_table      => $id_table,
 
-			}, ['id_user', 'type', 'label', 'order_context'],
+			}, [qw (id_user type label order_context id_table)],
 
 		);
 
 	}
-	
+
 }
 
 ################################################################################
 
 sub check___query {
 
+	my ($id_table) = @_;
+
 	return if $_QUERY;
 
 	$_REQUEST {__allow_check___query} or return;
 
 	$conf -> {core_store_table_order} or return;
+# Don't setup wrong $_REQUEST {__the_table} in sql_select_hash
+	local $_REQUEST {__the_table} = $_REQUEST {__the_table};
 
-	$_REQUEST {__order_context} ||= '';
-	
+	$_REQUEST {__order_context} ||= $_REQUEST {id} ? 'id' : '';
+
 	if ($_REQUEST {id___query} == -1) {
 
 		if ($SQL_VERSION -> {driver} eq 'Oracle') {
@@ -164,29 +214,29 @@ sub check___query {
 	else {
 
 		if ($SQL_VERSION -> {driver} eq 'Oracle') {
-			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label IS NULL AND id_user = ? AND type = ? AND order_context" . ($_REQUEST {__order_context} ? ' = ?' : ' IS NULL'), $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context} || ());
+			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label IS NULL AND id_user = ? AND type = ? AND order_context" . ($_REQUEST {__order_context} ? ' = ?' : ' IS NULL') . ($id_table ? ' AND id_table = ?' : ' AND id_table IS NULL'), $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context} || (), $id_table || ());
 		} else {
-			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?", $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context});
+			$_REQUEST {id___query} ||= sql_select_scalar ("SELECT id FROM $conf->{systables}->{__queries} WHERE fake = 0 AND label = '' AND id_user = ? AND type = ? AND order_context = ?" . ($id_table ? ' AND id_table = ?' : ' AND id_table IS NULL'), $_USER -> {id}, $_REQUEST {type}, $_REQUEST {__order_context}, $id_table || ());
 		}
 
 	}
-	
+
 	unless ($_REQUEST {id___query}) {
 
 		our $_QUERY = {};
 		our @_COLUMNS = ();
 		return;
-		
+
 	}
-	
-	our $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => , $_REQUEST {id___query});
-	
+
+	our $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id___query});
+
 	if ($_QUERY -> {label}) {
-	
+
 		$_REQUEST {id___query} = sql_select_id (
-	
+
 			$conf -> {systables} -> {__queries} => {
-	
+
 				id_user		=> $_USER -> {id},
 				type		=> $_QUERY -> {type},
 				label		=> '',
@@ -194,28 +244,23 @@ sub check___query {
 				-fake		=> 0,
 				-dump		=> $_QUERY -> {dump},
 				-parent		=> $_QUERY -> {id},
-	
+
 			}, ['id_user', 'type', 'label', 'order_context'],
-	
+
 		);
-	
+
+		$_QUERY -> {parent_label}  = delete $_QUERY -> {label};
+		$_QUERY -> {id_user}       = $_USER -> {id};
+		$_QUERY -> {order_context} = $_REQUEST {__order_context};
+		$_QUERY -> {fake}          = 0;
+
+
 	}
 
-	our $_QUERY = sql_select_hash (<<EOS, $_REQUEST {id___query});
-		SELECT
-			q.*
-			, p.label AS parent_label
-		FROM
-			$conf->{systables}->{__queries} AS q
-			LEFT JOIN $conf->{systables}->{__queries} AS p ON q.parent = p.id
-		WHERE
-			q.id = ?
-EOS
-
 	my $VAR1;
-	
+
 	eval $_QUERY -> {dump};
-	
+
 	$_QUERY -> {content} = $VAR1;
 
 	my $filters = $_QUERY -> {content} -> {filters};
@@ -223,52 +268,52 @@ EOS
 	foreach my $key (keys %$filters) {
 
 		next if exists $_REQUEST {$key};
-		
+
 		if ($key =~ /^id_/) {
-		
+
 			$filters -> {$key} = $_USER -> {id} if $filters -> {$key} eq '$_USER -> {id}';
-		
+
 		}
 		elsif ($key =~ /^dt_/ && $filters -> {$key} =~ /[^\d\.]/) {
-		
+
 			my ($y, $m, $d) = Date::Calc::Today;
-			
+
 			my $q = sprintf ('%02d', $m - (($m - 1) % 3));
-			my $m = sprintf ('%02d', $m);
-			my $d = sprintf ('%02d', $d);
-		
-			$filters -> {$key} =~ s{гггг}{$y};
-			$filters -> {$key} =~ s{мм}{$m};
-			$filters -> {$key} =~ s{кв}{$q};
-			$filters -> {$key} =~ s{дд}{$d};
-		
+			$m = sprintf ('%02d', $m);
+			$d = sprintf ('%02d', $d);
+
+			$filters -> {$key} =~ s|$i18n->{reduction_year}|$y|;
+			$filters -> {$key} =~ s|$i18n->{reduction_month}|$m|;
+			$filters -> {$key} =~ s|$i18n->{reduction_quarter}|$q|;
+			$filters -> {$key} =~ s|$i18n->{reduction_day}|$d|;
+
 		}
-						
+
 		$_REQUEST {$key} = $filters -> {$key};
- 
+
 	}
 
 	my $is_there_some_columns;
-				
+
 	foreach my $key (keys %{$_QUERY -> {content} -> {columns}}) {
-		
+
 		if ($_QUERY -> {content} -> {columns} -> {$key} -> {ord}) {
 			$is_there_some_columns = 1;
 			last;
 		}
 
 	}
-		
+
 	unless ($is_there_some_columns) {
 
 		sql_do ("DELETE FROM $conf->{systables}->{__queries} WHERE id = ?", $_REQUEST {id___query});
 
 		delete $_REQUEST {id___query};
-			
+
 		$_QUERY = undef;
 
 	}
-		
+
 }
 
 ################################################################################
@@ -276,7 +321,7 @@ EOS
 sub get_item_of___queries {
 
 	my ($data) = @_;
-	
+
 	delete $_REQUEST {__read_only};
 
 	return $data;
@@ -290,30 +335,30 @@ sub do_drop_filters___queries {
 	my $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id});
 
 	my $VAR1;
-	
+
 	eval $_QUERY -> {dump};
-	
+
 	$_QUERY -> {content} = $VAR1;
-	
+
 	delete $_QUERY -> {content} -> {filters};
-			
+
 	sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", Dumper ($_QUERY -> {content}), $_REQUEST {id});
 
 	my $esc_href = esc_href ();
 
 	foreach my $key (keys %_REQUEST) {
-	
+
 		$key =~ /^_filter_(.+)$/ or next;
-		
+
 		my $filter = $1;
 
 		$filter =~ s/_\d+//;
 
 		$esc_href =~ s/([\?\&]$filter=)[^\&]*//;
-	
+
 	}
 
-	$esc_href =~ s/([\?\&]__last_query_string=)(\-?\d+)/$1$_REQUEST{__last_query_string}/;	
+	$esc_href =~ s/([\?\&]__last_query_string=)(\-?\d+)/$1$_REQUEST{__last_query_string}/;
 	$esc_href .= '&__edit_query=1';
 
 	redirect ($esc_href, {kind => 'js'});
@@ -329,26 +374,40 @@ sub do_update___queries {
 
 	my @order = ();
 
+	my $is_any_column_shown = 0;
+
 	foreach my $key (keys %_REQUEST) {
-	
+
 		$key =~ /^_(.+)_ord$/ or next;
-		
+
 		my $order = $1;
-		
+
+		my $mandatory_field_label = $_REQUEST {"_${order}_mandatory"};
+
+		if (!exists($_REQUEST{"_${order}_parent"}) || $_REQUEST{$_REQUEST {"_${order}_parent"}} > 0) {
+			!$mandatory_field_label or $_REQUEST {"_${order}_ord"}
+				or croak "#_${order}_ord#:$i18n->{column} \"$mandatory_field_label\" $i18n->{mandatory_f}";
+		};
+
 		$content -> {columns} -> {$order} = {
-			ord  => $_REQUEST {"_${order}_ord"},
+			ord  => $_REQUEST {"_${order}_ord"} || 0,
 			sort => $_REQUEST {"_${order}_sort"},
 			desc => $_REQUEST {"_${order}_desc"},
 		};
-		
+
+		$is_any_column_shown ||= $_REQUEST {"_${order}_ord"};
+
 		if ($_REQUEST {"_${order}_sort"}) {
-		
+
 			$order [ $_REQUEST {"_${order}_sort"} ]  = $order;
 			$order [ $_REQUEST {"_${order}_sort"} ] .= ' DESC' if $_REQUEST {"_${order}_desc"};
-		
+
 		}
 
 	}
+
+	$is_any_column_shown
+		or croak "#_#:$i18n->{any_column_is_mandatory}";
 
 	$content -> {order} = join ', ', grep { $_ } @order;
 
@@ -357,7 +416,7 @@ sub do_update___queries {
 			$content -> {filters} -> {$1} .= '';
 		}
 	}
-	
+
 	foreach my $key (keys %_REQUEST) {
 
 		$key =~ /^_filter_(.+)$/ or next;
@@ -367,7 +426,17 @@ sub do_update___queries {
 		$_REQUEST {$key} = join ',', -1, @{$_REQUEST {$key}} if (ref $_REQUEST {$key} eq ARRAY);
 
 		$content -> {filters} -> {$filter} = $_REQUEST {$key} || '';
-	
+
+	}
+
+	my $_QUERY = sql_select_hash ($conf -> {systables} -> {__queries} => $_REQUEST {id});
+
+	my $VAR1;
+
+	eval $_QUERY -> {dump};
+
+	foreach my $col (keys %{$VAR1 -> {columns}}) {
+		$content -> {columns} -> {$col} -> {no_hidden} = $VAR1 -> {columns} -> {$col} -> {no_hidden} if (exists $content -> {columns} -> {$col});
 	}
 
 	sql_do ("UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?", Dumper ($content), $_REQUEST {id});
@@ -385,7 +454,7 @@ sub do_update___queries {
 
 		};
 
-	} 
+	}
 
 	$esc_href =~ s/\bstart=\d+\&?//;
 
@@ -395,17 +464,64 @@ sub do_update___queries {
 
 ################################################################################
 
+sub get___query_settings {
+
+	my ($id_query) = @_;
+
+	my $query = sql_select_hash ($conf -> {systables} -> {__queries} => $id_query);
+
+	my $VAR1;
+	eval $query -> {dump};
+
+	return $VAR1;
+}
+
+################################################################################
+
+sub set___query_settings {
+
+	my ($id_query, $settings) = @_;
+
+	$id_query or return;
+
+	sql_do (
+		"UPDATE $conf->{systables}->{__queries} SET dump = ? WHERE id = ?"
+		, Dumper ($settings)
+		, $id_query
+	);
+}
+
+################################################################################
+
+sub set_column_props {
+
+	my ($options) = @_;
+
+	$options -> {id_query} or return;
+
+	my $settings = get___query_settings ($options -> {id_query});
+
+	foreach my $key (keys %$options) {
+		next if $key =~ /^id_/;
+		$settings -> {columns} -> {$options -> {id}} -> {$key} = $options -> {$key};
+	}
+
+	set___query_settings ($options -> {id_query}, $settings);
+}
+
+################################################################################
+
 sub draw_item_of___queries {
 
 	my ($data) = @_;
-	
+
 	my @fields = (
-	
+
 		{
 			type  => 'banner',
-			label => 'СТОЛБЦЫ И ФИЛЬТРЫ',
+			label => $i18n -> {columns_and_filters},
 		},
-		
+
 	);
 
 	$_REQUEST {__form_checkboxes_custom} = '';
@@ -413,26 +529,16 @@ sub draw_item_of___queries {
 	my $cells_cnt = [];
 	my $composite_columns_cnt = -1;
 
-	for (my $i = 0; $i < @_ORDER; $i++) {
+	for (my $i = 0; $i < @_COLUMNS; $i++) {
 
-		my $o = @_ORDER -> [$i];
+		my $o = $_COLUMNS [$i];
 
 		$o -> {order} ||= $o -> {no_order};
 
+		next unless ($o -> {order} || $o -> {no_order});
+
 		next
-			if $o -> {__hidden} || $o -> {hidden};
-
-		if (@_ORDER -> [$i - 1] -> {colspan}) {
-
-			push @$cells_cnt, @_ORDER -> [$i - 1] -> {colspan};
-
-			if ($cells_cnt -> [$composite_columns_cnt + 1]) {
-
-				$composite_columns_cnt++;
-
-			}
-
-		}
+			if $o -> {__hidden} && !$o -> {no_hidden} || $o -> {ord_fixed};
 
 		my @f;
 
@@ -447,56 +553,57 @@ sub draw_item_of___queries {
 
 		} else {
 
-			if ($cells_cnt -> [$composite_columns_cnt]) {
-
-				for (my $j = 0; $j <= $composite_columns_cnt; $j++) {
+			my $current_o = $o;
+			my $no_hidden_title = $o -> {no_hidden_title} || 'Не отображается в текущем режиме';
+			while ($current_o -> {parent_header}) {
 					push @f, {
 						type => 'static',
 						label_off => 1,
 					};
-				}
-
-				unless ($o -> {colspan}) {
-					for (my $i = 0; $i < @$cells_cnt; $i++) {
-						$cells_cnt -> [$i]--;
-					}
-				}
-
-				while ($cells_cnt -> [$composite_columns_cnt] == 0 && $composite_columns_cnt >= 0) {
-					$composite_columns_cnt--;
-					pop @$cells_cnt;
-				}
-
+					$current_o = $current_o -> {parent_header};
 			}
 
 			push @f, (
 				{
-					label 		=> $o -> {title} || $o -> {label},
+					label 		=> ($o -> {__hidden} ? "<img src='$_REQUEST{__static_url}/status_102.gif' title = '$no_hidden_title' > " : '') . ($o -> {title} || $o -> {label}),
 					type  		=> 'hgroup',
+					label_title => $o -> {__hidden} ? $no_hidden_title : '',
 					nobr		=> 1,
 					cell_width	=> '50%',
 					items => [
 						{
-							label => 'показ',
+							label => $i18n -> {column_order},
 							size  => 2,
 							name  => $o -> {order} . '_ord',
-							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {ord},
+							value => $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {ord},
 							off   => $o -> {no_column},
 						},
 						{
-							label => 'сортировка',
+							label => $i18n -> {sorting},
 							size  => 2,
 							name  => $o -> {order} . '_sort',
-							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {sort},
+							value => $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {sort},
 							off   => $o -> {no_column} || $o -> {no_order},
 						},
 						{
 							name  => $o -> {order} . '_desc',
 							type  => 'select',
-							values => [{id => 1, label => 'убывание'}],
-							empty => 'возрастание',
-							value => $_QUERY -> {content} -> {columns} -> {$o -> {order}} -> {desc},
+							values => [{id => 1, label => $i18n -> {descending}}],
+							empty => $i18n -> {ascending},
+							value => $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {desc},
 							off   => $o -> {no_column} || $o -> {no_order},
+						},
+						{
+							name  => $o -> {order} . '_mandatory',
+							type  => 'hidden',
+							value => $o -> {title} || $o -> {label},
+							off   => $o -> {no_column} || $o -> {no_order} || !$o -> {mandatory},
+						},
+						{
+							name  => $o -> {order} . '_parent',
+							type  => 'hidden',
+							value => "_$o->{parent_header}->{order}_ord",
+							off   => $o -> {no_column} || $o -> {no_order} || !$o -> {mandatory} || !$o -> {parent_header} -> {order},
 						},
 						{
 							type  => 'static',
@@ -513,15 +620,15 @@ sub draw_item_of___queries {
 
 				$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
 
-				delete $f {type} 
+				delete $f {type}
 					if $f {type} eq 'input_text';
 
 				$f {type} =~ s/^input_//;
-			
+
 				if ($f {type} eq 'select') {
 					$f {values} = [grep {$_ -> {id} != -1} @{$f {values}}];
 					if ($f {other}) {
-						$f {name} = '_' . $f {name}; 
+						$f {name} = '_' . $f {name};
 						$f {value} ||= $_QUERY -> {content} -> {filters} -> {$f {name}};
 					}
 				} elsif ($f {type} eq 'date') {
@@ -529,10 +636,10 @@ sub draw_item_of___queries {
 				} elsif ($f {type} eq 'checkbox') {
 					$f {checked} = $f {value};
 				} elsif ($f {type} eq 'radio') {
-					$data -> {"filter_$f{name}"} = $f {value}; 
+					$data -> {"filter_$f{name}"} = $f {value};
 				} elsif ($f {type} eq 'checkboxes') {
 					$data -> {'filter_' . $f {name}} = [split /,/, $f {value}];
-					delete $f {value}; 
+					delete $f {value};
 
 					$_REQUEST {__form_checkboxes_custom} .= ',' . join ',', map {"_$f{name}_$_->{id}"} @{$f {values}};
 				}
@@ -554,20 +661,21 @@ sub draw_item_of___queries {
 			right_buttons => [
 				{
 					icon	=> 'delete',
-					label	=> 'Очистить фильтры',
-					href	=> "javaScript:document.form.action.value='drop_filters'; document.form.fireEvent('onsubmit'); document.form.submit()",
+					label	=> $i18n -> {drop_filters},
+					href	=> "javaScript:document.form.action.value='drop_filters'; \$(document.form).submit(); void(0);",
 					target	=> 'invisible',
 					keep_esc	=> 1,
 					off		=> $_REQUEST {__read_only} || !keys %{$_QUERY -> {content} -> {filters}},
 				},
 			],
 			no_edit => $_REQUEST {'__page_content'} -> {no_del},
-		}, 
-		
-		$data, 
-		
+			confirm_ok => undef,
+		},
+
+		$data,
+
 		\@fields
-		
+
 	);
 
 }

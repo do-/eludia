@@ -14,7 +14,7 @@ sub draw_string_voc_cell {
 	foreach my $value (@{$data -> {values}}) {
 		if (($value -> {id} eq $i -> {$data -> {name}}) or ($value -> {id} eq $data -> {value})) {
 			$data -> {id} = $value -> {id};
-			$data -> {label} = $value -> {label}; 
+			$data -> {label} = $value -> {label};
 			$data -> {label} =~ s/\"/\&quot\;/gsm; #";
 			last;
 		}

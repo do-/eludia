@@ -1,10 +1,10 @@
 {
 	_charset                 => 'windows-1252',
 	_calendar_lang           => 'fr',
-	_format_d		 => '%d/%m/%Y',
-	_format_dt		 => '%d/%m/%Y  %k:%M',
-	_lc			 => 'a-zà-öø-ÿ',
-	_uc			 => 'A-ZÀ-ÖØ-ß',
+	_format_d                => '%d/%m/%Y',
+	_format_dt               => '%d/%m/%Y %k:%M',
+	_lc                      => 'a-zà-öø-ÿ',
+	_uc                      => 'A-ZÀ-ÖØ-ß',
 	Exit                     => 'Déconnexion',
 	toolbar_pager_empty_list => 'liste vide',
 	toolbar_pager_of         => ' de ',
@@ -23,7 +23,7 @@
 	back                     => '&lt;&lt; pas précédent',
 	'next'                   => 'suite &gt;&gt;',
 	User                     => 'Utilisateur',
-	not_logged_in		 => 'indéfini',
+	not_logged_in            => 'indéfini',
 	Print                    => 'Imprimer',
 	F1                       => 'F1: Aide',
 	Select                   => 'Sélection',
@@ -44,11 +44,15 @@
 	wrong_hour               => 'Format de date inconnu',
 	wrong_min                => 'Format de date inconnu',
 	wrong_sec                => 'Format de date inconnu',
+	try_again                => "Echec de l'action. Veuillez essayer a nouveau.",
+	internal_error           => "Une erreur interne s'est produite.",
 	empty_file               => q[Ne pouvez pas telecharger des fichiers vides],
-	authorization		 => 'Connexion',
-	login			 => 'login',
-	execute_logon		 => 'se connecter',	
-	months			 => [qw(
+	authorization            => 'Connexion',
+	login                    => 'login',
+	execute_logon            => 'se connecter',	
+	Change                   => 'Changer',
+	Clear                    => 'Vider',
+	months                   => [qw(
 		janvier
 		février
 		mars

@@ -1125,8 +1125,7 @@ Calendar = function (mondayFirst, dateStr, onSelected, onClose) {
 Calendar._C = null;
 
 /// detect a special case of "web browser"
-Calendar.is_ie = ( /msie/i.test(navigator.userAgent) &&
-		   !/opera/i.test(navigator.userAgent) );
+Calendar.is_ie = /Trident\/\d\./i.test(navigator.userAgent);
 
 /// detect Opera browser
 Calendar.is_opera = /opera/i.test(navigator.userAgent);

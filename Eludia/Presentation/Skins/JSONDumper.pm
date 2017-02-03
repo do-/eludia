@@ -14,7 +14,13 @@ sub draw_hash {
 
 	my ($_SKIN, $h) = @_;
 
-	$_REQUEST {__content_type} ||= 'text/plain; charset=' . $i18n -> {_charset};
+	$_REQUEST {__content_type} ||= 'application/json; charset=' . $i18n -> {_charset};
+
+	if ($preconf -> {core_cors}) {
+		$r -> headers_out -> {'Access-Control-Allow-Origin'} = $preconf -> {core_cors};
+		$r -> headers_out -> {'Access-Control-Allow-Credentials'} = 'true';
+		$r -> headers_out -> {'Access-Control-Allow-Headers'} = 'Origin, X-Requested-With, Content-Type, Accept, Cookie';
+	}
 
 	$_JSON -> encode ($h);
 
@@ -25,11 +31,9 @@ sub draw_hash {
 sub draw_page {
 
 	my ($_SKIN, $page) = @_;
-	
-	$page -> {content} -> {__this_content_is_ok_to_be_shown_completely} or $page -> {content} = 'Sorry?..';
-	
-	return $_SKIN -> draw_hash ({ 
-	
+
+	return $_SKIN -> draw_hash ({
+
 		content => $page -> {content},
 
 	});
@@ -38,16 +42,26 @@ sub draw_page {
 
 ################################################################################
 
+sub draw_fatal_error_page {
+
+	return draw_error_page (@_);
+
+}
+
+################################################################################
+
 sub draw_error_page {
 
-	my ($_SKIN, $page) = @_;
+	my ($_SKIN, $page, $error) = @_;
 
-	return $_SKIN -> draw_hash ({ 
-	
-		message => $_REQUEST {error},
-		
-		field   => $page -> {error_field},
-		
+	return $_SKIN -> draw_hash ({
+
+		message => $error -> {label},
+
+		message_type => 'error',
+
+		field   => $error -> {field},
+
 	});
 
 }
@@ -58,12 +72,14 @@ sub draw_redirect_page {
 
 	my ($_SKIN, $page) = @_;
 
-	return $_SKIN -> draw_hash ({ 
-	
+	return $_SKIN -> draw_hash ({
+
 		url   => $page -> {url},
-		
+
 	});
 
 }
+
+
 
 1;

@@ -11,6 +11,7 @@
 .tbbg9 {background-color: #888888;}
 .tbbga {background-color: #e5e5e5;}
 .tbbgb {background-color: #e4e9ee;}
+.tbbgc {background-color: #a6a8ab;}
 
 .form-article {
 
@@ -103,6 +104,7 @@ div.checkboxes {
   cursor: default;
   background: #D7DFE6;
   font-family: tahoma,verdana,sans-serif;
+  z-index: 10000;
 }
 
 .calendar table {
@@ -356,6 +358,9 @@ BODY {
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
 	background-color: #FFFFFF
+}
+FORM {
+	margin: 0px;
 }
 
 .header_0 {
@@ -896,6 +901,11 @@ A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, 
 	border: 2px solid black;
 }
 
+.form-hidden-field {
+	display : none;
+}
+
+
 INPUT {
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
@@ -905,6 +915,7 @@ INPUT {
 	border-top: 2px inset;
 	border-left: 2px inset;
 	padding-left: 1px;
+	border-color: #FFF;
 }
 
 .cbx {
@@ -919,6 +930,7 @@ SELECT {
 	border-right: 2px ridge;
 	border-top: 2px inset;
 	border-left: 2px inset;
+	border-color: #FFF;
 }
 
 input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs {
@@ -959,6 +971,20 @@ input.form-mandatory-deleted, select.form-mandatory-deleted, textarea.form-manda
 	padding-right: 3px;
 }
 
+input.table-mandatory-inputs {
+	FONT-SIZE: 8pt;
+	COLOR: #000000;
+	background-color: #f4ff00;
+	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	border: 2px solid black;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+input.disabled {
+	background: #eeeeee;
+}
+
 td.toolbar {
 	FONT-SIZE: 8pt;
 	COLOR: #000000;
@@ -986,7 +1012,7 @@ a.hint {
 
 #admin a {color:#000000;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
 
-#Menu {position:absolute;top:expression(document.getElementById('admin').offsetTop+25);left:expression(document.getElementById('admin').offsetLeft + document.getElementById('admin').offsetParent.offsetLeft);visibility:expression(subsets_are_visible ? 'visible' : 'hidden');z-index:100;}
+#Menu {position:absolute;display:none;z-index:100;}
 #Menu .mm {background-color:#C4C7C9;padding:6px 5px 6px 9px;border-bottom:solid 1px #E2E3E4;}
 #Menu .mm0 {background-color:#C4C7C9;padding:6px 5px 0px 9px;}
 #Menu a {color:#23385A;text-decoration:none;font-family: Tahoma, Verdana, sans-serif;font-size:8pt;font-style:normal}
@@ -1067,3 +1093,6 @@ div.grey-submit a:hover {color:#222323;text-decoration:underline;}
 .dtree .clip {
 	overflow: hidden;
 }
+
+.zeroclipboard-is-hover { cursor:pointer !important; }
+.ui-dialog { z-index: 2000 !important ;}

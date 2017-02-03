@@ -1,26 +1,27 @@
 use Net::SMTP;
+use Email::Date::Format qw(email_date);
 
 ################################################################################
 
 sub __log {
 
 	my $now = time;
-	
+
 	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($now);
 	$year += 1900;
-	$mon ++; 
+	$mon ++;
 
-	printf STDERR "send_mail [%04d-%02d-%02d %02d:%02d:%02d:%03d %5d] %5.1f ms %s\n", 
+	printf STDERR "send_mail [%04d-%02d-%02d %02d:%02d:%02d:%03d %5d] %5.1f ms %s\n",
 		$year,
 		$mon,
 		$mday,
 		$hour,
 		$min,
 		$sec,
-		int (1000 * ($now - int $now)),		
+		int (1000 * ($now - int $now)),
 		$$,
-		1000 * ($now - $_[0]), 
-		$_[1]
+		1000 * ($now - $_[0]),
+		Encode::is_utf8($_[1]) ? Encode::encode('utf-8', $_[1]) : $_[1],
 	;
 
 	return $now;
@@ -32,48 +33,54 @@ sub __log {
 sub send_mail {
 
 	my ($options) = @_;
-	
+
+	$options -> {dt} ||= email_date ();
+
 	my $time = time;
-	
+
 	my $to = $options -> {to};
-	
+
 	ref $to eq ARRAY or $to = [$to];
-	
+
 	my $signature = ' [' . $options . ']: ';
 	$signature   .= $options -> {subject};
 	$signature   .= " / $options->{href}" if $options -> {href};
 
-	$time = __log ($time, " $signature" . Dumper ($options));
-	
+	if ($options -> {log} ne 'info') {
+
+		$time = __log ($time, " $signature" . Dumper ($options));
+
+	}
+
 	my @to_char = ();
 	my @to_num  = ();
-	
+
 	foreach my $i (@$to) {
-	
-		if (!ref $i && $i =~ /^[1-9]\d*$/) {
+
+		if (!ref $i && $i =~ /^\-?[1-9]\d*$/) {
 			push @to_num, $i;
 		}
 		else {
 			push @to_char, $i;
 		}
-	
+
 	}
-	
+
 	if (@to_num > 0) {
-	
+
 		my $ids = join ',', @to_num;
-		
+
 		sql_select_loop ("SELECT id, label, mail FROM $conf->{systables}->{users} WHERE id IN ($ids)", sub {
-		
+
 			$time = __log ($time, " $signature: $i->{id} -> $i->{mail}<$i->{label}>");
 			push @to_char, $i;
-		
+
 		});
-	
+
 	}
-	
+
 	my @to = ();
-	
+
 	foreach my $i (@to_char) {
 
 		ref $i eq HASH or $i = {mail => $i};
@@ -89,10 +96,10 @@ sub send_mail {
 		}
 
 	}
-	
-	if (@to == 0) {	
+
+	if (@to == 0) {
 		$time = __log ($time, " $signature: no valid mail addresses found, returning");
-		return;	
+		return;
 	}
 
 	$time = __log ($time, " $signature: thus, our address list is " . join (', ', @to));
@@ -105,73 +112,86 @@ sub send_mail {
 		$options -> {to} = \@to;
 		defer ('send_mail', [$options], {label => $signature});
 		return;
-	
+
 	}
-	
+
 		##### From address
 
 	$preconf -> {mail} -> {from} -> {mail} ||= $preconf -> {mail} -> {from} -> {address};
-	$options -> {from}                     ||= $preconf -> {mail} -> {from};	
+	$options -> {from}                     ||= $preconf -> {mail} -> {from};
 	$from                                    = encode_mail_address ($options -> {from}, $options);
-	
+
 		##### Message subject
 
 	my $subject = encode_mail_header ($options -> {subject}, $options -> {header_charset});
 
 		##### Message body
-	
+
 	$options -> {body_charset} ||= 'windows-1251';
 	$options -> {content_type} ||= 'text/plain';
-	
-	if ($options -> {href}) {	
+
+	if ($options -> {href}) {
 		my $server_name = $preconf -> {mail} -> {server_name} || $ENV{HTTP_HOST};
 		$options -> {href} =~ /^http/ or $options -> {href} = ($server_name =~ /^http/ ? $server_name : "http://$server_name") . $options -> {href};
 	}
 
+	my $text = $options -> {text};
+
 	if ($options -> {template}) {
 		our $DATA = $options -> {data} if $options -> {data};
 		$DATA -> {href} = $options -> {href};
-		$options -> {text} = fill_in_template ($options -> {template}, '', {no_print => 1});
+		$text = fill_in_template ($options -> {template}, '', {no_print => 1});
 		undef $DATA if $options -> {data};
 	}
 	elsif ($options -> {href}) {
 		$options -> {href} = "<br><br><a href='$$options{href}'>$$options{href}</a>" if $options -> {content_type} eq 'text/html';
-		$options -> {text} .= "\n\n" . $options -> {href};
+		$text .= "\n\n" . $options -> {href};
 	}
-	
+
 	if ($options -> {signature}) {
-		
-		$options -> {signature} = '<br><br>' . $options -> {signature} if $options -> {content_type} eq 'text/html';
-		$options -> {text} .= "\n\n" . $options -> {signature};
+
+		my $delimeter = "\n\n";
+
+		$delimeter .= '<br><br>' if $options -> {content_type} eq 'text/html';
+
+		$text .= $delimeter . $options -> {signature};
 	}
-	
-	my $text = encode_base64 ($options -> {text} . "\n") . $options -> {text_tail};
-	
+
+	if ($options -> {content_type} eq 'text/html' && $text !~ /<html/) {
+		$text = "<html><body>$text</body></html>";
+	}
+
+	$text = encode_base64 (
+		($i18n -> {_charset} eq 'UTF-8' ? Encode::encode ($options -> {body_charset}, $text) : $text)
+		. "\n"
+		. $options -> {text_tail}
+	);
+
 	my $is_child = 0;
-	
+
 	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'} || $_REQUEST {__skin} eq 'STDERR') {
 
 		$SIG {'CHLD'} = "IGNORE";
 
 		eval {$db -> disconnect};
-	
+
 		defined (my $child_pid = fork) or die "Cannot fork: $!\n";
 
 		if ($child_pid) {
 			sql_reconnect ();
 			return $child_pid;
 		}
-		
+
 		$is_child = 1;
-		
+
 	}
-		
+
 		##### connecting...
 
 	my $repeat = 10;
-	
+
 	my $smtp = undef;
-	
+
 	$time = __log ($time, " $signature: last message before connecting...");
 
 	while ($repeat) {
@@ -181,35 +201,35 @@ sub send_mail {
 		$smtp = Net::SMTP -> new ($preconf -> {mail} -> {host}, %{$preconf -> {mail} -> {options}});
 
 		$smtp or next;
-		
+
 		if ($preconf -> {mail} -> {user}) {
-		
+
 			require Authen::SASL;
-		
+
 			$smtp -> auth ($preconf -> {mail} -> {user}, $preconf -> {mail} -> {password}) or die "SMTP AUTH error: " . $smtp -> code . ' ' . $smtp -> message;
-			
+
 		}
-		
+
 		last if $smtp;
 
-	}	
+	}
 
-	unless (defined $smtp) {	
-	
+	unless (defined $smtp) {
+
 		$time = __log ($time, " $signature: CAN'T CONNECT TO $preconf->{mail}->{host}! Giving up.");
-		
+
 		if ($is_child) {
 			CORE::exit (0);
 		}
 		else {
 			return;
 		}
-		
+
 	}
 
 	$time = __log ($time, " $signature: connected to $preconf->{mail}->{host}, ready to send mail");
 
-	$smtp -> mail ($options -> {from} -> {address});
+	$smtp -> mail ($options -> {from} -> {mail} || $options -> {from} -> {address});
 
 	my @real_to = @to;
 
@@ -222,23 +242,25 @@ sub send_mail {
 		@real_to = map {ref $_ eq HASH ? ($_ -> {mail} || $_ -> {address}) : $_} @$mail_to;
 
 	}
-	
+
+	my $errors;
+
 	foreach my $to (@real_to) {
-			
+
 		next if $smtp -> recipient ($to, {Notify => ['FAILURE', 'DELAY'], SkipBad => 0});
-		
+
 		$smtp -> quit;
-		
-		$SIG {__DIE__} = 'DEFAULT';
-		
-		die ("The mail address '$to' is rejected by the SMTP server $preconf->{mail}->{host}\n");
-	
+
+		$errors .= "The mail address '$to' is rejected by the SMTP server $preconf->{mail}->{host}\n";
+
 	}
+
+	notify_about_error ($errors) if $errors;
 
 	$smtp -> data ();
 
 		##### sending main message
-		
+
 	$to = join ",\t", @to;
 	my $envelope_content_type = $options -> {envelope_content_type} || 'multipart/mixed';
 
@@ -247,6 +269,7 @@ From: $from
 Return-Path: $from
 To: $to
 Subject: $subject
+Date: $$options{dt}
 Content-type: $envelope_content_type;
 	Boundary="0__=4CBBE500DFA7329E8f9e8a93df938690918c4CBBE500DFA7329E"
 Content-Disposition: inline
@@ -291,9 +314,9 @@ EOT
 			close (FILE);
 
 			if ($attach -> {delete_after_send}) {
-			
+
 				unlink $attach -> {real_path} || warn "Can't unlink $attach->{real_path}: $!\n";
-				
+
 			}
 
 		}
@@ -309,7 +332,7 @@ EOT
 	$smtp -> quit;
 
 	$time = __log ($time, " $signature: done with sending mail");
-		
+
 	unless ($^O eq 'MSWin32' || $INC {'FCGI.pm'} || $_REQUEST {__skin} eq 'STDERR') {
 		$db -> disconnect;
 		CORE::exit (0);
@@ -322,9 +345,11 @@ EOT
 sub encode_mail_address {
 
 	my ($s, $options) = @_;
-	
+
 	ref $s or return $s;
-	
+
+	$s -> {label} ||= $s -> {mail};
+
 	return encode_mail_header ($s -> {label}, $options -> {header_charset}) . " <$s->{mail}>";
 
 }
@@ -335,17 +360,23 @@ sub encode_mail_header {
 
 	my ($s, $charset) = @_;
 
-	$charset ||= 'windows-1251';
-	
-	if ($charset eq 'windows-1251') {
-		$s =~ y{ÀÁÂÃÄÅ¨ÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäå¸æçèéêëìíîïðñòóôõö÷øùúûüýþÿ}{áâ÷çäå³öúéêëìíîïðòóôõæèãþûýÿùøüàñÁÂ×ÇÄÅ£ÖÚÉÊËÌÍÎÏÐÒÓÔÕÆÈÃÞÛÝßÙØÜÀÑ};
-		$charset = 'koi8-r';
+	if ($i18n -> {_charset} eq 'UTF-8') {
+
+		$charset ||= Encode::is_utf8($s) ? 'utf-8' : 'windows-1251';
+
+		$s = '=?' . $charset . '?B?' . encode_base64 (Encode::encode ($charset, $s)) . '?=';
+
+	} else {
+
+		$charset ||= 'windows-1251';
+		$s = '=?' . $charset . '?B?' . encode_base64 ($s) . '?=';
+
 	}
 
-	$s = '=?' . $charset . '?B?' . encode_base64 ($s) . '?=';
 	$s =~ s{[\n\r]}{}g;
-	return $s;	
-	
+
+	return $s;
+
 }
 
 1;

@@ -44,6 +44,21 @@ sub dt_iso {
 
 }
 
+
+sub dtime_iso {
+
+	my @ymdhms = map {split /\D+/} @_;
+
+	if ($ymdhms [0] < 1000) {
+		my $year = $ymdhms [2];
+		$ymdhms [2] = $ymdhms [0];
+		$ymdhms [0] = $year;
+	}
+
+	return sprintf ('%04d-%02d-%02d %02d:%02d:%02d', @ymdhms);
+
+}
+
 ################################################################################
 
 sub dt_dmy {

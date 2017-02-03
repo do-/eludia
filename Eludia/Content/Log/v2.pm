@@ -2,6 +2,10 @@
 
 sub log_action_start {
 
+	if ($_REQUEST {action} =~ /^_/ || $_REQUEST {type} =~ /^_/) {
+		return;
+	}
+
 	our $__log_id     = $_REQUEST {id};
 	our $__log_user   = $_USER -> {id};	
 	
@@ -77,6 +81,10 @@ sub log_action_start {
 
 sub log_action_finish {
 
+	if ($_REQUEST {action} =~ /^_/ || $_REQUEST {type} =~ /^_/) {
+		return;
+	}
+
 	$__log_id   ||= ($_REQUEST {id} || $_OLD_REQUEST {id} || $_REQUEST_VERBATIM {id});
 	
 	$__log_user ||=  $_USER -> {id};
@@ -106,7 +114,7 @@ sub log_action_finish {
 	
 		$fields .= ', id_user_real = ?';
 	
-		push @values, $_USER -> {id__real};
+		push @values, $_USER -> {id__real} || $_USER -> {id};
 	
 	}
 

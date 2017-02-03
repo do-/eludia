@@ -23,6 +23,13 @@ sub sql_version {
 
 ################################################################################
 
+sub sql_engine_status {
+
+	return '';
+}
+
+################################################################################
+
 sub sql_do_refresh_sessions {
 
 	my $timeout = sql_sessions_timeout_in_minutes ();

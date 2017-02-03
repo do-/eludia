@@ -57,7 +57,7 @@ sub session_access_log_set {
 	
 	}
 	
-	my $no = sql_select_scalar ("SELECT no FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND href = ?", $_REQUEST {sid}, $href);
+	my $no = sql_select_scalar ("SELECT no FROM $conf->{systables}->{__access_log} WHERE id_session = ? AND href LIKE ?", $_REQUEST {sid}, $href);
 		
 	return $no ? $no : session_access_log_append ($href);
 

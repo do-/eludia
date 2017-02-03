@@ -21,7 +21,7 @@ sub draw_input_cell {
 
 		our $_SUGGEST_SUB = &{$data -> {autocomplete} -> {values}} ();
 
-	} 
+	}
 
 	check_title ($data);
 

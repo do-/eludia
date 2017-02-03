@@ -34,6 +34,8 @@ sub wish_to_clarify_demands_for_table_columns {
 		
 		$i -> {DECIMAL_DIGITS} ||= 0;
 		
+		$i -> {COLUMN_DEF} = sprintf ("%.$$i{DECIMAL_DIGITS}f", $i -> {COLUMN_DEF})
+			if defined $i -> {COLUMN_DEF};
 	}
 		
 	if ($i -> {TYPE_NAME} eq 'VARCHAR') {
@@ -57,10 +59,17 @@ sub wish_to_explore_existing_table_columns {
 	my ($options) = @_;
 
 	my $existing = {};
-	
-	my $pk = '';
-	
-	sql_select_loop ("SHOW KEYS FROM $options->{table} WHERE Key_name = 'PRIMARY'", sub {$pk = $i -> {Column_name}});
+
+	my @pk_parts;
+
+	sql_select_loop (
+		"SHOW KEYS FROM $options->{table} WHERE Key_name = 'PRIMARY'"
+		, sub {
+			push @pk_parts, $i -> {Column_name};
+		}
+	);
+
+	my $pk = 1 == @pk_parts? $pk_parts [0] : '';
 
 	sql_select_loop (
 		
@@ -140,7 +149,7 @@ sub wish_to_explore_existing_table_columns {
 
 sub __genereate_sql_fragment_for_column {
 
-	my ($i) = @_;
+	my ($i, $options) = @_;
 	
 	return if $i -> {SQL};
 
@@ -154,9 +163,10 @@ sub __genereate_sql_fragment_for_column {
 
 		'');
 
+
 	$i -> {SQL} .= ' ' . $i -> {_EXTRA} if $i -> {_EXTRA};
-	
-	$i -> {SQL} .= ' PRIMARY KEY' if  $i -> {_PK};
+
+	$i -> {SQL} .= ' PRIMARY KEY' if  $i -> {_PK} && !$options -> {table_def} -> {partition};
 
 	if (!$i -> {NULLABLE}) {
 	
@@ -201,14 +211,7 @@ sub wish_to_update_demands_for_table_columns {
 	
 	}
 
-	if (exists $old -> {_EXTRA} && exists $new -> {_EXTRA} && $old -> {_EXTRA} eq $new -> {_EXTRA}) {
-	
-		delete $old -> {_EXTRA};
-		delete $new -> {_EXTRA};
-	
-	}
-	
-	__genereate_sql_fragment_for_column ($_) foreach ($old, $new);
+	__genereate_sql_fragment_for_column ($_, $options) foreach ($old, $new);
 
 }
 
@@ -234,7 +237,7 @@ sub wish_to_actually_create_table_columns {
 	
 	foreach my $i (@$items) {
 	
-		__genereate_sql_fragment_for_column ($i);
+		__genereate_sql_fragment_for_column ($i, $options);
 		
 		$sql .= ', ' . ($i -> {verb} || 'ADD') . ' ' . $i -> {name} . ' ' . $i -> {SQL};
 	
