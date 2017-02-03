@@ -73,6 +73,7 @@
 	request_sent             => 'Запрос отправлен на сервер',
 	session_terminated       => 'Сессия завершена',
 	save_or_cancel           => 'Пожалуйста, сначала сохраните данные (Ctrl-Enter) или отмените ввод (Esc)',
+	snils_incorrect          => 'Не корректный СНИЛС',
 	snils_checksum_fail      => 'Не сходится контрольная сумма СНИЛС',
 	snils_digits_count_fail  => 'СНИЛС должен состоять из 11 арабских цифр',
 	sorting                  => 'сортировка',
