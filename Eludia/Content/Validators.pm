@@ -14,6 +14,8 @@ sub vld_snils {
 		$value = $name;
 	}
 
+	$value =~ s/[^\d]//g;
+
 	if (!$value && $nullable) {
 		delete $_REQUEST {$name1} if ($name1);
 		return undef;
@@ -21,7 +23,7 @@ sub vld_snils {
 
 	local $SIG {__DIE__} = 'DEFAULT';
 
-	$value =~ s/[^\d]//g;
+	$value + 0 == 0 and $name1 ? die "#$name1#:$i18n->{snils_incorrect}" : return $i18n -> {snils_incorrect};
 
 	substr ($value, 0, 9) gt '001001998' or return undef;
 
