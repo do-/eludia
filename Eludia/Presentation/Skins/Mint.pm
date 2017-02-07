@@ -1992,9 +1992,6 @@ EOH
 
 	my $name = "_$$options{name}_1";
 
-	$options -> {href} = "javascript: \$('input[name=$name]').click()";
-
-
 	my $keep_form_params = $options -> {keep_form}? <<EOJS : '';
 		\$(this.form).filter('[isacopy]').remove();
 
@@ -2013,11 +2010,29 @@ EOH
 			});
 EOJS
 
+
+	my $keep_params = {action => 'upload'};
+
+	if (ref $options -> {href} eq 'HASH') {
+		$options -> {href} -> {action} ||= 'upload';
+		$keep_params = $options -> {href};
+	}
+
+	$keep_params = $_JSON -> encode ($keep_params);
+
+	$keep_params =~ s/\"/'/g;
+
+	$keep_form_params .= "\nvar keep_params = $keep_params;";
+
+	$options -> {href} = "javascript: \$('input[name=$name]').click(); void(0)";
+
 	$options -> {onChange} = "javascript:" . $keep_form_params . <<'EOJS';
 
 		var toolbarFormData = new FormData(this.form);
 
-		toolbarFormData.append('action', 'upload');
+		$.each(keep_params, function(name, value) {
+			toolbarFormData.append(name, value);
+		});
 
 		$.ajax ({
 			type: 'POST',
