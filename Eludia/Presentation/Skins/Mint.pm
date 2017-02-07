@@ -2026,7 +2026,7 @@ EOJS
 
 	$options -> {href} = "javascript: \$('input[name=$name]').click(); void(0)";
 
-	$options -> {onChange} = "javascript:" . $keep_form_params . <<'EOJS';
+	$options -> {onChange} = $keep_form_params . <<'EOJS';
 
 		var toolbarFormData = new FormData(this.form);
 
