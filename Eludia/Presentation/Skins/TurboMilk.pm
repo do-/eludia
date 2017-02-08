@@ -2252,28 +2252,7 @@ EOJS
 	$options -> {href} = "javascript: \$('input[name=$name]').click(); void(0)";
 
 	$options -> {onChange} = $keep_form_params . <<'EOJS';
-
-		var toolbarFormData = new FormData(this.form);
-
-		$.each(keep_params, function(name, value) {
-			toolbarFormData.append(name, value);
-		});
-
-		$.ajax ({
-			type: 'POST',
-			url: '/',
-			data: toolbarFormData,
-			processData: false,
-			contentType : false,
-			dataType: 'json',
-			success: function(data) {
-				alert(data.message);
-				location.reload(true);
-			},
-			error: function(data) {
-				console.log(data);
-			}
-		});
+	setAndSubmit($(this).closest('form').attr('name'), keep_params);
 EOJS
 
 	$html .= <<EOH;
@@ -2291,7 +2270,7 @@ EOH
 					onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
 					onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
 					onChange="is_dirty=true; $$options{onChange}"
-					style="visibility:hidden; width: 1px"
+					style="visibility:hidden; position:absolute; top:-9999px; left:-9999px; width: 1px"
 					is-native="true"
 				/>
 EOH
