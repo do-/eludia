@@ -897,6 +897,7 @@ sub adjust_last_query_string {
 		or $_REQUEST {__last_query_string} != $_PREVIOUS_REQUEST -> {__last_query_string}
 		or $_REQUEST {type}                ne $_PREVIOUS_REQUEST -> {type}
 		or $_REQUEST {__next_query_string}
+		or $_REQUEST {salt} ne $_PREVIOUS_REQUEST -> {salt}
 		or $_PREVIOUS_REQUEST -> {__edit}
 		or return;
 
