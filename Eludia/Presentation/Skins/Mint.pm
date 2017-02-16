@@ -954,7 +954,6 @@ sub draw_form_field_radio {
 ################################################################################
 
 sub draw_form_field_select {
-
 	my ($_SKIN, $options, $data) = @_;
 
 	return $_SKIN -> draw_form_field_combo ($options, $data)
@@ -1022,7 +1021,19 @@ EOH
 	}
 
 	foreach my $value (@{$options -> {values}}) {
-		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
+		my $tooltip = $value -> {orign_label}
+			? qq { data-tooltip-field="$$value{orign_label}"}
+			: '';
+
+		$html .= <<EOH;
+			<option
+				value="$$value{id}"
+				$$value{selected}
+				$tooltip
+			>
+				$$value{label}
+			</option>\n
+EOH
 	}
 
 	if (defined $options -> {other} && !$options -> {other} -> {on_top}) {
@@ -4022,7 +4033,10 @@ sub __adjust_form_field_select {
 
 	foreach my $value (@{$options -> {values}}) {
 
-		$value -> {label} = trunc_string ($value -> {label}, $options -> {max_len});
+		if (length $value -> {label} > $options -> {max_len}) {
+			$value -> {orign_label} = $value -> {label};
+			$value -> {label} = trunc_string ($value -> {label}, $options -> {max_len});
+		}
 
 		$value -> {id}    =~ s{\"}{\&quot;}g; #";
 
