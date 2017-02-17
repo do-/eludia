@@ -606,9 +606,17 @@ function adjust_kendo_selects(top_element) {
 		el.closest('.k-widget').width(w);
 	}
 
-	var select_tranform = function(){
+	var select_tranform = function() {
 		var original_select = this,
-			$original_select = $(this);
+			$original_select = $(this),
+			itemTemplate = "# var attrs = ''; \
+					$.each(data.attributes, function(index, item) { \
+						attrs += item.name + '=\"' + item.value + '\" '; \
+					}); \
+				# \
+				<span #= attrs #> \
+					#= data.label # \
+				</span>";
 
 		$original_select.addClass('k-group').kendoDropDownList({
 			height: 320,
@@ -618,11 +626,17 @@ function adjust_kendo_selects(top_element) {
 			dataBound: function() {
 				var self = this,
 					initTooltip = function() {
-						self.ul.find('[data-tooltip]').each(function() {
-							var $this = $(this);
+						var $elements = self.ul.find('[data-tooltip]'),
+							$valueElement = self.wrapper.find('[data-tooltip]'),
+							allElements = ($elements.length) ? $elements : [];
 
-							if (!$this.data('kendoTooltip')) {
-								$this.kendoTooltip({
+						if ($valueElement.length)
+							allElements.push($valueElement);
+						$.each(allElements, function(index, item) {
+							$item = $(item);
+
+							if (!$item.data('kendoTooltip')) {
+								$item.kendoTooltip({
 									width: 500,
 									content: function(e) {
 										return $(e.target).attr('data-tooltip')
@@ -637,6 +651,34 @@ function adjust_kendo_selects(top_element) {
 				} else {
 					require(['kendo.tooltip.min'], initTooltip)
 				}
+				$.each(this.dataSource.data(), function(index, item) {
+					if (item.attributes.length) {
+						var $option = $original_select.find('option[value=' + item.value + ']');
+
+						$.each(item.attributes, function(_index, _item) {
+							$option.attr({[_item.name]: _item.value})
+						})
+					}
+				})
+			},
+			change: function() {
+				var $valueElement = this.wrapper.find('[data-tooltip]'),
+					initTooltip = function() {
+						$valueElement.kendoTooltip({
+							width: 500,
+							content: function(e) {
+								return $(e.target).attr('data-tooltip')
+							}
+						})
+					};
+
+				if ($valueElement.length) {
+					if ($.fn.kendoTooltip) {
+						initTooltip()
+					} else {
+						require(['kendo.tooltip.min'], initTooltip)
+					}
+				}
 			},
 			dataSource: (function($select) {
 				var dataSource = [];
@@ -645,33 +687,28 @@ function adjust_kendo_selects(top_element) {
 					var $this = $(this),
 						item  = {
 							value: $this.attr('value').trim(),
-							label: $this.text().trim()
+							label: $this.text().trim(),
+							attributes: []
 						};
 
-					$.each(this.attributes, function(index, attr) {
-						var res = /^data(\-)(\w+)/i.exec(attr.nodeName || attr.name);
+					$.each(this.attributes, function(index, attribute) {
+						var name = attribute.nodeName || attribute.name;
 
-						if (res)
-							item[res[2]] = attr.value.trim()
+						if (name !== 'value' && name !== 'style' && name !== 'selected')
+							item.attributes.push({
+								name: name,
+								value: attribute.value.trim()
+							})
 					});
-					dataSource.push(item);
+					dataSource.push(item)
 				});
 
 				return dataSource
 			})($original_select),
 			dataTextField: 'label',
 			dataValueField: 'value',
-			template: "# var attrs = ''; \
-						 reservedKeys = ['_events', 'value', 'label', 'uid', 'parent']; \
-					for (var key in data) { \
-						if (data.hasOwnProperty(key) && reservedKeys.indexOf(key) === -1) { \
-							attrs += ' data-' + key + '=\"' + data[key] + '\"'; \
-						} \
-					}; \
-				# \
-				<span#= attrs #> \
-					#= data.label # \
-				</span>",
+			template: itemTemplate,
+			valueTemplate: itemTemplate,
 			open: function(e) {
 				$.data(original_select, 'prev_value', this.selectedIndex);
 				if (!$(original_select).attr('data-ken-autoopen'))
