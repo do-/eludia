@@ -13,6 +13,19 @@
  * Date: 30-03-2014
  */!function(a,b){"use strict";var c,d;if(a.uaMatch=function(a){a=a.toLowerCase();var b=/(opr)[\/]([\w.]+)/.exec(a)||/(chrome)[ \/]([\w.]+)/.exec(a)||/(version)[ \/]([\w.]+).*(safari)[ \/]([\w.]+)/.exec(a)||/(webkit)[ \/]([\w.]+)/.exec(a)||/(opera)(?:.*version|)[ \/]([\w.]+)/.exec(a)||/(msie) ([\w.]+)/.exec(a)||a.indexOf("trident")>=0&&/(rv)(?::| )([\w.]+)/.exec(a)||a.indexOf("compatible")<0&&/(mozilla)(?:.*? rv:([\w.]+)|)/.exec(a)||[],c=/(ipad)/.exec(a)||/(iphone)/.exec(a)||/(android)/.exec(a)||/(windows phone)/.exec(a)||/(win)/.exec(a)||/(mac)/.exec(a)||/(linux)/.exec(a)||/(cros)/i.exec(a)||[];return{browser:b[3]||b[1]||"",version:b[2]||"0",platform:c[0]||""}},c=a.uaMatch(b.navigator.userAgent),d={},c.browser&&(d[c.browser]=!0,d.version=c.version,d.versionNumber=parseInt(c.version)),c.platform&&(d[c.platform]=!0),(d.android||d.ipad||d.iphone||d["windows phone"])&&(d.mobile=!0),(d.cros||d.mac||d.linux||d.win)&&(d.desktop=!0),(d.chrome||d.opr||d.safari)&&(d.webkit=!0),d.rv){var e="msie";c.browser=e,d[e]=!0}if(d.opr){var f="opera";c.browser=f,d[f]=!0}if(d.safari&&d.android){var g="android";c.browser=g,d[g]=!0}d.name=c.browser,d.platform=c.platform,a.browser=d}(jQuery,window);
 
+/*
+	underscore js
+*/
+var _ = window.top._;
+
+if (typeof _ === 'undefined') {
+	$.ajax({
+		url: '/i/mint/libs/underscore/underscore.js',
+		async: false,
+		dataType: 'script'
+	})
+}
+
 var select_options = {};
 var browser_is_msie = $.browser.msie;
 var is_dialog_blockui = $.browser.webkit || $.browser.safari;
@@ -320,30 +333,29 @@ function open_vocabulary_from_select (s, options) {
 
 }
 
-function open_vocabulary_from_combo (combo, options) {
-
+function open_vocabulary_from_combo(combo, options) {
 	if (is_dialog_blockui)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + options.message + '</h1>'});
 
-	setComboValue = function (result) {
-
+	var setComboValue = function (result) {
 		if (result.result == 'ok') {
-
+			if (result.label.length > 100) {
+				result.orign_label = result.label;
+				result.label = result.label.substr(0, 99) + '...';
+			}
 			for (var j = 0; j < combo.dataSource.data().length; j ++) {
-				if (combo.dataSource.data() [j].id == result.id) {
+				if (combo.dataSource.data()[j].id == result.id) {
 					break;
 				}
 			}
-
 			if (j == combo.dataSource.data().length) {
-				combo.dataSource.add ({id : result.id, label : result.label});
+				combo.dataSource.add(
+					{id: result.id, label: result.label, orign_label: result.orign_label || null}
+				);
 			}
-
-			combo.select (j);
+			combo.select(j);
 			$(combo.element[0]).trigger('change');
-
 		}
-
 	};
 
 	try {
@@ -745,9 +757,32 @@ function adjust_kendo_selects(top_element) {
 
 
 function do_kendo_combo_box (id, options) {
+	var values = options.values,
+		ds = {},
+		setTooltip = function() {
+			var $this = this,
+				set = function() {
+					$this.kendoTooltip({
+						content: function(e) {
+							return $(e.target).attr('data-tooltip')
+						}
+					})
+				};
 
-	var values      = options.values,
-		ds          = {};
+			if ($this.data('kendoTooltip')) {
+				$this.data('kendoTooltip').refresh()
+			} else {
+				if ($.fn.kendoTooltip) {
+					set()
+				} else {
+					require(['kendo.tooltip.min'], set)
+				}
+			}
+		},
+		unsetTooltip = function() {
+			if (this.data('kendoTooltip'))
+				this.data('kendoTooltip').destroy()
+		};
 
 	if (options.href) {
 		ds = {
@@ -805,13 +840,36 @@ schema_loop:
 	};
 
 	var combo = $('#' + id).kendoComboBox({
-		placeholder     : options.empty,
-		dataTextField   : 'label',
-		dataValueField  : 'id',
-		filter          : 'contains',
-		minLength       : 3,
-		autoBind        : false,
+		placeholder    : options.empty,
+		dataTextField  : 'label',
+		dataValueField : 'id',
+		filter         : 'contains',
+		minLength      : 3,
+		autoBind       : false,
+		template       : '<span \
+							# if (data.orign_label) { # data-tooltip="#= data.orign_label #" # } # \
+						> \
+							#= data.label # \
+						</span>',
 		dataSource      : ds,
+		dataBound: function() {
+			setTimeout(function() {
+				var value = parseInt(this.value());
+
+				if (value) {
+					var itemValue = _.find(this.dataSource.data(), function(i) {
+						return parseInt(i.id) === value
+					});
+					if (itemValue.orign_label) {
+						this.input.attr('data-tooltip', itemValue.orign_label);
+						setTooltip.call(this.input)
+					} else {
+						unsetTooltip.call(this.input)
+					}
+				}
+			}.bind(this), 100);
+
+		},
 		cascade: function(e) {
 			var input = this.element [0];
 
@@ -846,6 +904,13 @@ schema_loop:
 
 			if (max_len * 8 + 32 > w)
 				this.popup.element.css("width", (max_len * 8 + 32) + "px");
+
+			this.ul.find('[data-tooltip]').each(function() {
+				var $this = $(this);
+
+				if (!$this.data('kendoTooltip'))
+					setTooltip.call($this);
+			});
 		},
 
 		close : function (e) {
@@ -864,12 +929,18 @@ schema_loop:
 
 	$('#' + id + '_input').on('keypress', $.proxy(input_change.on_change, input_change));
 
-	for(var i = 0; i < values.length; i++) {
-		combo.dataSource.add ({id : values [i].id, label : values [i].label});
-		if (values [i].selected)
-			combo.select (i);
-	}
+	for (var i = 0; i < values.length; i++) {
+		var orignLabel = values[i].orign_label || null;
 
+		combo.dataSource.add({id: values[i].id,label: values[i].label,orign_label: orignLabel});
+		if (values[i].selected) {
+			if (orignLabel) {
+				combo.input.attr('data-tooltip', orignLabel);
+				setTooltip.call(combo.input);
+			}
+			combo.select(i);
+		}
+	}
 
 	var p = combo.popup.element;
 	var w = p.css("visibility","hidden").show().outerWidth();
@@ -1231,7 +1302,6 @@ function setCursor (w, c) {
 }
 
 function invoke_setSelectOption (a) {
-
 	if (!a.question || window.confirm (a.question)) {
 		var ws = ancestor_window_with_child ('__body_iframe');
 		if (ws) ws.window._setSelectOption (a.id, a.label);
