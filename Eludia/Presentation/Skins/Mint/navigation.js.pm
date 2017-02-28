@@ -610,9 +610,11 @@ function adjust_kendo_selects(top_element) {
 		var original_select = this,
 			$original_select = $(this),
 			itemTemplate = "# var attrs = ''; \
-					$.each(data.attributes, function(index, item) { \
-						attrs += item.name + '=\"' + item.value + '\" '; \
-					}); \
+					if (data.attributes && data.attributes.length) { \
+						$.each(data.attributes, function(index, item) { \
+							attrs += item.name + '=\"' + item.value + '\" '; \
+						}); \
+					} \
 				# \
 				<span #= attrs #> \
 					#= data.label # \
@@ -652,11 +654,11 @@ function adjust_kendo_selects(top_element) {
 					require(['kendo.tooltip.min'], initTooltip)
 				}
 				$.each(this.dataSource.data(), function(index, item) {
-					if (item.attributes.length) {
+					if (item.attributes && item.attributes.length) {
 						var $option = $original_select.find('option[value=' + item.value + ']');
 
 						$.each(item.attributes, function(_index, _item) {
-							$option.attr({[_item.name]: _item.value})
+							$option.attr(_item.name, _item.value)
 						})
 					}
 				})
