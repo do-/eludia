@@ -25,9 +25,9 @@ sub vld_snils {
 
 	$value + 0 == 0 and $name1 ? die "#$name1#:$i18n->{snils_incorrect}" : return $i18n -> {snils_incorrect};
 
-	substr ($value, 0, 9) gt '001001998' or return undef;
-
 	$value =~ /^\d{11}$/ or $name1 ? die "#$name1#:$i18n->{snils_digits_count_fail}" : return $i18n -> {snils_digits_count_fail};
+
+	substr ($value, 0, 9) gt '001001998' or return undef;
 
 	my @n = split //, $value;
 
