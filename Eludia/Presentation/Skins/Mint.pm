@@ -1110,7 +1110,7 @@ EOH
 	$options -> {ds} -> {href} = ''
 		if $options -> {ds} -> {off};
 
-	my $width = $options -> {width} || '300px';
+	my $width = $options -> {width};
 
 	$_REQUEST {__on_load} .= <<EOJS;
 
