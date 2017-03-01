@@ -1110,6 +1110,8 @@ EOH
 	$options -> {ds} -> {href} = ''
 		if $options -> {ds} -> {off};
 
+	my $width = $options -> {width} || '300px';
+
 	$_REQUEST {__on_load} .= <<EOJS;
 
 		if (window.name.substring (0, 9) == 'invisible') {
@@ -1131,7 +1133,8 @@ EOH
 				empty   : '$options->{empty}',
 				href    : '$options->{ds}->{href}',
 				portion : $conf->{portion},
-				max_len : $options->{max_len}
+				max_len : $options->{max_len},
+				width   : "$width"
 			});
 		}
 

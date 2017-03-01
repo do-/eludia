@@ -699,3 +699,11 @@ a.hint {
 .k-callout-n {
 	border-bottom-color: #333;
 }
+
+/* combobox */
+.k-widget.k-combobox .k-input {
+	text-overflow: ellipsis;
+}
+.k-list-container.k-popup {
+	width: auto!important;
+}

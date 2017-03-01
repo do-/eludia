@@ -895,16 +895,6 @@ schema_loop:
 			if (input_change.is_changed)
 				this.dataSource.query();
 			input_change.is_changed = false;
-			var max_len = 0,
-				data_items = this.dataSource.data (),
-				w = this.popup.element.css("width").replace("px", "");
-			for (var i = 0; i < data_items.length; i ++)
-				if (data_items [i].label.length > max_len)
-					max_len = data_items [i].label.length;
-
-			if (max_len * 8 + 32 > w)
-				this.popup.element.css("width", (max_len * 8 + 32) + "px");
-
 			this.ul.find('[data-tooltip]').each(function() {
 				var $this = $(this);
 
@@ -915,16 +905,7 @@ schema_loop:
 
 		close : function (e) {
 			stibqif (false);
-		},
-
-		select : function (e) {
-			var w = (this.dataItem() ? this.dataItem().label : e.item.text ()).length * 8 + 32,
-				el = this.element.closest(".k-widget");
-
-			if (w > el.width ())
-				el.width(w);
 		}
-
 	}).data('kendoComboBox');
 
 	$('#' + id + '_input').on('keypress', $.proxy(input_change.on_change, input_change));
@@ -941,16 +922,7 @@ schema_loop:
 			combo.select(i);
 		}
 	}
-
-	var p = combo.popup.element;
-	var w = p.css("visibility","hidden").show().outerWidth();
-	p.hide().css("visibility","visible");
-	if (options.empty && options.empty.length * 8 > w)
-		w = options.empty.length * 8;
-	if (options.max_len && options.max_len * 8 < w)
-		w = options.max_len * 8;
-	combo.element.closest(".k-widget").width(w + 32);
-
+	combo.element.closest(".k-widget").width(options.width);
 }
 
 function hide_dropdown_button (id) {
