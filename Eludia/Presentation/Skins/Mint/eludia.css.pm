@@ -704,6 +704,9 @@ a.hint {
 .k-widget.k-combobox .k-input {
 	text-overflow: ellipsis;
 }
-.k-list-container.k-popup {
-	width: auto!important;
+
+/* popup */
+.k-popup .k-item {
+	overflow: hidden;
+	text-overflow: ellipsis;
 }

@@ -339,10 +339,6 @@ function open_vocabulary_from_combo(combo, options) {
 
 	var setComboValue = function (result) {
 		if (result.result == 'ok') {
-			if (result.label.length > 100) {
-				result.orign_label = result.label;
-				result.label = result.label.substr(0, 99) + '...';
-			}
 			for (var j = 0; j < combo.dataSource.data().length; j ++) {
 				if (combo.dataSource.data()[j].id == result.id) {
 					break;
@@ -350,7 +346,7 @@ function open_vocabulary_from_combo(combo, options) {
 			}
 			if (j == combo.dataSource.data().length) {
 				combo.dataSource.add(
-					{id: result.id, label: result.label, orign_label: result.orign_label || null}
+					{id: result.id, label: result.label}
 				);
 			}
 			combo.select(j);
@@ -610,9 +606,9 @@ function focus_on_input (__focused_input) {
 
 
 function adjust_kendo_selects(top_element) {
-	var setWidth = function(el) {
+	var setWidth = function(el, width) {
 		var p = el.data('kendoDropDownList').popup.element,
-			w = p.css('visibility','hidden').outerWidth() + 32;
+			w = width || p.css('visibility','hidden').outerWidth() + 32;
 
 		p.css('visibility', 'visible');
 		el.closest('.k-widget').width(w);
@@ -620,17 +616,7 @@ function adjust_kendo_selects(top_element) {
 
 	var select_tranform = function() {
 		var original_select = this,
-			$original_select = $(this),
-			itemTemplate = "# var attrs = ''; \
-					if (data.attributes && data.attributes.length) { \
-						$.each(data.attributes, function(index, item) { \
-							attrs += item.name + '=\"' + item.value + '\" '; \
-						}); \
-					} \
-				# \
-				<span #= attrs #> \
-					#= data.label # \
-				</span>";
+			$original_select = $(this);
 
 		$original_select.addClass('k-group').kendoDropDownList({
 			height: 320,
@@ -639,60 +625,29 @@ function adjust_kendo_selects(top_element) {
 			},
 			dataBound: function() {
 				var self = this,
-					initTooltip = function() {
-						var $elements = self.ul.find('[data-tooltip]'),
-							$valueElement = self.wrapper.find('[data-tooltip]'),
-							allElements = ($elements.length) ? $elements : [];
+					list = this.ul.find('li');
 
-						if ($valueElement.length)
-							allElements.push($valueElement);
-						$.each(allElements, function(index, item) {
-							$item = $(item);
-
-							if (!$item.data('kendoTooltip')) {
-								$item.kendoTooltip({
-									width: 500,
-									content: function(e) {
-										return $(e.target).attr('data-tooltip')
-									}
-								})
-							}
-						})
-					};
-
-				if ($.fn.kendoTooltip) {
-					initTooltip()
-				} else {
-					require(['kendo.tooltip.min'], initTooltip)
-				}
 				$.each(this.dataSource.data(), function(index, item) {
 					if (item.attributes && item.attributes.length) {
-						var $option = $original_select.find('option[value=' + item.value + ']');
+						var $option = $original_select.find('option[value=' + item.value + ']'),
+							$li = list.eq(index);
 
 						$.each(item.attributes, function(_index, _item) {
-							$option.attr(_item.name, _item.value)
+							$option.attr(_item.name, _item.value);
+							$li.attr(_item.name, _item.value);
 						})
 					}
 				})
 			},
-			change: function() {
-				var $valueElement = this.wrapper.find('[data-tooltip]'),
-					initTooltip = function() {
-						$valueElement.kendoTooltip({
-							width: 500,
-							content: function(e) {
-								return $(e.target).attr('data-tooltip')
-							}
-						})
-					};
+			change: function(e) {
+				var value = this.value(),
+					valueItem = _.find(this.dataSource.data(), function(i) { return i.value == value }),
+					tooltip = (valueItem && valueItem.attributes)
+						? _.find(valueItem.attributes, function(i) { return i.name === 'data-tooltip' })
+						: null;
 
-				if ($valueElement.length) {
-					if ($.fn.kendoTooltip) {
-						initTooltip()
-					} else {
-						require(['kendo.tooltip.min'], initTooltip)
-					}
-				}
+				if (tooltip)
+					this.wrapper.find('.k-input').attr(tooltip.name, tooltip.value)
 			},
 			dataSource: (function($select) {
 				var dataSource = [];
@@ -721,14 +676,12 @@ function adjust_kendo_selects(top_element) {
 			})($original_select),
 			dataTextField: 'label',
 			dataValueField: 'value',
-			template: itemTemplate,
-			valueTemplate: itemTemplate,
 			open: function(e) {
 				$.data(original_select, 'prev_value', this.selectedIndex);
 				if (!$(original_select).attr('data-ken-autoopen'))
 					return;
 
-				var kendo_select = this;
+				var kendo_select = this,
 					non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
 						return el.value != 0 && el.value != -1;
 					});
@@ -747,7 +700,43 @@ function adjust_kendo_selects(top_element) {
 				return blockEvent();
 			}
 		}).data('kendoDropDownList');
-		setWidth($original_select);
+		setWidth($original_select, $original_select.attr('data-width'));
+
+		var kendoDropDownList = $original_select.data('kendoDropDownList'),
+			$kInput = kendoDropDownList.wrapper.find('.k-input'),
+			value = kendoDropDownList.value(),
+			valueItem = _.find(kendoDropDownList.dataSource.data(), function(i) { return i.value == value }),
+			tooltip = (valueItem && valueItem.attributes)
+				? _.find(valueItem.attributes, function(i) { return i.name === 'data-tooltip' })
+				: null;
+
+		if (tooltip)
+			$kInput.attr(tooltip.name, tooltip.value);
+		$kInput.on('mouseenter', function() {
+			var $this = $(this),
+				textHasOverflown = this.scrollWidth > $this.innerWidth(),
+				showTooltip = function() {
+					$this.kendoTooltip({
+						content: $this.attr('data-tooltip') || $this.text()
+					})
+					.data('kendoTooltip')
+					.show();
+				};
+
+			if (textHasOverflown || $this.find('[data-tooltip]').length) {
+				if ($.fn.kendoTooltip) {
+					showTooltip()
+				} else {
+					require(['kendo.tooltip.min'], showTooltip)
+				}
+			}
+		});
+		$kInput.on('mouseout', function() {
+			var $this = $(this);
+
+			if ($this.data('kendoTooltip'))
+				$this.data('kendoTooltip').destroy()
+		});
 	}
 
 	$('select', top_element).not('#_setting__suggest, #_id_filter__suggest, [multiselect]')
@@ -758,31 +747,7 @@ function adjust_kendo_selects(top_element) {
 
 function do_kendo_combo_box (id, options) {
 	var values = options.values,
-		ds = {},
-		setTooltip = function() {
-			var $this = this,
-				set = function() {
-					$this.kendoTooltip({
-						content: function(e) {
-							return $(e.target).attr('data-tooltip')
-						}
-					})
-				};
-
-			if ($this.data('kendoTooltip')) {
-				$this.data('kendoTooltip').refresh()
-			} else {
-				if ($.fn.kendoTooltip) {
-					set()
-				} else {
-					require(['kendo.tooltip.min'], set)
-				}
-			}
-		},
-		unsetTooltip = function() {
-			if (this.data('kendoTooltip'))
-				this.data('kendoTooltip').destroy()
-		};
+		ds = {};
 
 	if (options.href) {
 		ds = {
@@ -846,83 +811,56 @@ schema_loop:
 		filter         : 'contains',
 		minLength      : 3,
 		autoBind       : false,
-		template       : '<span \
-							# if (data.orign_label) { # data-tooltip="#= data.orign_label #" # } # \
-						> \
-							#= data.label # \
-						</span>',
-		dataSource      : ds,
-		dataBound: function() {
-			setTimeout(function() {
-				var value = parseInt(this.value());
-
-				if (value) {
-					var itemValue = _.find(this.dataSource.data(), function(i) {
-						return parseInt(i.id) === value
-					});
-					if (itemValue.orign_label) {
-						this.input.attr('data-tooltip', itemValue.orign_label);
-						setTooltip.call(this.input)
-					} else {
-						unsetTooltip.call(this.input)
-					}
-				}
-			}.bind(this), 100);
-
-		},
+		dataSource     : ds,
 		cascade: function(e) {
 			var input = this.element [0];
 
 			if (this.value() && !this.dataItem()) {
-
 				this.value ('');
-
 			} else {
-
 				if (!input.options)
 					input.options = [];
-
 				input.selectedIndex = this.selectedIndex;
 				input.options [this.selectedIndex] = {};
 				input.options [this.selectedIndex].value = this.value ();
-
 			}
-
 		},
-
-		open : function (e) {
+		open: function (e) {
 			stibqif (true);
 			if (input_change.is_changed)
 				this.dataSource.query();
 			input_change.is_changed = false;
-			this.ul.find('[data-tooltip]').each(function() {
-				var $this = $(this);
-
-				if (!$this.data('kendoTooltip'))
-					setTooltip.call($this);
-			});
 		},
-
-		close : function (e) {
+		close: function (e) {
 			stibqif (false);
 		}
 	}).data('kendoComboBox');
-
 	$('#' + id + '_input').on('keypress', $.proxy(input_change.on_change, input_change));
-
 	for (var i = 0; i < values.length; i++) {
-		var orignLabel = values[i].orign_label || null;
-
-		combo.dataSource.add({id: values[i].id,label: values[i].label,orign_label: orignLabel});
-		if (values[i].selected) {
-			if (orignLabel) {
-				combo.input.attr('data-tooltip', orignLabel);
-				setTooltip.call(combo.input);
-			}
+		combo.dataSource.add({id: values[i].id,label: values[i].label});
+		if (values[i].selected)
 			combo.select(i);
-		}
 	}
-	combo.element.closest(".k-widget").width(options.width);
+	if (options.width)
+		combo.element.closest(".k-widget").width(options.width);
+	combo.input.on('mouseover', function() {
+		var $this = $(this),
+			textHasOverflown = this.scrollWidth > $this.innerWidth();
+
+		if (textHasOverflown) {
+			$this.kendoTooltip({
+				content: $this.val()
+			})
+			.data('kendoTooltip')
+			.show();
+		}
+	});
+	combo.input.on('mouseout', function() {
+		var $this = $(this);
+
+		if ($this.data('kendoTooltip'))
+			$this.data('kendoTooltip').destroy()
+	});
 }
 
 function hide_dropdown_button (id) {
@@ -3133,3 +3071,32 @@ function debounce (func, wait, immediate) {
 function tabOnEnter () {
 	void (0);
 }
+
+$(document).on('mouseenter', '.k-popup .k-item', function() {
+	var $this = $(this),
+		textHasOverflown = this.scrollWidth > $this.innerWidth(),
+		showTooltip = function() {
+			$this.kendoTooltip({
+				content: $this.attr('data-tooltip') || $this.text()
+			})
+			.data('kendoTooltip')
+			.show();
+		};
+
+	if ($this.data('kendoTooltip'))
+		$this.data('kendoTooltip').destroy();
+	if (textHasOverflown || $this.find('[data-tooltip]').length) {
+		if ($.fn.kendoTooltip) {
+			showTooltip()
+		} else {
+			require(['kendo.tooltip.min'], showTooltip)
+		}
+	}
+});
+
+$(document).on('mouseout', '.k-popup .k-item', function() {
+	var $this = $(this);
+
+	if ($this.data('kendoTooltip'))
+		$this.data('kendoTooltip').destroy()
+});

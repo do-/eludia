@@ -964,6 +964,9 @@ sub draw_form_field_select {
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
 
+	$options -> {attributes} -> {'data-width'} = $options -> {size}
+		if $options -> {size};
+
 	if (
 		@{$options -> {values}} == 0
 		&&
@@ -1110,8 +1113,6 @@ EOH
 	$options -> {ds} -> {href} = ''
 		if $options -> {ds} -> {off};
 
-	my $width = $options -> {width};
-
 	$_REQUEST {__on_load} .= <<EOJS;
 
 		if (window.name.substring (0, 9) == 'invisible') {
@@ -1134,7 +1135,7 @@ EOH
 				href    : '$options->{ds}->{href}',
 				portion : $conf->{portion},
 				max_len : $options->{max_len},
-				width   : "$width"
+				width   : "$options->{size}"
 			});
 		}
 
