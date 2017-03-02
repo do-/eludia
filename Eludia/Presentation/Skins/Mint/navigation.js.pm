@@ -723,7 +723,7 @@ function adjust_kendo_selects(top_element) {
 					.show();
 				};
 
-			if (textHasOverflown || $this.find('[data-tooltip]').length) {
+			if (textHasOverflown || $this.attr('data-tooltip')) {
 				if ($.fn.kendoTooltip) {
 					showTooltip()
 				} else {
@@ -843,7 +843,7 @@ schema_loop:
 	}
 	combo.element.closest(".k-widget").width(
 		options.width || options.empty.length * 8 + 32
-	)
+	);
 	combo.input.on('mouseover', function() {
 		var $this = $(this),
 			textHasOverflown = this.scrollWidth > $this.innerWidth();
@@ -3086,7 +3086,7 @@ $(document).on('mouseenter', '.k-popup .k-item', function() {
 
 	if ($this.data('kendoTooltip'))
 		$this.data('kendoTooltip').destroy();
-	if (textHasOverflown || $this.find('[data-tooltip]').length) {
+	if (textHasOverflown || $this.attr('data-tooltip')) {
 		if ($.fn.kendoTooltip) {
 			showTooltip()
 		} else {
