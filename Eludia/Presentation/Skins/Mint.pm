@@ -4037,7 +4037,10 @@ sub __adjust_form_field_select {
 
 	foreach my $value (@{$options -> {values}}) {
 
-		if (length $value -> {label} > $options -> {max_len}) {
+		if (
+			length $value -> {label} > $options -> {max_len}
+			&& $options -> {ds} == undef
+		) {
 			$value -> {orign_label} = $value -> {label};
 			$value -> {label} = trunc_string ($value -> {label}, $options -> {max_len});
 		}
