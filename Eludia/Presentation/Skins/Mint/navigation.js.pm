@@ -841,8 +841,9 @@ schema_loop:
 		if (values[i].selected)
 			combo.select(i);
 	}
-	if (options.width)
-		combo.element.closest(".k-widget").width(options.width);
+	combo.element.closest(".k-widget").width(
+		options.width || options.empty.length * 8 + 32
+	)
 	combo.input.on('mouseover', function() {
 		var $this = $(this),
 			textHasOverflown = this.scrollWidth > $this.innerWidth();
