@@ -3102,7 +3102,6 @@ $(document).on('mouseout', '.k-popup .k-item', function() {
 		var kendoTooltip = $(this).data('kendoTooltip');
 
 		if (kendoTooltip && typeof kendoTooltip.hide !== 'undefined') {
-			console.log('hide');
 			$(this).data('kendoTooltip').hide()
 		}
 	})
