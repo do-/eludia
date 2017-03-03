@@ -3084,20 +3084,26 @@ $(document).on('mouseenter', '.k-popup .k-item', function() {
 			.show();
 		};
 
-	if ($this.data('kendoTooltip'))
-		$this.data('kendoTooltip').destroy();
-	if (textHasOverflown || $this.attr('data-tooltip')) {
-		if ($.fn.kendoTooltip) {
-			showTooltip()
-		} else {
-			require(['kendo.tooltip.min'], showTooltip)
+	if ($this.data('kendoTooltip')) {
+		$this.data('kendoTooltip').show()
+	} else {
+		if (textHasOverflown || $this.attr('data-tooltip')) {
+			if ($.fn.kendoTooltip) {
+				showTooltip()
+			} else {
+				require(['kendo.tooltip.min'], showTooltip)
+			}
 		}
 	}
 });
 
 $(document).on('mouseout', '.k-popup .k-item', function() {
-	var $this = $(this);
+	$('[data-role=tooltip]').each(function() {
+		var kendoTooltip = $(this).data('kendoTooltip');
 
-	if ($this.data('kendoTooltip'))
-		$this.data('kendoTooltip').destroy()
+		if (kendoTooltip && typeof kendoTooltip.hide !== 'undefined') {
+			console.log('hide');
+			$(this).data('kendoTooltip').hide()
+		}
+	})
 });
