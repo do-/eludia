@@ -1135,7 +1135,7 @@ EOH
 				href    : '$options->{ds}->{href}',
 				portion : $conf->{portion},
 				max_len : $options->{max_len},
-				width   : "$options->{size}"
+				width   : '$options->{size}'
 			});
 		}
 
