@@ -1024,8 +1024,11 @@ EOH
 	}
 
 	foreach my $value (@{$options -> {values}}) {
+		$value -> {orign_label} =~ s/"/&quot;/g
+			if $value -> {orign_label};
+
 		my $tooltip = $value -> {orign_label}
-			? qq { data-tooltip="$$value{orign_label}"}
+			? qq { data-tooltip="$$value{orign_label}" }
 			: '';
 
 		$html .= <<EOH;
