@@ -2868,7 +2868,7 @@ sub draw_text_cell {
 
 	$html .= '<nobr>' unless $data -> {no_nobr};
 
-	if ($has_href) {
+	if ($has_href && index($data -> {label}, 'type=checkbox') == -1) {
 
 		$a_attributes_html = dump_attributes ({
 			id      => $data -> {a_id},
@@ -2896,7 +2896,7 @@ sub draw_text_cell {
 	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
 	$html .= '</b>'      if $data -> {bold}   || $options -> {bold};
 
-	if ($has_href) {
+	if ($has_href && index($data -> {label}, 'type=checkbox') == -1) {
 
 		$html .= '</span></a>';
 
