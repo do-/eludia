@@ -772,7 +772,6 @@ sub check_module_auth {
 	$preconf -> {_} -> {post_auth} = [];
 
 	check_module_auth_cookie  ();
-	check_module_auth_ntlm    ();
 	
 }
 
@@ -792,27 +791,6 @@ sub check_module_auth_cookie {
 	else { 
 		
 		loading_log "disabled, ok.\n";
-		
-	}
-
-}
-
-################################################################################
-
-sub check_module_auth_ntlm {
-
-	loading_log "  check_module_auth_ntlm............. ";
-
-	if ($preconf -> {ldap} -> {ntlm}) { 
-		
-		require Eludia::Content::Auth::NTLM; 
-		
-		loading_log "$preconf->{ldap}->{ntlm}, ok.\n";
-
-	} 
-	else { 
-
-		loading_log "no NTLM, ok.\n";
 		
 	}
 
