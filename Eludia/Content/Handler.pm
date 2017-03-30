@@ -302,8 +302,6 @@ sub setup_page {
 			
 	$page -> {request_type} = 
 
-		$_REQUEST {__suggest} ? 'suggest' :
-
 		$_REQUEST {action}    ? 'action'  :
 
 					'showing' ;		
@@ -433,34 +431,6 @@ sub handle_request_of_type_action {
 	return action_finish ();
 
 }
-
-################################################################################
-
-sub handle_request_of_type_suggest {
-
-	my ($page) = @_;
-
-	setup_skin ();
-	
-	our $_SUGGEST_SUB = undef;
-
-	$_REQUEST {__edit} = 1;
-	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
-
-	delete $_REQUEST {__read_only};
-	call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content});
-
-	if ($_SUGGEST_SUB) {
-
-		delete $_REQUEST {id};
-
-		out_html ({}, draw_suggest_page (ref $_SUGGEST_SUB eq 'CODE' ? &$_SUGGEST_SUB () : $_SUGGEST_SUB));
-	
-	}
-				
-	return handler_finish ();
-				
-}				
 
 ################################################################################
 
