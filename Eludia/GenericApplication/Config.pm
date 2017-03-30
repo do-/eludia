@@ -73,7 +73,6 @@ sub fill_in {
 		mail                 => 1,
 		math_fixed_precision => 1,
 		memory               => 1,
-		presentation_tools   => 1,
 		queries              => 1,
 		schedule             => 1,
 		uri_escape           => 1,

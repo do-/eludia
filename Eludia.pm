@@ -685,16 +685,6 @@ sub check_module_checksums {
 
 ################################################################################
 
-sub check_module_presentation_tools {
-
-	loading_log " check_module_presentation_tools..... ";
-
-	require Eludia::Presentation::Tools;
-
-}
-
-################################################################################
-
 sub check_module_mail {
 
 	loading_log " check_module_mail................... ";
