@@ -773,8 +773,6 @@ sub check_module_auth {
 
 	check_module_auth_cookie  ();
 	check_module_auth_ntlm    ();
-	check_module_auth_opensso ();
-	check_module_auth_tinysso ();
 	
 }
 
@@ -794,48 +792,6 @@ sub check_module_auth_cookie {
 	else { 
 		
 		loading_log "disabled, ok.\n";
-		
-	}
-
-}
-
-################################################################################
-
-sub check_module_auth_opensso {
-
-	loading_log "  check_module_auth_opensso.......... ";
-
-	if ($preconf -> {ldap} -> {opensso}) { 
-		
-		require Eludia::Content::Auth::OpenSSO; 
-		
-		loading_log "$preconf->{ldap}->{opensso}, ok.\n";
-
-	} 
-	else { 
-
-		loading_log "no OpenSSO, ok.\n";
-		
-	}
-
-}
-
-################################################################################
-
-sub check_module_auth_tinysso {
-
-	loading_log "  check_module_auth_tinysso.......... ";
-
-	if ($preconf -> {ldap} -> {tinysso}) { 
-		
-		require Eludia::Content::Auth::TinySSO; 
-		
-		loading_log "$preconf->{ldap}->{tinysso}, ok.\n";
-
-	} 
-	else { 
-
-		loading_log "no TinySSO, ok.\n";
 		
 	}
 
