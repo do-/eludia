@@ -35,7 +35,7 @@ sub check_constants {
 
 	$SIG {__DIE__} = \&Carp::confess;
 	
-	our $_NON_VOID_PARAMETER_NAMES       = {map {$_ => 1} qw (action select redirect_params)};
+	our $_NON_VOID_PARAMETER_NAMES       = {map {$_ => 1} qw (action select)};
 
 	our $_INHERITABLE_PARAMETER_NAMES    = {map {$_ => 1} qw (__this_query_string __last_scrollable_table_row __no_navigation __tree __infty __popup __no_infty)};
 
@@ -758,7 +758,6 @@ sub check_module_log {
 			__no_navigation
 			__popup
 			__this_query_string
-			redirect_params
 			sid
 			lang
 			salt
