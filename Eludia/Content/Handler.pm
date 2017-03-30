@@ -128,16 +128,6 @@ sub setup_user {
 
 	}
 
-	elsif ($_REQUEST {__whois}) {
-	
-		my $user = sql_select_hash ("SELECT $conf->{systables}->{users}.id, $conf->{systables}->{users}.label, $conf->{systables}->{users}.mail, $conf->{systables}->{roles}.name AS role FROM $conf->{systables}->{sessions} INNER JOIN $conf->{systables}->{users} ON $conf->{systables}->{sessions}.id_user = $conf->{systables}->{users}.id INNER JOIN $conf->{systables}->{roles} ON $conf->{systables}->{users}.id_role = $conf->{systables}->{roles}.id WHERE $conf->{systables}->{sessions}.id = ?", $_REQUEST {__whois});
-		
-		out_html ({}, Dumper ({data => $user}));
-		
-		return 0;
-
-	}
-
 	our $_USER = get_user ();
 	
 	return 1 if $_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/;
