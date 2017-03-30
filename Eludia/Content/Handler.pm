@@ -176,25 +176,12 @@ sub setup_request_params {
 	our $_SO_VARIABLES = {};
 
 	$_REQUEST {type} =~ s/_for_.*//;
-	$_REQUEST {__uri} = $r -> uri;
-	$_REQUEST {__uri} =~ s{/cgi-bin/.*}{/};
-	$_REQUEST {__uri} =~ s{/\w+\.\w+$}{};
-	$_REQUEST {__uri} =~ s{\?.*}{};
-	$_REQUEST {__uri} =~ s{^/+}{/};
-	$_REQUEST {__uri} =~ s{\&salt\=[\d\.]+}{}gsm;
-	$_REQUEST {__uri} =~ s{(\.\w+)/$}{$1};
-
-	$_REQUEST {__script_name} = $ENV {SERVER_SOFTWARE} =~ /IIS\/5/ ? $ENV {SCRIPT_NAME} : '';
-
-	$_REQUEST {__windows_ce} = $r -> headers_in -> {'User-Agent'} =~ /Windows CE/ ? 1 : undef;
 	
 	if ($_REQUEST {fake}) {
 		$_REQUEST {fake} =~ s/\%(25)*2c/,/ig;
 		$_REQUEST {fake} = join ',', map {0 + $_} split /,/, $_REQUEST {fake};
 		$_REQUEST {q}    =~ s/(^\s+)|(\s+$)//g;
 	}
-
-	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
 
 	$_REQUEST {lpt} ||= $_REQUEST {xls};
 
@@ -498,8 +485,6 @@ sub handle_request_of_type_showing {
 	my ($page) = @_;
 	
 	foreach (qw (js css)) { push @{$_REQUEST {"__include_$_"}}, @{$conf -> {"include_$_"}}}
-
-	adjust_last_query_string ();
 	
 	setup_page_content ($page) unless $_REQUEST {__only_menu};
 	
@@ -651,42 +636,6 @@ sub parse_query_string_to_hashref {
 	
 	return $h;
 
-}
-
-################################################################################
-
-sub adjust_last_query_string {
-
-	$_REQUEST {sid} && !$_REQUEST {__top} && !$_REQUEST {__only_menu} && $_REQUEST {type} ne '__query' or return;
-					
-	my $_PREVIOUS_REQUEST = parse_query_string_to_hashref ($r -> headers_in -> {Referer});
-	
-	$_PREVIOUS_REQUEST -> {action} 
-		or $_REQUEST {__last_query_string} != $_PREVIOUS_REQUEST -> {__last_query_string} 
-		or $_REQUEST {type}                ne $_PREVIOUS_REQUEST -> {type} 
-		or $_REQUEST {__next_query_string} 
-		or return;
-
-	my ($method, $url) = split /\s+/, $r -> the_request;
-	
-	if ($url !~ /\bsid=\d/) {
-		
-		$url .= '?';
-		
-		foreach my $k (keys %_REQUEST_VERBATIM) {
-		
-			next if $_REQUEST_VERBATIM {$k} eq '';
-				
-			$url .= "$k=";
-			$url .= uri_escape ($_REQUEST_VERBATIM {$k});
-			$url .= "&";
-				
-		}
-		
-		chop $url;
-		
-	}
-		
 }
 
 ################################################################################

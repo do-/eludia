@@ -207,13 +207,13 @@ sub hrefs {
 	return $order ?
 		$options -> {kind} == 1 ?
 			(
-				href      => create_url ($name_order => $order, $name_desc => $order eq $_REQUEST {$name_order} ? 1 - $_REQUEST {$name_desc} : 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+				href      => create_url ($name_order => $order, $name_desc => $order eq $_REQUEST {$name_order} ? 1 - $_REQUEST {$name_desc} : 0),
 			)
 		:	
 			(
-				href      => create_url ($name_order => $order, $name_desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
-				href_asc  => create_url ($name_order => $order, $name_desc => 0, __last_last_query_string => $_REQUEST {__last_last_query_string}),
-				href_desc => create_url ($name_order => $order, $name_desc => 1, __last_last_query_string => $_REQUEST {__last_last_query_string}),
+				href      => create_url ($name_order => $order, $name_desc => 0),
+				href_asc  => create_url ($name_order => $order, $name_desc => 0),
+				href_desc => create_url ($name_order => $order, $name_desc => 1),
 			)
 	:
 		();
@@ -569,13 +569,9 @@ sub adjust_esc {
 		&& !(ref $data eq HASH && $data -> {fake} > 0)
 	) {
 		$options -> {esc} = create_url (
-			__last_query_string => $_REQUEST {__last_last_query_string},
 			__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 		);
 	}	
-	elsif ($_REQUEST {__last_query_string}) {
-		$options -> {esc} ||= esc_href ();
-	}
 
 }
 
@@ -610,7 +606,6 @@ sub draw_form {
 		
 	}
 
-	$options -> {no_esc}    = 1 if $apr -> param ('__last_query_string') < 0 && !$_REQUEST {__edit};
 	$options -> {target}  ||= 'invisible';	
 	$options -> {method}  ||= 'post';
 	$options -> {target}  ||= 'invisible';	
@@ -699,16 +694,6 @@ sub draw_form {
 		
 			check_href ($item);
 
-			if (!exists $item -> {keep_esc}) {
-						
-				$item -> {href} =~ s{\&?__last_query_string=\d*}{}gsm;
-				$item -> {href} .= "&__last_query_string=$_REQUEST{__last_last_query_string}";
-
-				$item -> {href} =~ s{\&?__last_scrollable_table_row=\d*}{}gsm;
-				$item -> {href} .= "&__last_scrollable_table_row=$_REQUEST{__last_scrollable_table_row}" unless ($_REQUEST {__windows_ce});
-			
-			}
-
 			if ($item -> {hotkey}) {
 				hotkey ({
 					%{$item -> {hotkey}},
@@ -742,7 +727,6 @@ sub draw_form {
 	push @keep_params, {name  => 'type',                        value => $options -> {type} || $_REQUEST {type}  };
 	push @keep_params, {name  => 'id',                          value => $options -> {id} || $_REQUEST {id}      };
 	push @keep_params, {name  => 'action',                      value => $options -> {action}                    };
-	push @keep_params, {name  => '__last_query_string',         value => $_REQUEST {__last_last_query_string}    };
 	push @keep_params, {name  => '__form_checkboxes',           value => $_REQUEST {__form_checkboxes}           } if $_REQUEST {__form_checkboxes};
 	push @keep_params, {name  => '__last_scrollable_table_row', value => $_REQUEST {__last_scrollable_table_row} } unless ($_REQUEST {__windows_ce});
 	
@@ -1067,9 +1051,7 @@ sub draw_toolbar {
 	
 	push @{$options -> {keep_params}}, qw (
 		sid
-		__last_query_string
 		__last_scrollable_table_row
-		__last_last_query_string value
 		__toolbar_inputs
 	);
 
@@ -1099,15 +1081,6 @@ sub draw_centered_toolbar_button {
 
 	check_href ($options);
 	
-	if (
-		!(	
-			$options -> {keep_esc} ||
-			(!exists $options -> {keep_esc} && $options -> {icon} eq 'cancel')
-		)
-	) {
-		$options -> {href} =~ s{__last_query_string\=\d+}{__last_query_string\=$_REQUEST{__last_last_query_string}}gsm;
-	}
-
 	$_SKIN -> __adjust_button_href ($options);
 
 	return $_SKIN -> draw_centered_toolbar_button (@_);
@@ -1194,8 +1167,6 @@ sub draw_ok_esc_toolbar {
 			preset => 'edit',
 			label => $options -> {label_edit}, 
 			href  => create_url (
-				__last_query_string         => $_REQUEST {__last_last_query_string},
-				__last_scrollable_table_row => $_REQUEST {__windows_ce} ? undef : $_REQUEST {__last_scrollable_table_row},
 				__edit                      => 1,
 			),
 			off   => ((!$conf -> {core_auto_edit} && !$_REQUEST{__auto_edit}) || !$_REQUEST{__read_only} || $options -> {no_edit}),
@@ -1622,7 +1593,6 @@ sub draw_table_header_cell {
 	
 		$cell -> {href} = {
 			order                    => $cell -> {order}, 
-			__last_last_query_string => $_REQUEST {__last_last_query_string},
 		};
 		
 		$cell -> {href} -> {desc} = $_REQUEST {order} eq $cell -> {order} ? 1 - $_REQUEST {desc} : 0;
@@ -1781,9 +1751,6 @@ sub draw_table {
 	if ($options -> {'..'} && !$_REQUEST{lpt}) {
 	
 		my $url = $_REQUEST {__path} -> [-1];
-		if ($_REQUEST {__last_query_string}) {
-			$url = esc_href ();
-		}
 		
 		$_REQUEST {__uri_root} = $_REQUEST {__uri_root_common} . ($_REQUEST {__windows_ce} ? '' : '&__last_scrollable_table_row=' . $scrollable_row_id);
 	
@@ -2000,19 +1967,7 @@ sub draw_tree {
 	
 	my $url_base = {
 		href	=> $options -> {url_base} || '',
-	};
-	
-	if ($options -> {url_base}) {
-
-		my $__last_query_string = $_REQUEST {__last_query_string};
-		$_REQUEST {__last_query_string} = $options -> {no_no_esc} ? $__last_query_string : -1;
-		check_href ($url_base);
-		$url_base -> {href} .= '&__tree=1' if (!$options -> {no_tree} && $url_base -> {href} !~ /^javascript:/i);
-		$_REQUEST {__last_query_string} = $__last_query_string;
-		
-		$options -> {url_base} = $url_base -> {href};
-	}
-	
+	};	
 
 	$_REQUEST {__parent} = $__parent;
 
@@ -2041,62 +1996,6 @@ sub draw_tree {
 
 	return $html;
 
-}
-
-################################################################################
-
-sub draw_node {
-
-	my $options = shift;
-	
-	my $result = '';
-
-	$options -> {label} =~ s/[\r\n]+/ /g;
-
-	if ($options -> {href}) {
-
-		my $__last_query_string = $_REQUEST {__last_query_string};
-		$_REQUEST {__last_query_string} = $options -> {no_no_esc} ? $__last_query_string : -1;
-		check_href ($options);
-		$options -> {href} .= '&__tree=1' if (!$options -> {no_tree} && $options -> {href} !~ /^javascript:/i);
-		$_REQUEST {__last_query_string} = $__last_query_string;
-
-	} elsif ($options -> {url_tail}) {
-	
-		$options -> {href} = $options -> {url_tail};
-		 
-	}
-	
-	$options -> {parent} = -1 if ($options -> {parent} == 0);
-	
-	my @buttons;
-	
-	foreach my $button (@{$_ [0]}) {
-	
-		next if $button -> {off};
-	
-		$button -> {href} .= '&__tree=1';
-		check_href ($button);
-		
-		$button -> {target} ||= '_content_iframe';
-
-		if ($button -> {confirm}) {
-			my $salt = rand;
-			my $msg = js_escape ($button -> {confirm});
-			$button -> {href} =~ s{\%}{\%25}gsm; 		# wrong, but MSIE uri_unescapes the 1st arg of window.open :-(
-			$button -> {href} = qq [javascript:if (confirm ($msg)) {nope('$$button{href}', '$$button{target}')} else {document.body.style.cursor = 'default'; nop ();}];
-		}
-
-		check_title ($button, $i);
-		
-		push @buttons, $button; 
-	
-	}
-
-	$i -> {__menu} = draw_vert_menu ($i, \@buttons) if ((grep {$_ ne BREAK} @buttons) > 0);
-		
-	return 	$_SKIN -> draw_node ($options, $i);
-	
 }
 
 ################################################################################

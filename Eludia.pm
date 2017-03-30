@@ -35,13 +35,13 @@ sub check_constants {
 
 	$SIG {__DIE__} = \&Carp::confess;
 	
-	our $_NON_VOID_PARAMETER_NAMES       = {map {$_ => 1} qw (__last_query_string action select redirect_params)};
+	our $_NON_VOID_PARAMETER_NAMES       = {map {$_ => 1} qw (action select redirect_params)};
 
-	our $_INHERITABLE_PARAMETER_NAMES    = {map {$_ => 1} qw (__this_query_string __last_query_string __last_scrollable_table_row __no_navigation __tree __infty __popup __no_infty)};
+	our $_INHERITABLE_PARAMETER_NAMES    = {map {$_ => 1} qw (__this_query_string __last_scrollable_table_row __no_navigation __tree __infty __popup __no_infty)};
 
 	our $_NONINHERITABLE_PARAMETER_NAMES = {map {$_ => 1} qw (lang salt sid password error id___query)};
 	
-	our @_OVERRIDING_PARAMETER_NAMES     = qw (select __no_navigation __tree __last_query_string);
+	our @_OVERRIDING_PARAMETER_NAMES     = qw (select __no_navigation __tree);
 
 	our %INC_FRESH = ();
 	our %INC_FRESH_BY_PATH = ();
@@ -753,7 +753,6 @@ sub check_module_log {
 		always => [qw (
 		
 			__infty
-			__last_query_string
 			__last_scrollable_table_row
 			__no_infty
 			__no_navigation

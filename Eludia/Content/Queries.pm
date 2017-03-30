@@ -312,7 +312,6 @@ sub do_drop_filters___queries {
 	
 	}
 
-	$esc_href =~ s/([\?\&]__last_query_string=)(\-?\d+)/$1$_REQUEST{__last_query_string}/;	
 	$esc_href .= '&__edit_query=1';
 
 	redirect ($esc_href, {kind => 'js'});
