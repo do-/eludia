@@ -97,18 +97,6 @@ sub page_is_not_needed {
 
 sub setup_user {
 
-	if ($r -> uri =~ m{/(\w+)\.(css|gif|ico|js|html)$}) {
-
-		my $fn = "$1.$2";
-
-		setup_skin ();
-
-		$r -> internal_redirect ("/i/_skins/$_REQUEST{__skin}/$fn");
-
-		return 0;
-
-	}
-
 	our $_USER = get_user ();
 	
 	return 1 if $_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/;
