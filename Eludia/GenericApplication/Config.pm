@@ -74,7 +74,6 @@ sub fill_in {
 		math_fixed_precision => 1,
 		memory               => 1,
 		queries              => 1,
-		schedule             => 1,
 		uri_escape           => 1,
 		want                 => 1,
 		zlib                 => 1,
