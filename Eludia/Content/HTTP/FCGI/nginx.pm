@@ -569,7 +569,13 @@ sub start_win32 {
 
 					open (STDERR, ">>$app/logs/error.log");
 
-					check_configuration_and_handle_request_for_application ($app);
+					eval {
+
+						check_configuration_and_handle_request_for_application ($app);
+
+					};
+
+					warn $@ if $@;
 
 				}
 

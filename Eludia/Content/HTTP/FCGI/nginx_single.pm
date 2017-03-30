@@ -141,6 +141,8 @@ sub start {
 			check_configuration_and_handle_request_for_application ($app);
 		
 		};
+		
+		warn $@ if $@;
 
 	}
 
