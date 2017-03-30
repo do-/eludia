@@ -14,7 +14,7 @@ sub draw_hash {
 
 	my ($_SKIN, $h) = @_;
 
-	$_REQUEST {__content_type} ||= 'text/plain; charset=' . $i18n -> {_charset};
+	$_REQUEST {__content_type} ||= 'application/json';
 
 	$_JSON -> encode ($h);
 
