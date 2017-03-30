@@ -770,30 +770,7 @@ sub check_module_auth {
 	
 	$preconf -> {_} -> {pre_auth}  = [];
 	$preconf -> {_} -> {post_auth} = [];
-
-	check_module_auth_cookie  ();
 	
-}
-
-################################################################################
-
-sub check_module_auth_cookie {
-
-	loading_log "  check_module_auth_cookie........... ";
-
-	if ($preconf -> {core_auth_cookie}) { 
-		
-		require Eludia::Content::Auth::Cookie; 
-		
-		loading_log "$preconf->{core_auth_cookie}, ok.\n";
-
-	} 
-	else { 
-		
-		loading_log "disabled, ok.\n";
-		
-	}
-
 }
 
 ################################################################################
