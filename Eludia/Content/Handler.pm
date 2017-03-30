@@ -1,5 +1,65 @@
 no warnings;
 
+################################################################################
+
+sub draw_hash {
+
+	my ($h) = @_;
+
+	$_REQUEST {__content_type} = 'application/json';
+
+	$_JSON -> encode ($h);
+
+}
+
+################################################################################
+
+sub draw_page {
+
+	my ($page) = @_;
+		
+	return draw_hash ({ 
+	
+		content => $page -> {content},
+
+	});
+
+}
+
+################################################################################
+
+sub draw_error_page {
+
+	my $h = {};
+	
+	if ($_REQUEST {error} =~ /^\#(.*?)\#\:/) {
+	
+		$h -> {field}   = $1;
+		$h -> {message} = $';
+		
+	}
+	else {
+		$h -> {message} = $_REQUEST {error};
+	}
+
+	return draw_hash ($h);
+
+}
+
+################################################################################
+
+sub draw_redirect_page {
+
+	my ($page) = @_;
+
+	return draw_hash ({ 
+	
+		url   => $page -> {url},
+		
+	});
+
+}
+
 #################################################################################
 
 sub handler {
@@ -154,8 +214,6 @@ sub setup_request_params {
 	}
 	
 	our $_QUERY = undef;
-
-	$_REQUEST {__skin} = '';
 	
 	our $_REQUEST_TO_INHERIT = undef;
 
@@ -420,13 +478,7 @@ sub handle_request_of_type_action {
 	
 	return handle_error ($page) if $_REQUEST {error};
 
-	$_REQUEST {__response_sent} or redirect (
-
-		$action eq 'delete' ? esc_href () : { action => '', __last_scrollable_table_row => $_REQUEST {__last_scrollable_table_row}},
-
-		{ kind => 'js',	label => $_REQUEST {__redirect_alert} }
-
-	);
+	$_REQUEST {__response_sent} or out_html ({}, '[]');
 
 	return action_finish ();
 
@@ -437,9 +489,7 @@ sub handle_request_of_type_action {
 sub setup_page_content {
 
 	my ($page) = @_;
-	
-	delete $_REQUEST {__the_table};
-	
+		
 	eval { $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
 
 	$@ and return $_REQUEST {error} = $@;
@@ -453,9 +503,7 @@ sub setup_page_content {
 sub handle_request_of_type_showing {
 
 	my ($page) = @_;
-	
-	foreach (qw (js css)) { push @{$_REQUEST {"__include_$_"}}, @{$conf -> {"include_$_"}}}
-	
+		
 	setup_page_content ($page) unless $_REQUEST {__only_menu};
 	
 	return handler_finish () if $_REQUEST {__response_sent} && !$_REQUEST {error};
@@ -641,6 +689,78 @@ sub recalculate_logon {
 		sql_do ("UPDATE $conf->{systables}->{sessions} SET $fields WHERE id = ?", @params, $_REQUEST {sid});
 		
 	}
+
+}
+
+#################################################################################
+
+sub gzip_if_it_is_needed (\$) {
+
+	my ($ref_html) = @_;
+	
+	my $old_size = length $$ref_html;
+
+	$preconf -> {core_gzip} 
+	
+		and $r -> headers_in -> {'Accept-Encoding'} =~ /gzip/
+		
+		and (400 + $old_size) > ($preconf -> {core_mtu} ||= 1500)
+		
+		and !$_REQUEST {__is_gzipped}
+			
+		or return;
+	
+	__profile_in ('core.gzip'); 
+
+	eval {$$ref_html = gzip_in_memory ($$ref_html)};
+			
+	my $new_size = length $$ref_html;
+
+			my $ratio = int (10000 * ($old_size - $new_size) / $old_size) / 100;
+			
+	__profile_out ('core.gzip' => {label => sprintf ("%d -> %d, %.2f\%", $old_size, $new_size, 100 * ($old_size - $new_size) / $old_size)});
+
+	$r -> content_encoding ('gzip');
+
+	$_REQUEST {__is_gzipped} = 1;	
+
+}
+
+################################################################################
+
+sub out_html {
+
+	my ($options, $html) = @_;
+
+	$html and !$_REQUEST {__response_sent} or return;
+
+	__profile_in ('core.out_html'); 
+
+	$html = Encode::encode ('utf-8', $html);
+
+	return print $html if $_REQUEST {__response_started};
+
+	$r -> content_type ($_REQUEST {__content_type} ||= 'text/html; charset=utf-8');
+	
+	gzip_if_it_is_needed ($html);
+
+	$r -> headers_out -> {'Content-Length'} = my $length = length $html;
+		
+	send_http_header ();
+
+	$r -> header_only && !MP2 or print $html;
+	
+	$_REQUEST {__response_sent} = 1;
+
+	__profile_out ('core.out_html' => {label => "$length bytes"});
+
+}
+
+################################################################################
+
+sub out_json ($) {
+
+	out_html ({}, $_JSON -> encode ($_[0]));
 
 }
 
