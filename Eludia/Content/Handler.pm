@@ -168,16 +168,6 @@ sub setup_request_params {
 	
 	Encode::_utf8_on ($_) foreach (values %_REQUEST);
 
-#darn [$_, $_REQUEST {$_}, Encode::is_utf8 ($_REQUEST {$_})] foreach (keys %_REQUEST);
-	
-#	my $charset = $r -> header_in ('Content-Type-Charset');
-	
-#	if ($charset && $r -> header_in ('Content-Type') =~ /UTF\-?8/i) {
-
-#		Encode::from_to ($_, 'utf8', $charset) foreach (values %_REQUEST);
-
-#	}
-
 	our %_REQUEST_VERBATIM = %_REQUEST;
 	
 	if ($_REQUEST {sort} =~ /\[\{\"property\"\:\"(\w+)\"\,\"direction\"\:\"(ASC|DESC)\"\}\]/) {
@@ -444,22 +434,8 @@ sub handle_error {
 ################################################################################
 
 sub handle_request_of_type_kickout {
-
-	foreach (qw(sid salt _salt __last_query_string __last_scrollable_table_row)) {delete $_REQUEST {$_}}
-	
-	setup_json ();
-	set_cookie (-name => 'redirect_params', -value => MIME::Base64::encode (Encode::encode ('utf-8', $_JSON -> encode (\%_REQUEST))), -path => '/');
-	
-	redirect (
-		"/?type=" . ($conf -> {core_skip_boot} || $_REQUEST {__windows_ce} ? 'logon' : '_boot'),
-		{
-			kind => 'js', 
-			target => '_top'
-		},
-	);
-
-	return handler_finish ();
-
+	$r -> status (401);
+	send_http_header ();
 }
 
 ################################################################################
