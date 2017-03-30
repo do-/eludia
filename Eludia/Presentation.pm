@@ -2580,37 +2580,7 @@ sub setup_skin {
 
 	my ($options) = @_;
 
-	eval {$_REQUEST {__skin} ||= get_skin_name ()};
-
-	unless ($_REQUEST {__skin}) {
-
-		if ($_COOKIE {ExtJs}) {
-		
-			$_REQUEST {__skin} = 'ExtJs';
-			
-		}
-		elsif ($_REQUEST {xls}) {
-		
-			$_REQUEST {__skin} = 'XL';
-			
-		}
-		elsif (($_REQUEST {__dump} || $_REQUEST {__d}) && ($preconf -> {core_show_dump} || $_USER -> {peer_server})) {
-		
-			$_REQUEST {__skin} = 'Dumper';
-			
-		}
-		elsif ($r -> headers_in -> {'User-Agent'} eq 'Want JSON') {
-		
-			$_REQUEST {__skin} = 'JSONDumper';
-			
-		}
-		else {
-
-			$_REQUEST {__skin} = ($preconf -> {core_skin} ||= 'TurboMilk');
-
-	}
-
-	}
+	$_REQUEST {__skin} = 'JSONDumper';
 
 	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
 	
@@ -2620,31 +2590,6 @@ sub setup_skin {
 	
 	require $path . '.pm';
 	
-	$_REQUEST {__static_site} = '';
-	
-	if ($preconf -> {static_site}) {
-	
-		if (ref $preconf -> {static_site} eq CODE) {
-		
-			$_REQUEST {__static_site} = &{$preconf -> {static_site}} ();
-		
-		}
-		elsif (! ref $preconf -> {static_site}) {
-
-			$_REQUEST {__static_site} = $preconf -> {static_site};
-
-		}
-		else {
-		
-			die "Invalid \$preconf -> {static_site}: " . Dumper ($preconf -> {static_site});
-		
-		}
-			
-	}	
-	
-	$_REQUEST {__static_url}  = '/i/_skins/' . $_REQUEST {__skin};
-	$_REQUEST {__static_salt} = $_REQUEST {sid} || rand ();
-
 	foreach my $package ($_SKIN) {
 
 		attach_globals ($_PACKAGE => $package, qw(
@@ -2682,12 +2627,6 @@ sub setup_skin {
 	}
 
 	$_SKIN -> {options} ||= $_SKIN -> options;
-
-	$_REQUEST {__no_navigation} ||= $_SKIN -> {options} -> {no_navigation};
-	
-	check_static_files ();
-
-	$_REQUEST {__static_url} = $_REQUEST {__static_site} . $_REQUEST {__static_url} if $_REQUEST {__static_site};
 
 	setup_json ();
 
