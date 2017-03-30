@@ -486,7 +486,7 @@ sub handle_request_of_type_action {
 	
 	return handle_error ($page) if $_REQUEST {error};
 
-	return action_finish () if $_REQUEST {__response_sent} || $_REQUEST {__peer_server};
+	return action_finish () if $_REQUEST {__response_sent};
 
 	eval {
 

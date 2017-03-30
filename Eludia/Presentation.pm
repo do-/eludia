@@ -2371,12 +2371,6 @@ sub lrt_finish {
 
 	my ($banner, $href, $options) = @_;
 
-	if ($_USER -> {peer_server}) {
-	
-		$_REQUEST {sid} = sql_select_scalar ("SELECT peer_id FROM $conf->{systables}->{sessions} WHERE id = ?", $_REQUEST {sid});
-	
-	}
-
 	$href = check_href ({href => $href});
 	
 	

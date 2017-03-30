@@ -68,20 +68,12 @@ EOS
 ################################################################################
 
 sub get_user_with_fixed_session {
-
-	my ($peer_server) = @_;
 	
 	$_REQUEST {sid} or return undef;
 
-#	__profile_in ('auth.get_user'); 
-
 	unless ($_REQUEST {__suggest}) {
-
-#		__profile_in ('auth.refresh_sessions'); 
 		
 		sql_do_refresh_sessions ();
-
-#		__profile_out ('auth.refresh_sessions'); 
 
 	}
 	
@@ -94,14 +86,10 @@ sub get_user_with_fixed_session {
 	$st -> finish;
 	
 	lc_hashref ($user);
-
-#	__profile_out ('auth.get_user', {label => "$user->{id} ($user->{label})"});
 	
 	$user -> {id} or return undef;
-	
-	$user -> {peer_server} = $peer_server;
-	
-	if (!$preconf -> {core_no_cookie_check} && !$peer_server) {
+		
+	if (!$preconf -> {core_no_cookie_check}) {
 		
 		$_COOKIE {client_cookie} or return undef;
 
@@ -130,7 +118,7 @@ sub get_user {
 
 	eval { foreach (@{$preconf -> {_} -> {pre_auth}}) {&$_ ()} }; warn $@ if $@;
 	
-	my $user = get_user_with_fixed_session (check_peer_server ());
+	my $user = get_user_with_fixed_session ();
 	
 	defined $user and $user -> {id} or delete $_REQUEST {sid};
 

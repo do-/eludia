@@ -11,9 +11,6 @@ columns => {
 	ip_fw 		=> {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 
 	client_cookie 	=> {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
-
-	peer_server 	=> {TYPE_NAME => 'varchar', COLUMN_SIZE => 255, off => 0 == %{$conf    -> {peer_roles}}},
-	peer_id     	=> {TYPE_NAME => 'int',                         off => 0 == %{$conf    -> {peer_roles}}},
 	
 	tz_offset	=> {TYPE_NAME => 'tinyint', COLUMN_DEF => 0, 	off => !$preconf -> {core_fix_tz}},
 

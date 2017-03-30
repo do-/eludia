@@ -718,29 +718,6 @@ sub check_module_session_access_logs {
 
 ################################################################################
 
-sub check_module_peering {
-
-	loading_log " check_module_peering................ ";
-
-	if ($preconf -> {peer_servers}) {
-	
-		require Eludia::Content::Peering;
-
-		loading_log "$preconf->{peer_name}, ok.\n";
-	
-	}
-	else {
-
-		eval 'sub check_peer_server {undef}';
-
-		loading_log "no peering, ok.\n";
-
-	}; 
-	
-}
-
-################################################################################
-
 sub check_module_mail {
 
 	loading_log " check_module_mail................... ";
