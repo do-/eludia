@@ -312,7 +312,7 @@ sub check_application_directory {
 	
 	$preconf -> {_} -> {docroot} = $docroot;
 
-	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm', 'session_access_logs') {
+	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm') {
 
 		loading_log "  checking ${docroot}${subdir}...";
 
@@ -691,29 +691,6 @@ sub check_module_presentation_tools {
 
 	require Eludia::Presentation::Tools;
 
-}
-
-################################################################################
-
-sub check_module_session_access_logs {
-
-	loading_log " check_module_session_access_logs.... ";
-
-	if ($conf -> {core_session_access_logs_dbtable}) {
-
-		require Eludia::Content::SessionAccessLogs::DBTable;
-		
-		loading_log "DBTable, ok.\n";
-
-	} 
-	else {
-
-		require Eludia::Content::SessionAccessLogs::File4k;
-		
-		loading_log "File4k, ok.\n";
-
-	}
-	
 }
 
 ################################################################################

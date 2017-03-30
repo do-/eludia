@@ -76,7 +76,6 @@ sub fill_in {
 		presentation_tools   => 1,
 		queries              => 1,
 		schedule             => 1,
-		session_access_logs  => 1,
 		uri_escape           => 1,
 		want                 => 1,
 		zlib                 => 1,

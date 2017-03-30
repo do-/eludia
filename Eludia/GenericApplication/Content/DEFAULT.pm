@@ -125,19 +125,7 @@ sub do_create_DEFAULT { # создание
 	}
 
 	my $columns = $model_update -> get_columns ($_REQUEST {type});
-	
-	if ($parent && !$_REQUEST {"_$parent->{column}"}) {
-	
-		my $href = session_access_log_get ($_REQUEST {__last_last_query_string});
 		
-		if ($href =~ /\bid\=(\d+)/) {
-		
-			$_REQUEST {"_$parent->{column}"} = $1;
-			
-		}
-	
-	}
-	
 	if ($parent && $_REQUEST {"_$parent->{column}"}) {
 
 		my $data = sql ($parent -> {table} => $_REQUEST {"_$parent->{column}"});

@@ -181,24 +181,7 @@ sub trunc_string {
 
 sub esc_href {
 
-	my $href = 
-				
-		session_access_log_get ($_REQUEST {__last_last_query_string})
-
-		|| "/?type=$_REQUEST{type}"
-		
-	;
-
-	if (exists $_REQUEST {__last_scrollable_table_row} && !$_REQUEST {__windows_ce}) {
-		$href =~ s{\&?__scrollable_table_row\=\d*}{}g;
-		$href .= "&__scrollable_table_row=$_REQUEST{__last_scrollable_table_row}";
-	}
-
-	$href = check_href ({href => $href}, 1);
-	
-	$href =~ s{&__only_table=\w+}{};
-
-	return "${href}&__next_query_string=$_REQUEST{__last_query_string}";
+	return "";
 
 }
 
@@ -966,18 +949,6 @@ sub draw_path {
 	$options -> {nowrap}   = exists $options -> {nowrap} ? $options -> {nowrap} : 
 								$options -> {multiline} ? '' : 
 								'nowrap';
-
-	if ($_SKIN -> {options} -> {home_esc_forward}) {
-	
-		adjust_esc ($options);
-		
-		if ($_REQUEST {__next_query_string}) {
-		
-			$options -> {forward} = session_access_log_get ($_REQUEST {__next_query_string}) . "&sid=$_REQUEST {sid}";
-
-		}
-	
-	}
 	
 	$_REQUEST {__path} = [];
 	

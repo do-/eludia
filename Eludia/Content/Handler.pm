@@ -751,11 +751,7 @@ sub adjust_last_query_string {
 		chop $url;
 		
 	}
-	
-	$_REQUEST {__last_query_string} = session_access_log_set ($url);
-	
-	$_REQUEST {__last_last_query_string} ||= $_REQUEST {__last_query_string};
-	
+		
 }
 
 ################################################################################
@@ -789,10 +785,6 @@ sub recalculate_logon {
 		}
 
 		sql_do ("UPDATE $conf->{systables}->{sessions} SET $fields WHERE id = ?", @params, $_REQUEST {sid});
-
-		session_access_logs_purge ();
-		
-		mbox_refresh ();
 		
 	}
 
