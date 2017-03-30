@@ -312,7 +312,7 @@ sub check_application_directory {
 	
 	$preconf -> {_} -> {docroot} = $docroot;
 
-	foreach my $subdir ('i/_skins', 'i/upload', 'i/upload/images', 'dbm') {
+	foreach my $subdir ('i/upload', 'i/upload/images', 'dbm') {
 
 		loading_log "  checking ${docroot}${subdir}...";
 
