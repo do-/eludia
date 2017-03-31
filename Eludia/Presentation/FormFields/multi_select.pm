@@ -86,7 +86,7 @@ EOJS
 					type      => 'hidden',
 					name      => $options->{name},
 					value     => join (',', map {$_ -> {id}} @{$options -> {values}}),
-					off       => $_REQUEST {__read_only} || $options -> {read_only},
+					off       => $_REQUEST {__read_only} || ($options -> {read_only} && !$options -> {add_hidden}),
 					label_off => 1,
 				},
 				{
