@@ -5,7 +5,7 @@ no warnings;
 sub draw_hash {
 
 	my ($h) = @_;
-
+	
 	$_REQUEST {__content_type} = 'application/json';
 
 	$_JSON -> encode ($h);
@@ -46,20 +46,6 @@ sub draw_error_page {
 
 }
 
-################################################################################
-
-sub draw_redirect_page {
-
-	my ($page) = @_;
-
-	return draw_hash ({ 
-	
-		url   => $page -> {url},
-		
-	});
-
-}
-
 #################################################################################
 
 sub handler {
@@ -70,52 +56,55 @@ sub handler {
 	
 	my $code;
 	
+	setup_json ();
+
 	eval {
 	
-		my $page_is_not_needed = eval { page_is_not_needed (@_) };
+		return _ok () if page_is_not_needed (@_);
+
+		__profile_in ('handler.setup_page'); 
+
+		my $page = setup_page ();
 		
-		return _ok () if $page_is_not_needed;
+		__profile_out ('handler.setup_page'); 
 
-		$code = $@ ? 500 : eval {
+		__profile_in ("handler.$page->{request_type}"); 
 
-			__profile_in ('handler.setup_page'); 
+		my $code = &{"handle_request_of_type_$page->{request_type}"} ($page);
+		
+		__profile_out ("handler.$page->{request_type}");
 
-			my $page = setup_page ();
-			
-			__profile_out ('handler.setup_page'); 
+		return $code;
 
-			__profile_in ("handler.$page->{request_type}"); 
+	};
 
-			my $code = &{"handle_request_of_type_$page->{request_type}"} ($page);
-			
-			__profile_out ("handler.$page->{request_type}");
-
-			return $code;
-
+	if ($@) {
+		
+		$r -> status (500);
+		
+		send_http_header ();
+		
+		my $time = time;
+		
+		my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($time);
+		
+		my $h = {
+			id => Digest::MD5::md5_hex ($$ . $@ . time () . rand ()),
+			dt => sprintf ('%04d-%02d-%02d %02d:%02d:%02d.%03d', $year + 1900, $mon + 1, $mday, $hour, $min, $sec, 1000 * ($time - int $time)),
 		};
+		
+		warn "[$h->{dt} $$]\t$h->{id}\t$@\n";
+		
+		$h -> {dt} =~ y{ }{T};
+		
+		$r -> print ($_JSON -> encode ($h));
+		
+		return 500;
+		
+	}
 
-		if ($@) {
-
-			warn "$@\n";
-
-			out_script (q {
-
-				var d = window.top.document;
-
-				d.write ('<pre>' + data + '</pre>');
-
-				d.close ();
-
-			}, $@);
-
-			return _ok ();
-
-		}
-
-	}; 
-	
 	__profile_out ('handler.request' => {label => "type='$_REQUEST_VERBATIM{type}' id='$_REQUEST_VERBATIM{id}' action='$_REQUEST_VERBATIM{action}' id_user='$_USER->{id}'"}); warn "\n";
-	
+
 	if ($_REQUEST {__suicide}) {
 		$r -> print (' ' x 8192);
 		CORE::exit (0);
@@ -133,33 +122,33 @@ sub page_is_not_needed {
 
 	our $i18n = i18n ();
 
-	setup_request_params     (@_);
-
 	require_config           (  );
 
 	sql_reconnect            (  );
 
 	require_model            (  );
+
+	setup_request_params     (@_);
 	
 	__profile_in ('handler.setup_user'); 
 
-	my $u = setup_user ();
+	setup_user ();
 
 	__profile_out ('handler.setup_user', {label => "id_user=$_USER->{id}, ip=$_USER->{ip}, ip_fw=$_USER->{ip_fw}, sid=$_REQUEST{sid}"});
 
 	__profile_out ('handler.prelude'); 
 
-	return $u ? 0 : 1;
+	return $_USER ? 0 : 1;
 
 }
 
 ################################################################################
 
 sub setup_user {
-
+	
 	our $_USER = get_user ();
 	
-	return 1 if $_USER -> {id} or $_REQUEST {type} =~ /(logon|_boot)/;
+	return 1 if $_USER -> {id} or $_REQUEST {type} eq 'sessions';
 	
 	handle_request_of_type_kickout ();
 	
@@ -189,66 +178,16 @@ sub setup_request_params {
 
 	our %_REQUEST_VERBATIM = %_REQUEST;
 	
-	if ($_REQUEST {sort} =~ /\[\{\"property\"\:\"(\w+)\"\,\"direction\"\:\"(ASC|DESC)\"\}\]/) {
-	
-		delete $_REQUEST {sort};
-		
-		$_REQUEST {order} = $1;
-		
-		$_REQUEST {desc} = ($2 eq 'DESC');
-	
-	}
-
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
 	
-	set_cookie_for_root (client_cookie => $_COOKIE {client_cookie} || Digest::MD5::md5_hex (rand ()));
-	
-	foreach my $k (keys %_REQUEST) {
-
-		my $k_ = $k;
-		if ($k =~ s/</&lt;/g || $k =~ s/>/&gt;/g) {
-			$_REQUEST {$k} = delete $_REQUEST {$k_};
-		}
-		
-		$_REQUEST {$k} =~ s/</&lt;/g; $_REQUEST {$k} =~ s/>/&gt;/g;
-	}
-	
-	our $_QUERY = undef;
-	
-	our $_REQUEST_TO_INHERIT = undef;
-
-	$_REQUEST {__no_navigation} ||= $_REQUEST {select};
-	
-	if ($_REQUEST {__toolbar_inputs}) {
-	
-		foreach my $key (split /\,/, $_REQUEST {__toolbar_inputs}) {
-		
-			$key or next;
+	$_REQUEST {sid} = sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE client_cookie = ?", $_COOKIE {sid});
 			
-			exists $_REQUEST {$key} or $_REQUEST {$key} = '';
-		
-		}
-	
-	}
-	
+	our $_QUERY = undef;
+			
 	our $_SO_VARIABLES = {};
 
 	$_REQUEST {type} =~ s/_for_.*//;
 	
-	if ($_REQUEST {fake}) {
-		$_REQUEST {fake} =~ s/\%(25)*2c/,/ig;
-		$_REQUEST {fake} = join ',', map {0 + $_} split /,/, $_REQUEST {fake};
-		$_REQUEST {q}    =~ s/(^\s+)|(\s+$)//g;
-	}
-
-	$_REQUEST {lpt} ||= $_REQUEST {xls};
-
-	$_REQUEST {__read_only} = 1 if $_REQUEST {lpt};
-	
-	$_REQUEST {__read_only} = $_REQUEST {__pack} = $_REQUEST {__no_navigation} = 1 if $_REQUEST {__popup};
-
-	$_REQUEST {__page_title} ||= $conf -> {page_title};
-
 	setup_request_params_for_action () if $_REQUEST {action};
 	
 	__profile_out ('handler.setup_request_params', {label => "type='$_REQUEST_VERBATIM{type}' id='$_REQUEST_VERBATIM{id}' action='$_REQUEST_VERBATIM{action}'"}); 
@@ -311,14 +250,7 @@ sub setup_request_params_for_action {
 
 		$_REQUEST {$key} =~ s{^\s+}{};
 		$_REQUEST {$key} =~ s{\s+$}{};
-		
-#		my $encoded = encode_entities ($_REQUEST {$key}, "‚„-‰‹‘-™›\xA0¤¦§©«-®°-±µ-·»");
-		
-#		if ($_REQUEST {$key} ne $encoded) {
-#			$_REQUEST {$key} = $encoded;
-#			next;
-#		}
-		
+				
 		next if $key =~ /^_dt/;
 		next if $key =~ /^_label/;
 		next if $key =~ /_ids$/;
@@ -356,7 +288,7 @@ sub setup_page {
 
 	call_for_role ('get_page', $page);
 
-	require_both $page -> {type};
+	require_content $page -> {type};
 			
 	$page -> {request_type} = 
 
@@ -465,12 +397,14 @@ sub handle_request_of_type_action {
 	return handle_error ($page) if $_REQUEST {error};
 
 	return action_finish () if $_REQUEST {__response_sent};
+	
+	my $result;
 
 	eval {
 
-		call_for_role ("do_${action}_$$page{type}");
+		$result = call_for_role ("do_${action}_$$page{type}");
 
-		call_for_role ("recalculate_$$page{type}") if $action ne 'create';
+		call_for_role ("recalculate_$$page{type}");
 
 	};
 
@@ -478,7 +412,7 @@ sub handle_request_of_type_action {
 	
 	return handle_error ($page) if $_REQUEST {error};
 
-	$_REQUEST {__response_sent} or out_html ({}, '[]');
+	$_REQUEST {__response_sent} or out_html ({}, draw_hash ({data => $result}));
 
 	return action_finish ();
 
@@ -658,38 +592,27 @@ sub parse_query_string_to_hashref {
 
 ################################################################################
 
-sub recalculate_logon {
+sub recalculate_sessions {
 
 	$_REQUEST {action} =~ /^execute/ or return;
-
-	if ($_USER -> {id}) {
 	
-		set_cookie_for_root (user_login => sql_select_scalar ("SELECT login FROM $conf->{systables}->{users} WHERE id = ?", $_USER -> {id}));
-
-		my ($fields, @params);
-
-		$fields = 'ip = ?, ip_fw = ?';
-		push (@params, $ENV {REMOTE_ADDR}, $ENV {HTTP_X_FORWARDED_FOR});
-
-		if ($preconf -> {core_fix_tz} && $_REQUEST {tz_offset}) {
-			$fields .= ", tz_offset = ?";
-			push (@params, $_REQUEST {tz_offset});
-		}
-		
-		if ($conf -> {core_delegation} && !$_USER -> {id__real}) {
-			$fields .= ", id_user_real = ?";
-			push (@params, $_USER -> {id});
-		}
-
-		unless ($preconf -> {core_no_cookie_check}) {
-			$fields .= ", client_cookie = ?";
-			push (@params, $_COOKIE {client_cookie});
-		}
-
-		sql_do ("UPDATE $conf->{systables}->{sessions} SET $fields WHERE id = ?", @params, $_REQUEST {sid});
-		
+	$_USER = get_user ();
+	
+	$_USER -> {id} or return;
+	
+	my $h = {
+		ip    => $ENV {REMOTE_ADDR},
+		ip_fw => $ENV {HTTP_X_FORWARDED_FOR},
+	};
+	
+	$h -> {tz_offset} = $_REQUEST {tz_offset} if $preconf -> {core_fix_tz} && $_REQUEST {tz_offset};
+	
+	if ($conf -> {core_delegation} && !$_USER -> {id__real}) {
+		$_USER -> {id__real} or $h -> {id_user_real} = $_USER -> {id};
 	}
-
+	
+	sql_select_id ($conf -> {systables} -> {sessions} => $h, ['id']);
+	
 }
 
 #################################################################################

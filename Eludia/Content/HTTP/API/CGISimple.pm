@@ -27,7 +27,15 @@ sub send_http_header {
 
 sub set_cookie {
 
-	my $cookie = CGI::Simple::Cookie -> new (@_) or return;
+	my $cookie = CGI::Simple::Cookie -> new (@_);
+	
+	unless ($cookie) {
+	
+		warn "WARNING: no cookie set for " . Data::Dumper::Dumper (\@_));
+		
+		return;
+	
+	}
 
 	push @{$r -> {_headers} -> {'Set-Cookie'}}, $cookie -> as_string;
 
