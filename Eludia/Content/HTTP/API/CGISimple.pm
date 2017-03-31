@@ -31,7 +31,7 @@ sub set_cookie {
 	
 	unless ($cookie) {
 	
-		warn "WARNING: no cookie set for " . Data::Dumper::Dumper (\@_));
+		warn "WARNING: no cookie set for " . Data::Dumper::Dumper (\@_);
 		
 		return;
 	

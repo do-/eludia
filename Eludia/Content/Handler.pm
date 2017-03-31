@@ -49,15 +49,45 @@ sub draw_error_page {
 #################################################################################
 
 sub handler {
-
+          
 	our @_PROFILING_STACK = ();
 
 	__profile_in ('handler.request'); 
 	
-	my $code;
+	get_request (@_);
+
+	if ($ENV {REQUEST_METHOD} ne 'POST') {
+		$r -> status (405);
+		send_http_header ();
+		return $r -> status ();
+	}
 	
+	if ($r -> header_in ('Content-Type') ne 'application/json') {
+		$r -> status (400);
+		send_http_header ();
+		$r -> print ('Wrong Content-Type');
+		return $r -> status ();
+	}
+	
+	Encode::_utf8_on ($_) foreach (values %_REQUEST);
+
 	setup_json ();
 
+	if (my $postdata = delete $_REQUEST {POSTDATA}) {
+	
+		eval {%_REQUEST = (%_REQUEST, %{$_JSON -> decode ($postdata)})};
+		
+		if ($@) {
+			$r -> status (400);
+			send_http_header ();
+			$r -> print ('Wrong JSON: ' . $@);
+			return $r -> status ();
+		}
+	
+	}
+
+	my $code;
+	
 	eval {
 	
 		return _ok () if page_is_not_needed (@_);
@@ -104,11 +134,6 @@ sub handler {
 	}
 
 	__profile_out ('handler.request' => {label => "type='$_REQUEST_VERBATIM{type}' id='$_REQUEST_VERBATIM{id}' action='$_REQUEST_VERBATIM{action}' id_user='$_USER->{id}'"}); warn "\n";
-
-	if ($_REQUEST {__suicide}) {
-		$r -> print (' ' x 8192);
-		CORE::exit (0);
-	}
 
 	return $code;
 
@@ -171,11 +196,7 @@ sub setup_request_params {
 	my $http_host = $ENV {HTTP_X_FORWARDED_HOST} || $self -> {preconf} -> {http_host};
 	
 	$ENV {HTTP_HOST} = $http_host if $http_host;
-
-	get_request (@_);
 	
-	Encode::_utf8_on ($_) foreach (values %_REQUEST);
-
 	our %_REQUEST_VERBATIM = %_REQUEST;
 	
 	our %_COOKIE = (map {$_ => $_COOKIES {$_} -> value || ''} keys %_COOKIES);
