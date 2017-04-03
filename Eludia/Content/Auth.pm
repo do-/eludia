@@ -24,7 +24,7 @@ sub start_session {
 		fake          => 0,
 	});
 	
-	set_cookie (-name => 'sid', -value => $sid, -httponly => 1, -path => '/_data');
+	set_cookie (-name => 'sid', -value => $sid, -httponly => 1, -path => '/_back');
 
 }
 
