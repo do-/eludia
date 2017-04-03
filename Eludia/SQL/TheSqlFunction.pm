@@ -1143,4 +1143,119 @@ sub sql {
 
 }
 
+################################################################################
+
+sub order {
+
+	my $options;
+
+	if (ref $_ [-1] eq HASH) {
+		$options = pop;
+	}
+	elsif (ref $_ [0] eq HASH) {
+		$options = shift;
+	}
+
+	my $default = shift;
+
+	my $result;
+
+	my $name_order = $options -> {suffix} ? "order_$$options{suffix}" : 'order';
+	my $name_desc  = $options -> {suffix} ? "desc_$$options{suffix}"  : 'desc';
+	
+	my @default_order;
+	check___query ();
+
+	while (@_) {
+		my $name  = shift;
+		my $sql   = shift;
+		
+		$default_order [$_QUERY -> {content} -> {columns} -> {$name} -> {sort}] = {name => $name, sql => $sql} 
+			if (exists $_QUERY -> {content} -> {columns} -> {$name} && $_QUERY -> {content} -> {columns} -> {$name} -> {sort});
+			
+		$name eq $_REQUEST {$name_order} or next;
+		$result   = $sql;
+		last;
+	}
+
+	if (!$result && @default_order + 0) {
+		foreach my $order (@default_order) {
+
+			next 
+				unless $order;
+			
+			
+			unless ($_QUERY -> {content} -> {columns} -> {$order -> {name}} -> {desc}) {
+			
+				$order -> {sql} =~ s{(?<=SC)\!}{}g;
+				$result .= ','
+					if $result;
+				$result .= ' ' . $order -> {sql};
+				
+				next;
+			}
+			
+			
+			my @new = ();
+			
+			foreach my $token (split /\s*\,\s*/gsm, $order -> {sql}) {
+			
+				unless ($token =~ s{\!$}{}) {
+		
+					unless ($token =~ s{DESC$}{}i) {
+		
+						$token =~ s{ASC$}{}i;
+						$token .= ' DESC';
+		
+					}
+		
+				}
+			
+				push @new, $token;
+			
+			}
+			
+			$result .= ','
+				if $result;
+
+			$result .= ' ' . join ', ', @new;
+			
+		}
+
+		return $result;
+	
+	}
+
+	$result ||= $default;
+
+	unless ($_REQUEST {$name_desc}) {
+		$result =~ s{(?<=SC)\!}{}g;
+		return $result;
+	}
+	
+	
+	my @new = ();
+	
+	foreach my $token (split /\s*\,\s*/gsm, $result) {
+	
+		unless ($token =~ s{\!$}{}) {
+
+			unless ($token =~ s{DESC$}{}i) {
+
+				$token =~ s{ASC$}{}i;
+				$token .= ' DESC';
+
+			}
+
+		}
+	
+		push @new, $token;
+	
+	}
+	
+	return join ', ', @new;
+
+
+}
+
 1;
