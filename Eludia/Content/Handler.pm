@@ -414,8 +414,6 @@ sub handle_request_of_type_action {
 
 	undef $__last_insert_id;
 
-	log_action_start ();
-
 	eval { $db -> {AutoCommit} = 0; };
 	
 	my $result;
@@ -543,8 +541,6 @@ sub action_finish {
 
 	}
 
-	log_action_finish ();
-	
 	return handler_finish ();
 
 }

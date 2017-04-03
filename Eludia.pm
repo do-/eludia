@@ -536,55 +536,6 @@ sub check_module_queries {
 
 }
 
-################################################################################
-
-sub check_module_log {
-
-	loading_log " check_module_log.................... ";
-	
-	$conf -> {core_log} -> {version} ||= 'v1';
-	
-	$preconf -> {core_log} -> {suppress} ||= {
-	
-		always => [qw (
-		
-			__infty
-			__last_scrollable_table_row
-			__no_infty
-			__no_navigation
-			__popup
-			__this_query_string
-			sid
-			lang
-			salt
-
-		)],
-		
-		empty  => [qw (
-		
-			__form_checkboxes
-			__suggest
-			__tree
-			select
-			
-		)],
-	
-	};
-	
-	$preconf -> {_} -> {core_log} = $conf -> {core_log};
-
-	!exists $preconf -> {core_no_log_mac}
-
-		or $preconf -> {core_no_log_mac}
-
-			or $preconf -> {_} -> {core_log} -> {log_mac} = 1;
-
-	require "Eludia/Content/Log/$preconf->{_}->{core_log}->{version}.pm";
-	
-	loading_log "$preconf->{_}->{core_log}->{version}, ok.\n";
-
-}
-
 #############################################################################
 
 sub darn ($) {warn Dumper ($_[0]); return $_[0]}
