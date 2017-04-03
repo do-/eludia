@@ -86,6 +86,14 @@ sub handler {
 		}
 	
 	}
+	
+	while (my ($k, $v) = each %{$r -> {headers_in}}) {
+	
+		$k =~ /X-Request-Param-/ or next;
+		
+		$_REQUEST {lc $'} = $v;
+	
+	}
 
 	my $code;
 	
