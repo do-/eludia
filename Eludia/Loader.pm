@@ -1,13 +1,10 @@
 package Eludia::Loader;
-use Time::HiRes 'time';
 
 ################################################################################
 
 sub import {
 
 	my ($dummy, $root, $package, $preconf) = @_;
-	
-	$preconf -> {_} -> {site_conf} -> {timestamp} = time;
 	
 	$Eludia::last_loaded_package = $package;
 	
