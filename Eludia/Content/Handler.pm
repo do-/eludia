@@ -161,8 +161,14 @@ sub page_is_not_needed {
 	sql_reconnect            (  );
 
 	require_model            (  );
-
+	
 	setup_request_params     (@_);
+	
+	unless ($_REQUEST {type}) {
+		keep_alive ($_REQUEST {sid});
+		out_html ({}, draw_hash ({data => {}}));
+		return 1;
+	}	
 	
 	__profile_in ('handler.setup_user'); 
 
