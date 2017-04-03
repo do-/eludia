@@ -36,6 +36,7 @@ sub draw_error_page {
 	
 		$h -> {field}   = $1;
 		$h -> {message} = $';
+		$h -> {message} =~ s{ at .*}{}gsm;
 		
 	}
 	else {
@@ -405,19 +406,9 @@ sub handle_request_of_type_action {
 
 	undef $__last_insert_id;
 
-	our %_OLD_REQUEST = %_REQUEST;
-
 	log_action_start ();
 
 	eval { $db -> {AutoCommit} = 0; };
-
-	eval { $_REQUEST {error} = call_for_role ("validate_${action}_$$page{type}"); };
-	
-	$_REQUEST {error} ||= $@ if $@;
-	
-	return handle_error ($page) if $_REQUEST {error};
-
-	return action_finish () if $_REQUEST {__response_sent};
 	
 	my $result;
 
@@ -428,10 +419,14 @@ sub handle_request_of_type_action {
 		call_for_role ("recalculate_$$page{type}");
 
 	};
-
-	$_REQUEST {error} = $@ if $@;
 	
-	return handle_error ($page) if $_REQUEST {error};
+	if ($@) {
+		
+		$_REQUEST {error} = $@;
+
+		return handle_error ($page);
+	
+	}
 
 	$_REQUEST {__response_sent} or out_html ({}, draw_hash ({data => $result}));
 
@@ -636,40 +631,6 @@ sub recalculate_sessions {
 	
 }
 
-#################################################################################
-
-sub gzip_if_it_is_needed (\$) {
-
-	my ($ref_html) = @_;
-	
-	my $old_size = length $$ref_html;
-
-	$preconf -> {core_gzip} 
-	
-		and $r -> headers_in -> {'Accept-Encoding'} =~ /gzip/
-		
-		and (400 + $old_size) > ($preconf -> {core_mtu} ||= 1500)
-		
-		and !$_REQUEST {__is_gzipped}
-			
-		or return;
-	
-	__profile_in ('core.gzip'); 
-
-	eval {$$ref_html = gzip_in_memory ($$ref_html)};
-			
-	my $new_size = length $$ref_html;
-
-			my $ratio = int (10000 * ($old_size - $new_size) / $old_size) / 100;
-			
-	__profile_out ('core.gzip' => {label => sprintf ("%d -> %d, %.2f\%", $old_size, $new_size, 100 * ($old_size - $new_size) / $old_size)});
-
-	$r -> content_encoding ('gzip');
-
-	$_REQUEST {__is_gzipped} = 1;	
-
-}
-
 ################################################################################
 
 sub out_html {
@@ -686,8 +647,6 @@ sub out_html {
 
 	$r -> content_type ($_REQUEST {__content_type} ||= 'text/html; charset=utf-8');
 	
-	gzip_if_it_is_needed ($html);
-
 	$r -> headers_out -> {'Content-Length'} = my $length = length $html;
 		
 	send_http_header ();
