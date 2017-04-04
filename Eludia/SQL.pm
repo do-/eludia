@@ -1405,7 +1405,7 @@ sub assert {
 
 	local $preconf -> {core_debug_sql_do} = 1;
 
-	my ($tables, my $new_checksums) = checksum_filter (db_model => $params {prefix},
+	my ($tables, $new_checksums) = checksum_filter (db_model => $params {prefix},
 
 		sql_assert_default_columns (Storable::dclone ($params {tables}), \%params)
 
