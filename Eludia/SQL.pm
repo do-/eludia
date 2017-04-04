@@ -584,7 +584,7 @@ sub sql_select_vocabulary {
 sub sql_select_id {
 
 	my ($table, $values, @lookup_field_sets) = @_;
-	
+
 	my $result = {};
 
 	my $table_safe = sql_table_name ($table);
@@ -600,7 +600,7 @@ sub sql_select_id {
 		$values {$2} = $values -> {$key};
 
 	}
-	
+
 	$values = \%values;
 	
 	exists $values -> {fake} or $values -> {fake} = 0;
@@ -626,7 +626,10 @@ sub sql_select_id {
 			return 0;		
 		}
 
-		my $sql = "SELECT * FROM $table_safe WHERE fake <= 0";
+		my $sql = "SELECT * FROM $table_safe WHERE 1=1";
+		
+		$forced -> {fake} or $sql .= " AND fake <= 0";
+		
 		my @params = ();
 
 		foreach my $lookup_field (@$lookup_fields) {
@@ -654,13 +657,13 @@ sub sql_select_id {
 		}
 
 		$sql .= " ORDER BY fake DESC, id DESC";
-		
+
 		$record = sql_select_hash ($sql, @params);
 
 		last if $record -> {id};
 
 	}
-		
+
 	unless ($_REQUEST {_no_search_merged_record}) {
 		while (my $id = ($record -> {is_merged_to} || $record -> {id_merged_to})) {
 			$record = sql_select_hash ($table, $id);
