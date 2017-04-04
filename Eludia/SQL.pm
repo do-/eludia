@@ -534,20 +534,6 @@ sub sql_select_vocabulary {
 		}
 	
 	}
-
-	if ($preconf -> {subset} && $table_name eq $conf -> {systables} -> {roles}) {
-		
-		$filter .= " AND name IN ('-1'";
-		
-		foreach my $name (keys %{$preconf -> {subset_names}}) {			
-			$filter .= ", '";
-			$filter .= $name;
-			$filter .= "'";
-		}
-		
-		$filter .= ")";
-		
-	}
 	
 	$limit = "LIMIT $options->{limit}" if $options -> {limit};
 

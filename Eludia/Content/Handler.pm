@@ -309,7 +309,6 @@ sub setup_request_params_for_action {
 sub setup_page {
 
 	my $page = {
-		subset => setup_subset (),
 		menu   => setup_menu (),
 	};
 	
@@ -333,41 +332,6 @@ sub setup_page {
 					'showing' ;		
 
 	return $page;
-
-}
-
-################################################################################
-
-sub setup_subset {
-
-	require_content 'subset';
-
-	our $_SUBSET = call_for_role ('select_subset');
-	
-	if ($_SUBSET && $_SUBSET -> {items}) {
-
-		$_SUBSET -> {items} = [ grep {!$_ -> {off}} @{$_SUBSET -> {items}} ];
-
-		$_REQUEST {__subset} ||= $_USER -> {subset};
-		$_SUBSET -> {name}   ||= $_REQUEST {__subset};
-
-		my $n = 0;
-		my $found = 0;
-
-		foreach my $item (@{$_SUBSET -> {items}}) {
-			$n ++;
-			$found = 1 if $item -> {name} eq $_SUBSET -> {name};
-		}
-
-		$found or delete $_SUBSET -> {name};
-
-		$_SUBSET -> {name} ||= $_SUBSET -> {items} -> [0] -> {name} if $n > 0;
-
-		$_SUBSET -> {name} eq $_USER -> {subset} or sql_do ("UPDATE $conf->{systables}->{users} SET subset = ? WHERE id = ?", $_SUBSET -> {name}, $_USER -> {id});
-
-	}
-	
-	return $_SUBSET;	
 
 }
 

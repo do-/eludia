@@ -341,7 +341,7 @@ sub _INC {
 
 	my $type_prefix = $_REQUEST {type} =~ /^(\w+?)_/ ? $1 : '';
 	
-	my %prefixes = $_SUBSET -> {name} eq '*' ? ('*' => 1) : (map {$_ => 1} ('', $_[0], $_SUBSET -> {name}, $type_prefix));
+	my %prefixes = ('*' => 1);
 
 	my @prefixes = sort keys %prefixes;
 	
@@ -422,7 +422,7 @@ sub require_fresh {
 	
 	my $old_type = $_REQUEST {type};
 	
-	$_REQUEST {type} = $type     if $type !~ /^(menu|subset)/;
+	$_REQUEST {type} = $type     if $type ne 'menu';
 
 	my @inc = _INC ();
 

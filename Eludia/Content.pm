@@ -453,30 +453,6 @@ sub get_mac {
 
 ################################################################################
 
-sub get_user_subset_menu {
-
-	my $content = {
-	
-		user => {
-		
-			label  => $_USER -> {label},
-			
-			subset => $_REQUEST {__subset} || $_USER -> {subset},
-			
-		},
-
-		__subsets => $_SUBSET -> {items},
-		
-		__menu    => select_menu (),
-	
-	};
-		
-	return $content;
-
-}
-
-################################################################################
-
 sub print_file {
 	my ($fn, $s) = @_;
 	open (F, ">$fn") or die "Can't write to $fn: $!\n";
