@@ -283,13 +283,11 @@ sub _sql_filters {
 				}
 
 			}
-			else {								# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (-1, 1)"
-
-				$$buffer .= "\n  AND ($field (-1";
-
-				foreach (grep {/\d/} @$values) { $where .= ", $_"}
-
-				$$buffer .= "))";
+			else {								# ['id_org IN' => [0, undef, 1]] => "users.id_org IN (?, ?, ?)"
+				
+				$$buffer .= "\n  AND ($field (" . (join ', ', map {'?'} @$values) . "))";
+				
+				push @$params, @$values;
 
 			}
 
