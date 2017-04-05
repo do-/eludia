@@ -137,6 +137,7 @@ sub _sql_filters {
 	my ($root, $filters) = @_;
 
 	my $have_id_filter = 0;
+	my $have_fake_filter = 0;
 	my $cnt_filters    = 0;
 	my $where          = '';
 	my $having         = '';
@@ -237,6 +238,8 @@ sub _sql_filters {
 
 		}
 		
+		$have_fake_filter = 1 if $field eq 'fake';
+
 		if (($tied or $was_array) && $field =~ /^([a-z][a-z0-9_]*)$/) {
 		
 			$field .= ' IN';
@@ -378,6 +381,7 @@ sub _sql_filters {
 
 	return {
 		have_id_filter => $have_id_filter,
+		have_fake_filter => $have_fake_filter,
 		cnt_filters    => $cnt_filters,
 		delete         => $delete,
 		update         => $update,
@@ -554,14 +558,14 @@ sub sql {
 	my $cnt_filters    = $sql_filters -> {cnt_filters};
 
 	my $default_columns = '*';
-	
+
 	unless ($have_id_filter) {
 		
 		$default_columns = 'id, fake';
 
-		$where .= ($_REQUEST {fake} || '') =~ /\,/ ? "\n AND $root.fake IN ($_REQUEST{fake})" : "\n AND $root.fake = " . ($_REQUEST {fake} || 0);
+		$sql_filters -> {have_fake_filter} or $where .= "\n AND $root.fake = 0";
 
-	}	
+	}
 		
 	foreach my $table (@tables) {
 	
