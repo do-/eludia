@@ -30,7 +30,7 @@ sub get_request_problem {
 		
 		Encode::_utf8_on ($s);
 		
-		$_REQUEST {lc $'} = $s;
+		$_REQUEST {data} -> {lc $'} = $s;
 	
 	}
 

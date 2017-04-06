@@ -51,25 +51,6 @@ sub vld_date {
 
 ################################################################################
 
-sub vld_unique {
-
-	my ($table, $options) = @_;
-	
-	$options -> {field} ||= 'label';
-	$options -> {value} ||= $_REQUEST {'_' . $options -> {field}};
-	$options -> {id}    ||= $_REQUEST {id};
-	
-	my $filter = "$$options{field} = ? AND fake = 0 AND id <> ?";
-	$filter .= " AND $$options{filter}" if $options -> {filter};
-	
-	my $id = sql_select_scalar ("SELECT id FROM $table WHERE $filter LIMIT 1", $options -> {value}, $options -> {id});
-
-	return $id ? 0 : 1;
-
-}
-
-################################################################################
-
 sub vld_noref {
 
 	my ($table, $options) = @_;
@@ -367,91 +348,6 @@ sub vld_bank_account {
 		substr ($bik, -3, 3) . $account, 
 		[7, 1, 3, 7, 1, 3, 7, 1, 3, 7, 1, 3, 7, 1, 3, 7, 1, 3, 7, 1, 3, 7, 1]
 	) % 10)
-
-}
-
-################################################################################
-
-sub vb {
-
-	$_REQUEST {__vb_cnt} ++;
-	
-	my $key = "__vb_$_REQUEST{__vb_cnt}";
-	
-	exists $_REQUEST {$key} and return $_REQUEST {$key};
-	
-	my ($code) = @_;
-	
-	$code =~ /vb\s\=*/ism or $code = "vb = $code";
-	
-	my $inputs = '';
-	my $length = 0;
-	
-	foreach my $k (keys %_REQUEST) {
-		
-		next if $k eq '__vb_cnt';
-		
-		my $v = $_REQUEST {$k};
-		
-		next if ref $v;
-		next if $v eq '';
-		next if $v eq 'lang';
-		
-		$length += length (uri_escape ($v));
-		$length += length ($k);
-		$length += 2;
-
-		$v =~ s{\'}{&apos;}gsm;
-		
-		$inputs .= "<input type='hidden' name='$k' value='$v'>";		
-		
-	}
-	
-	my $method = $length > 1000 ? 'POST' : 'GET';
-	
-	out_html ({}, <<EOH);
-<html>
-	<head>
-		<script language="vbscript">
-			function vb ()
-			  $code
-			end function			
-		</script>
-		<script language="jscript">
-			function l () {
-				var f = document.forms['f'];
-				f.elements['$key'].value = vb ();
-				f.submit ();
-			}
-		</script>
-	</head>
-	<body onLoad="l()">
-		<form name=f method=$method>
-			<input type="hidden" name="__no_back" value="1">
-			<input type="hidden" name="$key" value="">
-			$inputs
-		</form>
-	</body>
-</html>
-EOH
-
-	$_REQUEST {__response_sent} = 1;
-	
-	exit;
-
-}
-
-################################################################################
-
-sub vb_yes {
-
-	my ($message, $title, $default_button) = @_;
-	
-	$title ||= '';
-
-	$default_button = 0 unless ($default_button == 1);
-
-	return 6 == vb (qq{MsgBox ("$message", 4 + $default_button * 256, "$title")});
 
 }
 
