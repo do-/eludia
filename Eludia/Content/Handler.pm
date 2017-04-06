@@ -91,7 +91,11 @@ sub handler {
 	
 		$k =~ /X-Request-Param-/ or next;
 		
-		$_REQUEST {lc $'} = $v;
+		my $s = uri_unescape ($v);
+		
+		Encode::_utf8_on ($s);
+		
+		$_REQUEST {lc $'} = $s;
 	
 	}
 
