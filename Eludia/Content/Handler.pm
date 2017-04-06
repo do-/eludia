@@ -49,7 +49,63 @@ sub draw_error_page {
 
 #################################################################################
 
-sub handler {
+sub get_request_problem {
+
+	get_request (@_);
+
+	$ENV {REQUEST_METHOD} eq 'POST' or return 405;
+	
+	$r -> header_in ('Content-Type') eq 'application/json' or return (400 => 'Wrong Content-Type');
+
+	Encode::_utf8_on ($_) foreach (values %_REQUEST);
+	
+	setup_json ();
+
+	if (my $postdata = delete $_REQUEST {POSTDATA}) {
+	
+		eval {%_REQUEST = (%_REQUEST, %{$_JSON -> decode ($postdata)})};
+		
+		$@ and return (400 => 'Wrong JSON');
+		
+	}
+
+	while (my ($k, $v) = each %{$r -> {headers_in}}) {
+	
+		$k =~ /X-Request-Param-/ or next;
+		
+		my $s = uri_unescape ($v);
+		
+		Encode::_utf8_on ($s);
+		
+		$_REQUEST {lc $'} = $s;
+	
+	}
+
+	undef;
+
+}
+
+#################################################################################
+
+sub is_request_ok {
+
+	my ($code, $message) = get_request_problem (@_);
+	
+	$code or return 1;
+
+	$r -> status ($code);
+	send_http_header ();
+	$r -> print ($message);	
+	
+	warn "Request problem $code $message\n";
+	
+	return 0;
+	
+}
+
+#################################################################################
+
+sub _handler {
           
 	our @_PROFILING_STACK = ();
 
@@ -640,6 +696,8 @@ sub out_html {
 ################################################################################
 
 sub out_json ($) {
+
+	$_REQUEST {__content_type} = 'application/json';
 
 	out_html ({}, $_JSON -> encode ($_[0]));
 
