@@ -1005,6 +1005,8 @@ sub write_signature_xl {
 
 	my ($worksheet) = @_;
 
+	return if $_REQUEST {__no_default_after_xls};
+
 	$_REQUEST {__xl_row} ++;
 
 	$worksheet -> write ($_REQUEST {__xl_row}, 0, $_USER -> {label}, $_REQUEST{__xl_format} -> {simple});
