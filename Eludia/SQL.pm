@@ -174,36 +174,10 @@ sub sql_assert_core_tables {
 
 	return if $model_update -> {core_ok};
 
-	__profile_in ('sql.assert_core_tables'); 
-
-	$model_update -> assert (
-	
-		tables => {
-
-			$conf -> {systables} -> {__last_update} => {
-
-				columns => {
-				
-					id        => {TYPE_NAME => 'bigint', _EXTRA => 'auto_increment', _PK => 1},
-					pid 	  => {TYPE_NAME => 'int'},
-					unix_ts   => {TYPE_NAME => 'bigint'},
-				
-				},
-
-			},
-		
-		}, 
-				
-		prefix => 'sql_assert_core_tables#',
-		
-	);
-
 	sql_version ();
 
 	$model_update -> {core_ok} = 1;
-		
-	__profile_out ('sql.assert_core_tables'); 
-	
+			
 }
 
 ################################################################################
@@ -1241,15 +1215,11 @@ sub sql_assert_default_columns {
 sub assert {
 
 	my ($self, %params) = @_;
-	
-	local $preconf -> {core_debug_sql_do} = 1;
 
-	my ($tables, my $new_checksums) = checksum_filter (db_model => $params {prefix}, 
+	local $preconf -> {core_debug_sql_do} = 1;
 	
-		sql_assert_default_columns (Storable::dclone ($params {tables}), \%params)
-		
-	);
-		
+	my $tables = sql_assert_default_columns (Storable::dclone ($params {tables}), \%params);
+			
 	my $objects = [\my @tables, \my @views];
 
 	while (my ($name, $object) = each %$tables) {
@@ -1293,8 +1263,6 @@ sub assert {
 		wish (views => \@views, {});
 	
 	}
-
-	checksum_write ('db_model', $new_checksums);
 
 }
 

@@ -66,14 +66,6 @@ sub FETCH_ {
 		
 		my $name = $key;
 		
-		if (-f "$dir/core") {
-		
-			&{"$options->{package}::reverse_systables"} ();
-				
-			$name = ${"$options->{package}::conf"} -> {systables_reverse} -> {$key} || $name;
-		
-		}
-
 		my $path = "${dir}/${name}.pm";
 
 		-f $path or next;

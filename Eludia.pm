@@ -473,14 +473,6 @@ sub check_module_memory {
 
 ################################################################################
 
-sub check_module_checksums {
-
-	require Eludia::Content::Checksums;
-
-}
-
-################################################################################
-
 sub check_module_mail {
 
 	loading_log " check_module_mail................... ";

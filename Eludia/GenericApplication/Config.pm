@@ -67,7 +67,6 @@ sub fill_in {
    	fill_in_things (core_modules =>
    		
 		auth                 => 1,
-		checksums            => 1,
 		json                 => 1,
 		mail                 => 1,
 		math_fixed_precision => 1,

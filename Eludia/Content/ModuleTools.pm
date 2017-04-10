@@ -29,23 +29,6 @@ sub require_content ($) {
 
 ################################################################################
 
-sub require_presentation ($) {
-
-	require_fresh ("${_PACKAGE}Presentation::$_[0]");
-
-}
-
-################################################################################
-
-sub require_both ($) {
-
-	require_content      $_[0];
-	require_presentation $_[0];
-
-}
-
-################################################################################
-
 sub require_config {
 
 	__profile_in ('require.config');
@@ -84,13 +67,11 @@ sub require_model {
 
 		default_columns => {
 			id   => {TYPE_NAME  => 'int', _EXTRA => 'auto_increment', _PK => 1},
-			fake => {TYPE_NAME  => 'bigint'},
+			fake => {TYPE_NAME  => 'int'},
 		},
 
 	};
-	
-	my $was_virgin = 0;
-	
+		
 	my %tables = ();
 
 	if (!exists $DB_MODEL -> {tables}) {
@@ -99,47 +80,11 @@ sub require_model {
 
 		$DB_MODEL -> {tables} = \%tables;
 		
-		$was_virgin = 1;		
-
 	}
 
 	$core_was_ok or require_scripts ();
 	
-	if ($was_virgin) {
-
-		__profile_in ('require.model_static');
-
-		while (my ($name, $table) = each %tables) {
-			my $options = $table -> {static} or next;
-			ref $options eq HASH or $options = {};
-			push @params, $name, $options;	
-		}
-
-		sql_voc_static (@params);
-
-		__profile_out ('require.model_static');
-
-	}
-
 	__profile_out ('require.model');
-
-}
-
-################################################################################
-
-sub reverse_systables {
-
-	return if $conf -> {systables_reverse};
-
-	foreach my $key (keys %{$conf -> {systables}}) {
-	
-		my $value = $conf -> {systables} -> {$key};
-		
-		next if $key eq $value;
-	
-		$conf -> {systables_reverse} -> {$value} = $key;
-	
-	}					
 
 }
 
@@ -147,7 +92,7 @@ sub reverse_systables {
 
 sub list_of_files_in_the_directory ($) {
 
-	opendir (DIR, $_[0]) or die "Ñan't opendir $_[0]: $!";
+	opendir (DIR, $_[0]) or die "Can't opendir $_[0]: $!";
 	
 	my @file_names = readdir (DIR);
 	
@@ -159,170 +104,157 @@ sub list_of_files_in_the_directory ($) {
 
 ################################################################################
 
-sub require_scripts_of_type ($) {
+sub require_model_scripts {
 
-	my ($script_type) = @_;
-
-	my $__last_update = get_last_update ();
+	my ($dir) = @_;
 	
-	my $__time = 0;
+	$dir .= '/Model';
 	
-	my $postfix = '/' . ucfirst $script_type;
-		
-	foreach my $dir (grep {-d} map {$_ . $postfix} _INC ()) {
+	__profile_in ("require.scripts.model" => {label => $dir}); 
 
-		__profile_in ("require.scripts.$script_type" => {label => $dir}); 
-		
-		my @scripts = ();
-		my $name2def = {};
-
-		foreach my $file_name (list_of_files_in_the_directory $dir) {
+	foreach my $file_name (list_of_files_in_the_directory $dir) {
 				
-			$file_name =~ /\.p[lm]$/ or next;
+		$file_name =~ /\.pm$/ or next;
 			
-			my $script = {name => $`};
-			
-			if (-f "$dir/core") {
-			
-				reverse_systables ();
-				
-				$script -> {name} = $conf -> {systables_reverse} -> {$script -> {name}} || $script -> {name};
-
-			}
-
-			$script -> {path} = "$dir/$file_name";
-						
-			my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $last_modified, $ctime, $blksize, $blocks) = stat ($script -> {path});
-						
-			($script -> {last_modified} = $last_modified) > $__last_update or next;
-			
-			$__time = $last_modified if $__time < $last_modified;
-			
-			push @scripts, $script;
-						
-			$name2def -> {$script -> {path}} = $script -> {last_modified};
-
-		}
+		my $name = $`;		
 		
-		if (@scripts == 0) {
-		
-			__profile_out ("require.scripts.$script_type");
-			
-			next;
-			
-		}
+		__profile_in ("require.scripts.model.$name"); 
 
-		my $checksum_kind = $script_type . '_scripts';
-
-		my ($needed_scripts, $new_checksums) = checksum_filter ($checksum_kind, '', $name2def);
-	
-		if (%$needed_scripts == 0) {
-		
-			__profile_out ("require.scripts.$script_type");
-			
-			next;
-			
-		}
-
-		foreach my $script (sort {$a -> {last_modified} <=> $b -> {last_modified}} grep {$needed_scripts -> {$_ -> {path}}} @scripts) {
-		
-			__profile_in ("require.scripts.$script_type.file", {label => $script -> {path}});
-					
-			if ($script_type eq 'model') {
-			
-				my $table = $DB_MODEL -> {tables} -> {$script -> {name}};
-
-				$model_update -> assert (
-					
-					prefix => 'application model#',
-						
-					default_columns => $DB_MODEL -> {default_columns},
-						
-					tables => {$script -> {name} => $table},
-
-				);
-				
-				if (my $s = $table -> {static}) {
-					
-					sql_voc_static ($script -> {name}, ref $s ? $s : ());
-					
-				}				
-
-			}
-			else {
-
-				my $s = '';
-
-				open (F, $script -> {path}) or die "Can't open $script->{path}: $!\n";
-				while (<F>) {$s .= $_};
-				close (F);
-
-				eval Encode::decode ($preconf -> {core_src_charset} ||= 'windows-1251', $s);
-
-				die $@ if $@;
-
-			}
-
-			__profile_out ("require.scripts.$script_type.file");
+		$model_update -> assert (
 											
+			default_columns => $DB_MODEL -> {default_columns},
+						
+			tables => {$name => $DB_MODEL -> {tables} -> {$name}},
+
+		);
+
+		__profile_out ("require.scripts.model.$name"); 
+
+	}			
+
+	__profile_out ("require.scripts.model"); 
+
+}
+
+################################################################################
+
+sub _file_md5 {
+
+	my ($path) = @_;
+
+	open (my $fh, $path) or die "Can't open $path: $!\n";
+
+    	binmode ($fh);
+
+    	my $r = Digest::MD5 -> new -> addfile ($fh) -> hexdigest;
+
+	return $r;
+
+}
+
+################################################################################
+
+sub is_update_script_shot {
+
+	my ($fn, $dir, $shot_dir) = @_;
+
+	my @suspects = grep {0 == substr ($_, $fn)} list_of_files_in_the_directory $shot_dir;
+
+	@suspects > 0 or return ();
+	
+	my $size = -s "$dir/$fn";
+	
+	@suspects = grep {$size == -s "$shot_dir/$_"} @suspects;
+
+	@suspects > 0 or return ();
+	
+	my $md5 = _file_md5 ("$dir/$fn");
+	
+	return reverse sort grep {$md5 eq _file_md5 ("$shot_dir/$_")} @suspects;
+
+}
+
+################################################################################
+
+sub require_update_scripts {
+
+	my ($dir) = @_; $dir =~ y{\\}{/};
+	
+	$dir .= '/Updates';	
+	
+	-d $dir or return;
+	
+	__profile_in ("require.scripts.update" => {label => $dir}); 
+
+	my $shot_dir = $dir . '/_shot';
+	
+	-d $shot_dir or mkdir $shot_dir or die "Can't create $shot_dir: $!\n";
+	
+	foreach my $fn (list_of_files_in_the_directory $dir) {
+	
+		$fn =~ /\.pl$/ or next;
+		
+		my $name = $`;
+
+		my $path = "$dir/$fn";
+	
+		my @previous = is_update_script_shot ($fn, $dir, $shot_dir);
+
+		if (@previous) {
+		
+			warn "$fn was already shot: " . (join ', ', @previous) . "; will delete it\n";
+			
+			unlink $path;
+		
 		}
+		else {
+		
+			__profile_in ("require.scripts.update.$name"); 
+			
+			my $code = "";
 
-		checksum_write ($checksum_kind, $new_checksums);
+			open (I, $path) or die "Can't read $path: $!\n";
+			$code .= $_ while (<I>);	
+			close (I);
 
-		__profile_out ("require.scripts.$script_type");
+			eval $code; 
+
+			die $@ if $@;			
+			
+			my $ts = localtime_to_iso (time); 
+			
+			$ts =~ s{\D+}{_}g;
+			
+			$fn =~ s{\.pl$}{\.$ts\.pl};
+			
+			File::Copy::move ($path, "$shot_dir/$fn");
+
+			__profile_out ("require.scripts.update.$name"); 
+
+		}
 
 	}
-	
-	return $__time;
+
+	__profile_out ("require.scripts.update"); 
 
 }
 
 ################################################################################
 
 sub require_scripts {
-
-	return if $_REQUEST {__don_t_require_scripts};
 	
 	__profile_in ('require.scripts'); 
 	
-	my $file_name;
+	foreach my $dir (grep {-d} _INC ()) {
 	
-	foreach my $dir (reverse @$PACKAGE_ROOT) {
-	
-		$file_name = "$dir/Config.pm";
+		require_model_scripts  ($dir);
 		
-		last if -f $file_name;
-	
-	}
-	
-	$file_name or die "Config.pm not found in @{[ join ',', @$PACKAGE_ROOT ]}\n";
-
-	open (CONFIG, $file_name) || die "can't open $file_name: $!";
-
-	flock (CONFIG, LOCK_EX);
-	
-	my $__last_update = get_last_update ();
-
-	my $__time = 0;
-	
-	foreach my $kind ('model', 'updates') {
-	
-		my $time = require_scripts_of_type $kind;
+		require_update_scripts ($dir);
 		
-		$__time > $time or $__time = $time;
-	
 	}
-
-	set_last_update ($__time) if $__time > $__last_update;
-
-	flock (CONFIG, LOCK_UN);
-
-	close (CONFIG);
 
 	__profile_out ('require.scripts'); 
 	
-	$_REQUEST {__don_t_require_scripts} = 1;
-
 }
 
 ################################################################################
@@ -386,22 +318,6 @@ sub _INC {
 
 	return @result;
 
-}
-
-################################################################################
-
-sub require_fresh_message {
-
-	my ($file_name) = @_;
-
-	my $message = $file_name;
-
-	$message =~ s{\\}{/}g;
-
-	$message =~ s{.*?/(lib|GenericApplication)/}{};
-	
-	return $message;
-	
 }
 
 ################################################################################
