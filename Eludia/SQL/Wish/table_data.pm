@@ -110,19 +110,15 @@ sub wish_to_actually_create_table_data {
 		
 	my $sql = "INSERT INTO $options->{table} (" . (join ', ', @cols) . ") VALUES (" . (join ', ', map {'?'} @cols) . ")";
 
-	__profile_in ('sql.prepare');
+	__profile_in ('sql.prepare_execute');
 
 	my $sth = $db -> prepare ($sql);
-
-	__profile_out ('sql.prepare', {label => $sql});
-
-	__profile_in ('sql.execute');
 
 	my @tuple_status;
 	
 	$sth -> execute_array ({ArrayTupleStatus => \@tuple_status}, @prms);
 	
-	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms) . ' ' . Dumper (\@tuple_status)});
+	__profile_out ('sql.prepare_execute', {label => $sql . ' ' . Dumper (\@prms) . ' ' . Dumper (\@tuple_status)});
 
 	$sth -> finish;
 	
@@ -152,17 +148,13 @@ sub wish_to_actually_update_table_data {
 	
 	my $sql = "UPDATE $options->{table} SET " . (join ', ', @cols) . " WHERE id = ?";
 		
-	__profile_in ('sql.prepare');
+	__profile_in ('sql.prepare_execute');
 
 	my $sth = $db -> prepare ($sql);
 
-	__profile_out ('sql.prepare', {label => $sql});
-
-	__profile_in ('sql.execute');
-
 	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
 	
-	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms)});
+	__profile_out ('sql.prepare_execute', {label => $sql . ' ' . Dumper (\@prms)});
 
 	$sth -> finish;
 
@@ -182,19 +174,15 @@ sub wish_to_actually_delete_table_data {
 	
 		"DELETE FROM $options->{table} WHERE id = ?";
 
-	__profile_in ('sql.prepare');
+	__profile_in ('sql.prepare_execute');
 
 	my $sth = $db -> prepare ($sql);
 	
-	__profile_out ('sql.prepare', {label => $sql});
-	
 	my $p = [map {$_ -> {id}} @$items];
-
-	__profile_in ('sql.execute');
 
 	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, $p);
 	
-	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper ($p)});
+	__profile_out ('sql.prepare_execute', {label => $sql . ' ' . Dumper ($p)});
 
 	$sth -> finish;
 

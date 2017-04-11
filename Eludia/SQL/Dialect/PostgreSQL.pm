@@ -39,13 +39,15 @@ sub sql_do_refresh_sessions {
 
 sub sql_execute {
 	
-	my ($st, @params) = sql_prepare (@_);
+	my ($sql, @params) = @_;
 
-	__profile_in ('sql.execute');
+	__profile_in ('sql.prepare_execute');
+	
+	my $st = sql_prepare ($sql);
 
 	my $affected = $st -> execute (@params);
 
-	__profile_out ('sql.execute', {label => $st -> {Statement} . ' ' . (join ', ', map {$db -> quote ($_)} @params)});
+	__profile_out ('sql.prepare_execute', {label => $st -> {Statement} . ' ' . (join ', ', map {$db -> quote ($_)} @params)});
 
 	return wantarray ? ($st, $affected) : $st;
 
@@ -55,44 +57,17 @@ sub sql_execute {
 
 sub sql_prepare {
 
-	my ($sql, @params) = @_;
-
-	__profile_in ('sql.prepare');
-
-	$sql =~ s{^\s+}{};
-
-	if ($sql =~ /\bIF\s*\((.+?),(.+?),(.+?)\s*\)/igsm) {
-		
-		$sql = mysql_to_postgresql ($sql) if $conf -> {core_auto_postgresql};
-
-		($sql, @params) = sql_extract_params ($sql, @params) if ($conf -> {core_sql_extract_params} && $sql =~ /^\s*(SELECT|INSERT|UPDATE|DELETE)/i);
-
-	} else {
-
-		($sql, @params) = sql_extract_params ($sql, @params) if ($conf -> {core_sql_extract_params} && $sql =~ /^\s*(SELECT|INSERT|UPDATE|DELETE)/i);
-
-		$sql = mysql_to_postgresql ($sql) if $conf -> {core_auto_postgresql};
-
-	}
+	my ($sql) = @_;
 	
 	my $st;
 	
-	if ($preconf -> {db_cache_statements}) {
-		eval {$st = $db  -> prepare_cached ($sql, {}, 3)};
-	}
-	else {
-		eval {$st = $db  -> prepare ($sql, {})};
-	}
+	eval {$st = $db  -> prepare ($sql, {})};
 	
-	if ($@) {
-		my $msg = "sql_prepare: $@ (SQL = $sql)\n";
-		print STDERR $msg;
-		die $msg;
-	}
-		
-	__profile_out ('sql.prepare', {label => $sql});
+	$@ or return $st;
 
-	return ($st, @params);
+	warn "$sql\n";
+	
+	die $@;
 
 }
 
@@ -111,48 +86,6 @@ sub sql_do {
 	$st -> finish;	
 	
 }
-
-################################################################################
-#
-#sub sql_execute_procedure {
-
-#	my ($sql, @params) = @_;
-
-#	my $time = time;	
-
-#	$sql .= ';' unless $sql =~ /;[\n\r\s]*$/;
-	
-#	(my $st, @params) = sql_prepare ($sql, @params);
-
-#	my $i = 1;
-#	while (@params > 0) {
-#		my $val = shift (@params);
-#		if (ref $val eq 'SCALAR') {
-#			$st -> bind_param_inout ($i, $val, shift (@params));
-#		} else {
-#			$st -> bind_param ($i, $val);
-#		}
-#		$i ++; 
-#	}
-	
-#	eval {
-#		$st -> execute;
-#	};
-	
-
-#	if ($@) {
-#		local $SIG {__DIE__} = 'DEFAULT';
-#		if ($@ =~ /ORA-\d+:(.*)/) {
-#			die "$1\n";
-#	  } else {
-#			die $@;
-#		}
-#		
-#	}
-
-#	$st -> finish;	
-	
-#}
 
 ################################################################################
 
@@ -311,24 +244,10 @@ sub lc_hashref {
 
 	return undef unless (defined $hr);	
 
-	if ($conf -> {core_auto_postgresql}) {	
-		foreach my $key (keys %$hr) {
-		        my $old_key = $key;
-			$key =~ s/RewbfhHHkgkglld/user/igsm;
-#			$key =~ s/NbhcQQehgdfjfxf/level/igsm;
-			$hr -> {lc $key} = $hr -> {$old_key};
-			delete $hr -> {uc $key};
-		}
+	foreach my $key (keys %$hr) {
+		$hr -> {lc $key} = $hr -> {$key};
+		delete $hr -> {uc $key};
 	}
-	else {
-		foreach my $key (keys %$hr) {
-			$hr -> {lc $key} = $hr -> {$key};
-			delete $hr -> {uc $key};
-		}
-	}
-
-	delete $hr -> {REWBFHHHKGKGLLD};
-#	delete $hr -> {NBHCQQEHGDFJFXF};
 
 	return $hr;
 
@@ -881,255 +800,6 @@ sub sql_select_loop {
 
 }
 
-#################################################################################
-
-sub mysql_to_postgresql {
-
-my ($sql) = @_;
-
-our $mysql_to_postgresql_cache;
-
-my $cached = $mysql_to_postgresql_cache -> {$sql};
-
-my $src_sql = $sql;
-
-return $cached if $cached;
-
-my (@items,@group_by_values_ref,@group_by_fields_ref);
-my ($pattern,$need_group_by);
-my $sc_in_quotes=0;
-
-#warn "ORACLE IN: <$sql>\n";
-
-############### Заменяем неразрешенные в запросах слова на ключи (обратно восстанавливаем в lc_hashref())
-$sql =~ s/([^\W]\s*\b)user\b(?!\.)/\1RewbfhHHkgkglld/igsm;
-#$sql =~ s/([^\W]\s*\b)level\b(?!\.)/\1NbhcQQehgdfjfxf/igsm;
-
-############### Вырезаем и запоминаем все что внутри кавычек, помечая эти места.
-while ($sql =~ /(''|'.*?[^\\]')/ism)
-{	
-	my $temp = $1;
-	# Скобки и запятые внутри кавычек прячем чтобы не мешались при анализе и замене функций 
-	$temp =~ s/\(/JKghsdgfweftyfd/gsm;
-	$temp =~ s/\)/RTYfghhfFGhhjJg/gsm;
-	$temp =~ s/\,/DFgpoUUYTJjkgJj/gsm;
-	$in_quotes[++$sc_in_quotes]=$temp;
-	$sql =~ s/''|'.*?[^\\]'/POJJNBhvtgfckjh$sc_in_quotes/ism;
-}
-
-### Убираем пробелы перед скобками
-$sql =~ s/\s*(\(|\))/\1/igsm;
-############### Делаем из выражений в скобках псевдофункции чтобы шаблон свернулся
-while ($sql =~ s/([^\w\s]+?\s*)(\()/\1VGtygvVGVYbbhyh\2/ism) {};
-############### Это убираем
-
-$sql =~ s/\bBINARY\b//igsm; 
-#$sql =~ s/\bAS\b\s+(?!\bSELECT\b)//igsm;
-$sql =~ s/(.*?)#.*?\n/\1\n/igsm; 		 				# Убираем закомментированные строки
-$sql =~ s/STRAIGHT_JOIN//igsm;					
-$sql =~ s/FORCE\s+INDEX\(.*?\)//igsm;             		
-
-
-############### Вырезаем функции начиная с самых вложенных и совсем не вложенных
-# места помечаем ключем с номером, а сами функции с аргументами запоминаем в @items
-# до тех пор пока всё не вырежем
-while ($sql =~m/((\b\w+\((?!.*\().*?)\))/igsm)
-{	
-	$items[++$sc]=$1;
-	$sql =~s/((\b\w+\((?!.*\().*?)\))/NJNJNjgyyuypoht$sc/igsm;
-}
-
-$pattern = $sql;
-
-if ($sql =~ /(\s+ORDER\s+BY\s+)(.*?)(\sLIMIT\s.*)?/igsm) {
-
-	my $old_order_by = $1 . $2;
-      
-	my @order_by = split ',', $2;
-         
-	foreach my $field (@order_by) {
-		next if ($field =~ m/\bNULLS\s+(FIR|LA)ST\b/igsm); 
-		$field .= ($field =~ m/\bDESC\b/igsm) ? ' NULLS LAST ' : ' NULLS FIRST '; 	
-	}
-
-	$new_order_by = join ',', @order_by;
-
-	$sql =~ s/$old_order_by/ ORDER BY $new_order_by/igsm;
-
-}
-
-#$need_group_by=1 if ( $sql =~ m/\s+GROUP\s+BY\s+/igsm);
-
-#if ($need_group_by) {
-
-	# Запоминаем значения из GROUP BY до UNION или ORDER BY или HAVING
-	# Также формируем массив хранящий ссылки на массивы значений для каждого SELECT
-#	my $sc=0;
-#	while ($sql =~ s/\s+GROUP\s+BY\s+(.*?)(\s+HAVING\s+|\s+UNION\s+|\s+ORDER\s+BY\s+|$)/VJkjn;lohggff\2/ism) {
-#		my @group_by_values = split(',',$1);                                            
-#		$group_by_values_ref[$sc++]=\@group_by_values;
-#	}
-
-#	my $sc=0;
-	# Разбиваем шаблон от SELECT до FROM на поля для дальнейшего раздельного наполнения
-	# и подстановки в GROUP BY вместо цифр
-#	while ($pattern =~ s/\bSELECT(.*?)\bFROM\b//ism) {
-#		my @group_by_fields = split (',',$1);
-		# Удаляем алиасы
-#		for (my $i = 0; $i <= $#group_by_fields; $i++) {
-#			$group_by_fields[$i] =~ s/^\s*//igsm;
-#			$group_by_fields[$i] =~ s/\s+.*//igsm;
-#		}
-#		$group_by_fields_ref[$sc++]=\@group_by_fields;	
-#	}
-#}
-
-# Если в шаблоне нет FROM - взводим флаг чтобы после замен добавить FROM DUAL 
-# Делаем так потому что внутри ORACLE функции EXTRACT есть FROM
-#my $need_from_dual=1 if ($sql =~ m/^\s*SELECT\b/igsm && not ($sql =~ m/\bFROM\b/igsm));
-
-# Делаем замену и собираем исходный SQL начиная с нижних уровней
-for(my $i = $#items; $i >= 1; $i--) {
-	# Восстанавливаем то что было внутри кавычек в аргументах функций 
-	$items[$i] =~ s/POJJNBhvtgfckjh(\d+)/$in_quotes[$1]/igsm;			
-	######################### Блок замен SQL синтаксиса #########################
-	$items[$i] =~ s/\bIFNULL(\(.*?\))/NULLIF\1/igsm;
-	$items[$i] =~ s/\bRAND(\(.*?\))/RANDOM\1/igsm;
-	$items[$i] =~ s/\b(?:OLD_)?PASSWORD(\(.*?\))/MD5\1/igsm;
-	$items[$i] =~ s/\bCONCAT\((.*?)\)/join('||',split(',',$1))/iegsm;
-	$items[$i] =~ s/\bSUBSTR\((.+?),(.+?),(.+?)\)/SUBSTRING\(\1,\2,\3\)/igsm;
-	$items[$i] =~ s/\bLEFT\((.+?),(.+?)\)/SUBSTRING\(\1,1,\2\)/igsm;
-	$items[$i] =~ s/\bRIGHT\((.+?),(.+?)\)/SUBSTRING\(\1,LENGTH\(\1\)-\(\2\)+1,LENGTH\(\1\)\)/igsm;
-	$items[$i] =~ s/(\bSUBDATE|\bDATE_SUB)\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/$1 - interval '$2 $3'/igsm;
-	$items[$i] =~ s/(\bADDDATE|\bDATE_ADD)\((.+?),\s*\w*?\s*(\d+)\s*(\w+)\)/$1 + interval '$2 $3'/igsm;
-
-#	if ($model_update -> {characterset} =~ /UTF/i) {
-#		$items[$i] =~ s/\bHEX(\(.*?\))/RAWTONHEX\1/igsm;
-#	}
-#	else {
-#		$items[$i] =~ s/\bHEX(\(.*?\))/RAWTOHEX\1/igsm;	
-#	}
-	####### DATE_FORMAT
-	if ($items[$i] =~ m/\bDATE_FORMAT\((.+?),(.+?)\)/igsm) {
-		my $expression = $1;
-		my $format = $2;
-		$format =~ s/%Y/YYYY/igsm;
-		$format =~ s/%y/YY/igsm;
-		$format =~ s/%d/DD/igsm;
-		$format =~ s/%m/MM/igsm;
-		$format =~ s/%H/HH24/igsm;
-		$format =~ s/%h/HH12/igsm;
-		$format =~ s/%i/MI/igsm;
-		$format =~ s/%s/SS/igsm;
-		$items[$i] = "TO_CHAR ($expression,$format)";
-	}
-
-	######## CURDATE()
-	$items[$i] =~ s/\bCURDATE\(.*?\)/CURRENT_DATE/igsm; 		
-	######## YEAR, MONTH, DAY
-	$items[$i] =~ s/(\bYEAR\b|\bMONTH\b|\bDAY\b)\((.*?)\)/EXTRACT\(\1 FROM \2\)/igsm; 		
-	######## TO_DAYS()
-#	$items[$i] =~ s/\bTO_DAYS\((.+?)\)/EXTRACT\(DAY FROM TO_TIMESTAMP\(\1,'YYYY-MM-DD HH24:MI:SS'\) - TO_TIMESTAMP\('0001-01-01 00:00:00','YYYY-MM-DD HH24:MI:SS'\) + NUMTODSINTERVAL\( 364 , 'DAY' \)\)/igsm; 			
-	######## DAYOFYEAR()
-	$items[$i] =~ s/\bDAYOFYEAR\((.+?)\)/TO_CHAR(\1\,'DDD')/igsm;
-	######## LOCATE(), POSITION()  
-	if ($items[$i] =~ m/(\bLOCATE\((.+?),(.+?)\)|\bPOSITION\((.+?)\s+IN\s+(.+?)\))/igsm) {
-		$items[$i] =~ s/'\0'/'00'/;		
-		$items[$i] =~ s/\bLOCATE\((.+?),(.+?)\)/POSITION\(\1,\2\)/igsm;
-#		$items[$i] =~ s/\bPOSITION\((.+?)\s+IN\s+(.+?)\)/INSTR\(\2,\1\)/igsm;
-	}
-	######## IF() 
-	$items[$i] =~ s/\bIF\((.+?),(.+?),(.+?)\)/(CASE WHEN \1 THEN \2 ELSE \3 END)/igms;
-	##############################################################################
-	# Заполняем шаблон верхнего уровня ранее запомненными и измененными items 
-	# в помеченных местах
-	##############################################################################
-	$sql =~ s/NJNJNjgyyuypoht$i/$items[$i]/gsm;
-	# Просматриваем поля и заменяем если в них есть текущий шаблон (для дальнейшей замены GROUP BY 1,2,3 ...)
-	if ($need_group_by) {
-		for (my $x = 0; $x <= $#group_by_fields_ref; $x++) {
-			for (my $y = 0; $y <= $#{@{$group_by_fields_ref[$x]}}; $y++) {
-				$group_by_fields_ref [$x] -> [$y] =~ s/NJNJNjgyyuypoht$i/$items[$i]/gsm;
-			}
-		}  
-	}
-}
-
-################ Меняем GROUP BY 1,2,3 ...
-
-#if ($need_group_by) {
-#	my (@result,$group_by);
-#
-#	for (my $x = 0; $x <= $#group_by_values_ref; $x++) {
-#		for (my $y = 0; $y <= $#{@{group_by_values_ref[$x]}}; $y++) {
-#			my $index = $group_by_values_ref [$x] -> [$y];
-#			# Если в GROUP BY стояла цифра - заменяем на значение
-#			if ($index =~ m/\b\d+\b/igsm) {
-#				push @result,$group_by_fields_ref[$x]->[$index-1];				
-#			}
-#			# иначе - то что стояло
-#			else {
-#				push @result,$group_by_values_ref[$x]->[$y];			
-#			}
-#
-#		}
-#		# Формируем GROUP BY для каждого SELECT
-#		$group_by = join(',',@result);
-#		$sql =~ s/VJkjn;lohggff/\n GROUP BY $group_by /sm; 
-#		@result=();
-#	}
-#}
-
-############### Делаем регистронезависимый LIKE 
-#$sql =~ s/([\w\'\?\.\%\_]*?\s+)(NOT\s+)*LIKE(\s+[\w\'\?\.\%\_]*?[\s\)]+)/ UPPER\(\1\) \2 LIKE UPPER\(\3\) /igsm;
-$sql =~ s/\sLIKE\s/ ILIKE /igsm;
-
-############### Удаляем псевдофункции
-$sql =~ s/VGtygvVGVYbbhyh//gsm;
-# Восстанавливаем то что было внутри кавычек НЕ в аргументах функций
-$sql =~ s/POJJNBhvtgfckjh(\d+)/$in_quotes[$1]/gsm;			
-# Восстанавливаем скобки и запятые в кавычках
-$sql =~ s/JKghsdgfweftyfd/\(/gsm;
-$sql =~ s/RTYfghhfFGhhjJg/\)/gsm;
-$sql =~ s/DFgpoUUYTJjkgJj/\,/gsm;
-# добавляем FROM DUAL если в SELECT не задано FROM
-#if ($need_from_dual) {
-#	$sql =~ s/\n//igsm;
-#	$sql .= " FROM DUAL\n";	
-#}
-
-################# Эти замены необходимо делать только после всех преобразований
-# , потому что сборка идет с верхнего уровня и мы заранее не знаем что будет стоять
-# в параметрах этих функций после всех замен
-#################
-# Делаем из (TO_TIMESTAMP(CURRENT_TIMESTAMP)) просто CURRENT_TIMESTAMP
-$sql =~ s/TO_TIMESTAMP\(CURRENT_TIMESTAMP,'YYYY-MM-DD HH24:MI:SS'\)/CURRENT_TIMESTAMP/igsm;
-#################
-# В случае если у нас данные хранятся в Unicode и есть явно заданные литералы
-# внутри CASE ... END - передаем литералы  в UNISTR()
-################################################################################### 
-#if ($model_update -> {characterset} =~ /UTF/i) {
-
-#	my $new_sql;
-#	while ($sql =~ m/\bCASE\s+(.*?WHEN\s+.*?THEN\s+.*?ELSE\s+.*?END)/ism) {
-#		$new_sql .= $`;
-#		$sql = $';
-#		my $temp = $1;
-#		$temp =~ s/('.*?')/UNISTR\(\1\)/igsm;
-#		$new_sql .= " CASE $temp ";
-#	}
-#	$new_sql .= $sql;
-#	$sql = $new_sql;
-#}
-
-#warn "ORACLE OUT: <$sql>\n";
-
-$mysql_to_postgresql_cache -> {$src_sql} = $sql if ($src_sql !~ /\bIF\((.+?),(.+?),(.+?)\)/igsm);
-
-return $sql;	
-
-}
-
 ################################################################################
 
 sub sql_lock {
@@ -1149,34 +819,5 @@ sub sql_unlock {
 ################################################################################
 
 sub _sql_ok_subselects { 1 }
-
-################################################################################
-
-sub get_sql_translator_ref {
-
-	return \ &mysql_to_postgresql if $conf -> {core_auto_postgresql};
-
-}
-
-################################################################################
-################################################################################
-
-#package DBIx::ModelUpdate::PostgreSQL;
-
-#use Data::Dumper;
-
-#no warnings;
-
-#our @ISA = qw (DBIx::ModelUpdate);
-
-################################################################################
-
-sub prepare {
-
-	my ($self, $sql) = @_;
-	
-	return $self -> {db} -> prepare ($sql);
-
-}
 
 1;
