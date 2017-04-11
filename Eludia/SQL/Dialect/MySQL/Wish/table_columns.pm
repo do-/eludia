@@ -45,6 +45,8 @@ sub wish_to_clarify_demands_for_table_columns {
 	if ($i -> {TYPE_NAME} eq 'TIMESTAMP') {
 
 		$i -> {NULLABLE} = 0;
+		
+		$i -> {_EXTRA} = 'on update CURRENT_TIMESTAMP';
 
 	}
 
