@@ -103,22 +103,20 @@ sub wish_to_clarify_demands_for_table_columns {
 sub wish_to_explore_existing_table_columns {
 
 	my ($options) = @_;
-
-	my $existing = {};
 		
-	sql_select_loop (q {
+	$options -> {_cache} or sql_select_loop (q {
 	
 			SELECT 
 				pg_attribute.*
 				, pg_type.typname
 				, pg_attrdef.adsrc
 				, pg_description.description
+				, pg_class.relname
 			FROM 
 				pg_namespace
 				LEFT JOIN pg_class ON (
 					pg_class.relnamespace = pg_namespace.oid
 					AND pg_class.relkind = 'r'
-					AND pg_class.relname = ?
 				)
 				LEFT JOIN pg_attribute ON (
 					pg_attribute.attrelid = pg_class.oid
@@ -143,7 +141,7 @@ sub wish_to_explore_existing_table_columns {
 		
 			my $name = $i -> {attname};
 
-			$existing -> {$name} = (my $r = {
+			$options -> {_cache} -> {$i -> {relname}} -> {$name} = (my $r = {
 			
 				name       => $name,
 			
@@ -165,21 +163,11 @@ sub wish_to_explore_existing_table_columns {
 
 			}
 			
-#			if ($r -> {TYPE_NAME} eq 'NUMERIC') {
-			
-#				$r -> {COLUMN_SIZE}    = $i -> {atttypmod} >> 16;
-				
-#				$r -> {DECIMAL_DIGITS} = $i -> {atttypmod} - ($r -> {COLUMN_SIZE} << 16) - 4;
-			
-#			}
+		}
 
-		},
-		
-		$options -> {table},
-	
 	);
 
-	return $existing;
+	$options -> {_cache} -> {$options -> {table}};
 
 }
 

@@ -1227,10 +1227,14 @@ sub assert {
 	if (@tables > 0) {
 
 		wish (tables => Storable::dclone \@tables, {});
+		
+		my $col_options = {};
 
 		foreach my $table (@tables) {
+		
+			$col_options -> {table} = $table -> {name};
 
-			wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], {table => $table -> {name}}) if exists $table -> {columns};
+			wish (table_columns => [map {{name => $_, %{$table -> {columns} -> {$_}}}}    (keys %{$table -> {columns}})], $col_options) if exists $table -> {columns};
 
 			wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})],    {table => $table -> {name}, table_def => $table}) if exists $table -> {keys};
 
