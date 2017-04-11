@@ -890,24 +890,11 @@ sub delete_fakes {
 	
 	my ($table_name) = @_;
 	
-	$table_name    ||= $_REQUEST {type};
+	$table_name ||= $_REQUEST {type};
 
 	return if ($_REQUEST {__delete_fakes} -> {$table_name} ||= is_recyclable ($table_name));
-	
-	assert_fake_key ($table_name);
-	
-	my ($ids, $in_clause) = sql_select_ids (<<EOS);
-		SELECT
-			$table_name.id
-		FROM
-			$table_name
-			LEFT JOIN $conf->{systables}->{sessions} ON $table_name.fake = $conf->{systables}->{sessions}.id
-		WHERE
-			$table_name.fake > 0
-			AND $conf->{systables}->{sessions}.id_user IS NULL
-EOS
-			
-	sql_do ("DELETE FROM $table_name WHERE id IN ($in_clause)");
+
+	sql_do ("DELETE FROM $table_name WHERE fake > 0 AND fake NOT IN (SELECT * FROM $conf->{systables}->{sessions})");
 	
 	$_REQUEST {__delete_fakes} -> {$table_name} = 1;
 

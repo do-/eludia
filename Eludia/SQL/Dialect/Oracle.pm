@@ -873,8 +873,6 @@ sub sql_do_insert {
 
 	$pairs -> {fake} = $_REQUEST {sid} unless exists $pairs -> {fake};
 	
-	delete_fakes ($table_name) if $pairs -> {fake} > 0;
-
 	if (is_recyclable ($table_name)) {
 	
 		assert_fake_key ($table_name);
