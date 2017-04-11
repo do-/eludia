@@ -403,17 +403,6 @@ sub check_module_mail {
 
 ################################################################################
 
-sub check_module_auth {
-
-	loading_log " check_module_auth:\n";
-	
-	$preconf -> {_} -> {pre_auth}  = [];
-	$preconf -> {_} -> {post_auth} = [];
-	
-}
-
-################################################################################
-
 sub check_module_queries {
 
 	loading_log " check_module_queries................ ";
