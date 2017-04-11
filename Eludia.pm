@@ -258,76 +258,6 @@ sub finish_loading_logging {
 
 ################################################################################
 
-sub check_application_directory {
-
-	loading_log " check_application_directory... ";
-
-	my $docroot = $ENV{DOCUMENT_ROOT};
-		
-	if (!$docroot && open (IN, $0)) {
-	
-		my $httpd_conf = join ('', <IN>);
-		
-		close (IN);
-		
-		if ($httpd_conf =~ /^\s*DocumentRoot\s+([\"\'\\\/\w\.\:\-\(\) ]+)/gism) {
-		
-			$docroot = $1;
-			
-			$docroot =~ s/[\"\']//g; #'
-			
-		}
-		
-	}
-	
-	if (!$docroot) {
-	
-		foreach (reverse @$PACKAGE_ROOT) {
-					
-			/[\/\\]lib$/ or next;
-			
-			$docroot = $` . '/docroot';
-			
-			last;
-		
-		}
-		
-	}
-	
-	$docroot or die "docroot NOT FOUND :-(\n";
-	
-	$docroot =~ s{[\/\\]$}{};
-	
-	$docroot .= '/';
-
-	loading_log "$docroot...\n";
-	
-	$preconf -> {_} -> {docroot} = $docroot;
-
-	foreach my $subdir ('i/upload', 'i/upload/images', 'dbm') {
-
-		loading_log "  checking ${docroot}${subdir}...";
-
-		my $dir = $docroot . $subdir;
-
-		eval {
-		
-			-d $dir or mkdir $dir;
-	
-			chmod 0777, $dir;
-			
-		};
-
-		warn $@ if $@;
-
-		loading_log "ok\n";
-
-	}
-
-}
-
-################################################################################
-
 sub check_module_want {
 
 	loading_log " check_module_want................... ";
@@ -545,7 +475,6 @@ BEGIN {
 
 	start_loading_logging       ();
 
-	check_application_directory ();
 	check_web_server            (); 
 	
 	require "Eludia/$_.pm" foreach qw (Content SQL GenericApplication/Config);
