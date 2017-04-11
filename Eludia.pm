@@ -258,29 +258,6 @@ sub finish_loading_logging {
 
 ################################################################################
 
-sub check_module_want {
-
-	loading_log " check_module_want................... ";
-
-	eval 'use Want';
-	
-	if ($@) {
-
-		loading_log "no Want.pm, ok. [INSTALL SUGGESTED]\n";
-		
-		eval 'sub want {0}';
-
-	}
-	else {
-	
-		loading_log "Want $Want::VERSION ok.\n";
-
-	}
-
-}
-
-################################################################################
-
 sub check_module_math_fixed_precision {
 
 	loading_log " check_module_math_fixed_precision... ";

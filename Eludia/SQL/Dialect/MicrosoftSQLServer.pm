@@ -586,7 +586,7 @@ EOS
 
 	sql_do ("$statement INTO $table_name ($fields) VALUES ($args)", @params);
 
-	return want ('VOID') ? undef : sql_last_insert_id ();
+	return sql_last_insert_id ();
 	
 }
 
