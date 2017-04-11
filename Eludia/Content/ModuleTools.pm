@@ -111,26 +111,24 @@ sub require_model_scripts {
 	$dir .= '/Model';
 	
 	__profile_in ("require.scripts.model" => {label => $dir}); 
+	
+	my $tables = {};
 
 	foreach my $file_name (list_of_files_in_the_directory $dir) {
 				
 		$file_name =~ /\.pm$/ or next;
-			
-		my $name = $`;		
 		
-		__profile_in ("require.scripts.model.$name"); 
-
-		$model_update -> assert (
-											
-			default_columns => $DB_MODEL -> {default_columns},
-						
-			tables => {$name => $DB_MODEL -> {tables} -> {$name}},
-
-		);
-
-		__profile_out ("require.scripts.model.$name"); 
-
+		$tables -> {$`} = $DB_MODEL -> {tables} -> {$`};
+					
 	}			
+	
+	$model_update -> assert (
+											
+		default_columns => $DB_MODEL -> {default_columns},
+						
+		tables => $tables,
+
+	);	
 
 	__profile_out ("require.scripts.model"); 
 
