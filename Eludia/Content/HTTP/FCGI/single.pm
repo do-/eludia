@@ -6,10 +6,12 @@ use Cwd;
 ################################################################################
 
 sub start {
+
+	my $efn = Cwd::abs_path ('logs/error.log');
 	
-	warn "\n ------------------------------------------------------\n";
-	warn " == Starting Eludia.pm FastCGI single process server ==\n";
-	warn " ------------------------------------------------------\n\n";
+	warn "Redirecting STDERR to $efn...\n";
+	
+	open (STDERR, ">>$efn") or die "Can't append to $fn: $!\n";
 	
 	my $fn = 'conf/elud.json';
 	open (I, $fn) or die "Can't read $fn: $!";
@@ -32,8 +34,6 @@ sub start {
 	my $socket = FCGI::OpenSocket ($o -> {fcgi} -> {address}, $o -> {fcgi} -> {backlog});
 			
 	my $request = FCGI::Request (\*STDIN, \*STDOUT, new IO::File, \%ENV, $socket);
-
-	open (STDERR, ">>logs/error.log");
 
 	while ($request -> Accept >= 0) {
 
