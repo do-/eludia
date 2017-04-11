@@ -17,7 +17,7 @@ sub vld_snils {
 	$value =~ s/[^\d]//g;
 
 	if (!$value && $nullable) {
-		delete $_REQUEST {$name1} if ($name1);
+		$_REQUEST {$name1} = '' if $name1;
 		return undef;
 	}
 
@@ -175,7 +175,7 @@ sub vld_inn_10 {
 	}
 
 	if (!$value && $nullable) {
-		delete $_REQUEST {$name1} if ($name1);
+		$_REQUEST {$name1} = '' if $name1;
 		return undef;
 	}
 
@@ -221,7 +221,7 @@ sub vld_inn_12 {
 	}
 
 	if (!$value && $nullable) {
-		delete $_REQUEST {$name1} if ($name1);
+		$_REQUEST {$name1} = '' if $name1;
 		return undef;
 	}
 
@@ -288,7 +288,7 @@ sub vld_inn {
 	}
 
 	if (!$value && $nullable) {
-		delete $_REQUEST {$name1} if ($name1);
+		$_REQUEST {$name1} = '' if $name1;
 		return undef;
 	}
 
