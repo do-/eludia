@@ -289,6 +289,11 @@ sub sql_reconnect {
 
 		if (sql_ping ()) {
 		
+			unless ($db -> {AutoCommit}) {
+				$db -> rollback;
+				$db -> {AutoCommit} = 1;
+			}
+		
 			__profile_out ('core.sql.reconnect', {label => 'ping OK'});
 		
 			return;
