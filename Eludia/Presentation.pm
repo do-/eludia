@@ -1153,7 +1153,12 @@ sub draw_toolbar {
 
 			$_REQUEST {__toolbar_inputs} .= "$button->{name}," if $button -> {type} =~ /^input_/;
 
-			$button -> {html} = call_from_file ("Eludia/Presentation/ToolbarElements/$button->{type}.pm", 'draw_toolbar_' . $button -> {type}, $button, $options -> {_list}) unless $_REQUEST {__edit_query};
+			$button -> {html} = call_from_file ("Eludia/Presentation/ToolbarElements/$button->{type}.pm"
+				, 'draw_toolbar_' . $button -> {type}
+				, $button
+				, $options -> {_list}
+				, $options
+			) unless $_REQUEST {__edit_query};
 
 		}
 		else {
