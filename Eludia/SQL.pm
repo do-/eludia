@@ -703,164 +703,6 @@ sub sql_select_id {
 
 ################################################################################
 
-sub sql_do_relink {
-
-	my ($table_name, $old_ids, $new_id, $options) = @_;			
-	
-	sql_weave_model ($DB_MODEL);
-
-	ref $old_ids eq ARRAY or $old_ids = [$old_ids];
-	
-	my $column_name = '';
-	$column_name = 'is_merged_to' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {is_merged_to};
-	$column_name = 'id_merged_to' if $DB_MODEL -> {tables} -> {$table_name} -> {columns} -> {id_merged_to};
-	
-	my $record = sql_select_hash ($table_name, $new_id);
-	my @empty_fields = ();
-	foreach my $key (keys %$record) {
-		next if $options -> {no_update};
-		next if $record -> {$key} . '' ne '';
-		next if $key eq 'id';
-		next if $key eq 'fake';
-		next if $key eq 'is_merged_to';
-		next if $key eq 'id_merged_to';
-		push @empty_fields, $key;
-	}
-			
-	my $moved_links_table = sql_table_name ($conf -> {systables} -> {__moved_links});
-				
-	foreach my $old_id (@$old_ids) {
-	
-warn "relink $table_name: $old_id -> $new_id";
-
-		my $record = sql_select_hash ($table_name, $old_id);
-		
-		foreach my $empty_field (@empty_fields) {
-			$_REQUEST {'_' . $empty_field} ||= $record -> {$empty_field};
-		}
-
-		foreach my $column_def (@{$DB_MODEL -> {aliases} -> {$table_name} -> {references}}) {
-
-			next
-				if $DB_MODEL -> {tables} -> {$column_def -> {table_name}} -> {sql};
-			
-warn "relink $$column_def{table_name} ($$column_def{name}): $old_id -> $new_id";
-
-			if ($column_def -> {TYPE_NAME} =~ /int/) {
-			
-				sql_do (<<EOS, $old_id);
-					INSERT INTO $moved_links_table
-						(table_name, column_name, id_from, id_to)
-					SELECT
-						'$$column_def{table_name}' AS table_name,
-						'$$column_def{name}' AS column_name,
-						id AS id_from,
-						'$old_id' AS id_to
-					FROM
-						$$column_def{table_name}
-					WHERE
-						$$column_def{name} = ?
-EOS
-
-				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = ? WHERE $$column_def{name} = ?", $new_id, $old_id);
-				
-			}
-			else {
-			
-				my $_old_id = ',' . $old_id . ',';
-				my $_new_id = ',' . $new_id . ',';
-			
-				sql_do (<<EOS, '%' . $old_id . '%');
-					INSERT INTO $moved_links_table
-						(table_name, column_name, id_from, id_to)
-					SELECT
-						'$$column_def{table_name}' AS table_name,
-						'$$column_def{name}' AS column_name,
-						id AS id_from,
-						'$_old_id' AS id_to
-					FROM
-						$$column_def{table_name}
-					WHERE
-						$$column_def{name} LIKE ?
-EOS
-
-				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = REPLACE($$column_def{name}, ?, ?) WHERE $$column_def{name} LIKE ?", $_old_id, $_new_id, '%' . $_old_id . '%');
-
-			}
-
-		}
-				
-		if ($column_name) {
-			sql_do ("UPDATE $table_name SET fake = -1, $column_name = ? WHERE id = ?", $new_id, $old_id);
-		}
-		else {
-			sql_do ("UPDATE $table_name SET fake = -1 WHERE id = ?", $old_id);
-		}
-
-	}
-
-	sql_do_update ($table_name, \@empty_fields) if @empty_fields > 0;
-
-	delete $DB_MODEL -> {aliases};
-
-}
-
-################################################################################
-
-sub sql_undo_relink {
-
-	sql_weave_model ($DB_MODEL);
-
-	my ($table_name, $old_ids) = @_;
-
-	ref $old_ids eq ARRAY or $old_ids = [$old_ids];
-
-	my $moved_links_table = sql_table_name ($conf -> {systables} -> {__moved_links});
-	
-	foreach my $old_id (@$old_ids) {
-		
-		$old_id > 0 or next;
-
-warn "undo relink $table_name: $old_id";
-
-		my $record = sql_select_hash ($table_name, $old_id);
-		
-		foreach my $column_def (@{$DB_MODEL -> {aliases} -> {$table_name} -> {references}}) {
-
-			next
-				if $DB_MODEL -> {tables} -> {$column_def -> {table_name}} -> {sql};
-
-			my $from = <<EOS;
-				FROM
-					$moved_links_table
-				WHERE
-					table_name = '$$column_def{table_name}'
-					AND column_name = '$$column_def{name}'
-					AND id_to = $old_id
-EOS
-			my $ids = sql_select_ids ("SELECT id_from $from");
-			sql_do ("DELETE $from");
-
-warn "undo relink $$column_def{table_name} ($$column_def{name}): $old_id";
-
-			if ($column_def -> {TYPE_NAME} =~ /int/) {
-				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = ? WHERE id IN ($ids)", $old_id);
-			}
-			else {			
-				$old_id_ = $old_id . ',';
-				sql_do ("UPDATE $$column_def{table_name} SET $$column_def{name} = CONCAT($$column_def{name}, ?) WHERE id IN ($ids)", $old_id_);
-			}
-
-		}
-		
-	}
-	
-	delete $DB_MODEL -> {aliases};
-	
-}
-
-################################################################################
-
 sub assert_fake_key {
 
 	my ($table_name) = @_;
@@ -1472,23 +1314,24 @@ sub get_keys {
 
 sub sql_table_name {$_[0]}
 
-#############################################################################
+################################################################################
 
-sub sql_voc_static {
+sub sql_do_update {
 
-	$ENV {DOCUMENT_ROOT} or return;
-
-	setup_json ();
-
-	my $root = $ENV {DOCUMENT_ROOT} . '/voc/';
-
-	-d $root or mkdir ($root);	
-
-	my $data = add_vocabularies ({}, @_);	
-
-	while (my ($k, $v) = each %$data) {
-		print_file ("${root}${k}.json" => $_JSON -> encode ({success => \1, content => [map {[$_ -> {id}, $_ -> {label}]} @$v]}));
+	my ($table, $data, $id) = @_;
+	
+	$id ||= delete $data -> {id} or die 'Wrong argument for sql_do_update: ' . Dumper (\@_);
+	
+	$data -> {fake} //= 0;
+	
+	my (@q, @p) = ();
+	
+	while (my ($k, $v) = each %$data) {	
+		push @q, $db -> quote_identifier ($k) . " = ?";
+		push @p, $v;	
 	}
+	
+	sql_do ("UPDATE " . $db -> quote_identifier ($table) . " SET " . (join ', ', @q) . " WHERE id = ?", @p, $id);
 
 }
 

@@ -6,6 +6,7 @@ no warnings;
 sub sql_version {
 
 	$db -> {pg_enable_utf8} = 1;
+	$db -> {pg_errorlevel}  = 2;
 
 	my $version = $SQL_VERSION;
 	
@@ -15,7 +16,13 @@ sub sql_version {
 	
 	($version -> {number}) = $version -> {string} =~ /([\d\.]+)/;
 	
-	$version -> {number_tokens} = [split /\./, $version -> {number}];
+	my @t = split /\./, $version -> {number};
+	
+	$version -> {number_tokens} = \@t;
+	
+	$version -> {n} = 0 + (join '.', grep {$_} @t [0 .. 1]);
+	
+	$version -> {features} -> {'idx.partial'} = ($version -> {n} > 7.1);
 	
 	$preconf -> {db_schema} = sql_select_scalar ('SELECT current_schema()');
 
@@ -79,11 +86,19 @@ sub sql_do {
 
 	my ($sql, @params) = @_;
 	
-	my $time = time;
+	my $st;
+	
+	eval { ($st, $affected) = sql_execute ($sql, @params) };
+	
+	my $err = $@;
+	
+	eval { $st -> finish } if $st;
 
-	(my $st, $affected) = sql_execute ($sql, @params);
-
-	$st -> finish;	
+	$err or return;
+	
+	$err =~ /23505:/ and die "UNIQUE VIOLATION\n$err";
+	
+	die $err;
 	
 }
 
@@ -427,42 +442,6 @@ sub sql_select_subtree {
 	
 	return @ids;
 	
-}
-
-################################################################################
-
-sub sql_do_update {
-
-	my ($table_name, $field_list, $options) = @_;
-	
-	ref $options eq HASH or $options = {
-		stay_fake => $options,
-		id        => $_REQUEST {id},
-	};
-	
-	$options -> {id} ||= $_REQUEST {id};
-		
-	my $item = sql_select_hash ($table_name, $options -> {id});
-
-#	my %lobs = map {$_ => 1} @{$options -> {lobs}};
-	
-#	my @field_list = grep {!$lobs {$_}} @$field_list;
-                      
-	if (@$field_list > 0) {
-		my $sql = join ', ', map {"$_ = ?"} @$field_list;
-		$options -> {stay_fake} or $sql .= ', fake = 0';
-		$sql = "UPDATE $table_name SET $sql WHERE id = ?";	
-
-		my @params = @_REQUEST {(map {"_$_"} @$field_list)};	
-		push @params, $options -> {id};
-		sql_do ($sql, @params);
-
-	}
-
-	if ($item -> {fake} == -1 && $conf -> {core_undelete_to_edit} && !$options -> {stay_fake}) {
-		do_undelete_DEFAULT ($table_name, $options -> {id});
-	}
-
 }
 
 ################################################################################

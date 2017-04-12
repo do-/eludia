@@ -5,8 +5,20 @@ sub wish_to_clarify_demands_for_table_keys {
 	my ($i, $options) = @_;
 	
 	$i -> {global_name} = 'ix_' . $options -> {table} . '_' . $i -> {name};
+	
+	unless (ref $i -> {parts} eq ARRAY) {
+	
+		if ($i -> {parts} =~ /\!$/) {
+		
+			chop $i -> {parts};
+			
+			$i -> {part_uniq} = 1;
+		
+		}
 
-	ref $i -> {parts} eq ARRAY or $i -> {parts} = [split /\,/, $i -> {parts}];
+		$i -> {parts} = [split /\,/, $i -> {parts}];
+
+	}
 	
 	foreach my $part (@{$i -> {parts}}) {
 	
@@ -30,7 +42,7 @@ sub wish_to_explore_existing_table_keys {
 
 		my $def;
 
-		if ($i -> {indexdef} =~ /\(\s*(.*)\s*\)/) {
+		if ($i -> {indexdef} =~ /\(\s*(.*?)\s*\)/) {
 
 			$def = $1;
 
@@ -42,8 +54,8 @@ sub wish_to_explore_existing_table_keys {
 		}
 		
 		my $global_name = lc $i -> {indexname};
-
-		$options -> {_cache} -> {$i -> {tablename}} -> {$global_name} = {
+		
+		my $d = {
 					
 			parts       => [split /\s*\,\s*/, lc $def],
 			
@@ -52,6 +64,10 @@ sub wish_to_explore_existing_table_keys {
 			name        => substr $global_name, (4 + length $i -> {tablename})
 			
 		};
+		
+		$d -> {part_uniq} = 1 if $i -> {indexdef} =~ /UNIQUE(.+)WHERE/i;
+
+		$options -> {_cache} -> {$i -> {tablename}} -> {$global_name} = $d;
 
 	});
 
@@ -66,10 +82,12 @@ sub wish_to_actually_create_table_keys {
 	my ($items, $options) = @_;
 	
 	my $concurrently = $self -> {db} -> {AutoCommit} ? 'CONCURRENTLY' : '';
-
+	
 	foreach my $i (@$items) {
 
-		sql_do ("CREATE $concurrently INDEX $i->{global_name} ON $options->{table} (@{[ join ', ', @{$i -> {parts}} ]})");
+		my ($unique, $where) = $i -> {part_uniq} ? ('UNIQUE', 'WHERE fake = 0') : ('', '');
+
+		sql_do ("CREATE $concurrently $unique INDEX $i->{global_name} ON $options->{table} (@{[ join ', ', @{$i -> {parts}} ]}) $where");
 	
 	}
 

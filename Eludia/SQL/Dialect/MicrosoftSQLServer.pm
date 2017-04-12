@@ -504,38 +504,6 @@ sub sql_last_insert_id {
 
 ################################################################################
 
-sub sql_do_update {
-
-	my ($table_name, $field_list, $options) = @_;
-
-	ref $options eq HASH or $options = {
-		stay_fake => $options,
-		id        => $_REQUEST {id},
-	};
-
-	
-	$options -> {id} ||= $_REQUEST {id};
-	
-	my $have_fake_param;
-	my $sql = join ', ', map {$have_fake_param ||= ($_ eq 'fake'); "$_ = ?"} @$field_list;
-	$options -> {stay_fake} or $have_fake_param or $sql .= ', fake = 0';
-
-	$sql = "UPDATE $table_name SET $sql WHERE id = ?";
-	my @params = @_REQUEST {(map {"_$_"} @$field_list)};
-	push @params, $options -> {id};
-
-	# ѕри передаче пустой строки в численное поле генерируетс€ ошибка преобразовани€ типов
-	if ($table_name eq 'core_log')
-	{
-		$params[2] = 0 if $params[2] eq '';
-	}
-
-	sql_do ($sql, @params);
-	
-}
-
-################################################################################
-
 sub sql_do_insert {
 
 	my ($table_name, $pairs) = @_;
