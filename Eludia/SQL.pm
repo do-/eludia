@@ -358,6 +358,20 @@ sub sql_reconnect {
 	delete $SQL_VERSION -> {_};
 	
 	sql_version ();
+	
+	if (my $f = $conf -> {sql_features}) {
+	
+		foreach (@$f) {
+		
+			next if $SQL_VERSION -> {features} -> {$_};
+			
+			warn ("This application cannot run on $SQL_VERSION->{string}, the missing feature is $_\n");
+			
+			CORE::exit (1);
+		
+		}
+	
+	}
 
 	unless ($preconf -> {no_model_update}) {
 		
