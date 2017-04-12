@@ -1614,7 +1614,6 @@ sub draw_toolbar {
 	<form action="$_REQUEST{__uri}" name="$options->{form_name}" target="$$options{target}" class="toolbar">
 EOH
 
-
 	my %keep_params = map {$_ => 1} @{$options -> {keep_params}};
 
 	$keep_params {$_} = 1 foreach qw (sid __last_query_string __last_scrollable_table_row __last_last_query_string);
@@ -1760,29 +1759,39 @@ sub draw_toolbar_input_tree {
 	$_REQUEST {__script} .= <<EOJS;
 var ${id}_changed = 0;
 EOJS
+
 	$_REQUEST {__on_load} .= <<EOJS;
 require (['/i/mint/libs/kendo.web.ext.js'], function () {
-	var ${id}_el = \$("#$id").kendoExtDropDownTreeView ({
-		dropDownWidth : $dropdown_width,
-		value      : "$value",
-		tree_close : function (e) {
-			if (${id}_changed) {
-				\$("#$id").parents("FORM").submit ();
-			}
-		},
-		treeview   : {
-			width      : $options->{width},
-			height     : $options->{height},
-			checkboxes : {
-				template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='${name}_#=item.id#' value='1' # if(item.is_checkbox == 2){# checked #}#/> #}#"
-			},
-			dataSource : {
-				data : $data
-			}
+	if (!\$("#$id").data("kendoExtDropDownTreeView")) {
+		var emptyLabel = "$$options{empty}",
+			${id}_el = \$("#$id").kendoExtDropDownTreeView ({
+				dropDownWidth : $dropdown_width,
+				value      : "$value",
+				tree_close : function (e) {
+					if (${id}_changed)
+						\$("#$id").parents("FORM").submit ();
+				},
+				treeview   : {
+					width      : $options->{width},
+					height     : $options->{height},
+					checkboxes : {
+						template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='${name}_#=item.id#' value='1' # if(item.is_checkbox == 2){# checked #}#/> #}#"
+					},
+					dataSource : {
+						data : $data
+					}
+				}
+			}).data('kendoExtDropDownTreeView');
+
+		\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
+		${id}_el.dropDownList().enable(!!$enable);
+		if (!"$value".length && emptyLabel.length) {
+			var \$kInput = ${id}_el.element.find('.k-input');
+
+			\$kInput.addClass('empty');
+			\$kInput.html(emptyLabel);
 		}
-	});
-	\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
-	${id}_el.data('kendoExtDropDownTreeView').dropDownList().enable(!!$enable);
+	}
 });
 EOJS
 
