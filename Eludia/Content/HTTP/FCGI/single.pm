@@ -6,12 +6,6 @@ use Cwd;
 ################################################################################
 
 sub start {
-
-	my $efn = Cwd::abs_path ('logs/error.log');
-	
-	warn "Redirecting STDERR to $efn...\n";
-	
-	open (STDERR, ">>$efn") or die "Can't append to $fn: $!\n";
 	
 	my $fn = 'conf/elud.json';
 	open (I, $fn) or die "Can't read $fn: $!";
