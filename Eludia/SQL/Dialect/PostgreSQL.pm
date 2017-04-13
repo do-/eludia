@@ -134,7 +134,7 @@ sub sql_select_all_cnt {
 	__profile_in ('sql.fetch');
 	
 	while (my $i = $st -> fetchrow_hashref ()) {			
-		push @result, lc_hashref ($i);	
+		push @result, $i;	
 	}
 	
 	__profile_out ('sql.fetch', {label => $st -> rows});
@@ -176,7 +176,7 @@ sub sql_select_all {
 	__profile_in ('sql.fetch');
 
 	while (my $i = $st -> fetchrow_hashref ()) {			
-		push @result, lc_hashref ($i);	
+		push @result, $i;	
 	}
 
 	__profile_out ('sql.fetch', {label => $st -> rows});
@@ -211,7 +211,6 @@ sub sql_select_all_hash {
 	__profile_in ('sql.fetch');
 
 	while (my $r = $st -> fetchrow_hashref) {
-		lc_hashref ($r);		                       	
 		$result -> {$r -> {id}} = $r;
 	}
 
@@ -248,23 +247,6 @@ sub sql_select_col {
 	$st -> finish;
 	
 	return @result;
-
-}
-
-################################################################################
-
-sub lc_hashref {
-
-	my ($hr) = @_;
-
-	return undef unless (defined $hr);	
-
-	foreach my $key (keys %$hr) {
-		$hr -> {lc $key} = $hr -> {$key};
-		delete $hr -> {uc $key};
-	}
-
-	return $hr;
 
 }
 
@@ -316,7 +298,7 @@ sub sql_select_hash {
 
 	$st -> finish;		
 	
-	return lc_hashref ($result);
+	return $result;
 
 }
 
@@ -769,7 +751,6 @@ sub sql_select_loop {
 	__profile_in ('sql.fetch');
 
 	while ($i = $st -> fetchrow_hashref) {
-		lc_hashref ($i);
 		&$coderef ();
 	}
 	
