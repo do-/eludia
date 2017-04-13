@@ -5,7 +5,6 @@ use Eludia::Content::Dt;
 use Eludia::Content::ModuleTools;
 use Eludia::Content::Handler;
 use Eludia::Content::Validators;
-use Eludia::Content::Templates;
 use Eludia::Content::Tie;
 use Eludia::Content::Profiling;
 
