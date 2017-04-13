@@ -34,13 +34,6 @@ sub vld_date {
 		die "#${name}#:Некорректно задан год\n";
 	}
 	
-
-	$month > 0  or die "#${name}#:$$i18n{wrong_month}\n";
-	$month < 13 or die "#${name}#:$$i18n{wrong_month}\n";
-	
-	$day   > 0  or die "#${name}#:$$i18n{wrong_day}\n";
-	$day   < 32 or die "#${name}#:$$i18n{wrong_day}\n";
-	
 	Date::Calc::check_date ($year, $month, $day) or die "#${name}#:Некорректная дата\n";
 
 	$_REQUEST {$name} = sprintf ('%04d-%02d-%02d', $year, $month, $day);

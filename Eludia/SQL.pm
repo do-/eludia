@@ -1,7 +1,6 @@
 no warnings;
 
-use Eludia::SQL::Transfer;
-use Eludia::SQL::TheSqlFunction;
+use Eludia::SQL::TheSqlFunction;
 
 ################################################################################
 

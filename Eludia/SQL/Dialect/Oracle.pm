@@ -219,12 +219,6 @@ sub sql_prepare {
 		print STDERR $msg;
 		die $msg;
 	}
-	
-	if ($db -> {Driver} -> {Name} eq ODBC) {
-
-		Encode::is_utf8	($_) or $_ = Encode::decode ($i18n -> {_charset}, $_) foreach (@params);
-
-	}
 
 	__profile_out ('sql.prepare', {label => $sql});
 
@@ -537,30 +531,11 @@ sub lc_hashref {
 
 	defined $hr or return undef;
 
-	if ($db -> {Driver} -> {Name} eq ODBC) {
+	foreach my $key (keys %$hr) {
 
-		foreach my $key (keys %$hr) {
-
-			my $s = delete $hr -> {$key};
-
-			$s = Encode::encode ($i18n -> {_charset}, $s) if Encode::is_utf8 ($s);
-
-			$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = $s;
-
-		}
+		$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = delete $hr -> {$key};
 
 	}
-	else {
-
-		foreach my $key (keys %$hr) {
-
-			$hr -> {$SQL_VERSION -> {_keys_map} -> {$key} || lc $key} = delete $hr -> {$key};
-
-		}
-
-	}
-	
-
 
 	return $hr;
 
