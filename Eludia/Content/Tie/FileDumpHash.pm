@@ -78,8 +78,8 @@ sub FETCH_ {
 		my $src = '';
 		
 		while (my $line = <I>) {
-
-$line = Encode::decode ('windows-1251', $line);
+		
+			Encode::_utf8_on ($line);
 		
 			$src .= $line;
 			
@@ -101,7 +101,7 @@ $line = Encode::decode ('windows-1251', $line);
 			$column -> {TYPE} or next;
 			
 			my %options;
-
+			
 			if ($column -> {TYPE} =~ /^\s*(\w+)/) {
 			
 				$column -> {TYPE_NAME} = $1;
@@ -110,6 +110,16 @@ $line = Encode::decode ('windows-1251', $line);
 
 				$options {FIELD_OPTIONS} -> {type} ||= $1;
 			
+			}
+
+			if ($column -> {TYPE} =~ m{(.*?)\s*\=\s*}) {
+			
+				$column -> {TYPE} = $1;
+				
+				$column -> {COLUMN_DEF} = $';
+				
+				$column -> {NULLABLE} = 0;
+
 			}
 
 			if ($column -> {TYPE} =~ /\s*\(\s*(\w+)\s*\)\s*$/) {
@@ -176,7 +186,7 @@ $line = Encode::decode ('windows-1251', $line);
 					
 					ref $v ne HASH or !exists $v -> {off} or !$v -> {off} or next;
 
-					$VAR1 -> {$object} -> {$key} ||= $v;
+					$VAR1 -> {$object} -> {$key} = $v;
 
 				}
 
