@@ -1334,5 +1334,9 @@ sub sql_do_update {
 	sql_do ("UPDATE " . $db -> quote_identifier ($table) . " SET " . (join ', ', @q) . " WHERE id = ?", @p, $id);
 
 }
+
+################################################################################
+
+sub sql_check_seq {}
 
 1;

@@ -428,117 +428,55 @@ sub sql_select_subtree {
 
 ################################################################################
 
-sub sql_set_sequence {
-
-	my ($seq_name, $value) = @_;
-	return sql_select_scalar ("SELECT setval('$seq_name', $value)");
-
-}
-
-################################################################################
-
 sub sql_do_insert {
 
-	my ($table_name, $pairs) = @_;
+	my ($table, $data) = @_;
 		
-	my $fields = '';
-	my $args   = '';
-	my @params = ();
+	exists $data -> {fake} or $data -> {fake} = $_REQUEST {sid};
 
-	$pairs -> {fake} = $_REQUEST {sid} unless exists $pairs -> {fake};
+	my ($fields, $args, @params) = ('', '');
 
-	if (is_recyclable ($table_name)) {
-	
-		assert_fake_key ($table_name);
+	while (my ($k, $v) = each %$data) {
 
-		### all orphan records are now mine
-
-		sql_do (<<EOS, $_REQUEST {sid});
-			UPDATE
-				$table_name
-			SET	
-				fake = ?
-			WHERE
-				$table_name.fake > 0
-			AND
-				$table_name.fake NOT IN (SELECT id FROM $conf->{systables}->{sessions})
-EOS
-
-		### get my least fake id (maybe ex-orphan, maybe not)
-
-		$__last_insert_id = sql_select_scalar ("SELECT id FROM $table_name WHERE fake = ? ORDER BY id LIMIT 1", $_REQUEST {sid});
-		
-		if ($__last_insert_id) {
-			sql_do ("DELETE FROM $table_name WHERE id = ?", $__last_insert_id);
-			$pairs -> {id} = $__last_insert_id;
-		}
-
-	}
-	
-	my $seq_name;
-		
-	$seq_name ||= $table_name . '_id_seq';	
-	
-	my $nextval;
-	
-	eval {$nextval = sql_select_scalar ("SELECT nextval('$seq_name')")};
-	
-	while (1) {
-	
-		my $max = sql_select_scalar ("SELECT MAX(id) FROM $table_name");
-		
-		last if $nextval > $max;
-		
-		$nextval = sql_set_sequence ($seq_name, $max + 1);
-	
-	}
-
-	if ($pairs -> {id}) {
-		
-		if ($pairs -> {id} > $nextval) {
-		
-			my $step = $pairs -> {id} - $nextval;
-
-			sql_set_sequence ($seq_name, $pairs -> {id});
-
-		}
-	
-	}
-	else {
-		
-		$pairs -> {id} = $nextval;
-		
-	}
-	
-	foreach my $field (keys %$pairs) { 
-	
-		defined $pairs -> {$field} or next;
+		defined $v or next;
 		
 		if (@params) {
 			$fields .= ', ';
 			$args   .= ', ';
 		}
-		
-		$fields .= $field;
+
+		$fields .= $k;
 		$args   .= '?';
-		push @params, $pairs -> {$field};
+		push @params, $v;
  
 	}
-
-	if ($pairs -> {id}) {
 	
-		sql_do ("INSERT INTO $table_name ($fields) VALUES ($args)", @params);
+	my $sql = "INSERT INTO $table ($fields) VALUES ($args)";
 	
-		return $pairs -> {id};
+	if ($data -> {id}) {
+	
+		sql_do ($sql, @params);	
+		
+		sql_check_seq ($table);
 
 	}
 	else {
-
-		my $id = sql_select_scalar ("INSERT INTO $table_name ($fields) VALUES ($args) RETURNING id", @params);
-
-		return $id;
+	
+		$data -> {id} = sql_select_scalar ("$sql RETURNING id", @params);
 
 	}
+
+	return $data -> {id};
+
+}
+
+################################################################################
+
+sub sql_check_seq {
+
+	my ($table) = @_;
+
+	sql_select_scalar ("SELECT setval('${table}_id_seq', (SELECT MAX(id) FROM $table))");
 
 }
 

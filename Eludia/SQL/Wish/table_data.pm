@@ -123,6 +123,8 @@ sub wish_to_actually_create_table_data {
 	
 	$sth -> execute_array ({ArrayTupleStatus => \@tuple_status}, @prms);
 	
+	sql_check_seq ($options -> {table});
+	
 	__profile_out ('sql.prepare_execute', {label => $sql . ' ' . Dumper (\@prms) . ' ' . Dumper (\@tuple_status)});
 
 	$sth -> finish;
