@@ -30,65 +30,26 @@ sub start_session {
 
 ################################################################################
 
-sub get_user_sql {
+sub get_auth_cookie_name {
 
-	my ($users, $sessions, $roles) = map {$conf -> {systables} -> {$_}} qw (users sessions roles);
-	
-	my @session_fields = qw (ip ip_fw);
-	
-	push @session_fields, 'tz_offset' if $preconf -> {core_fix_tz};
-	
-	my $ohter_select = '';
-	my $ohter_join   = '';
-	
-	$ohter_select .= ", $sessions.$_" foreach @session_fields;
-	
-	if ($conf -> {core_delegation}) {
-	
-		$ohter_select .= ', users__real.id AS id__real, users__real.label AS label__real';
-	
-		$ohter_join   .= "LEFT JOIN $users users__real ON $sessions.id_user_real = users__real.id";
-	
-	}
-
-	<<EOS;
-		SELECT
-			$users.*
-			, $roles.name AS role
-			, $roles.label AS role_label
-			$ohter_select
-		FROM
-			$sessions
-			LEFT JOIN $users ON (
-				$sessions.id_user = $users.id
-				AND $users.fake <> -1
-			)
-			LEFT JOIN $roles ON $users.id_role = $roles.id
-			$ohter_join
-		WHERE
-			$sessions.id = ?
-EOS
+	$preconf -> {auth_cookie_name} || $conf -> {auth_cookie_name} || 'sid';
 
 }
 
 ################################################################################
 
 sub get_user {
+
+	my $c = $_COOKIES {get_auth_cookie_name ()} or return undef;
 	
-	$_REQUEST {sid} or return undef;
-		
+	my $s = sql_select_hash ('SELECT * FROM sessions WHERE client_cookie = ?', $c -> value);
+
+	$_REQUEST {sid} = $s -> {id} or return undef;
+
 	sql_do_refresh_sessions ();
-	
-	my $st = ($SQL_VERSION -> {_} -> {st_select_user} ||= $db -> prepare_cached (get_user_sql (), {}, 3));
-	
-	$st -> execute ($_REQUEST {sid});
-	
-	my ($user) = $st -> fetchrow_hashref;
-	
-	$st -> finish;
-	
-	lc_hashref ($user);
-	
+
+	my $user = sql_select_hash ('SELECT * FROM users WHERE id = ?', $s -> {id_user});
+
 	return $user -> {id} ? $user : undef;
 
 }
