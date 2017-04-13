@@ -105,22 +105,22 @@ sub list_of_files_in_the_directory ($) {
 ################################################################################
 
 sub require_model_scripts {
-
-	my ($dir) = @_;
-	
-	$dir .= '/Model';
-	
+		
 	__profile_in ("require.scripts.model" => {label => $dir}); 
-	
+
 	my $tables = {};
 
-	foreach my $file_name (list_of_files_in_the_directory $dir) {
-				
-		$file_name =~ /\.pm$/ or next;
-		
-		$tables -> {$`} = $DB_MODEL -> {tables} -> {$`};
-					
-	}			
+	foreach my $dir (@_) {
+
+		foreach my $file_name (list_of_files_in_the_directory $dir . '/Model') {
+
+			$file_name =~ /\.pm$/ or next;
+
+			$tables -> {$`} ||= $DB_MODEL -> {tables} -> {$`};
+
+		}
+	
+	}
 	
 	$model_update -> assert (
 											
@@ -179,7 +179,7 @@ sub require_update_scripts {
 	my ($dir) = @_; $dir =~ y{\\}{/};
 	
 	$dir .= '/Updates';	
-	
+
 	-d $dir or return;
 	
 	__profile_in ("require.scripts.update" => {label => $dir}); 
@@ -243,14 +243,12 @@ sub require_scripts {
 	
 	__profile_in ('require.scripts'); 
 	
-	foreach my $dir (grep {-d} _INC ()) {
+	my @dirs = grep {-d} _INC ();
 	
-		require_model_scripts  ($dir);
+	require_model_scripts (@dirs);
+	
+	require_update_scripts ($_) foreach (@dirs);
 		
-		require_update_scripts ($dir);
-		
-	}
-
 	__profile_out ('require.scripts'); 
 	
 }
