@@ -39,22 +39,6 @@ sub sql_select_loop {
 
 ################################################################################
 
-sub sql_do_refresh_sessions {
-
-	my $timeout = sql_sessions_timeout_in_minutes ();
-
-	my $ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions} WHERE ts < dateadd(MINUTE, -" . $timeout . ", getdate())");
-	
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE id IN ($ids)");
-
-	$ids = sql_select_ids ("SELECT id FROM $conf->{systables}->{sessions}");
-	
-	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = GETDATE() WHERE id = ? ", 0+$_REQUEST {sid});
-	
-}
-
-################################################################################
-
 sub sql_do {
 
 	darn \@_ if $preconf -> {core_debug_sql_do};

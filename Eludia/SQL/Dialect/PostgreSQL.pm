@@ -32,18 +32,6 @@ sub sql_version {
 
 ################################################################################
 
-sub sql_do_refresh_sessions {
-
-	my $s = $conf -> {systables} -> {sessions};
-	
-	sql_do ("DELETE FROM $s WHERE ts < NOW() - CAST(? AS INTERVAL)", sql_sessions_timeout_in_minutes () . ' MINUTES');
-
-	sql_do ("UPDATE $s SET ts = NOW() WHERE id = ?", $_REQUEST {sid}) if $_REQUEST {sid};
-
-}
-
-################################################################################
-
 sub sql_execute {
 	
 	my ($sql, @params) = @_;

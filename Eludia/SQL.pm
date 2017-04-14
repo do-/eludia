@@ -8,17 +8,6 @@ sub lc_hashref {}
 
 ################################################################################
 
-sub sql_sessions_timeout_in_minutes {
-
-	return 
-		$preconf -> {session_timeout} || 
-		$conf    -> {session_timeout} || 
-		30;
-
-}
-
-################################################################################
-
 sub add_vocabularies {
 
 	my ($item, @items) = @_;
@@ -142,18 +131,8 @@ sub sql_weave_model {
 sub check_systables {
 
 	foreach (qw(
-		__access_log
 		__queries
 		__defaults
-		__benchmarks		
-		__request_benchmarks
-		__last_update		
-		__moved_links		
-		__required_files	
-		__screenshots		
-		cache_html		
-		holidays
-		log			
 		roles			
 		sessions		
 		users			

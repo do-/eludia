@@ -59,18 +59,6 @@ sub sql_version {
 
 ################################################################################
 
-sub sql_do_refresh_sessions {
-
-	my $timeout = sql_sessions_timeout_in_minutes ();
-
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < now() - INTERVAL ? MINUTE", $timeout);
-
-	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = NULL WHERE id = ? ", $_REQUEST {sid});
-
-}
-
-################################################################################
-
 sub sql_do {
 
 	darn \@_ if $preconf -> {core_debug_sql_do};

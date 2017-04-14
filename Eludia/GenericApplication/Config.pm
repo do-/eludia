@@ -62,8 +62,6 @@ sub fill_in {
 
 	our $number_format ||= Number::Format -> new (%{$conf -> {number_format}});
 
-   	$conf -> {lang} ||= 'RUS';   	
-
    	fill_in_things (core_modules =>
    		
 		json                 => 1,
@@ -97,68 +95,9 @@ sub fill_in {
 		ref      => {TYPE_NAME => 'int'},
 
    	);
-
-   	fill_in_things (button_presets =>
-
-   		ok => {
-   			icon    => 'ok',
-   			label   => 'ok',
-   			hotkey  => {code => ENTER, ctrl => 1},
-   			confirm => $conf -> {core_no_confirm_submit} ? undef : 'confirm_ok',
-   		},
-   		
-   		cancel => {
-   			icon   => 'cancel',
-   			label  => 'cancel',
-   			hotkey => {code => ESC},
-   			confirm => confirm_esc,
-   			preconfirm => 'is_dirty',
-   		},
-
-   		edit => {
-   			icon   => 'edit',
-   			label  => 'edit',
-   			hotkey => {code => F4},
-   		},
-
-   		choose => {
-   			icon   => 'choose',
-   			label  => 'choose',
-   			hotkey => {code => ENTER, ctrl => 1},
-   		},
-
-   		'close' => {
-   			icon   => 'ok',
-   			label  => 'close',
-   			hotkey => {code => ESC},
-   		},
-   		
-   		back => {
-			icon => 'back', 
-			label => 'back', 
-			hotkey => {code => F11 },
-		},
-
-   		next => {
-			icon => 'next',
-			label => 'next',
-   			hotkey => {code => F12},
-		},
-
-   		delete => {
-   			icon    => 'delete',
-   			label   => 'delete',
-   			hotkey  => {code => DEL, ctrl => 1},
-   			confirm => 'confirm_delete',
-   		},
-
-   		undelete => {
-   			icon    => 'create',
-   			label   => 'undelete',
-   			confirm => 'confirm_undelete',
-   		},
-
-   	);
+   	
+   	$preconf -> {auth} -> {session_timeout} ||= ($conf -> {auth} -> {session_timeout} || 30);
+   	$preconf -> {auth} -> {cookie_name}     ||= ($conf -> {auth} -> {cookie_name} || 'sid');
 
    	$conf -> {__filled_in} = 1;
 

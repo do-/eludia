@@ -18,37 +18,79 @@ sub start_session {
 		
 	}		
 
+	delete_all_expired_sessions ($old);
+
 	$_REQUEST {sid} = sql_do_insert ($conf -> {systables} -> {sessions} => {
 		client_cookie => $sid,
 		id_user       => $id_user,
 		fake          => 0,
+		ts            => dt_iso (30 + time),
 	});
 	
-	set_cookie (-name => 'sid', -value => $sid, -httponly => 1, -path => '/_back');
+	set_cookie (
+		-name => $preconf -> {auth} -> {cookie_name}, 
+		-value => $sid, 
+		-httponly => 1, 
+		-path => '/_back'
+	);		
 
 }
 
 ################################################################################
 
-sub get_auth_cookie_name {
+sub get_max_expired_session_dt {
+	
+	return dt_iso (int time - 60 * $preconf -> {auth} -> {session_timeout});
 
-	$preconf -> {auth_cookie_name} || $conf -> {auth_cookie_name} || 'sid';
+}
+
+################################################################################
+
+sub delete_all_expired_sessions {
+	
+	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < ?", get_max_expired_session_dt ());
+
+}
+
+################################################################################
+
+sub get_session {
+
+	my $c = $_COOKIES {$preconf -> {auth} -> {cookie_name}} or return undef;
+	
+	my $s;
+		
+	while (1) {
+	
+		$s = sql_select_hash ("SELECT * FROM $conf->{systables}->{sessions} WHERE client_cookie = ?", $c -> value);
+		
+		$s -> {id} or return undef;
+		
+		last if $s -> {ts} gt get_max_expired_session_dt ();
+		
+		delete_all_expired_sessions ($old);
+
+	}
+	
+	my $now = int time;
+	
+	$s -> {ts} ge dt_iso ($now) or sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = ? WHERE id = ?", dt_iso ($now + 30), $s -> {id});
+
+	$_REQUEST {sid} = $s -> {id};
+	
+	return $s;
 
 }
 
 ################################################################################
 
 sub get_user {
-
-	my $c = $_COOKIES {get_auth_cookie_name ()} or return undef;
 	
-	my $s = sql_select_hash ('SELECT * FROM sessions WHERE client_cookie = ?', $c -> value);
+	my $s = get_session () or return undef;
 
-	$_REQUEST {sid} = $s -> {id} or return undef;
-
-	sql_do_refresh_sessions ();
-
-	my $user = sql_select_hash ('SELECT * FROM users WHERE id = ?', $s -> {id_user});
+	my $user = sql_select_hash ("SELECT * FROM $conf->{systables}->{users} WHERE id = ?", $s -> {id_user});
+	
+	delete $user -> {password};
 
 	return $user -> {id} ? $user : undef;
 

@@ -79,32 +79,6 @@ sub sql_ping {
 
 ################################################################################
 
-sub sql_do_refresh_sessions {
-
-	unless ($SQL_VERSION -> {_} -> {st_refresh_sessions}) {
-			
-		my $timeout = sql_sessions_timeout_in_minutes () / 1440;
-		
-		$SQL_VERSION -> {_} -> {st_refresh_sessions} = $db -> prepare_cached (<<EOS, {}, 3);
-		
-			BEGIN
-		
-				DELETE FROM $conf->{systables}->{sessions} WHERE ts < sysdate - $timeout;
-
-				UPDATE $conf->{systables}->{sessions} SET ts = sysdate WHERE id = ?;
-				
-			END;
-
-EOS
-	
-	}
-
-	$SQL_VERSION -> {_} -> {st_refresh_sessions} -> execute ($_REQUEST {sid});
-
-}
-
-################################################################################
-
 sub sql_execute {
 
 	my ($st, @params) = sql_prepare (@_);

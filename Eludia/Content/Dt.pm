@@ -12,11 +12,33 @@ sub dt_y_m_d {
 
 sub dt_iso {
 
-	my @ymd = map {split /\D+/} @_;
+	my @ymd = @_;
 	
-	@ymd = reverse @ymd if $ymd [0] < 1000;
+	@ymd > 0 or @ymd = (time);
+	
+	@ymd > 1 or @ymd = split /\D/, $ymd [0];
 		
-	return sprintf ('%04d-%02d-%02d', @ymd);
+	if (@ymd <= 2) {
+
+		my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($ymd [0]);
+		
+		splice @ymd, 0, 1, ($year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+		
+	}
+
+	my $f = 
+		@ymd == 3 ? '%04d-%02d-%02d' :
+		@ymd == 6 ? '%04d-%02d-%02d %02d:%02d:%02d' :
+		@ymd == 7 ? '%04d-%02d-%02d %02d:%02d:%02d.%d' :
+		die "Wrong dt_iso params: " . Dumper (\@_);
+	
+	if ($ymd [0] <= 31) {
+		(my $y = $ymd [2]) > 31 or die "Wrong dt_iso params: " . Dumper (\@_);
+		$ymd [2] = $ymd [0];
+		$ymd [0] = $y;
+	}
+		
+	return sprintf ($f, @ymd);
 
 }
 

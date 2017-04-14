@@ -50,31 +50,6 @@ sub sql_prepare {
 	return $db  -> prepare ($sql);
 }
 
-
-################################################################################
-
-sub sql_do_refresh_sessions {
-
-	my $timeout = sql_sessions_timeout_in_minutes ();
-	
-	my @now = Date::Calc::Today_and_Now;
-
-	my $now = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', @now);
-	
-	my @new = Date::Calc::Add_Delta_YMDHMS (@now, 0, 0, 0, 0, 1 - $timeout, 0);
-
-	my $new = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', @new);
-
-	sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = ? WHERE id = ? AND ts < ?", $ts, $_REQUEST {sid}, $new);
-
-	my @old = Date::Calc::Add_Delta_YMDHMS (@now, 0, 0, 0, 0, - $timeout, 0);
-	
-	my $old = sprintf ('%04d-%02d-%02d %02d:%02d:%02d', @old);
-	
-	sql_do ("DELETE FROM $conf->{systables}->{sessions} WHERE ts < ?", $old);
-
-}
-
 ################################################################################
 
 sub sql_do {

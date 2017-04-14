@@ -58,31 +58,6 @@ sub is_request_ok {
 
 ################################################################################
 
-sub recalculate_sessions {
-
-	$_REQUEST {action} =~ /^execute/ or return;
-	
-	$_USER = get_user ();
-	
-	$_USER -> {id} or return;
-	
-	my $h = {
-		ip    => $ENV {REMOTE_ADDR},
-		ip_fw => $ENV {HTTP_X_FORWARDED_FOR},
-	};
-	
-	$h -> {tz_offset} = $_REQUEST {tz_offset} if $preconf -> {core_fix_tz} && $_REQUEST {tz_offset};
-	
-	if ($conf -> {core_delegation} && !$_USER -> {id__real}) {
-		$_USER -> {id__real} or $h -> {id_user_real} = $_USER -> {id};
-	}
-	
-	sql_select_id ($conf -> {systables} -> {sessions} => $h, ['id']);
-	
-}
-
-################################################################################
-
 sub out_html {
 
 	my ($options, $html) = @_;
