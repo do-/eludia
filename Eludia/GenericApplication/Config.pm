@@ -96,8 +96,17 @@ sub fill_in {
 
    	);
    	
-   	$preconf -> {auth} -> {session_timeout} ||= ($conf -> {auth} -> {session_timeout} || 30);
-   	$preconf -> {auth} -> {cookie_name}     ||= ($conf -> {auth} -> {cookie_name} || 'sid');
+   	$preconf -> {auth} -> {sessions} -> {timeout}          ||= ($conf -> {auth} -> {sessions} -> {timeout} || 30);
+
+   	$preconf -> {auth} -> {sessions} -> {cookie} -> {name} ||= ($conf -> {auth} -> {sessions} -> {cookie} -> {name} || 'sid');
+   	
+   	if (my $mc = $preconf -> {auth} -> {sessions} -> {memcached}) {
+   	
+   		require Cache::Memcached::Fast;
+   		
+   		$mc -> {connection} = new Cache::Memcached::Fast ($mc);
+   	
+   	}
 
    	$conf -> {__filled_in} = 1;
 

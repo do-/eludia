@@ -8,31 +8,40 @@ sub start_session {
 	
 	$id_user or die 'No user id passed to start_session';
 	
-	my $sid;
+	my $client_cookie = Digest::MD5::md5_hex (rand () * $id_user) . Digest::MD5::md5_hex (rand () * $$);
+
+	if ($DB_MODEL -> {tables} -> {$conf -> {systables} -> {sessions}} -> {fields}) {
+
+		delete_all_expired_sessions ();
+
+		$_REQUEST {sid} = sql_do_insert ($conf -> {systables} -> {sessions} => {
+			client_cookie => $client_cookie,
+			id_user       => $id_user,
+			fake          => 0,
+			ts            => dt_iso (30 + time),
+		});
+
+	}
+	else {
+
+		$_REQUEST {sid} = $id_user;
+
+	}
 	
-	while (1) {
-
-		$sid = Digest::MD5::md5_hex (rand () * $id_user) . Digest::MD5::md5_hex (rand () * $$);
-		
-		sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE client_cookie = ?", $sid) or last;
-		
-	}		
-
-	delete_all_expired_sessions ($old);
-
-	$_REQUEST {sid} = sql_do_insert ($conf -> {systables} -> {sessions} => {
-		client_cookie => $sid,
-		id_user       => $id_user,
-		fake          => 0,
-		ts            => dt_iso (30 + time),
-	});
+	if (my $mc = $preconf -> {auth} -> {sessions} -> {memcached}) {
 	
+		$mc -> {connection} -> add ($client_cookie, {id_user => $id_user}, 60 * $preconf -> {auth} -> {sessions} -> {timeout}) or die 'Cache::Memcached::Fast returned not true';
+	
+	}
+	
+	my $c = $preconf -> {auth} -> {sessions} -> {cookie};
+
 	set_cookie (
-		-name => $preconf -> {auth} -> {cookie_name}, 
-		-value => $sid, 
+		-name => $c -> {name}, 
+		-value => $client_cookie, 
 		-httponly => 1, 
-		-path => '/_back'
-	);		
+		-path => $c -> {path},
+	);
 
 }
 
@@ -40,7 +49,7 @@ sub start_session {
 
 sub get_max_expired_session_dt {
 	
-	return dt_iso (int time - 60 * $preconf -> {auth} -> {session_timeout});
+	return dt_iso (int time - 60 * $preconf -> {auth} -> {sessions} -> {timeout});
 
 }
 
@@ -56,29 +65,44 @@ sub delete_all_expired_sessions {
 
 sub get_session {
 
-	my $c = $_COOKIES {$preconf -> {auth} -> {cookie_name}} or return undef;
-	
+	my $c = $_COOKIES {$preconf -> {auth} -> {sessions} -> {cookie} -> {name}} or return undef;
+
 	my $s;
+
+	if (my $mc = $preconf -> {auth} -> {sessions} -> {memcached}) {
+
+		my $s = $mc -> {connection} -> get ($c -> value);
+															### bizarre: couldn't get Cache::Memcached::Fast::touch() to work
+		$mc -> {connection} -> set ($c -> value, $s, 60 * $preconf -> {auth} -> {sessions} -> {timeout});
+
+		return $s;		
 		
-	while (1) {
-	
-		$s = sql_select_hash ("SELECT * FROM $conf->{systables}->{sessions} WHERE client_cookie = ?", $c -> value);
-		
-		$s -> {id} or return undef;
-		
-		last if $s -> {ts} gt get_max_expired_session_dt ();
-		
-		delete_all_expired_sessions ($old);
+	}
+	elsif ($DB_MODEL -> {tables} -> {$conf -> {systables} -> {sessions}} -> {fields}) {
+
+		while (1) {
+
+			$s = sql_select_hash ("SELECT * FROM $conf->{systables}->{sessions} WHERE client_cookie = ?", $c -> value);
+
+			$s -> {id} or return undef;
+
+			last if $s -> {ts} gt get_max_expired_session_dt ();
+
+			delete_all_expired_sessions ();
+
+		}
+
+		my $now = int time;
+
+		$s -> {ts} ge dt_iso ($now) or sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = ? WHERE id = ?", dt_iso ($now + 30), $s -> {id});
+
+		$_REQUEST {sid} = $s -> {id};
+
+		return $s;
 
 	}
 	
-	my $now = int time;
-	
-	$s -> {ts} ge dt_iso ($now) or sql_do ("UPDATE $conf->{systables}->{sessions} SET ts = ? WHERE id = ?", dt_iso ($now + 30), $s -> {id});
-
-	$_REQUEST {sid} = $s -> {id};
-	
-	return $s;
+	die "No session storage method defined.\n";
 
 }
 
