@@ -39,10 +39,10 @@ sub start_session {
 				id_user => $id_user,
 			}, 
 			
-			60 * $preconf -> {auth} -> {sessions} -> {timeout}
+			5 + 60 * $preconf -> {auth} -> {sessions} -> {timeout}
 
 		);
-	
+
 		my $r = $mc -> {connection} -> add (@arg);
 				
 		$r or die "Cache::Memcached::Fast::add returned: '$r' for " . Dumper (\@arg);
@@ -87,7 +87,7 @@ sub get_session {
 	if (my $mc = $preconf -> {auth} -> {sessions} -> {memcached}) {
 
 		my $s = $mc -> {connection} -> get ($c -> value);
-		
+
 		$_REQUEST {sid} = $s -> {id} or return undef;
 
 		if (
@@ -103,8 +103,10 @@ sub get_session {
 			return undef;
 
 		}		
-															### bizarre: couldn't get Cache::Memcached::Fast::touch() to work
-		$mc -> {connection} -> set ($c -> value, $s, 60 * $preconf -> {auth} -> {sessions} -> {timeout});
+		
+		my @a = ($c -> value, $s, 5 + 60 * $preconf -> {auth} -> {sessions} -> {timeout});
+
+		$mc -> {connection} -> set (@a);
 
 		return $s;		
 		
