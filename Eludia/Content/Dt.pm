@@ -24,12 +24,29 @@ sub dt_iso {
 		
 		splice @ymd, 0, 1, ($year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 		
+		if (@ymd == 7) {
+		
+			my $l = length $ymd [-1];
+			
+			if ($l < 6) {
+			
+				$ymd [-1] .= '0' x (6 - $l);
+			
+			}
+			elsif ($l > 6) {
+			
+				$ymd [-1] = substr $ymd [-1], 0, 6;
+				
+			}			
+		
+		}
+		
 	}
 
 	my $f = 
 		@ymd == 3 ? '%04d-%02d-%02d' :
 		@ymd == 6 ? '%04d-%02d-%02d %02d:%02d:%02d' :
-		@ymd == 7 ? '%04d-%02d-%02d %02d:%02d:%02d.%d' :
+		@ymd == 7 ? '%04d-%02d-%02d %02d:%02d:%02d.%06d' :
 		die "Wrong dt_iso params: " . Dumper (\@_);
 	
 	if ($ymd [0] <= 31) {

@@ -44,13 +44,9 @@ sub __profile_print_details {
 sub __profile_print_tree {
 
 	my ($old_options, $new_options) = @_;
-	
-	my $now = $new_options -> {__time};
+		
+	my $message = dt_iso ($new_options -> {__time}) . "\t$$\t";
 
-	my ($sec, $min, $hour, $day, $mon, $year) = localtime ($now);
-				
-	my $message = sprintf ("[%04d-%02d-%02d %02d:%02d:%02d:%03d $$] ", $year + 1900, $mon + 1, $day, $hour, $min, $sec, int (1000 * ($now - int $now)));
-	
 	$message .= '       ' x $old_options -> {__level};
 	
 	$message .= sprintf ('%6.1f ms ', $new_options -> {__duration});
@@ -74,10 +70,8 @@ sub __profile_print_tree {
 		$message .= $comment;
 
 	}
-	
-	$message .= "\n";
 
-	warn $message;
+	warn "$message\n";
 
 }
 
@@ -188,33 +182,6 @@ sub __profile_out {
 		last if $old_options -> {__type} eq $type;
 	
 	}
-
-}
-
-################################################################################
-
-sub __log_profilinig {
-
-	my $now = time ();
-	
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($now);
-	$year += 1900;
-	$mon ++; 
-
-	printf STDERR "[%04d-%02d-%02d %02d:%02d:%02d:%03d $$] %7.2f ms %s\n", 
-		$year,
-		$mon,
-		$mday,
-		$hour,
-		$min,
-		$sec,
-		int (1000 * ($now - int $now)),
-		1000 * ($now - $_[0]), 
-		$_[1] 
-		
-		if $preconf -> {core_debug_profiling} > 0 && !$ENV {ELUDIA_SILENT};
-	
-	return $now;
 
 }
 
