@@ -152,28 +152,6 @@ sub _file_md5 {
 
 ################################################################################
 
-sub is_update_script_shot {
-
-	my ($fn, $dir, $shot_dir) = @_;
-
-	my @suspects = grep {0 == substr ($_, $fn)} list_of_files_in_the_directory $shot_dir;
-
-	@suspects > 0 or return ();
-	
-	my $size = -s "$dir/$fn";
-	
-	@suspects = grep {$size == -s "$shot_dir/$_"} @suspects;
-
-	@suspects > 0 or return ();
-	
-	my $md5 = _file_md5 ("$dir/$fn");
-	
-	return reverse sort grep {$md5 eq _file_md5 ("$shot_dir/$_")} @suspects;
-
-}
-
-################################################################################
-
 sub require_update_scripts {
 
 	my ($dir) = @_; $dir =~ y{\\}{/};
@@ -194,20 +172,42 @@ sub require_update_scripts {
 		
 		my $name = $`;
 
-		my $path = "$dir/$fn";
-	
-		my @previous = is_update_script_shot ($fn, $dir, $shot_dir);
+		my $path = "$dir/$fn";	
 
-		if (@previous) {
+		my $size = -s $path;
+
+		my $md5 = _file_md5 ($path);
 		
-			warn "$fn was already shot: " . (join ', ', @previous) . "; will delete it\n";
+		my $yet = sql_select_hash ("SELECT * FROM $conf->{systables}->{__update_exec_log} WHERE name = ? AND size = ? AND md5 = ?", $name, $size, $md5);
+
+		if ($yet) {
+		
+			if ($yet -> {is_ok}) {
+
+				warn "$fn was already shot $yet->{dt_from}..$yet->{dt_to}, going to delete it\n";
+
+				unlink $path;
+
+			}
+			else {
 			
-			unlink $path;
+				die "$fn is known to fail at $yet->{dt_to} with the message $yet->{err}\n";
+			
+			}		
 		
 		}
 		else {
 		
 			__profile_in ("require.scripts.update.$name"); 
+			
+			my $id_log = sql_do_insert ($conf -> {systables} -> {__update_exec_log} => {
+				fake    => 0,
+				name    => $name,
+				size    => $size,
+				md5     => $md5,
+				dt_from => dt_iso (),
+				is_ok   => 0,			
+			});
 			
 			my $code = "";
 
@@ -216,11 +216,19 @@ sub require_update_scripts {
 			close (I);
 
 			eval $code; 
+			
+			my $ts = dt_iso ();
 
-			die $@ if $@;			
+			if ($@) {
 			
-			my $ts = localtime_to_iso (time); 
-			
+				sql_do ("UPDATE $conf->{systables}->{__update_exec_log} SET dt_to = ?, err = ? WHERE id = ?", $ts, $@, $id_log);
+
+				die $@;
+
+			}
+						
+			sql_do ("UPDATE $conf->{systables}->{__update_exec_log} SET dt_to = ?, is_ok = 1 WHERE id = ?", $ts, $id_log);
+
 			$ts =~ s{\D+}{_}g;
 			
 			$fn =~ s{\.pl$}{\.$ts\.pl};
@@ -250,16 +258,6 @@ sub require_scripts {
 	require_update_scripts ($_) foreach (@dirs);
 		
 	__profile_out ('require.scripts'); 
-	
-}
-
-################################################################################
-
-sub localtime_to_iso {
-
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime ($_[0]);
-	
-	return sprintf ('%04d-%02d-%02d %02d:%02d:%02d', 1900 + $year, 1 + $mon, $mday, $hour, $min, $sec);
 	
 }
 
@@ -350,7 +348,7 @@ sub require_fresh {
 
 		my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat ($_);
 		
-		my $last_modified_iso = localtime_to_iso ($mtime);
+		my $last_modified_iso = dt_iso ($mtime);
 
 		$is_need_reload_module ||= $mtime > $last_recorded_time;
 

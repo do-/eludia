@@ -131,6 +131,7 @@ sub sql_weave_model {
 sub check_systables {
 
 	foreach (qw(
+		__update_exec_log
 		__queries
 		__defaults
 		roles			
