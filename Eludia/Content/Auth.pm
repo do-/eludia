@@ -10,7 +10,7 @@ sub start_session {
 	
 	my $client_cookie = Digest::MD5::md5_hex (rand () * $id_user) . Digest::MD5::md5_hex (rand () * $$);
 
-	if ($DB_MODEL -> {tables} -> {$conf -> {systables} -> {sessions}} -> {fields}) {
+	if ($DB_MODEL -> {tables} -> {$conf -> {systables} -> {sessions}} -> {columns}) {
 
 		delete_all_expired_sessions ();
 
@@ -30,7 +30,22 @@ sub start_session {
 	
 	if (my $mc = $preconf -> {auth} -> {sessions} -> {memcached}) {
 	
-		$mc -> {connection} -> add ($client_cookie, {id_user => $id_user}, 60 * $preconf -> {auth} -> {sessions} -> {timeout}) or die 'Cache::Memcached::Fast returned not true';
+		my @arg = (
+
+			$client_cookie, 
+			
+			{
+				id      => $_REQUEST {sid},
+				id_user => $id_user,
+			}, 
+			
+			60 * $preconf -> {auth} -> {sessions} -> {timeout}
+
+		);
+	
+		my $r = $mc -> {connection} -> add (@arg);
+				
+		$r or die "Cache::Memcached::Fast::add returned: '$r' for " . Dumper (\@arg);
 	
 	}
 	
@@ -72,13 +87,29 @@ sub get_session {
 	if (my $mc = $preconf -> {auth} -> {sessions} -> {memcached}) {
 
 		my $s = $mc -> {connection} -> get ($c -> value);
+		
+		$_REQUEST {sid} = $s -> {id} or return undef;
+
+		if (
+
+			$DB_MODEL -> {tables} -> {$conf -> {systables} -> {sessions}} -> {columns}
+			
+			&& !sql_select_scalar ("SELECT id FROM $conf->{systables}->{sessions} WHERE id = ?", $s -> {id})
+			
+		) {
+
+			$mc -> {connection} -> delete ($c -> value);
+			
+			return undef;
+
+		}		
 															### bizarre: couldn't get Cache::Memcached::Fast::touch() to work
 		$mc -> {connection} -> set ($c -> value, $s, 60 * $preconf -> {auth} -> {sessions} -> {timeout});
 
 		return $s;		
 		
 	}
-	elsif ($DB_MODEL -> {tables} -> {$conf -> {systables} -> {sessions}} -> {fields}) {
+	elsif ($DB_MODEL -> {tables} -> {$conf -> {systables} -> {sessions}} -> {columns}) {
 
 		while (1) {
 
