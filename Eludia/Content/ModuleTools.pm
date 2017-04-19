@@ -208,22 +208,16 @@ sub require_update_scripts {
 				dt_from => dt_iso (),
 				is_ok   => 0,			
 			});
-			
-			my $code = "";
 
-			open (I, $path) or die "Can't read $path: $!\n";
-			$code .= $_ while (<I>);	
-			close (I);
-
-			eval $code; 
+			do $path;
 			
 			my $ts = dt_iso ();
 
-			if ($@) {
+			if (my $err = $@ || $!) {
 			
 				sql_do ("UPDATE $conf->{systables}->{__update_exec_log} SET dt_to = ?, err = ? WHERE id = ?", $ts, $@, $id_log);
 
-				die $@;
+				die $err;
 
 			}
 						
