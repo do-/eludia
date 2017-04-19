@@ -285,8 +285,10 @@ sub sql_reconnect {
 	local $ENV {GATEWAY_INTERFACE} = undef;
 	
 	__profile_in ('core.sql.connect', {label => $preconf -> {db_dsn}});
+	
+	my $d = $preconf -> {db};
 
-	$db = DBI -> connect ($preconf -> {db_dsn}, $preconf -> {db_user}, $preconf -> {db_password}, {
+	$db = DBI -> connect ($d -> {dsn}, $d -> {user}, $d -> {password}, {
 		PrintError  => 0, 
 		RaiseError  => 1, 
 		AutoCommit  => 1,
