@@ -76,104 +76,23 @@ sub finalize_offline_script_execution () {
 
 ################################################################################
 
-sub config_file () {
-
-	use File::Spec;
-
-	my $fn = File::Spec -> rel2abs ($0);
-	
-	$fn = readlink $fn while -l $fn;
-	
-	$fn =~ y{\\}{/};
-	
-	$fn =~ s{/(lib|t)/.*}{/conf/httpd.conf};
-	
-	return $fn;
-	
-}
-
-################################################################################
-
-sub perl_section_from ($) {
-
-	my ($fn) = @_;
-
-	my $code = '';
-	my $flag = 0;
-
-	open (CONF, $fn) or die ("Can't open $fn:$!\n");
-
-	while (<CONF>) {
-	
-		if (/<[Pp]erl\s*>/)      { $flag = 1   }
-
-		elsif (/<\/[Pp]erl\s*>/) { $flag = 0   }
-
-		elsif ($flag)            { $code .= $_ }
-	
-	}
-
-	close (CONF);
-	
-	return $code;
-
-}
-
-################################################################################
-
-sub the_rest_of_the_script () {
-
-	my @code = ();
-
-	my $flag = 0;
-	
-	open (SCRIPT, $0);
-	
-	while (<SCRIPT>) {
-	
-		if    (/use\s+Eludia::Offline/) { $flag = 1 }
-
-		else                            { $code [$flag] .= $_ }
-	
-	}
-	
-	close (SCRIPT);
-
-	return $code [1] || $code [0];	
-
-}
-
-################################################################################
-
 BEGIN {
 
 	$| = 1;
 	
-	initialize_offline_script_execution;	
+	initialize_offline_script_execution;
 	
-	my $code = perl_section_from config_file;
+	require Eludia::Loader;	
+	Eludia::Loader -> import ();
 	
-	eval $code; die "$code\n\n$@" if $@;
-
-	my $package = __PACKAGE__;
-
-	$package = $Eludia::last_loaded_package if $package eq 'main';
-
-	$code = qq {
-	
-		package $package;
-
-		\$_REQUEST {__skin} = 'STDERR';
-
-		sql_reconnect ();
+	package APP;
 		
-		require_model ();
-		
-		no warnings;
-	
-	} . the_rest_of_the_script;
+	sql_reconnect ();
+	require_model ();	
 
-	eval $code; die "$code\n\n$@" if $@;
+	do $0;
+	
+	my $err = $@ || $!; die "${err}\n" if $err;
 	
 	finalize_offline_script_execution;
 	
