@@ -238,26 +238,6 @@ sub sql_is_temporal_table {
 
 ################################################################################
 
-sub sql_ping {
-
-	my $r;
-
-	eval {
-	
-		my $st = $db -> prepare ('SELECT 1');
-		
-		$st -> execute;
-		
-		$r = $st -> fetchrow_arrayref;
-	
-	};
-	
-	return @$r == 1 && $r -> [0] == 1 ? 1 : 0;
-
-}
-
-################################################################################
-
 sub sql_reconnect {
 
 	__profile_in ('core.sql.reconnect');
@@ -266,7 +246,7 @@ sub sql_reconnect {
 
 	if ($db && ($preconf -> {no_model_update} || ($model_update && $model_update -> {core_ok}))) {
 
-		if (sql_ping ()) {
+		if ($db -> ping ()) {
 		
 			unless ($db -> {AutoCommit}) {
 				$db -> rollback;
