@@ -1,30 +1,30 @@
 package Eludia::Loader;
+use JSON;
+use Cwd;
 
 ################################################################################
 
 sub import {
 
-	my ($dummy, $root, $package, $preconf) = @_;
-	
-	$Eludia::last_loaded_package = $package;
-	
-	ref $root eq ARRAY or $root = [$root];	
-			
-	eval "use lib '$$root[0]'";
-		
-	${$package . '::_NEW_PACKAGE'} = $package;
-	${$package . '::_PACKAGE'}     = $package . '::';
-	${$package . '::PACKAGE_ROOT'} = $root;
-	${$package . '::preconf'}      = $preconf;
+	package APP;
 
-	my $path = __FILE__;	
+	my $fn = 'conf/elud.json';
+	open (I, $fn) or die "Can't read $fn: $!";
+	my $json = join '', grep /^[^\#]/, (<I>);
+	close (I);
+
+	our $preconf = JSON::decode_json ($json);
+
+	my $path = __FILE__;
 	$path =~ s{Loader.pm}{GenericApplication};
+	our $PACKAGE_ROOT = [Cwd::abs_path ('lib'), $path];	
+			
+	unshift (@INC, $PACKAGE_ROOT -> [0]);
+		
+	our $_NEW_PACKAGE = 'APP'  ;
+	our $_PACKAGE     = 'APP::';
 
-	unshift @$root, $path;
-
-	eval "package $package; require Eludia;";
-
-	print STDERR $@ if $@;	
+	require Eludia;
 
 }
 
