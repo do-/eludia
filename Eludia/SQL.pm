@@ -277,18 +277,6 @@ sub sql_reconnect {
 		InactiveDestroy => 0,
 		mysql_enable_utf8 => 1,
 	});
-	
-	if ($preconf -> {db_cache_statements}) {
-
-		require Eludia::Content::Tie::LRUHash;
-		
-		my %cache;
-
-		tie %cache, 'Eludia::Content::Tie::LRUHash', {size => 300};
-
-		$db -> {CachedKids} = \%cache;
-
-	}
 
 	__profile_out ('core.sql.connect');
 
