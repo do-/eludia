@@ -331,7 +331,7 @@ sub sql_reconnect {
 		}
 		else {
 	
-			$model_update = $_NEW_PACKAGE -> new (
+			$model_update = __PACKAGE__ -> new (
 				$db, 
 				before_assert		=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
 				schema			=> $preconf -> {db_schema},

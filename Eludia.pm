@@ -242,9 +242,7 @@ sub check_web_server {
 
 sub start_loading_logging {
 
-	$_NEW_PACKAGE ||= __PACKAGE__;
-
-	loading_log "\nLoading {\n" . (join ",\n", map {"\t$_"} @$PACKAGE_ROOT) . "\n} => " . $_NEW_PACKAGE . "...\n";
+	loading_log "\nLoading {\n" . (join ",\n", map {"\t$_"} @$PACKAGE_ROOT) . "\n} => " . __PACKAGE__ . "...\n";
 
 }
 
@@ -252,7 +250,7 @@ sub start_loading_logging {
 
 sub finish_loading_logging {
 
-	loading_log "Loading $_NEW_PACKAGE is over.\n\n";
+	loading_log "Loading " . __PACKAGE__ . " is over.\n\n";
 
 }
 

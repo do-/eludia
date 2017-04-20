@@ -21,7 +21,6 @@ sub import {
 			
 	unshift (@INC, $PACKAGE_ROOT -> [0]);
 		
-	our $_NEW_PACKAGE = 'APP'  ;
 	our $_PACKAGE     = 'APP::';
 
 	require Eludia;
