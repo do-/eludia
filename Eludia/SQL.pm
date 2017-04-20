@@ -497,7 +497,7 @@ sub sql_select_vocabulary {
 		
 		_REQUEST => \%_REQUEST,
 		
-		package  => current_package (),
+		package  => __PACKAGE__,
 		
 		tree     => $options -> {tree},
 		

@@ -2,28 +2,9 @@ no warnings;
 
 ################################################################################
 
-sub current_package {
-	
-	my ($_package, $filename, $line, $subroutine, $hasargs, $wantarray, $evaltext, $is_require, $hints, $bitmask) = caller (1);
-
-	if ($subroutine =~ /^(\w+)\:\:/) {
-	
-		return $1;
-	
-	}
-	else {
-	
-		return __PACKAGE__;
-	
-	}
-	
-}
-
-################################################################################
-
 sub require_content ($) {
 
-	require_fresh ("${_PACKAGE}Content::$_[0]");
+	require_fresh ("Content/$_[0]");
 
 }
 
@@ -33,7 +14,7 @@ sub require_config {
 
 	__profile_in ('require.config');
 	
-	require_fresh ($_PACKAGE . 'Config');
+	require_fresh ('Config');
 		
 	fill_in ();
 
@@ -76,7 +57,7 @@ sub require_model {
 
 	if (!exists $DB_MODEL -> {tables}) {
 
-		tie %tables, Eludia::Tie::FileDumpHash, {conf => $conf, path => \&_INC, package => current_package ()};
+		tie %tables, Eludia::Tie::FileDumpHash, {conf => $conf, path => \&_INC, package => __PACKAGE__};
 
 		$DB_MODEL -> {tables} = \%tables;
 		
@@ -318,21 +299,9 @@ sub require_fresh {
 
 	my $local_file_name = $module_name;
 
-	$local_file_name =~ s{(::)+}{\/}g;
-
-	my $type = $';
-
-	$local_file_name =~ s{^(.+?)\/}{\/};
-	
-	my $old_type = $_REQUEST {type};
-	
-	$_REQUEST {type} = $type     if $type ne 'menu';
-
 	my @inc = _INC ();
 
-	$_REQUEST {type} = $old_type;
-
-	my @file_names = grep {-f} map {"${_}$local_file_name.pm"} @inc;
+	my @file_names = grep {-f} map {"${_}/$local_file_name.pm"} @inc;
 
 	my $is_need_reload_module;
 
@@ -360,47 +329,18 @@ sub require_fresh {
 
 	foreach my $file (reverse @file_names) {
 	
-		__profile_in ('require.file'); 
+		__profile_in ('require.file');
 			
 		my ($file_name, $mtime, $last_modified_iso) = ($file -> {file_name}, $file -> {mtime}, $file -> {last_modified_iso});
 
 		delete $INC_FRESH_BY_PATH {$file_name};
-
-		if ($type eq 'menu') {
-
-			(tied %{$DB_MODEL -> {tables}}) -> {cache} = {};
-
-			require_scripts () if $db;
-
-		}
-
-		my $src = '';
-
-		open (S, $file_name);
-
-		while (my $line = <S>) {
-
-$line = Encode::decode ($preconf -> {core_src_charset} ||= 'windows-1251', $line);
-
-			$src .= $line;
-
-			$line =~ /^sub (\w+)_$type \{ # / or next;
-
-			my $sub   = $1;
-			my $label = $';
-			$label =~ s{[\r\n]+$}{}gsm;
-
-			my $action = $sub =~ /^(do|validate)_/ ? $' : ''; 
-
-			$_ACTIONS -> {_actions} -> {$type} -> {$action} = $label;
-
-		}
-
-		close (S);
-
-		eval qq{# line 1 "$file_name"\n use utf8; $src \n; 1;\n};
-
-		die "$module_name: " . $@ if $@;
+		
+		open (S, "<:encoding(UTF-8)", $file_name);
+		my $src = qq {# line 1 "$file_name"\n use utf8; };
+		$src .= $_ while (<S>);
+		$src .= "; 1;";
+		
+		eval $src; die $@ if $@;
 
 		$INC_FRESH {$module_name} = $INC_FRESH_BY_PATH {$file_name} = $mtime;
 
@@ -456,9 +396,9 @@ sub call_for_role {
 	$default_sub_name =~ s{_$_REQUEST{type}$}{_DEFAULT};
 
 	my $name_to_call = 
-		exists $$_PACKAGE {$full_sub_name}    ? $full_sub_name :
-		exists $$_PACKAGE {$sub_name}         ? $sub_name : 
-		exists $$_PACKAGE {$default_sub_name} ? $default_sub_name : 
+		exists &$full_sub_name    ? $full_sub_name :
+		exists &$sub_name         ? $sub_name : 
+		exists &$default_sub_name ? $default_sub_name : 
 		undef;
 
 	if ($name_to_call) {

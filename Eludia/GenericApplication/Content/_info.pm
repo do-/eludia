@@ -102,18 +102,6 @@ sub select__info {
 			version => ${(ref $_JSON) . '::VERSION'},
 		},
 
-		{			
-			id    => 'Application package',
-			label => ($_PACKAGE =~ /(\w+)/),
-			path  => join ', ', @$PACKAGE_ROOT,
-		},
-
-		{
-			id    => 'Skin',
-			path  => $INC {$_SKIN},
-			label => $_SKIN
-		},
-
 	]};
 	
 	my $exe = $^X;

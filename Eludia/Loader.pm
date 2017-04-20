@@ -20,8 +20,6 @@ sub import {
 	our $PACKAGE_ROOT = [Cwd::abs_path ('lib'), $path];	
 			
 	unshift (@INC, $PACKAGE_ROOT -> [0]);
-		
-	our $_PACKAGE     = 'APP::';
 
 	require Eludia;
 
