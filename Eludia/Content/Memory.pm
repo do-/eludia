@@ -40,7 +40,7 @@ BEGIN {
 		
 		}
 	
-		loading_log ' (' . format_picture ($preconf -> {_} -> {memory} -> {first} >> 20, "### ### ### ### MiB), ok.\n");		
+		loading_log ' (' . Number::Format::format_picture ($preconf -> {_} -> {memory} -> {first} >> 20, "### ### ### ### MiB), ok.\n");		
 	
 	}
 	else {
