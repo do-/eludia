@@ -1,5 +1,4 @@
 package Eludia::Loader;
-use JSON;
 use Cwd;
 
 ################################################################################
@@ -8,16 +7,11 @@ sub import {
 
 	package APP;
 
-	my $fn = 'conf/elud.json';
-	open (I, $fn) or die "Can't read $fn: $!";
-	my $json = join '', grep /^[^\#]/, (<I>);
-	close (I);
+	do 'Eludia/Conf.pm';
 
-	our $preconf = JSON::decode_json ($json);
-
-	my $path = __FILE__;
-	$path =~ s{Loader.pm}{GenericApplication};
-	our $PACKAGE_ROOT = [Cwd::abs_path ('lib'), $path];	
+	my $generic_path = __FILE__; $generic_path =~ s{Loader.pm}{GenericApplication};
+	
+	our $PACKAGE_ROOT = [Cwd::abs_path ('lib'), $generic_path];
 			
 	unshift (@INC, $PACKAGE_ROOT -> [0]);
 
