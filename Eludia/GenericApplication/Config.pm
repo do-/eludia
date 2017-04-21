@@ -1,59 +1,5 @@
 ################################################################################
 
-sub get_page {}
-
-#############################################################################
-
-sub fake_select {
-
-	my ($options) = @_;
-
-	return {
-		type    => 'input_select',
-		name    => $options -> {name} || 'fake',
-		values  => [
-			{id => '0,-1', label => 'Все'},
-			{id => '-1', label => 'Удалённые'},
-		],
-		empty   => 'Активные',
-	}
-	
-}
-
-################################################################################
-
-sub del {
-	
-	return () if $_REQUEST {__no_navigation};
-	
-	my ($data) = @_;
-
-	return () if $data -> {no_del};
-
-	return (
-		{
-			preset  => 'delete',
-			href    => {action => 'delete'},
-			target  => 'invisible',
-			off     => $data -> {fake} != 0 || !$_REQUEST {__read_only} || $_REQUEST {__popup},
-		},		
-		{
-			preset  => 'undelete',
-			href    => {action => 'undelete'},
-			target  => 'invisible',
-			off     => $data -> {fake} >= 0 || !$_REQUEST {__read_only} || $_REQUEST {__popup} || $conf -> {core_undelete_to_edit},
-		},
-		{
-			preset  => 'undelete',
-			href    => create_url() . "&__edit=1",
-			off     => $data -> {fake} >= 0 || !$_REQUEST {__read_only} || $_REQUEST {__popup} || !$conf -> {core_undelete_to_edit},
-		},
-	);
-
-}
-
-################################################################################
-
 sub fill_in {
 
 	return if $conf -> {__filled_in};
