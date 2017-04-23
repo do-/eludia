@@ -1,3 +1,6 @@
+
+our $number_format ||= Number::Format -> new (%{$conf -> {number_format}});
+
 ################################################################################
 
 sub fill_in {
