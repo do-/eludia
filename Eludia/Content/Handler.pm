@@ -70,7 +70,7 @@ sub out_html {
 
 	return print $html if $_REQUEST {__response_started};
 
-	$r -> content_type ($_REQUEST {__content_type} ||= 'text/html; charset=utf-8');
+	$r -> content_type ($_REQUEST {__content_type}) if $_REQUEST {__content_type};
 	
 	$r -> headers_out -> {'Content-Length'} = my $length = length $html;
 		
@@ -89,8 +89,38 @@ sub out_html {
 sub out_json ($) {
 
 	$_REQUEST {__content_type} = 'application/json';
+	
+	my ($page) = @_;
 
-	out_html ({}, $_JSON -> encode ($_[0]));
+	eval {out_html ({}, $_JSON -> encode ($page))};
+
+	$@ or return;
+	
+	$@ =~ /^encountered CODE/ or die $@;
+
+	my %content = %{delete $page -> {content}};
+
+	my $json_page = $_JSON -> encode ($page); chop $json_page;
+	
+	my @c = (); while (my ($k, $v) = each %content) {$c [CODE eq ref $v] -> {$k} = $v}
+
+	my $json_content = $_JSON -> encode ($c [0]); chop $json_content;
+
+	$r -> content_type ($_REQUEST {__content_type});
+			
+	send_http_header ();
+
+	print $json_page;
+	print ',"content":';
+	print $json_content;
+
+	while (my ($k, $v) = each %{$c [1]}) {
+		print qq{,"$k":"}; #"
+		&$v ();
+		print '"';
+	}
+	
+	print '}}';
 
 }
 

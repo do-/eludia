@@ -7,6 +7,7 @@ use Eludia::Content::Handler;
 use Eludia::Content::Validators;
 use Eludia::Content::Tie;
 use Eludia::Content::Profiling;
+use Eludia::Content::HTTP::FileTools;
 
 #############################################################################
 

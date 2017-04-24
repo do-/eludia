@@ -1,16 +1,32 @@
 ################################################################################
 
-sub delete_file {
+sub print_as_data_uri {
 
-	unlink $r -> document_root . $_[0];
+	my ($path) = @_;	
 
-}
+	open (FILE, $path) or die "$!";
 
-################################################################################
+	binmode FILE;
 
-sub get_filehandle {
+	my $buf;
+	
+	my $is_virgin = 1;
 
-	return ref $apr eq 'Apache2::Request' ? $apr -> upload ($_[0]) -> upload_fh : $apr -> upload ($_[0]) -> fh;	
+	while (read (FILE, $buf, 60*57)) {
+	
+		if ($is_virgin) {
+			print 'image/';
+			print $buf =~ /^GIF/ ? 'gif' : $buf =~ /^.PNG/ ? 'png' : 'jpeg';
+			print ';base64,';
+		}
+
+		print MIME::Base64::encode_base64 ($buf, '');
+		
+		$is_virgin = 0;
+
+	}	
+
+	close FILE;
 
 }
 
@@ -30,7 +46,7 @@ sub download_file_header {
 
 	$type ||= 'application/octet-stream';
 
-	my $path = $r -> document_root . $options -> {path};
+	my $path = $options -> {path};
 	
 	my $start = 0;
 	
@@ -38,7 +54,7 @@ sub download_file_header {
 	
 	if (!$content_length && $options -> {path}) {
 	
-		$content_length = -s $r -> document_root . $options -> {path};
+		$content_length = -s $options -> {path};
 	
 	}
 		
@@ -81,13 +97,9 @@ sub download_file {
 
 	my ($options) = @_;	
 
-	my $path = $r -> document_root . $options -> {path};
+	my $path = $options -> {path};
 	
-	-f $path or $path = $options -> {path};
-
 	-f $path or die "File not found: $path\n";
-
-	$_REQUEST {__out_html_time} = time;
 
 	my $start = download_file_header (@_);
 	
@@ -99,8 +111,6 @@ sub download_file {
 		$r -> send_fd (F);
 		close F;
 	}
-	
-	unlink $path if $options -> {'delete'};
 	
 }
 
