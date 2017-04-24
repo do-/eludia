@@ -334,7 +334,6 @@ sub sql_reconnect {
 			$model_update = __PACKAGE__ -> new (
 				$db, 
 				before_assert		=> $conf -> {'db_temporality'} ? \&sql_temporality_callback : undef,
-				schema			=> $preconf -> {db_schema},
 			);
 
 		}
@@ -970,11 +969,8 @@ sub new {
 	
 	if ($driver_name eq 'Oracle') {
   		$self -> {characterset} = sql_select_scalar ('SELECT VALUE FROM V$NLS_PARAMETERS WHERE PARAMETER = ?', 'NLS_CHARACTERSET');
-  		$self -> {schema} ||= uc $db -> {Username};
 	}
 	
-	$self -> {schema} ||= '';
-
 	return $self;
 
 }

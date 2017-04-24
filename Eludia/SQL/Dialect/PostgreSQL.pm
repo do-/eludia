@@ -24,8 +24,6 @@ sub sql_version {
 	
 	$version -> {features} -> {'idx.partial'} = ($version -> {n} > 7.1);
 	
-	$preconf -> {db_schema} = sql_select_scalar ('SELECT current_schema()');
-
 	return $version;
 	
 }
