@@ -704,4 +704,64 @@ sub sql_unlock {
 
 sub _sql_ok_subselects { 1 }
 
+
+################################################################################
+
+sub sql_do_upsert {
+
+	my ($table, $data) = @_;
+	
+	exists $data -> {id} and die "sql_do_upsert called with id defined\n";
+
+	exists $data -> {fake} or $data -> {fake} = $_REQUEST {sid};
+	
+	my $def = $DB_MODEL -> {tables} -> {$table} or die "Can't find $table definition in model\n";
+
+	my $keys = $def -> {keys} or die "$table definition have no keys at all\n";
+
+	my @uniq = grep {/\!\s*$/} values %$keys;
+
+	@uniq > 0 or die "$table definition have no partially unique keys\n";
+
+	@uniq < 2 or die "$table definition have more than one partially unique key\n";
+	
+	my ($uniq) = @uniq;
+	
+	$uniq =~ s{\!\s*$}{};
+	
+	my %uniq_fields = map {$_ => 1} split /\W/, $uniq [0];
+
+	my ($fields, $args, $set, @params) = ('', '', '');
+
+	while (my ($k, $v) = each %$data) {
+
+		defined $v or next;
+		
+		if (@params) {
+			$fields .= ', ';
+			$args   .= ', ';
+		}
+
+		$fields .= $k;
+		$args   .= '?';
+		push @params, $v;
+		
+		unless ($uniq_fields {$k}) {
+
+			$set .= ', ' if length $set;
+
+			$set .= "$k = EXCLUDED.$k";
+
+		}
+
+	}
+	
+	my $sql = "INSERT INTO $table ($fields) VALUES ($args) ON CONFLICT ($uniq) WHERE fake = 0 DO UPDATE SET $set RETURNING id";
+	
+	$data -> {id} = sql_select_scalar ("$sql ", @params);
+
+	return $data -> {id};
+
+}
+
 1;
