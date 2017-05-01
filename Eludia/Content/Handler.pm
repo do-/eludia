@@ -8,7 +8,9 @@ sub get_request_problem {
 
 	$ENV {REQUEST_METHOD} eq 'POST' or return 405;
 	
-	$r -> header_in ('Content-Type') eq 'application/json' or return (400 => 'Wrong Content-Type');
+	my $enctype = $r -> header_in ('Content-Type');
+	
+	$enctype eq 'application/json' or $enctype eq 'text/plain' or return (400 => 'Wrong Content-Type');
 
 	Encode::_utf8_on ($_) foreach (values %_REQUEST);
 	
