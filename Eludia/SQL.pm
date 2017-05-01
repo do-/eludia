@@ -1265,7 +1265,7 @@ sub sql_do_update {
 
 	my ($table, $data, $id) = @_;
 	
-	$id ||= delete $data -> {id} or die 'Wrong argument for sql_do_update: ' . Dumper (\@_);
+	$id ||= ((delete $data -> {id}) || $_REQUEST {id}) or die 'Wrong argument for sql_do_update: ' . Dumper (\@_);
 	
 	$data -> {fake} //= 0;
 	
