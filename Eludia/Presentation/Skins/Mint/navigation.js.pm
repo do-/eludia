@@ -1235,39 +1235,22 @@ function invoke_setSelectOption (a) {
 }
 
 function setSelectOption (select, id, label) {
+	var $select = $(select),
+		maxLen = $select.attr('data-max-len') ? parseInt($select.attr('data-max-len')) : window.max_len,
+		label = label.length <= maxLen ? label : (label.substr (0, maxLen - 3) + '...'),
+		dropDownList = $select.data('kendoDropDownList'),
+		item = _.find(select.options, function(option) { return option.value == id });
 
-	label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...');
+	if (!item) {
+		var newItem = {};
 
-	var drop_down_list = $(select).data('kendoDropDownList');
-
-	for (var i = 0; i < select.options.length; i++) {
-		if (select.options [i].value == id) {
-			select.options [i].innerText = label;
-			select.selectedIndex = i;
-			drop_down_list.select (i);
-			drop_down_list.focus ();
-			drop_down_list.refresh();
-			$(select).change();
-			return;
-		}
+		newItem[dropDownList.options.dataTextField] = label;
+		newItem[dropDownList.options.dataValueField] = id;
+		dropDownList.dataSource.add(newItem);
 	}
-
-	var option = document.createElement ("OPTION");
-	select.options.add (option);
-	option.value = id;
-
-	if ("textContent" in option) {
-		option.textContent = label;
-	}
-	else {
-		option.innerText = label;
-	}
-
-	select.selectedIndex = select.options.length - 1;
-
-	drop_down_list.select (i);
-	drop_down_list.focus ();
-	$(select).change();
+	dropDownList.value(id);
+	dropDownList.focus();
+	$select.change();
 };
 
 function blur_all_inputs () {
