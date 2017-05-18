@@ -1815,8 +1815,8 @@ TableSlider.prototype.clear_rows = function (row) {
 
 TableSlider.prototype.set_row = function (row) {
 
-	self = this;
-	var matrix = self.rows;
+	var self = this,
+		matrix = self.rows;
 
 	$('div.st-table-right-viewport table.st-fixed-table-right').each (function (n) {
 
