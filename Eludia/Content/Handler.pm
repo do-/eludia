@@ -279,6 +279,7 @@ sub setup_request_params {
 
 	$_REQUEST {__last_last_query_string}   ||= $_REQUEST {__last_query_string};
 
+	$_REQUEST {xls} ||= $_REQUEST {xlsx};
 	$_REQUEST {lpt} ||= $_REQUEST {xls};
 
 	$_REQUEST {__read_only} = 1 if $_REQUEST {lpt};
