@@ -25,6 +25,29 @@ var dialog_width,
 $(document).ready (function () {
 	dialog_width = is_ua_mobile  ? top.innerWidth - 20  : (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - 50;
 	dialog_height = is_ua_mobile ? top.innerHeight - 100 : (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) - 50;
+
+	function calcSelectWidth() {
+		var $this = $(this),
+			label = 'label',
+			label = $this.find('option[value=' + $this.val() + ']').text(),
+			maxLen = $this.attr('max_len') ? parseInt($this.attr('max_len')) : null,
+			$prerenderEl = $('<span/>', {
+				style: 'position:absolute;left:-9999px;',
+				text: (maxLen && (maxLen < label.length)) ? label.substr(0, maxLen) : label
+			}),
+			width;
+
+		$('body').append($prerenderEl);
+		width = $prerenderEl.width();
+		$prerenderEl.remove();
+		$this.width(width + 30);
+	}
+
+	var ie8OrOld = false;
+	/*@cc_on @*/
+	/*@ @if (@_jscript_version && @_jscript_version < 9) ie8OrOld = true; @end @*/
+
+	if (!ie8OrOld) $('select').each(calcSelectWidth).on('change', calcSelectWidth);
 });
 
 var scrollable_table_ids = [];
