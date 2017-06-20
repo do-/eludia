@@ -41,16 +41,15 @@
 }
 
 div.table-container {
-
-      	PADDING-RIGHT: 0px;
-      	OVERFLOW-Y: scroll;
-      	PADDING-LEFT: 0px;
-      	OVERFLOW-X: auto;
-      	PADDING-BOTTOM: 0px;
-      	MARGIN: 0px;
-      	WIDTH: expression(document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 18));
-      	PADDING-TOP: 0px;
-
+	PADDING-RIGHT: 0px;
+	OVERFLOW-Y: scroll;
+	PADDING-LEFT: 0px;
+	OVERFLOW-X: auto;
+	PADDING-BOTTOM: 0px;
+	MARGIN: 0px;
+	WIDTH: expression(document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 18));
+	max-width: 100%;
+	PADDING-TOP: 0px;
 	scrollbar-base-color:#d6d3ce;
 	scrollbar-arrow-color:#485f70;
 	scrollbar-3dlight-color: #efefef;
