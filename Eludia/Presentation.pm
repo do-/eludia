@@ -1645,7 +1645,7 @@ sub draw_cells {
 			$cell -> {a_class} ||= $options -> {a_class};
 			$cell -> {target}  ||= $options -> {target} || '_self';
 
-			unless (exists $cell -> {href}) {
+			unless (exists $cell -> {href} || $cell -> {no_href}) {
 				$cell -> {href} = $options -> {href};
 				$cell -> {no_check_href} = 1;
 			}
@@ -1674,7 +1674,7 @@ sub draw_cells {
 
 	foreach my $cell (@cells) {
 
-		$cell -> {href} ||= $options -> {href};
+		$cell -> {href} ||= $options -> {href} unless $cell -> {no_href};
 
 		delete $cell -> {editor} if (exists $_REQUEST {__edited_cells_table} && ($i -> {fake} != 0 || $_REQUEST {xls}));
 
