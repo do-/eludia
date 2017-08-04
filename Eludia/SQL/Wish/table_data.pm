@@ -150,33 +150,50 @@ sub wish_to_actually_update_table_data {
 
 	@$items > 0 or return;
 
-	my @cols = ();
-	my @prms = ();
+	if ($options -> {is_model_update} == 1) {
 
-	foreach my $col (grep {$_ ne 'id'} keys %{$items -> [0]}) {
+		foreach my $i (@$items) {
 
-		push @cols, "$col = ?";
-		push @prms, [ map {$_ -> {$col}} @$items];
+			my @cols;
+			my @params;
 
+			map { push @cols,  "$_ = ?"; push @params, $i -> {$_}; } grep {$_ ne 'id'} keys %$i;
+
+			push @params, $i -> {id};
+
+			sql_do ("UPDATE $options->{table} SET " . (join ', ', @cols) . " WHERE id = ?", @params);
+		}
+
+	} else {
+
+		my @cols = ();
+		my @prms = ();
+
+		foreach my $col (grep {$_ ne 'id'} keys %{$items -> [0]}) {
+
+			push @cols, "$col = ?";
+			push @prms, [ map {$_ -> {$col}} @$items];
+
+		}
+
+		push @prms, [ map {$_ -> {id}} @$items];
+
+		my $sql = "UPDATE $options->{table} SET " . (join ', ', @cols) . " WHERE id = ?";
+
+		__profile_in ('sql.prepare');
+
+		my $sth = $db -> prepare ($sql);
+
+		__profile_out ('sql.prepare', {label => $sql});
+
+		__profile_in ('sql.execute');
+
+		$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
+
+		__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms)});
+
+		$sth -> finish;
 	}
-
-	push @prms, [ map {$_ -> {id}} @$items];
-
-	my $sql = "UPDATE $options->{table} SET " . (join ', ', @cols) . " WHERE id = ?";
-
-	__profile_in ('sql.prepare');
-
-	my $sth = $db -> prepare ($sql);
-
-	__profile_out ('sql.prepare', {label => $sql});
-
-	__profile_in ('sql.execute');
-
-	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
-
-	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms)});
-
-	$sth -> finish;
 
 }
 

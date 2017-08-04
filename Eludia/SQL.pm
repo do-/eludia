@@ -1444,6 +1444,8 @@ sub assert {
 
 					key   => exists $table -> {data} -> [0] -> {id} ? 'id' : 'name',
 
+					is_model_update => 1,
+
 				});
 
 			}

@@ -6,45 +6,52 @@ sub wish_to_actually_create_table_data {
 
 	@$items > 0 or return;
 
-	my $uniq_cols;
-	foreach my $record (@$items) {
-		foreach my $column (keys %$record) {
-			$uniq_cols -> {$column} = 1;
-		}
-	}
+	if (exists $items -> [0] -> {id}) {
 
-	my @cols = keys %$uniq_cols;
-	my @prms = ();
+		sql_do_insert ($options -> {table} => $_) foreach sort {$a -> {id} <=> $b -> {id}} @$items;
 
-	my $is_set_identity_insert;
-	foreach my $col (@cols) {
-		if ($col eq 'id') {
-			$is_set_identity_insert = 1;
+	} else {
+
+		my $uniq_cols;
+		foreach my $record (@$items) {
+			foreach my $column (keys %$record) {
+				$uniq_cols -> {$column} = 1;
+			}
 		}
 
+		my @cols = keys %$uniq_cols;
+		my @prms = ();
 
-		push @prms, [ map {$_ -> {$col}} @$items];
+		my $is_set_identity_insert;
+		foreach my $col (@cols) {
+			if ($col eq 'id') {
+				$is_set_identity_insert = 1;
+			}
 
+
+			push @prms, [ map {$_ -> {$col}} @$items];
+
+		}
+
+		my $sql = "INSERT INTO $options->{table} (" . (join ', ', @cols) . ") VALUES (" . (join ', ', map {'?'} @cols) . ")";
+
+		$sql = "SET IDENTITY_INSERT $options->{table} ON; $sql; SET IDENTITY_INSERT $options->{table} OFF"
+			if $is_set_identity_insert;
+
+		__profile_in ('sql.prepare');
+
+		my $sth = $db -> prepare ($sql);
+
+		__profile_out ('sql.prepare', {label => $sql});
+
+		__profile_in ('sql.execute');
+
+		$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
+
+		__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms)});
+
+		$sth -> finish;
 	}
-
-	my $sql = "INSERT INTO $options->{table} (" . (join ', ', @cols) . ") VALUES (" . (join ', ', map {'?'} @cols) . ")";
-
-	$sql = "SET IDENTITY_INSERT $options->{table} ON; $sql; SET IDENTITY_INSERT $options->{table} OFF"
-		if $is_set_identity_insert;
-
-	__profile_in ('sql.prepare');
-
-	my $sth = $db -> prepare ($sql);
-
-	__profile_out ('sql.prepare', {label => $sql});
-
-	__profile_in ('sql.execute');
-
-	$sth -> execute_array ({ArrayTupleStatus => \my @tuple_status}, @prms);
-
-	__profile_out ('sql.execute', {label => $sql . ' ' . Dumper (\@prms)});
-
-	$sth -> finish;
 
 }
 
