@@ -1,4 +1,5 @@
-/*!
+
+ /*
  * jQuery Browser Plugin 0.0.6
  * https://github.com/gabceb/jquery-browser-plugin
  *
@@ -2880,8 +2881,10 @@ function init_page (options) {
 		$(this).height(h);
 	});
 
-	$('[data-type=datepicker]').each(function () {$(this).kendoDatePicker()});
-	$('[data-type=datetimepicker]').each(function () {$(this).kendoDateTimePicker()});
+	$('[data-type=datepicker]').each(function() {
+		$(this).kendoDatePicker({ format: 'dd.MM.yyyy' });
+	});
+	$('[data-type=datetimepicker]').each(function() { $(this).kendoDateTimePicker(); });
 
 	$('input[mask]').each (init_masked_text_box);
 
