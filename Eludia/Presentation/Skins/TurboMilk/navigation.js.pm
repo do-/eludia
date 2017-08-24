@@ -29,7 +29,7 @@ $(document).ready (function () {
 	function calcSelectWidth() {
 		var $this = $(this),
 			label = 'label',
-			label = $this.find('option[value=' + $this.val() + ']').text(),
+			label = $this.find('option[value="' + $this.val() + '"]').text(),
 			maxLen = $this.attr('max_len') ? parseInt($this.attr('max_len')) : null,
 			$prerenderEl = $('<span/>', {
 				style: 'position:absolute;left:-9999px;',
