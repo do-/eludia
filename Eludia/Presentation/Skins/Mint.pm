@@ -3299,7 +3299,7 @@ sub draw_page {
 	$init_page_options = $_JSON -> encode ($init_page_options);
 
 	my $kendo_modules = join ',',
-		qq |"$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js"|,
+		qq |"$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js","cultures/kendo.culture.ru-RU.min"|,
 		map {qq |"kendo.$_.min"|} keys %{$_REQUEST {__libs} -> {kendo}};
 
 
@@ -3308,20 +3308,17 @@ sub draw_page {
 			requirejs.config({
 				baseUrl: '/i/mint/libs/KendoUI/js',
 				shim: {
-					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {
-						deps: ['cultures/kendo.culture.ru-RU.min']
-					},
+					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {},
 					'/i/mint/libs/SuperTable/supertable.min.js' : {}
 				}
 			});
-			require([ $kendo_modules ], function () {\$(document).ready (
-				function () {
+			require([ $kendo_modules ], function() {
+				kendo.culture("ru-RU");
+				\$(document).ready(function() {
 					var options = $init_page_options;
-					options.on_load = function () {
-						$_REQUEST{__on_load};
-					}
+					options.on_load = function() { $_REQUEST{__on_load}; }
 					init_page (options);
-				})
+				});
 			});
 		</script>
 EOJS
