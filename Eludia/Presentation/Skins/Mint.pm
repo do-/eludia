@@ -3046,13 +3046,15 @@ EOJS
 
 		$$options{title}
 		$$options{path}
-		$$options{top_toolbar}
+		<div data-st-id="$$options{id_table}">
+			$$options{top_toolbar}
+		</div>
 
 		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible" $enctype>
-		<input type=hidden name="__suggest" value="" />
-		$hiddens_html
-		$html
-		$$options{toolbar}
+			<input type=hidden name="__suggest" value="" />
+			$hiddens_html
+			$html
+			$$options{toolbar}
 		</form>
 EOH
 
