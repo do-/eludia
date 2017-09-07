@@ -532,9 +532,6 @@ sub draw_text_cell {
 	}
 
 	if (defined ($data -> {label}) && !($data -> {off})) {
-		if ($data -> {attributes} -> {align}) {
-			$format -> set_align ($data -> {attributes} -> {align});
-		}
 
 		if ($data -> {attributes} -> {title} && $data -> {picture}) {
 			$txt = $data -> {attributes} -> {title};
@@ -581,6 +578,10 @@ sub draw_text_cell {
 			if ($data -> {strike} || $options -> {strike}) {
 				$format -> set_font_strikeout ();
 			}
+		}
+
+		if ($data -> {attributes} -> {align}) {
+			$format -> set_align ($data -> {attributes} -> {align});
 		}
 	}
 
