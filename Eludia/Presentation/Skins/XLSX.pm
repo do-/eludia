@@ -607,7 +607,7 @@ sub draw_text_cell {
 				unless ($worksheet -> {__united_cells} -> {$key}) {
 					$worksheet -> {__united_cells} -> {$key} = [];
 				}
-				push ($worksheet -> {__united_cells} -> {$key}, $_REQUEST {__xl_col});
+				push (@{$worksheet -> {__united_cells} -> {$key}}, $_REQUEST {__xl_col});
 			}
 		}
 
@@ -715,7 +715,7 @@ sub draw_table_header_cell {
 
 	if (!$cell -> {parent_header}) {
 		for (my $i = 0; $i < $colspan; $i++) {
-			push $worksheet -> {__map_str} -> {$row}, 1;
+			push @{$worksheet -> {__map_str} -> {$row}}, 1;
 		}
 	}
 	else {
@@ -756,7 +756,7 @@ sub draw_table_header_cell {
 		}
 		for (my $j = 0; $j < $colspan; $j++) {
 			my $k = $i == $rowspan ? 0 : 1;
-			push $worksheet -> {__map_str} -> {$row + $i}, $k;
+			push @{$worksheet -> {__map_str} -> {$row + $i}}, $k;
 		}
 		$i++;
 	}
