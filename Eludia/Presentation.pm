@@ -3312,7 +3312,8 @@ sub setup_skin {
 
 		$_REQUEST {__core_skin} ||= $_REQUEST {__skin};
 
-		$_REQUEST {__skin} = $preconf -> {xlsx_print} || $_REQUEST {xlsx}? 'XLSX' : 'XL';
+		$_REQUEST {__skin} = $preconf -> {xlsx_print} || $_REQUEST {xlsx} ? 'XLSX' : 'XL';
+
 	}
 
 	our $_SKIN = "Eludia::Presentation::Skins::$_REQUEST{__skin}";
@@ -3322,8 +3323,6 @@ sub setup_skin {
 	$path    =~ s{\:\:}{/}gsm;
 
 	require $path . '.pm';
-
-	$_REQUEST {xls} ||= $_REQUEST {xlsx};
 
 	$_REQUEST {__static_site} = '';
 
