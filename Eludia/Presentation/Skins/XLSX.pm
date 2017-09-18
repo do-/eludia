@@ -516,14 +516,14 @@ sub draw_text_cell {
 	my $worksheet = $_REQUEST {__xl_workbook} -> get_worksheet_by_name ($_REQUEST {__xl_sheet_name});
 	my $txt = '';
 
-	my $format = $_REQUEST {__xl_workbook} -> add_format (
+	my $format =  {
 		text_wrap => 1,
      	border    => 1,
      	valign	  => 'top',
 		align 	  => 'left',
      	font      => $_REQUEST {__xl_font},
      	size      => $_REQUEST {__xl_font_size},
-	);
+	};
 
 	foreach (@{$worksheet -> {__united_cells} -> {$_REQUEST {__xl_row}}}) {
 		if ($_ == $_REQUEST {__xl_col}){
@@ -533,7 +533,7 @@ sub draw_text_cell {
 
 	if (defined ($data -> {label}) && !($data -> {off})) {
 		if ($data -> {attributes} -> {align}) {
-			$format -> set_align ($data -> {attributes} -> {align});
+			$format -> {align} = $data -> {attributes} -> {align};
 		}
 
 		if ($data -> {attributes} -> {title} && $data -> {picture}) {
@@ -544,60 +544,62 @@ sub draw_text_cell {
 		}
 
 		if ($txt =~ /^(\-|\+)?\d+(\.?\d+|)$/) {
-			$format -> set_align ('right');
+			$format -> {align} = 'right';
 		}
 
 		if (length $txt > 0) {
 			if ($data -> {picture}) {
 				my $picture = $_SKIN -> _picture ($data -> {picture});
-				$format -> set_num_format ($picture);
+				$format -> {num_format} = $picture;
 
 				if (!($picture =~ /\./)) {
 					$txt =~ s/\..*//gi;
 				}
 			}
 			elsif ($txt =~ /^\d\d\.\d\d\.\d\d(\d\d)?$/) {
-				$format -> set_num_format ('m/d/yy');
-				$format -> set_align ('right');
+				$format -> {num_format} = 'm/d/yy';
+				$format -> {align} = 'right';
 			}
 			elsif ($txt =~ /^\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:?\d?\d?$/) {
-				$format -> set_num_format ('m/d/yy h:mm');
-				$format -> set_align ('right');
+				$format -> {num_format} = 'm/d/yy h:mm';
+				$format -> {align} = 'right';
 			}
 			elsif ($txt =~ /^\d{12,20}$/) {
-				$format -> set_num_format ('#' x 20);
+				$format -> {num_format} = '#' x 20;
 			}
 			elsif (!$data -> {no_nobr}) {
-				$format -> set_num_format ('@');
+				$format -> {num_format} = '@';
 			}
 
 			if ($data -> {bold} || $options -> {bold} || $options -> {is_total} || $txt =~ /<b>/) {
-				$format -> set_bold ();
+				$format -> {bold} = 1;
 				$data -> {bold} ||= 1;
 			}
 			if ($data -> {italic} || $options -> {italic}) {
-				$format -> set_italic ();
+				$format -> {italic} = 1;
 			}
 			if ($data -> {strike} || $options -> {strike}) {
-				$format -> set_font_strikeout ();
+				$format -> {font_strikeout} = 1;
 			}
 		}
 	}
 
 	if ($data -> {bgcolor} ||= $data -> {attributes} -> {bgcolor}) {
-		$format -> set_bg_color ($data -> {bgcolor});
+		$format -> {bg_color} = $data -> {bgcolor};
 	}
 	if ($data -> {fgcolor} ||= $data -> {attributes} -> {fgcolor}) {
-		$format -> set_color ($data -> {fgcolor});
+		$format -> {color} = $data -> {fgcolor};
 	}
 	if ($data -> {level}) {
-		$format -> set_indent ($data -> {level});
+		$format -> {indent} = $data -> {level};
 	}
 
 	$txt = processing_string ($txt);
 
 	my $rowspan = $data -> {rowspan} ? $data -> {rowspan} : 1;
 	my $colspan = $data -> {colspan} ? $data -> {colspan} : 1;
+
+	$format = $_SKIN -> add_format ($format);
 
 	if ($rowspan != 1 || $colspan != 1){
 
@@ -890,6 +892,27 @@ sub add_worksheet {
 	$worksheet -> add_write_handler (qr[[Р-пр-џЙ]], \&decode_rus);
 	$worksheet -> add_write_handler (qr[\w], \&store_string_widths);
 	$worksheet -> add_write_handler (qr[^0[^.,]], \&write_as_string);
+}
+
+################################################################################
+
+sub add_format {
+
+	my ($_SKIN, $options) = @_;
+
+	my $key = Digest::MD5::md5_hex (Dumper ($options));
+
+	if ($_REQUEST {__xl_formats} -> {$key}) {
+		return $_REQUEST {__xl_formats} -> {$key};
+	}
+
+	my $format = $_REQUEST {__xl_workbook} -> add_format ();
+
+	$format -> set_format_properties (%$options);
+
+	$_REQUEST {__xl_formats} -> {$key} = $format;
+
+	return $format;
 }
 
 ####################################################################
