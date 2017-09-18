@@ -2205,6 +2205,100 @@ sub draw_toolbar_input_checkbox {
 
 ################################################################################
 
+sub draw_toolbar_input_files {
+
+	my ($_SKIN, $options) = @_;
+
+	$_REQUEST {__libs} -> {kendo} -> {button} = 1;
+
+	my $html = <<EOH;
+		<td class="toolbar bgr0" nowrap>
+EOH
+
+	my $name = "_$$options{name}_1";
+
+	my $keep_form_params = $options -> {keep_form}? <<EOJS : '';
+		\$(this.form).filter('[isacopy]').remove();
+
+		var \$originalInputs = \$('form[name=$$options{keep_form}] :input').not(':submit');
+
+		\$originalInputs.clone().hide().attr('isacopy','y').appendTo(\$(this.form))
+			.each(function(i, el) {
+				\$(el).val(\$originalInputs.eq(i).val())
+			});
+
+		var \$originalSelects = \$('form[name=$$options{keep_form}] > select');
+
+		\$originalSelects.clone().hide().attr('isacopy','y').appendTo(\$(this.form))
+			.each(function(i, el) {
+				\$(el).val(\$originalSelects.eq(i).val())
+			});
+EOJS
+
+
+	my $keep_params = {action => 'upload'};
+
+	if (ref $options -> {href} eq 'HASH') {
+		$options -> {href} -> {action} ||= 'upload';
+		$keep_params = $options -> {href};
+	}
+
+	$keep_params = $_JSON -> encode ($keep_params);
+
+	$keep_params =~ s/\"/'/g;
+
+	$keep_form_params .= "\nvar keep_params = $keep_params;";
+
+	$options -> {href} = "javascript: \$('input[name=$name]').click(); void(0)";
+
+	$options -> {onChange} = $keep_form_params . <<'EOJS';
+	setAndSubmit($(this).closest('form').attr('name'), keep_params);
+EOJS
+
+	$html .= <<EOH;
+	<table cellspacing=0 cellpadding=0 border=0 valign="middle">
+	<tr>
+		<td class="bgr0" width=6><img src="$_REQUEST{__static_url}/btn2_l.gif?$_REQUEST{__static_salt}" width="6" height="21" border="0"></td>
+		<td class="bgr0" style="background-repeat:repeat-x" background="$_REQUEST{__static_url}/btn2_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><nobr>&nbsp;<a TABINDEX=-1 class="button" href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}">
+EOH
+
+	$html .= <<EOH;
+				<input
+					type="file"
+					name="$name"
+					$attributes
+					onFocus="scrollable_table_is_blocked = true; q_is_focused = true"
+					onBlur="scrollable_table_is_blocked = false; q_is_focused = false"
+					onChange="is_dirty=true; $$options{onChange}"
+					style="visibility:hidden; position:absolute; top:-9999px; left:-9999px; width: 1px"
+					is-native="true"
+				/>
+EOH
+
+
+
+	if ($options -> {icon}) {
+		my $img_path = _icon_path ($options -> {icon});
+		$html .= qq {<img src="$img_path" border=0 hspace=0 style='vertical-align:middle;'>};
+	}
+
+	$html .= <<EOH;
+			</a></nobr></td>
+			<td class="bgr0" style="background-repeat:repeat-x" background="$_REQUEST{__static_url}/btn2_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><nobr>&nbsp;<a TABINDEX=-1 class=button href="$$options{href}" $$options{onclick} id="$$options{id}" target="$$options{target}" title="$$options{title}">$options->{label}</a></nobr></td>
+			<td width=6><img src="$_REQUEST{__static_url}/btn2_r.gif?$_REQUEST{__static_salt}" width="6" height="21" border="0"></td>
+		</tr>
+		</table>
+		</td>
+		<td class='toolbar'>&nbsp;&nbsp;&nbsp;</td>
+
+EOH
+
+	return $html;
+
+}
+
+################################################################################
+
 sub draw_toolbar_input_submit {
 
 	my ($_SKIN, $options) = @_;
@@ -2774,7 +2868,7 @@ sub draw_text_cell {
 
 	$html .= '<nobr>' unless $data -> {no_nobr};
 
-	if ($has_href) {
+	if ($has_href && index($data -> {label}, 'type=checkbox') == -1) {
 
 		$a_attributes_html = dump_attributes ({
 			id      => $data -> {a_id},
@@ -2802,7 +2896,7 @@ sub draw_text_cell {
 	$html .= '</i>'      if $data -> {italic} || $options -> {italic};
 	$html .= '</b>'      if $data -> {bold}   || $options -> {bold};
 
-	if ($has_href) {
+	if ($has_href && index($data -> {label}, 'type=checkbox') == -1) {
 
 		$html .= '</span></a>';
 

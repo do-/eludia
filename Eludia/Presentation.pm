@@ -819,7 +819,7 @@ sub draw_form {
 
 sub _adjust_field {
 
-	my ($field, $data) = @_;
+	my ($field, $data, $form_options) = @_;
 
 	ref $field or $field = {name => $field};
 
@@ -856,6 +856,24 @@ sub _adjust_field {
 
 	$field -> {data_source} and $field -> {values} ||= ($data -> {$field -> {data_source}} ||= sql_select_vocabulary ($field -> {data_source}));
 
+
+	if (ref $_REQUEST {__field_metadata} eq 'HASH') {
+
+		my ($id_table, $id_field) = ($form_options -> {table} || $_REQUEST {type}, $field -> {name});
+
+		if ($field -> {hint} =~ s/^(\w+)\.(\w+)$//) {
+			$id_table = $1;
+			$id_field = $2;
+		}
+
+		$field -> {hint} ||= $_REQUEST {__field_metadata} -> {$id_table} -> {$id_field} -> {hint}
+			if exists $_REQUEST {__field_metadata} -> {$id_table} && exists $_REQUEST {__field_metadata} -> {$id_table} -> {$id_field};
+	}
+
+	if ($field -> {hint}) {
+		$field -> {label_title} = $field -> {attributes} -> {title} = $field -> {hint};
+	}
+
 	return $field;
 
 }
@@ -876,7 +894,7 @@ sub draw_form_field {
 
 	my ($field, $data, $form_options) = @_;
 
-	$field = _adjust_field ($field, $data);
+	$field = _adjust_field ($field, $data, $form_options);
 
 	if (
 		($_REQUEST {__read_only} or $field -> {read_only})
@@ -1135,7 +1153,12 @@ sub draw_toolbar {
 
 			$_REQUEST {__toolbar_inputs} .= "$button->{name}," if $button -> {type} =~ /^input_/;
 
-			$button -> {html} = call_from_file ("Eludia/Presentation/ToolbarElements/$button->{type}.pm", 'draw_toolbar_' . $button -> {type}, $button, $options -> {_list}) unless $_REQUEST {__edit_query};
+			$button -> {html} = call_from_file ("Eludia/Presentation/ToolbarElements/$button->{type}.pm"
+				, 'draw_toolbar_' . $button -> {type}
+				, $button
+				, $options -> {_list}
+				, $options
+			) unless $_REQUEST {__edit_query};
 
 		}
 		else {

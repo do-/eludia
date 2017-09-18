@@ -1,8 +1,14 @@
 sub draw_toolbar_input_tree {
 
-	my ($options) = @_;
+	my ($options, $data, $form_options) = @_;
 
 	my $label = '';
+
+	my $key = '__get_ids_' . $options -> {name};
+
+	$_REQUEST {$key} = 1;
+
+	push @{$form_options -> {keep_params}}, $key;
 
 	foreach my $value (@{$options -> {values}}) {
 

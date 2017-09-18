@@ -532,9 +532,6 @@ sub draw_text_cell {
 	}
 
 	if (defined ($data -> {label}) && !($data -> {off})) {
-		if ($data -> {attributes} -> {align}) {
-			$format -> {align} = $data -> {attributes} -> {align};
-		}
 
 		if ($data -> {attributes} -> {title} && $data -> {picture}) {
 			$txt = $data -> {attributes} -> {title};
@@ -581,6 +578,10 @@ sub draw_text_cell {
 			if ($data -> {strike} || $options -> {strike}) {
 				$format -> {font_strikeout} = 1;
 			}
+		}
+
+		if ($data -> {attributes} -> {align}) {
+			$format -> {align} = $data -> {attributes} -> {align};
 		}
 	}
 
@@ -922,7 +923,7 @@ sub start_page {
 	$_REQUEST {__salt} ||= int(rand () * time ());
 
 	my $tmpdir = File::Spec -> tmpdir();
-	$_REQUEST {__xl_file_name} = "$tmpdir/eludia_$_REQUEST{type}_$_REQUEST{sid}_$_REQUEST{__salt}.xlsx";
+	$_REQUEST {__xl_file_name} ||= "$tmpdir/eludia_$_REQUEST{type}_$_REQUEST{sid}_$_REQUEST{__salt}.xlsx";
 
 	open (OUT, '>' . $_REQUEST {__xl_file_name}) or die "Can't open $_REQUEST{__file_name}: $!\n";
 	binmode OUT;

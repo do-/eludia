@@ -954,7 +954,6 @@ sub draw_form_field_radio {
 ################################################################################
 
 sub draw_form_field_select {
-
 	my ($_SKIN, $options, $data) = @_;
 
 	return $_SKIN -> draw_form_field_combo ($options, $data)
@@ -964,6 +963,9 @@ sub draw_form_field_select {
 
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id}    ||= $options -> {id} || "_$options->{name}_select";
+
+	$options -> {attributes} -> {'data-width'} = $options -> {size}
+		if $options -> {size};
 
 	if (
 		@{$options -> {values}} == 0
@@ -1022,7 +1024,22 @@ EOH
 	}
 
 	foreach my $value (@{$options -> {values}}) {
-		$html .= qq {<option value="$$value{id}" $$value{selected}>$$value{label}</option>\n};
+		$value -> {orign_label} =~ s/"/&quot;/g
+			if $value -> {orign_label};
+
+		my $tooltip = $value -> {orign_label}
+			? qq { data-tooltip="$$value{orign_label}" }
+			: '';
+
+		$html .= <<EOH;
+			<option
+				value="$$value{id}"
+				$$value{selected}
+				$tooltip
+			>
+				$$value{label}
+			</option>\n
+EOH
 	}
 
 	if (defined $options -> {other} && !$options -> {other} -> {on_top}) {
@@ -1120,7 +1137,8 @@ EOH
 				empty   : '$options->{empty}',
 				href    : '$options->{ds}->{href}',
 				portion : $conf->{portion},
-				max_len : $options->{max_len}
+				max_len : $options->{max_len},
+				width   : '$options->{size}'
 			});
 		}
 
@@ -1596,7 +1614,6 @@ sub draw_toolbar {
 	<form action="$_REQUEST{__uri}" name="$options->{form_name}" target="$$options{target}" class="toolbar">
 EOH
 
-
 	my %keep_params = map {$_ => 1} @{$options -> {keep_params}};
 
 	$keep_params {$_} = 1 foreach qw (sid __last_query_string __last_scrollable_table_row __last_last_query_string);
@@ -1742,29 +1759,39 @@ sub draw_toolbar_input_tree {
 	$_REQUEST {__script} .= <<EOJS;
 var ${id}_changed = 0;
 EOJS
+
 	$_REQUEST {__on_load} .= <<EOJS;
 require (['/i/mint/libs/kendo.web.ext.js'], function () {
-	var ${id}_el = \$("#$id").kendoExtDropDownTreeView ({
-		dropDownWidth : $dropdown_width,
-		value      : "$value",
-		tree_close : function (e) {
-			if (${id}_changed) {
-				\$("#$id").parents("FORM").submit ();
-			}
-		},
-		treeview   : {
-			width      : $options->{width},
-			height     : $options->{height},
-			checkboxes : {
-				template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='${name}_#=item.id#' value='1' # if(item.is_checkbox == 2){# checked #}#/> #}#"
-			},
-			dataSource : {
-				data : $data
-			}
+	if (!\$("#$id").data("kendoExtDropDownTreeView")) {
+		var emptyLabel = "$$options{empty}",
+			${id}_el = \$("#$id").kendoExtDropDownTreeView ({
+				dropDownWidth : $dropdown_width,
+				value      : "$value",
+				tree_close : function (e) {
+					if (${id}_changed)
+						\$("#$id").parents("FORM").submit ();
+				},
+				treeview   : {
+					width      : $options->{width},
+					height     : $options->{height},
+					checkboxes : {
+						template: "#if(item.is_checkbox > 0 || item.is_radio > 0){# <input type='#if(item.is_checkbox){#checkbox#}else{#radio#}#' name='${name}_#=item.id#' value='1' # if(item.is_checkbox == 2){# checked #}#/> #}#"
+					},
+					dataSource : {
+						data : $data
+					}
+				}
+			}).data('kendoExtDropDownTreeView');
+
+		\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
+		${id}_el.dropDownList().enable(!!$enable);
+		if (!"$value".length && emptyLabel.length) {
+			var \$kInput = ${id}_el.element.find('.k-input');
+
+			\$kInput.addClass('empty');
+			\$kInput.html(emptyLabel);
 		}
-	});
-	\$("INPUT[type='checkbox'][name^='${name}_']").change(function () {${id}_changed = 1});
-	${id}_el.data('kendoExtDropDownTreeView').dropDownList().enable(!!$enable);
+	}
 });
 EOJS
 
@@ -1992,9 +2019,6 @@ EOH
 
 	my $name = "_$$options{name}_1";
 
-	$options -> {href} = "javascript: \$('input[name=$name]').click()";
-
-
 	my $keep_form_params = $options -> {keep_form}? <<EOJS : '';
 		\$(this.form).filter('[isacopy]').remove();
 
@@ -2013,11 +2037,29 @@ EOH
 			});
 EOJS
 
-	$options -> {onChange} = "javascript:" . $keep_form_params . <<'EOJS';
+
+	my $keep_params = {action => 'upload'};
+
+	if (ref $options -> {href} eq 'HASH') {
+		$options -> {href} -> {action} ||= 'upload';
+		$keep_params = $options -> {href};
+	}
+
+	$keep_params = $_JSON -> encode ($keep_params);
+
+	$keep_params =~ s/\"/'/g;
+
+	$keep_form_params .= "\nvar keep_params = $keep_params;";
+
+	$options -> {href} = "javascript: \$('input[name=$name]').click(); void(0)";
+
+	$options -> {onChange} = $keep_form_params . <<'EOJS';
 
 		var toolbarFormData = new FormData(this.form);
 
-		toolbarFormData.append('action', 'upload');
+		$.each(keep_params, function(name, value) {
+			toolbarFormData.append(name, value);
+		});
 
 		$.ajax ({
 			type: 'POST',
@@ -3053,7 +3095,9 @@ EOJS
 
 		$$options{title}
 		$$options{path}
+		<div data-st-id="$$options{id_table}">
 		$$options{top_toolbar}
+		</div>
 
 		<form name="$$options{name}" action="$_REQUEST{__uri}" method="post" target="invisible" $enctype>
 		<input type=hidden name="__suggest" value="" />
@@ -3257,7 +3301,7 @@ sub draw_page {
 	$init_page_options = $_JSON -> encode ($init_page_options);
 
 	my $kendo_modules = join ',',
-		qq |"$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js"|,
+		qq |"$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js","cultures/kendo.culture.ru-RU.min"|,
 		map {qq |"kendo.$_.min"|} keys %{$_REQUEST {__libs} -> {kendo}};
 
 
@@ -3266,20 +3310,17 @@ sub draw_page {
 			requirejs.config({
 				baseUrl: '/i/mint/libs/KendoUI/js',
 				shim: {
-					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {
-						deps: ['cultures/kendo.culture.ru-RU.min']
-					},
+					'$_REQUEST{__static_url}/i18n_$_REQUEST{lang}.js' : {},
 					'/i/mint/libs/SuperTable/supertable.min.js' : {}
 				}
 			});
-			require([ $kendo_modules ], function () {\$(document).ready (
-				function () {
+			require([ $kendo_modules ], function() {
+				kendo.culture("ru-RU");
+				\$(document).ready(function() {
 					var options = $init_page_options;
-					options.on_load = function () {
-						$_REQUEST{__on_load};
-					}
+					options.on_load = function() { $_REQUEST{__on_load}; }
 					init_page (options);
-				})
+				});
 			});
 		</script>
 EOJS
@@ -4007,7 +4048,13 @@ sub __adjust_form_field_select {
 
 	foreach my $value (@{$options -> {values}}) {
 
-		$value -> {label} = trunc_string ($value -> {label}, $options -> {max_len});
+		if (
+			length $value -> {label} > $options -> {max_len}
+			&& $options -> {ds} == undef
+		) {
+			$value -> {orign_label} = $value -> {label};
+			$value -> {label} = trunc_string ($value -> {label}, $options -> {max_len});
+		}
 
 		$value -> {id}    =~ s{\"}{\&quot;}g; #";
 

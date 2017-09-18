@@ -194,6 +194,7 @@ sub setup_request_params {
 	$ENV {HTTP_HOST} = $http_host if $http_host;
 
 	get_request (@_);
+
 	if ($i18n -> {_charset} eq 'UTF-8') {
 		utf8::decode ($_) foreach (values %_REQUEST);
 	}
@@ -290,7 +291,45 @@ sub setup_request_params {
 
 	setup_request_params_for_action () if $_REQUEST {action};
 
+	setup_request_params_for_toolbar_inputs () if $_REQUEST {__toolbar_inputs};
+
 	__profile_out ('handler.setup_request_params', {label => "type='$_REQUEST_VERBATIM{type}' id='$_REQUEST_VERBATIM{id}' action='$_REQUEST_VERBATIM{action}'"});
+
+}
+
+################################################################################
+
+sub setup_request_params_for_toolbar_inputs {
+
+	my @names = sort {$a cmp $b} keys %_REQUEST;
+
+	my @get_ids = ();
+
+	foreach (@names) {
+
+		/^__get_ids_(\w+)$/ or next;
+
+		push @get_ids, $1;
+
+	}
+
+	foreach my $key (@get_ids) {
+
+		my @ids = ();
+
+		foreach my $name (@names) {
+
+			$name =~ /^${key}_/ or next;
+
+			push @ids, $';
+
+		}
+
+		$_REQUEST {$key} = \@ids;
+
+		$_REQUEST {$key . ',-1'} = join ',', (@ids, -1);
+
+	}
 
 }
 

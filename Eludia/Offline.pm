@@ -242,7 +242,12 @@ BEGIN {
 
 	} . the_rest_of_the_script;
 
-	eval $code; die "$code\n\n$@" if $@;
+	local $Carp::MaxEvalLen = 3;
+	eval $code;
+	if ($@) {
+		warn $@;
+		exit 1;
+	}
 
 	finalize_offline_script_execution;
 

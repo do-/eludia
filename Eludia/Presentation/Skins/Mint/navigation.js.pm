@@ -1,4 +1,5 @@
-/*!
+
+ /*
  * jQuery Browser Plugin 0.0.6
  * https://github.com/gabceb/jquery-browser-plugin
  *
@@ -12,6 +13,29 @@
  *
  * Date: 30-03-2014
  */!function(a,b){"use strict";var c,d;if(a.uaMatch=function(a){a=a.toLowerCase();var b=/(opr)[\/]([\w.]+)/.exec(a)||/(chrome)[ \/]([\w.]+)/.exec(a)||/(version)[ \/]([\w.]+).*(safari)[ \/]([\w.]+)/.exec(a)||/(webkit)[ \/]([\w.]+)/.exec(a)||/(opera)(?:.*version|)[ \/]([\w.]+)/.exec(a)||/(msie) ([\w.]+)/.exec(a)||a.indexOf("trident")>=0&&/(rv)(?::| )([\w.]+)/.exec(a)||a.indexOf("compatible")<0&&/(mozilla)(?:.*? rv:([\w.]+)|)/.exec(a)||[],c=/(ipad)/.exec(a)||/(iphone)/.exec(a)||/(android)/.exec(a)||/(windows phone)/.exec(a)||/(win)/.exec(a)||/(mac)/.exec(a)||/(linux)/.exec(a)||/(cros)/i.exec(a)||[];return{browser:b[3]||b[1]||"",version:b[2]||"0",platform:c[0]||""}},c=a.uaMatch(b.navigator.userAgent),d={},c.browser&&(d[c.browser]=!0,d.version=c.version,d.versionNumber=parseInt(c.version)),c.platform&&(d[c.platform]=!0),(d.android||d.ipad||d.iphone||d["windows phone"])&&(d.mobile=!0),(d.cros||d.mac||d.linux||d.win)&&(d.desktop=!0),(d.chrome||d.opr||d.safari)&&(d.webkit=!0),d.rv){var e="msie";c.browser=e,d[e]=!0}if(d.opr){var f="opera";c.browser=f,d[f]=!0}if(d.safari&&d.android){var g="android";c.browser=g,d[g]=!0}d.name=c.browser,d.platform=c.platform,a.browser=d}(jQuery,window);
+
+/* trim polyfill */
+if (!String.prototype.trim) {
+	(function() {
+		// Вырезаем BOM и неразрывный пробел
+		String.prototype.trim = function() {
+			return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+		};
+	})();
+}
+
+/*
+	underscore js
+*/
+var _ = window.top._;
+
+if (typeof _ === 'undefined') {
+	$.ajax({
+		url: '/i/mint/libs/underscore/underscore.js',
+		async: false,
+		dataType: 'script'
+	})
+}
 
 var select_options = {};
 var browser_is_msie = $.browser.msie;
@@ -320,30 +344,25 @@ function open_vocabulary_from_select (s, options) {
 
 }
 
-function open_vocabulary_from_combo (combo, options) {
-
+function open_vocabulary_from_combo(combo, options) {
 	if (is_dialog_blockui)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + options.message + '</h1>'});
 
-	setComboValue = function (result) {
-
+	var setComboValue = function (result) {
 		if (result.result == 'ok') {
-
 			for (var j = 0; j < combo.dataSource.data().length; j ++) {
-				if (combo.dataSource.data() [j].id == result.id) {
+				if (combo.dataSource.data()[j].id == result.id) {
 					break;
 				}
 			}
-
 			if (j == combo.dataSource.data().length) {
-				combo.dataSource.add ({id : result.id, label : result.label});
+				combo.dataSource.add(
+					{id: result.id, label: result.label}
+				);
 			}
-
-			combo.select (j);
+			combo.select(j);
 			$(combo.element[0]).trigger('change');
-
 		}
-
 	};
 
 	try {
@@ -598,47 +617,137 @@ function focus_on_input (__focused_input) {
 
 
 function adjust_kendo_selects(top_element) {
+	var setWidth = function(el, width) {
+		var p = el.data('kendoDropDownList').popup.element,
+			w = width || p.css('visibility','hidden').outerWidth() + 32;
 
-	var setWidth = function (el) {
-		var p = el.data("kendoDropDownList").popup.element;
-		var w = p.css("visibility","hidden").outerWidth() + 32;
-		p.css("visibility","visible");
-		el.closest(".k-widget").width(w);
+		p.css('visibility', 'visible');
+		el.closest('.k-widget').width(w);
 	}
 
-	var select_tranform = function(){
-		var original_select = this;
-		$(original_select).addClass('k-group').kendoDropDownList({
+	var select_tranform = function() {
+		var original_select = this,
+			$original_select = $(this);
+
+		$original_select.addClass('k-group').kendoDropDownList({
 			height: 320,
 			popup : {
 				appendTo: $(body),
 			},
-			open: function (e) {
+			dataBound: function() {
+				var self = this,
+					list = this.ul.find('li');
 
-				$.data (original_select, 'prev_value', this.selectedIndex);
+				$.each(this.dataSource.data(), function(index, item) {
+					if (item.attributes && item.attributes.length) {
+						var $option = $original_select.find('option[value=' + item.value + ']'),
+							$li = list.eq(index);
 
-				if (!$(original_select).attr('data-ken-autoopen')) {
-					return;
-				}
+						$.each(item.attributes, function(_index, _item) {
+							$option.attr(_item.name, _item.value);
+							$li.attr(_item.name, _item.value);
+						})
+					}
+				})
+			},
+			change: function(e) {
+				var value = this.value(),
+					valueItem = _.find(this.dataSource.data(), function(i) { return i.value == value }),
+					tooltip = (valueItem && valueItem.attributes)
+						? _.find(valueItem.attributes, function(i) { return i.name === 'data-tooltip' })
+						: null;
 
-				var kendo_select = this;
-				var non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
-					return el.value != 0 && el.value != -1;
+				if (tooltip)
+					this.wrapper.find('.k-input').attr(tooltip.name, tooltip.value)
+			},
+			dataSource: (function($select) {
+				var dataSource = [];
+
+				$select.find('option').each(function() {
+					var $this = $(this),
+						item  = {
+							value: $this.attr('value').trim(),
+							label: $this.text().trim(),
+							attributes: []
+						};
+
+					$.each(this.attributes, function(index, attribute) {
+						var name = attribute.nodeName || attribute.name;
+
+						if (name !== 'value' && name !== 'style' && name !== 'selected')
+							item.attributes.push({
+								name: name,
+								value: attribute.value.trim()
+							})
+					});
+					dataSource.push(item)
 				});
-				if (non_voc_options.length > 0) {
-					return;
-				}
 
+				return dataSource
+			})($original_select),
+			dataTextField: 'label',
+			dataValueField: 'value',
+			open: function(e) {
+				$.data(original_select, 'prev_value', this.selectedIndex);
+				if (!$(original_select).attr('data-ken-autoopen'))
+					return;
+
+				var kendo_select = this,
+					non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
+						return el.value != 0 && el.value != -1;
+					});
+
+				if (non_voc_options.length > 0)
+					return;
 				// auto click vocabulary item
-				setTimeout (function (){ // HACK: 'after_open' event replacement
-					kendo_select.select(function(dataItem){return dataItem.value == -1});
-					$(original_select).trigger('change');
+				setTimeout(function () { // HACK: 'after_open' event replacement
+					kendo_select.select(function(dataItem) {
+						return dataItem.value == -1
+					});
+					$original_select.trigger('change');
 					kendo_select.close();
 				}, 200);
+
 				return blockEvent();
 			}
 		}).data('kendoDropDownList');
-		setWidth ($(original_select));
+		setWidth($original_select, $original_select.attr('data-width'));
+
+		var kendoDropDownList = $original_select.data('kendoDropDownList'),
+			$kInput = kendoDropDownList.wrapper.find('.k-input'),
+			value = kendoDropDownList.value(),
+			valueItem = _.find(kendoDropDownList.dataSource.data(), function(i) { return i.value == value }),
+			tooltip = (valueItem && valueItem.attributes)
+				? _.find(valueItem.attributes, function(i) { return i.name === 'data-tooltip' })
+				: null;
+
+		if (tooltip)
+			$kInput.attr(tooltip.name, tooltip.value);
+		$kInput.on('mouseenter', function() {
+			var $this = $(this),
+				textHasOverflown = this.scrollWidth > $this.innerWidth(),
+				showTooltip = function() {
+					$this.kendoTooltip({
+						content: $this.attr('data-tooltip') || $this.text()
+					})
+					.data('kendoTooltip')
+					.show();
+				};
+
+			if (textHasOverflown || $this.attr('data-tooltip')) {
+				if ($.fn.kendoTooltip) {
+					showTooltip()
+				} else {
+					require(['kendo.tooltip.min'], showTooltip)
+				}
+			}
+		});
+		$kInput.on('mouseout', function() {
+			var $this = $(this);
+
+			if ($this.data('kendoTooltip'))
+				$this.data('kendoTooltip').destroy()
+		});
 	}
 
 	$('select', top_element).not('#_setting__suggest, #_id_filter__suggest, [multiselect]')
@@ -648,9 +757,8 @@ function adjust_kendo_selects(top_element) {
 
 
 function do_kendo_combo_box (id, options) {
-
-	var values      = options.values,
-		ds          = {};
+	var values = options.values,
+		ds = {};
 
 	if (options.href) {
 		ds = {
@@ -708,81 +816,63 @@ schema_loop:
 	};
 
 	var combo = $('#' + id).kendoComboBox({
-		placeholder     : options.empty,
-		dataTextField   : 'label',
-		dataValueField  : 'id',
-		filter          : 'contains',
-		minLength       : 3,
-		autoBind        : false,
-		dataSource      : ds,
+		placeholder    : options.empty,
+		dataTextField  : 'label',
+		dataValueField : 'id',
+		filter         : 'contains',
+		minLength      : 3,
+		autoBind       : false,
+		dataSource     : ds,
 		cascade: function(e) {
 			var input = this.element [0];
 
 			if (this.value() && !this.dataItem()) {
-
 				this.value ('');
-
 			} else {
-
 				if (!input.options)
 					input.options = [];
-
 				input.selectedIndex = this.selectedIndex;
 				input.options [this.selectedIndex] = {};
 				input.options [this.selectedIndex].value = this.value ();
-
 			}
-
 		},
-
-		open : function (e) {
+		open: function (e) {
 			stibqif (true);
 			if (input_change.is_changed)
 				this.dataSource.query();
 			input_change.is_changed = false;
-			var max_len = 0,
-				data_items = this.dataSource.data (),
-				w = this.popup.element.css("width").replace("px", "");
-			for (var i = 0; i < data_items.length; i ++)
-				if (data_items [i].label.length > max_len)
-					max_len = data_items [i].label.length;
-
-			if (max_len * 8 + 32 > w)
-				this.popup.element.css("width", (max_len * 8 + 32) + "px");
 		},
-
-		close : function (e) {
+		close: function (e) {
 			stibqif (false);
-		},
-
-		select : function (e) {
-			var w = (this.dataItem() ? this.dataItem().label : e.item.text ()).length * 8 + 32,
-				el = this.element.closest(".k-widget");
-
-			if (w > el.width ())
-				el.width(w);
 		}
-
 	}).data('kendoComboBox');
-
 	$('#' + id + '_input').on('keypress', $.proxy(input_change.on_change, input_change));
-
-	for(var i = 0; i < values.length; i++) {
-		combo.dataSource.add ({id : values [i].id, label : values [i].label});
-		if (values [i].selected)
-			combo.select (i);
+	for (var i = 0; i < values.length; i++) {
+		combo.dataSource.add({id: values[i].id,label: values[i].label});
+		if (values[i].selected)
+			combo.select(i);
 	}
+	combo.element.closest(".k-widget").width(
+		options.width || options.empty.length * 8 + 32
+	);
+	combo.input.on('mouseover', function() {
+		var $this = $(this),
+			textHasOverflown = this.scrollWidth > $this.innerWidth();
 
+		if (textHasOverflown) {
+			$this.kendoTooltip({
+				content: $this.val()
+			})
+			.data('kendoTooltip')
+			.show();
+		}
+	});
+	combo.input.on('mouseout', function() {
+		var $this = $(this);
 
-	var p = combo.popup.element;
-	var w = p.css("visibility","hidden").show().outerWidth();
-	p.hide().css("visibility","visible");
-	if (options.empty && options.empty.length * 8 > w)
-		w = options.empty.length * 8;
-	if (options.max_len && options.max_len * 8 < w)
-		w = options.max_len * 8;
-	combo.element.closest(".k-widget").width(w + 32);
-
+		if ($this.data('kendoTooltip'))
+			$this.data('kendoTooltip').destroy()
+	});
 }
 
 function hide_dropdown_button (id) {
@@ -1134,7 +1224,6 @@ function setCursor (w, c) {
 }
 
 function invoke_setSelectOption (a) {
-
 	if (!a.question || window.confirm (a.question)) {
 		var ws = ancestor_window_with_child ('__body_iframe');
 		if (ws) ws.window._setSelectOption (a.id, a.label);
@@ -1147,39 +1236,22 @@ function invoke_setSelectOption (a) {
 }
 
 function setSelectOption (select, id, label) {
+	var $select = $(select),
+		maxLen = $select.attr('data-max-len') ? parseInt($select.attr('data-max-len')) : window.max_len,
+		label = label.length <= maxLen ? label : (label.substr (0, maxLen - 3) + '...'),
+		dropDownList = $select.data('kendoDropDownList'),
+		item = _.find(select.options, function(option) { return option.value == id });
 
-	label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...');
+	if (!item) {
+		var newItem = {};
 
-	var drop_down_list = $(select).data('kendoDropDownList');
-
-	for (var i = 0; i < select.options.length; i++) {
-		if (select.options [i].value == id) {
-			select.options [i].innerText = label;
-			select.selectedIndex = i;
-			drop_down_list.select (i);
-			drop_down_list.focus ();
-			drop_down_list.refresh();
-			$(select).change();
-			return;
-		}
+		newItem[dropDownList.options.dataTextField] = label;
+		newItem[dropDownList.options.dataValueField] = id;
+		dropDownList.dataSource.add(newItem);
 	}
-
-	var option = document.createElement ("OPTION");
-	select.options.add (option);
-	option.value = id;
-
-	if ("textContent" in option) {
-		option.textContent = label;
-	}
-	else {
-		option.innerText = label;
-	}
-
-	select.selectedIndex = select.options.length - 1;
-
-	drop_down_list.select (i);
-	drop_down_list.focus ();
-	$(select).change();
+	dropDownList.value(id);
+	dropDownList.focus();
+	$select.change();
 };
 
 function blur_all_inputs () {
@@ -1744,8 +1816,8 @@ TableSlider.prototype.clear_rows = function (row) {
 
 TableSlider.prototype.set_row = function (row) {
 
-	self = this;
-	var matrix = self.rows;
+	var self = this,
+		matrix = self.rows;
 
 	$('div.st-table-right-viewport table.st-fixed-table-right').each (function (n) {
 
@@ -2809,8 +2881,10 @@ function init_page (options) {
 		$(this).height(h);
 	});
 
-	$('[data-type=datepicker]').each(function () {$(this).kendoDatePicker()});
-	$('[data-type=datetimepicker]').each(function () {$(this).kendoDateTimePicker()});
+	$('[data-type=datepicker]').each(function() {
+		$(this).kendoDatePicker({ format: 'dd.MM.yyyy' });
+	});
+	$('[data-type=datetimepicker]').each(function() { $(this).kendoDateTimePicker(); });
 
 	$('input[mask]').each (init_masked_text_box);
 
@@ -2994,3 +3068,37 @@ function debounce (func, wait, immediate) {
 function tabOnEnter () {
 	void (0);
 }
+
+$(document).on('mouseenter', '.k-popup .k-item', function() {
+	var $this = $(this),
+		textHasOverflown = this.scrollWidth > $this.innerWidth(),
+		showTooltip = function() {
+			$this.kendoTooltip({
+				content: $this.attr('data-tooltip') || $this.text()
+			})
+			.data('kendoTooltip')
+			.show();
+		};
+
+	if ($this.data('kendoTooltip')) {
+		$this.data('kendoTooltip').show()
+	} else {
+		if (textHasOverflown || $this.attr('data-tooltip')) {
+			if ($.fn.kendoTooltip) {
+				showTooltip()
+			} else {
+				require(['kendo.tooltip.min'], showTooltip)
+			}
+		}
+	}
+});
+
+$(document).on('mouseout', '.k-popup .k-item', function() {
+	$('[data-role=tooltip]').each(function() {
+		var kendoTooltip = $(this).data('kendoTooltip');
+
+		if (kendoTooltip && typeof kendoTooltip.hide !== 'undefined') {
+			$(this).data('kendoTooltip').hide()
+		}
+	})
+});

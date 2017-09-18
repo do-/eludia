@@ -7,25 +7,27 @@ sub vld_snils {
 
 	my $name1;
 	my $value;
-	if ($name !~ /^[\-\d ]$/) {
-		$name1 = '_' . $name;
+	if ($name !~ /^[\-\d ]+$/) {
+		$name1 = '_' . $name if $name;
 		$value = $_REQUEST {$name1};
 	} else {
 		$value = $name;
 	}
 
+	$value =~ s/[^\d]//g;
+
 	if (!$value && $nullable) {
-		delete $_REQUEST {$name1} if ($name1);
+		$_REQUEST {$name1} = '' if $name1;
 		return undef;
 	}
 
 	local $SIG {__DIE__} = 'DEFAULT';
 
-	$value =~ s/[^\d]//g;
-
-	substr ($value, 0, 9) gt '001001998' or return undef;
+	$value + 0 == 0 and $name1 ? die "#$name1#:$i18n->{snils_incorrect}" : return $i18n -> {snils_incorrect};
 
 	$value =~ /^\d{11}$/ or $name1 ? die "#$name1#:$i18n->{snils_digits_count_fail}" : return $i18n -> {snils_digits_count_fail};
+
+	substr ($value, 0, 9) gt '001001998' or return undef;
 
 	my @n = split //, $value;
 
@@ -173,7 +175,7 @@ sub vld_inn_10 {
 	}
 
 	if (!$value && $nullable) {
-		delete $_REQUEST {$name1} if ($name1);
+		$_REQUEST {$name1} = '' if $name1;
 		return undef;
 	}
 
@@ -219,7 +221,7 @@ sub vld_inn_12 {
 	}
 
 	if (!$value && $nullable) {
-		delete $_REQUEST {$name1} if ($name1);
+		$_REQUEST {$name1} = '' if $name1;
 		return undef;
 	}
 
@@ -286,7 +288,7 @@ sub vld_inn {
 	}
 
 	if (!$value && $nullable) {
-		delete $_REQUEST {$name1} if ($name1);
+		$_REQUEST {$name1} = '' if $name1;
 		return undef;
 	}
 

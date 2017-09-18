@@ -689,3 +689,24 @@ a.hint {
 }
 
 .zeroclipboard-is-hover { cursor:pointer !important; }
+
+/* Tooltip */
+.k-animation-container .k-widget.k-tooltip {
+	background: #f7f7ad;
+	color: #333;
+	border-color: #333;
+}
+.k-callout-n {
+	border-bottom-color: #333;
+}
+
+/* combobox */
+.k-widget.k-combobox .k-input {
+	text-overflow: ellipsis;
+}
+
+/* popup */
+.k-popup .k-item {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
