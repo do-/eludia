@@ -153,6 +153,10 @@ sub draw_window_title {
 
 	my ($_SKIN, $options) = @_;
 
+	if ($_REQUEST {__only_field} || $_REQUEST {__only_table}) {
+		return '';
+	}
+
 	if ($_REQUEST {select}) {
 
 		$_REQUEST {__script} .= <<EOJ;
