@@ -3318,7 +3318,7 @@ sub draw_page {
 					'/i/mint/libs/SuperTable/supertable.min.js' : {}
 				}
 			});
-			require([ $kendo_modules ], function() {
+			require([ 'kendo.core.min', $kendo_modules ], function() {
 				kendo.culture("ru-RU");
 				\$(document).ready(function() {
 					var options = $init_page_options;
