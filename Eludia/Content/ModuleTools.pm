@@ -93,7 +93,7 @@ sub require_config {
 
 		warn $perl_section;
 
-		eval ($is_utf ? 'use utf8; ' : '') . $perl_section;
+		eval (($is_utf ? 'use utf8; ' : '') . $perl_section);
 
 		if ($@) {
 
