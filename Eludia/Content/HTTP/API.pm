@@ -27,7 +27,7 @@ sub check_configuration_for_application {
 
 	while (my $s = <C>) {
 
-		next if $s =~ /\s*\#/;
+		next if $s =~ /^\s*\#/;
 
 		$cnf_src .= $s;
 
