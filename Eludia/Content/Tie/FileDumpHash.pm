@@ -117,7 +117,7 @@ sub FETCH_ {
 
 				$column -> {TYPE_NAME} = $1;
 
-				%options = %{$sql_types -> {$1} ||= {TYPE_NAME => $1}};
+				%options = %{Storable::dclone ($sql_types -> {$1} ||= {TYPE_NAME => $1})};
 
 				$options {FIELD_OPTIONS} -> {type} ||= $1;
 
