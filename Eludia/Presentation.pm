@@ -907,6 +907,7 @@ sub draw_form_field {
 		 &&  $field -> {type} ne 'color_excel'
 		 &&  $field -> {type} ne 'multi_select'
 		 &&  $field -> {type} ne 'dir'
+		 &&  $field -> {type} ne 'htmleditor'
 		 && ($field -> {type} ne 'text'    || !$conf -> {core_keep_textarea})
 		 && ($field -> {type} ne 'suggest' || !$_REQUEST {__suggest})
 	)

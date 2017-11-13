@@ -1459,19 +1459,59 @@ sub draw_form_field_htmleditor {
 
 	return '' if $options -> {off};
 
-	push @{$_REQUEST{__include_js}}, 'rte/fckeditor';
-
-	return <<EOH;
-		<SCRIPT language="javascript">
-			<!--
-				var oFCKeditor_$$options{name};
-				oFCKeditor_$$options{name} = new FCKeditor('_$$options{name}', '$$options{width}', '$$options{height}', '$$options{toolbar}');
-				oFCKeditor_$$options{name}.Value = '$$options{value}';
-				oFCKeditor_$$options{name}.Create ();
-			//-->
-		</SCRIPT>
+	if ($_REQUEST {__read_only} || $options -> {read_only}) {
+		my $html = '';
+		$$options{value} =~ s/\'/\\'/g;
+		push @{$_REQUEST {__include_css}}, 'tinymce/skins/lightgray/content.min';
+		my $script = '';
+		if (!$options -> {height}) {
+			$html .= '<iframe id="tinymce"></iframe>';
+			$script .= <<EOJS;
+				setTimeout(function() {
+					\$('#tinymce').css('height', \$('body', \$iframeContent).height() + 16);
+				});
+EOJS
+		} else {
+			$html .= <<EOH;
+				<iframe id="tinymce" style="height: $$options{height}px; overflow-y: scroll;"></iframe>
 EOH
+		}
 
+		$html .= <<EOH;
+			<script>
+				var \$iframeContent = \$('#tinymce').contents();
+				\$('body', \$iframeContent).addClass('mce-content-body');
+				\$('head', \$iframeContent).append('<link href="/i/tinymce/skins/lightgray/content.min.css" type="text/css" rel="stylesheet"/>');
+				\$('body', \$iframeContent).append('$$options{value}');
+				$script
+			</script>
+EOH
+		return $html;
+	} else {
+
+push @{$_REQUEST {__include_js}},  'tinymce/tinymce.min';
+
+	my $height = $options -> {height} || 400;
+$_REQUEST {__on_load} .= <<EOJS;
+	tinymce.init({
+		selector: "textarea#_$$options{name}",
+		theme: "modern",
+		plugins: [
+			"advlist autolink link lists preview pagebreak",
+			"searchreplace wordcount visualblocks code fullscreen nonbreaking",
+			"table contextmenu paste textcolor"
+		],
+		toolbar: " undo redo | styleselect | bold italic fontsizeselect fontselect | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | preview fullscreen | forecolor backcolor",
+		removed_menuitems: 'newdocument',
+
+		language : "ru",
+		height : "$height"
+	});
+EOJS
+		return <<EOH;
+			<textarea name='_$$options{name}' id='_$$options{name}' >$$options{value}</textarea>
+EOH
+	}
 }
 
 ################################################################################

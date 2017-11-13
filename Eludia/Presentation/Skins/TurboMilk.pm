@@ -1160,7 +1160,6 @@ sub draw_form_field_static {
 
 	my ($_SKIN, $options, $data) = @_;
 
-
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id} ||= $options -> {id} || "input_$$options{name}";
 
@@ -1725,7 +1724,7 @@ EOH
 
 }
 
-################################################################################
+###############################################################################
 
 sub draw_form_field_htmleditor {
 
@@ -1733,24 +1732,43 @@ sub draw_form_field_htmleditor {
 
 	return '' if $options -> {off};
 
-	push @{$_REQUEST{__include_js}}, 'rte/fckeditor';
-
-	return <<EOH;
-		<SCRIPT language="javascript">
-			<!--
-				var oFCKeditor_$$options{name};
-				oFCKeditor_$$options{name} = new FCKeditor('_$$options{name}', '$$options{width}', '$$options{height}', '$$options{toolbar}');
-				oFCKeditor_$$options{name}.Value = '$$options{value}';
-				oFCKeditor_$$options{name}.Create ();
-			//-->
-		</SCRIPT>
+	if ($_REQUEST {__read_only} || $options -> {read_only}) {
+		push @{$_REQUEST {__include_css}}, 'tiny_mce/tinymce';
+		return $options -> {height} ? <<EOH
+			<div class = "tinymce" style="height: $$options{height}; overflow-y: scroll;">
+				<span id="input_logon_message">$$options{value}</span>
+			</div>
 EOH
+			: <<EOH;
+			<div class = "tinymce">
+				<span id="input_logon_message">$$options{value}</span>
+			</div>
+EOH
+	} else {
 
+	push @{$_REQUEST {__include_js}},  'tiny_mce/jquery.tinymce';
+	push @{$_REQUEST {__include_js}},  'tiny_mce/tiny_mce';
+
+$_REQUEST {__on_load} .= <<EOJS;
+	tinymce.init({
+		selector : "textarea#_$$options{name}",
+		theme : "advanced",
+		plugins : "autolink,lists,pagebreak,style,layer,table,save,advhr,advimage,advlink,emotions,iespell,inlinepopups,insertdatetime,preview,media,searchreplace,print,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,xhtmlxtras,template",
+
+		theme_advanced_buttons1 : "cut,copy,paste,pastetext,pasteword,|,search,replace,|,bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,formatselect,fontselect,fontsizeselect,|,forecolor,backcolor,bullist,numlist",
+		theme_advanced_buttons2 : "undo,redo,|,outdent,indent,blockquote,|,link,unlink,code,|,tablecontrols,|,hr,removeformat,visualaid,|,sub,sup,|,advhr,visualchars,|,preview,fullscreen",
+		theme_advanced_toolbar_location : "top",
+		theme_advanced_toolbar_align : "left",
+		theme_advanced_statusbar_location : "bottom",
+		theme_advanced_resizing : true,
+		language: "ru"
+	});
+EOJS
+		return <<EOH;
+			<textarea name='_$$options{name}' id='_$$options{name}' rows='$$params{rows}'>$$options{value}</textarea>
+EOH
+	}
 }
-
-################################################################################
-# TOOLBARS
-################################################################################
 
 ################################################################################
 
