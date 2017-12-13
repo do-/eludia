@@ -1301,6 +1301,7 @@ sub draw_form_field_checkboxes {
 				$subhtml .= $value -> {html};
 				$subhtml .= $value -> {inline} ? qq{</span>} : '';
 				$subattr = qq{onClick="setVisible('$id', checked)"} unless $options -> {expand_all};
+				$_REQUEST {__on_load} .= qq{setVisible("$id", @{[$checked ? 1 : 0]});} unless $options -> {expand_all};
 			}
 			elsif ($value -> {items} && @{$value -> {items}} > 0) {
 
