@@ -2513,6 +2513,10 @@ sub draw_centered_toolbar_button {
 	my $btn_r = 'btn_r';
 	my $btn_r_width = 6;
 
+	my $js_restore_cursor = "document.body.style.cursor = 'wait'; this.style.cursor = 'wait';";
+
+	$options -> {onclick} .= "$js_restore_cursor void(0);";
+
 	if (@{$options -> {items}} > 0) {
 
 		$btn_r = 'btn_r_multi';
@@ -2537,8 +2541,8 @@ EOH
 	$html .= <<EOH;
 				<tr>
 					<td width=6><img src="$_REQUEST{__static_url}/btn_l.gif?$_REQUEST{__static_salt}" width="6" height="25" border="0"></td>
-					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}"><img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=1 align=absmiddle>${nbsp}</a></td>
-					<td background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="absmiddle" align="center" nowrap><a class="button" $$options{onclick} href="$$options{href}" id="$$options{id}" target="$$options{target}" $title>$$options{label}</a>${nbsp}${nbsp}</td>
+					<td width=30 background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="middle" align="center" nowrap><a class="button" onclick="$$options{onclick}" href="$$options{href}" id="$$options{id}" target="$$options{target}"><img src="$img_path" alt="$$options{label}" border=0 hspace=0 vspace=1 align=absmiddle>${nbsp}</a></td>
+					<td background="$_REQUEST{__static_url}/btn_bg.gif?$_REQUEST{__static_salt}" valign="absmiddle" align="center" nowrap><a class="button" onclick="$$options{onclick}" href="$$options{href}" id="$$options{id}" target="$$options{target}" $title>$$options{label}</a>${nbsp}${nbsp}</td>
 					<td width=$btn_r_width><img src="$_REQUEST{__static_url}/${btn_r}.gif?$_REQUEST{__static_salt}" width="$btn_r_width" height="25" border="0"></td>
 				</tr>
 			</table>
