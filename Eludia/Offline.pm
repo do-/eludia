@@ -1,4 +1,4 @@
-use POSIX qw(setuid setgid getuid getgid);
+use POSIX qw(setuid setgid getuid);
 no warnings;
 
 ################################################################################
@@ -31,6 +31,20 @@ sub lock_file_name () {
 
 ################################################################################
 
+sub set_uidgid {
+
+	my ($uid, $gid, $groups) = @_;
+
+	my $all_groups = "$gid " . join (" ", sort {$a <=> $b } $gid,@$groups);
+
+	setgid ($gid);
+	$) = $all_groups;
+	setuid ($uid);
+
+}
+
+################################################################################
+
 sub initialize_offline_script_execution {
 
 	my $preconf = $_[0];
@@ -39,21 +53,44 @@ sub initialize_offline_script_execution {
 
 	my $current_uid = getuid();
 
-	my $new_uid,$new_gid;
+	my $new_uid, $new_gid;
+
+	my $new_groups;
 
 	if ($user && $^O ne 'MSWin32') {
 
-		my ($pwName, $pwCode, $pwUid, $pwGid, $pwQuota, $pwComment, $pwGcos, $pwHome, $pwLogprog) = getpwnam($user);
+		my ($user_uid, $user_gid, $user_home, $user_shell) = (getpwnam ($user))[2,3,7,8];
 
-		if ($pwUid != $current_uid && $current_uid != 0) {
+		if (! defined ($user_uid) or ! defined ($user_gid)) {
 
-			warn "Can't change uid to '$user', cos you are not root user.";
+			warn "Can't find uid and gid of user '$user'";
+
 			exit;
 
 		}
 
-		$new_uid = $pwUid;
-		$new_gid = $pwGid;
+		if ($user_uid != $current_uid && $current_uid != 0) {
+
+			warn "Can't change uid to '$user', cos you are not root user.";
+
+			exit;
+
+		}
+
+		while (my ($gr_name, $gr_gid, $gr_mem) = (getgrent ())[0, 2, 3]) {
+
+			my $members = {map {$_ => 1} split (/\s/, $gr_mem)};
+
+			if (exists ($members -> {$user})) {
+
+				push (@{$new_groups}, $gr_gid);
+
+			}
+
+		}
+
+		$new_uid = $user_uid;
+		$new_gid = $user_gid;
 
 	}
 
@@ -89,8 +126,7 @@ sub initialize_offline_script_execution {
 
 				}
 
-				setgid ($new_gid);
-				setuid ($new_uid);
+				set_uidgid ($new_gid, $new_gid, $new_groups);
 
 			}
 
@@ -118,8 +154,7 @@ sub initialize_offline_script_execution {
 
 		if ( $new_uid ) {
 
-			setgid ($new_gid);
-			setuid ($new_uid);
+			set_uidgid ($new_gid, $new_gid, $new_groups);
 
 		}
 
