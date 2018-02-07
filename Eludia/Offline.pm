@@ -126,7 +126,7 @@ sub initialize_offline_script_execution {
 
 				}
 
-				set_uidgid ($new_gid, $new_gid, $new_groups);
+				set_uidgid ($new_uid, $new_gid, $new_groups);
 
 			}
 
@@ -154,7 +154,7 @@ sub initialize_offline_script_execution {
 
 		if ( $new_uid ) {
 
-			set_uidgid ($new_gid, $new_gid, $new_groups);
+			set_uidgid ($new_uid, $new_gid, $new_groups);
 
 		}
 
