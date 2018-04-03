@@ -1256,11 +1256,17 @@ sub sql_safe_execute {
 	my ($st, $params, $dbh) = @_;
 
 	if ($ENV {ELUDIA_SILENT}) {
+		__profile_in ('sql.sql_execute');
 		$st -> execute (@$params);
+		__profile_out ('sql.sql_execute');
 		return;
 	}
 
+	__profile_in ('sql.sql_execute');
+
 	eval {$st -> execute (@$params)};
+
+	__profile_out ('sql.sql_execute', {label => $st -> {Statement} . ' ' . (join ', ', map {$db -> quote ($_)} @$params)});
 
 	my $error = $@;
 
