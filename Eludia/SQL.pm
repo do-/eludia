@@ -881,7 +881,7 @@ EOS
 
 	}
 
-	sql_do_update ($table_name, \@empty_fields) if @empty_fields > 0;
+	sql_do_update ($table_name, \@empty_fields, {id => $new_id}) if @empty_fields > 0;
 
 	delete $DB_MODEL -> {aliases};
 
