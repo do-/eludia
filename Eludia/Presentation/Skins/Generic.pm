@@ -370,7 +370,7 @@ sub __adjust_button_href {
 	}
 	elsif ($options -> {no_wait_cursor}) {
 
-		$options -> {onclick} = qq {onclick="$cursor_state void(0);"};
+		$options -> {onclick} .= qq {$cursor_state void(0);};
 
 	}
 
