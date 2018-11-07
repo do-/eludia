@@ -119,6 +119,7 @@ sub send_mail {
 
 	$preconf -> {mail} -> {from} -> {mail} ||= $preconf -> {mail} -> {from} -> {address};
 	$options -> {from}                     ||= $preconf -> {mail} -> {from};
+	$options -> {from}                       = { mail => $options -> {from} } if ref $options -> {from} ne HASH;
 	$from                                    = encode_mail_address ($options -> {from}, $options);
 
 		##### Message subject
