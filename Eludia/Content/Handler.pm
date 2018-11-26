@@ -660,6 +660,9 @@ sub handle_request_of_type_action {
 
 	unless ($_REQUEST {__response_sent}) {
 
+		delete $_REQUEST {sql_query};
+		delete $_REQUEST {sql_params};
+
 		my $redirect_url = $action eq 'delete' && !$_REQUEST {__refresh_tree}? esc_href () :
 			create_url (
 				action => '',
