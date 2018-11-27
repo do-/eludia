@@ -32,6 +32,9 @@ sub setup_page_content {
 
 	$_REQUEST {__allow_check___query} = 1;
 
+	delete $_REQUEST {sql_query};
+	delete $_REQUEST {sql_params};
+
 	call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content});
 
 	$_REQUEST {__allow_check___query} = 0;

@@ -634,6 +634,9 @@ sub handle_request_of_type_action {
 
 	return handle_error ($page) if $_REQUEST {error};
 
+	delete $_REQUEST {sql_query};
+	delete $_REQUEST {sql_params};
+
 	if ($_REQUEST {__edited_cells_table}) {
 
 		my $skin = $_REQUEST {__skin};
@@ -659,9 +662,6 @@ sub handle_request_of_type_action {
 	}
 
 	unless ($_REQUEST {__response_sent}) {
-
-		delete $_REQUEST {sql_query};
-		delete $_REQUEST {sql_params};
 
 		my $redirect_url = $action eq 'delete' && !$_REQUEST {__refresh_tree}? esc_href () :
 			create_url (
@@ -693,6 +693,9 @@ sub handle_request_of_type_suggest {
 
 	$_REQUEST {__edit} = 1;
 	eval { $_REQUEST {__page_content} = $page -> {content} = call_for_role (($_REQUEST {id} ? 'get_item_of_' : 'select_') . $page -> {type})};
+
+	delete $_REQUEST {sql_query};
+	delete $_REQUEST {sql_params};
 
 	delete $_REQUEST {__read_only};
 	call_for_role (($_REQUEST {id} ? 'draw_item_of_' : 'draw_') . $page -> {type}, $page -> {content});

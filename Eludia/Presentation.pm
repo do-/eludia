@@ -2941,6 +2941,9 @@ sub draw_page {
 
 	push @{$_REQUEST {__invisibles}}, 'invisible';
 
+	delete $_REQUEST {sql_query};
+	delete $_REQUEST {sql_params};
+
 	eval {
 		$_SKIN -> {subset}       = $preconf -> {hide_subsets} ? undef : $_SUBSET;
 		$_SKIN -> start_page ($page) if $_SKIN -> {options} -> {no_buffering};
