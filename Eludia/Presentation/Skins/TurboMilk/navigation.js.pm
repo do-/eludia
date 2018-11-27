@@ -1141,6 +1141,8 @@ function setAndSubmit (name, values) {
 
 	for (var i in values) {
 
+		if (!values.hasOwnProperty(i)) continue;
+
 		if (elements [i] == undefined) {
 
 			$('<input>').attr({
