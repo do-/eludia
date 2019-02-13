@@ -533,12 +533,7 @@ sub draw_text_cell {
 
 	if (defined ($data -> {label}) && !($data -> {off})) {
 
-		if ($data -> {attributes} -> {title} && $data -> {picture}) {
-			$txt = $data -> {attributes} -> {title};
-		}
-		else {
-			$txt = $data -> {label};
-		}
+		$txt = $data -> {label};
 
 		if ($txt =~ /^(\-|\+)?\d+(\.?\d+|)$/) {
 			$format -> {align} = 'right';
