@@ -518,11 +518,11 @@ sub draw_text_cell {
 
 	my $format =  {
 		text_wrap => 1,
-     	border    => 1,
-     	valign	  => 'top',
-		align 	  => 'left',
-     	font      => $_REQUEST {__xl_font},
-     	size      => $_REQUEST {__xl_font_size},
+		border    => 1,
+		valign    => 'top',
+		align     => 'left',
+		font      => $_REQUEST {__xl_font},
+		size      => $_REQUEST {__xl_font_size},
 	};
 
 	foreach (@{$worksheet -> {__united_cells} -> {$_REQUEST {__xl_row}}}) {
