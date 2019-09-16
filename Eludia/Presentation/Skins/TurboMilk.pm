@@ -407,6 +407,12 @@ sub _draw_input_datetime {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
+	if ($data -> {input_attrs}) {
+		my $is_disabled = delete $data -> {input_attrs} {disabled};
+		$attributes .= ' disabled ' if ($is_disabled);
+		$attributes .= dump_attributes ($data -> {input_attrs});
+	}
+
 	my $shows_time = $options -> {no_time} ? 'false' : 'true';
 
 	my $html = <<EOH;
@@ -2952,8 +2958,15 @@ sub draw_radio_cell {
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
+	my $attr_input;
+	if ($data -> {input_attrs}) {
+		my $is_disabled = delete $data -> {input_attrs} {disabled};
+		$attr_input .= ' disabled ' if ($is_disabled);
+		$attr_input .= dump_attributes ($data -> {input_attrs});
+	}
+
 	my $html = ($options -> {editor} ? '<div' : '<td')
-		. qq { $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'>$label_tail}
+		. qq { $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} $attr_input value='$$data{value}'>$label_tail}
 		. ($options -> {editor} ? '</div>' : '</td>');
 
 	return $html;
@@ -3005,8 +3018,15 @@ sub draw_checkbox_cell {
 
 	my $label = $data -> {label} ? '&nbsp;' . $data -> {label} : '';
 
+	my $attr_input;
+	if ($data -> {input_attrs}) {
+		my $is_disabled = delete $data -> {input_attrs} {disabled};
+		$attr_input .= ' disabled ' if ($is_disabled);
+		$attr_input .= dump_attributes ($data -> {input_attrs});
+	}
+
 	my $html = ($options -> {editor} ? '<div' : '<td')
-		. qq{$$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>$label$label_tail}
+		. qq{$$options{data} $attributes><input class=cbx type=checkbox name=$$data{name} $$data{checked} $attr_input value='$$data{value}'>$label$label_tail}
 		. ($options -> {editor} ? '</div>' : '</td>');
 
 	return $html;
@@ -3091,12 +3111,21 @@ EOJS
 
 	}
 
+	my $attr_input;
+	my $attrs = $data -> {select_attrs} || $data -> {input_attrs};
+	if ($attrs) {
+		my $is_disabled = delete $attrs -> {disabled};
+		$attr_input .= ' disabled ' if ($is_disabled);
+		$attr_input .= dump_attributes ($data -> {input_attrs});
+	}
+
 	my $html = ($options -> {editor} ? '<div ' : '<td ')
 		. qq {$attributes><select
 			$s_attributes
 			name="$$data{name}"
 			onChange="is_dirty=true; $$data{onChange}"
 			onkeypress='typeAhead();'
+			$attr_input
 			$multiple
 		};
 
@@ -3271,6 +3300,12 @@ EOH
 
 	my $attributes = dump_attributes ($data -> {attributes});
 	$attr_input = dump_attributes ($attr_input);
+
+	if ($data -> {input_attrs}) {
+		my $is_disabled = delete $data -> {input_attrs} {disabled};
+		$attr_input .= ' disabled ' if ($is_disabled);
+		$attr_input .= dump_attributes ($data -> {input_attrs});
+	}
 
 	$data -> {label} =~ s{\"}{\&quot;}gsm;
 
