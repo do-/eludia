@@ -237,6 +237,12 @@ sub _draw_input_datetime {
 
 	my $attributes = dump_attributes ($options -> {attributes});
 
+	if ($data -> {input_attrs}) {
+		my $is_disabled = delete $data -> {input_attrs} {disabled};
+		$attributes .= ' disabled ' if ($is_disabled);
+		$attributes .= dump_attributes ($data -> {input_attrs});
+	}
+
 	my $picker_type = $options -> {no_time}? 'datepicker' : 'datetimepicker';
 
 	my $html = <<EOH;
@@ -2613,7 +2619,14 @@ sub draw_radio_cell {
 
 	my $attributes = dump_attributes ($data -> {attributes});
 
-	return qq {<td $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} value='$$data{value}'>$label_tail</td>};
+	my $attr_input;
+	if ($data -> {input_attrs}) {
+		my $is_disabled = delete $data -> {input_attrs} {disabled};
+		$attr_input .= ' disabled ' if ($is_disabled);
+		$attr_input .= dump_attributes ($data -> {input_attrs});
+	}
+
+	return qq {<td $$options{data} $attributes><input class=cbx type=radio name=$$data{name} $$data{checked} $attr_input value='$$data{value}'>$label_tail</td>};
 
 }
 
@@ -2649,7 +2662,14 @@ sub draw_checkbox_cell {
 
 	my $label = $data -> {label} ? '&nbsp;' . $data -> {label} : '';
 
-	return qq {<td $$options{data} $attributes><input tabindex=$data->{tabindex} class=cbx type=checkbox name=$$data{name} $$data{checked} value='$$data{value}'>${label}${label_tail}</td>};
+	my $attr_input;
+	if ($data -> {input_attrs}) {
+		my $is_disabled = delete $data -> {input_attrs} {disabled};
+		$attr_input .= ' disabled ' if ($is_disabled);
+		$attr_input .= dump_attributes ($data -> {input_attrs});
+	}
+
+	return qq {<td $$options{data} $attributes><input tabindex=$data->{tabindex} class=cbx type=checkbox name=$$data{name} $$data{checked} $attr_input value='$$data{value}'>${label}${label_tail}</td>};
 
 }
 
@@ -2709,11 +2729,20 @@ EOJS
 
 	my $id_select = $data -> {id} || "_$data->{name}_select";
 
+	my $attr_input;
+	my $attrs = $data -> {select_attrs} || $data -> {input_attrs};
+	if ($attrs) {
+		my $is_disabled = delete $attrs -> {disabled};
+		$attr_input .= ' disabled ' if ($is_disabled);
+		$attr_input .= dump_attributes ($data -> {input_attrs});
+	}
+
 	my $html = qq {<td $attributes><select
 		$s_attributes
 		id="$id_select"
 		name="$$data{name}"
 		onChange="is_dirty=true; $$data{onChange}"
+		$attr_input
 		$multiple
 	};
 
@@ -2859,6 +2888,12 @@ sub draw_input_cell {
 
 	my $attributes = dump_attributes ($data -> {attributes});
 	$attr_input = dump_attributes ($attr_input);
+
+	if ($data -> {input_attrs}) {
+		my $is_disabled = delete $data -> {input_attrs} {disabled};
+		$attr_input .= ' disabled ' if ($is_disabled);
+		$attr_input .= dump_attributes ($data -> {input_attrs});
+	}
 
 	$data -> {label} =~ s{\"}{\&quot;}gsm;
 
