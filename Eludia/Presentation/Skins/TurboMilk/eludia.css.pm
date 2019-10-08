@@ -65,7 +65,7 @@ div.table-container-x {
 	OVERFLOW-X: auto;
 	PADDING-BOTTOM: 18px;
 	MARGIN: 0px;
-	WIDTH: expression(document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 16));
+	WIDTH: expression(document.body.offsetWidth > 1024 ? document.body.offsetWidth - (window.name == '_content_iframe' ? 32 : 16) : '100%');
 	PADDING-TOP: 0px;
 
 	scrollbar-base-color:#d6d3ce;
