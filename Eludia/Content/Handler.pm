@@ -293,7 +293,7 @@ sub setup_request_params {
 
 	setup_request_params_for_toolbar_inputs () if $_REQUEST {__toolbar_inputs};
 
-	__profile_out ('handler.setup_request_params', {label => "type='$_REQUEST_VERBATIM{type}' id='$_REQUEST_VERBATIM{id}' action='$_REQUEST_VERBATIM{action}'"});
+	__profile_out ('handler.setup_request_params', {label => "type='$_REQUEST_VERBATIM{type}' id='$_REQUEST_VERBATIM{id}' action='$_REQUEST_VERBATIM{action}' id_user='$_USER->{id}'"});
 
 }
 
@@ -431,7 +431,7 @@ sub setup_page {
 	if ($ENV {FCGI_ROLE}) {
 		my $process = $0;
 		$process =~ s#(.*/)?([\w\.]+).*#$2#;
-		$process .= " $ENV{SERVER_NAME}: type=$_REQUEST{type}, id=$_REQUEST{id}, action=$_REQUEST{action}";
+		$process .= " $ENV{SERVER_NAME}: type=$_REQUEST{type}, id=$_REQUEST{id}, action=$_REQUEST{action}, id_user=$_USER->{id}";
 		$0 = $process;
 	}
 
