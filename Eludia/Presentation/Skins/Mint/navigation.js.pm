@@ -1649,6 +1649,15 @@ TableSlider.prototype.onMouseDown = function (event, self) {
 		if (event.target.tagName != 'TD')
 			return;
 
+		var table = event.currentTarget;
+
+		if(event.which != 1) {
+			$(table).removeClass ('selected');
+			$(table).unbind('mouseover');
+			self.calculateSelections ();
+			return;
+		}
+
 		self.cell_off ();
 
 		var td = event.target,
