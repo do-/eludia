@@ -3190,6 +3190,7 @@ sub draw_string_voc_cell {
 			if (result.result == 'ok') {
 				document.getElementById('$$data{name}_label').value = result.label;
 				document.getElementById('$$data{name}_id').value = result.id;
+$data->{onChange}
 			}
 EOJS
 	}
