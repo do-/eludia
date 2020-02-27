@@ -1260,7 +1260,11 @@ sub sql_safe_execute {
 		return;
 	}
 
+	__profile_in ('sql.sql_execute');
+
 	eval {$st -> execute (@$params)};
+
+	__profile_out ('sql.sql_execute', {label => $st -> {Statement} . ' ' . (join ', ', map {$db -> quote ($_)} @$params)});
 
 	my $error = $@;
 
