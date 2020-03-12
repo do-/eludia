@@ -1246,6 +1246,10 @@ sub decode_rus {
 
 	my ($row, $col, $label, @args) = @_;
 
+	if (Encode::is_utf8 ($label)) {
+		return undef;
+	}
+
 	$label = decode ($i18n -> {_charset}, $label);
 
     return $worksheet -> write ($row, $col, $label, @args);
@@ -1266,7 +1270,6 @@ sub processing_string{
 	$string =~ s/\<(b|h)r\/?\>/\n/ig;
 	$string =~ s/&rArr;/ \=\> /ig;
 
-	$string =~ s/&amp;(#\d+)/&$1/g;
 	$string = Encode::decode ('cp-1251', $string)
 			if $preconf -> {core_skin} ne 'Ken';
 
