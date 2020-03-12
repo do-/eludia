@@ -1266,6 +1266,10 @@ sub processing_string{
 	$string =~ s/\<(b|h)r\/?\>/\n/ig;
 	$string =~ s/&rArr;/ \=\> /ig;
 
+	$string =~ s/&amp;(#\d+)/&$1/g;
+	$string = Encode::decode ('cp-1251', $string)
+			if $preconf -> {core_skin} ne 'Ken';
+
 	$string =~ s/&#x([a-fA-F0-9]+);/"&#". hex($1) .";"/ge;
 	$string =~ s/&#([0-9]+);/chr($1)." "/ge;
 
