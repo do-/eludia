@@ -519,7 +519,7 @@ sub draw_text_cell {
 	my $format =  {
 		text_wrap => 1,
 		border    => 1,
-		valign    => 'top',
+		valign    => $data -> {options} -> {valign} || 'top',
 		align     => 'left',
 		font      => $_REQUEST {__xl_font},
 		size      => $_REQUEST {__xl_font_size},
