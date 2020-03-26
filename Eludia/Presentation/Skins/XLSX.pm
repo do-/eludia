@@ -519,7 +519,7 @@ sub draw_text_cell {
 	my $format =  {
 		text_wrap => 1,
 		border    => 1,
-		valign    => 'top',
+		valign    => $data -> {options} -> {valign} || 'top',
 		align     => 'left',
 		font      => $_REQUEST {__xl_font},
 		size      => $_REQUEST {__xl_font_size},
@@ -1246,6 +1246,10 @@ sub decode_rus {
 
 	my ($row, $col, $label, @args) = @_;
 
+	if (Encode::is_utf8 ($label)) {
+		return undef;
+	}
+
 	$label = decode ($i18n -> {_charset}, $label);
 
     return $worksheet -> write ($row, $col, $label, @args);
@@ -1265,6 +1269,9 @@ sub processing_string{
 	$string =~ s/\<br\/?\>$//ig;
 	$string =~ s/\<(b|h)r\/?\>/\n/ig;
 	$string =~ s/&rArr;/ \=\> /ig;
+
+	$string = Encode::decode ('cp-1251', $string)
+			if $preconf -> {core_skin} ne 'Ken';
 
 	$string =~ s/&#x([a-fA-F0-9]+);/"&#". hex($1) .";"/ge;
 	$string =~ s/&#([0-9]+);/chr($1)." "/ge;
