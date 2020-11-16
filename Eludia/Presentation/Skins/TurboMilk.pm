@@ -1166,6 +1166,11 @@ sub draw_form_field_static {
 
 	my ($_SKIN, $options, $data) = @_;
 
+	if ($_REQUEST {__read_only} && !$options -> {href} && !ref $options -> {value} && $options -> {value} =~ m/https?:/i) {
+		$options -> {value} =~ s/(https?:[^\s\|]+)(\s|$)/\[$1\|$1\]$2/ig; # http://link -> [http://link|label]
+		$options -> {value} =~ s/\[(https?:\S+)\|([^\]]+)\]/<a href="$1" target="_blank" class="form-very-active-inputs" title="$1">$2<\/a>/ig;
+	}
+
 	$options -> {attributes} ||= {};
 	$options -> {attributes} -> {id} ||= $options -> {id} || "input_$$options{name}";
 
