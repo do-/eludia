@@ -2377,7 +2377,7 @@ sub draw_table {
 		};
 		unshift @{$options -> {top_toolbar}}, $toolbar_options;
 
-		my $href = {href => {ids => undef, add_id => undef}};
+		my $href = {href => {ids => undef, add_id => undef, clear_id => undef}};
 		check_href ($href);
 		$_REQUEST {ids} ||= '-1';
 
