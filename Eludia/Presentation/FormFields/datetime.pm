@@ -15,6 +15,11 @@ sub draw_form_field_datetime {
 		$options -> {attributes} -> {maxlength} = $options -> {size} - 1;
 	}
 
+	if (defined $options -> {detail}) {
+		$options -> {value_src} = "\$('#input_$options->{name}')[0].value";
+		$options -> {onClose} .= js_detail ($options);
+	}
+
 	if ($r -> headers_in -> {'User-Agent'} =~ /MSIE 5\.0/) {
 		$options -> {type} = 'string';
 		return draw_form_field_of_type ($options, $data);
