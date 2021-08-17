@@ -1,8 +1,7 @@
 language: perl
 
 perl:
-  - "5.24"
-  - "5.20"
+  - "5.28"
   - "5.14"
 
 services:
@@ -14,7 +13,8 @@ install:
   - cpanm --quiet --notest --installdeps .
 
 before_script:
-  - mysql -e 'create database eludia_test'
+  - perl -MDBD::mysql -e 'print $DBD::mysql::VERSION ."\n"'
+  - mysql -e 'CREATE DATABASE eludia_test CHARACTER SET cp1251 COLLATE cp1251_general_ci'
   - cd ..
   - git clone https://github.com/do-/default-eludia.pm-application.git
   - cd default-eludia.pm-application
