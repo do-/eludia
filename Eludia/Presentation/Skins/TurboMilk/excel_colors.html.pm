@@ -11,7 +11,7 @@
 
 	<SCRIPT LANGUAGE="JavaScript" FOR="cell" EVENT="onclick">
 
-	  window.returnValue = event.srcElement.value;
+	  window.returnValue = event.srcElement.getAttribute('value');
 	  window.close ();
 
 	</SCRIPT>
