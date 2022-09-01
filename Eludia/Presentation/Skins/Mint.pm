@@ -1205,15 +1205,13 @@ EOJS
 
 			re = /&_?salt=[\\d\\.]*/g;
 			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
-
-			re = /&q=[^&]*/i;
+			re = /&$options->{other}->{param}=[^&]*/i;
 			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
-
-			dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&q=' + q;
+			dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&$options->{other}->{param}=' + q;
 			$url
 EOJS
-	}
 
+	}
 
 	my $html = qq[<span style="white-space: nowrap" id="_$options->{name}_span"><input type="text" $attributes id="${options}_label" >]
 
@@ -2816,10 +2814,10 @@ EOJS
 			re = /&_?salt=[\\d\\.]*/g;
 			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
 
-			re = /&q=[^&]*/i;
+			re = /&$options->{other}->{param}=[^&]*/i;
 			dialogs[$url_dialog_id].href = dialogs[$url_dialog_id].href.replace(re, '');
 
-			dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&q=' + q;
+			dialogs[$url_dialog_id].href += '&salt=' + Math.random () + '&$data->{other}->{param}=' + q;
 			$url
 EOJS
 
