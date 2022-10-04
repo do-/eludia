@@ -656,8 +656,10 @@ sub draw_item_of___queries {
 						{
 							name  => $o -> {order} . '_desc',
 							type  => 'select',
-							values => [{id => 1, label => $i18n -> {descending}}],
-							empty => $i18n -> {ascending},
+							values => [
+								{id => 0, label => $i18n -> {ascending}},
+								{id => 1, label => $i18n -> {descending}}
+							],
 							value => $_QUERY -> {content} -> {columns} -> {$o -> {order} || $o -> {no_order}} -> {desc},
 							off   => $o -> {no_column} || $o -> {no_order},
 						},
