@@ -14,7 +14,7 @@ my @tables = ({
 		fake               => {TYPE_NAME => 'bigint'},
 		label              => {TYPE_NAME => 'varchar', COLUMN_SIZE => 255},
 		id_status          => {TYPE_NAME => 'int', label => 'Статус'},
-		dt_status   => {TYPE_NAME => 'datetime', label => 'Дата изменения статуса'},
+		dt_status          => {TYPE_NAME => 'datetime', label => 'Дата изменения статуса'},
 
 	},
 

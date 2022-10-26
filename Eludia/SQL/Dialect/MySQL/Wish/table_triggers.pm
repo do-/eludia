@@ -61,7 +61,6 @@ sub wish_to_actually_create_table_triggers {
 			$sql =~ s{^ }{};
 			$sql =~ s{ $}{};
 
-			local $conf -> {core_auto_postgresql} = 0;
 			sql_do ($sql);
 		}
 
