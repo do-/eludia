@@ -1442,6 +1442,12 @@ sub assert {
 
 			wish (table_keys    => [map {{name => $_, parts => $table -> {keys} -> {$_}}} (keys %{$table -> {keys}})],    {table => $table -> {name}, table_def => $table}) if exists $table -> {keys};
 
+			if (exists $table -> {triggers}) {
+
+				wish (table_triggers => [map {{name => $_, body => $table -> {triggers} -> {$_}}} (keys %{$table -> {triggers}})], {table => $table -> {name}});
+
+			}
+
 			if (exists $table -> {data} && ref $table -> {data} eq ARRAY && @{$table -> {data}} > 0) {
 
 				wish (table_data => $table -> {data}, {
