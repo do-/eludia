@@ -647,8 +647,8 @@ input.form-mandatory-deleted, select.form-mandatory-deleted, textarea.form-manda
 	padding-left: 3px;
 	padding-right: 3px;
 }
-input.k-textbox.form-mandatory-inputs, span.form-mandatory-inputs .k-dropdown-wrap, div.form-mandatory-inputs {
-	background-color: #F7F7AD!important;
+input.k-textbox.form-mandatory-inputs, textarea.k-textbox.form-mandatory-inputs , span.form-mandatory-inputs .k-dropdown-wrap, div.form-mandatory-inputs {
+	background-color: #f7f7ad !important;
 }
 
 input.disabled {
