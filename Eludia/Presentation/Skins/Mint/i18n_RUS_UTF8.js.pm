@@ -6,6 +6,7 @@ var i18n = {
 	count : 'Кол-во',
 	sum   : 'Сумма',
 	clipboard_help: "Для копирования нажмите CTRL+C, потом ENTER",
+	no_data_found : 'Список пуст',
 	clipboard_copied: "Скопировал"
 };
 

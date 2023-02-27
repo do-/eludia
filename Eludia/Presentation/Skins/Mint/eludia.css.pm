@@ -410,13 +410,11 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 	FONT-SIZE: 11pt;
 	COLOR: #2f3237;
 	background-color: #f2f2f2;
-
 	padding: 10px 10px;
-
 	border-color: #d6d3ce;
 	border-style:solid;
-
 	border-width: 0 1px 1px 0;
+	white-space: pre-wrap;
 }
 
 .form-deleted-banner {
@@ -573,8 +571,13 @@ A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, 
 }
 
 .form-very-active-inputs {
-	background-color: #fff!important;
 	font-size: 13px!important;
+	font-weight: bold;
+}
+
+.form-very-deleted-inputs {
+	font-size: 13px!important;
+	font-weight: bold;
 }
 
 INPUT {
@@ -634,7 +637,7 @@ input.form-active-deleted, select.form-active-deleted, textarea.form-active-dele
 input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
 	FONT-SIZE: 13px;
 	COLOR: #000000;
-	background-color: #f7f7ad !important;
+	background-color: #f7f7ad;
 	border: 1px #7f9db9 solid;
 	padding-left: 3px;
 	padding-right: 3px;
@@ -642,13 +645,13 @@ input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandato
 input.form-mandatory-deleted, select.form-mandatory-deleted, textarea.form-mandatory-deleted {
 	FONT-SIZE: 13px;
 	COLOR: #000000;
-	background-color: #f7f7ad;
+	background-color: #F7F7AD;
 	border: 2px solid black;
 	padding-left: 3px;
 	padding-right: 3px;
 }
-input.k-textbox.form-mandatory-inputs, textarea.k-textbox.form-mandatory-inputs , span.form-mandatory-inputs .k-dropdown-wrap, div.form-mandatory-inputs {
-	background-color: #f7f7ad !important;
+input.k-textbox.form-mandatory-inputs, textarea.k-textbox.form-mandatory-inputs, span.form-mandatory-inputs .k-dropdown-wrap, div.form-mandatory-inputs {
+	background-color: #F7F7AD !important;
 }
 
 input.disabled {
@@ -690,23 +693,53 @@ a.hint {
 
 .zeroclipboard-is-hover { cursor:pointer !important; }
 
-/* Tooltip */
-.k-animation-container .k-widget.k-tooltip {
-	background: #f7f7ad;
-	color: #333;
-	border-color: #333;
-}
-.k-callout-n {
-	border-bottom-color: #333;
+.k-grid tr td.empty {
+	box-shadow: inset 0 0 1px 1px rgba(255, 0, 0, 0.7);
 }
 
-/* combobox */
-.k-widget.k-combobox .k-input {
-	text-overflow: ellipsis;
+.k-grid a.k-button.k-button-icontext.k-grid-delete {
+	padding: 3px;
+	line-height: normal;
+	min-width: auto;
 }
 
-/* popup */
-.k-popup .k-item {
-	overflow: hidden;
-	text-overflow: ellipsis;
+.k-grid a.k-button.k-button-icontext.k-grid-delete .k-icon {
+	display: none;
+}
+
+.k-numerictextbox .k-link {
+	height: 50%!important;
+}
+.k-numerictextbox .k-link .k-icon {
+	position: inherit!important;
+	margin: 3px 0 0 0!important;
+}
+.k-numerictextbox input[type=text] {
+	box-sizing: border-box;
+}
+#waiting_screen {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	background-color: #fff;
+	z-index: 9999;
+}
+#waiting_screen .content {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left: -12px;
+	margin-top: -12px;
+}
+#waiting_screen .content img {
+	width: 24px;
+}
+
+/* clearfix */
+.clearfix:after {
+	content: "";
+	display: table;
+	clear: both;
 }

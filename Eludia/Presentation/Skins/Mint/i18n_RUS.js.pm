@@ -9,6 +9,7 @@ define(
 			clipboard_help: "Для копирования нажмите CTRL+C, потом ENTER",
 			clipboard_copied: "Скопировал",
 			count : 'Кол-во',
+			no_data_found : 'Список пуст',
 			sum   : 'Сумма'
 		};
 

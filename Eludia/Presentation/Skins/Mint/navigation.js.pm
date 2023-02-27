@@ -14,16 +14,6 @@
  * Date: 30-03-2014
  */!function(a,b){"use strict";var c,d;if(a.uaMatch=function(a){a=a.toLowerCase();var b=/(opr)[\/]([\w.]+)/.exec(a)||/(chrome)[ \/]([\w.]+)/.exec(a)||/(version)[ \/]([\w.]+).*(safari)[ \/]([\w.]+)/.exec(a)||/(webkit)[ \/]([\w.]+)/.exec(a)||/(opera)(?:.*version|)[ \/]([\w.]+)/.exec(a)||/(msie) ([\w.]+)/.exec(a)||a.indexOf("trident")>=0&&/(rv)(?::| )([\w.]+)/.exec(a)||a.indexOf("compatible")<0&&/(mozilla)(?:.*? rv:([\w.]+)|)/.exec(a)||[],c=/(ipad)/.exec(a)||/(iphone)/.exec(a)||/(android)/.exec(a)||/(windows phone)/.exec(a)||/(win)/.exec(a)||/(mac)/.exec(a)||/(linux)/.exec(a)||/(cros)/i.exec(a)||[];return{browser:b[3]||b[1]||"",version:b[2]||"0",platform:c[0]||""}},c=a.uaMatch(b.navigator.userAgent),d={},c.browser&&(d[c.browser]=!0,d.version=c.version,d.versionNumber=parseInt(c.version)),c.platform&&(d[c.platform]=!0),(d.android||d.ipad||d.iphone||d["windows phone"])&&(d.mobile=!0),(d.cros||d.mac||d.linux||d.win)&&(d.desktop=!0),(d.chrome||d.opr||d.safari)&&(d.webkit=!0),d.rv){var e="msie";c.browser=e,d[e]=!0}if(d.opr){var f="opera";c.browser=f,d[f]=!0}if(d.safari&&d.android){var g="android";c.browser=g,d[g]=!0}d.name=c.browser,d.platform=c.platform,a.browser=d}(jQuery,window);
 
-/* trim polyfill */
-if (!String.prototype.trim) {
-	(function() {
-		// Вырезаем BOM и неразрывный пробел
-		String.prototype.trim = function() {
-			return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
-		};
-	})();
-}
-
 /*
 	underscore js
 */
@@ -35,6 +25,24 @@ if (typeof _ === 'undefined') {
 		async: false,
 		dataType: 'script'
 	})
+}
+
+$.fn.scrollTo = function(target, options, callback) {
+  if(typeof options == 'function' && arguments.length == 2){ callback = options; options = target; }
+  var settings = $.extend({
+    scrollTarget  : target,
+    offsetTop     : 50,
+    duration      : 500,
+    easing        : 'swing'
+  }, options);
+  return this.each(function(){
+    var scrollPane = $(this);
+    var scrollTarget = (typeof settings.scrollTarget == "number") ? settings.scrollTarget : $(settings.scrollTarget);
+    var scrollY = (typeof scrollTarget == "number") ? scrollTarget : scrollTarget.offset().top + scrollPane.scrollTop() - parseInt(settings.offsetTop);
+    scrollPane.animate({scrollTop : scrollY }, parseInt(settings.duration), settings.easing, function(){
+      if (typeof callback == 'function') { callback.call(this); }
+    });
+  });
 }
 
 var select_options = {};
@@ -78,28 +86,217 @@ for (var i = 0; i < params.length; i++ ) {
 	request [couple [0]] = couple [1];
 }
 
+var alert_window_is_open = false,
+	confirm_window_is_open = false;
 
-window.__original_alert   = window.alert;
-window.alert = function (s) {
+/*
+	Options:
+	title   - текст заголовка окна, def Ошибка
+	icon    - путь к иконке, def: /i/_skins/Mint/alert.png
+	ok_text - текст кнопки, def: OK
+*/
+window.__original_alert = window.alert;
+window.alert = function(message, errorFieldName, options) {
+	var w = window.name == 'invisible' ? parent : window.name == '_body_iframe' ? parent.parent : window,
+		$field = errorFieldName ? w.$('[name="' + errorFieldName + '"') : null;
 
-	window.__original_alert (s);
+	if (errorFieldName && !$field.is(':visible')) $field = $field.parent();
+	if (errorFieldName && $field.length !== 0) {
+		$field.focus();
 
-	window.setCursor (top);
-	window.setCursor (window);
+		var notification = w.$('#notification').data('kendoTooltip'),
+			role = $field.attr('role'),
+			showFor;
 
+		if (notification) notification.hide();
+		switch(role) {
+			case 'dropdownlist':
+				showFor = $field.closest('.k-widget.k-dropdown');
+				break;
+			case 'upload':
+				showFor = $field.closest('.k-button.k-upload-button');
+				break;
+			case 'multiSelect':
+				showFor = $field.closest('span');
+				break;
+			default:
+				showFor = $field;
+		}
+		notification = w.$('#notification').kendoTooltip({
+			position: 'bottom',
+			autoHide: false,
+			content: message
+		}).data('kendoTooltip');
+		notification.show(showFor);
+		notification.popup.element.addClass('error');
+	} else {
+		try {
+			var $ = w.$,
+				kendo = w.kendo,
+				$alertWindow = $('<div/>', { id: 'alert-window' }),
+				K_alertWindow,
+				maxWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) / 2,
+				maxHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) / 2;
+
+			if (!options) options = {};
+			$('body').append($alertWindow);
+			K_alertWindow = $alertWindow.kendoWindow({
+				modal: true,
+				title: options.title || 'Ошибка',
+				resizable: false,
+				draggable: false,
+				minWidth: 400,
+				maxWidth: maxWidth,
+				maxHeight: maxHeight,
+				open: function() {
+					alert_window_is_open = true;
+				},
+				close: function() {
+					setTimeout(function() { alert_window_is_open = false; }, 500);
+					if (typeof options.on_close === 'function') options.on_close();
+					this.destroy();
+				}
+			}).data('kendoWindow');
+			K_alertWindow
+				.content(kendo.template('<div>' +
+						'<div class="icon"><img src="#= data.icon #" /></div>' +
+							'<div class="viewport">' +
+								'<div>' +
+									'<div style="max-height: #= data.maxHeight #px">#= data.message #</div>' +
+								'</div>' +
+							'</div>' +
+						'<div class="footer">' +
+							'<a class="k-button">#= data.okText #</a>' +
+						'</div>' +
+					'</div>')({
+						message: message,
+						icon: options.icon || '/i/_skins/Mint/alert.png',
+						maxHeight: maxHeight - 53,
+						okText: options.ok_text || 'OK'
+					})
+				)
+				.center()
+				.open();
+			$('.footer a', $alertWindow).click(function(e) {
+				e.preventDefault();
+				K_alertWindow.close()
+			});
+		} catch(e) {
+			if (console && console.error) console.error(e);
+			window.__original_alert(message);
+		}
+	}
+	if (w.is_interface_is_locked) {
+		w.$.unblockUI();
+		w.is_interface_is_locked = false;
+	}
+	w.setCursor(top);
+	w.setCursor(w);
 };
 
+window.warning = function(message) {
+	window.alert(
+		message,
+		null,
+		{
+			title : 'Предупреждение',
+			icon  : '/i/_skins/Mint/warning.png'
+		}
+	);
+}
+
+/*
+	Options:
+	title       - текст заголовка окна, def: Ошибка
+	icon        - путь к иконке, def: /i/_skins/Mint/question.png
+	ok_text     - текст кнопки, def: Да
+	cancel_text - текст кнопки, def: Нет
+*/
 window.__original_confirm = window.confirm;
-window.confirm = function (s) {
+window.confirm = function(message, succesCallback, failCallback, options) {
+	if (typeof succesCallback !== 'function') {
+		var result = window.__original_confirm(message);
+		window.setCursor(top);
+		window.setCursor(window);
+		return result;
+	}
+	if (!options) options = {};
 
-	var r = window.__original_confirm (s);
+	var $confirmWindow = $('<div/>', { id: 'confirm-window' }),
+		maxWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) / 2,
+		maxHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) / 2,
+		K_confirmWindow = $confirmWindow.kendoWindow({
+			modal: true,
+			resizable: false,
+			draggable: false,
+			title: options.title || i18n.confirm,
+			minWidth: 400,
+			maxWidth: maxWidth,
+			maxHeight: maxHeight,
+			open: function() {
+				confirm_window_is_open = true;
+			},
+			close: function() {
+				setTimeout(function() { confirm_window_is_open = false; }, 500);
+				if (is_interface_is_locked) {
+					$.unblockUI();
+					is_interface_is_locked = false
+				}
+				if (this.element.data('success') && succesCallback) succesCallback();
+				if (!this.element.data('success') && failCallback) failCallback();
+				setCursor(top);
+				setCursor(window);
+				this.destroy();
+			}
+		}).data('kendoWindow');
 
-	window.setCursor (top);
-	window.setCursor (window);
+	K_confirmWindow
+		.content(kendo.template('<div>' +
+				'<div class="icon"><img src="#= data.icon #"/></div>' +
+				'<div class="viewport">' +
+					'<div>' +
+						'<div style="max-height: #= data.maxHeight #px">#= data.message #</div>' +
+					'</div>' +
+				'</div>' +
+				'<div class="footer">' +
+					'<a class="k-button _ok">#= data.okText #</a>' +
+					'<a class="k-button _cancel">#= data.cancelText #</a>' +
+				'</div>' +
+			'</div>')({
+				message: message,
+				icon: options.icon || '/i/_skins/Mint/question.png',
+				maxHeight: maxHeight - 53,
+				okText: options.ok_text || 'Да',
+				cancelText: options.cancel_text || 'Нет'
+			}))
+		.center()
+		.open();
+	$confirmWindow.focus();
+	confirm_window_is_open = true;
+	$('.footer a', $confirmWindow).click(function(e) {
+		e.preventDefault();
 
-	return r;
+		var $this = $(this);
 
-};
+		if ($this.hasClass('_ok') && typeof succesCallback === 'function') $confirmWindow.data('success', true);
+		if ($this.hasClass('_cancel') && typeof failCallback === 'function') $confirmWindow.data('success', false);
+		K_confirmWindow.close();
+	});
+}
+
+$(document).on('keyup', function(e) {
+	var $alertWindow = $('#alert-window'),
+		$confirmWindow = $('#confirm-window');
+
+	$alertWindow = $alertWindow.length ? $alertWindow.data('kendoWindow') : null;
+	$confirmWindow = $confirmWindow.length ? $confirmWindow.data('kendoWindow') : null;
+
+	if (($alertWindow || $confirmWindow) && [13, 27, 32].indexOf(e.keyCode) !== -1) {
+		e.preventDefault();
+		if ($confirmWindow) $confirmWindow.element.data('success', e.keyCode !== 27);
+		($alertWindow || $confirmWindow).close();
+	}
+});
 
 function drop_form_tr_for_this_minus_icon (i) {
 
@@ -180,11 +377,7 @@ function dialog_open (options) {
 		options = dialogs[options];
 	}
 
-	if (typeof options.off === 'function') {
-		options.off = options.off();
-	}
-
-	if (options.off)
+	if (typeof options.off === 'function' ? options.off() : options.off)
 		return;
 
 	options.before = options.before || function (){};
@@ -207,11 +400,21 @@ function dialog_open (options) {
 	if ($.browser.webkit || $.browser.safari)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
 
+	var getDialogSize = function(type, size) {
+		return size
+			? /^[\d]{1,2}%$/.test(size)
+				? (function(size) {
+					return window.top.document.documentElement[type === 'width' ? 'clientWidth' : 'clientHeight'] / 100 * size
+				})(parseInt(size.replace('%', '')))
+				: size
+			: type === 'width' ? dialog_width : dialog_height
+	}
+
 	if (is_ua_mobile) {
 		$.showModalDialog({
 			url             : url,
-			height          : options.height || dialog_height,
-			width           : options.width || dialog_width,
+			height          : getDialogSize('height', options.height),
+			width           : getDialogSize('width', options.width),
 			position        : options.position || undefined,
 			resizable       : true,
 			scrolling       : 'no',
@@ -259,51 +462,94 @@ function close_multi_select_window (ret) {
 	}
 }
 
-function open_vocabulary_from_select (s, options) {
+function open_vocabulary_from_select(s, options) {
+
+	var value = $(s).data('kendoDropDownList').value();
 
 	if (is_dialog_blockui)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + options.message + '</h1>'});
-
 	try {
-
-
 		if (is_ua_mobile) {
-
 			 $.showModalDialog({
 				url             : window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
-				height          : dialog_height,
-				width           : dialog_width,
+				height          : options.dialog_height
+					? ( (document.documentElement.clientHeight <= options.dialog_height)
+							? document.documentElement.clientHeight - 100
+							: options.dialog_height )
+					: dialog_height,
+				width           : options.dialog_width
+					? ( (document.documentElement.clientWidth  <= options.dialog_width)
+							? ( (document.documentElement.clientWidth < 768) ? dialog_width : document.documentElement.clientWidth - 100 )
+							: options.dialog_width )
+					: dialog_width,
 				resizable       : true,
 				scrolling       : 'no',
+				title_max_len   : options.title_max_len,
 				dialogArguments : {href: options.href, parent: window, title: options.title},
 				onClose: function () {
-
-					var result = this.returnValue || {result: 'esc'};
+					var result = this.returnValue || {result: 'esc'},
+						$s = $(s),
+						kendo_select = $s.data("kendoDropDownList"),
+						selected_item,
+						widget,
+						width;
 
 					if (result.result == 'ok') {
+						if (options.gridId) {
+							var kGridRow = $('#grid_' + options.gridId).data('kendoGrid').dataSource.data()[options.rowIndex];
 
-						setSelectOption (s, result.id, result.label);
+							if (_.isArray(kendo_grids[options.gridId].data.vocs[options.vocId])) {
+								if (!_.find(kendo_grids[options.gridId].data.vocs[options.vocId], function(item) {
+									item.id == result.id
+								})) kendo_grids[options.gridId].data.vocs[options.vocId].push({
+									id: result.id,
+									label: result.label
+								});
+							} else {
+								kendo_grids[options.gridId].data.vocs[options.vocId] = [{
+									id: result.id,
+									label: result.label
+								}]
+							}
 
+							kGridRow.set(options.field, result.id);
+						} else {
+						setSelectOption(s, result.id, result.label);
+						}
 					} else {
+						if (options.gridId) {
+							if (value) {
+								var kGridRow = $('#grid_' + options.gridId).data('kendoGrid').dataSource.data()[options.rowIndex];
 
-						var kendo_select = $(s).data('kendoDropDownList');
-						kendo_select.select(0);
-						kendo_select.close();
-						kendo_select.focus ();
+								kGridRow.set(options.field, value);
+							}
+						} else {
+							kendo_select.select($s.data('prev_value'));
 
-						$(s).trigger ('change');
+							var selected_item = kendo_select.wrapper.find('span.k-input'),
+								widget = kendo_select.wrapper,
+								$parent = typeof widget.parent().attr('data-note') === 'undefined'
+									? widget.parent()
+									: widget.parent().parent(),
+								widgetWrapperWidth = $parent.width(),
+								width;
 
+							widget.css({ width: 'auto' });
+							width = selected_item.width() + 55;
+							if (width > widgetWrapperWidth)
+								width = widgetWrapperWidth;
+							kendo_select.list.width('auto');
+							widget.width(width);
+							kendo_select.focus();
+						}
 					}
-
-					if (is_dialog_blockui)
-						$.unblockUI ();
-
+					if (is_dialog_blockui && (result.result == 'esc' || result.result == 'ok' && options.kind != 'toolbar_input_select'))
+						$.unblockUI();
+					if (!options.gridId)
+					kendo_select.colorize_empty_value();
 				}
 			});
-
-
 		} else {
-
 			var result = window.showModalDialog (
 				window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random(),
 				{href: options.href, parent: window, title: options.title},
@@ -311,58 +557,53 @@ function open_vocabulary_from_select (s, options) {
 			);
 
 			window.focus ();
-
 			if (result.result == 'ok') {
-
 				setSelectOption (s, result.id, result.label);
-
 			} else {
-
 				var kendo_select = $(s).data('kendoDropDownList');
+
 				kendo_select.select(0);
 				kendo_select.close();
 				kendo_select.focus ();
-
 				$(s).trigger ('change');
-
 			}
-
 			if (is_dialog_blockui)
 				$.unblockUI ();
-
 		}
-
 	} catch (e) {
-
 		var kendo_select = $(s).data('kendoDropDownList');
+
 		kendo_select.select(0);
 		kendo_select.close();
-
 		if (is_dialog_blockui)
 			$.unblockUI ();
 	}
-
 }
 
-function open_vocabulary_from_combo(combo, options) {
+function open_vocabulary_from_combo (combo, options) {
+
 	if (is_dialog_blockui)
 		$.blockUI ({fadeIn: 0, message: '<h1>' + options.message + '</h1>'});
 
-	var setComboValue = function (result) {
+	setComboValue = function (result) {
+
 		if (result.result == 'ok') {
+
 			for (var j = 0; j < combo.dataSource.data().length; j ++) {
-				if (combo.dataSource.data()[j].id == result.id) {
+				if (combo.dataSource.data() [j].id == result.id) {
 					break;
 				}
 			}
+
 			if (j == combo.dataSource.data().length) {
-				combo.dataSource.add(
-					{id: result.id, label: result.label}
-				);
+				combo.dataSource.add ({id : result.id, label : result.label});
 			}
-			combo.select(j);
+
+			combo.select (j);
 			$(combo.element[0]).trigger('change');
+
 		}
+
 	};
 
 	try {
@@ -442,6 +683,8 @@ function encode1251 (str) {
 function handle_hotkey_focus    (r) {document.form.elements [r.data].focus ()}
 function handle_hotkey_focus_id (r) {document.getElementById (r.data).focus ()}
 function handle_hotkey_href     (r) {
+
+	if (alert_window_is_open || confirm_window_is_open) return;
 
 	if (r.confirm && !confirm (r.confirm)) return blockEvent ();
 
@@ -532,20 +775,39 @@ function activate_link_by_id (id) {
 }
 
 function refresh_radio__div (id) {
+	var div = document.getElementById ('radio_div_' + id),
+		display = document.getElementById (id).checked? 'block' : 'none';
 
-	var div = document.getElementById ('radio_div_' + id);
-
-	if (document.getElementById (id).checked) {
-
-		div.style.display = 'block';
-
+	if (div.style.display === display) {
+		return;
 	}
-	else {
+	div.style.display = display;
+	if (display == 'block') {
+		$(div).find('select').each(function() {
+			var	$div_parents = $(this).parents('div'),
+				$wrapper = $div_parents.eq((typeof $div_parents.eq(0).attr('id') == 'undefined') ? 1 : 0);
 
-		div.style.display = 'none';
-
+			if ($wrapper.css('display') !== 'none') {
+				$(this).trigger('change');
+			}
+		});
 	}
+	if (div.hasAttribute('clear-on-hide') && display === 'none') {
+		var selects = $(div).find('select');
 
+		if (selects.length) {
+			selects.data('kendoDropDownList').value(0);
+			selects.trigger('change')
+		}
+
+		var dates = $(div).find('input[data-type=datepicker]');
+
+		if (dates.length) {
+			dates.data('kendoDatePicker').value(null);
+			dates.trigger('change')
+		}
+		$(div).find('input:not([data-type])').val('').trigger('change');
+	}
 }
 
 function stibqif (stib, qif) {
@@ -610,155 +872,182 @@ function focus_on_input (__focused_input) {
 	}
 
 	$("FORM:not('.toolbar')").find("INPUT[type='text'],INPUT[type='checkbox'],INPUT[type='radio'],TEXTAREA").each (function () {
-		try {this.focus ();} catch (e) { return true; } return false;
+		try {
+			if ($(this).is_on_screen())
+				this.focus ();
+		} catch (e) { return true; } return false;
 	})
 
 }
 
+$.fn.kendoSelectsSetWidth = function() {
+	var el = $(this);
+
+	if (!el.data("kendoDropDownList")) return;
+
+	var kendo_select  = el.data("kendoDropDownList"),
+		selected_item = kendo_select.wrapper.find('span.k-input'),
+		widget = el.closest('.k-widget'),
+		widgetWrapperWidth,
+		width,
+		$parent = typeof widget.parent().attr('data-note') === 'undefined'
+			? widget.parent()
+			: widget.parent().parent();
+
+	widget.css({ width: 'auto' });
+	selected_item.addClass('full-size');
+	width = selected_item.width() + 35;
+	selected_item.removeClass('full-size');
+	widgetWrapperWidth = Math.max($parent.width(), $parent[0].clientWidth);
+	if (width > widgetWrapperWidth)
+		width = widgetWrapperWidth + 5;
+	kendo_select.list.width('auto');
+	widget.width(width);
+}
+
 
 function adjust_kendo_selects(top_element) {
-	var setWidth = function(el, width) {
-		var p = el.data('kendoDropDownList').popup.element,
-			w = width || p.css('visibility','hidden').outerWidth() + 32;
 
-		p.css('visibility', 'visible');
-		el.closest('.k-widget').width(w);
-	}
+	function required_lighten() {
+
+		var wrapper = this.wrapper;
+
+		if (wrapper.hasClass('required')) {
+
+			var value = this.value(),
+				emptyVal = this.element.attr('data-empty-val');
+
+			if (emptyVal ? value == emptyVal : value < 1) wrapper.addClass('light');
+			else wrapper.removeClass('light');
+
+		}
+
+	};
 
 	var select_tranform = function() {
-		var original_select = this,
-			$original_select = $(this);
 
-		$original_select.addClass('k-group').kendoDropDownList({
+		if (this.selectedIndex == $.data(this, 'prev_value')) return;
+
+		var $this    = $(this),
+			tooltips = [];
+
+		$('option', $this).each(function() {
+			tooltips.push($(this).attr('data-tooltip'));
+		});
+
+		$this.addClass('k-group').kendoDropDownList({
 			height: 320,
 			popup : {
-				appendTo: $(body),
+				appendTo: $('body'),
 			},
 			dataBound: function() {
-				var self = this,
-					list = this.ul.find('li');
 
-				$.each(this.dataSource.data(), function(index, item) {
-					if (item.attributes && item.attributes.length) {
-						var $option = $original_select.find('option[value=' + item.value + ']'),
-							$li = list.eq(index);
+				var empty_option = this.wrapper.find('option[value=0]'),
+					k_items      = this.ul.find('li.k-item'),
+					is_empty     = (empty_option.length == -1) ? false : (empty_option.index() < 1);
 
-						$.each(item.attributes, function(_index, _item) {
-							$option.attr(_item.name, _item.value);
-							$li.attr(_item.name, _item.value);
-						})
+				if (this.value() > 0 || !is_empty) this.wrapper.removeClass('required');
+
+				this.dataItems().forEach(function(item, index) {
+
+					var value = parseInt(item.value);
+
+					if (value == 0 || value == -1) {
+						var k_item = k_items.eq(index);
+
+						k_item.addClass('empty');
 					}
-				})
-			},
-			change: function(e) {
-				var value = this.value(),
-					valueItem = _.find(this.dataSource.data(), function(i) { return i.value == value }),
-					tooltip = (valueItem && valueItem.attributes)
-						? _.find(valueItem.attributes, function(i) { return i.name === 'data-tooltip' })
-						: null;
 
-				if (tooltip)
-					this.wrapper.find('.k-input').attr(tooltip.name, tooltip.value)
-			},
-			dataSource: (function($select) {
-				var dataSource = [];
-
-				$select.find('option').each(function() {
-					var $this = $(this),
-						item  = {
-							value: $this.attr('value').trim(),
-							label: $this.text().trim(),
-							attributes: []
-						};
-
-					$.each(this.attributes, function(index, attribute) {
-						var name = attribute.nodeName || attribute.name;
-
-						if (name !== 'value' && name !== 'style' && name !== 'selected')
-							item.attributes.push({
-								name: name,
-								value: attribute.value.trim()
-							})
-					});
-					dataSource.push(item)
 				});
 
-				return dataSource
-			})($original_select),
-			dataTextField: 'label',
-			dataValueField: 'value',
+			},
 			open: function(e) {
-				$.data(original_select, 'prev_value', this.selectedIndex);
-				if (!$(original_select).attr('data-ken-autoopen'))
-					return;
+
+				$.data($this[0], 'prev_value', this.selectedIndex);
+
+				if (typeof this.wrapper.parent().attr('data-note') !== 'undefined') {
+
+					var $tooltip = this.wrapper.parent(),
+						K_tooltip = $tooltip.data('kendoTooltip');
+
+					this.tooltip = K_tooltip.options;
+					K_tooltip.destroy();
+					$tooltip.kendoTooltip({
+						autoHide: false,
+						position: 'top',
+						content: $tooltip.attr('data-note').replace(/(?:\r\n|\r|\n)/g, '<br/>')
+					}).data('kendoTooltip').show();
+
+				}
+
+				$('> li', this.ul).each(function(idx) {
+					if (tooltips[idx]) $(this).kendoTooltip({ content: tooltips[idx] });
+				});
+
+				if (!$this.attr('data-ken-autoopen')) return;
 
 				var kendo_select = this,
 					non_voc_options = $.grep(kendo_select.dataSource.data(), function(el, idx) {
 						return el.value != 0 && el.value != -1;
 					});
 
-				if (non_voc_options.length > 0)
-					return;
+				if (non_voc_options.length > 0) return;
+
 				// auto click vocabulary item
-				setTimeout(function () { // HACK: 'after_open' event replacement
-					kendo_select.select(function(dataItem) {
-						return dataItem.value == -1
-					});
-					$original_select.trigger('change');
+				setTimeout (function () { // HACK: 'after_open' event replacement
+					kendo_select.select(function(dataItem){return dataItem.value == -1});
+					$this.trigger('change');
 					kendo_select.close();
 				}, 200);
 
 				return blockEvent();
-			}
-		}).data('kendoDropDownList');
-		setWidth($original_select, $original_select.attr('data-width'));
 
-		var kendoDropDownList = $original_select.data('kendoDropDownList'),
-			$kInput = kendoDropDownList.wrapper.find('.k-input'),
-			value = kendoDropDownList.value(),
-			valueItem = _.find(kendoDropDownList.dataSource.data(), function(i) { return i.value == value }),
-			tooltip = (valueItem && valueItem.attributes)
-				? _.find(valueItem.attributes, function(i) { return i.name === 'data-tooltip' })
-				: null;
+			},
+			close: function(e) {
 
-		if (tooltip)
-			$kInput.attr(tooltip.name, tooltip.value);
-		$kInput.on('mouseenter', function() {
-			var $this = $(this),
-				textHasOverflown = this.scrollWidth > $this.innerWidth(),
-				showTooltip = function() {
-					$this.kendoTooltip({
-						content: $this.attr('data-tooltip') || $this.text()
-					})
-					.data('kendoTooltip')
-					.show();
-				};
+				$('> li', this.ul).each(function() {
+					var K_tooltip = $(this).data('kendoTooltip');
+					if (K_tooltip) K_tooltip.destroy();
+				});
 
-			if (textHasOverflown || $this.attr('data-tooltip')) {
-				if ($.fn.kendoTooltip) {
-					showTooltip()
-				} else {
-					require(['kendo.tooltip.min'], showTooltip)
+				if (typeof this.wrapper.parent().attr('data-note') !== 'undefined') {
+
+					var $tooltip = this.wrapper.parent(),
+						K_tooltip = $tooltip.data('kendoTooltip');
+
+					K_tooltip.destroy();
+					$tooltip.kendoTooltip(this.tooltip);
+
 				}
-			}
-		});
-		$kInput.on('mouseout', function() {
-			var $this = $(this);
 
-			if ($this.data('kendoTooltip'))
-				$this.data('kendoTooltip').destroy()
-		});
+			},
+			change: function(e) {
+				required_lighten.call(this);
+			}
+		})
+		.data('kendoDropDownList')
+		.colorize_empty_value();
+
+		$this.kendoSelectsSetWidth();
+
+		if ($this.attr('required'))
+			$this.data('kendoDropDownList').wrapper.addClass('required');
+
+		required_lighten.call($this.data('kendoDropDownList'));
+
 	}
 
 	$('select', top_element).not('#_setting__suggest, #_id_filter__suggest, [multiselect]')
 		.each(select_tranform)
 		.change(select_tranform);
+
 }
 
 
 function do_kendo_combo_box (id, options) {
-	var values = options.values,
-		ds = {};
+
+	var values      = options.values,
+		ds          = {};
 
 	if (options.href) {
 		ds = {
@@ -808,6 +1097,20 @@ schema_loop:
 		ds = values;
 	}
 
+	var required_lighten = function() {
+		var wrapper = this.wrapper;
+
+		if (wrapper.hasClass('required')) {
+			var value = this.value()
+
+			if (this.value()) {
+				wrapper.removeClass('light');
+			} else {
+				wrapper.addClass('light');
+			}
+		}
+	}
+
 	var input_change = {
 		is_changed : true,
 		on_change  : function () {
@@ -816,166 +1119,228 @@ schema_loop:
 	};
 
 	var combo = $('#' + id).kendoComboBox({
-		placeholder    : options.empty,
-		dataTextField  : 'label',
-		dataValueField : 'id',
-		filter         : 'contains',
-		minLength      : 3,
-		autoBind       : false,
-		dataSource     : ds,
+		placeholder     : options.empty,
+		dataTextField   : 'label',
+		dataValueField  : 'id',
+		filter          : 'contains',
+		minLength       : 3,
+		autoBind        : false,
+		dataSource      : ds,
 		cascade: function(e) {
 			var input = this.element [0];
 
 			if (this.value() && !this.dataItem()) {
+
 				this.value ('');
+
 			} else {
+
 				if (!input.options)
 					input.options = [];
+
 				input.selectedIndex = this.selectedIndex;
 				input.options [this.selectedIndex] = {};
 				input.options [this.selectedIndex].value = this.value ();
+
 			}
+
 		},
-		open: function (e) {
+
+		open : function (e) {
 			stibqif (true);
 			if (input_change.is_changed)
 				this.dataSource.query();
 			input_change.is_changed = false;
+			var max_len = 0,
+				data_items = this.dataSource.data (),
+				w = this.popup.element.css("width").replace("px", "");
+			for (var i = 0; i < data_items.length; i ++)
+				if (data_items [i].label.length > max_len)
+					max_len = data_items [i].label.length;
+
+			if (max_len * 8 + 50 > w)
+				this.popup.element.css("width", (max_len * 8 + 60) + "px");
 		},
-		close: function (e) {
+
+		close : function (e) {
 			stibqif (false);
+		},
+
+		select : function (e) {
+			var w = (this.dataItem() ? this.dataItem().label : e.item.text ()).length * 8 + 60,
+				el = this.element.closest(".k-widget");
+
+			if (w > el.width ())
+				el.width(w);
+		},
+		change: function(e) {
+			required_lighten.call(this);
+		},
+		cascade: function(e) {
+			required_lighten.call(this);
 		}
+
 	}).data('kendoComboBox');
+
 	$('#' + id + '_input').on('keypress', $.proxy(input_change.on_change, input_change));
-	for (var i = 0; i < values.length; i++) {
-		combo.dataSource.add({id: values[i].id,label: values[i].label});
-		if (values[i].selected)
-			combo.select(i);
+
+	for(var i = 0; i < values.length; i++) {
+		combo.dataSource.add ({id : values [i].id, label : values [i].label});
+		if (values [i].selected)
+			combo.select (i);
 	}
-	combo.element.closest(".k-widget").width(
-		options.width || options.empty.length * 8 + 32
-	);
-	combo.input.on('mouseover', function() {
-		var $this = $(this),
-			textHasOverflown = this.scrollWidth > $this.innerWidth();
 
-		if (textHasOverflown) {
-			$this.kendoTooltip({
-				content: $this.val()
-			})
-			.data('kendoTooltip')
-			.show();
-		}
-	});
-	combo.input.on('mouseout', function() {
-		var $this = $(this);
+	required_lighten.call(combo);
 
-		if ($this.data('kendoTooltip'))
-			$this.data('kendoTooltip').destroy()
-	});
+	var p = combo.popup.element;
+	var w = p.css("visibility","hidden").show().outerWidth();
+	p.hide().css("visibility","visible");
+	if (options.empty && options.empty.length * 8 > w)
+		w = options.empty.length * 8;
+	if (options.max_len && options.max_len * 8 < w)
+		w = options.max_len * 8;
+	combo.element.closest(".k-widget").width(w + 60);
+
 }
 
 function hide_dropdown_button (id) {
-	if (document.getElementById ("ul_" + id)) {
-		$("#ul_" + id).remove();
-		return true;
-	}
+	var $ul = $("#ul_" + id);
+
+	if (!$ul.length) return false;
+
+	$ul.remove();
+	$("#form_" + id).remove();
+
+	return true;
 };
 
 function setup_drop_down_button (id, data) {
-	$("#" + id).on ('blur', function (e) {
-		var relTarg = e.relatedTarget || e.toElement
-		if (relTarg == undefined || relTarg == null) {
-			window.setTimeout(function () {hide_dropdown_button (id);}, 100);
+	var $button = $('#' + id);
+
+	$button.blur(function(e) {
+		if (!$('#ul_' + id).length)
+			return;
+
+		var relTarg = e.relatedTarget || e.toElement;
+
+		if (!relTarg) {
+			window.setTimeout(function () { hide_dropdown_button(id); }, 100);
+
 			return;
 		}
 		if (relTarg.id !== "ul_" + id && $(relTarg).closest('#ul_' + id).length == 0)
-			hide_dropdown_button (id);
+			hide_dropdown_button(id);
 	});
+	$button.click(function(e) {
+		e.preventDefault();
 
-	$("#" + id).on ('click', function (e) {
+		if (hide_dropdown_button(id)) return;
 
-		if (hide_dropdown_button (id)) {
-			return false;
+		var $this    = $(this),
+			$wrapper = $('#wrapper_' + id),
+			$form    = $('<form/>', { id: 'form_' + id }),
+			$ul      = $('<ul/>', { id: 'ul_' + id });
+
+		if (!$wrapper.length) {
+			$wrapper = $this.wrap('<span></span>').parent();
+			$wrapper.attr('id', 'wrapper_' + id);
+			$wrapper.css('position', 'relative');
 		}
 
-		var menuDiv = $('<ul id="ul_' + id + '" title="" style="position:absolute;z-index:200;white-space:nowrap" />').appendTo (document.body);
+		$wrapper.append($form);
 
-		var a_offset = $(this).offset ();
-
-		menuDiv.css ({
-			top:  a_offset.top + this.clientHeight,
-			left: a_offset.left,
+		$ul.css({
+			position      : 'absolute',
+			left          : 0,
+			'z-index'     : 200,
+			'white-space' : 'nowrap'
 		});
 
-		menuDiv.kendoMenu ({
-			dataSource: data,
-			orientation: 'vertical',
-			select: function (e) {
-				var selected_url = data [$(e.item).index()].url;
-				if (selected_url.match(/^javascript:/)) {
-					eval (selected_url);
-				}
-				menuDiv.remove ();
-				return true;
+		if (($(document).height() - $this.offset().top) < data.length * 30 + $this[0].clientHeight) $ul.css({ bottom: $this[0].clientHeight + 'px' });
+		else $ul.css({ top: '100%' });
+
+		$form.append([
+			$('<input/>', {
+				id    : 'salt_' + id,
+				type  : 'hidden',
+				name  : '__salt',
+				value : Math.random()
+			}),
+			$ul
+		]);
+
+		_.forEach(data, function(item) {
+			item.url = item.url.replace(/'/g,'"')
+		});
+
+		$ul.kendoMenu({
+			dataSource  : data,
+			orientation : 'vertical',
+			select      : function(e) {
+				var item = data[$(e.item).index()];
+
+				if (item.target) $(e.item).find('.k-link').attr('target', item.target);
+				if (item.blockui !== null) {
+					/salt=(\d{1,}\.\d{1,})/.test(item.url)
+					var salt = RegExp.$1 || Math.random();
+					$('#form_' + id + ' input[name=__salt]').val(salt);
+					blockui('', 1, 'form_' + id, function() { hide_dropdown_button(id); });
+				} else hide_dropdown_button(id);
 			}
 		});
 
-		if (menuDiv.width () < this.clientWidth)
-			menuDiv.width (this.clientWidth);
+		if ($ul.width() < this.clientWidth) $ul.width(this.clientWidth);
 
-		return false;
-
+		$button.focus();
 	});
 }
 
-function table_row_context_menu (e, tr) {
+function table_row_context_menu(e, tr) {
+	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap;top:0;left:0" />').appendTo(document.body),
+		items = $.parseJSON($(tr).attr('data-menu'));
 
 	var menuDiv = $('<ul class="menuFonDark" title="" style="position:absolute;z-index:200;white-space:nowrap;top:0;left:0" />').appendTo (document.body);
 
 	var items = $.parseJSON ($(tr).attr ('data-menu'));
+
+	_.forEach(items, function(item) {
+		item.url = item.url.replace(/'/g,'"')
+	})
+
 	menuDiv.kendoMenu ({
 		dataSource: items,
 		orientation: 'vertical',
 		select: function (event) {
-			var selected_url = items [$(event.item).index()].url;
-			if (selected_url.match(/^javascript:/)) {
-				eval (selected_url);
-			}
 			menuDiv.remove ();
 		}
 	});
 
-	var tr_offset = $(tr).offset ();
-	var tr_height = $(tr).height ();
+	var tr_offset = $(tr).offset(),
+		tr_height = $(tr).height(),
+		menu_top  = e.pageY >= tr_offset.top && e.pageY <= tr_offset.top + tr_height ? e.pageY - 5 : e.clientY - 5,
+		menu_left = e.pageX - 5,
+		is_offscreen = menu_top + $(menuDiv).height() > $(window).height();
 
-	var menu_top  = e.pageY >= tr_offset.top && e.pageY <= tr_offset.top + tr_height ? e.pageY - 5 : e.clientY - 5;
-	var menu_left = e.pageX - 5;
-
-	var is_offscreen = menu_top + $(menuDiv).height() > $(window).height();
 	if (is_offscreen) {
 		menu_top = menu_top - $(menuDiv).height();
 	}
-
-
-	menuDiv.css ({
+	menuDiv.css({
 		top:  menu_top,
 		left: menu_left
 	});
 
-	var width = menuDiv.width ();
+	var width = menuDiv.width();
 
-	window.setTimeout (function () {
-		menuDiv.width (width);
+	window.setTimeout(function() {
+		menuDiv.width(width);
 	}, 100);
-
-	menuDiv.hover (
-		function () {
-			menuDiv.width (width);
+	menuDiv.hover(
+		function() {
+			menuDiv.width(width);
 		},
-		function () {
-			window.setTimeout (function () {
-				menuDiv.remove ()
+		function() {
+			window.setTimeout (function() {
+				menuDiv.remove()
 			}, 500);
 		}
 	);
@@ -1224,6 +1589,7 @@ function setCursor (w, c) {
 }
 
 function invoke_setSelectOption (a) {
+
 	if (!a.question || window.confirm (a.question)) {
 		var ws = ancestor_window_with_child ('__body_iframe');
 		if (ws) ws.window._setSelectOption (a.id, a.label);
@@ -1236,22 +1602,27 @@ function invoke_setSelectOption (a) {
 }
 
 function setSelectOption (select, id, label) {
-	var $select = $(select),
-		maxLen = $select.attr('data-max-len') ? parseInt($select.attr('data-max-len')) : window.max_len,
-		label = label.length <= maxLen ? label : (label.substr (0, maxLen - 3) + '...'),
-		dropDownList = $select.data('kendoDropDownList'),
-		item = _.find(select.options, function(option) { return option.value == id });
 
-	if (!item) {
-		var newItem = {};
+	var max_len = $(select).attr('data-max-len') ? parseInt($(select).attr('data-max-len')) : window.max_len,
+		label = label.length <= max_len ? label : (label.substr (0, max_len - 3) + '...'),
+		drop_down_list = $(select).data('kendoDropDownList');
 
-		newItem[dropDownList.options.dataTextField] = label;
-		newItem[dropDownList.options.dataValueField] = id;
-		dropDownList.dataSource.add(newItem);
+	for (var i = 0; i < select.options.length; i++) {
+		if (select.options[i].value == id) {
+			select.options[i].innerText = label;
+			drop_down_list.select(i);
+			drop_down_list.focus();
+			drop_down_list.refresh();
+			$(select).change();
+			return;
+		}
 	}
-	dropDownList.value(id);
-	dropDownList.focus();
-	$select.change();
+
+	drop_down_list.dataSource.add({ text: label, value: id });
+	drop_down_list.value(id);
+	drop_down_list.focus();
+	$(select).change();
+
 };
 
 function blur_all_inputs () {
@@ -1581,15 +1952,21 @@ TableSlider.prototype.removeSelection = function (td, selection_id) {
 
 TableSlider.prototype.onClick = function (event, self) {
 
-	if (event.target.tagName != 'TD' || !event.ctrlKey)
+	if (event.target.tagName != 'TD')
 		return;
 
 	self.cell_off ();
 
 	var selection_id = event.timeStamp,
 		start = self.cell_location (event.target),
-		matrix = self.rows;
+		matrix = self.rows,
+		tds = $('td.selected', event.currentTarget);
 
+	if (tds.length) {
+		tds.removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
+			$(this).data ('selections', {});
+		});
+	}
 	if (!$(matrix [start.y][start.x]).hasClass ('selected')) {
 
 		self.addSelectClass (matrix [start.y][start.x], selection_id);
@@ -1617,7 +1994,7 @@ TableSlider.prototype.onContextMenu = function (event, self) {
 		tds.removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
 			$(this).data ('selections', {});
 		});
-		self.showStat ($(event.currentTarget).closest ('div.eludia-table-container'), '');
+		// self.showStat ($(event.currentTarget).closest ('div.eludia-table-container'), '');
 
 		event.preventDefault ();
 
@@ -1626,166 +2003,6 @@ TableSlider.prototype.onContextMenu = function (event, self) {
 	}
 
 	return true;
-
-}
-
-TableSlider.prototype.onMouseDown = function (event, self) {
-
-	if (event.target.tagName != 'TD' || event.which != 1)
-		return;
-
-	if (!event.ctrlKey)
-		$(event.currentTarget).find('td').removeClass('selected-single selected selected-top selected-right selected-bottom selected-left').each (function () {
-			$(this).data ('selections', {});
-		});
-
-
-	var selection_id = event.timeStamp,
-		start = self.cell_location (event.target),
-		matrix = self.rows;
-
-	$(event.currentTarget).mouseover(function (event) {
-
-		if (event.target.tagName != 'TD')
-			return;
-
-
-		if(event.which != 1) {
-
-			var table = event.currentTarget;
-			$(table).removeClass ('selected');
-			$(table).unbind('mouseover');
-			self.calculateSelections ();
-			return;
-		}
-
-		self.cell_off ();
-
-		var td = event.target,
-			finish = self.cell_location (td);
-
-		$(this).addClass ('selected');
-
-		var x1 = Math.min(start.x, finish.x);
-		var y1 = Math.min(start.y, finish.y);
-		var x2 = Math.max(start.x + start.colspan - 1, finish.x + finish.colspan - 1);
-		var y2 = Math.max(start.y + start.rowspan - 1, finish.y + finish.rowspan - 1);
-
-		var should_be_restarted;
-
-		do {
-
-			should_be_restarted = false;
-
-TOP:
-			for (var i = y1 > 0 ? y1 - 1 : 0; i <= y2 + 1 && i < matrix.length; i ++) {
-
-				for (var j = x1 > 0 ? x1 - 1 : 0; j <= x2 + 1 && j < matrix [i].length; j ++) {
-
-					if (i < y1 || i > y2 || j < x1 || j > x2) {
-						self.removeSelection (matrix [i][j], selection_id);
-						self.removeSelectClass (matrix [i][j], selection_id);
-
-						continue;
-					}
-
-					self.addSelection (matrix [i][j], selection_id);
-
-					if (i == y1)
-						self.addSelectClass (matrix [i][j], selection_id, 'top');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'top');
-
-					if (i == y2)
-						self.addSelectClass (matrix [i][j], selection_id, 'bottom');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'bottom');
-
-					if (j == x1)
-						self.addSelectClass (matrix [i][j], selection_id, 'left');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'left');
-
-					if (j == x2)
-						self.addSelectClass (matrix [i][j], selection_id, 'right');
-					else
-						self.removeSelectClass (matrix [i][j], selection_id, 'right');
-
-
-					var shift_x_left = 0,
-						shift_x_right = 0,
-						shift_y_up = 0,
-						shift_y_down = 0;
-
-					if ($(matrix [i][j]).prop ('colspan') > 1) {
-
-						for (var k = x1 - 1; k >= 0; k --) {
-							if (matrix [i][j].isSameNode (matrix [i][k]))
-								shift_x_left ++;
-							else {
-								break;
-							}
-						}
-
-						for (var k = x2 + 1; k < matrix [i].length; k ++) {
-							if (matrix [i][j].isSameNode (matrix [i][k]))
-								shift_x_right ++;
-							else {
-								break;
-							}
-						}
-
-
-						for (var k = y1 - 1; k >= 0; k --) {
-							if (matrix [i][j].isSameNode (matrix [k][j]))
-								shift_y_up ++;
-							else {
-								break;
-							}
-						}
-
-						for (var k = y2 + 1; k < matrix.length; k ++) {
-							if (matrix [i][j].isSameNode (matrix [k][j]))
-								shift_y_down ++;
-							else {
-								break;
-							}
-						}
-
-					}
-
-					if (shift_x_left || shift_x_right || shift_y_up || shift_y_down) {
-						x1 = x1 - shift_x_left;
-						x2 = x2 + shift_x_right;
-						y1 = y1 - shift_y_up;
-						y2 = y2 + shift_y_down;
-						should_be_restarted = true;
-
-						break TOP;
-
-					}
-
-				}
-
-			}
-
-		} while (should_be_restarted);
-
-	});
-
-	var table = event.currentTarget;
-
-	$(document).mouseup(function (event) {
-
-		$(table).unbind('mouseover');
-		$(table).removeClass ('selected');
-		$(document).unbind('mouseup');
-
-		self.calculateSelections ();
-
-		return false;
-
-	});
 
 }
 
@@ -1814,7 +2031,7 @@ TableSlider.prototype.calculateSelections = function () {
 				sum = sum + Number(text);
 		});
 
-		self.showStat (this, count ? i18n.count + ': ' + count + ', ' + i18n.sum + ': ' + sum : '');
+		// self.showStat (this, count ? i18n.count + ': ' + count + ', ' + i18n.sum + ': ' + sum : '');
 
 	});
 
@@ -1825,9 +2042,9 @@ TableSlider.prototype.clear_rows = function (row) {
 }
 
 TableSlider.prototype.set_row = function (row) {
+	self = this;
 
-	var self = this,
-		matrix = self.rows;
+	var matrix = self.rows;
 
 	$('div.st-table-right-viewport table.st-fixed-table-right').each (function (n) {
 
@@ -1862,7 +2079,6 @@ TableSlider.prototype.set_row = function (row) {
 
 		}
 
-		$(table).on ('mousedown', function (event) {self.onMouseDown (event, self);});
 		$(table).on ('click', function (event) {self.onClick (event, self);});
 		$(table).on ('contextmenu', function (event) {self.onContextMenu (event, self);});
 
@@ -2106,16 +2322,24 @@ function toggle_field (name, is_visible, is_clear_field) {
 	td_field.prev().toggle(is_visible);
 
 	var sibling = td_field.prev().prev().length? td_field.prev().prev() : td_field.next().next();
-	if (sibling.length) {
-		var colspan = sibling.attr('colSpan') + (is_visible? -2 : 2);
-		sibling.attr('colSpan', colspan);
-	}
+	if (sibling.length)
+		sibling.attr('colSpan',  parseInt(sibling.attr('colSpan')) + is_visible ? -2 : 2);
 
 	var tr = td_field.closest('tr');
 	tr.toggle(is_visible || tr.children(':visible').length > 0);
 
 	if (is_clear_field) {
 		field.val(0);
+	}
+	if (is_visible) {
+		if (
+			field.length
+			&& (field[0].tagName == 'SELECT' || field.hasClass('k-input') || field.hasClass('k-textbox'))
+		) {
+			setTimeout(function() {
+				field.trigger('change')
+			}, 300)
+		}
 	}
 }
 
@@ -2140,6 +2364,18 @@ function toggle_field_id (id, is_visible,is_clear_field) {
 		document.getElementById(full_id).value = 0;
 	else if (is_clear_field == 1)
 		document.getElementById(full_id).value = "";
+	if (is_visible) {
+		var $field = $('#' + full_id);
+
+		if (
+			$field.length
+			&& ($field[0].tagName == 'SELECT' || $field.hasClass('k-input') || $field.hasClass('k-textbox'))
+		) {
+			setTimeout(function() {
+				$field.trigger('change')
+			}, 300)
+		}
+	}
 }
 
 function toggle_field_and_row (td_field, is_visible) {
@@ -2278,7 +2514,7 @@ function treeview_convert_plain_response (response) {
 		// schema.model.id added to request when loading children
 		item.__parent = item.id;
 
-		if (item.parent == 0 || item.expanded) {
+		if (item.expanded || !response.no_expand_root && item.parent == 0) {
 			expanded_nodes [item.id] = true;
 		}
 
@@ -2332,7 +2568,8 @@ function treeview_oncontextmenu (e) {
 
 	var a = [];
 	for (i = 0; i < menu.length; i ++) a [i] = menu [i];
-	var menuDiv = $('<ul class="menuFonDark" style="position:absolute;z-index:200" />').appendTo (tree_div);
+	tree_div.find('.treeview_contextmenu').remove();
+	var menuDiv = $('<ul class="menuFonDark treeview_contextmenu" style="position:absolute;z-index:200" />').appendTo (tree_div);
 
 	menuDiv.kendoMenu ({
 		dataSource  : a,
@@ -2352,6 +2589,9 @@ function treeview_oncontextmenu (e) {
 	var top = e.pageY;
 	if (e.pageY + menuDiv.height () > tree_div.height ())
 		top = tree_div.height () - menuDiv.height () - 10;
+
+	var top_iframe = $('#outer_tree_window_top').height() || 0;
+	top = top - top_iframe;
 
 	if (top < 0)
 		top = 0;
@@ -2409,22 +2649,21 @@ function treeview_onexpand (e) {
 
 	setCookie ("co_" + request ['type'], Object.keys(expanded_nodes).join('.'));
 
-	$( document ).on ('contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu);
+	$( document ).off ('contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu);
+	$( document ).on  ('contextmenu', "#splitted_tree_window_left li", treeview_oncontextmenu);
 }
 
 
 function treeview_onselect_node (node, expand_on_select, e) {
-
 	var treeview = $("#splitted_tree_window_left").data ("kendoTreeView");
 
 	if (expand_on_select == 1)
 		treeview.expand(node);
-
 	node = treeview.dataItem (node);
 	if (!node || !node.href) return false;
-	var href = node.href;
 
-	var right_div = $("#splitted_tree_window_right"),
+	var href = node.href,
+		right_div = $("#splitted_tree_window_right"),
 		content_iframe = $('#__content_iframe', right_div);
 
 	if (content_iframe.length && content_iframe.get(0).contentWindow && content_iframe.get(0).contentWindow.is_dirty && !confirm (i18n.F5)) {
@@ -2433,10 +2672,13 @@ function treeview_onselect_node (node, expand_on_select, e) {
 	}
 
 	var name = right_div.data('name');
-	right_div.html ("<iframe onload='this.style.visibility="+'"visible"'+"' style='visibility: hidden;' width=100% height=100% src='" + href + "' name='" + name + "' id='__content_iframe' application=yes scroll=no>");
+
+	content_iframe.attr('src', href);
+	content_iframe.attr('name', name);
 
 	/************************* add height in iframe *************************/
 	var heghtstr = $(window.parent.document.getElementById( "tabstrip" )).height();
+
 	if (heghtstr > 100){
 		$('#__content_iframe').css('height', heghtstr - 36);
 	}
@@ -2473,6 +2715,9 @@ function treeview_get_node_uid_by_id(node, id) {
 
 		var childs = node.children.data();
 		var res = 0;
+		if (!childs) {
+			return 0;
+		}
 		for (var i = 0; i < childs.length; i++) {
 			res = treeview_get_node_uid_by_id(childs[i], id);
 			if (res) {return res;};
@@ -2482,7 +2727,6 @@ function treeview_get_node_uid_by_id(node, id) {
 }
 
 function treeview_select_node(e) {
-
 	var tree = $('#splitted_tree_window_left');
 	var selected_node = tree.data ('selected-node');
 	if (!selected_node) {
@@ -2494,12 +2738,22 @@ function treeview_select_node(e) {
 	if (!root.length)
 		return;
 
-	var selected_node_uid = treeview_get_node_uid_by_id(root[0], selected_node) || root[0].uid;
+	var selected_node_uid;
+	for (var i = root.length - 1; i >= 0; i--) {
+		selected_node_uid = treeview_get_node_uid_by_id(root[i], selected_node);
+		if (selected_node_uid) {
+			break;
+		}
+	}
+
+	selected_node_uid = selected_node_uid || root[0].uid;
+
 	if(selected_node_uid){
 		var select_node = treeview.findByUid(selected_node_uid);
 		if (select_node) {
 			treeview.select(select_node);
 			treeview_onselect_node (select_node);
+			treeview.element.closest(".k-scrollable").scrollTo(treeview.select(), {duration: 0});
 		}
 		treeview.unbind("dataBound", treeview_select_node);
 	}
@@ -2540,18 +2794,20 @@ function eludia_copy_clipboard_init (text, element) {
 }
 
 
-function poll_invisibles (form_name) {
+function poll_invisibles (form_name, cb) {
 	var has_loading_iframes;
 	if (browser_is_msie)
 		$('iframe[name^="invisible"]').each (function () {if (this.readyState == 'loading') has_loading_iframes = 1});
 	else if (form_name) {
-		var __salt_element = $('form[name="' + form_name + '"] input[name="__salt"]'),
+		var __salt_element = $('form[name="' + form_name + '"] input[name="__salt"]');
+		if (__salt_element.length === 0) __salt_element = $('#' + form_name + ' input[name="__salt"]');
 			__salt = __salt_element.val ();
 		if (__salt) {
 			has_loading_iframes = 1;
 			if (__salt == getCookie ('download_salt')) {
 				has_loading_iframes = 0;
-				__salt_element.val (Math.random ());
+//				__salt_element.val (Math.random ());
+				setCookie('download_salt', Math.random ());
 			}
 		}
 	}
@@ -2562,6 +2818,7 @@ function poll_invisibles (form_name) {
 		$.unblockUI ();
 		is_interface_is_locked = false;
 		setCursor ();
+		if (typeof cb == 'function' ) cb();
 	}
 }
 
@@ -2569,45 +2826,46 @@ function poll_invisibles (form_name) {
 function activate_suggest_fields (top_element) {
 
 	$("INPUT[data-role='autocomplete']", top_element).each (function () {
-		var i = $(this);
-		var id = i.attr ('id');
+		var i = $(this),
+			id = i.attr('id'),
+			name = i.attr('name'),
+			read_data = {};
 
-		var read_data = {};
-		read_data [i.attr ('name')] = new Function("return $('#" + id + "').data('kendoAutoComplete').value()");
-
+		read_data[i.attr('name')] = new Function("return $('#" + id + "').data('kendoAutoComplete').value()");
 		i.kendoAutoComplete({
-			minLength       : i.attr ('a-data-min-length') || 1,
+			minLength       : i.attr('a-data-min-length') || 1,
 			filter          : 'contains',
 			dataTextField   : 'label',
-			dataSource      : {
-				serverFiltering : true,
+			dataBound: function() {
+				$('.k-nodata div').text(i18n['no_data_found']);
+			},
+			dataSource : {
+				serverFiltering: true,
 				data: {
-					json: $.parseJSON (i.attr ('a-data-values')),
+					json: $.parseJSON(i.attr('a-data-values')),
 				},
 				transport: {
-					read            : {
-						url         : i.attr ('a-data-url') + "&salt=" + Math.random (),
+					read: {
+						url         : i.attr('a-data-url') + "&salt=" + Math.random (),
 						contentType : 'application/x-www-form-urlencoded; charset=UTF-8',
 						data        : read_data,
 						dataType    : 'json'
 					},
 					parameterMap: function(data, type) {
-						var q = '';
-						if (data.filter && data.filter.filters && data.filter.filters [0] && data.filter.filters [0].value)
-							q = data.filter.filters [0].value;
+						var q = '',
+							result = {};
 
-						var result = {};
-						result [$('#' + id).attr ('name') + '__label'] = q;
-
-						if (type == 'read') {
+						if (data.filter && data.filter.filters && data.filter.filters[0] && data.filter.filters[0].value)
+							q = data.filter.filters[0].value;
+						result[name + '__label'] = q;
+						if (type === 'read')
 							return result;
-						}
 					}
 				}
 			},
-			change          : function(e) {
-				var selected_item = this.current();
-				var id           = '',
+			change: function(e) {
+				var selected_item = this.current(),
+					id           = '',
 					label        = this.value(),
 					element_id   = this.element.attr('id'),
 					element_name = this.element.attr('name'),
@@ -2623,8 +2881,7 @@ function activate_suggest_fields (top_element) {
 					});
 				}
 
-				var
-					id_element = $('#' + element_id + '__id'),
+				var id_element = $('#' + element_id + '__id'),
 					prev_id = id_element.val();
 
 				$('#' + element_id + '__label').val(label);
@@ -2634,14 +2891,12 @@ function activate_suggest_fields (top_element) {
 				$('#' + element_name + '__suggest').val(id);
 
 				var onchange = i.attr ('a-data-change');
-				if (onchange) {
-					eval (onchange);
-				}
+
+				if (onchange)
+					eval(onchange);
 			}
 		});
-
 		i.parent().css("width", i.attr("size") * 8);
-
 	});
 }
 
@@ -2698,7 +2953,7 @@ function lrt_start (filepath) {
 								} else if (service_message.substring(0, 4) == '3:::') {
 									clearInterval (get_lrt_interval);
 									var message = service_message.substring(4).split (':::');
-									var f = function () {alert (message [0]);window.location.href = message [1];};
+									var f = message [0] == '' ? function () {window.location.href = message [1];} : function () {alert (message [0]);window.location.href = message [1];};
 									setTimeout (f, 1000);
 								}
 
@@ -2721,22 +2976,28 @@ function lrt_start (filepath) {
 	});
 }
 
-function blockui (message, poll) {
+function blockui(message, poll, form, cb) {
+	try {
+		setTimeout(function() { unblockui(); }, 1000 * 60);
+		$.blockUI({
+			onBlock: function() { is_interface_is_locked = true; },
+			onUnblock: function() { is_interface_is_locked = false; },
+			fadeIn: 0,
+			message: "<h2>" + (message || "<img src='/i/_skins/Mint/busy.gif'> " + i18n.request_sent) + "</h2>"
+		});
+		window.blockuiAfterLoad = null;
+	} catch(e) {
+		window.blockuiAfterLoad = [message, poll, form];
+	}
 
-	$.blockUI ({
-		onBlock: function(){ is_interface_is_locked = true; },
-		onUnblock: function(){ is_interface_is_locked = false; },
-		fadeIn: 0,
-		message: "<h2>" + (message || "<img src='/i/_skins/Mint/busy.gif'> " + i18n.request_sent) + "</h2>"
-	});
-
+	if (window.blockuiAfterLoad) return true;
 	if (poll) {
 		if (poll_invisibles_interval_id) {
-			window.clearInterval (poll_invisibles_interval_id);
+			window.clearInterval(poll_invisibles_interval_id);
 			poll_invisibles_interval_id = undefined;
 		}
-		poll_invisibles_interval_id = window.setInterval(poll_invisibles, 100);
-	}
+		poll_invisibles_interval_id = window.setInterval(function() { poll_invisibles(form, cb) }, 100);
+	} else { if (typeof cb == 'function' ) cb()};
 
 	return true;
 }
@@ -2767,15 +3028,20 @@ function init_page (options) {
 	var table_containers = $('div.eludia-table-container');
 
 	if (table_containers.length) {
-		require (['/i/mint/libs/SuperTable/supertable.min.js'], function (supertable) {
+		require ([
+			'/i/mint/libs/SuperTable/supertable.min.js?' + ((window.versions && window.versions['supertable.js']) || 'v1')
+		], function (supertable) {
 
-			table_containers.each (function() {
+			table_containers.each (function(index) {
 				var that = this;
 
 				supertables.push (new supertable({
-					tableUrl        : '/?' + tables_data [that.id]['table_url'] + '&__only_table=' + that.id + '&__table_cnt=' + table_containers.length,
+					tableUrl        : '/?' + tables_data[that.id]['table_url'] + '&__only_table=' + that.id + '&__table_cnt=' + table_containers.length,
 					initial_data : tables_data [that.id],
 					el: $(that),
+					columns_draggable: tables_data[that.id]['disable_reorder_columns'],
+					config: tables_data[that.id].config,
+					index: index,
 					containerRender : function(model) {
 						$(that).find('tr[data-menu],td[data-menu]').on ('contextmenu', function (e) {e.stopImmediatePropagation(); return table_row_context_menu (e, this)});
 						activate_suggest_fields (that);
@@ -2803,33 +3069,144 @@ function init_page (options) {
 							tableSlider.clear_rows ();
 							tableSlider.set_row (0);
 						}
-
-
 					}
 				}))
 			});
 
 			options.on_load ();
-
 			tableSlider = new TableSlider ();
-			tableSlider.set_row (parseInt (options.__scrollable_table_row));
+			tableSlider.set_row (parseInt (options.__scrollable_table_row || 0));
+			if (options.__scrollable_table_row !== null) {
+				setTimeout(function() {
+					var $cursor = $('td.selected-single'),
+						$body = $('#body');
 
-			$(body).scroll(function() {
+					if ($cursor.length && !$cursor.is_on_screen()) {
+						$body.css('height', 'auto');
+						$body.scrollTo($cursor.closest('.main-container').position().top + $cursor.position().top);
+					}
+				});
+			}
+
+			$('body').scroll(function() {
 				$(document.body).find("[data-role=popup]").each(function() {
 					var popup = $(this).data("kendoPopup");
 					popup.close();
 				});
 			});
-
 			if (typeof tableSlider.row === 'number' && tableSlider.rows.length > tableSlider.row) {
 				tableSlider.scrollCellToVisibleTop ();
 			}
-
 			$(document).click (function () {$('UL.menuFonDark').remove ()});
+
+			var splitter = table_containers.closest('.supertable_with_panels');
+
+			if (splitter.length !== 0) {
+				var splitterSize = window.top.localStorage.getItem('passportSplitterWidth') || '50%',
+					splitterMaxSize = table_containers.find('.st-table-header-right-pane > div').eq(0).width() / ($(document).width() / 100);
+
+				if (parseInt(splitterSize) > 100)
+					splitterSize = '90%';
+				if (parseInt(splitterSize) > splitterMaxSize)
+					splitterSize = splitterMaxSize + '%';
+				splitter.kendoSplitter({
+					panes: [
+						{ collapsible: true, size: splitterSize },
+						{ collapsible: true, size: (100 - parseInt(splitterSize)) + '%' }
+					],
+					resize: function(e) {
+						var isClose = (/^\d{1,}(\.\d{1,})?%$/.test(this.options.panes[1].size)
+								? $(document).width() / 100 * parseInt(this.options.panes[1].size)
+								: parseInt(this.options.panes[1].size)) < 51,
+							iframe = this.wrapper.find('iframe'),
+							supertableWidth = this.wrapper.find('.k-pane').eq(0).find('.st-table-right-viewport > div').width(),
+							paneSizePx = /^\d{1,}(\.\d{1,})?%$/.test(this.options.panes[0].size)
+								? $(document).width() / 100 * parseInt(this.options.panes[0].size)
+								: parseInt(this.options.panes[0].size),
+							paneSizePercent = (paneSizePx / ($(document).width() / 100)) + '%';
+
+						if (paneSizePx > supertableWidth && ($(document).width() - paneSizePx) > 51) {
+							var self = this;
+
+							paneSizePx = supertableWidth;
+							paneSizePercent = (paneSizePx / ($(document).width() / 100)) + '%';
+							setTimeout(function() {
+								self.size('.k-pane:first', paneSizePercent);
+							}, 100);
+						}
+						localStorage.setItem('passportSplitterWidth', paneSizePercent);
+						if (iframe.attr('src') === '/i/empty_object/' && !isClose) {
+							var selectedRow = $(tableSlider.get_cell()).closest('tr'),
+								data_href = selectedRow.attr('data-href') || null;
+
+							if (data_href !== null && /open_in_supertable_panel/.test(data_href))
+								open_in_supertable_panel(
+									selectedRow[0],
+									data_href.slice(_.indexOf(data_href, '\'') + 1, _.lastIndexOf(data_href, '\''))
+								);
+						}
+						$(window).trigger('resize');
+						setTimeout(function() {
+							var view_port_height = Math.floor(
+									parseInt(document.documentElement.clientHeight)
+									- parseInt(splitter.offset().top)
+									- window.devicePixelRatio
+								);
+
+							splitter.data('kendoSplitter').wrapper.height(view_port_height)
+						}, 1000)
+					}
+				})
+			}
+
+			$('.k-textbox.required').each(function() {
+				textbox_required(this);
+			});
 
 		});
 	}
 
+	if ($('[data-tooltip], [data-note]').length !== 0) {
+		requirejs.config({
+			baseUrl: '/i/mint/libs/KendoUI/js',
+			shim: {
+				'/i/_skins/Mint/i18n_RUS.js' : {
+					deps: ['cultures/kendo.culture.ru-RU.min']
+				}
+			}
+		})
+		require([ "kendo.tooltip.min" ],
+		function() {
+			$(document).ready(function() {
+				$('[data-tooltip], [data-note]').each(function() {
+					var $this = $(this),
+						options = {
+							content: function(e) {
+								var $this = $(e.target);
+
+								return $this.attr(
+									(typeof $this.attr('data-tooltip') === 'undefined')
+										? 'data-note'
+										: 'data-tooltip'
+									).replace(/(?:\r\n|\r|\n)/g, '<br/>')
+							}
+						};
+
+					if ($this.hasClass('form-metrics-label')) {
+						options.show = function() {
+							var left = $this.offset().left + parseInt($this.css('paddingLeft'));
+
+							$(this.popup.wrapper).css({
+								left: left,
+								maxWidth: $('body').prop('clientWidth') - left
+							})
+						}
+					}
+					$this.kendoTooltip(options)
+				})
+			})
+		})
+	}
 
 	var splitted_tree_window = $("#splitted_tree_window");
 	if (splitted_tree_window.length) {
@@ -2851,7 +3228,7 @@ function init_page (options) {
 			}
 		}
 		var resizeTree = debounce (function () {
-			var ontouchcontentheight = $(window.parent.document).find('iframe').height() || $(window).height();
+			var ontouchcontentheight = $(window.parent.document).find('#eludia-application-iframe').height() || $(window).height();
 			$('#touch_welt').css('height', ontouchcontentheight);
 			$('#__content_iframe').css('height', ontouchcontentheight);
 			var stw = $("#splitted_tree_window").data("kendoSplitter");
@@ -2891,34 +3268,112 @@ function init_page (options) {
 		$(this).height(h);
 	});
 
-	$('[data-type=datepicker]').each(function() {
-		$(this).kendoDatePicker({ format: 'dd.MM.yyyy' });
+	var date_field_keydown = function(e) {
+			var key = e.keyCode || e.which,
+				form = $(this).closest('form');
+
+			if (key == 13 && form.hasClass('toolbar')) form.submit();
+		},
+		date_field_light = function() {
+			var $el = this.element,
+				wrapper = this.wrapper,
+				light = function() {
+					if (this.element.val().length == 0) {
+						this.wrapper.addClass('light');
+					} else {
+						this.wrapper.removeClass('light');
+					}
+				};
+
+			if ($el.hasClass('required')) {
+				wrapper.addClass('required')
+					.addClass('light');
+				$el.removeClass('required')
+					.removeClass('light');
+				$el.change(light.bind(this));
+			}
+			light.call(this);
+		};
+
+	window.required_date_field = function($field, required) {
+		var wrapper = $field.closest('.k-widget');
+
+		if (required) {
+			$field.addClass('form-mandatory-inputs');
+			wrapper.addClass('required');
+		} else {
+			$field.removeClass('form-mandatory-inputs');
+			wrapper.removeClass('required');
+		}
+		// $field.kendoDatePicker();
+		if (required) {
+			date_field_light.call($field.data('kendoDatePicker'));
+		}
+	};
+
+	window.init_date_fields = function($el) {
+		$el.each(function(){
+		var $this = $(this),
+			select_time = $this.attr('data-type') === 'datetimepicker',
+			options = {},
+			min = $this.attr('min'),
+			max = $this.attr('max');
+
+		if (min) {
+			options.min = new Date(min);
+		}
+		if (max) {
+			options.max = new Date(max);
+		}
+		$this.on('keydown', date_field_keydown);
+		if (select_time) {
+			if ($this.attr('mask')) {
+				options.format = 'dd.MM.yyyy HH:mm';
+				$this.val($this.val().replace(' ', ''));
+			}
+			$this.kendoDateTimePicker(options);
+		} else {
+			$this.kendoDatePicker(options);
+		}
+		$.data($this[0], 'prev_value', $this.data(select_time ? 'kendoDateTimePicker' : 'kendoDatePicker').value());
+		date_field_light.call($this.data(
+			select_time ? 'kendoDateTimePicker' : 'kendoDatePicker'
+		));
 	});
-	$('[data-type=datetimepicker]').each(function() { $(this).kendoDateTimePicker(); });
+	};
+	init_date_fields ($('[data-type=datepicker], [data-type=datetimepicker]'));
+
+	$('[data-type="numeric-text-box"]').each(function () {$(this).kendoNumericTextBox({format : $(this).attr('format') || 'n'})});
 
 	$('input[mask]').each (init_masked_text_box);
+	$('.k-textbox.required, .k-numericbox.required').each(function() {
+		textbox_required(this)
+	});
 
-	$('input[type=file]:not([data-upload-url]):not([is-native])').each(function () {
+	$('input[type=file]:not([data-upload-url]):not([is-native]):not(.metrics_file)').each(function () {
 		$(this).kendoUpload({
 			multiple : $(this).attr('data-ken-multiple') == 'true'
 		});
 	});
-	$('input[type=file][data-upload-url]').each(function () {
+	$('input[type=file][data-upload-url]:not(.metrics_file)').each(function () {
 		$(this).kendoUpload({
 			async: {
 				saveUrl: $(this).attr('data-upload-url'),
+				removeUrl: '/',
 				autoUpload: true
-			}
+			},
+			files: $(this).attr('data-files')
 		});
 	});
-
+	try {
+		additional_params_init()
+	} catch(e) {}
 	$("form").on ("submit", function () {
 		$('input[type=file][disabled]', this).each (function () {
 			if ($('input[type=file][name="' + this.name + '"]').length == 1)
 				$(this).removeAttr("disabled");
 		});
 	});
-
 	$('.eludia-chart').each(function () {
 		var options = $(this).data('chart-options');
 		options.dataSource = new kendo.data.DataSource($(this).data('chart-datasource'));
@@ -2959,22 +3414,28 @@ function init_page (options) {
 
 	if (top.localStorage && top.localStorage ['message']) {
 		require(['kendo.notification.min'], function() {
-			var notification = $("#notification", top.document).data("kendoNotification");
-			if (!notification) {
-				notification = $("<span id='notification'/>").appendTo($(top.document.body)).kendoNotification({
-					stacking: "down",
-					button: true
-				}).data("kendoNotification");
+			if (top.localStorage ['message_type'] === 'approve') {
+				alert(top.localStorage ['message']);
+			} else if (top.localStorage ['message_type'] === 'approve_warning') {
+				warning(top.localStorage ['message']);
+			} else {
+				var notification = $("#notification", top.document).data("kendoNotification");
+				if (!notification) {
+					notification = $("<span id='notification'/>").appendTo($(top.document.body)).kendoNotification({
+						stacking: "down",
+						button: true
+					}).data("kendoNotification");
+				}
+				notification.show (top.localStorage ['message'], top.localStorage ['message_type']);
 			}
-			notification.show (top.localStorage ['message'], top.localStorage ['message_type']);
 			top.localStorage ['message'] = '';
 			top.localStorage ['message_type'] = '';
 		});
 	}
 
 	if (options.session_timeout) {
-		setInterval (function () {
-			$.get (location.protocol + '//' + location.host + location.pathname + '?keepalive=' + request ['sid'] + '&_salt=' + Math.random ())
+		setInterval (function() {
+			$.get(location.protocol + '//' + location.host + location.pathname + '?keepalive=' + window.top.options.sid + '&_salt=' + Math.random())
 		}, options.session_timeout);
 	}
 
@@ -2989,22 +3450,16 @@ function init_page (options) {
 		});
 	}
 
-	$(document).on ('keydown', function (event) {
-		lastKeyDownEvent = event;
-		return handle_basic_navigation_keys ();
+	$(document).on('keydown', function(event) {
+			lastKeyDownEvent = event;
+
+		return handle_basic_navigation_keys();
 	});
 
 	$(document).on ('keypress', function (event) {
 		if (!browser_is_msie && event.keyCode == 27)
 			return false;
 	});
-
-	if (options.help_url) {
-		$(document).on ('help', function (event) {
-			nope (options.help_url, '_blank', 'toolbar=no,resizable=yes');
-			blockEvent ();
-		});
-	}
 
 	$(window).on ('beforeunload', function (event) {
 		setCursor (window, 'wait');
@@ -3020,14 +3475,23 @@ function init_page (options) {
 		$('[type="checkbox"]', e.target).click ();
 	});
 
-	require (['/i/_skins/Mint/jquery.blockUI.js']);
-
+	require(['/i/_skins/Mint/jquery.blockUI.js'], function() {
+		if (window.blockuiAfterLoad) blockui.apply(null, window.blockuiAfterLoad);
+	});
 }
 
 function init_masked_text_box () {
 
 	$(this).kendoMaskedTextBox({
-		mask:$(this).attr('mask')
+		mask:$(this).attr('mask'),
+		culture: "ru-RU",
+		promptChar: " ",
+		rules: {
+			"L": /[a-zA-Zа-яА-ЯёЁ]/,
+			"?": /[a-zA-Zа-яА-ЯёЁ\s]/,
+			"A": /[a-zA-Zа-яА-ЯёЁ\d]/,
+			"a": /[a-zA-Zа-яА-ЯёЁ\d\s]/
+		}
 	});
 
 	if ($(this).data('type') == 'datepicker' || $(this).data('type') == 'datetimepicker') {
@@ -3079,36 +3543,140 @@ function tabOnEnter () {
 	void (0);
 }
 
-$(document).on('mouseenter', '.k-popup .k-item', function() {
-	var $this = $(this),
-		textHasOverflown = this.scrollWidth > $this.innerWidth(),
-		showTooltip = function() {
-			$this.kendoTooltip({
-				content: $this.attr('data-tooltip') || $this.text()
-			})
-			.data('kendoTooltip')
-			.show();
+if (!Array.prototype.find) {
+	Array.prototype.find = function(predicate) {
+    	if (this == null) {
+      		throw new TypeError('Array.prototype.find called on null or undefined');
+    	}
+    	if (typeof predicate !== 'function') {
+      		throw new TypeError('predicate must be a function');
+    	}
+    	var list = Object(this);
+    	var length = list.length >>> 0;
+    	var thisArg = arguments[1];
+    	var value;
+
+    	for (var i = 0; i < length; i++) {
+      		value = list[i];
+      		if (predicate.call(thisArg, value, i, list)) {
+        		return value;
+      		}
+    	}
+    return undefined;
+  	};
+}
+
+if (!String.prototype.trim) {
+	(function() {
+    	String.prototype.trim = function() {
+      		return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
+    	};
+  	})();
+}
+
+if (!window.getSelection) {
+	window.getSelection = function() {
+		return document.selection.createRange();
+	}
+}
+
+window.queryCommandSupported__original = document.queryCommandSupported;
+document.queryCommandSupported = function(command) {
+	var result;
+	try {
+		result = window.queryCommandSupported__original(command);
+	} catch(error) {
+		result = false;
+	}
+	return result;
+}
+
+parseURL = function(a){var b=[];a=a||e.location.href;for(var d=a.slice(a.indexOf("?")+1).split("&"),c=0;c<d.length;c++)a=d[c].split("="),b.push(a[0]),b[a[0]]=a[1];return b};
+
+var open_in_supertable_panel = function(self, url) {
+	var splitter = $(self).closest('.supertable_with_panels').data('kendoSplitter'),
+		iframe = splitter.wrapper.find('iframe'),
+		_is_dirty = iframe[0].contentWindow.is_dirty;
+
+	if (_is_dirty&& !confirm('Уйти без сохранения данных?'))
+		return;
+	if ((/^\d{1,}(\.\d{1,})?%$/.test(splitter.options.panes[1].size)
+		? $(document).width() / 100 * parseInt(splitter.options.panes[1].size)
+		: parseInt(splitter.options.panes[1].size)) < 51
+	) { document.location.href = url;
+	} else {
+		if (url !== '/i/empty_object/')
+			url += '&in_panel=1';
+		iframe.attr('src', url);
+	}
+};
+
+var textbox_required = function(el) {
+	var $el = $(el),
+		light = function() {
+			var v = this.val().replace (/\s+/, '');
+			if (v.length == 0) {
+				if (!this.hasClass('light')) {
+					this.addClass('light');
+				}
+				if (this.hasClass('k-numericbox')) {
+					this.closest('.k-numeric-wrap').addClass('light');
+					this.prev().addClass('light');
+				}
+			} else if (this.hasClass('light')) {
+				this.removeClass('light');
+				if (this.hasClass('k-numericbox')) {
+					this.closest('.k-numeric-wrap').removeClass('light');
+					this.prev().removeClass('light')
+				}
+			}
+		};
+		$el.keyup(function() {
+		light.call($(this));
+	});
+	if ($el.hasClass('k-numericbox')) {
+		$el.change(function() {
+			light.call($(this))
+		})
+	}
+	light.call($el);
+};
+
+$(document).ready(function() {
+
+	var is_show_highlight = function(el) {
+		var value = (el[0].tagName == 'SELECT')
+			? parseInt(el.val())
+			: el.val().trim();
+
+		return (typeof value == 'number')
+			? (value < 1)
+			: (value.length == 0);
 		};
 
-	if ($this.data('kendoTooltip')) {
-		$this.data('kendoTooltip').show()
-	} else {
-		if (textHasOverflown || $this.attr('data-tooltip')) {
-			if ($.fn.kendoTooltip) {
-				showTooltip()
-			} else {
-				require(['kendo.tooltip.min'], showTooltip)
-			}
-		}
+	$('.k-textbox.required').each(function() {
+		textbox_required(this);
+	});
+});
+
+$(window).load(function() {
+	if ($('#waiting_screen').length !== 0) {
+		$('#waiting_screen').remove();
 	}
 });
 
-$(document).on('mouseout', '.k-popup .k-item', function() {
-	$('[data-role=tooltip]').each(function() {
-		var kendoTooltip = $(this).data('kendoTooltip');
+$.fn.is_on_screen = function() {
+	var win = $(window),
+		viewport = {
+			top : win.scrollTop(),
+			left : win.scrollLeft()
+		},
+		bounds = this.offset();
 
-		if (kendoTooltip && typeof kendoTooltip.hide !== 'undefined') {
-			$(this).data('kendoTooltip').hide()
-		}
-	})
-});
+	viewport.right = viewport.left + win.width();
+	viewport.bottom = viewport.top + win.height();
+    bounds.right = bounds.left + this.outerWidth();
+    bounds.bottom = bounds.top + this.outerHeight();
+
+    return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
+};
