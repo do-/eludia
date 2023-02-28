@@ -6,6 +6,7 @@ sub draw_form_field_hgroup {
 
 		ref $item or $item = {name => $item};
 
+		next if $item -> {type} eq 'br';
 		next if $item -> {off} && $data -> {id};
 
 		$item = _adjust_field ($item, $data);
