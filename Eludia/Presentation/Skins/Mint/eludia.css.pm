@@ -618,7 +618,7 @@ span.get_down_the_text_1 {
 }
 
 input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs {
-	FONT-SIZE: 13px;
+	FONT-SIZE: 13px !important;
 	COLOR: #000000;
 	background-color: #ffffff;
 	border: 1px #7f9db9 solid;
@@ -635,7 +635,7 @@ input.form-active-deleted, select.form-active-deleted, textarea.form-active-dele
 }
 
 input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
-	FONT-SIZE: 13px;
+	FONT-SIZE: 13px !important;
 	COLOR: #000000;
 	background-color: #f7f7ad;
 	border: 1px #7f9db9 solid;
@@ -652,6 +652,7 @@ input.form-mandatory-deleted, select.form-mandatory-deleted, textarea.form-manda
 }
 input.k-textbox.form-mandatory-inputs, textarea.k-textbox.form-mandatory-inputs, span.form-mandatory-inputs .k-dropdown-wrap, div.form-mandatory-inputs {
 	background-color: #F7F7AD !important;
+	FONT-SIZE: 13px !important;
 }
 
 input.disabled {
@@ -716,6 +717,9 @@ a.hint {
 }
 .k-numerictextbox input[type=text] {
 	box-sizing: border-box;
+}
+.k-animation-container li {
+	FONT-SIZE: 13px !important;
 }
 #waiting_screen {
 	position: fixed;
