@@ -250,7 +250,6 @@ sub _draw_input_datetime {
 			if ((lastValueDate[0] != newValueDate[0] || newValueDate[1].search('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]') == -1) && newValueDate[0]) { this.value = newValueDate[0] + ' ' + '$$options{time}' }";
 
 		$options -> {onChange}   = $additional_verification . $options -> {onChange};
-		# $options -> {onKeyPress} = $additional_verification . $options -> {onKeyPress};
 	}
 
 	my $html = <<EOH;
