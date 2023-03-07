@@ -740,11 +740,78 @@ EOJS
 		var element = doc.getElementById ('input_$field->{name}');
 EOJS
 		} else {
-			$_REQUEST {__script} .= <<EOJS;
+
+			if ($_REQUEST {__skin} eq 'TurboMilk') {
+
+				$_REQUEST {__script} .= <<EOJS;
 		var element = doc.getElementById ('input_$field_name');
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
 EOJS
+
+			} else {
+
+				$_REQUEST {__script} .= <<EOJS;
+		var element = (function() {
+			var el = doc.querySelector('[name=_$field_name]'),
+				sought_for = null;
+
+			if (
+				typeof window.top._ === 'undefined'
+				&& typeof Array.prototype.indexOf === 'undefined'
+			) {
+				Array.prototype.indexOf = function(elt /*, from*/) {
+					var len = this.length >>> 0,
+						from = Number(arguments[1]) || 0;
+
+					from = (from < 0) ? Math.ceil(from) : Math.floor(from);
+					if (from < 0) {
+						from += len;
+					}
+					for (; from < len; from++) {
+						if (from in this && this[from] === elt) {
+							return from;
+						}
+					}
+
+					return -1;
+				}
+			}
+
+			if (el !== null) {
+				var stop = false;
+
+				el = el.parentElement;
+				while(!stop) {
+					var result = (typeof window.top._ === 'undefined')
+						? el.classList.indexOf('k-widget') !== -1
+						: window.top._.indexOf(el.classList, 'k-widget') !== -1;
+
+					if (
+						result
+						|| el.parentElement === null
+					) {
+						if (result) {
+							sought_for = el
+						}
+						stop = true
+					} else {
+						el = el.parentElement
+					}
+				}
+			}
+
+			return sought_for
+		})();
+		if (!element) element = doc.getElementById ('input_$field_name');
+		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
+		try {
+			if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
+		} catch(e){}
+		if (element && element.parentElement.id == 'input_$field_name') element = element.parentElement;
+EOJS
+			}
+
 		}
 
 		$_REQUEST {__script} .= <<EOJS;
