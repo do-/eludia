@@ -741,36 +741,13 @@ EOJS
 EOJS
 		} else {
 
-			if ($_REQUEST {__skin} eq 'TurboMilk') {
-
-				$_REQUEST {__script} .= <<EOJS;
-		var element = doc.getElementById ('input_$field_name');
-		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
-		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
-EOJS
-
-			} else {
-
-				$_REQUEST {__script} .= <<EOJS;
-		var element = (function() {
-			var el = doc.querySelector('[name=_$field_name]'),
-				sought_for = null;
-			if (el !== null) {
-				el = el.closest('.k-widget');
-				sought_for = el;
-			}
-			return sought_for
-		})();
-
+			$_REQUEST {__script} .= <<EOJS;
+		var element = window.parent.\$('[name=_$field_name]').closest('.k-widget').get(0);
 		if (!element) element = doc.getElementById ('input_$field_name');
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
-		try {
-			if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
-		} catch(e){}
+		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
 		if (element && element.parentElement.id == 'input_$field_name') element = element.parentElement;
 EOJS
-			}
-
 		}
 
 		$_REQUEST {__script} .= <<EOJS;
