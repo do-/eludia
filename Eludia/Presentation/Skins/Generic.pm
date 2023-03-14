@@ -199,7 +199,7 @@ sub js_detail {
 		push @all_details, $detail;
 
 		$tab_js .= <<EOJS;
-			element = window.form.elements['_${detail}'];
+			element = \$('[name=_${detail}]')[0];
 			if (element) {
 				tabs.push (element.tabIndex);
 			}
@@ -221,7 +221,7 @@ EOJS
 		activate_link (
 
 			'$script_name/$href&__only_field=${\(join (',', @all_details))}&__only_form=' +
-			window.form.name +
+			\$(this).closest('form').attr('name') +
 			'&_$$options{name}=' +
 			$options->{value_src} +
 			'&__src_field=' +
