@@ -1182,6 +1182,8 @@ EOH
 			? qq { data-tooltip="$$value{orign_label}" }
 			: '';
 
+		$value -> {label} = ('&nbsp;&nbsp;&nbsp;' x $value -> {level}) . $value -> {label};
+
 		$html .= <<EOH;
 			<option
 				value="$$value{id}"
@@ -2106,6 +2108,8 @@ EOH
 	foreach my $value (@{$options -> {values}}) {
 
 		my $attributes = dump_attributes ($value -> {attributes});
+
+		$value -> {label} = ('&nbsp;&nbsp;&nbsp;' x $value -> {level}) . $value -> {label};
 
 		$html .= qq {<option value="$$value{id}" $$value{selected} $attributes>$$value{label}</option>};
 
