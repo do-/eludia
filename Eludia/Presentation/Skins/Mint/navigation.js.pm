@@ -703,6 +703,25 @@ function nope (url, name, options) {
 		w.location.href = url;
 	}
 	else {
+		if (typeof options === 'object' && options !== null) {
+
+			if (options.fitscreen) {
+
+				$.extend (options, {
+					resizable: 'yes',
+					left  : 25,
+					top   : 25,
+					width : screen.availWidth - 50,
+					height: screen.availHeight - 50
+				});
+			}
+
+			var params = [];
+			$.each(options, function(key, value) {
+				params.push(key + "=" + value);
+			});
+			options = params.join(",");
+		}
 		w.open (url, name, options);
 	}
 }
