@@ -3541,7 +3541,7 @@ sub draw_page {
 	$static_version =~ s|^\s+||g;
 	$static_version =~ s|\s+$||g;
 
-	my $body = $preconf -> {toggle_in_hidden_form} ? <<EOH : '';
+	my $body = $preconf -> {toggle_in_hidden_form} && $page -> {body} !~ /^\s*\<frameset/ism ? <<EOH : '';
 	<div id="waiting_screen">
 		<div class="content">
 			<img src="$_REQUEST{__static_url}/busy.gif">
