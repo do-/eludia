@@ -2326,7 +2326,7 @@ function enable_input(name, enable) {
 	field.prop('readonly', !enable).toggleClass('disabled', !enable);
 }
 
-function toggle_field (name, is_visible, is_clear_field) {
+function toggle_field (name, is_visible, is_clear_field, clear_value) {
 
 	is_visible = is_visible > 0;
 
@@ -2348,7 +2348,7 @@ function toggle_field (name, is_visible, is_clear_field) {
 	tr.toggle(is_visible || tr.children(':visible').length > 0);
 
 	if (is_clear_field) {
-		field.val(0);
+		clear_field (td_field, clear_value);
 	}
 	if (is_visible) {
 		if (
@@ -2362,7 +2362,7 @@ function toggle_field (name, is_visible, is_clear_field) {
 	}
 }
 
-function toggle_field_id (id, is_visible,is_clear_field) {
+function toggle_field_id (id, is_visible,is_clear_field, clear_value) {
 
 	var full_id;
 	if (document.getElementById('input_' + id))
@@ -2379,10 +2379,9 @@ function toggle_field_id (id, is_visible,is_clear_field) {
 		return 0;
 	var td_field = $('[id=' + full_id + ']').closest('td');
 	toggle_field_and_row(td_field, is_visible);
-	if (is_clear_field == 2)
-		document.getElementById(full_id).value = 0;
-	else if (is_clear_field == 1)
-		document.getElementById(full_id).value = "";
+	if (is_clear_field) {
+		clear_field (td_field, clear_value);
+	}
 	if (is_visible) {
 		var $field = $('#' + full_id);
 
@@ -2395,6 +2394,12 @@ function toggle_field_id (id, is_visible,is_clear_field) {
 			}, 300)
 		}
 	}
+}
+
+function clear_field (td_field, clear_value){
+	td_field.find("input[type='radio']:checked, input[type='checkbox']:checked").prop('checked', false);
+	td_field.find("select").prop('value', clear_value ? clear_value : '');
+	td_field.find("input[type='text']").prop('value', clear_value ? clear_value : '');
 }
 
 function toggle_field_and_row (td_field, is_visible) {
