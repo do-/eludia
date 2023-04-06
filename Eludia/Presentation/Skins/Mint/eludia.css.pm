@@ -419,15 +419,14 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 
 .form-deleted-banner {
 	FONT-WEIGHT: bold;
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	FONT-SIZE:  11pt;
 	COLOR: #000000;
 	background-color: #dadae0;
 
 	padding-left: 10px;
 	padding-right: 10px;
-	padding-top: 5px;
-	padding-bottom: 5px;
+	padding-top: 10px;
+	padding-bottom: 10px;
 
 	border-color: #d6d3ce;
 	border-style:solid;
@@ -440,8 +439,6 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 
 .form-deleted-label {
 	FONT-WEIGHT: bold;
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	COLOR: #000000;
 	background-color: #dadae0;
 	padding-left: 10px;
@@ -460,8 +457,6 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 }
 
 .form-deleted-inputs {
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	background-color: #dadae0;
 	padding-left: 5px;
 	padding-right: 10px;
@@ -476,8 +471,6 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 
 }
 .form-deleted-deleted {
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	background-color: #dadae0;
 	padding-left: 5px;
 	padding-right: 10px;
@@ -488,8 +481,6 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 
 A.form-deleted-inputs, A.form-deleted-inputs:link, A.form-deleted-inputs:hover, A.form-deleted-inputs:visited {
 	FONT-WEIGHT: normal;
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	background-color: #dadae0;
 	COLOR: #293869;
 	TEXT-DECORATION: none;
@@ -507,8 +498,6 @@ A.form-deleted-inputs, A.form-deleted-inputs:link, A.form-deleted-inputs:hover, 
 }
 A.form-deleted-deleted, A.form-deleted-deleted:link, A.form-deleted-deleted:hover, A.form-deleted-deleted:visited {
 	FONT-WEIGHT: normal;
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	background-color: #dadae0;
 	COLOR: #293869;
 	TEXT-DECORATION: none;
@@ -538,8 +527,6 @@ td.form-active-inputs, td.form-passive-inputs {
 }
 
 .form-active-deleted, .form-passive-deleted {
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	background-color: #fff;
 	padding-left: 5px;
 	padding-right: 10px;
@@ -556,8 +543,6 @@ A.form-active-inputs, A.form-active-inputs:link, A.form-active-inputs:hover, A.f
 	border-style:none;
 }
 A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, A.form-active-deleted:visited, A.form-passive-deleted, A.form-passive-deleted:link, A.form-passive-deleted:hover, A.form-passive-deleted:visited{
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	COLOR: #293869;
 	background-color: #fff;
 	padding-left: 0px;
