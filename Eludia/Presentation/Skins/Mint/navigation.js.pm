@@ -1519,7 +1519,7 @@ function setAndSubmit (name, values) {
 		elements [i].value = values [i];
 	}
 
-	form.submit ();
+	$(form).submit ();
 }
 
 function checkMultipleInputs (f) {
