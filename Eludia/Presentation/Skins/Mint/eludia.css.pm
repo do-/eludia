@@ -410,26 +410,23 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 	FONT-SIZE: 11pt;
 	COLOR: #2f3237;
 	background-color: #f2f2f2;
-
 	padding: 10px 10px;
-
 	border-color: #d6d3ce;
 	border-style:solid;
-
 	border-width: 0 1px 1px 0;
+	white-space: pre-wrap;
 }
 
 .form-deleted-banner {
 	FONT-WEIGHT: bold;
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
+	FONT-SIZE:  11pt;
 	COLOR: #000000;
 	background-color: #dadae0;
 
 	padding-left: 10px;
 	padding-right: 10px;
-	padding-top: 5px;
-	padding-bottom: 5px;
+	padding-top: 10px;
+	padding-bottom: 10px;
 
 	border-color: #d6d3ce;
 	border-style:solid;
@@ -442,8 +439,6 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 
 .form-deleted-label {
 	FONT-WEIGHT: bold;
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	COLOR: #000000;
 	background-color: #dadae0;
 	padding-left: 10px;
@@ -462,8 +457,6 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 }
 
 .form-deleted-inputs {
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	background-color: #dadae0;
 	padding-left: 5px;
 	padding-right: 10px;
@@ -478,8 +471,6 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 
 }
 .form-deleted-deleted {
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	background-color: #dadae0;
 	padding-left: 5px;
 	padding-right: 10px;
@@ -490,8 +481,6 @@ A.row-button, A.row-button:link, A.row-button:active, A.row-button:hover, A.row-
 
 A.form-deleted-inputs, A.form-deleted-inputs:link, A.form-deleted-inputs:hover, A.form-deleted-inputs:visited {
 	FONT-WEIGHT: normal;
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	background-color: #dadae0;
 	COLOR: #293869;
 	TEXT-DECORATION: none;
@@ -509,8 +498,6 @@ A.form-deleted-inputs, A.form-deleted-inputs:link, A.form-deleted-inputs:hover, 
 }
 A.form-deleted-deleted, A.form-deleted-deleted:link, A.form-deleted-deleted:hover, A.form-deleted-deleted:visited {
 	FONT-WEIGHT: normal;
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	background-color: #dadae0;
 	COLOR: #293869;
 	TEXT-DECORATION: none;
@@ -523,7 +510,7 @@ A.form-deleted-deleted, A.form-deleted-deleted:link, A.form-deleted-deleted:hove
 
 
 .form-inner {
-	FONT-SIZE:  8pt;
+	FONT-SIZE:  10pt;
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	white-space: nowrap;
 }
@@ -540,8 +527,6 @@ td.form-active-inputs, td.form-passive-inputs {
 }
 
 .form-active-deleted, .form-passive-deleted {
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	background-color: #fff;
 	padding-left: 5px;
 	padding-right: 10px;
@@ -558,8 +543,6 @@ A.form-active-inputs, A.form-active-inputs:link, A.form-active-inputs:hover, A.f
 	border-style:none;
 }
 A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, A.form-active-deleted:visited, A.form-passive-deleted, A.form-passive-deleted:link, A.form-passive-deleted:hover, A.form-passive-deleted:visited{
-	FONT-SIZE:  8pt;
-	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	COLOR: #293869;
 	background-color: #fff;
 	padding-left: 0px;
@@ -573,8 +556,13 @@ A.form-active-deleted, A.form-active-deleted:link, A.form-active-deleted:hover, 
 }
 
 .form-very-active-inputs {
-	background-color: #fff!important;
 	font-size: 13px!important;
+	font-weight: bold;
+}
+
+.form-very-deleted-inputs {
+	font-size: 13px!important;
+	font-weight: bold;
 }
 
 INPUT {
@@ -615,7 +603,7 @@ span.get_down_the_text_1 {
 }
 
 input.form-active-inputs, select.form-active-inputs, textarea.form-active-inputs {
-	FONT-SIZE: 13px;
+	FONT-SIZE: 13px !important;
 	COLOR: #000000;
 	background-color: #ffffff;
 	border: 1px #7f9db9 solid;
@@ -632,9 +620,9 @@ input.form-active-deleted, select.form-active-deleted, textarea.form-active-dele
 }
 
 input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandatory-inputs {
-	FONT-SIZE: 13px;
+	FONT-SIZE: 13px !important;
 	COLOR: #000000;
-	background-color: #f7f7ad !important;
+	background-color: #f7f7ad;
 	border: 1px #7f9db9 solid;
 	padding-left: 3px;
 	padding-right: 3px;
@@ -642,13 +630,14 @@ input.form-mandatory-inputs, select.form-mandatory-inputs, textarea.form-mandato
 input.form-mandatory-deleted, select.form-mandatory-deleted, textarea.form-mandatory-deleted {
 	FONT-SIZE: 13px;
 	COLOR: #000000;
-	background-color: #f7f7ad;
+	background-color: #F7F7AD;
 	border: 2px solid black;
 	padding-left: 3px;
 	padding-right: 3px;
 }
-input.k-textbox.form-mandatory-inputs, textarea.k-textbox.form-mandatory-inputs , span.form-mandatory-inputs .k-dropdown-wrap, div.form-mandatory-inputs {
-	background-color: #f7f7ad !important;
+input.k-textbox.form-mandatory-inputs, textarea.k-textbox.form-mandatory-inputs, span.form-mandatory-inputs .k-dropdown-wrap, div.form-mandatory-inputs {
+	background-color: #F7F7AD !important;
+	FONT-SIZE: 13px !important;
 }
 
 input.disabled {
@@ -690,23 +679,56 @@ a.hint {
 
 .zeroclipboard-is-hover { cursor:pointer !important; }
 
-/* Tooltip */
-.k-animation-container .k-widget.k-tooltip {
-	background: #f7f7ad;
-	color: #333;
-	border-color: #333;
-}
-.k-callout-n {
-	border-bottom-color: #333;
+.k-grid tr td.empty {
+	box-shadow: inset 0 0 1px 1px rgba(255, 0, 0, 0.7);
 }
 
-/* combobox */
-.k-widget.k-combobox .k-input {
-	text-overflow: ellipsis;
+.k-grid a.k-button.k-button-icontext.k-grid-delete {
+	padding: 3px;
+	line-height: normal;
+	min-width: auto;
 }
 
-/* popup */
-.k-popup .k-item {
-	overflow: hidden;
-	text-overflow: ellipsis;
+.k-grid a.k-button.k-button-icontext.k-grid-delete .k-icon {
+	display: none;
+}
+
+.k-numerictextbox .k-link {
+	height: 50%!important;
+}
+.k-numerictextbox .k-link .k-icon {
+	position: inherit!important;
+	margin: 3px 0 0 0!important;
+}
+.k-numerictextbox input[type=text] {
+	box-sizing: border-box;
+}
+.k-animation-container li {
+	FONT-SIZE: 13px !important;
+}
+#waiting_screen {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	background-color: #fff;
+	z-index: 9999;
+}
+#waiting_screen .content {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left: -12px;
+	margin-top: -12px;
+}
+#waiting_screen .content img {
+	width: 24px;
+}
+
+/* clearfix */
+.clearfix:after {
+	content: "";
+	display: table;
+	clear: both;
 }

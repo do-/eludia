@@ -18,8 +18,6 @@ sub draw_form_field_multi_select {
 	$label =~ s/:$//g;
 	$label =~ s/\s+/ /g;
 
-	my $hasOnChangeEvent = 0 + (exists ($options -> {onChange}) && length ($options->{onChange}) > 0);
-
 	$options -> {delimeter} ||= $conf -> {multi_select_delimeter} || '<br>';
 
 	my $replace_delimeter = $options -> {delimeter} eq '<br>' ? ''
@@ -35,8 +33,7 @@ sub draw_form_field_multi_select {
 			el_ids.value = result.ids;
 EOJS
 
-	$after .= "if (!stringSetsEqual (oldIds, result.ids)) {$options->{onChange}}"
-		if $hasOnChangeEvent;
+	$after .= "if (!stringSetsEqual (oldIds, result.ids)) {\$(el_ids).trigger('change'); $options->{onChange}}";
 
 	my $js_detail;
 
@@ -72,9 +69,8 @@ EOJS
 		}
 	}
 
-	my $onclear_js = "document.getElementById ('$options->{span_name}').innerHTML = '';var oldValue = document.getElementsByName ('_$options->{name}') [0].value; document.getElementsByName ('_$options->{name}') [0].value = '';";
-	$onclear_js .= "if (oldValue != '') {$options->{onChange}}"
-		if $hasOnChangeEvent;
+	my $onclear_js = "document.getElementById ('$options->{span_name}').innerHTML = ''; var el_ids = document.getElementsByName ('_$options->{name}') [0]; var oldValue = el_ids.value; el_ids.value = '';";
+	$onclear_js .= "if (oldValue != '') {\$(el_ids).trigger('change'); $options->{onChange}}";
 	$onclear_js .= $js_detail;
 
 	return qq|<span id="input_$$options{name}">| . draw_form_field_of_type (
@@ -90,7 +86,7 @@ EOJS
 					type      => 'hidden',
 					name      => $options->{name},
 					value     => join (',', map {$_ -> {id}} @{$options -> {values}}),
-					off       => $_REQUEST {__read_only} || $options -> {read_only},
+					off       => $_REQUEST {__read_only} || ($options -> {read_only} && !$options -> {add_hidden}),
 					label_off => 1,
 				},
 				{

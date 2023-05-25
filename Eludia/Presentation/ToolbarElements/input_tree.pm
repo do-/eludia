@@ -33,6 +33,8 @@ sub draw_toolbar_input_tree {
 
 	}
 
+	$label = $options -> {label} if $options -> {label_fix};
+
 	if ($label) {
 
 		$options -> {max_len} ||= ($conf -> {max_len} || 20);

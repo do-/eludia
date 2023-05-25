@@ -995,9 +995,9 @@ sub draw_form_field {
 
 	$field -> {colspan} ||= $_REQUEST {__max_cols} - 1;
 
-	$field -> {state}     = $data -> {fake} == -1 ? 'deleted' : $_REQUEST {__read_only} ? 'passive' : 'active';
+	$field -> {state}   ||= $data -> {fake} == -1 ? 'deleted' : $_REQUEST {__read_only} ? 'passive' : 'active';
 
-	$field -> {label_width} = '20%' unless $field -> {is_slave};
+	$field -> {label_width} ||= '20%' unless $field -> {is_slave};
 
 	$_REQUEST {__no_navigation} ||= $_REQUEST {__only_field};
 
@@ -1148,7 +1148,8 @@ sub draw_toolbar {
 
 			}
 
-			$button -> {type} ||= 'button';
+			$button -> {type}     ||= 'button';
+			$button -> {id_table} ||= $options -> {id_table};
 
 			$_REQUEST {__toolbar_inputs} .= "$button->{name}," if $button -> {type} =~ /^input_/;
 
@@ -2404,6 +2405,7 @@ EOJS
 	if (ref $options -> {top_toolbar} eq ARRAY) {
 
 		$options -> {top_toolbar} -> [0] -> {_list} = $list;
+		$options -> {top_toolbar} -> [0] -> {id_table} = $options -> {id_table};
 		$options -> {top_toolbar} = draw_toolbar (@{ $options -> {top_toolbar} });
 	}
 
@@ -2756,6 +2758,8 @@ sub draw_node {
 
 	my @buttons;
 
+	my $any_buttons = 0;
+
 	foreach my $button (@{$_ [0]}) {
 
 		next if $button -> {off};
@@ -2776,9 +2780,10 @@ sub draw_node {
 
 		push @buttons, $button;
 
+		$any_buttons ||= $button && $button ne 'BREAK';
 	}
 
-	$i -> {__menu} = draw_vert_menu ($i, \@buttons) if ((grep {$_ ne BREAK} @buttons) > 0);
+	$i -> {__menu} = draw_vert_menu ($i, \@buttons) if $any_buttons;
 
 	return 	$_SKIN -> draw_node ($options, $i);
 

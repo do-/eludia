@@ -94,8 +94,8 @@
             $frame.load(function() {
                 if ($modalWindow) {
 
-                    var maxTitleLength = 50; // max title length
-                    var title = $(this).contents().find("title").text(); // get target page's title
+                    var maxTitleLength = optns.title_max_len || 50;
+                    var title = $(this).contents().find("title").text();
                     title = $("<div/>").html(title).text();
 
                     if (title.length > maxTitleLength) {
@@ -124,7 +124,8 @@
         resizable          : true,
         scrolling          : 'no',
         onClose            : function() { },
-        returnValue        : null
+        returnValue        : null,
+        title_max_len      : 50
     };
     // END of plugin
 })(jQuery);

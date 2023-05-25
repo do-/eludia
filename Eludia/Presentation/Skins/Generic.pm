@@ -199,7 +199,7 @@ sub js_detail {
 		push @all_details, $detail;
 
 		$tab_js .= <<EOJS;
-			element = window.form.elements['_${detail}'];
+			element = \$('[name=_${detail}]')[0];
 			if (element) {
 				tabs.push (element.tabIndex);
 			}
@@ -221,7 +221,7 @@ EOJS
 		activate_link (
 
 			'$script_name/$href&__only_field=${\(join (',', @all_details))}&__only_form=' +
-			window.form.name +
+			\$(this).closest('form').attr('name') +
 			'&_$$options{name}=' +
 			$options->{value_src} +
 			'&__src_field=' +
@@ -740,10 +740,13 @@ EOJS
 		var element = doc.getElementById ('input_$field->{name}');
 EOJS
 		} else {
+
 			$_REQUEST {__script} .= <<EOJS;
-		var element = doc.getElementById ('input_$field_name');
+		var element = window.parent.\$('[name=_$field_name]').closest('.k-widget').get(0);
+		if (!element) element = doc.getElementById ('input_$field_name');
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].elements ['_$field_name'];
 		if (!element) element = doc.forms ['$_REQUEST{__only_form}'].all.namedItem ('_$field_name');
+		if (element && element.parentElement.id == 'input_$field_name') element = element.parentElement;
 EOJS
 		}
 
