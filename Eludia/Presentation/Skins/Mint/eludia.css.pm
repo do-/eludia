@@ -293,6 +293,10 @@ table.list {
 	white-space: nowrap !important;
 }
 
+.row-cell-overflow {
+	overflow: visible !important;
+}
+
 .row-cell-transparent {
 	FONT-FAMILY: Tahoma, 'MS Sans Serif';
 	FONT-WEIGHT: normal;
