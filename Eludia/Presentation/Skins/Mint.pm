@@ -2735,6 +2735,9 @@ sub draw_text_cell {
 	$data -> {attributes} -> {class} .= ' row-cell-nowrap'
 		if $data -> {attributes} -> {title} =~ /^-?\d+(\.\d+)?$/ || $data -> {attributes} -> {title} =~ /^\d{2}\.\d{2}\.\d{4} \d{1,2}\:\d{1,2}\:\d{1,2}/;
 
+	$data -> {attributes} -> {class} .= ' row-cell-overflow'
+		if $data -> {attributes} -> {title} =~ /^-?\d+(\.\d+)?$/;
+
 	if ($data -> {a_class} && $data -> {a_class} ne 'row-cell') {
 		$data -> {attributes} -> {class} .= ' ' . $data -> {a_class};
 	}
