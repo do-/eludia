@@ -397,8 +397,10 @@ function dialog_open (options) {
 
 	var url = window.location.protocol + '//' + window.location.host + '/i/_skins/Mint/dialog.html?' + Math.random();
 
+	options.blockUI_msg = options.blockUI_msg || i18n.choose_open_vocabulary;
+
 	if ($.browser.webkit || $.browser.safari)
-		$.blockUI ({fadeIn: 0, message: '<h1>' + i18n.choose_open_vocabulary + '</h1>'});
+		$.blockUI ({fadeIn: 0, message: '<h1>' + options.blockUI_msg + '</h1>'});
 
 	var getDialogSize = function(type, size) {
 		return size
