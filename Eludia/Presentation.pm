@@ -1939,8 +1939,7 @@ sub get_composite_table_headers {
 
 		push @$result_headers, $headers -> [$i] -> [$j];
 
-		if ($headers -> [$i] -> [$j] -> {colspan}) {
-
+		if ($headers -> [$i] -> [$j] -> {colspan} || $_REQUEST {xls} && @{$headers -> [$i + 1]} > 0) {
 			my $result = get_composite_table_headers ({
 				headers       => $headers,
 				level_indexes => $options -> {level_indexes},
