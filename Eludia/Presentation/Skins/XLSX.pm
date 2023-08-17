@@ -701,8 +701,8 @@ sub draw_table_header_cell {
 
 	return '' if $cell -> {hidden} || $cell -> {off} || (!$cell -> {label} && $conf -> {core_hide_row_buttons} == 2);
 
-	my $rowspan = $cell -> {attributes} -> {rowspan};
-	my $colspan = $cell -> {attributes} -> {colspan};
+	my $rowspan = $cell -> {attributes} -> {rowspan} || 1;
+	my $colspan = $cell -> {attributes} -> {colspan} || 1;
 
 	my $col = $_REQUEST {__xl_col};
 	my $row = $_REQUEST {__xl_row};
@@ -731,6 +731,7 @@ sub draw_table_header_cell {
 	my $right_width = $worksheet -> {__col_widths} -> [$col];
 
 	if ($rowspan != 1 || $colspan != 1){
+
 		$worksheet -> merge_range ($row, $col, $row + $rowspan - 1, $col + $colspan - 1, $cell -> {label}, $_REQUEST{__xl_format} -> {table_header});
 		if ($colspan > 1)  {
 			$worksheet -> {__col_widths} -> [$col] = $right_width;
@@ -748,13 +749,17 @@ sub draw_table_header_cell {
 	}
 
 	my $i = 1;
-	while ($i <= $rowspan) {
+	while ($i < $rowspan) {
 		if (!$worksheet -> {__map_str} -> {$row + $i}) {
 			$worksheet -> {__map_str} -> {$row + $i} = [];
 		}
-		for (my $j = 0; $j < $colspan; $j++) {
-			my $k = $i == $rowspan ? 0 : 1;
-			push @{$worksheet -> {__map_str} -> {$row + $i}}, $k;
+		for (my $j = 0; $j <= $col + $colspan - 1; $j++) {
+
+			next if $worksheet -> {__map_str} -> {$row + $i} [$j];
+
+			my $k = $j < $col ? $worksheet -> {__map_str} -> {$row + $i} [$j]  + 0 : 1;
+
+			$worksheet -> {__map_str} -> {$row + $i} [$j] = $k;
 		}
 		$i++;
 	}
