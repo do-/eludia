@@ -740,3 +740,7 @@ a.hint {
 .iframe-tree-window-right {
 	height: 100% !important;
 }
+
+table.st-fixed-table-right {
+	margin-bottom: 0 !important;
+}
