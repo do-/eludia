@@ -732,3 +732,11 @@ a.hint {
 	display: table;
 	clear: both;
 }
+
+#splitted_tree_window_right {
+	overflow: hidden !important;
+}
+
+.iframe-tree-window-right {
+	height: 100% !important;
+}

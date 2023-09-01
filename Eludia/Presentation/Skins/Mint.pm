@@ -4139,7 +4139,7 @@ sub draw_tree {
 			<div id="splitted_tree_window_left" data-selected-node="$$options{selected_node}">
 			</div>
 			<div id="splitted_tree_window_right" style="$content_div_style" data-name="$$options{name}">
-				<iframe onload="this.style.visibility='visible'" style="visibility: hidden;" width=100% height=100% name="$$options{name}" id="__content_iframe" application=yes scroll=no>
+				<iframe class="iframe-tree-window-right" onload="this.style.visibility='visible'" style="visibility: hidden;overflow: scroll;" width=100% height=100% name="$$options{name}" id="__content_iframe" application=yes >
 			</div>
 		</div>
 	};
@@ -4155,7 +4155,7 @@ sub draw_tree {
 					<iframe width=100% height=100% src="$options->{top}->{href}" name="_top_iframe" id="__top_iframe" application="yes" noresize scrolling=no>
 					</iframe>
 				</div>
-				<div id="outer_tree_window_bottom" style="height:100%">
+				<div id="outer_tree_window_bottom" style="height: calc( 100% - $options->{top}->{height}px );">
 					$html
 				</div>
 			</div>
