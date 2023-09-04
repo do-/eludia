@@ -179,7 +179,7 @@ A.k-button:focus {
 
 
 .k-widget, .k-textbox {
-	margin: 2px 0;
+	margin: 0;
 }
 
 .menuFonDark.k-header {
@@ -233,7 +233,7 @@ div.modal_div  > * {
 }
 
 table.st-fixed-table-right {
-	margin-bottom: 2px !important;
+	margin-bottom: 0px !important;
 }
 
 table.st-fixed-table-right td.selected-single {
@@ -739,8 +739,4 @@ a.hint {
 
 .iframe-tree-window-right {
 	height: 100% !important;
-}
-
-table.st-fixed-table-right {
-	margin-bottom: 0 !important;
 }
