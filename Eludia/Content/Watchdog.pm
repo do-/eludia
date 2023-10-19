@@ -86,6 +86,7 @@ sub investigate_error {
 
 	return {
 		label => "[$id_error]$$options{error_tags}",
+		id_error => "[$id_error]",
 		error => $error_details . $options -> {error},
 		msg   => $msg,
 		kind  => $options -> {error_kind},

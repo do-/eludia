@@ -602,18 +602,15 @@ sub draw_fatal_error_page {
 
 	my $head_links;
 
-	my $details = $error -> {label};
-	$details =~ s/\sprocess.*$/]/;
-
 	if ($error -> {kind}) {
 
 		my $options = {
 			email   => $preconf -> {mail}? $preconf -> {mail} -> {support} : '',
 			subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
 			title   => $i18n -> {internal_error},
-			details => $details,
+			details => $error -> {id_error},
 			msg     => $error -> {msg},
-			label   => $details,
+			label   => $error -> {id_error},
 			href    => "$_REQUEST{__static_url}/error.html?",
 			height  => 280,
 			width   => 510,
