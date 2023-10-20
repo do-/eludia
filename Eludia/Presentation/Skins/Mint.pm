@@ -462,18 +462,15 @@ EOJS
 
 	$_REQUEST {__script} .= <<EOJS;
 
-		var parent_frame =  parent ? parent : window;
+		var top_w = window.ancestor_window_with_child('eludia-application-iframe')
 
-		var top_w = parent_frame.ancestor_window_with_child('eludia-application-iframe')
-
-		var eludia_frame = top_w && top_w.child? top_w.child.contentWindow : parent_frame;
+		var eludia_frame = top_w && top_w.child? top_w.child.contentWindow : window;
 
 		var options = $options;
 
 		options.after = function() {
-			parent_frame.unblockui();
+			window.unblockui();
 		};
-
 
 		if (eludia_frame.dialog_open) {
 			eludia_frame.dialog_open (options);
