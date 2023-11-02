@@ -608,9 +608,9 @@ sub draw_fatal_error_page {
 			email   => $preconf -> {mail}? $preconf -> {mail} -> {support} : '',
 			subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
 			title   => $i18n -> {internal_error},
-			details => $error -> {label} . "\n" . $error -> {error},
+			details => $error -> {id_error},
 			msg     => $error -> {msg},
-			label   => $error -> {label},
+			label   => $error -> {id_error},
 			href    => "$_REQUEST{__static_url}/error.html?",
 			height  => 280,
 			width   => 510,
@@ -618,6 +618,7 @@ sub draw_fatal_error_page {
 			show_error_detail => $i18n -> {show_error_detail},
 			error_hint_area   => $i18n -> {error_hint_area},
 			mail_support      => $i18n -> {mail_support},
+			blockUI_msg       => 'Произошла внутренняя ошибка',
 		};
 
 		$options = $_JSON -> encode ($options);

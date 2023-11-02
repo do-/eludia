@@ -86,6 +86,7 @@ sub investigate_error {
 
 	return {
 		label => "[$id_error]$$options{error_tags}",
+		id_error => "[$id_error]",
 		error => $error_details . $options -> {error},
 		msg   => $msg,
 		kind  => $options -> {error_kind},
@@ -167,7 +168,7 @@ sub log_error {
 
 	my ($options) = @_;
 
-	print STDERR $options -> {error} . "\n";
+	print STDERR $options -> {label} . "\n" . $options -> {error} . "\n";
 
 	my $log = $preconf -> {_} -> {logs} . 'fatal.log';
 
