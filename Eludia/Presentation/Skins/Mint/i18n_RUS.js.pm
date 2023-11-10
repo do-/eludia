@@ -10,7 +10,8 @@ define(
 			clipboard_copied: "Скопировал",
 			count : 'Кол-во',
 			no_data_found : 'Список пуст',
-			sum   : 'Сумма'
+			sum   : 'Сумма',
+			confirm : "Подтвердите"
 		};
 
 		try{

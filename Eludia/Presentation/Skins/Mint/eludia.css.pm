@@ -744,3 +744,51 @@ a.hint {
 .iframe-tree-window-right {
 	height: 100% !important;
 }
+
+#alert-window_wnd_title, #confirm-window_wnd_title {
+	font-weight: 700;
+}
+#alert-window, #confirm-window {
+	position: relative;
+	min-width: 400px !important;
+	padding: 0;
+}
+#alert-window .icon, #confirm-window .icon {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+}
+#alert-window .icon img, #confirm-window .icon img {
+	width: 50px;
+}
+#alert-window .viewport, #confirm-window .viewport {
+	display: table;
+	padding-left: 66px;
+	box-sizing: border-box;
+	margin-bottom: 53px;
+	min-height: 66px;
+}
+#alert-window .viewport > div, #confirm-window .viewport > div {
+	display: table-cell;
+	vertical-align: middle;
+}
+#alert-window .viewport > div > div, #confirm-window .viewport > div > div {
+	overflow: auto;
+	padding: 8px 8px 8px 0;
+	box-sizing: border-box;
+}
+#alert-window .footer, #confirm-window .footer {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	text-align: center;
+	background-color: #f5f5f5;
+	padding: 8px 0;
+}
+#alert-window .footer .k-button, #confirm-window .footer .k-button {
+	min-width: 100px;
+}
+#alert-window .footer .k-button._ok, #confirm-window .footer .k-button._ok {
+	margin-right: 8px;
+}

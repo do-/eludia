@@ -353,24 +353,25 @@ sub __adjust_button_href {
 
 			$options -> {href} =~ s{\%}{\%25}g unless $options -> {parent};
 
-			$js_action = "nope('$options->{href}','$options->{target}')";
+			$js_action = "nope('$options->{href}','$options->{target}');";
 
 		}
 
-		my $condition = 'confirm(' . js_escape ($options -> {confirm}) . ')';
+		my $condition = 'confirm(' . js_escape ($options -> {confirm}) . ", function () { $cursor_state$js_action }, function () { ${js_restore_cursor}nop(); } )";
+
 
 		if ($options -> {preconfirm}) {
 
-			$condition = "!$options->{preconfirm}||($options->{preconfirm}&&$condition)";
+			$condition = "if($options->{preconfirm}) { $condition; } else { $cursor_state$js_action }";
 
 		}
 
-		$options -> {href} = qq {javascript:if($condition){$cursor_state$js_action}else{${js_restore_cursor}nop()}};
+		$options -> {href} = qq {javascript:$condition; nop();};
 
 	}
 	elsif ($options -> {no_wait_cursor}) {
 
-		$options -> {onclick} .= qq {$cursor_state void(0);};
+        $options -> {onclick} = qq {onclick="$cursor_state void(0);"};
 
 	}
 
@@ -610,7 +611,13 @@ EOJ
 
 	$_REQUEST {__script} .= <<EOJ;
 			var data = $data;
-			alert (data [0]);
+
+			if (window.parent) {
+				window.parent.alert (data [0]);
+			} else {
+				alert (data [0]);
+			}
+
 			try {window.parent.setCursor ()} catch (e) {}
 			window.parent.document.body.style.cursor = 'default';
 			try {window.parent.poll_invisibles ()} catch (e) {}
