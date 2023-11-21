@@ -357,16 +357,18 @@ sub __adjust_button_href {
 
 		}
 
-		my $condition = 'confirm(' . js_escape ($options -> {confirm}) . ", function () { $cursor_state$js_action }, function () { ${js_restore_cursor}nop(); } )";
-
+		my $condition = $_REQUEST {__skin} eq 'Mint' ? 'confirm(' . js_escape ($options -> {confirm}) . ", function () { $cursor_state$js_action }, function () { ${js_restore_cursor}nop(); } )"
+			: 'confirm(' . js_escape ($options -> {confirm}) . ')';;
 
 		if ($options -> {preconfirm}) {
 
-			$condition = "if($options->{preconfirm}) { $condition; } else { $cursor_state$js_action }";
+			$condition = $_REQUEST {__skin} eq 'Mint' ? "if($options->{preconfirm}) { $condition; } else { $cursor_state$js_action }"
+				: "if($options->{preconfirm}) { $condition; } else { $cursor_state$js_action }";
 
 		}
 
-		$options -> {href} = qq {javascript:$condition; nop();};
+		$options -> {href} = $_REQUEST {__skin} eq 'Mint' ? qq {javascript:$condition; nop();}
+			: qq {javascript:if($condition){$cursor_state $js_action}else{${js_restore_cursor}nop()}};
 
 	}
 	elsif ($options -> {no_wait_cursor}) {
