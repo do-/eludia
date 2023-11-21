@@ -363,12 +363,12 @@ sub __adjust_button_href {
 		if ($options -> {preconfirm}) {
 
 			$condition = $_REQUEST {__skin} eq 'Mint' ? "if($options->{preconfirm}) { $condition; } else { $cursor_state$js_action }"
-				: "if($options->{preconfirm}) { $condition; } else { $cursor_state$js_action }";
+				: "!$options->{preconfirm}||($options->{preconfirm}&&$condition)";
 
 		}
 
 		$options -> {href} = $_REQUEST {__skin} eq 'Mint' ? qq {javascript:$condition; nop();}
-			: qq {javascript:if($condition){$cursor_state $js_action}else{${js_restore_cursor}nop()}};
+			: qq {javascript:if($condition){$cursor_state$js_action}else{${js_restore_cursor}nop()}};
 
 	}
 	elsif ($options -> {no_wait_cursor}) {
