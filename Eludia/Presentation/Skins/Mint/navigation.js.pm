@@ -97,10 +97,12 @@ var alert_window_is_open = false,
 */
 window.__original_alert = window.alert;
 window.alert = function(message, errorFieldName, options) {
+
 	var w = window.name == 'invisible' ? parent : window.name == '_body_iframe' ? parent.parent : window,
 		$field = errorFieldName ? w.$('[name="' + errorFieldName + '"') : null;
 
 	if (errorFieldName && !$field.is(':visible')) $field = $field.parent();
+
 	if (errorFieldName && $field.length !== 0) {
 		$field.focus();
 
@@ -122,6 +124,7 @@ window.alert = function(message, errorFieldName, options) {
 			default:
 				showFor = $field;
 		}
+
 		notification = w.$('#notification').kendoTooltip({
 			position: 'bottom',
 			autoHide: false,
@@ -129,7 +132,9 @@ window.alert = function(message, errorFieldName, options) {
 		}).data('kendoTooltip');
 		notification.show(showFor);
 		notification.popup.element.addClass('error');
+
 	} else {
+
 		try {
 			var $ = w.$,
 				kendo = w.kendo,
@@ -207,21 +212,22 @@ window.warning = function(message) {
 
 /*
 	Options:
-	title       - текст заголовка окна, def: Ошибка
+	title       - текст заголовка окна, def: Подтвердите
 	icon        - путь к иконке, def: /i/_skins/Mint/question.png
 	ok_text     - текст кнопки, def: Да
 	cancel_text - текст кнопки, def: Нет
 */
 window.__original_confirm = window.confirm;
 window.confirm = function(message, succesCallback, failCallback, options) {
+
 	if (typeof succesCallback !== 'function') {
 		var result = window.__original_confirm(message);
 		window.setCursor(top);
 		window.setCursor(window);
 		return result;
 	}
-	if (!options) options = {};
 
+	if (!options) options = {};
 	var $confirmWindow = $('<div/>', { id: 'confirm-window' }),
 		maxWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) / 2,
 		maxHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) / 2,
