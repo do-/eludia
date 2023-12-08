@@ -717,12 +717,14 @@ sub draw_table_header_cell {
 		}
 	}
 	else {
+
 		my $i = $col;
 		while ($worksheet -> {__map_str} -> {$row} [$i] != 0) {
 
 			$i++;
 		}
 		$col = $i;
+
 		for (my $j = 0; $j < $colspan; $j++) {
 			$worksheet -> {__map_str} -> {$row} [$col + $j] = 1;
 		}
@@ -749,13 +751,12 @@ sub draw_table_header_cell {
 	}
 
 	my $i = 1;
+
 	while ($i < $rowspan) {
 		if (!$worksheet -> {__map_str} -> {$row + $i}) {
 			$worksheet -> {__map_str} -> {$row + $i} = [];
 		}
-		for (my $j = 0; $j <= $col + $colspan - 1; $j++) {
-
-			next if $worksheet -> {__map_str} -> {$row + $i} [$j];
+		for (my $j = 0; $j < $col + $colspan; $j++) {
 
 			my $k = $j < $col ? $worksheet -> {__map_str} -> {$row + $i} [$j]  + 0 : 1;
 
