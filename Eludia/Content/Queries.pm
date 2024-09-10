@@ -410,6 +410,19 @@ sub do_update___queries {
 				or croak "#_${order}_ord#:$i18n->{column} \"$mandatory_field_label\" $i18n->{mandatory_f}";
 		};
 
+		my $field_label = $_REQUEST {"_${order}_label"};
+
+		if ($_REQUEST {"_${order}_ord"} && exists $_REQUEST {"_${order}_parent"} && !$_REQUEST {$_REQUEST {"_${order}_parent"}}) {
+			croak "#_${order}_ord#:$i18n->{require_parent_column} \"$field_label\"";
+		}
+
+		if ($_REQUEST {"_${order}_ord"}
+			&& 0 + (grep {$_ =~ /^_(.+)_parent$/ && $_REQUEST {$_} eq "_${order}_ord"} keys %_REQUEST) > 0
+			&& 0 + (grep {$_ =~ /^_(.+)_parent$/ && $_REQUEST {$_} eq "_${order}_ord" && $_REQUEST {"_${1}_ord"}} keys %_REQUEST) == 0
+		) {
+			croak "#_${order}_ord#:$i18n->{require_any_child_column} \"$field_label\"";
+		}
+
 		$content -> {columns} -> {$order} = {
 			ord  => $_REQUEST {"_${order}_ord"} || 0,
 			sort => $_REQUEST {"_${order}_sort"},
@@ -673,7 +686,14 @@ sub draw_item_of___queries {
 							name  => $o -> {order} . '_parent',
 							type  => 'hidden',
 							value => "_$o->{parent_header}->{order}_ord",
-							off   => $o -> {no_column} || $o -> {no_order} || !$o -> {mandatory} || !$o -> {parent_header} -> {order},
+							off   => $o -> {no_column} || !$o -> {parent_header} -> {order},
+						},
+
+						{
+							type  => 'hidden',
+							name  => $o -> {order} . '_label',
+							value => $o -> {label},
+							off   => $o -> {no_column},
 						},
 						{
 							type  => 'static',

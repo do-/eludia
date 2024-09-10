@@ -77,6 +77,8 @@ EOT
 	reduction_quarter        => 'кв',
 	reduction_year           => 'гггг',
 	request_sent             => 'Запрос отправлен на сервер',
+	require_parent_column    => 'Необходимо отображать родительскую колонку для колонки',
+	require_any_child_column => 'Необходимо отбражать хотя бы одну дочернюю колонку для колонки',
 	session_terminated       => 'Сессия завершена',
 	save_or_cancel           => 'Пожалуйста, сначала сохраните данные (Ctrl-Enter) или отмените ввод (Esc)',
 	snils_incorrect          => 'Не корректный СНИЛС',
