@@ -13,29 +13,21 @@
 				width: auto;
 				margin-right: 20px;
 			}
-			#error_detail_area {
-				margin: 5px;
-			}
 		</style>
 		<script src="/i/mint/libs/KendoUI/js/jquery.min.js"></script>
 		<script>
-			function toggle_detail() {
-				$("#error_detail_area").toggle();
-				$("#mail_support_area").toggle();
-				var label = $('#error_detail_area').is(":visible")? "Скрыть подробности ошибки" : "Показать подробности ошибки";
-				$("#toggle_detail").text(label);
-			}
 
 			function support_mailto_href(options) {
 				var href = 'mailto:' + options.email + '?';
 				href = href + 'subject=' + encodeURIComponent(options.subject);
 				href = href + '&body=' + encodeURIComponent(
-					"Пожалуйста, подробно опишите Ваши действия до появления ошибки здесь:\n\n\n" + options.label
+					"Пожалуйста, подробно опишите Ваши действия до появления ошибки здесь:\n\n\n" 
+					+ "Нижеуказанную служебную информацию, пожалуйста, не удаляйте и не редактируйте:\n" 
+					+ options.label
 				);
 
 				return href;
 			}
-
 
 			function on_load(){
 
@@ -48,12 +40,10 @@
 
 				window.returnValue = {'result': 'esc'};
 
-				if(dialogArguments.details)
-					$('#error_detail').val(dialogArguments.details);
+				if (dialogArguments.details)
+					$('#error_detail').text(dialogArguments.details);
 				if (dialogArguments.msg)
 					$('#error_message_area').text(dialogArguments.msg);
-				if (dialogArguments.show_error_detail)
-					$('#toggle_detail').text(dialogArguments.show_error_detail);
 				if (dialogArguments.error_hint_area)
 					$('#error_hint_area').text(dialogArguments.error_hint_area);
 				if (dialogArguments.mail_support)
@@ -70,18 +60,10 @@
 			<img src="/i/_skins/Mint/error.png" class="help-image"></img>
 		</div>
 		<p>
-		<span id="error_message_area">
-			Произошла внутренняя ошибка.
-		</span>
+			<span id="error_message_area"></span>
 		</p>
 		<p>
-			<a href="#" id="toggle_detail" onclick="toggle_detail();">Показать подробности ошибки</a>
-		</p>
-		<p>
-			<span id="error_detail_area" style="display: none">
-				<textarea id="error_detail" rows="8" cols="62"></textarea>
-			</span>
-			<p></p>
+			<span id="error_detail"></span>
 		</p>
 		<span id="mail_support_area">
 			<p>

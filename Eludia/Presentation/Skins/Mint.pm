@@ -410,49 +410,84 @@ sub draw_fatal_error_page {
 
 	$_REQUEST {__content_type} ||= 'text/html; charset=' . $i18n -> {_charset};
 
+	my $head_links;
+
 	my $options = {
 		email   => $preconf -> {mail}? $preconf -> {mail} -> {support} : '',
 		subject => "Техподдержка ($$preconf{about_name}). Ошибка от $$_USER{label}",
 		title   => $i18n -> {internal_error},
-		details => $error -> {label} . "\n" . $error -> {error},
+		details => $error -> {id_error},
 		msg     => $error -> {msg},
-		label   => $error -> {label},
+		label   => $error -> {id_error},
 		href    => "$_REQUEST{__static_url}/error.html?",
-		height  => 290,
+		height  => 280,
 		width   => 510,
 		close   => $i18n -> {close},
 		show_error_detail => $i18n -> {show_error_detail},
 		error_hint_area   => $i18n -> {error_hint_area},
 		mail_support      => $i18n -> {mail_support},
+		blockUI_msg       => 'Произошла внутренняя ошибка',
 	};
 
 	$options = $_JSON -> encode ($options);
 
-	$_REQUEST {__script} .= <<EOJS;
+	$head_links  = qq {
+		<link rel="stylesheet" href="/i/_skins/Mint/eludia.css" type="text/css">
+		<link rel="stylesheet" href="/i/mint/libs/jQueryUI/jquery-ui.min.css" type="text/css">
+		<link rel="stylesheet" href="/i/mint/libs/SuperTable/supertable.css" type="text/css">
 
-	var parent_frame = parent;
+		<script src="/i/mint/libs/KendoUI/js/jquery.min.js"></script>
+		<script src="/i/_skins/Mint/jquery.blockUI.js"></script>
 
-	var top_w = parent_frame.ancestor_window_with_child('eludia-application-iframe')
+		<script src="/i/_skins/Mint/navigation.js"></script>
+		<script src="/i/mint/libs/jQueryUI/jquery-ui.min.js"></script>
+		<script src="/i/mint/libs/require.min.js"></script>
+		<script src="/i/_skins/Mint/jQuery.showModalDialog.js"></script>
 
-	var eludia_frame = top_w && top_w.child? top_w.child.contentWindow : parent_frame;
-
-	var options = $options;
-
-	options.after = function() {
-		parent_frame.unblockui();
 	};
 
-	if (eludia_frame.dialog_open) {
-		eludia_frame.dialog_open (options);
-	} else {
-		alert (options.label);
-		if (window.name != 'invisible') {history.go (-1)};
-	}
+
+	$head_links .= <<EOJS;
+		<script>
+			requirejs.config({
+				baseUrl: '/i/mint/libs/KendoUI/js/',
+				shim: {
+					'/i/mint/libs/jQueryUI/jquery-ui.min.js' : {
+						deps: ['jquery.min']
+					},
+				}
+			});
+		</script>
 EOJS
 
-	$_REQUEST {__head_links} .= dump_tag (script => {}, $_REQUEST {__script}) . "\n";
+	$_REQUEST {__script} .= <<EOJS;
 
-	return qq{<html><head>$_REQUEST{__head_links}</head><body></body></html>};
+		var top_w = window.ancestor_window_with_child('eludia-application-iframe')
+
+		var eludia_frame = top_w && top_w.child? top_w.child.contentWindow : window;
+
+		var options = $options;
+
+		options.after = function() {
+			window.unblockui();
+		};
+
+		if (eludia_frame.dialog_open) {
+			eludia_frame.dialog_open (options);
+		} else {
+			alert (options.label);
+			if (window.name != 'invisible') {history.go (-1)};
+		}
+
+EOJS
+
+	$_REQUEST {__script} = <<EOJ;
+function on_load () {
+$_REQUEST{__script}
+}
+EOJ
+
+	return qq{<html><head>$head_links<script>$_REQUEST{__script}</script></head><body onLoad="on_load ()"></body></html>};
 
 }
 
