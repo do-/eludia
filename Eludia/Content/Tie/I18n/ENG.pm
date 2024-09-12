@@ -49,6 +49,8 @@
 	reduction_quarter        => 'q',
 	reduction_year           => 'yyyy',
 	request_sent             => 'Request sent',
+	require_parent_column    => 'The parent column must be displayed for the column',
+	require_any_child_column => 'At least one child column must be displayed for the column',
 	session_terminated       => 'Logged off',
 	save_or_cancel           => 'Please save your data (Ctrl-Enter) or cancel pending input (Esc)',
 	sorting                  => 'sorting',
