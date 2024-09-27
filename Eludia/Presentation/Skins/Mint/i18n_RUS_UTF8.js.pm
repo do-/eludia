@@ -7,7 +7,8 @@ var i18n = {
 	sum   : 'Сумма',
 	clipboard_help: "Для копирования нажмите CTRL+C, потом ENTER",
 	no_data_found : 'Список пуст',
-	clipboard_copied: "Скопировал"
+	clipboard_copied: "Скопировал",
+	confirm : "Подтвердите"
 };
 
 try{
