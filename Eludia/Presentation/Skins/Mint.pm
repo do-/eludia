@@ -802,7 +802,9 @@ sub draw_form_field_files {
 
 			\$(file_field_$options->{name}).append('<div><span style="display: flex;" id="' + file_field_id + '"><br>' + input_html + remove_button_html + '</span></div>');
 
-			\$('input[ name="_$$options{name}_' + file_field_$options->{name}_cnt  + '"]').kendoUpload();
+			\$('input[ name="_$$options{name}_' + file_field_$options->{name}_cnt  + '"]').kendoUpload({
+				multiple: false,
+			});
 
 		}
 
