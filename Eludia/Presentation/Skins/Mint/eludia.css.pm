@@ -710,6 +710,9 @@ a.hint {
 .k-animation-container li {
 	FONT-SIZE: 13px !important;
 }
+.k-widget.k-upload {
+	width: 20%;
+}
 #waiting_screen {
 	position: fixed;
 	top: 0;
