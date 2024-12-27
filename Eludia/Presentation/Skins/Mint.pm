@@ -782,14 +782,40 @@ sub draw_form_field_files {
 
 	$_REQUEST {__libs} -> {kendo} -> {upload} = 1;
 
-	$options -> {attributes} -> {"data-ken-multiple"} = "true";
-
 	my $attributes = dump_attributes ($options -> {attributes});
 
 	my $html;
 
-	$html .=  "<input type='hidden' name='_file_no_limit_for_$$options{name}' id='_file_no_limit_for_$$options{name}' value='1'>"
-		if $options -> {no_limit};
+	$_REQUEST {__script} .= <<EOH;
+
+		var file_field_$options->{name}_cnt = 1;
+
+		function file_field_add_$options->{name} () {
+
+			file_field_$options->{name}_cnt ++;
+
+			var file_field_id = 'file_field_$options->{name}' + file_field_$options->{name}_cnt;
+
+			var remove_button_html = '<a href="javaScript:file_field_remove_$options->{name}(' + file_field_id + ');void(0);"><img height=14 src="$_REQUEST{__static_url}/files_delete.png?$_REQUEST{__static_salt}" width=14"></a>&nbsp;';
+
+			var input_html = '<input  name="_$$options{name}_' + file_field_$options->{name}_cnt  + '" type="file" $attributes />';
+
+			\$(file_field_$options->{name}).append('<div><span style="display: flex;" id="' + file_field_id + '"><br>' + input_html + remove_button_html + '</span></div>');
+
+			\$('input[ name="_$$options{name}_' + file_field_$options->{name}_cnt  + '"]').kendoUpload({
+				multiple: false,
+			});
+
+		}
+
+		function file_field_remove_$options->{name} (id_file_field) {
+
+			setCursor ();
+
+			\$(id_file_field).empty();
+
+		}
+EOH
 
 	$html .= <<EOH;
 		<input
@@ -805,25 +831,17 @@ sub draw_form_field_files {
 		<span id="file_field_$options->{name}">
 EOH
 
-	my $file_tooltip = !$preconf -> {file_tooltip} ? ''
-		: sprintf (
-			$preconf -> {file_tooltip},
-			join (', ', @{$preconf -> {file_extensions}}),
-			$options -> {max_file_size} || $preconf -> {max_file_size},
-			$options -> {file_max_name_length} || $preconf -> {file_max_name_length},
-		);
-
-	$html .= ($options -> {no_limit} || !$file_tooltip ? '<div>' : "<div data-tooltip='$file_tooltip'>") . <<EOH;
-			<span id="file_field_$options->{name}_head">
-				<input name="_$$options{name}" type="file" $attributes />
-			</span>
+	$html .= <<EOH;
+			<div>
+				<span id="file_field_$options->{name}_head" style="display: flex;">
+					<input name="_$$options{name}_1" type="file"  $attributes />
+					<a href="javaScript:file_field_add_$options->{name}();void(0);"><img height=18 src="$_REQUEST{__static_url}/tree_nolines_plus.gif?$_REQUEST{__static_salt}" width=18></a>
+				</span>
 			</div>
 		</span>
-
 EOH
 
 	return $html;
-
 
 }
 
